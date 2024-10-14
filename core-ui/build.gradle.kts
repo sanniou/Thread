@@ -14,12 +14,12 @@ plugins {
 kotlin {
     @OptIn(ExperimentalWasmDsl::class)
     wasmJs {
-        moduleName = "composeApp"
+        moduleName = "coreui"
         browser {
             val rootDirPath = project.rootDir.path
             val projectDirPath = project.projectDir.path
             commonWebpackConfig {
-                outputFileName = "composeApp.js"
+                outputFileName = "coreui.js"
                 devServer = (devServer ?: KotlinWebpackConfig.DevServer()).apply {
                     static = (static ?: mutableListOf()).apply {
                         // Serve sources to debug inside browser
@@ -47,7 +47,7 @@ kotlin {
         iosSimulatorArm64()
     ).forEach { iosTarget ->
         iosTarget.binaries.framework {
-            baseName = "ComposeApp"
+            baseName = "CoreUi"
             isStatic = true
         }
     }
@@ -69,7 +69,6 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime.compose)
             implementation(libs.navigation.compose)
-//            implementation(project(":feature-nmb"))
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
@@ -83,11 +82,7 @@ android {
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "ai.saniou.thread"
         minSdk = libs.versions.android.minSdk.get().toInt()
-        targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 1
-        versionName = "1.0"
     }
     packaging {
         resources {
@@ -111,11 +106,11 @@ dependencies {
 
 compose.desktop {
     application {
-        mainClass = "ai.saniou.thread.MainKt"
+        mainClass = "ai.saniou.core_ui.MainKt"
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "ai.saniou.thread"
+            packageName = "ai.saniou.coreui"
             packageVersion = "1.0.0"
         }
     }

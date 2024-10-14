@@ -29,3 +29,6 @@ dependencyResolutionManagement {
 }
 
 include(":composeApp")
+include(":core-ui")
+include(":feature-nmb")
+//include(":feature-tieba")
