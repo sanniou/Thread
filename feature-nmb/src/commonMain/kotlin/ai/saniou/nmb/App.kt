@@ -1,7 +1,9 @@
 package ai.saniou.nmb
 
 import ai.saniou.coreui.Greeting
+import ai.saniou.nmb.data.api.ExampleApi
 import ai.saniou.nmb.data.mock.ApiTest
+import ai.saniou.nmb.di.nmbdi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
@@ -16,13 +18,16 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
-
+import org.kodein.di.instance
 import thread.feature_nmb.generated.resources.Res
 import thread.feature_nmb.generated.resources.compose_multiplatform
 
 @Composable
 @Preview
 fun App() {
+
+    val exampleApi: ExampleApi by nmbdi.instance()
+
     MaterialTheme {
 
         var showContent by remember { mutableStateOf(false) }
@@ -31,7 +36,7 @@ fun App() {
             Button(onClick = {
                 showContent = !showContent
                 GlobalScope.launch {
-                    println("Ktorfit:" + getPlatform().name + ":" + ApiTest().t())
+                    println("Ktorfit:" + getPlatform().name + ":" + exampleApi.getPerson())
                     showContentText = ApiTest().t()
                 }
             }) {

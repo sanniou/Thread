@@ -14,12 +14,12 @@ plugins {
 kotlin {
     @OptIn(ExperimentalWasmDsl::class)
     wasmJs {
-        moduleName = "coreui"
+        moduleName = "corecommon"
         browser {
             val rootDirPath = project.rootDir.path
             val projectDirPath = project.projectDir.path
             commonWebpackConfig {
-                outputFileName = "coreui.js"
+                outputFileName = "corecommon.js"
                 devServer = (devServer ?: KotlinWebpackConfig.DevServer()).apply {
                     static = (static ?: mutableListOf()).apply {
                         // Serve sources to debug inside browser
@@ -47,7 +47,7 @@ kotlin {
         iosSimulatorArm64()
     ).forEach { iosTarget ->
         iosTarget.binaries.framework {
-            baseName = "CoreUi"
+            baseName = "CoreCommon"
             isStatic = true
         }
     }
@@ -60,15 +60,15 @@ kotlin {
             implementation(libs.androidx.activity.compose)
         }
         commonMain.dependencies {
-            implementation(compose.runtime)
-            api(compose.foundation)
-            api(compose.material)
-            api(compose.ui)
-            implementation(compose.components.resources)
-            api(compose.components.uiToolingPreview)
             api(libs.androidx.lifecycle.viewmodel)
             api(libs.androidx.lifecycle.runtime.compose)
             api(libs.navigation.compose)
+            api(libs.ktorfit.lib)
+            implementation(libs.ktor.serialization.kotlinx.json)
+            implementation(libs.ktor.client.serialization)
+            implementation(libs.ktor.client.content.negotiation)
+            implementation(libs.ktor.serialization.kotlinx.json)
+            api(libs.kodein.di)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
@@ -106,11 +106,11 @@ dependencies {
 
 compose.desktop {
     application {
-        mainClass = "ai.saniou.core_ui.MainKt"
+        mainClass = "ai.saniou.core_common.MainKt"
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "ai.saniou.coreui"
+            packageName = "ai.saniou.corecommon"
             packageVersion = "1.0.0"
         }
     }

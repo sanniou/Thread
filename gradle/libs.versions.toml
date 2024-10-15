@@ -1,4 +1,5 @@
 [versions]
+kodeinDi = "7.22.0"
 ktorfitLib = "2.1.0"
 agp = "8.2.2"
 android-compileSdk = "34"
@@ -16,9 +17,11 @@ compose-plugin = "1.6.11"
 junit = "4.13.2"
 kotlin = "2.0.20"
 kotlinx-coroutines = "1.9.0"
+ktor = "3.0.0"
 navigationCompose = "2.7.0-alpha07"
 
 [libraries]
+kodein-di = { module = "org.kodein.di:kodein-di", version.ref = "kodeinDi" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -32,6 +35,10 @@ androidx-activity-compose = { module = "androidx.activity:activity-compose", ver
 androidx-lifecycle-viewmodel = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-viewmodel", version.ref = "androidx-lifecycle" }
 androidx-lifecycle-runtime-compose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
 kotlinx-coroutines-swing = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-swing", version.ref = "kotlinx-coroutines" }
+ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
+ktor-client-serialization = { module = "io.ktor:ktor-client-serialization", version.ref = "ktor" }
+ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
+ktor-server-content-negotiation = { module = "io.ktor:ktor-server-content-negotiation", version.ref = "ktor" }
 ktorfit-lib = { module = "de.jensklingenberg.ktorfit:ktorfit-lib-ktor-3.0.0", version.ref = "ktorfitLib" }
 navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 
