@@ -1,6 +1,6 @@
 package ai.saniou.nmb.di
 
-import ai.saniou.corecommon.di.coreCommon
+import ai.saniou.corecommon.data.di.coreCommon
 import ai.saniou.nmb.data.api.NmbXdApi
 import ai.saniou.nmb.data.api._NmbXdApiImpl
 import org.kodein.di.DI
