@@ -1,7 +1,7 @@
 package ai.saniou.nmb
 
 import ai.saniou.coreui.Greeting
-import ai.saniou.nmb.data.api.ExampleApi
+import ai.saniou.nmb.data.api.NmbXdApi
 import ai.saniou.nmb.data.mock.ApiTest
 import ai.saniou.nmb.di.nmbdi
 import androidx.compose.animation.AnimatedVisibility
@@ -26,7 +26,8 @@ import thread.feature_nmb.generated.resources.compose_multiplatform
 @Preview
 fun App() {
 
-    val exampleApi: ExampleApi by nmbdi.instance()
+    val exampleApi: NmbXdApi by nmbdi.instance()
+
 
     MaterialTheme {
 
@@ -36,8 +37,7 @@ fun App() {
             Button(onClick = {
                 showContent = !showContent
                 GlobalScope.launch {
-                    println("Ktorfit:" + getPlatform().name + ":" + exampleApi.getPerson())
-                    showContentText = ApiTest().t()
+                    println("Ktorfit:" + getPlatform().name + ":" + exampleApi.getTimelineList())
                 }
             }) {
                 Text("Click me! $showContentText")

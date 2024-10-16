@@ -11,7 +11,7 @@ plugins {
     alias(libs.plugins.compose.compiler)
     id("com.google.devtools.ksp") version "2.0.20-1.0.24"
     id("de.jensklingenberg.ktorfit") version "2.1.0"
-
+    kotlin("plugin.serialization") version "2.0.20"
 }
 
 kotlin {
