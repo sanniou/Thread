@@ -62,8 +62,8 @@ kotlin {
         commonMain.dependencies {
             implementation(compose.runtime)
             api(compose.foundation)
-            api(compose.material)
             api(compose.ui)
+            api(compose.material3)
             implementation(compose.components.resources)
             api(compose.components.uiToolingPreview)
             api(libs.androidx.lifecycle.viewmodel)

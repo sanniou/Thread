@@ -13,6 +13,7 @@ import ai.saniou.nmb.data.entity.Thread
 import ai.saniou.nmb.data.entity.TimeLine
 import de.jensklingenberg.ktorfit.http.Body
 import de.jensklingenberg.ktorfit.http.Field
+import de.jensklingenberg.ktorfit.http.FieldMap
 import de.jensklingenberg.ktorfit.http.FormUrlEncoded
 import de.jensklingenberg.ktorfit.http.GET
 import de.jensklingenberg.ktorfit.http.POST
@@ -112,7 +113,7 @@ interface NmbXdApi {
      * 返回值为 HTML 格式的页面，可以直接复制到浏览器中打开。
      */
     @POST("https://www.nmbxd.com/home/forum/doPostThread.html")
-    @FormUrlEncoded
+//    @FormUrlEncoded
     suspend fun postThread(
         @Body body: PostThreadRequest
     ): String
@@ -121,7 +122,7 @@ interface NmbXdApi {
      * 回复串
      */
     @POST("https://www.nmbxd.com/home/forum/doReplyThread.html")
-    @FormUrlEncoded
+//    @FormUrlEncoded
     suspend fun postReply(
         @Body body: PostReplyRequest
     ): String
