@@ -12,6 +12,8 @@ import ai.saniou.nmb.data.entity.ShowF
 import ai.saniou.nmb.data.entity.Thread
 import ai.saniou.nmb.data.entity.TimeLine
 import de.jensklingenberg.ktorfit.http.Body
+import de.jensklingenberg.ktorfit.http.Field
+import de.jensklingenberg.ktorfit.http.FormUrlEncoded
 import de.jensklingenberg.ktorfit.http.GET
 import de.jensklingenberg.ktorfit.http.POST
 import de.jensklingenberg.ktorfit.http.Query
@@ -110,6 +112,7 @@ interface NmbXdApi {
      * 返回值为 HTML 格式的页面，可以直接复制到浏览器中打开。
      */
     @POST("https://www.nmbxd.com/home/forum/doPostThread.html")
+    @FormUrlEncoded
     suspend fun postThread(
         @Body body: PostThreadRequest
     ): String
@@ -118,6 +121,7 @@ interface NmbXdApi {
      * 回复串
      */
     @POST("https://www.nmbxd.com/home/forum/doReplyThread.html")
+    @FormUrlEncoded
     suspend fun postReply(
         @Body body: PostReplyRequest
     ): String
@@ -142,9 +146,10 @@ interface NmbXdApi {
      * response:"订阅大成功→_→" / "该串不存在"
      */
     @POST("addFeed")
+    @FormUrlEncoded
     suspend fun addFeed(
         @Query uuid: String,//订阅 UUID
-        @Query tid: Long,// 串的 ID
+        @Field tid: Long,// 串的 ID
     ): String
 
     /**
@@ -155,9 +160,10 @@ interface NmbXdApi {
      * response:"取消订阅成功!"
      */
     @POST("delFeed")
+    @FormUrlEncoded
     suspend fun delFeed(
         @Query uuid: String,//订阅 UUID
-        @Query tid: Long,// 串的 ID
+        @Field tid: Long,// 串的 ID
     ): String
 
     /**
