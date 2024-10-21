@@ -1,7 +1,7 @@
 package ai.saniou.coreui.widgets
 
 import ai.saniou.coreui.theme.body1
-import ai.saniou.coreui.theme.risBlack
+import ai.saniou.coreui.theme.md_theme_light_scrim
 import ai.saniou.coreui.theme.subtitle1Bold
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -12,8 +12,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Text
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -78,14 +78,14 @@ fun MBErrorPage(
                         modifier = Modifier.padding(top = 20.dp),
                         text = stringResource(type.errorLabelResId()),
                         style = subtitle1Bold,
-                        color = risBlack()
+                        color = md_theme_light_scrim
                     )
                     Text(
                         textAlign = TextAlign.Center,
                         modifier = Modifier.padding(top = 16.dp),
                         text = stringResource(type.errorOptionGuidResId()),
                         style = body1,
-                        color = risBlack()
+                        color = md_theme_light_scrim
                     )
                 }
             }

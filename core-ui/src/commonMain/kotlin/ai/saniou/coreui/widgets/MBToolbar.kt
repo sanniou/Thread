@@ -1,7 +1,7 @@
 package ai.saniou.coreui.widgets
 
-import ai.saniou.coreui.theme.risBlack
-import ai.saniou.coreui.theme.risWhite
+import ai.saniou.coreui.theme.md_theme_light_onTertiary
+import ai.saniou.coreui.theme.md_theme_light_scrim
 import ai.saniou.coreui.theme.subtitle2Bold
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -35,7 +35,7 @@ fun BaseMBToolbar(
 ) {
     Box(
         Modifier
-            .background(color = risBlack())
+            .background(color = md_theme_light_scrim)
             .statusBarsPadding()
             .padding(11.dp, 0.dp, 16.dp, 0.dp)
             .fillMaxWidth()
@@ -94,7 +94,7 @@ fun MBToolbar(
             maxLines = 1,
             textAlign = TextAlign.Center,
             style = subtitle2Bold,
-            color = risWhite()
+            color = md_theme_light_onTertiary
         )
     }, {
         if (rightIconId != null) {

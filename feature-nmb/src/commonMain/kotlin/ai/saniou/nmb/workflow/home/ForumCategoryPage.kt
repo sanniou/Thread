@@ -21,33 +21,32 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults.topAppBarColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.kodein.di.DI
 import org.kodein.di.instance
 
 
 @Composable
-fun ForumCategoryPage(di: DI = nmbdi) {
-    val forumCategoryViewModel: ForumCategoryViewModel = remember {
+fun ForumCategoryPage(di: DI = nmbdi, onThreadClicked: (Long) -> Unit) {
+    val forumCategoryViewModel: ForumCategoryViewModel = viewModel {
         val forumCategoryViewModel by di.instance<ForumCategoryViewModel>()
         forumCategoryViewModel;
     }
     val content by forumCategoryViewModel.uiState.collectAsStateWithLifecycle()
 
-
-    val forumViewModel: ForumViewModel = remember {
+    val forumViewModel: ForumViewModel = viewModel {
         val forumViewModel by di.instance<ForumViewModel>()
         forumViewModel;
     }
     val forumContent by forumViewModel.uiState.collectAsStateWithLifecycle()
 
-    ForumCategoryUi(content, forumContent, forumViewModel)
+    ForumCategoryUi(content, forumContent, forumViewModel, onThreadClicked)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -56,7 +55,8 @@ fun ForumCategoryPage(di: DI = nmbdi) {
 fun ForumCategoryUi(
     uiState: GroupMemberUiState,
     forumContent: UiStateWrapper,
-    forumViewModel: ForumViewModel
+    forumViewModel: ForumViewModel,
+    onThreadClicked: (Long) -> Unit
 ) {
     MaterialTheme {
         ModalNavigationDrawer(
@@ -124,7 +124,7 @@ fun ForumCategoryUi(
                 }
             ) { innerPadding ->
                 forumContent.LoadingWrapper<ShowForumUiState>(content = {
-                    Forum(it)
+                    Forum(it, onThreadClicked)
                 }, onRetryClick = {
 
                 })

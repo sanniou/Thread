@@ -1,0 +1,11 @@
+<resources>
+    <string name="back_button">My awesome app</string>
+    <string name="title">Some title</string>
+    <string name="core_ui_loading_wording">Some title</string>
+    <string name="core_ui_list_loading_wording">Some title</string>
+    <string name="core_ui_no_internet_retry">Some title</string>
+    <string name="core_ui_net_un_connect">Some title</string>
+    <string name="core_ui_server_error">Some title</string>
+    <string name="core_ui_net_un_connect_and_retry">Some title</string>
+    <string name="core_ui_server_busy">Some title</string>
+</resources>

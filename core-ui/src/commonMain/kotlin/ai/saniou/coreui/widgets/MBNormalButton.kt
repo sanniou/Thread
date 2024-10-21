@@ -1,7 +1,7 @@
 package ai.saniou.coreui.widgets
 
 import ai.saniou.coreui.theme.body2Bold
-import ai.saniou.coreui.theme.risWhite
+import ai.saniou.coreui.theme.md_theme_light_onTertiary
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -74,7 +74,7 @@ fun MBNormalButton(
             text = text,
             style = body2Bold,
             textAlign = TextAlign.Center,
-            color = risWhite()
+            color = md_theme_light_onTertiary
         )
     }
 }

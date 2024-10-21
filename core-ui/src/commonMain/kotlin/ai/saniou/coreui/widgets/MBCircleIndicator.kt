@@ -1,8 +1,8 @@
 package ai.saniou.coreui.widgets
 
 import ai.saniou.coreui.theme.body2
-import ai.saniou.coreui.theme.risBlack
-import ai.saniou.coreui.theme.risWhite
+import ai.saniou.coreui.theme.md_theme_light_onTertiary
+import ai.saniou.coreui.theme.md_theme_light_scrim
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -66,7 +66,7 @@ fun MBPageLoadingIndicator(
             modifier = Modifier.align(Alignment.CenterHorizontally),
             text = stringResource(messageId),
             style = body2,
-            color = risBlack().copy(alpha = 0.6f)
+            color = md_theme_light_scrim.copy(alpha = 0.6f)
         )
         Spacer(modifier = Modifier.size(12.dp))
         MBCircleIndicator(
@@ -85,7 +85,7 @@ fun MBPageLoadingWithBgIndicator(
     Box(
         modifier
             .clip(RoundedCornerShape(10.dp))
-            .background(risBlack().copy(alpha = 0.8f))
+            .background(md_theme_light_scrim.copy(alpha = 0.8f))
             .size(124.dp)
     ) {
         Column(
@@ -95,7 +95,7 @@ fun MBPageLoadingWithBgIndicator(
                 modifier = Modifier.align(Alignment.CenterHorizontally),
                 text = stringResource(messageId),
                 style = body2,
-                color = risWhite()
+                color = md_theme_light_onTertiary
             )
             Spacer(modifier = Modifier.size(12.dp))
             MBCircleIndicator(
@@ -125,7 +125,7 @@ fun ColumnLoadingPlaceholder(
             modifier = Modifier.align(Alignment.CenterVertically),
             text = wording,
             style = body2,
-            color = risBlack().copy(alpha = 0.6f)
+            color = md_theme_light_scrim.copy(alpha = 0.6f)
         )
     }
 }

@@ -1,5 +1,6 @@
 package ai.saniou.nmb.workflow.home
 
+import ai.saniou.coreui.state.LoadingWrapper
 import ai.saniou.nmb.di.nmbdi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -9,38 +10,44 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.kodein.di.DI
 import org.kodein.di.instance
 
 
 @Composable
-fun ForumPage(di: DI = nmbdi) {
-    val forumViewModel: ForumViewModel = remember {
+fun ForumScreen(
+    di: DI = nmbdi,
+    onThreadClicked: (Long) -> Unit = {},
+) {
+    val forumViewModel: ForumViewModel = viewModel {
         val forumCategoryViewModel by di.instance<ForumViewModel>()
         forumCategoryViewModel;
     }
-    val content by forumViewModel.uiState.collectAsStateWithLifecycle()
-//    Forum(content)
+    val forumContent by forumViewModel.uiState.collectAsStateWithLifecycle()
+    forumContent.LoadingWrapper<ShowForumUiState>(content = {
+        Forum(it, onThreadClicked)
+    }, onRetryClick = {
+
+    })
+
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 @Preview
-fun Forum(uiState: ShowForumUiState) {
+fun Forum(uiState: ShowForumUiState, onThreadClicked: (Long) -> Unit) {
 
     LazyColumn {
         items(uiState.showF) { forum ->
             Box(modifier = Modifier.fillMaxWidth()
                 .clickable {
-                    uiState.onClickThread(forum.id)
+                    onThreadClicked(forum.id)
                 }
             ) {
                 Row {

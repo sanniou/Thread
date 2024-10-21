@@ -1,6 +1,8 @@
 package ai.saniou.nmb
 
+import ai.saniou.nmb.data.NmbScreen
 import ai.saniou.nmb.workflow.home.ForumCategoryPage
+import ai.saniou.nmb.workflow.home.HomePage
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -21,6 +23,6 @@ fun main() = application {
         undecorated = true,
         state = windowState
     ) {
-        ForumCategoryPage()
+        HomePage()
     }
 }
