@@ -21,7 +21,7 @@ data class ShowF(
     val img: String,// 图片的相对地址
     val ext: String,// 图片扩展名
     val now: String,// 发串时间，格式：2022-06-18(六)05:10:29
-    val userHash: String,// 发串的饼干或红名名称
+    val userHash: String? = null,// 发串的饼干或红名名称
     val name: String,// 一般是“无名氏”的名称
     val title: String,// 一般是“无标题”的标题
     val content: String,// 串的内容，使用 HTML
@@ -32,7 +32,7 @@ data class ShowF(
     @JsonNames("Replies")
     val replies: List<Reply>,
     @JsonNames("RemainReplies")
-    val remainReplies: Long,// 网页版除去显示的最近几条回复后剩余的回复数量,“回应有……篇被省略。要阅读所有回应请按下回应链接。”
+    val remainReplies: Long? = null,// 网页版除去显示的最近几条回复后剩余的回复数量,“回应有……篇被省略。要阅读所有回应请按下回应链接。”
 )
 
 @Serializable
@@ -45,7 +45,7 @@ data class Reply(
     val img: String,// 图片的相对地址
     val ext: String,// 图片扩展名
     val now: String,// 发串时间，格式：2022-06-18(六)05:10:29
-    val userHash: String,// 发串的饼干或红名名称
+    val userHash: String? = null,// 发串的饼干或红名名称
     val name: String,// 一般是“无名氏”的名称
     val title: String,// 一般是“无标题”的标题
     val content: String,// 串的内容，使用 HTML

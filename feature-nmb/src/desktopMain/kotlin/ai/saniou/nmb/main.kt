@@ -1,46 +1,26 @@
 package ai.saniou.nmb
 
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.ModalDrawerSheet
-import androidx.compose.material3.ModalNavigationDrawer
-import androidx.compose.material3.NavigationDrawerItem
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
+import ai.saniou.nmb.workflow.home.ForumCategoryPage
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.application
-import org.jetbrains.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.window.rememberWindowState
 
 fun main() = application {
+    val windowState = rememberWindowState(
+        position = WindowPosition(Alignment.Center),
+        size = DpSize(480.dp, 768.dp),
+    )
     Window(
         onCloseRequest = ::exitApplication,
         title = "Thread",
+        // Hide default window title
+        undecorated = true,
+        state = windowState
     ) {
-        App()
+        ForumCategoryPage()
     }
-}
-
-@Composable
-@Preview
-fun DrawerDem2o() {
-    // [START android_compose_layout_material_modal_drawer]
-    ModalNavigationDrawer(
-        drawerContent = {
-            ModalDrawerSheet {
-                Text("Drawer title", modifier = Modifier.padding(16.dp))
-                HorizontalDivider()
-                NavigationDrawerItem(
-                    label = { Text(text = "Drawer Item") },
-                    selected = false,
-                    onClick = { /*TODO*/ }
-                )
-                // ...other drawer items
-            }
-        }
-    ) {
-        // Screen content
-    }
-    // [END android_compose_layout_material_modal_drawer]
 }

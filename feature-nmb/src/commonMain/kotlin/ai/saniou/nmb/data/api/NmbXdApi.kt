@@ -27,6 +27,12 @@ interface NmbXdApi {
     suspend fun getCdnPath(): SaniouResponse<List<CdnPath>>
 
     /**
+     * 获取备用 API 链接的接口的路径
+     */
+    @GET("backupUrl")
+    suspend fun backupUrl(): String
+
+    /**
      * 版面列表
      *
      * 这个 API 所有本来应该返回 Number 的字段都被弄成了 String，需要注意类型转换问题。
@@ -82,6 +88,15 @@ interface NmbXdApi {
     ): SaniouResponse<List<Thread>>
 
     /**
+     * 获取最新发的串的链接
+     */
+    @GET("getLastPost")
+    suspend fun getLastPost(
+        @Query("id") id: Long,//串 ID
+        @Query("page") page: Long,//页数，默认为 1
+    ): SaniouResponse<List<Thread>>
+
+    /**
      * 查看串（只看 PO）
      *
      * 回复数据中可能会出现 Tips 酱，具体特征可以参见上面的示例。
@@ -126,6 +141,29 @@ interface NmbXdApi {
     suspend fun postReply(
         @Body body: PostReplyRequest
     ): String
+
+    /**
+     *   /// 验证码图片链接
+     *   Uri get verifyImage => baseUrl.replace(path: 'Member/User/Index/verify.html');
+     *
+     *   /// 用户登陆链接
+     *   Uri get userLogin => baseUrl.replace(path: 'Member/User/Index/login.html');
+     *
+     *   /// 用户饼干链接
+     *   Uri get cookiesList => baseUrl.replace(path: 'Member/User/Cookie/index.html');
+     *
+     *   /// 获取新饼干链接
+     *   Uri get getNewCookie =>
+     *       baseUrl.replace(path: 'Member/User/Cookie/apply.html');
+     *
+     *   /// 注册帐号链接
+     *   Uri get registerAccount =>
+     *       baseUrl.replace(path: 'Member/User/Index/sendRegister.html');
+     *
+     *   /// 重置密码链接
+     *   Uri get resetPassword =>
+     *       baseUrl.replace(path: 'Member/User/Index/sendForgotPassword.html');
+     */
 
     /**
      * 查看订阅
