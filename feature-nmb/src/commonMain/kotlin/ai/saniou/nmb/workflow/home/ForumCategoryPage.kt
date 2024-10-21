@@ -79,7 +79,7 @@ fun ForumCategoryUi(
                                         Text(
                                             modifier = Modifier.fillMaxWidth()
                                                 .clickable {
-                                                    uiState.onForumClick(category.id)
+                                                    uiState.onForumClick(forum.id)
                                                     forumViewModel.refreshForum(forum.id.toLong())
                                                 }
                                                 .padding(16.dp)

@@ -4,122 +4,122 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 @Composable
-fun risAccentPrimary() = /*Res.color.mb_accent_primary_new*/ Color.Unspecified
+fun risAccentPrimary() = Color(0xFF8B0000UL)
 
 @Composable
-fun risAccentAccessible() = /*Res.color.ris_text_accent_primary_accessible*/ Color.Unspecified
+fun risAccentAccessible() = Color(0xFF8B0000UL)
 
 @Composable
-fun risTextAccentPrimary() = /*Res.color.ris_text_accent_primary*/ Color.Unspecified
+fun risTextAccentPrimary() = Color(0xFF8B0000UL)
 
 @Composable
-fun risAccentSecondary() = /*Res.color.ris_accent_secondary*/ Color.Unspecified
+fun risAccentSecondary() = Color(0xFF8B0000UL)
 
 @Composable
-fun risTextAccentSecondary() = /*Res.color.ris_text_accent_secondary*/ Color.Unspecified
+fun risTextAccentSecondary() = Color(0xFF8B0000UL)
 
 @Composable
-fun risBlack() = /*Res.color.ris_black*/ Color.Unspecified
+fun risBlack() = Color(0xFF000000UL)
 
 @Composable
-fun risWhite() = /*Res.color.ris_white*/ Color.Unspecified
+fun risWhite() = Color(0xFFFFFFFFUL)
 
 @Composable
-fun risGrey5() = /*Res.color.ris_grey5*/ Color.Unspecified
+fun risGrey5() = Color(0xFF8B0000UL)
 
 @Composable
-fun risGrey0() = /*Res.color.ris_grey0*/ Color.Unspecified
+fun risGrey0() = Color(0xFF8B0000UL)
 
 @Composable
-fun risTextDisabledAlpha() = /*Res.color.ris_text_disabled_alpha*/ Color.Unspecified
+fun risTextDisabledAlpha() = Color(0xFF8B0000UL)
 
 @Composable
-fun risGrey1() = /*Res.color.ris_grey1*/ Color.Unspecified
+fun risGrey1() = Color(0xFF8B0000UL)
 
 @Composable
-fun risGrey2() = /*Res.color.ris_grey2*/ Color.Unspecified
+fun risGrey2() = Color(0xFF8B0000UL)
 
 @Composable
-fun risGrey2_5() = /*Res.color.ris_grey2_5*/ Color.Unspecified
+fun risGrey2_5() = Color(0xFF8B0000UL)
 
 @Composable
-fun risGrey2_75() = /*Res.color.ris_grey2_75*/ Color.Unspecified
+fun risGrey2_75() = Color(0xFF8B0000UL)
 
 @Composable
-fun risGrey2Alpha() = /*Res.color.ris_grey2_alpha*/ Color.Unspecified
+fun risGrey2Alpha() = Color(0xFF8B0000UL)
 
 @Composable
-fun risGrey3() = /*Res.color.ris_grey3*/ Color.Unspecified
+fun risGrey3() = Color(0xFF8B0000UL)
 
 @Composable
-fun risGrey4() = /*Res.color.ris_grey4*/ Color.Unspecified
+fun risGrey4() = Color(0xFF8B0000UL)
 
 @Composable
-fun risGrey4Alpha() = /*Res.color.ris_grey4_alpha*/ Color.Unspecified
+fun risGrey4Alpha() = Color(0xFF8B0000UL)
 
 @Composable
-fun risGrey6() = /*Res.color.ris_grey6*/ Color.Unspecified
+fun risGrey6() = Color(0xFF8B0000UL)
 
 @Composable
-fun risGrey5Alpha() = /*Res.color.ris_grey5_alpha*/ Color.Unspecified
+fun risGrey5Alpha() = Color(0xFF8B0000UL)
 
 @Composable
-fun risGrey6Alpha() = /*Res.color.ris_grey6_alpha*/ Color.Unspecified
+fun risGrey6Alpha() = Color(0xFF8B0000UL)
 
 @Composable
-fun risEmphasisSecondary() = /*Res.color.ris_emphasis_secondary*/ Color.Unspecified
+fun risEmphasisSecondary() = Color(0xFF8B0000UL)
 
 @Composable
-fun risEmphasisTertiary() = /*Res.color.ris_emphasis_tertiary*/ Color.Unspecified
+fun risEmphasisTertiary() = Color(0xFF8B0000UL)
 
 @Composable
-fun risStatusErrorBright() = /*Res.color.ris_text_status_error*/ Color.Unspecified
+fun risStatusErrorBright() = Color(0xFF8B0000UL)
 
 @Composable
-fun risStatusErrorDark() = /*Res.color.ris_status_error_inverted*/ Color.Unspecified
+fun risStatusErrorDark() = Color(0xFF8B0000UL)
 
 @Composable
-fun risStatusMediumBright() = /*Res.color.ris_status_medium*/ Color.Unspecified
+fun risStatusMediumBright() = Color(0xFF8B0000UL)
 
 @Composable
-fun risStatusMediumDark() = /*Res.color.ris_status_medium_inverted*/ Color.Unspecified
+fun risStatusMediumDark() = Color(0xFF8B0000UL)
 
 @Composable
-fun risStatusSuccessBright() = /*Res.color.ris_text_status_success*/ Color.Unspecified
+fun risStatusSuccessBright() = Color(0xFF8B0000UL)
 
 @Composable
-fun risStatusSuccessDark() = /*Res.color.ris_text_status_success_inverted*/ Color.Unspecified
+fun risStatusSuccessDark() = Color(0xFF8B0000UL)
 
 @Composable
-fun risTextDisabledInverted() = /*Res.color.ris_text_disabled_inverted*/ Color.Unspecified
+fun risTextDisabledInverted() = Color(0xFF8B0000UL)
 
 @Composable
-fun risTextDisabled() = /*Res.color.ris_text_disabled*/ Color.Unspecified
+fun risTextDisabled() = Color(0xFF8B0000UL)
 
 @Composable
-fun risTextSecondaryInverted() = /*Res.color.ris_text_secondary_inverted*/ Color.Unspecified
+fun risTextSecondaryInverted() = Color(0xFF8B0000UL)
 
 @Composable
-fun risTextSecondary() = /*Res.color.ris_text_secondary*/ Color.Unspecified
+fun risTextSecondary() = Color(0xFF8B0000UL)
 
 @Composable
-fun risButtonPrimaryOutline() = /*Res.color.mb_button_primary_outline*/ Color.Unspecified
+fun risButtonPrimaryOutline() = Color(0xFF8B0000UL)
 
 @Composable
-fun risTextSecondaryAlpha() = /*Res.color.ris_text_secondary_alpha*/ Color.Unspecified
+fun risTextSecondaryAlpha() = Color(0xFF8B0000UL)
 
 @Composable
-fun risTextPrimaryAlpha() = /*Res.color.ris_text_primary_alpha*/ Color.Unspecified
+fun risTextPrimaryAlpha() = Color(0xFF8B0000UL)
 
 @Composable
-fun risTextSecondaryAlphaInverted() = /*Res.color.ris_text_secondary_alpha_inverted*/
-    Color.Unspecified
+fun risTextSecondaryAlphaInverted() = Color(0xFF8B0000UL)
+
 
 @Composable
-fun risGrey3Alpha() = /*Res.color.ris_grey3_alpha*/ Color.Unspecified
+fun risGrey3Alpha() = Color(0xFF8B0000UL)
 
 @Composable
-fun mbDialogShadowEndColor() = /*Res.color.mb_dialog_shadow_end_color*/ Color.Unspecified
+fun mbDialogShadowEndColor() = Color(0xFF8B0000UL)
 
 @Composable
-fun mbLoadingBarYellow() = /*Res.color.mb_loading_bar_yellow*/ Color.Unspecified
+fun mbLoadingBarYellow() = Color(0xFF8B0000UL)
