@@ -2,6 +2,7 @@ package ai.saniou.nmb.workflow.home
 
 import ai.saniou.nmb.data.NmbScreen
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -80,7 +81,6 @@ fun HomePage(navController: NavHostController = rememberNavController()) {
             startDestination = NmbScreen.ForumCategory.name,
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
                 .padding(innerPadding)
         ) {
             composable(route = NmbScreen.ForumCategory.name) {
