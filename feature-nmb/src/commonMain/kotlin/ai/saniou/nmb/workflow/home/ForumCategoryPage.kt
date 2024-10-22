@@ -96,7 +96,6 @@ fun ForumCategoryUi(
                 }
             }
         ) {
-
             Scaffold(
                 topBar = {
                     TopAppBar(
@@ -124,7 +123,7 @@ fun ForumCategoryUi(
                 }
             ) { innerPadding ->
                 forumContent.LoadingWrapper<ShowForumUiState>(content = {
-                    Forum(it, onThreadClicked)
+                    Forum(it, onThreadClicked,innerPadding)
                 }, onRetryClick = {
 
                 })
