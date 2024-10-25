@@ -3,6 +3,9 @@ package ai.saniou.nmb.workflow.home
 import ai.saniou.coreui.state.LoadingWrapper
 import ai.saniou.coreui.state.UiStateWrapper
 import ai.saniou.nmb.di.nmbdi
+import ai.saniou.nmb.workflow.forum.Forum
+import ai.saniou.nmb.workflow.forum.ForumViewModel
+import ai.saniou.nmb.workflow.forum.ShowForumUiState
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -49,11 +52,10 @@ fun ForumCategoryPage(di: DI = nmbdi, onThreadClicked: (Long) -> Unit) {
     ForumCategoryUi(content, forumContent, forumViewModel, onThreadClicked)
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 @Preview
 fun ForumCategoryUi(
-    uiState: GroupMemberUiState,
+    uiState: ForumCategoryUiState,
     forumContent: UiStateWrapper,
     forumViewModel: ForumViewModel,
     onThreadClicked: (Long) -> Unit
@@ -96,38 +98,12 @@ fun ForumCategoryUi(
                 }
             }
         ) {
-            Scaffold(
-                topBar = {
-                    TopAppBar(
-                        colors = topAppBarColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                            titleContentColor = MaterialTheme.colorScheme.primary,
-                        ),
-                        title = {
-                            Text("Top app bar")
-                        }
-                    )
-                },
-                bottomBar = {
-                    BottomAppBar(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.primary,
-                    ) {
-                        Text(
-                            modifier = Modifier
-                                .fillMaxWidth(),
-                            textAlign = TextAlign.Center,
-                            text = "Bottom app bar",
-                        )
-                    }
-                }
-            ) { innerPadding ->
-                forumContent.LoadingWrapper<ShowForumUiState>(content = {
-                    Forum(it, onThreadClicked,innerPadding)
-                }, onRetryClick = {
+            forumContent.LoadingWrapper<ShowForumUiState>(content = {
+                Forum(it, onThreadClicked)
+            }, onRetryClick = {
 
-                })
-            }
+            })
+
         }
     }
 }

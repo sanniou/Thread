@@ -13,7 +13,7 @@ class ForumCategoryViewModel(private val forumCategoryUserCase: ForumCategoryUse
     ViewModel() {
 
     private val _uiState = MutableStateFlow(
-        GroupMemberUiState(
+        ForumCategoryUiState(
             forums = emptyList(),
             checkState = false,
             onForwardChange = { checked ->
@@ -50,14 +50,14 @@ class ForumCategoryViewModel(private val forumCategoryUserCase: ForumCategoryUse
         }
     }
 
-    private fun updateUiState(invoke: (GroupMemberUiState) -> GroupMemberUiState) {
+    private fun updateUiState(invoke: (ForumCategoryUiState) -> ForumCategoryUiState) {
         _uiState.update(invoke)
     }
 
     val uiState = _uiState.asStateFlow()
 }
 
-data class GroupMemberUiState(
+data class ForumCategoryUiState(
     var forums: List<ForumCategory>,
     var expandCategory: String? = null,
     var currentForum: String? = null,

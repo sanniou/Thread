@@ -1,14 +1,13 @@
 package ai.saniou.nmb.workflow.home
 
 import ai.saniou.nmb.data.NmbScreen
+import ai.saniou.nmb.workflow.forum.ForumScreen
+import ai.saniou.nmb.workflow.thread.ThreadPage
+import ai.saniou.nmb.workflow.thread.ThreadPageNavigationDestination
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -34,7 +33,7 @@ import thread.feature_nmb.generated.resources.back_button
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CupcakeAppBar(
+fun SaniouAppBar(
     currentScreen: NmbScreen,
     canNavigateBack: Boolean,
     navigateUp: () -> Unit,
@@ -69,7 +68,7 @@ fun HomePage(navController: NavHostController = rememberNavController()) {
     )
     Scaffold(
         topBar = {
-            CupcakeAppBar(
+            SaniouAppBar(
                 currentScreen = currentScreen,
                 canNavigateBack = navController.previousBackStackEntry != null,
                 navigateUp = { navController.navigateUp() }
@@ -111,18 +110,4 @@ fun HomePage(navController: NavHostController = rememberNavController()) {
 
 interface NavigationDestination {
     val route: String
-}
-
-object ThreadPageNavigationDestination : NavigationDestination {
-    override val route = NmbScreen.Thread.name
-    const val nameArg = "tid"
-    val routeWithArg = "$route/{$nameArg}"
-}
-
-@Composable
-fun ThreadPage(name: Long?) {
-    Text(
-        "A\nB\nC\nD\nE\nF\nG\nH\nI\nJ\nK\nL\nM\nN\nO\nP\nQ\nR\nS\nT\nU\nV\nW\nX\nY\nZ\n"
-                + NmbScreen.Thread.name + " " + name
-    )
 }

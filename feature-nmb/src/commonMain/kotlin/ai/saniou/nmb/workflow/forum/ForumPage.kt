@@ -1,4 +1,4 @@
-package ai.saniou.nmb.workflow.home
+package ai.saniou.nmb.workflow.forum
 
 import ai.saniou.coreui.state.LoadingWrapper
 import ai.saniou.coreui.widgets.PullToRefreshWrapper
