@@ -2,12 +2,15 @@ package ai.saniou.nmb.workflow.home
 
 import ai.saniou.nmb.data.NmbScreen
 import ai.saniou.nmb.workflow.forum.ForumScreen
+import ai.saniou.nmb.workflow.post.PostPage
 import ai.saniou.nmb.workflow.thread.ThreadPage
 import ai.saniou.nmb.workflow.thread.ThreadPageNavigationDestination
+import ai.saniou.nmb.workflow.user.UserPage
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -37,6 +40,7 @@ fun SaniouAppBar(
     currentScreen: NmbScreen,
     canNavigateBack: Boolean,
     navigateUp: () -> Unit,
+    onUserIconClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     TopAppBar(
@@ -53,6 +57,14 @@ fun SaniouAppBar(
                         contentDescription = stringResource(Res.string.back_button)
                     )
                 }
+            }
+        },
+        actions = {
+            IconButton(onClick = onUserIconClick) {
+                Icon(
+                    imageVector = Icons.Default.AccountCircle,
+                    contentDescription = "用户中心"
+                )
             }
         }
     )
@@ -71,7 +83,8 @@ fun HomePage(navController: NavHostController = rememberNavController()) {
             SaniouAppBar(
                 currentScreen = currentScreen,
                 canNavigateBack = navController.previousBackStackEntry != null,
-                navigateUp = { navController.navigateUp() }
+                navigateUp = { navController.navigateUp() },
+                onUserIconClick = { navController.navigate(NmbScreen.User.name) }
             )
         }
     ) { innerPadding ->
@@ -89,8 +102,14 @@ fun HomePage(navController: NavHostController = rememberNavController()) {
             }
 
             composable(route = "${NmbScreen.Forum.name}/{id}") {
+                val forumId = it.arguments?.getString("id")?.toLongOrNull() ?: 0
                 ForumScreen(
-                    onThreadClicked = { navController.navigate("${ThreadPageNavigationDestination.route}/${it}") }
+                    onThreadClicked = { threadId ->
+                        navController.navigate("${ThreadPageNavigationDestination.route}/${threadId}")
+                    },
+                    onNewPostClicked = { fid ->
+                        navController.navigate("${NmbScreen.Post.name}/${fid}")
+                    }
                 )
             }
 
@@ -100,11 +119,32 @@ fun HomePage(navController: NavHostController = rememberNavController()) {
                     type = NavType.LongType
                 })
             ) {
-                ThreadPage(backStackEntry?.arguments?.getLong(ThreadPageNavigationDestination.nameArg))
+                val threadId = backStackEntry?.arguments?.getLong(ThreadPageNavigationDestination.nameArg)
+                ThreadPage(threadId)
             }
 
-        }
+            composable(route = "${NmbScreen.Post.name}/{forumId}") {
+                val forumId = it.arguments?.getString("forumId")?.toIntOrNull()
+                PostPage(
+                    forumId = forumId,
+                    onNavigateBack = { navController.navigateUp() }
+                )
+            }
 
+            composable(route = "${NmbScreen.Post.name}/reply/{threadId}") {
+                val threadId = it.arguments?.getString("threadId")?.toLongOrNull()
+                PostPage(
+                    threadId = threadId,
+                    onNavigateBack = { navController.navigateUp() }
+                )
+            }
+
+            composable(route = NmbScreen.User.name) {
+                UserPage(
+                    onNavigateBack = { navController.navigateUp() }
+                )
+            }
+        }
     }
 }
 

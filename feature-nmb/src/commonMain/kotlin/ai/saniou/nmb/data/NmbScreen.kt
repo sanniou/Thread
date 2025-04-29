@@ -5,4 +5,5 @@ enum class NmbScreen {
     ForumCategory,
     Thread,
     Post,
+    User,
 }

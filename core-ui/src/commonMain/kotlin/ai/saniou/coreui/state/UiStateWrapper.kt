@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.update
 
 interface UiStateWrapper {
     object Loading : UiStateWrapper
+    data class Success<T>(val value: T?) : UiStateWrapper
     data class Error(val throwable: Throwable, val message: String?) : UiStateWrapper
 }
 

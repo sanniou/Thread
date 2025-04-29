@@ -2,8 +2,11 @@ package ai.saniou.nmb.data.api;
 
 import ai.saniou.corecommon.data.SaniouResponse
 import ai.saniou.nmb.data.entity.CdnPath
+import ai.saniou.nmb.data.entity.CookieListResponse
 import ai.saniou.nmb.data.entity.Feed
 import ai.saniou.nmb.data.entity.ForumCategory
+import ai.saniou.nmb.data.entity.LoginRequest
+import ai.saniou.nmb.data.entity.LoginResponse
 import ai.saniou.nmb.data.entity.NmbNotice
 import ai.saniou.nmb.data.entity.NmbReference
 import ai.saniou.nmb.data.entity.PostReplyRequest
@@ -143,27 +146,52 @@ interface NmbXdApi {
     ): String
 
     /**
-     *   /// 验证码图片链接
-     *   Uri get verifyImage => baseUrl.replace(path: 'Member/User/Index/verify.html');
-     *
-     *   /// 用户登陆链接
-     *   Uri get userLogin => baseUrl.replace(path: 'Member/User/Index/login.html');
-     *
-     *   /// 用户饼干链接
-     *   Uri get cookiesList => baseUrl.replace(path: 'Member/User/Cookie/index.html');
-     *
-     *   /// 获取新饼干链接
-     *   Uri get getNewCookie =>
-     *       baseUrl.replace(path: 'Member/User/Cookie/apply.html');
-     *
-     *   /// 注册帐号链接
-     *   Uri get registerAccount =>
-     *       baseUrl.replace(path: 'Member/User/Index/sendRegister.html');
-     *
-     *   /// 重置密码链接
-     *   Uri get resetPassword =>
-     *       baseUrl.replace(path: 'Member/User/Index/sendForgotPassword.html');
+     * 获取验证码图片
      */
+    @GET("https://www.nmbxd.com/Member/User/Index/verify.html")
+    suspend fun getVerifyImage(): String
+
+    /**
+     * 用户登录
+     */
+    @POST("https://www.nmbxd.com/Member/User/Index/login.html")
+    suspend fun login(
+        @Body request: LoginRequest
+    ): LoginResponse
+
+    /**
+     * 获取用户饼干列表
+     */
+    @GET("https://www.nmbxd.com/Member/User/Cookie/index.html")
+    suspend fun getCookiesList(): CookieListResponse
+
+    /**
+     * 申请新饼干
+     */
+    @POST("https://www.nmbxd.com/Member/User/Cookie/apply.html")
+    suspend fun applyNewCookie(): String
+
+    /**
+     * 注册账号
+     */
+    @POST("https://www.nmbxd.com/Member/User/Index/sendRegister.html")
+    @FormUrlEncoded
+    suspend fun register(
+        @Field("email") email: String,
+        @Field("password") password: String,
+        @Field("password_confirm") passwordConfirm: String,
+        @Field("verify") verify: String
+    ): String
+
+    /**
+     * 重置密码
+     */
+    @POST("https://www.nmbxd.com/Member/User/Index/sendForgotPassword.html")
+    @FormUrlEncoded
+    suspend fun resetPassword(
+        @Field("email") email: String,
+        @Field("verify") verify: String
+    ): String
 
     /**
      * 查看订阅

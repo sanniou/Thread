@@ -10,11 +10,3 @@ object ThreadPageNavigationDestination : NavigationDestination {
     const val nameArg = "tid"
     val routeWithArg = "$route/{$nameArg}"
 }
-
-@Composable
-fun ThreadPage(name: Long?) {
-    Text(
-        "A\nB\nC\nD\nE\nF\nG\nH\nI\nJ\nK\nL\nM\nN\nO\nP\nQ\nR\nS\nT\nU\nV\nW\nX\nY\nZ\n"
-                + NmbScreen.Thread.name + " " + name
-    )
-}
