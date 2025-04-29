@@ -82,7 +82,7 @@ fun ForumCategoryUi(
                                             modifier = Modifier.fillMaxWidth()
                                                 .clickable {
                                                     uiState.onForumClick(forum.id)
-                                                    forumViewModel.refreshForum(forum.id.toLong())
+                                                    forumViewModel.refreshForum()
                                                 }
                                                 .padding(16.dp)
                                                 .padding(start = 16.dp),

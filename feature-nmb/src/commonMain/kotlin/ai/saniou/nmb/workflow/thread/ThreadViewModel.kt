@@ -84,17 +84,13 @@ class ThreadViewModel(private val threadUseCase: ThreadUseCase) : ViewModel() {
         try {
             _uiState.emit(UiStateWrapper.Loading)
             val thread = threadUseCase(threadId, 1)
-            if (thread.isNotEmpty()) {
-                updateUiState { state ->
-                    state.copy(
-                        thread = thread[0],
-                        currentPage = 1
-                    )
-                }
-                _uiState.emit(UiStateWrapper.Success(dataUiState.value))
-            } else {
-                _uiState.emit(UiStateWrapper.Error(IllegalStateException("帖子不存在"), "帖子不存在或已被删除"))
+            updateUiState { state ->
+                state.copy(
+                    thread = thread,
+                    currentPage = 1
+                )
             }
+            _uiState.emit(UiStateWrapper.Success(dataUiState.value))
         } catch (e: Throwable) {
             _uiState.emit(UiStateWrapper.Error(e, "加载帖子失败: ${e.message}"))
         }
@@ -121,19 +117,17 @@ class ThreadViewModel(private val threadUseCase: ThreadUseCase) : ViewModel() {
             try {
                 val threadData = threadUseCase(currentId, nextPage.toLong())
 
-                if (threadData.isNotEmpty()) {
-                    // 合并回复列表
-                    val currentThread = dataUiState.value.thread
-                    val newReplies = currentThread.replies + threadData[0].replies
+                // 合并回复列表
+                val currentThread = dataUiState.value.thread
+                val newReplies = currentThread.replies + threadData.replies
 
-                    updateUiState { state ->
-                        state.copy(
-                            thread = currentThread.copy(replies = newReplies),
-                            currentPage = nextPage
-                        )
-                    }
-                    _uiState.emit(UiStateWrapper.Success(dataUiState.value))
+                updateUiState { state ->
+                    state.copy(
+                        thread = currentThread.copy(replies = newReplies),
+                        currentPage = nextPage
+                    )
                 }
+                _uiState.emit(UiStateWrapper.Success(dataUiState.value))
             } catch (e: Throwable) {
                 // 加载下一页失败，但不影响当前页面显示
                 // 可以显示一个提示
