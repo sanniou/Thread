@@ -29,6 +29,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,9 +51,9 @@ fun ThreadPage(threadId: Long?, di: DI = nmbdi) {
         viewModel
     }
 
-    // 加载帖子数据
-    if (threadId != null && threadId > 0) {
-        threadViewModel.loadThread(threadId)
+    // 使用LaunchedEffect设置threadId，确保只在threadId变化时触发
+    LaunchedEffect(threadId) {
+        threadViewModel.setThreadId(threadId)
     }
 
     val uiState by threadViewModel.uiState.collectAsStateWithLifecycle()
@@ -66,9 +67,8 @@ fun ThreadPage(threadId: Long?, di: DI = nmbdi) {
                 }
             },
             onRetryClick = {
-                if (threadId != null) {
-                    threadViewModel.loadThread(threadId)
-                }
+                // 重试时重新设置threadId，触发重新加载
+                threadViewModel.setThreadId(threadId)
             }
         )
 

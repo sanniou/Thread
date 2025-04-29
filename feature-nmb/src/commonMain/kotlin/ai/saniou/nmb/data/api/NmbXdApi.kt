@@ -88,7 +88,7 @@ interface NmbXdApi {
     suspend fun thread(
         @Query("id") id: Long,//串 ID
         @Query("page") page: Long,//页数，默认为 1
-    ): SaniouResponse<List<Thread>>
+    ): SaniouResponse<Thread>
 
     /**
      * 获取最新发的串的链接

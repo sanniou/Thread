@@ -104,6 +104,7 @@ fun HomePage(navController: NavHostController = rememberNavController()) {
             composable(route = "${NmbScreen.Forum.name}/{id}") {
                 val forumId = it.arguments?.getString("id")?.toLongOrNull() ?: 0
                 ForumScreen(
+                    forumId = forumId,
                     onThreadClicked = { threadId ->
                         navController.navigate("${ThreadPageNavigationDestination.route}/${threadId}")
                     },

@@ -42,6 +42,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -64,11 +65,18 @@ fun ForumScreen(
     di: DI = nmbdi,
     onThreadClicked: (Long) -> Unit = {},
     onNewPostClicked: (Long) -> Unit = {},
+    forumId: Long = 0
 ) {
     val forumViewModel: ForumViewModel = viewModel {
         val forumViewModel by di.instance<ForumViewModel>()
         forumViewModel
     }
+
+    // 使用LaunchedEffect设置forumId，确保只在forumId变化时触发
+    LaunchedEffect(forumId) {
+        forumViewModel.setForumId(forumId)
+    }
+
     val forumContent by forumViewModel.uiState.collectAsStateWithLifecycle()
 
     Surface(
@@ -80,11 +88,8 @@ fun ForumScreen(
                     Forum(it, onThreadClicked)
                 },
                 onRetryClick = {
-                    (forumContent as UiStateWrapper.Success<ShowForumUiState>).value?.let {
-                        if (it.id > 0) {
-                            forumViewModel.refreshForum(it.id)
-                        }
-                    }
+                    // 重试时刷新当前论坛
+                    forumViewModel.refreshForum()
                 }
             )
 

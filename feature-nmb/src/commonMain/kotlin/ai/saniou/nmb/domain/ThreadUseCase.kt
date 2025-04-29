@@ -9,7 +9,7 @@ class ThreadUseCase(
 ) {
     suspend operator fun invoke(
         id: Long, page: Long
-    ): List<Thread> {
+    ): Thread {
         return try {
             return when (val threadResponse = forumRepository.thread(id, page)) {
                 is SaniouResponse.Success -> threadResponse.data
@@ -21,7 +21,7 @@ class ThreadUseCase(
             throw e
         }
     }
-    
+
     suspend fun getThreadPo(
         id: Long, page: Long
     ): List<Thread> {
@@ -35,7 +35,7 @@ class ThreadUseCase(
             throw e
         }
     }
-    
+
     suspend fun getReference(id: Long) = try {
         when (val refResponse = forumRepository.ref(id)) {
             is SaniouResponse.Success -> refResponse.data
