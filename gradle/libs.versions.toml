@@ -1,6 +1,8 @@
 [versions]
 kodeinDi = "7.22.0"
 ktorfitLib = "2.1.0"
+kottage = "1.8.0"
+kotlinxDatetime = "0.5.0"
 agp = "8.5.0"
 android-compileSdk = "34"
 android-minSdk = "24"
@@ -25,6 +27,8 @@ uiAndroid = "1.7.4"
 
 [libraries]
 kodein-di = { module = "org.kodein.di:kodein-di", version.ref = "kodeinDi" }
+kottage = { module = "io.github.irgaly.kottage:kottage", version.ref = "kottage" }
+kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDatetime" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }

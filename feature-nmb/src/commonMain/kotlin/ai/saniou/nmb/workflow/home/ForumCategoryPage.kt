@@ -23,6 +23,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults.topAppBarColors
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -48,6 +49,18 @@ fun ForumCategoryPage(di: DI = nmbdi, onThreadClicked: (Long) -> Unit) {
         forumViewModel;
     }
     val forumContent by forumViewModel.uiState.collectAsStateWithLifecycle()
+
+    // 监听当前选中的 forum 并自动加载
+    LaunchedEffect(content.currentForum) {
+        content.currentForum?.let { forumId ->
+            try {
+                val id = forumId.toLong()
+                forumViewModel.setForumId(id)
+            } catch (e: NumberFormatException) {
+                // 处理转换异常
+            }
+        }
+    }
 
     ForumCategoryUi(content, forumContent, forumViewModel, onThreadClicked)
 }
@@ -82,7 +95,6 @@ fun ForumCategoryUi(
                                             modifier = Modifier.fillMaxWidth()
                                                 .clickable {
                                                     uiState.onForumClick(forum.id)
-                                                    forumViewModel.refreshForum()
                                                 }
                                                 .padding(16.dp)
                                                 .padding(start = 16.dp),

@@ -188,6 +188,21 @@ interface NmbXdApi {
     ): SaniouResponse<LastPost>
 
     /**
+     * 查看匿名版公告
+     */
+
+    @GET("https://nmb.ovear.info/nmb-notice.json")
+    suspend fun notice(): SaniouResponse<NmbNotice>
+
+    /**
+     * 随机封面图
+     *
+     * 占位，直接加载即可
+     */
+    @GET("https://nmb.ovear.info/h.php")
+    suspend fun greetImage(): String
+
+    /**
      * 获取验证码图片
      */
     @GET("https://www.nmbxd.com/Member/User/Index/verify.html")
@@ -234,19 +249,4 @@ interface NmbXdApi {
         @Field("email") email: String,
         @Field("verify") verify: String
     ): String
-
-    /**
-     * 查看匿名版公告
-     */
-
-    @GET("https://nmb.ovear.info/nmb-notice.json")
-    suspend fun notice(): SaniouResponse<NmbNotice>
-
-    /**
-     * 随机封面图
-     *
-     * 占位，直接加载即可
-     */
-    @GET("https://nmb.ovear.info/h.php")
-    suspend fun greetImage(): String
 }

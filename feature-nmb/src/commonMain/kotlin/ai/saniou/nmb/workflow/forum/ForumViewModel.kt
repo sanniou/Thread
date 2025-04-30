@@ -66,6 +66,7 @@ class ForumViewModel(private val forumUserCase: ForumUserCase) : ViewModel() {
         val currentId = _forumId.value
         if (currentId != null && currentId > 0) {
             viewModelScope.launch {
+                _uiState.emit(UiStateWrapper.Loading)
                 loadForumInternal(currentId)
             }
         }

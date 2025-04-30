@@ -40,5 +40,9 @@ inline fun <reified T : UiStateWrapper> UiStateWrapper.LoadingWrapper(
         is T -> {
             content(this)
         }
+
+        is UiStateWrapper.Success<*> -> {
+            content(this.value as T)
+        }
     }
 }

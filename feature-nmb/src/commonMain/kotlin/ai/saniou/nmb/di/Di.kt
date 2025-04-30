@@ -5,6 +5,7 @@ import ai.saniou.nmb.data.api.NmbXdApi
 import ai.saniou.nmb.data.api._NmbXdApiImpl
 import ai.saniou.nmb.data.manager.CdnManager
 import ai.saniou.nmb.data.repository.ForumRepository
+import ai.saniou.nmb.data.storage.CategoryStorage
 import ai.saniou.nmb.initializer.AppInitializer
 import ai.saniou.nmb.domain.ForumCategoryUserCase
 import ai.saniou.nmb.domain.ForumUserCase
@@ -16,6 +17,8 @@ import ai.saniou.nmb.workflow.home.ForumCategoryViewModel
 import ai.saniou.nmb.workflow.post.PostViewModel
 import ai.saniou.nmb.workflow.thread.ThreadViewModel
 import ai.saniou.nmb.workflow.user.UserViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import org.kodein.di.DI
 import org.kodein.di.bindConstant
 import org.kodein.di.bindProvider
@@ -38,9 +41,17 @@ val nmbdi = DI {
     // 应用初始化器
     bindSingleton<AppInitializer> { AppInitializer(instance()) }
 
+
+    // 数据存储相关
+    bindSingleton {
+        CategoryStorage(
+            scope = CoroutineScope(Dispatchers.Default)
+        )
+    }
+
     // 论坛分类相关
     bindProvider<ForumCategoryUserCase> { ForumCategoryUserCase(instance()) }
-    bindProvider<ForumCategoryViewModel> { ForumCategoryViewModel(instance(), instance()) }
+    bindProvider<ForumCategoryViewModel> { ForumCategoryViewModel(instance(), instance(), instance()) }
 
     // 论坛相关
     bindProvider { ForumUserCase(instance()) }

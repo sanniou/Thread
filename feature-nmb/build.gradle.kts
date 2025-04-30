@@ -47,6 +47,8 @@ kotlin {
             implementation(compose.components.resources)
             implementation(project(":core-ui"))
             implementation(project(":core-common"))
+            implementation(libs.kottage)
+            implementation(libs.kotlinx.datetime)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
