@@ -3,6 +3,7 @@ package ai.saniou.nmb.workflow.thread
 import ai.saniou.coreui.state.LoadingWrapper
 import ai.saniou.coreui.widgets.PullToRefreshWrapper
 import ai.saniou.nmb.di.nmbdi
+import ai.saniou.nmb.ui.components.NmbImage
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -192,19 +193,15 @@ fun ThreadMainPost(thread: ai.saniou.nmb.data.entity.Thread) {
             // 如果有图片，显示图片
             if (thread.img.isNotEmpty() && thread.ext.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(8.dp))
-                // 这里应该添加图片显示组件
-                Box(
+                NmbImage(
+                    imgPath = thread.img,
+                    ext = thread.ext,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(200.dp)
-                        .border(1.dp, Color.Gray, RoundedCornerShape(4.dp))
-                        .background(Color.LightGray, RoundedCornerShape(4.dp))
-                ) {
-                    Text(
-                        text = "图片: ${thread.img}${thread.ext}",
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                }
+                        .height(200.dp),
+                    isThumb = false,
+                    contentDescription = "帖子图片"
+                )
             }
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -274,19 +271,15 @@ fun ThreadReply(
             // 如果有图片，显示图片
             if (reply.img.isNotEmpty() && reply.ext.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(8.dp))
-                // 这里应该添加图片显示组件
-                Box(
+                NmbImage(
+                    imgPath = reply.img,
+                    ext = reply.ext,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(150.dp)
-                        .border(1.dp, Color.Gray, RoundedCornerShape(4.dp))
-                        .background(Color.LightGray, RoundedCornerShape(4.dp))
-                ) {
-                    Text(
-                        text = "图片: ${reply.img}${reply.ext}",
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                }
+                        .height(150.dp),
+                    isThumb = true,
+                    contentDescription = "回复图片"
+                )
             }
         }
     }

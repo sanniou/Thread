@@ -3,7 +3,9 @@ package ai.saniou.nmb.di
 import ai.saniou.corecommon.data.di.coreCommon
 import ai.saniou.nmb.data.api.NmbXdApi
 import ai.saniou.nmb.data.api._NmbXdApiImpl
+import ai.saniou.nmb.data.manager.CdnManager
 import ai.saniou.nmb.data.repository.ForumRepository
+import ai.saniou.nmb.initializer.AppInitializer
 import ai.saniou.nmb.domain.ForumCategoryUserCase
 import ai.saniou.nmb.domain.ForumUserCase
 import ai.saniou.nmb.domain.PostUseCase
@@ -30,9 +32,15 @@ val nmbdi = DI {
 
     bindSingleton<ForumRepository> { ForumRepository(instance()) }
 
+    // CDN管理器
+    bindSingleton<CdnManager> { CdnManager(instance()) }
+
+    // 应用初始化器
+    bindSingleton<AppInitializer> { AppInitializer(instance()) }
+
     // 论坛分类相关
     bindProvider<ForumCategoryUserCase> { ForumCategoryUserCase(instance()) }
-    bindProvider<ForumCategoryViewModel> { ForumCategoryViewModel(instance()) }
+    bindProvider<ForumCategoryViewModel> { ForumCategoryViewModel(instance(), instance()) }
 
     // 论坛相关
     bindProvider { ForumUserCase(instance()) }

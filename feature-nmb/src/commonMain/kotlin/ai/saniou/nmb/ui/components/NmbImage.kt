@@ -1,5 +1,7 @@
 package ai.saniou.nmb.ui.components
 
+import ai.saniou.nmb.data.manager.CdnManager
+import ai.saniou.nmb.di.nmbdi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -7,13 +9,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ThumbUp
-import androidx.compose.material.icons.filled.Face
+import androidx.compose.material.icons.filled.BrokenImage
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -24,6 +27,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import org.kodein.di.instance
 
 /**
  * NMB图片加载组件
@@ -33,18 +37,22 @@ import androidx.compose.ui.unit.dp
  */
 @Composable
 fun NmbImage(
-    cdnUrl: String,
+    cdnUrl: String = "",
     imgPath: String,
     ext: String,
     modifier: Modifier = Modifier,
     isThumb: Boolean = true,
     contentDescription: String? = null
 ) {
+    // 获取CDN管理器
+    val cdnManager by nmbdi.instance<CdnManager>()
+    val currentCdnUrl by cdnManager.currentCdnUrl.collectAsState()
+
     // 图片加载状态
     var loadState by remember { mutableStateOf(ImageLoadState.LOADING) }
 
     // 构建完整的图片URL
-    val imageUrl = buildImageUrl(cdnUrl, imgPath, ext, isThumb)
+    val imageUrl = cdnManager.buildImageUrl(imgPath, ext, isThumb)
 
     Box(
         modifier = modifier
@@ -117,12 +125,11 @@ fun NmbImage(
 }
 
 /**
- * 构建完整的图片URL
+ * 重试加载图片
  */
-private fun buildImageUrl(cdnUrl: String, imgPath: String, ext: String, isThumb: Boolean): String {
-    val baseUrl = cdnUrl.removeSuffix("/")
-    val path = if (isThumb) "thumb" else "image"
-    return "$baseUrl/$path/$imgPath$ext"
+fun retryLoadImage(cdnManager: CdnManager) {
+    // 切换到下一个CDN地址
+    cdnManager.switchToNextCdn()
 }
 
 /**

@@ -269,7 +269,6 @@ fun ThreadCard(
             if (thread.img.isNotBlank() && thread.ext.isNotBlank()) {
                 Spacer(modifier = Modifier.height(8.dp))
                 NmbImage(
-                    cdnUrl = "https://image.nmb.best",
                     imgPath = thread.img,
                     ext = thread.ext,
                     modifier = Modifier

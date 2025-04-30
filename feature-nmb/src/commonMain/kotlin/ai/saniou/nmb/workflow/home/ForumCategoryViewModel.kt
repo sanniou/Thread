@@ -2,6 +2,7 @@ package ai.saniou.nmb.workflow.home
 
 import ai.saniou.nmb.data.entity.ForumCategory
 import ai.saniou.nmb.domain.ForumCategoryUserCase
+import ai.saniou.nmb.initializer.AppInitializer
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -9,8 +10,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.update
 
-class ForumCategoryViewModel(private val forumCategoryUserCase: ForumCategoryUserCase) :
-    ViewModel() {
+class ForumCategoryViewModel(
+    private val forumCategoryUserCase: ForumCategoryUserCase,
+    private val appInitializer: AppInitializer
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(
         ForumCategoryUiState(
@@ -39,7 +42,10 @@ class ForumCategoryViewModel(private val forumCategoryUserCase: ForumCategoryUse
     )
 
     init {
-        print("init:$this")
+        // 初始化应用
+        appInitializer.initialize()
+
+        // 加载论坛分类
         viewModelScope.launch {
             val forums = forumCategoryUserCase()
             updateUiState { state ->

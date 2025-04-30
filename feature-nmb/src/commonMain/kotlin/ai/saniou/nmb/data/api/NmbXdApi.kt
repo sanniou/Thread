@@ -5,6 +5,7 @@ import ai.saniou.nmb.data.entity.CdnPath
 import ai.saniou.nmb.data.entity.CookieListResponse
 import ai.saniou.nmb.data.entity.Feed
 import ai.saniou.nmb.data.entity.ForumCategory
+import ai.saniou.nmb.data.entity.LastPost
 import ai.saniou.nmb.data.entity.LoginRequest
 import ai.saniou.nmb.data.entity.LoginResponse
 import ai.saniou.nmb.data.entity.NmbNotice
@@ -91,15 +92,6 @@ interface NmbXdApi {
     ): SaniouResponse<Thread>
 
     /**
-     * 获取最新发的串的链接
-     */
-    @GET("getLastPost")
-    suspend fun getLastPost(
-        @Query("id") id: Long,//串 ID
-        @Query("page") page: Long,//页数，默认为 1
-    ): SaniouResponse<List<Thread>>
-
-    /**
      * 查看串（只看 PO）
      *
      * 回复数据中可能会出现 Tips 酱，具体特征可以参见上面的示例。
@@ -118,7 +110,7 @@ interface NmbXdApi {
     @GET("ref")
     suspend fun ref(
         @Query("id") id: Long,//串 ID
-    ): SaniouResponse<List<NmbReference>>
+    ): SaniouResponse<NmbReference>
 
     /**
      * 发串
@@ -144,6 +136,56 @@ interface NmbXdApi {
     suspend fun postReply(
         @Body body: PostReplyRequest
     ): String
+
+    /**
+     * 查看订阅
+     *
+     * 订阅 ID 的字段虽然名为 uuid，但是实际上并不需要遵守 UUID 的格式。包括空字符串在内的任意长度的字符串都可以作为订阅 ID 使用。
+     * 这个 API 同样把所有本来应该返回 Number 的字段弄成了 String，需要注意类型转换问题
+     */
+    @GET("feed")
+    suspend fun feed(
+        @Query("uuid") uuid: String,//订阅 UUID
+        @Query("page") page: Long,//页数，默认为 1
+    ): SaniouResponse<List<Feed>>
+
+    /**
+     * 添加订阅
+     *
+     * 即使已经使用这个订阅 ID 订阅过某个串，再次订阅时仍然会提示订阅成功。并没有办法获取某个串是否已经订阅过。
+     *
+     * response:"订阅大成功→_→" / "该串不存在"
+     */
+    @POST("addFeed")
+    @FormUrlEncoded
+    suspend fun addFeed(
+        @Query uuid: String,//订阅 UUID
+        @Field tid: Long,// 串的 ID
+    ): String
+
+    /**
+     * 取消订阅
+     *
+     * 即使并没有使用这个订阅 ID 订阅过某个串或串本身不存在，取消订阅时仍然会提示取消订阅成功。
+     *
+     * response:"取消订阅成功!"
+     */
+    @POST("delFeed")
+    @FormUrlEncoded
+    suspend fun delFeed(
+        @Query uuid: String,//订阅 UUID
+        @Field tid: Long,// 串的 ID
+    ): String
+
+    /**
+     * 获取最新发的串的链接
+     * 只能在发串/回复后的大约 3 秒内从这个 API 查到数据，否则会返回 []。
+     */
+    @GET("getLastPost")
+    suspend fun getLastPost(
+        @Query("id") id: Long,//串 ID
+        @Query("page") page: Long,//页数，默认为 1
+    ): SaniouResponse<LastPost>
 
     /**
      * 获取验证码图片
@@ -191,46 +233,6 @@ interface NmbXdApi {
     suspend fun resetPassword(
         @Field("email") email: String,
         @Field("verify") verify: String
-    ): String
-
-    /**
-     * 查看订阅
-     *
-     * 订阅 ID 的字段虽然名为 uuid，但是实际上并不需要遵守 UUID 的格式。包括空字符串在内的任意长度的字符串都可以作为订阅 ID 使用。
-     * 这个 API 同样把所有本来应该返回 Number 的字段弄成了 String，需要注意类型转换问题
-     */
-    @GET("feed")
-    suspend fun feed(
-        @Query("uuid") uuid: String,//订阅 UUID
-        @Query("page") page: Long,//页数，默认为 1
-    ): SaniouResponse<List<Feed>>
-
-    /**
-     * 添加订阅
-     *
-     * 即使已经使用这个订阅 ID 订阅过某个串，再次订阅时仍然会提示订阅成功。并没有办法获取某个串是否已经订阅过。
-     *
-     * response:"订阅大成功→_→" / "该串不存在"
-     */
-    @POST("addFeed")
-    @FormUrlEncoded
-    suspend fun addFeed(
-        @Query uuid: String,//订阅 UUID
-        @Field tid: Long,// 串的 ID
-    ): String
-
-    /**
-     * 取消订阅
-     *
-     * 即使并没有使用这个订阅 ID 订阅过某个串或串本身不存在，取消订阅时仍然会提示取消订阅成功。
-     *
-     * response:"取消订阅成功!"
-     */
-    @POST("delFeed")
-    @FormUrlEncoded
-    suspend fun delFeed(
-        @Query uuid: String,//订阅 UUID
-        @Field tid: Long,// 串的 ID
     ): String
 
     /**
