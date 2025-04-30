@@ -1,11 +1,7 @@
 package ai.saniou.nmb.workflow.home
 
-import ai.saniou.coreui.state.LoadingWrapper
-import ai.saniou.coreui.state.UiStateWrapper
 import ai.saniou.nmb.di.nmbdi
-import ai.saniou.nmb.workflow.forum.Forum
-import ai.saniou.nmb.workflow.forum.ForumViewModel
-import ai.saniou.nmb.workflow.forum.ShowForumUiState
+import ai.saniou.nmb.workflow.forum.ForumContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -20,31 +16,27 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.BottomAppBar
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.DrawerState
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults.topAppBarColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.kodein.di.DI
 import org.kodein.di.instance
@@ -54,38 +46,33 @@ import org.kodein.di.instance
 fun ForumCategoryPage(
     di: DI = nmbdi,
     onThreadClicked: (Long) -> Unit,
+    onNewPostClicked: (Long) -> Unit,
+    onUpdateTitle: ((String) -> Unit)?,
     drawerState: DrawerState
 ) {
     val forumCategoryViewModel: ForumCategoryViewModel = viewModel {
         val forumCategoryViewModel by di.instance<ForumCategoryViewModel>()
         forumCategoryViewModel;
     }
-    val content by forumCategoryViewModel.uiState.collectAsStateWithLifecycle()
+    val categoryContent by forumCategoryViewModel.uiState.collectAsStateWithLifecycle()
 
-    val forumViewModel: ForumViewModel = viewModel {
-        val forumViewModel by di.instance<ForumViewModel>()
-        forumViewModel;
-    }
-    val forumContent by forumViewModel.uiState.collectAsStateWithLifecycle()
+    // 创建协程作用域用于控制抽屉
+    val scope = rememberCoroutineScope()
 
     // 监听当前选中的 forum 并自动加载
-    LaunchedEffect(content.currentForum) {
-        content.currentForum?.let { forumId ->
-            try {
-                val id = forumId.toLong()
-                forumViewModel.setForumId(id)
-            } catch (e: NumberFormatException) {
-                // 处理转换异常
-            }
+    LaunchedEffect(categoryContent.currentForum) {
+        categoryContent.currentForum?.let { forumId ->
+            onUpdateTitle?.invoke(categoryContent.currentForum ?: "")
         }
     }
 
     ForumCategoryUi(
-        uiState = content,
-        forumContent = forumContent,
-        forumViewModel = forumViewModel,
+        uiState = categoryContent,
         onThreadClicked = onThreadClicked,
-        drawerState = drawerState
+        onNewPostClicked = onNewPostClicked,
+        onUpdateTitle = onUpdateTitle,
+        drawerState = drawerState,
+        scope = scope
     )
 }
 
@@ -93,10 +80,11 @@ fun ForumCategoryPage(
 @Preview
 fun ForumCategoryUi(
     uiState: ForumCategoryUiState,
-    forumContent: UiStateWrapper,
-    forumViewModel: ForumViewModel,
     onThreadClicked: (Long) -> Unit,
-    drawerState: DrawerState
+    onNewPostClicked: (Long) -> Unit,
+    onUpdateTitle: ((String) -> Unit)?,
+    drawerState: DrawerState,
+    scope: CoroutineScope = rememberCoroutineScope()
 ) {
     MaterialTheme {
         ModalNavigationDrawer(
@@ -143,7 +131,7 @@ fun ForumCategoryUi(
                                     // 分类图标
                                     Icon(
                                         imageVector = if (uiState.expandCategory == category.id)
-                                            Icons.Default.KeyboardArrowDown else Icons.Default.KeyboardArrowRight,
+                                            Icons.Default.KeyboardArrowDown else Icons.AutoMirrored.Filled.KeyboardArrowRight,
                                         contentDescription = null,
                                         tint = if (uiState.expandCategory == category.id)
                                             MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
@@ -168,7 +156,12 @@ fun ForumCategoryUi(
                                                 modifier = Modifier
                                                     .fillMaxWidth()
                                                     .clickable {
+                                                        // 选择论坛
                                                         uiState.onForumClick(forum.id)
+                                                        // 关闭抽屉
+                                                        scope.launch {
+                                                            drawerState.close()
+                                                        }
                                                     }
                                                     .padding(horizontal = 16.dp, vertical = 12.dp)
                                                     .padding(start = 32.dp),
@@ -206,23 +199,25 @@ fun ForumCategoryUi(
                 }
             }
         ) {
-            // 内容区域
-            forumContent.LoadingWrapper<ShowForumUiState>(
-                content = {
-                    Forum(it, onThreadClicked)
-                },
-                onRetryClick = {
-                    // 重试逻辑
-                    uiState.currentForum?.let { forumId ->
-                        try {
-                            val id = forumId.toLong()
-                            forumViewModel.setForumId(id)
-                        } catch (e: NumberFormatException) {
-                            // 处理转换异常
-                        }
-                    }
+            // 内容区域 - 使用可复用的ForumContent组件
+            uiState.currentForum?.let { forumId ->
+                val id = forumId.toLong()
+                ForumContent(
+                    forumId = id,
+                    onThreadClicked = onThreadClicked,
+                    onNewPostClicked = onNewPostClicked,
+                    onUpdateTitle = onUpdateTitle,
+                    showFloatingActionButton = true
+                )
+            } ?: run {
+                // 未选择论坛时显示提示
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("请从左侧选择一个论坛")
                 }
-            )
+            }
         }
     }
 }

@@ -23,7 +23,10 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import kotlinx.coroutines.launch
@@ -48,10 +51,14 @@ fun SaniouAppBar(
     onUserIconClick: () -> Unit,
     onMenuClick: () -> Unit,
     showMenuIcon: Boolean = true,
+    isDrawerOpen: Boolean = false,
+    customTitle: String? = null,
     modifier: Modifier = Modifier
 ) {
     TopAppBar(
-        title = { Text(currentScreen.name) },
+        title = {
+            Text(customTitle ?: currentScreen.name)
+        },
         colors = TopAppBarDefaults.mediumTopAppBarColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer
         ),
@@ -66,9 +73,13 @@ fun SaniouAppBar(
                 }
             } else if (showMenuIcon) {
                 IconButton(onClick = onMenuClick) {
+                    // 根据抽屉状态显示不同图标
                     Icon(
-                        imageVector = Icons.Default.Menu,
-                        contentDescription = "打开菜单"
+                        imageVector = if (isDrawerOpen)
+                            Icons.AutoMirrored.Filled.ArrowBack
+                        else
+                            Icons.Default.Menu,
+                        contentDescription = if (isDrawerOpen) "关闭菜单" else "打开菜单"
                     )
                 }
             }
@@ -97,6 +108,18 @@ fun HomePage(navController: NavHostController = rememberNavController()) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
+    // 检查抽屉是否打开
+    val isDrawerOpen = drawerState.isOpen
+
+    // 自定义标题状态
+    val customTitle = remember { mutableStateOf<String?>(null) }
+
+    // 监听导航变化，重置自定义标题
+    LaunchedEffect(backStackEntry) {
+        // 当导航到新页面时，重置自定义标题
+        customTitle.value = null
+    }
+
     Scaffold(
         topBar = {
             SaniouAppBar(
@@ -106,11 +129,17 @@ fun HomePage(navController: NavHostController = rememberNavController()) {
                 onUserIconClick = { navController.navigate(NmbScreen.User.name) },
                 onMenuClick = {
                     scope.launch {
-                        drawerState.open()
+                        if (drawerState.isOpen) {
+                            drawerState.close()
+                        } else {
+                            drawerState.open()
+                        }
                     }
                 },
                 // 只在论坛分类页面显示菜单图标
-                showMenuIcon = currentScreen == NmbScreen.ForumCategory
+                showMenuIcon = currentScreen == NmbScreen.ForumCategory,
+                isDrawerOpen = isDrawerOpen,
+                customTitle = customTitle.value
             )
         }
     ) { innerPadding ->
@@ -124,7 +153,13 @@ fun HomePage(navController: NavHostController = rememberNavController()) {
             composable(route = NmbScreen.ForumCategory.name) {
                 ForumCategoryPage(
                     onThreadClicked = { navController.navigate("${ThreadPageNavigationDestination.route}/${it}") },
-                    drawerState = drawerState
+                    onNewPostClicked = { fid ->
+                        navController.navigate("${NmbScreen.Post.name}/${fid}")
+                    },
+                    onUpdateTitle = { title ->
+                        customTitle.value = title
+                    },
+                    drawerState = drawerState,
                 )
             }
 
@@ -137,6 +172,9 @@ fun HomePage(navController: NavHostController = rememberNavController()) {
                     },
                     onNewPostClicked = { fid ->
                         navController.navigate("${NmbScreen.Post.name}/${fid}")
+                    },
+                    onUpdateTitle = { title ->
+                        customTitle.value = title
                     }
                 )
             }
@@ -147,7 +185,8 @@ fun HomePage(navController: NavHostController = rememberNavController()) {
                     type = NavType.LongType
                 })
             ) {
-                val threadId = backStackEntry?.arguments?.getLong(ThreadPageNavigationDestination.nameArg)
+                val threadId =
+                    backStackEntry?.arguments?.getLong(ThreadPageNavigationDestination.nameArg)
                 ThreadPage(threadId)
             }
 

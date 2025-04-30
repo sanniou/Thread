@@ -38,6 +38,7 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -48,6 +49,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -64,85 +66,30 @@ import org.kodein.di.DI
 import org.kodein.di.instance
 
 
+/**
+ * ForumScreen 作为一个轻量级包装器，用于独立页面导航
+ *
+ * 该组件主要用于从非Drawer入口（如搜索结果、收藏列表等）进入论坛
+ */
 @Composable
 fun ForumScreen(
     di: DI = nmbdi,
     onThreadClicked: (Long) -> Unit = {},
     onNewPostClicked: (Long) -> Unit = {},
-    forumId: Long = 0
+    forumId: Long = 0,
+    onUpdateTitle: ((String) -> Unit)? = null
 ) {
-    val forumViewModel: ForumViewModel = viewModel {
-        val forumViewModel by di.instance<ForumViewModel>()
-        forumViewModel
-    }
-
-    // 使用LaunchedEffect设置forumId，确保只在forumId变化时触发
-    LaunchedEffect(forumId) {
-        forumViewModel.setForumId(forumId)
-    }
-
-    val forumContent by forumViewModel.uiState.collectAsStateWithLifecycle()
-
     Surface(
         color = MaterialTheme.colorScheme.background
     ) {
-        Box(modifier = Modifier.fillMaxWidth()) {
-            forumContent.LoadingWrapper<ShowForumUiState>(
-                content = {
-                    Forum(it, onThreadClicked)
-                },
-                error = {
-                    // 错误状态显示
-                    Box(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier.padding(16.dp)
-                        ) {
-                            Text(
-                                text = "加载失败",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.error
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Button(
-                                onClick = { forumViewModel.refreshForum() }
-                            ) {
-                                Text("重试")
-                            }
-                        }
-                    }
-                },
-                loading = {
-                    // 加载状态显示骨架屏
-                    SkeletonLoader()
-                },
-                onRetryClick = {
-                    // 重试时刷新当前论坛
-                    forumViewModel.refreshForum()
-                }
-            )
-
-            // 添加发帖按钮
-            if (forumContent is UiStateWrapper.Success<*>) {
-                val state = (forumContent as UiStateWrapper.Success<ShowForumUiState>).value!!
-                if (state.id > 0) {
-                    FloatingActionButton(
-                        onClick = { onNewPostClicked(state.id) },
-                        modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .padding(16.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = "发布新帖"
-                        )
-                    }
-                }
-            }
-        }
+        // 使用可复用的ForumContent组件
+        ForumContent(
+            forumId = forumId,
+            onThreadClicked = onThreadClicked,
+            onNewPostClicked = onNewPostClicked,
+            onUpdateTitle = onUpdateTitle,
+            showFloatingActionButton = true
+        )
     }
 }
 
@@ -213,6 +160,23 @@ fun Forum(
             val scrollState = rememberLazyListState()
             val coroutineScope = rememberCoroutineScope()
 
+            // 监听滚动到底部，加载更多
+            LaunchedEffect(scrollState) {
+                snapshotFlow {
+                    val layoutInfo = scrollState.layoutInfo
+                    val totalItemsCount = layoutInfo.totalItemsCount
+                    val lastVisibleItemIndex = (layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0) + 1
+
+                    // 当最后一个可见项是列表中的最后一项，且列表不为空
+                    lastVisibleItemIndex >= totalItemsCount && totalItemsCount > 0
+                }.collect { isAtBottom ->
+                    if (isAtBottom) {
+                        // 加载下一页
+                        uiState.onLoadNextPage()
+                    }
+                }
+            }
+
             LazyColumn(
                 state = scrollState,
                 modifier = Modifier
@@ -232,6 +196,23 @@ fun Forum(
                         onClick = { onThreadClicked(thread.id) }
                     )
                     Spacer(modifier = Modifier.height(8.dp))
+                }
+
+                // 底部加载指示器
+                item {
+                    if (uiState.showF.isNotEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                strokeWidth = 2.dp
+                            )
+                        }
+                    }
                 }
             }
         }

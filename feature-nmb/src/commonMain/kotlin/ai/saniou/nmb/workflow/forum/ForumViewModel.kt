@@ -28,6 +28,9 @@ class ForumViewModel(private val forumUserCase: ForumUserCase) : ViewModel() {
             onClickThread = {
                 // 处理帖子点击事件
             },
+            onLoadNextPage = {
+                loadNextPage()
+            }
         )
     )
 
@@ -77,11 +80,21 @@ class ForumViewModel(private val forumUserCase: ForumUserCase) : ViewModel() {
         try {
             _uiState.emit(UiStateWrapper.Loading)
             val dataList = forumUserCase(fid, 1)
+
+            // 获取论坛名称 - 如果有数据，使用第一个帖子的fid来确定论坛名称
+            var forumName = "论坛 $fid"
+            if (dataList.isNotEmpty()) {
+                // 这里可以从数据中获取论坛名称，或者从其他地方获取
+                // 暂时使用简单的名称
+                forumName = "论坛 $fid"
+            }
+
             updateUiState { state ->
                 state.copy(
                     id = fid,
                     showF = dataList,
                     page = 1,
+                    forumName = forumName
                 )
             }
             _uiState.emit(UiStateWrapper.Success(dataUiState.value))
@@ -129,6 +142,8 @@ data class ShowForumUiState(
     var showF: List<ShowF>,
     var page: Long = 1,
     var id: Long = 0,
+    var forumName: String = "",
     var onUpdateForumId: (Long) -> Unit,
     var onClickThread: (Long) -> Unit,
+    var onLoadNextPage: () -> Unit = {},
 ) : UiStateWrapper

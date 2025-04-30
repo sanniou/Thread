@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -28,6 +29,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -41,6 +43,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -309,7 +312,27 @@ fun ThreadContent(
             }
         } else {
             // 有回复时显示列表
+            val scrollState = rememberLazyListState()
+
+            // 监听滚动到底部，加载更多
+            LaunchedEffect(scrollState) {
+                snapshotFlow {
+                    val layoutInfo = scrollState.layoutInfo
+                    val totalItemsCount = layoutInfo.totalItemsCount
+                    val lastVisibleItemIndex = (layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0) + 1
+
+                    // 当最后一个可见项是列表中的最后一项，且列表不为空
+                    lastVisibleItemIndex >= totalItemsCount && totalItemsCount > 0
+                }.collect { isAtBottom ->
+                    if (isAtBottom) {
+                        // 加载下一页
+                        uiState.onLoadNextPage()
+                    }
+                }
+            }
+
             LazyColumn(
+                state = scrollState,
                 modifier = Modifier.padding(8.dp)
             ) {
                 // 主帖
@@ -322,6 +345,23 @@ fun ThreadContent(
                 items(uiState.thread.replies) { reply ->
                     ThreadReply(reply, onReplyClicked)
                     Spacer(modifier = Modifier.height(8.dp))
+                }
+
+                // 底部加载指示器
+                item {
+                    if (uiState.thread.replies.isNotEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                strokeWidth = 2.dp
+                            )
+                        }
+                    }
                 }
             }
         }

@@ -72,8 +72,8 @@ kotlin {
             implementation(libs.ktor.client.encoding)
             api(libs.ktor.serialization.kotlinx.json)
             api(libs.kodein.di)
-            api(libs.paging.compose.common)
-            api(libs.paging.common)
+//            api(libs.paging.compose.common)
+//            api(libs.paging.common)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
