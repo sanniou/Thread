@@ -32,7 +32,7 @@ import androidx.compose.ui.window.Dialog
 
 /**
  * 引用弹窗组件
- * 
+ *
  * 用于显示引用的回复内容
  */
 @Composable
@@ -65,7 +65,7 @@ fun ReferencePopup(
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.weight(1f)
                     )
-                    
+
                     IconButton(onClick = onDismiss) {
                         Icon(
                             imageVector = Icons.Default.Close,
@@ -73,7 +73,7 @@ fun ReferencePopup(
                         )
                     }
                 }
-                
+
                 // 内容区域
                 Box(
                     modifier = Modifier
@@ -89,6 +89,7 @@ fun ReferencePopup(
                                 strokeWidth = 2.dp
                             )
                         }
+
                         error != null -> {
                             // 加载失败
                             Text(
@@ -97,6 +98,7 @@ fun ReferencePopup(
                                 modifier = Modifier.align(Alignment.Center)
                             )
                         }
+
                         reply != null -> {
                             // 显示引用内容
                             Column(
@@ -116,17 +118,17 @@ fun ReferencePopup(
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
-                                    
+
                                     Spacer(modifier = Modifier.width(8.dp))
-                                    
+
                                     Text(
-                                        text = reply.userHash,
+                                        text = reply.userHash ?: "",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.primary
                                     )
-                                    
+
                                     Spacer(modifier = Modifier.width(8.dp))
-                                    
+
                                     Text(
                                         text = reply.now,
                                         style = MaterialTheme.typography.bodySmall,
@@ -135,16 +137,16 @@ fun ReferencePopup(
                                         overflow = TextOverflow.Ellipsis
                                     )
                                 }
-                                
+
                                 Spacer(modifier = Modifier.padding(4.dp))
-                                
+
                                 // 回复内容
                                 HtmlText(
                                     text = reply.content,
                                     style = MaterialTheme.typography.bodyMedium,
                                     onReferenceClick = null // 不允许在引用中再次引用
                                 )
-                                
+
                                 // 如果有图片，显示图片
                                 if (reply.img.isNotEmpty() && reply.ext.isNotEmpty()) {
                                     Spacer(modifier = Modifier.padding(4.dp))
@@ -154,12 +156,12 @@ fun ReferencePopup(
                                         modifier = Modifier.fillMaxWidth(),
                                         isThumb = true,
                                         contentDescription = "回复图片",
-                                        isThreadContext = true,
-                                        heightWrap = true
+                                        autosize = true,
                                     )
                                 }
                             }
                         }
+
                         else -> {
                             // 未找到引用
                             Text(

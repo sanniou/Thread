@@ -5,10 +5,7 @@ import ai.saniou.nmb.di.nmbdi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
@@ -17,27 +14,15 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import coil3.ImageLoader
-import coil3.PlatformContext
-import coil3.annotation.ExperimentalCoilApi
-import coil3.compose.AsyncImage
-import coil3.compose.AsyncImagePainter
 import coil3.compose.LocalPlatformContext
 import coil3.compose.SubcomposeAsyncImage
-import coil3.compose.rememberAsyncImagePainter
 import coil3.request.CachePolicy
 import coil3.request.ImageRequest
 import coil3.request.crossfade
@@ -48,20 +33,25 @@ import org.kodein.di.instance
  * NMB图片加载组件
  *
  * 使用Coil 3.1.0实现的图片加载组件
+ *
+ * @param imgPath 图片路径
+ * @param ext 图片扩展名
+ * @param modifier 修饰符
+ * @param isThumb 是否为缩略图
+ * @param contentDescription 内容描述
+ * @param autosize 是否在帖子详情页面中显示，如果为true则使用ContentScale.FillWidth显示图片，否则使用ContentScale.Crop裁剪显示
  */
-@OptIn(ExperimentalCoilApi::class)
 @Composable
 fun NmbImage(
-    cdnUrl: String = "",
     imgPath: String,
     ext: String,
     modifier: Modifier = Modifier,
     isThumb: Boolean = true,
-    contentDescription: String? = null
+    contentDescription: String? = null,
+    autosize: Boolean = false,
 ) {
     // 获取CDN管理器
     val cdnManager by nmbdi.instance<CdnManager>()
-    val currentCdnUrl by cdnManager.currentCdnUrl.collectAsState()
     val coroutineScope = rememberCoroutineScope()
 
     // 构建完整的图片URL
@@ -70,12 +60,13 @@ fun NmbImage(
     // 记住是否正在重试
     var isRetrying by remember { mutableStateOf(false) }
 
-    Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(4.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-            .border(1.dp, Color.Gray.copy(alpha = 0.5f), RoundedCornerShape(4.dp))
-    ) {
+    // 准备修饰符
+    val boxModifier = modifier
+        .clip(RoundedCornerShape(4.dp))
+        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+        .border(1.dp, Color.Gray.copy(alpha = 0.5f), RoundedCornerShape(4.dp))
+
+    Box(modifier = boxModifier) {
         // 使用SubcomposeAsyncImage可以自定义加载、错误和成功状态
         SubcomposeAsyncImage(
             model = ImageRequest.Builder(LocalPlatformContext.current)
@@ -85,8 +76,14 @@ fun NmbImage(
                 .diskCachePolicy(CachePolicy.ENABLED)
                 .build(),
             contentDescription = contentDescription,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize(),
+            contentScale = if (autosize) ContentScale.FillWidth else ContentScale.Crop,
+            modifier = if (autosize) {
+                // 自适应高度时，使用wrapContentHeight
+                Modifier.fillMaxWidth()
+            } else {
+                // 固定高度时，使用fillMaxSize
+                Modifier.fillMaxSize()
+            },
             loading = {
                 // 加载中状态
                 Box(
@@ -143,12 +140,4 @@ fun NmbImage(
             }
         )
     }
-}
-
-/**
- * 重试加载图片
- */
-fun retryLoadImage(cdnManager: CdnManager) {
-    // 切换到下一个CDN地址
-    cdnManager.switchToNextCdn()
 }

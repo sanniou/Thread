@@ -1,13 +1,23 @@
 package ai.saniou.nmb.workflow.thread
 
 import ai.saniou.coreui.state.LoadingWrapper
+import ai.saniou.coreui.state.UiStateWrapper
 import ai.saniou.coreui.widgets.PullToRefreshWrapper
+import ai.saniou.nmb.data.entity.Reply
+import ai.saniou.nmb.data.entity.Thread
+import ai.saniou.nmb.data.entity.ThreadReply
 import ai.saniou.nmb.di.nmbdi
+import ai.saniou.nmb.ui.components.HtmlText
 import ai.saniou.nmb.ui.components.NmbImage
-import ai.saniou.nmb.ui.components.SkeletonLoader
+import ai.saniou.nmb.ui.components.PageJumpDialog
+import ai.saniou.nmb.ui.components.ReferencePopup
 import ai.saniou.nmb.ui.components.SkeletonReplyItem
+import ai.saniou.nmb.ui.components.ThreadMenu
+import ai.saniou.nmb.workflow.reference.ReferenceViewModel
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,15 +34,15 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.animation.core.RepeatMode
@@ -40,10 +50,7 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -51,19 +58,31 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.kodein.di.DI
 import org.kodein.di.instance
 
 @Composable
-fun ThreadPage(threadId: Long?, di: DI = nmbdi) {
+fun ThreadPage(
+    threadId: Long?,
+    di: DI = nmbdi,
+    onUpdateTitle: ((String) -> Unit)? = null,
+    onSetupMenuButton: ((@Composable () -> Unit) -> Unit)? = null
+) {
     val threadViewModel: ThreadViewModel = viewModel {
         val viewModel by di.instance<ThreadViewModel>()
+        viewModel
+    }
+
+    // 引用ViewModel
+    val referenceViewModel: ReferenceViewModel = viewModel {
+        val viewModel by di.instance<ReferenceViewModel>()
         viewModel
     }
 
@@ -74,13 +93,64 @@ fun ThreadPage(threadId: Long?, di: DI = nmbdi) {
 
     val uiState by threadViewModel.uiState.collectAsStateWithLifecycle()
 
+    // 菜单状态
+    var showMenu by remember { mutableStateOf(false) }
+    var showJumpDialog by remember { mutableStateOf(false) }
+
+    // 引用弹窗状态
+    var showReferencePopup by remember { mutableStateOf(false) }
+    var currentReferenceId by remember { mutableStateOf(0L) }
+    val referenceState by referenceViewModel.uiState.collectAsStateWithLifecycle()
+
+    // 复制链接的处理
+    val clipboardManager = LocalClipboardManager.current
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // 监听状态变化，更新标题
+    LaunchedEffect(uiState) {
+        if (uiState is UiStateWrapper.Success<*>) {
+            val state = (uiState as UiStateWrapper.Success<ThreadUiState>).value!!
+            // 使用HTML标签来实现大标题和小标题的样式
+            val title = buildString {
+                append("<b>No.${threadId}</b>")
+                if (state.forumName.isNotBlank()) {
+                    append("<br><small>${state.forumName}</small>")
+                }
+            }
+            onUpdateTitle?.invoke(title)
+        }
+    }
+
+    // 设置菜单按钮
+    LaunchedEffect(Unit) {
+        onSetupMenuButton?.invoke {
+            IconButton(onClick = { showMenu = true }) {
+                Icon(
+                    imageVector = Icons.Default.MoreVert,
+                    contentDescription = "菜单"
+                )
+            }
+        }
+    }
+
     Box {
         uiState.LoadingWrapper<ThreadUiState>(
             content = { state ->
-                ThreadContent(state) { replyId ->
-                    // 处理回复点击
-                    threadViewModel.onReplyClicked(replyId)
-                }
+                ThreadContent(
+                    uiState = state,
+                    onReplyClicked = { replyId ->
+                        // 处理回复点击
+                        threadViewModel.onReplyClicked(replyId)
+                    },
+                    function = { showMenu = true },
+                    refClick = { refId ->
+                        // 显示引用弹窗
+                        currentReferenceId = refId
+                        referenceViewModel.getReference(refId)
+                        showReferencePopup = true
+                    }
+                )
             },
             error = {
                 // 错误状态显示
@@ -235,27 +305,68 @@ fun ThreadPage(threadId: Long?, di: DI = nmbdi) {
                 threadViewModel.setThreadId(threadId)
             }
         )
+    }
 
-        // 添加回复按钮
-        FloatingActionButton(
-            onClick = {
-                if (threadId != null) {
-                    threadViewModel.navigateToReply(threadId)
+    // 显示菜单
+    if (showMenu && uiState is UiStateWrapper.Success<*>) {
+        val state = (uiState as UiStateWrapper.Success<ThreadUiState>).value!!
+        ThreadMenu(
+            expanded = showMenu,
+            onDismissRequest = { showMenu = false },
+            onJumpToPage = { showJumpDialog = true },
+            onTogglePoOnly = { state.onTogglePoOnly() },
+            onToggleSubscribe = { state.onToggleSubscribe(it) },
+            onCopyLink = {
+                // 复制帖子链接
+                val url = "https://nmb.com/t/${threadId}"
+                clipboardManager.setText(AnnotatedString(url))
+                scope.launch {
+                    snackbarHostState.showSnackbar("链接已复制到剪贴板")
                 }
             },
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(16.dp)
-        ) {
-            Icon(Icons.Default.Edit, contentDescription = "回复")
-        }
+            isSubscribed = state.isSubscribed,
+            isPoOnlyMode = state.isPoOnlyMode
+        )
+    }
+
+    // 显示跳转页面对话框
+    if (showJumpDialog && uiState is UiStateWrapper.Success<*>) {
+        val state = (uiState as UiStateWrapper.Success<ThreadUiState>).value!!
+        PageJumpDialog(
+            currentPage = state.currentPage,
+            totalPages = state.totalPages,
+            onDismissRequest = { showJumpDialog = false },
+            onJumpToPage = { page ->
+                state.onJumpToPage(page)
+            }
+        )
+    }
+
+    // 显示引用弹窗
+    if (showReferencePopup) {
+        ReferencePopup(
+            refId = currentReferenceId,
+            reply = if (referenceState is UiStateWrapper.Success<*>) {
+                (referenceState as UiStateWrapper.Success<Reply>).value
+            } else null,
+            isLoading = referenceState is UiStateWrapper.Loading,
+            error = if (referenceState is UiStateWrapper.Error) {
+                (referenceState as UiStateWrapper.Error).message
+            } else null,
+            onDismiss = {
+                showReferencePopup = false
+                referenceViewModel.clear()
+            }
+        )
     }
 }
 
 @Composable
 fun ThreadContent(
     uiState: ThreadUiState,
-    onReplyClicked: (Long) -> Unit
+    onReplyClicked: (Long) -> Unit,
+    function: () -> Unit,
+    refClick: (Long) -> Unit
 ) {
     PullToRefreshWrapper(
         onRefreshTrigger = {
@@ -274,7 +385,7 @@ fun ThreadContent(
                     modifier = Modifier.padding(32.dp)
                 ) {
                     // 主帖
-                    ThreadMainPost(uiState.thread)
+                    ThreadMainPost(uiState.thread, refClick = refClick)
 
                     Spacer(modifier = Modifier.height(32.dp))
 
@@ -337,19 +448,23 @@ fun ThreadContent(
             ) {
                 // 主帖
                 item {
-                    ThreadMainPost(uiState.thread)
+                    ThreadMainPost(
+                        thread = uiState.thread,
+                        forumName = "",
+                        refClick = refClick
+                    )
                     Spacer(modifier = Modifier.height(16.dp))
                 }
 
                 // 回复列表
                 items(uiState.thread.replies) { reply ->
-                    ThreadReply(reply, onReplyClicked)
+                    ThreadReply(reply, onReplyClicked, refClick)
                     Spacer(modifier = Modifier.height(8.dp))
                 }
 
                 // 底部加载指示器
                 item {
-                    if (uiState.thread.replies.isNotEmpty()) {
+                    if (uiState.thread.replies.isNotEmpty() && uiState.hasMoreData) {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -361,6 +476,20 @@ fun ThreadContent(
                                 strokeWidth = 2.dp
                             )
                         }
+                    } else if (uiState.thread.replies.isNotEmpty()) {
+                        // 显示已经加载完所有数据的提示
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "已加载全部回复",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                            )
+                        }
                     }
                 }
             }
@@ -369,7 +498,12 @@ fun ThreadContent(
 }
 
 @Composable
-fun ThreadMainPost(thread: ai.saniou.nmb.data.entity.Thread) {
+fun ThreadMainPost(
+    thread: Thread,
+    forumName: String = "",
+    onMenuClick: () -> Unit = {},
+    refClick: (Long) -> Unit
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
@@ -398,12 +532,31 @@ fun ThreadMainPost(thread: ai.saniou.nmb.data.entity.Thread) {
 
                 Spacer(modifier = Modifier.width(8.dp))
 
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
+                    // 大标题 = 帖子号码
                     Text(
-                        text = thread.title,
+                        text = "No.${thread.id}",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
+
+                    // 小标题 = 论坛名称
+                    if (forumName.isNotBlank()) {
+                        Text(
+                            text = forumName,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+
+                    // 帖子标题
+                    if (thread.title.isNotBlank() && thread.title != "无标题") {
+                        Text(
+                            text = thread.title,
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
 
                     Row {
                         Text(
@@ -429,16 +582,19 @@ fun ThreadMainPost(thread: ai.saniou.nmb.data.entity.Thread) {
                         )
                     }
                 }
+
+                // 不再显示菜单按钮，因为已经移到顶部应用栏
             }
 
             Spacer(modifier = Modifier.height(8.dp))
             Divider()
             Spacer(modifier = Modifier.height(8.dp))
 
-            // 内容
-            Text(
+            // 内容 - 使用HtmlText支持HTML标签
+            HtmlText(
                 text = thread.content,
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
+                onReferenceClick = refClick
             )
 
             // 如果有图片，显示图片
@@ -447,11 +603,10 @@ fun ThreadMainPost(thread: ai.saniou.nmb.data.entity.Thread) {
                 NmbImage(
                     imgPath = thread.img,
                     ext = thread.ext,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp),
+                    modifier = Modifier.fillMaxWidth(),
                     isThumb = false,
-                    contentDescription = "帖子图片"
+                    contentDescription = "帖子图片",
+                    autosize = true,
                 )
             }
 
@@ -469,8 +624,9 @@ fun ThreadMainPost(thread: ai.saniou.nmb.data.entity.Thread) {
 
 @Composable
 fun ThreadReply(
-    reply: ai.saniou.nmb.data.entity.ThreadReply,
-    onReplyClicked: (Long) -> Unit
+    reply: ThreadReply,
+    onReplyClicked: (Long) -> Unit,
+    refClick: (Long) -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -484,39 +640,53 @@ fun ThreadReply(
         Column(modifier = Modifier.padding(12.dp)) {
             // 回复者信息
             Row(
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
             ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Row {
+                        Text(
+                            text = reply.name,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        Text(
+                            text = reply.userHash,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        Text(
+                            text = reply.now,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+
+                // 显示回复号码
                 Text(
-                    text = reply.name,
+                    text = "No.${reply.id}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                Text(
-                    text = reply.userHash,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                Text(
-                    text = reply.now,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold
                 )
             }
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            // 回复内容
-            Text(
+            // 回复内容 - 使用HtmlText支持HTML标签
+            HtmlText(
                 text = reply.content,
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
+                onReferenceClick = refClick
             )
 
             // 如果有图片，显示图片
@@ -525,11 +695,10 @@ fun ThreadReply(
                 NmbImage(
                     imgPath = reply.img,
                     ext = reply.ext,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(150.dp),
+                    modifier = Modifier.fillMaxWidth(),
                     isThumb = true,
-                    contentDescription = "回复图片"
+                    contentDescription = "回复图片",
+                    autosize = true,
                 )
             }
         }

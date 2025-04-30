@@ -52,5 +52,5 @@ data class Reply(
     val sage: Long,// 是否被 SAGE，可以当成 Boolean 使用（非 0 则为 true）
     val admin: Long,// 是否为红名小会员，可以当成 Boolean 使用
     @JsonNames("Hide")
-    val hide: Long,// ？
+    val hide: Long? = null,// ？
 )

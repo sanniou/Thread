@@ -5,6 +5,10 @@ import ai.saniou.nmb.data.api.NmbXdApi
 import ai.saniou.nmb.data.api._NmbXdApiImpl
 import ai.saniou.nmb.data.manager.CdnManager
 import ai.saniou.nmb.data.repository.ForumRepository
+import ai.saniou.nmb.data.repository.NmbRepository
+import ai.saniou.nmb.data.repository.NmbRepositoryImpl
+import ai.saniou.nmb.data.usecase.ReferenceUseCase
+import ai.saniou.nmb.workflow.reference.ReferenceViewModel
 import ai.saniou.nmb.data.storage.CategoryStorage
 import ai.saniou.nmb.initializer.AppInitializer
 import ai.saniou.nmb.domain.ForumCategoryUserCase
@@ -34,6 +38,15 @@ val nmbdi = DI {
     bindSingleton<NmbXdApi> { _NmbXdApiImpl(instance(arg = instance<String>("nmbBaseUrl"))) }
 
     bindSingleton<ForumRepository> { ForumRepository(instance()) }
+
+    // NMB 仓库
+    bindSingleton<NmbRepository> { NmbRepositoryImpl(instance()) }
+
+    // 引用 UseCase
+    bindSingleton<ReferenceUseCase> { ReferenceUseCase(instance()) }
+
+    // 引用 ViewModel
+    bindSingleton<ReferenceViewModel> { ReferenceViewModel(instance()) }
 
     // CDN管理器
     bindSingleton<CdnManager> { CdnManager(instance()) }

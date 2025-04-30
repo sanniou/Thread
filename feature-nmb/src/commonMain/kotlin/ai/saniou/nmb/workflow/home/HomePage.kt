@@ -3,6 +3,7 @@ package ai.saniou.nmb.workflow.home
 import ai.saniou.nmb.data.NmbScreen
 import ai.saniou.nmb.workflow.forum.ForumScreen
 import ai.saniou.nmb.workflow.post.PostPage
+import ai.saniou.nmb.ui.components.HtmlTitleText
 import ai.saniou.nmb.workflow.thread.ThreadPage
 import ai.saniou.nmb.workflow.thread.ThreadPageNavigationDestination
 import ai.saniou.nmb.workflow.user.UserPage
@@ -53,11 +54,18 @@ fun SaniouAppBar(
     showMenuIcon: Boolean = true,
     isDrawerOpen: Boolean = false,
     customTitle: String? = null,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    extraActions: @Composable (() -> Unit)? = null
 ) {
     TopAppBar(
         title = {
-            Text(customTitle ?: currentScreen.name)
+            if (customTitle != null && (customTitle.contains("<b>") || customTitle.contains("<br>") || customTitle.contains("<small>"))) {
+                // 如果标题包含HTML标签，则使用HtmlTitleText组件
+                HtmlTitleText(text = customTitle)
+            } else {
+                // 否则使用普通Text
+                Text(customTitle ?: currentScreen.name)
+            }
         },
         colors = TopAppBarDefaults.mediumTopAppBarColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer
@@ -85,6 +93,10 @@ fun SaniouAppBar(
             }
         },
         actions = {
+            // 显示额外的操作按钮（如果有）
+            extraActions?.invoke()
+
+            // 用户图标按钮
             IconButton(onClick = onUserIconClick) {
                 Icon(
                     imageVector = Icons.Default.AccountCircle,
@@ -114,10 +126,14 @@ fun HomePage(navController: NavHostController = rememberNavController()) {
     // 自定义标题状态
     val customTitle = remember { mutableStateOf<String?>(null) }
 
-    // 监听导航变化，重置自定义标题
+    // 额外的操作按钮状态
+    val extraActions = remember { mutableStateOf<(@Composable () -> Unit)?>(null) }
+
+    // 监听导航变化，重置自定义标题和操作按钮
     LaunchedEffect(backStackEntry) {
-        // 当导航到新页面时，重置自定义标题
+        // 当导航到新页面时，重置自定义标题和操作按钮
         customTitle.value = null
+        extraActions.value = null
     }
 
     Scaffold(
@@ -139,7 +155,8 @@ fun HomePage(navController: NavHostController = rememberNavController()) {
                 // 只在论坛分类页面显示菜单图标
                 showMenuIcon = currentScreen == NmbScreen.ForumCategory,
                 isDrawerOpen = isDrawerOpen,
-                customTitle = customTitle.value
+                customTitle = customTitle.value,
+                extraActions = extraActions.value
             )
         }
     ) { innerPadding ->
@@ -187,7 +204,15 @@ fun HomePage(navController: NavHostController = rememberNavController()) {
             ) {
                 val threadId =
                     backStackEntry?.arguments?.getLong(ThreadPageNavigationDestination.nameArg)
-                ThreadPage(threadId)
+                ThreadPage(
+                    threadId = threadId,
+                    onUpdateTitle = { title ->
+                        customTitle.value = title
+                    },
+                    onSetupMenuButton = { menuButton ->
+                        extraActions.value = menuButton
+                    }
+                )
             }
 
             composable(route = "${NmbScreen.Post.name}/{forumId}") {

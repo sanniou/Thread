@@ -12,17 +12,17 @@ import kotlinx.coroutines.launch
 
 /**
  * 引用ViewModel
- * 
+ *
  * 用于获取引用的回复内容
  */
 class ReferenceViewModel(
     private val referenceUseCase: ReferenceUseCase
 ) : ViewModel() {
-    
+
     // UI状态
-    private val _uiState = MutableStateFlow<UiStateWrapper<Reply>>(UiStateWrapper.Loading)
-    val uiState: StateFlow<UiStateWrapper<Reply>> = _uiState.asStateFlow()
-    
+    private val _uiState = MutableStateFlow<UiStateWrapper>(UiStateWrapper.Loading)
+    val uiState: StateFlow<UiStateWrapper> = _uiState.asStateFlow()
+
     /**
      * 获取引用的回复内容
      */
@@ -41,7 +41,7 @@ class ReferenceViewModel(
             }
         }
     }
-    
+
     /**
      * 清除状态
      */

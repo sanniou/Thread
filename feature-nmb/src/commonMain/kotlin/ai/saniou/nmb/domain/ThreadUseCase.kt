@@ -24,7 +24,7 @@ class ThreadUseCase(
 
     suspend fun getThreadPo(
         id: Long, page: Long
-    ): List<Thread> {
+    ): Thread {
         return try {
             return when (val threadResponse = forumRepository.po(id, page)) {
                 is SaniouResponse.Success -> threadResponse.data

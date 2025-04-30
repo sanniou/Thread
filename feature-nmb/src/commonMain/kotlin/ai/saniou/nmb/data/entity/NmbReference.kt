@@ -33,5 +33,5 @@ data class NmbReference(
     val sage: Long,
     val status: String,
     @JsonNames("Hide")
-    val hide: Long,
+    val hide: Long? = null,
 )

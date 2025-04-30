@@ -1,15 +1,11 @@
 package ai.saniou.nmb.workflow.forum
 
-import ai.saniou.coreui.state.LoadingWrapper
-import ai.saniou.coreui.state.UiStateWrapper
 import ai.saniou.coreui.widgets.PullToRefreshWrapper
 import ai.saniou.nmb.data.entity.Reply
 import ai.saniou.nmb.data.entity.ShowF
 import ai.saniou.nmb.di.nmbdi
 import ai.saniou.nmb.ui.components.NmbImage
-import ai.saniou.nmb.ui.components.SkeletonLoader
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
@@ -31,7 +27,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Star
@@ -40,14 +35,12 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -58,12 +51,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.kodein.di.DI
-import org.kodein.di.instance
 
 
 /**
@@ -200,7 +190,7 @@ fun Forum(
 
                 // 底部加载指示器
                 item {
-                    if (uiState.showF.isNotEmpty()) {
+                    if (uiState.showF.isNotEmpty() && uiState.hasMoreData) {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -210,6 +200,20 @@ fun Forum(
                             CircularProgressIndicator(
                                 modifier = Modifier.size(24.dp),
                                 strokeWidth = 2.dp
+                            )
+                        }
+                    } else if (uiState.showF.isNotEmpty()) {
+                        // 显示已经加载完所有数据的提示
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "已加载全部帖子",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                             )
                         }
                     }

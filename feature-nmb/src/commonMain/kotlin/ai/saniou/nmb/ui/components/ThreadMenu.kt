@@ -6,12 +6,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material.icons.filled.FilterList
-import androidx.compose.material.icons.filled.Link
-import androidx.compose.material.icons.filled.Numbers
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.StarBorder
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -46,9 +41,9 @@ fun ThreadMenu(
             // 跳页选项
             DropdownMenuItem(
                 text = { Text("跳转到页面") },
-                leadingIcon = { 
+                leadingIcon = {
                     Icon(
-                        imageVector = Icons.Default.Numbers,
+                        imageVector = Icons.Default.Edit,
                         contentDescription = null
                     )
                 },
@@ -57,18 +52,18 @@ fun ThreadMenu(
                     onJumpToPage()
                 }
             )
-            
+
             // 只看PO选项
             DropdownMenuItem(
-                text = { 
+                text = {
                     Text(
                         text = if (isPoOnlyMode) "显示全部回复" else "只看PO",
                         color = if (isPoOnlyMode) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                     )
                 },
-                leadingIcon = { 
+                leadingIcon = {
                     Icon(
-                        imageVector = Icons.Default.FilterList,
+                        imageVector = Icons.Default.Person,
                         contentDescription = null,
                         tint = if (isPoOnlyMode) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                     )
@@ -78,18 +73,18 @@ fun ThreadMenu(
                     onTogglePoOnly()
                 }
             )
-            
+
             // 订阅/取消订阅选项
             DropdownMenuItem(
-                text = { 
+                text = {
                     Text(
                         text = if (isSubscribed) "取消订阅" else "订阅",
                         color = if (isSubscribed) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                     )
                 },
-                leadingIcon = { 
+                leadingIcon = {
                     Icon(
-                        imageVector = if (isSubscribed) Icons.Default.Star else Icons.Default.StarBorder,
+                        imageVector = if (isSubscribed) Icons.Default.Star else Icons.Default.Star,
                         contentDescription = null,
                         tint = if (isSubscribed) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                     )
@@ -99,13 +94,13 @@ fun ThreadMenu(
                     onToggleSubscribe(!isSubscribed)
                 }
             )
-            
+
             // 复制链接选项
             DropdownMenuItem(
                 text = { Text("复制链接") },
-                leadingIcon = { 
+                leadingIcon = {
                     Icon(
-                        imageVector = Icons.Default.ContentCopy,
+                        imageVector = Icons.Default.Share,
                         contentDescription = null
                     )
                 },

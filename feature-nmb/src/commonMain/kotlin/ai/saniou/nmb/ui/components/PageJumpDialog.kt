@@ -33,7 +33,7 @@ fun PageJumpDialog(
 ) {
     var pageInput by remember { mutableStateOf(currentPage.toString()) }
     var inputError by remember { mutableStateOf(false) }
-    
+
     AlertDialog(
         onDismissRequest = onDismissRequest,
         title = { Text("跳转到页面") },
@@ -45,12 +45,12 @@ fun PageJumpDialog(
                     text = "当前页面: $currentPage / $totalPages",
                     style = MaterialTheme.typography.bodyMedium
                 )
-                
+
                 Spacer(modifier = Modifier.height(16.dp))
-                
+
                 OutlinedTextField(
                     value = pageInput,
-                    onValueChange = { 
+                    onValueChange = {
                         pageInput = it
                         inputError = false
                     },
@@ -58,7 +58,7 @@ fun PageJumpDialog(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     isError = inputError,
                     supportingText = if (inputError) {
-                        { Text("请输入1到$totalPages之间的数字") }
+                        { Text("请输入1到${totalPages}之间的数字") }
                     } else null,
                     modifier = Modifier.fillMaxWidth()
                 )

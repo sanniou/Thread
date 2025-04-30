@@ -113,6 +113,9 @@ class ForumViewModel(private val forumUserCase: ForumUserCase) : ViewModel() {
         val currentId = _forumId.value
         if (currentId == null || currentId <= 0) return
 
+        // 如果已经没有更多数据，则不再加载
+        if (!dataUiState.value.hasMoreData) return
+
         val nextPage = dataUiState.value.page + 1
 
         viewModelScope.launch {
@@ -123,16 +126,25 @@ class ForumViewModel(private val forumUserCase: ForumUserCase) : ViewModel() {
                 val currentList = dataUiState.value.showF
                 val combinedList = currentList + newDataList
 
+                // 判断是否还有更多数据
+                // 如果返回的帖子为空，则认为没有更多数据
+                val hasMoreData = newDataList.isNotEmpty()
+
                 updateUiState { state ->
                     state.copy(
                         showF = combinedList,
-                        page = nextPage
+                        page = nextPage,
+                        hasMoreData = hasMoreData
                     )
                 }
                 _uiState.emit(UiStateWrapper.Success(dataUiState.value))
             } catch (e: Throwable) {
                 // 加载下一页失败，但不影响当前页面显示
-                // 可以显示一个提示
+                // 将hasMoreData设置为false，避免继续尝试加载
+                updateUiState { state ->
+                    state.copy(hasMoreData = false)
+                }
+                _uiState.emit(UiStateWrapper.Success(dataUiState.value))
             }
         }
     }
@@ -143,6 +155,7 @@ data class ShowForumUiState(
     var page: Long = 1,
     var id: Long = 0,
     var forumName: String = "",
+    var hasMoreData: Boolean = true,
     var onUpdateForumId: (Long) -> Unit,
     var onClickThread: (Long) -> Unit,
     var onLoadNextPage: () -> Unit = {},
