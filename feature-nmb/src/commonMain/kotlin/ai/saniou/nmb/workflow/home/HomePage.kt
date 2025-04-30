@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -19,9 +21,12 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import kotlinx.coroutines.launch
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -41,6 +46,8 @@ fun SaniouAppBar(
     canNavigateBack: Boolean,
     navigateUp: () -> Unit,
     onUserIconClick: () -> Unit,
+    onMenuClick: () -> Unit,
+    showMenuIcon: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     TopAppBar(
@@ -55,6 +62,13 @@ fun SaniouAppBar(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = stringResource(Res.string.back_button)
+                    )
+                }
+            } else if (showMenuIcon) {
+                IconButton(onClick = onMenuClick) {
+                    Icon(
+                        imageVector = Icons.Default.Menu,
+                        contentDescription = "打开菜单"
                     )
                 }
             }
@@ -78,13 +92,25 @@ fun HomePage(navController: NavHostController = rememberNavController()) {
     val currentScreen = NmbScreen.valueOf(
         backStackEntry?.destination?.route?.split("/")?.get(0) ?: NmbScreen.ForumCategory.name
     )
+
+    // 控制抽屉状态
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
+
     Scaffold(
         topBar = {
             SaniouAppBar(
                 currentScreen = currentScreen,
                 canNavigateBack = navController.previousBackStackEntry != null,
                 navigateUp = { navController.navigateUp() },
-                onUserIconClick = { navController.navigate(NmbScreen.User.name) }
+                onUserIconClick = { navController.navigate(NmbScreen.User.name) },
+                onMenuClick = {
+                    scope.launch {
+                        drawerState.open()
+                    }
+                },
+                // 只在论坛分类页面显示菜单图标
+                showMenuIcon = currentScreen == NmbScreen.ForumCategory
             )
         }
     ) { innerPadding ->
@@ -97,7 +123,8 @@ fun HomePage(navController: NavHostController = rememberNavController()) {
         ) {
             composable(route = NmbScreen.ForumCategory.name) {
                 ForumCategoryPage(
-                    onThreadClicked = { navController.navigate("${ThreadPageNavigationDestination.route}/${it}") }
+                    onThreadClicked = { navController.navigate("${ThreadPageNavigationDestination.route}/${it}") },
+                    drawerState = drawerState
                 )
             }
 

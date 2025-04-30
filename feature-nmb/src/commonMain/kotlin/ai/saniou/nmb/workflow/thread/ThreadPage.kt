@@ -4,6 +4,8 @@ import ai.saniou.coreui.state.LoadingWrapper
 import ai.saniou.coreui.widgets.PullToRefreshWrapper
 import ai.saniou.nmb.di.nmbdi
 import ai.saniou.nmb.ui.components.NmbImage
+import ai.saniou.nmb.ui.components.SkeletonLoader
+import ai.saniou.nmb.ui.components.SkeletonReplyItem
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -22,21 +24,31 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Button
 import androidx.compose.material3.Divider
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -65,6 +77,154 @@ fun ThreadPage(threadId: Long?, di: DI = nmbdi) {
                 ThreadContent(state) { replyId ->
                     // 处理回复点击
                     threadViewModel.onReplyClicked(replyId)
+                }
+            },
+            error = {
+                // 错误状态显示
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Text(
+                            text = "加载失败",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Button(
+                            onClick = { threadViewModel.setThreadId(threadId) }
+                        ) {
+                            Text("重试")
+                        }
+                    }
+                }
+            },
+            loading = {
+                // 加载状态显示骨架屏
+                Column(
+                    modifier = Modifier.padding(8.dp)
+                ) {
+                    // 创建动画效果
+                    val shimmerColors = listOf(
+                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                    )
+
+                    val transition = rememberInfiniteTransition()
+                    val translateAnim by transition.animateFloat(
+                        initialValue = 0f,
+                        targetValue = 1000f,
+                        animationSpec = infiniteRepeatable(
+                            animation = tween(durationMillis = 1200, delayMillis = 300),
+                            repeatMode = RepeatMode.Restart
+                        )
+                    )
+
+                    val brush = Brush.linearGradient(
+                        colors = shimmerColors,
+                        start = Offset(10f, 10f),
+                        end = Offset(translateAnim, translateAnim)
+                    )
+
+                    // 主帖骨架屏
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surface
+                        )
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            // 标题和作者信息
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(24.dp)
+                                        .clip(CircleShape)
+                                        .background(brush)
+                                )
+
+                                Spacer(modifier = Modifier.width(8.dp))
+
+                                Column {
+                                    Box(
+                                        modifier = Modifier
+                                            .width(200.dp)
+                                            .height(20.dp)
+                                            .clip(RoundedCornerShape(4.dp))
+                                            .background(brush)
+                                    )
+
+                                    Spacer(modifier = Modifier.height(4.dp))
+
+                                    Box(
+                                        modifier = Modifier
+                                            .width(150.dp)
+                                            .height(12.dp)
+                                            .clip(RoundedCornerShape(4.dp))
+                                            .background(brush)
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // 内容
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(16.dp)
+                                    .clip(RoundedCornerShape(4.dp))
+                                    .background(brush)
+                            )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth(0.8f)
+                                    .height(16.dp)
+                                    .clip(RoundedCornerShape(4.dp))
+                                    .background(brush)
+                            )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth(0.6f)
+                                    .height(16.dp)
+                                    .clip(RoundedCornerShape(4.dp))
+                                    .background(brush)
+                            )
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // 图片占位
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(200.dp)
+                                    .clip(RoundedCornerShape(4.dp))
+                                    .background(brush)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // 回复骨架屏
+                    repeat(3) {
+                        SkeletonReplyItem(brush)
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
                 }
             },
             onRetryClick = {
@@ -99,19 +259,70 @@ fun ThreadContent(
             uiState.onRefresh()
         }
     ) {
-        LazyColumn(
-            modifier = Modifier.padding(8.dp)
-        ) {
-            // 主帖
-            item {
-                ThreadMainPost(uiState.thread)
-                Spacer(modifier = Modifier.height(16.dp))
-            }
+        // 检查是否有回复
+        if (uiState.thread.replies.isEmpty() && uiState.thread.replyCount == 0L) {
+            // 空回复状态
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(32.dp)
+                ) {
+                    // 主帖
+                    ThreadMainPost(uiState.thread)
 
-            // 回复列表
-            items(uiState.thread.replies) { reply ->
-                ThreadReply(reply, onReplyClicked)
-                Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(32.dp))
+
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = null,
+                        modifier = Modifier.size(48.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text(
+                        text = "暂无回复",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = "成为第一个回复的人吧！",
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Button(
+                        onClick = { uiState.onRefresh() }
+                    ) {
+                        Text("刷新")
+                    }
+                }
+            }
+        } else {
+            // 有回复时显示列表
+            LazyColumn(
+                modifier = Modifier.padding(8.dp)
+            ) {
+                // 主帖
+                item {
+                    ThreadMainPost(uiState.thread)
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+
+                // 回复列表
+                items(uiState.thread.replies) { reply ->
+                    ThreadReply(reply, onReplyClicked)
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
             }
         }
     }

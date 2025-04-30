@@ -1,17 +1,15 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
-import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidApplication)
-    alias(libs.plugins.jetbrainsCompose)
-    alias(libs.plugins.compose.compiler)
-    id("com.google.devtools.ksp") version "2.0.20-1.0.24"
-    id("de.jensklingenberg.ktorfit") version "2.1.0"
-    kotlin("plugin.serialization") version "2.0.20"
+    alias(libs.plugins.composeMultiplatform)
+    alias(libs.plugins.composeCompiler)
+    id("com.google.devtools.ksp") version "2.1.20-2.0.0"
+    id("de.jensklingenberg.ktorfit") version "2.5.1"
+    kotlin("plugin.serialization") version "2.1.20"
 }
 
 kotlin {
@@ -49,10 +47,19 @@ kotlin {
             implementation(project(":core-common"))
             implementation(libs.kottage)
             implementation(libs.kotlinx.datetime)
+            // Coil for Multiplatform
+            implementation("io.coil-kt.coil3:coil-core:3.1.0")
+            implementation("io.coil-kt.coil3:coil-compose-core:3.1.0")
+            implementation("io.coil-kt.coil3:coil-compose:3.1.0")
+            implementation("io.coil-kt.coil3:coil-network-ktor3:3.1.0")
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
+        }
+
+        iosMain.dependencies {
+
         }
     }
 }
@@ -93,5 +100,13 @@ compose.desktop {
             packageName = "ai.saniou.nmb"
             packageVersion = "1.0.0"
         }
+    }
+}
+
+tasks.withType<com.google.devtools.ksp.gradle.KspAATask>().configureEach {
+    if (name.contains("KotlinDesktop")) {
+        dependsOn(tasks.withType<com.google.devtools.ksp.gradle.KspAATask>().filter {
+            it.name.contains("CommonMainKotlinMetadata")
+        })
     }
 }

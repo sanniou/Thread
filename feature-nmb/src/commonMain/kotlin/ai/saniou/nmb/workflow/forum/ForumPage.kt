@@ -7,6 +7,7 @@ import ai.saniou.nmb.data.entity.Reply
 import ai.saniou.nmb.data.entity.ShowF
 import ai.saniou.nmb.di.nmbdi
 import ai.saniou.nmb.ui.components.NmbImage
+import ai.saniou.nmb.ui.components.SkeletonLoader
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -32,7 +33,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
@@ -50,6 +53,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -86,6 +90,34 @@ fun ForumScreen(
             forumContent.LoadingWrapper<ShowForumUiState>(
                 content = {
                     Forum(it, onThreadClicked)
+                },
+                error = {
+                    // 错误状态显示
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.padding(16.dp)
+                        ) {
+                            Text(
+                                text = "加载失败",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Button(
+                                onClick = { forumViewModel.refreshForum() }
+                            ) {
+                                Text("重试")
+                            }
+                        }
+                    }
+                },
+                loading = {
+                    // 加载状态显示骨架屏
+                    SkeletonLoader()
                 },
                 onRetryClick = {
                     // 重试时刷新当前论坛
@@ -133,28 +165,74 @@ fun Forum(
             }
         }
     ) {
-        val scrollState = rememberLazyListState()
-        val coroutineScope = rememberCoroutineScope()
+        // 检查是否有帖子
+        if (uiState.showF.isEmpty()) {
+            // 空状态显示
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = null,
+                        modifier = Modifier.size(48.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
 
-        LazyColumn(
-            state = scrollState,
-            modifier = Modifier
-                .draggable(
-                    orientation = Orientation.Vertical,
-                    state = rememberDraggableState { delta ->
-                        coroutineScope.launch {
-                            scrollState.scrollBy(-delta)
-                        }
-                    },
-                ),
-            contentPadding = PaddingValues(8.dp)
-        ) {
-            items(uiState.showF) { thread ->
-                ThreadCard(
-                    thread = thread,
-                    onClick = { onThreadClicked(thread.id) }
-                )
-                Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text(
+                        text = "暂无帖子",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = "该板块当前没有帖子，点击右下角按钮发布第一个帖子吧！",
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Button(
+                        onClick = { uiState.onUpdateForumId(uiState.id) }
+                    ) {
+                        Text("刷新")
+                    }
+                }
+            }
+        } else {
+            // 有帖子时显示列表
+            val scrollState = rememberLazyListState()
+            val coroutineScope = rememberCoroutineScope()
+
+            LazyColumn(
+                state = scrollState,
+                modifier = Modifier
+                    .draggable(
+                        orientation = Orientation.Vertical,
+                        state = rememberDraggableState { delta ->
+                            coroutineScope.launch {
+                                scrollState.scrollBy(-delta)
+                            }
+                        },
+                    ),
+                contentPadding = PaddingValues(8.dp)
+            ) {
+                items(uiState.showF) { thread ->
+                    ThreadCard(
+                        thread = thread,
+                        onClick = { onThreadClicked(thread.id) }
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
             }
         }
     }

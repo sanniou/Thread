@@ -26,11 +26,12 @@ inline fun <reified T : UiStateWrapper> MutableStateFlow<UiStateWrapper>.updateU
 inline fun <reified T : UiStateWrapper> UiStateWrapper.LoadingWrapper(
     content: @Composable (T) -> Unit,
     noinline error: @Composable (() -> Unit)? = null,
+    noinline loading: @Composable (() -> Unit)? = null,
     crossinline onRetryClick: () -> Unit
 ) {
     when (this) {
         is UiStateWrapper.Loading -> {
-            DefaultLoading()
+            loading?.invoke() ?: DefaultLoading()
         }
 
         is UiStateWrapper.Error -> {
