@@ -280,6 +280,12 @@ fun HomePage(navController: NavHostController = rememberNavController(), di: org
                         // 保存图片
                         imagePreviewViewModel.setCurrentImage(path, extension)
                         imagePreviewViewModel.saveCurrentImage()
+                    },
+                    onUpdateTitle = { title ->
+                        customTitle.value = title
+                    },
+                    onSetupMenuButton = { menuButton ->
+                        extraActions.value = menuButton
                     }
                 )
             }

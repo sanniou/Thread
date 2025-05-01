@@ -7,19 +7,21 @@ import ai.saniou.nmb.data.manager.CdnManager
 import ai.saniou.nmb.data.repository.ForumRepository
 import ai.saniou.nmb.data.repository.NmbRepository
 import ai.saniou.nmb.data.repository.NmbRepositoryImpl
-import ai.saniou.nmb.data.usecase.ReferenceUseCase
-import ai.saniou.nmb.workflow.reference.ReferenceViewModel
 import ai.saniou.nmb.data.storage.CategoryStorage
-import ai.saniou.nmb.initializer.AppInitializer
+import ai.saniou.nmb.data.storage.GreetImageStorage
+import ai.saniou.nmb.data.usecase.ReferenceUseCase
 import ai.saniou.nmb.domain.ForumCategoryUserCase
 import ai.saniou.nmb.domain.ForumUserCase
 import ai.saniou.nmb.domain.PostUseCase
 import ai.saniou.nmb.domain.ThreadUseCase
 import ai.saniou.nmb.domain.UserUseCase
+import ai.saniou.nmb.initializer.AppInitializer
 import ai.saniou.nmb.workflow.forum.ForumViewModel
 import ai.saniou.nmb.workflow.home.ForumCategoryViewModel
+import ai.saniou.nmb.workflow.home.GreetImageViewModel
 import ai.saniou.nmb.workflow.image.ImagePreviewViewModel
 import ai.saniou.nmb.workflow.post.PostViewModel
+import ai.saniou.nmb.workflow.reference.ReferenceViewModel
 import ai.saniou.nmb.workflow.thread.ThreadViewModel
 import ai.saniou.nmb.workflow.user.UserViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -62,6 +64,16 @@ val nmbdi = DI {
             scope = CoroutineScope(Dispatchers.Default)
         )
     }
+
+    // 欢迎图片存储
+    bindSingleton {
+        GreetImageStorage(
+            scope = CoroutineScope(Dispatchers.Default)
+        )
+    }
+
+    // 欢迎图片ViewModel
+    bindSingleton<GreetImageViewModel> { GreetImageViewModel(instance(), instance()) }
 
     // 论坛分类相关
     bindProvider<ForumCategoryUserCase> { ForumCategoryUserCase(instance()) }

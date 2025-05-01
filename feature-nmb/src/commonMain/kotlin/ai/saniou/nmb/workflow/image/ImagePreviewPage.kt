@@ -3,6 +3,7 @@ package ai.saniou.nmb.workflow.image
 import ai.saniou.nmb.data.manager.CdnManager
 import ai.saniou.nmb.di.nmbdi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.layout.*
@@ -18,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil3.compose.LocalPlatformContext
@@ -32,6 +34,7 @@ import org.kodein.di.instance
  * 图片预览页面
  *
  * 支持图片缩放、查看上一张/下一张、保存图片等功能
+ * 支持双击放大功能
  *
  * @param imgPath 图片路径
  * @param ext 图片扩展名
@@ -41,8 +44,9 @@ import org.kodein.di.instance
  * @param hasPrevious 是否有上一张图片
  * @param onNextImage 下一张图片回调
  * @param onPreviousImage 上一张图片回调
+ * @param onUpdateTitle 更新标题回调
+ * @param onSetupMenuButton 设置菜单按钮回调
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ImagePreviewPage(
     imgPath: String,
@@ -52,7 +56,9 @@ fun ImagePreviewPage(
     hasNext: Boolean = false,
     hasPrevious: Boolean = false,
     onNextImage: () -> Unit = {},
-    onPreviousImage: () -> Unit = {}
+    onPreviousImage: () -> Unit = {},
+    onUpdateTitle: ((String) -> Unit)? = null,
+    onSetupMenuButton: ((@Composable () -> Unit) -> Unit)? = null
 ) {
     // 获取CDN管理器
     val cdnManager by nmbdi.instance<CdnManager>()
@@ -79,30 +85,24 @@ fun ImagePreviewPage(
     // 记住是否正在重试
     var isRetrying by remember { mutableStateOf(false) }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("图片预览") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
-                    }
-                },
-                actions = {
-                    // 保存图片按钮
-                    IconButton(onClick = { onSaveImage(imgPath, ext) }) {
-                        Icon(Icons.Default.Place, contentDescription = "保存图片")
-                    }
-                }
-            )
+    // 设置标题和菜单按钮
+    LaunchedEffect(Unit) {
+        // 设置标题
+        onUpdateTitle?.invoke("图片预览")
+
+        // 设置菜单按钮
+        onSetupMenuButton?.invoke {
+            // 保存图片按钮
+            IconButton(onClick = { onSaveImage(imgPath, ext) }) {
+                Icon(Icons.Default.Place, contentDescription = "保存图片")
+            }
         }
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .background(Color.Black)
-        ) {
+    }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black)
+    ) {
             // 图片显示区域
             SubcomposeAsyncImage(
                 model = ImageRequest.Builder(LocalPlatformContext.current)
@@ -122,7 +122,23 @@ fun ImagePreviewPage(
                         translationX = offset.x,
                         translationY = offset.y
                     )
-                    .transformable(state = transformableState),
+                    .transformable(state = transformableState)
+                    .pointerInput(Unit) {
+                        detectTapGestures(
+                            onDoubleTap = { tapOffset ->
+                                // 双击放大/缩小功能
+                                if (scale > 1.5f) {
+                                    // 如果当前已经放大，则重置为原始大小
+                                    scale = 1f
+                                    offset = Offset.Zero
+                                    rotation = 0f
+                                } else {
+                                    // 否则放大到2.5倍
+                                    scale = 2.5f
+                                }
+                            }
+                        )
+                    },
                 loading = {
                     // 加载中状态
                     Box(
@@ -217,5 +233,4 @@ fun ImagePreviewPage(
                 }
             }
         }
-    }
 }
