@@ -7,52 +7,22 @@ import ai.saniou.nmb.data.entity.Reply
 import ai.saniou.nmb.data.entity.Thread
 import ai.saniou.nmb.data.entity.ThreadReply
 import ai.saniou.nmb.di.nmbdi
-import ai.saniou.nmb.ui.components.HtmlText
-import ai.saniou.nmb.ui.components.NmbImage
-import ai.saniou.nmb.ui.components.PageJumpDialog
-import ai.saniou.nmb.ui.components.ReferencePopup
-import ai.saniou.nmb.ui.components.SkeletonReplyItem
-import ai.saniou.nmb.ui.components.ThreadMenu
+import ai.saniou.nmb.ui.components.*
 import ai.saniou.nmb.workflow.image.ImagePreviewNavigationDestination
 import ai.saniou.nmb.workflow.reference.ReferenceViewModel
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
-import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -60,12 +30,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.kodein.di.DI
@@ -147,7 +120,6 @@ fun ThreadPage(
                         // 处理回复点击
                         threadViewModel.onReplyClicked(replyId)
                     },
-                    function = { showMenu = true },
                     refClick = { refId ->
                         // 显示引用弹窗
                         currentReferenceId = refId
@@ -373,7 +345,6 @@ fun ThreadPage(
 fun ThreadContent(
     uiState: ThreadUiState,
     onReplyClicked: (Long) -> Unit,
-    function: () -> Unit,
     refClick: (Long) -> Unit,
     onImageClick: (String, String) -> Unit
 ) {
@@ -511,7 +482,6 @@ fun ThreadContent(
 fun ThreadMainPost(
     thread: Thread,
     forumName: String = "",
-    onMenuClick: () -> Unit = {},
     refClick: (Long) -> Unit,
     onImageClick: (String, String) -> Unit
 ) {
@@ -598,7 +568,7 @@ fun ThreadMainPost(
             }
 
             Spacer(modifier = Modifier.height(8.dp))
-            Divider()
+            HorizontalDivider()
             Spacer(modifier = Modifier.height(8.dp))
 
             // 内容 - 使用HtmlText支持HTML标签

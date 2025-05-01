@@ -5,9 +5,7 @@ import ai.saniou.nmb.data.entity.Reply
 import ai.saniou.nmb.data.usecase.ReferenceUseCase
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 /**
@@ -21,7 +19,12 @@ class ReferenceViewModel(
 
     // UI状态
     private val _uiState = MutableStateFlow<UiStateWrapper>(UiStateWrapper.Loading)
-    val uiState: StateFlow<UiStateWrapper> = _uiState.asStateFlow()
+
+    val uiState = _uiState.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(3000),
+        UiStateWrapper.Loading
+    )
 
     /**
      * 获取引用的回复内容
@@ -49,3 +52,4 @@ class ReferenceViewModel(
         _uiState.value = UiStateWrapper.Loading
     }
 }
+

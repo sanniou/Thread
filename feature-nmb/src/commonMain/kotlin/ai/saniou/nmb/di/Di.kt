@@ -45,12 +45,6 @@ val nmbdi = DI {
     // NMB 仓库
     bindSingleton<NmbRepository> { NmbRepositoryImpl(instance()) }
 
-    // 引用 UseCase
-    bindSingleton<ReferenceUseCase> { ReferenceUseCase(instance()) }
-
-    // 引用 ViewModel
-    bindSingleton<ReferenceViewModel> { ReferenceViewModel(instance()) }
-
     // CDN管理器
     bindSingleton<CdnManager> { CdnManager(instance()) }
 
@@ -73,7 +67,7 @@ val nmbdi = DI {
     }
 
     // 欢迎图片ViewModel
-    bindSingleton<GreetImageViewModel> { GreetImageViewModel(instance(), instance()) }
+    bindProvider<GreetImageViewModel> { GreetImageViewModel(instance(), instance()) }
 
     // 论坛分类相关
     bindProvider<ForumCategoryUserCase> { ForumCategoryUserCase(instance()) }
@@ -97,6 +91,11 @@ val nmbdi = DI {
 
     // 图片预览相关
     bindProvider { ImagePreviewViewModel(di) }
+
+    // 引用 UseCase
+    bindProvider<ReferenceUseCase> { ReferenceUseCase(instance()) }
+    // 引用 ViewModel
+    bindProvider<ReferenceViewModel> { ReferenceViewModel(instance()) }
 }
 
 
