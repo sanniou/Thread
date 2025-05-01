@@ -18,6 +18,7 @@ import ai.saniou.nmb.domain.ThreadUseCase
 import ai.saniou.nmb.domain.UserUseCase
 import ai.saniou.nmb.workflow.forum.ForumViewModel
 import ai.saniou.nmb.workflow.home.ForumCategoryViewModel
+import ai.saniou.nmb.workflow.image.ImagePreviewViewModel
 import ai.saniou.nmb.workflow.post.PostViewModel
 import ai.saniou.nmb.workflow.thread.ThreadViewModel
 import ai.saniou.nmb.workflow.user.UserViewModel
@@ -81,6 +82,9 @@ val nmbdi = DI {
     // 用户认证相关
     bindProvider { UserUseCase(instance()) }
     bindProvider { UserViewModel(instance()) }
+
+    // 图片预览相关
+    bindProvider { ImagePreviewViewModel(di) }
 }
 
 

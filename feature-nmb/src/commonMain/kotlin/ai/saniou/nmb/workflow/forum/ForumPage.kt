@@ -5,6 +5,7 @@ import ai.saniou.nmb.data.entity.Reply
 import ai.saniou.nmb.data.entity.ShowF
 import ai.saniou.nmb.di.nmbdi
 import ai.saniou.nmb.ui.components.NmbImage
+import ai.saniou.nmb.workflow.image.ImagePreviewNavigationDestination
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
@@ -15,6 +16,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -67,7 +70,8 @@ fun ForumScreen(
     onThreadClicked: (Long) -> Unit = {},
     onNewPostClicked: (Long) -> Unit = {},
     forumId: Long = 0,
-    onUpdateTitle: ((String) -> Unit)? = null
+    onUpdateTitle: ((String) -> Unit)? = null,
+    navController: NavController = rememberNavController()
 ) {
     Surface(
         color = MaterialTheme.colorScheme.background
@@ -78,7 +82,11 @@ fun ForumScreen(
             onThreadClicked = onThreadClicked,
             onNewPostClicked = onNewPostClicked,
             onUpdateTitle = onUpdateTitle,
-            showFloatingActionButton = true
+            showFloatingActionButton = true,
+            onImageClick = { imgPath, ext ->
+                // 导航到图片预览页面
+                navController.navigate(ImagePreviewNavigationDestination.createRoute(imgPath, ext))
+            }
         )
     }
 }
@@ -88,6 +96,7 @@ fun ForumScreen(
 fun Forum(
     uiState: ShowForumUiState,
     onThreadClicked: (Long) -> Unit,
+    onImageClick: ((String, String) -> Unit)? = null,
     innerPadding: PaddingValues? = null
 ) {
     PullToRefreshWrapper(
@@ -183,7 +192,8 @@ fun Forum(
                 items(uiState.showF) { thread ->
                     ThreadCard(
                         thread = thread,
-                        onClick = { onThreadClicked(thread.id) }
+                        onClick = { onThreadClicked(thread.id) },
+                        onImageClick = onImageClick
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                 }
@@ -226,7 +236,8 @@ fun Forum(
 @Composable
 fun ThreadCard(
     thread: ShowF,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onImageClick: ((String, String) -> Unit)? = null
 ) {
     Card(
         modifier = Modifier
@@ -338,7 +349,8 @@ fun ThreadCard(
                         .fillMaxWidth()
                         .height(160.dp),
                     isThumb = true,
-                    contentDescription = "帖子图片"
+                    contentDescription = "帖子图片",
+                    onClick = onImageClick?.let { onClick -> { onClick(thread.img, thread.ext) } }
                 )
             }
 

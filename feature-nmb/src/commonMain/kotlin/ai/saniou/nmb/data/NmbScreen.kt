@@ -6,4 +6,5 @@ enum class NmbScreen {
     Thread,
     Post,
     User,
+    ImagePreview,
 }

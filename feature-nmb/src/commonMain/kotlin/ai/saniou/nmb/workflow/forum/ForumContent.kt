@@ -31,7 +31,7 @@ import org.kodein.di.instance
 
 /**
  * 可复用的论坛内容组件
- * 
+ *
  * 该组件负责显示论坛内容，包括加载状态、错误状态和成功状态
  * 可以在多个地方使用，如 ForumScreen 和 ForumCategoryPage
  */
@@ -42,6 +42,7 @@ fun ForumContent(
     onNewPostClicked: (Long) -> Unit = {},
     onUpdateTitle: ((String) -> Unit)? = null,
     showFloatingActionButton: Boolean = true,
+    onImageClick: ((String, String) -> Unit)? = null,
     di: DI = nmbdi
 ) {
     val forumViewModel: ForumViewModel = viewModel {
@@ -69,7 +70,7 @@ fun ForumContent(
     Box(modifier = Modifier.fillMaxWidth()) {
         forumContent.LoadingWrapper<ShowForumUiState>(
             content = {
-                Forum(it, onThreadClicked)
+                Forum(it, onThreadClicked, onImageClick = onImageClick)
             },
             error = {
                 // 错误状态显示

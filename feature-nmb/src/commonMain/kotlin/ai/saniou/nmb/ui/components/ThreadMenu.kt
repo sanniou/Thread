@@ -84,7 +84,7 @@ fun ThreadMenu(
                 },
                 leadingIcon = {
                     Icon(
-                        imageVector = if (isSubscribed) Icons.Default.Star else Icons.Default.Star,
+                        imageVector = if (isSubscribed) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                         contentDescription = null,
                         tint = if (isSubscribed) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                     )

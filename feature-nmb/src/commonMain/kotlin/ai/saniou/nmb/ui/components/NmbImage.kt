@@ -40,6 +40,7 @@ import org.kodein.di.instance
  * @param isThumb 是否为缩略图
  * @param contentDescription 内容描述
  * @param autosize 是否在帖子详情页面中显示，如果为true则使用ContentScale.FillWidth显示图片，否则使用ContentScale.Crop裁剪显示
+ * @param onClick 点击图片回调，如果为null则不可点击
  */
 @Composable
 fun NmbImage(
@@ -49,6 +50,7 @@ fun NmbImage(
     isThumb: Boolean = true,
     contentDescription: String? = null,
     autosize: Boolean = false,
+    onClick: (() -> Unit)? = null,
 ) {
     // 获取CDN管理器
     val cdnManager by nmbdi.instance<CdnManager>()
@@ -61,10 +63,15 @@ fun NmbImage(
     var isRetrying by remember { mutableStateOf(false) }
 
     // 准备修饰符
-    val boxModifier = modifier
+    var boxModifier = modifier
         .clip(RoundedCornerShape(4.dp))
         .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
         .border(1.dp, Color.Gray.copy(alpha = 0.5f), RoundedCornerShape(4.dp))
+
+    // 如果提供了点击回调，添加点击修饰符
+    if (onClick != null) {
+        boxModifier = boxModifier.clickable { onClick() }
+    }
 
     Box(modifier = boxModifier) {
         // 使用SubcomposeAsyncImage可以自定义加载、错误和成功状态

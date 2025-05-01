@@ -13,9 +13,12 @@ import ai.saniou.nmb.ui.components.PageJumpDialog
 import ai.saniou.nmb.ui.components.ReferencePopup
 import ai.saniou.nmb.ui.components.SkeletonReplyItem
 import ai.saniou.nmb.ui.components.ThreadMenu
+import ai.saniou.nmb.workflow.image.ImagePreviewNavigationDestination
 import ai.saniou.nmb.workflow.reference.ReferenceViewModel
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -73,7 +76,8 @@ fun ThreadPage(
     threadId: Long?,
     di: DI = nmbdi,
     onUpdateTitle: ((String) -> Unit)? = null,
-    onSetupMenuButton: ((@Composable () -> Unit) -> Unit)? = null
+    onSetupMenuButton: ((@Composable () -> Unit) -> Unit)? = null,
+    navController: NavController
 ) {
     val threadViewModel: ThreadViewModel = viewModel {
         val viewModel by di.instance<ThreadViewModel>()
@@ -149,6 +153,10 @@ fun ThreadPage(
                         currentReferenceId = refId
                         referenceViewModel.getReference(refId)
                         showReferencePopup = true
+                    },
+                    onImageClick = { imgPath, ext ->
+                        // 导航到图片预览页面
+                        navController.navigate(ImagePreviewNavigationDestination.createRoute(imgPath, ext))
                     }
                 )
             },
@@ -366,7 +374,8 @@ fun ThreadContent(
     uiState: ThreadUiState,
     onReplyClicked: (Long) -> Unit,
     function: () -> Unit,
-    refClick: (Long) -> Unit
+    refClick: (Long) -> Unit,
+    onImageClick: (String, String) -> Unit
 ) {
     PullToRefreshWrapper(
         onRefreshTrigger = {
@@ -385,7 +394,7 @@ fun ThreadContent(
                     modifier = Modifier.padding(32.dp)
                 ) {
                     // 主帖
-                    ThreadMainPost(uiState.thread, refClick = refClick)
+                    ThreadMainPost(uiState.thread, refClick = refClick, onImageClick = onImageClick)
 
                     Spacer(modifier = Modifier.height(32.dp))
 
@@ -451,14 +460,15 @@ fun ThreadContent(
                     ThreadMainPost(
                         thread = uiState.thread,
                         forumName = "",
-                        refClick = refClick
+                        refClick = refClick,
+                        onImageClick = onImageClick
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                 }
 
                 // 回复列表
                 items(uiState.thread.replies) { reply ->
-                    ThreadReply(reply, onReplyClicked, refClick)
+                    ThreadReply(reply, onReplyClicked, refClick, onImageClick)
                     Spacer(modifier = Modifier.height(8.dp))
                 }
 
@@ -502,7 +512,8 @@ fun ThreadMainPost(
     thread: Thread,
     forumName: String = "",
     onMenuClick: () -> Unit = {},
-    refClick: (Long) -> Unit
+    refClick: (Long) -> Unit,
+    onImageClick: (String, String) -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -607,6 +618,7 @@ fun ThreadMainPost(
                     isThumb = false,
                     contentDescription = "帖子图片",
                     autosize = true,
+                    onClick = { onImageClick(thread.img, thread.ext) }
                 )
             }
 
@@ -626,7 +638,8 @@ fun ThreadMainPost(
 fun ThreadReply(
     reply: ThreadReply,
     onReplyClicked: (Long) -> Unit,
-    refClick: (Long) -> Unit
+    refClick: (Long) -> Unit,
+    onImageClick: (String, String) -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -699,6 +712,7 @@ fun ThreadReply(
                     isThumb = true,
                     contentDescription = "回复图片",
                     autosize = true,
+                    onClick = { onImageClick(reply.img, reply.ext) }
                 )
             }
         }

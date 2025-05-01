@@ -2,6 +2,9 @@ package ai.saniou.nmb.workflow.home
 
 import ai.saniou.nmb.data.NmbScreen
 import ai.saniou.nmb.workflow.forum.ForumScreen
+import ai.saniou.nmb.workflow.image.ImagePreviewNavigationDestination
+import ai.saniou.nmb.workflow.image.ImagePreviewPage
+import ai.saniou.nmb.workflow.image.ImagePreviewViewModel
 import ai.saniou.nmb.workflow.post.PostPage
 import ai.saniou.nmb.ui.components.HtmlTitleText
 import ai.saniou.nmb.workflow.thread.ThreadPage
@@ -38,9 +41,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.lifecycle.viewmodel.compose.viewModel
 import org.jetbrains.compose.resources.stringResource
 import thread.feature_nmb.generated.resources.Res
 import thread.feature_nmb.generated.resources.back_button
+import ai.saniou.nmb.di.nmbdi
+import org.kodein.di.instance
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -108,7 +114,7 @@ fun SaniouAppBar(
 }
 
 @Composable
-fun HomePage(navController: NavHostController = rememberNavController()) {
+fun HomePage(navController: NavHostController = rememberNavController(), di: org.kodein.di.DI = nmbdi) {
     // Get current back stack entry
     val backStackEntry by navController.currentBackStackEntryAsState()
     // Get the name of the current screen
@@ -177,6 +183,7 @@ fun HomePage(navController: NavHostController = rememberNavController()) {
                         customTitle.value = title
                     },
                     drawerState = drawerState,
+                    navController = navController
                 )
             }
 
@@ -191,8 +198,8 @@ fun HomePage(navController: NavHostController = rememberNavController()) {
                         navController.navigate("${NmbScreen.Post.name}/${fid}")
                     },
                     onUpdateTitle = { title ->
-                        customTitle.value = title
-                    }
+                    },
+                    navController = navController
                 )
             }
 
@@ -211,7 +218,8 @@ fun HomePage(navController: NavHostController = rememberNavController()) {
                     },
                     onSetupMenuButton = { menuButton ->
                         extraActions.value = menuButton
-                    }
+                    },
+                    navController = navController
                 )
             }
 
@@ -234,6 +242,45 @@ fun HomePage(navController: NavHostController = rememberNavController()) {
             composable(route = NmbScreen.User.name) {
                 UserPage(
                     onNavigateBack = { navController.navigateUp() }
+                )
+            }
+
+            // 图片预览页面
+            composable(
+                route = ImagePreviewNavigationDestination.routeWithArgs,
+                arguments = listOf(
+                    navArgument(ImagePreviewNavigationDestination.imgPathArg) {
+                        type = NavType.StringType
+                        nullable = false
+                    },
+                    navArgument(ImagePreviewNavigationDestination.extArg) {
+                        type = NavType.StringType
+                        nullable = false
+                    }
+                )
+            ) {
+                // 获取并解码路径参数
+                val encodedImgPath = it.arguments?.getString(ImagePreviewNavigationDestination.imgPathArg) ?: ""
+                val encodedExt = it.arguments?.getString(ImagePreviewNavigationDestination.extArg) ?: ""
+
+                // 使用 ImagePreviewNavigationDestination 的解码方法
+                val imgPath = ImagePreviewNavigationDestination.decodePath(encodedImgPath)
+                val ext = ImagePreviewNavigationDestination.decodePath(encodedExt)
+
+                val imagePreviewViewModel: ImagePreviewViewModel = viewModel {
+                    val viewModel by di.instance<ImagePreviewViewModel>()
+                    viewModel
+                }
+
+                ImagePreviewPage(
+                    imgPath = imgPath,
+                    ext = ext,
+                    onNavigateBack = { navController.navigateUp() },
+                    onSaveImage = { path, extension ->
+                        // 保存图片
+                        imagePreviewViewModel.setCurrentImage(path, extension)
+                        imagePreviewViewModel.saveCurrentImage()
+                    }
                 )
             }
         }

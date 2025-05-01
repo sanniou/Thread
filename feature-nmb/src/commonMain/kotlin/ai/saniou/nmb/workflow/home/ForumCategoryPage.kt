@@ -2,6 +2,9 @@ package ai.saniou.nmb.workflow.home
 
 import ai.saniou.nmb.di.nmbdi
 import ai.saniou.nmb.workflow.forum.ForumContent
+import ai.saniou.nmb.workflow.image.ImagePreviewNavigationDestination
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -48,7 +51,8 @@ fun ForumCategoryPage(
     onThreadClicked: (Long) -> Unit,
     onNewPostClicked: (Long) -> Unit,
     onUpdateTitle: ((String) -> Unit)?,
-    drawerState: DrawerState
+    drawerState: DrawerState,
+    navController: NavController = rememberNavController()
 ) {
     val forumCategoryViewModel: ForumCategoryViewModel = viewModel {
         val forumCategoryViewModel by di.instance<ForumCategoryViewModel>()
@@ -72,7 +76,8 @@ fun ForumCategoryPage(
         onNewPostClicked = onNewPostClicked,
         onUpdateTitle = onUpdateTitle,
         drawerState = drawerState,
-        scope = scope
+        scope = scope,
+        navController = navController
     )
 }
 
@@ -84,7 +89,8 @@ fun ForumCategoryUi(
     onNewPostClicked: (Long) -> Unit,
     onUpdateTitle: ((String) -> Unit)?,
     drawerState: DrawerState,
-    scope: CoroutineScope = rememberCoroutineScope()
+    scope: CoroutineScope = rememberCoroutineScope(),
+    navController: NavController = rememberNavController()
 ) {
     MaterialTheme {
         ModalNavigationDrawer(
@@ -207,7 +213,11 @@ fun ForumCategoryUi(
                     onThreadClicked = onThreadClicked,
                     onNewPostClicked = onNewPostClicked,
                     onUpdateTitle = onUpdateTitle,
-                    showFloatingActionButton = true
+                    showFloatingActionButton = true,
+                    onImageClick = { imgPath, ext ->
+                        // 导航到图片预览页面
+                        navController.navigate(ImagePreviewNavigationDestination.createRoute(imgPath, ext))
+                    }
                 )
             } ?: run {
                 // 未选择论坛时显示提示
