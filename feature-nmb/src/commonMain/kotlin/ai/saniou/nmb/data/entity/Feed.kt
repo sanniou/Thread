@@ -29,11 +29,12 @@ import kotlinx.serialization.json.JsonNames
 @OptIn(ExperimentalSerializationApi::class)
 data class Feed(
     val id: String,// 串的 ID
+    @JsonNames("user_id")
     val userId: String,// 发串的用户 ID？
     val fid: String,// 串所属的版面 ID
-    @JsonNames("ReplyCount")
+    @JsonNames("reply_count")
     val replyCount: String,// 回复数量
-    @JsonNames("RecentReplies")
+    @JsonNames("recent_replies")
     val recentReplies: String,// 最近几条回复的 ID，使用的是 [0,1,2,3] 这样的类似于数组的格式
     val category: String,// ？
     @JsonNames("file_id")

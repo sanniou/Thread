@@ -25,7 +25,7 @@ inline fun <reified T : UiStateWrapper> MutableStateFlow<UiStateWrapper>.updateU
 @Composable
 inline fun <reified T : UiStateWrapper> UiStateWrapper.LoadingWrapper(
     content: @Composable (T) -> Unit,
-    noinline error: @Composable (() -> Unit)? = null,
+    noinline error: @Composable ((UiStateWrapper.Error) -> Unit)? = null,
     noinline loading: @Composable (() -> Unit)? = null,
     crossinline onRetryClick: () -> Unit
 ) {
@@ -35,7 +35,7 @@ inline fun <reified T : UiStateWrapper> UiStateWrapper.LoadingWrapper(
         }
 
         is UiStateWrapper.Error -> {
-            error?.invoke() ?: DefaultError(onRetryClick)
+            error?.invoke(this) ?: DefaultError(onRetryClick)
         }
 
         is T -> {

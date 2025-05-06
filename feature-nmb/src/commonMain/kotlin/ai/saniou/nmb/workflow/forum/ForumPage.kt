@@ -164,7 +164,8 @@ fun Forum(
                 snapshotFlow {
                     val layoutInfo = scrollState.layoutInfo
                     val totalItemsCount = layoutInfo.totalItemsCount
-                    val lastVisibleItemIndex = (layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0) + 1
+                    val lastVisibleItemIndex =
+                        (layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0) + 1
 
                     // 当最后一个可见项是列表中的最后一项，且列表不为空
                     lastVisibleItemIndex >= totalItemsCount && totalItemsCount > 0
@@ -346,7 +347,6 @@ fun ThreadCard(
                     imgPath = thread.img,
                     ext = thread.ext,
                     modifier = Modifier
-                        .fillMaxWidth()
                         .height(160.dp),
                     isThumb = true,
                     contentDescription = "帖子图片",

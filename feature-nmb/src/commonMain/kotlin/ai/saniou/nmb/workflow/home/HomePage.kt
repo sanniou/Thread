@@ -7,6 +7,8 @@ import ai.saniou.nmb.workflow.image.ImagePreviewPage
 import ai.saniou.nmb.workflow.image.ImagePreviewViewModel
 import ai.saniou.nmb.workflow.post.PostPage
 import ai.saniou.nmb.ui.components.HtmlTitleText
+import ai.saniou.nmb.workflow.subscription.SubscriptionNavigationDestination
+import ai.saniou.nmb.workflow.subscription.SubscriptionPage
 import ai.saniou.nmb.workflow.thread.ThreadPage
 import ai.saniou.nmb.workflow.thread.ThreadPageNavigationDestination
 import ai.saniou.nmb.workflow.user.UserPage
@@ -242,6 +244,19 @@ fun HomePage(navController: NavHostController = rememberNavController(), di: org
             composable(route = NmbScreen.User.name) {
                 UserPage(
                     onNavigateBack = { navController.navigateUp() }
+                )
+            }
+
+            // 订阅列表页面
+            composable(route = SubscriptionNavigationDestination.route) {
+                SubscriptionPage(
+                    onThreadClicked = { threadId ->
+                        navController.navigate("${ThreadPageNavigationDestination.route}/${threadId}")
+                    },
+                    onUpdateTitle = { title ->
+                        customTitle.value = title
+                    },
+                    navController = navController
                 )
             }
 

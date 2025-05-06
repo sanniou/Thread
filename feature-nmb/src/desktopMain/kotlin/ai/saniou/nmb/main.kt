@@ -8,10 +8,7 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
-import coil3.SingletonImageLoader
-import coil3.annotation.ExperimentalCoilApi
 
-@OptIn(ExperimentalCoilApi::class)
 fun main() = application {
     val windowState = rememberWindowState(
         position = WindowPosition(Alignment.Center),

@@ -1,7 +1,9 @@
 package ai.saniou.nmb.workflow.thread
 
 import ai.saniou.coreui.state.UiStateWrapper
+import ai.saniou.nmb.data.api.NmbXdApi
 import ai.saniou.nmb.data.entity.Thread
+import ai.saniou.nmb.data.storage.SubscriptionStorage
 import ai.saniou.nmb.domain.ThreadUseCase
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -15,7 +17,11 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class ThreadViewModel(private val threadUseCase: ThreadUseCase) : ViewModel() {
+class ThreadViewModel(
+    private val threadUseCase: ThreadUseCase,
+    private val nmbXdApi: NmbXdApi,
+    private val subscriptionStorage: SubscriptionStorage
+) : ViewModel() {
 
     // 默认空状态
     private val emptyThread = Thread(
@@ -88,8 +94,23 @@ class ThreadViewModel(private val threadUseCase: ThreadUseCase) : ViewModel() {
                 .distinctUntilChanged() // 确保只有在值变化时才触发
                 .collect { id ->
                     loadThreadInternal(id)
+                    // 加载订阅状态
+                    checkSubscriptionStatus(id)
                 }
         }
+
+        // 加载订阅ID
+        viewModelScope.launch {
+            subscriptionStorage.getSubscriptionId()
+        }
+    }
+
+    /**
+     * 检查当前帖子的订阅状态
+     */
+    private suspend fun checkSubscriptionStatus(threadId: Long) {
+        // 目前API没有提供检查订阅状态的方法，这里暂时不实现
+        // 未来可以通过获取订阅列表并检查是否包含当前帖子来实现
     }
 
     // 公开方法，设置threadId
@@ -300,15 +321,52 @@ class ThreadViewModel(private val threadUseCase: ThreadUseCase) : ViewModel() {
      * 切换订阅状态
      */
     private fun toggleSubscribe(subscribed: Boolean) {
-        _isSubscribed.value = subscribed
+        val currentId = _threadId.value
+        if (currentId == null || currentId <= 0) return
 
-        // 更新UI状态
-        updateUiState { state ->
-            state.copy(isSubscribed = subscribed)
+        viewModelScope.launch {
+            try {
+                val subscriptionId = subscriptionStorage.getSubscriptionId()
+
+                if (subscriptionId == null) {
+                    // 如果没有订阅ID，生成一个随机ID并保存
+                    val newId = subscriptionStorage.generateRandomSubscriptionId()
+                    subscriptionStorage.saveSubscriptionId(newId)
+
+                    // 使用新ID进行订阅/取消订阅操作
+                    if (subscribed) {
+                        nmbXdApi.addFeed(newId, currentId)
+                    } else {
+                        nmbXdApi.delFeed(newId, currentId)
+                    }
+                } else {
+                    // 使用已有ID进行订阅/取消订阅操作
+                    if (subscribed) {
+                        nmbXdApi.addFeed(subscriptionId, currentId)
+                    } else {
+                        nmbXdApi.delFeed(subscriptionId, currentId)
+                    }
+                }
+
+                // 更新订阅状态
+                _isSubscribed.value = subscribed
+
+                // 更新UI状态
+                updateUiState { state ->
+                    state.copy(isSubscribed = subscribed)
+                }
+
+                // 更新UI
+                _uiState.emit(UiStateWrapper.Success(dataUiState.value))
+            } catch (e: Exception) {
+                // 订阅/取消订阅失败，恢复状态
+                _isSubscribed.value = !subscribed
+                updateUiState { state ->
+                    state.copy(isSubscribed = !subscribed)
+                }
+                _uiState.emit(UiStateWrapper.Success(dataUiState.value))
+            }
         }
-
-        // 在这里可以添加实际的订阅/取消订阅逻辑
-        // TODO: 实现订阅功能
     }
 
     /**

@@ -9,6 +9,7 @@ import ai.saniou.nmb.data.repository.NmbRepository
 import ai.saniou.nmb.data.repository.NmbRepositoryImpl
 import ai.saniou.nmb.data.storage.CategoryStorage
 import ai.saniou.nmb.data.storage.GreetImageStorage
+import ai.saniou.nmb.data.storage.SubscriptionStorage
 import ai.saniou.nmb.data.usecase.ReferenceUseCase
 import ai.saniou.nmb.domain.ForumCategoryUserCase
 import ai.saniou.nmb.domain.ForumUserCase
@@ -22,6 +23,7 @@ import ai.saniou.nmb.workflow.home.GreetImageViewModel
 import ai.saniou.nmb.workflow.image.ImagePreviewViewModel
 import ai.saniou.nmb.workflow.post.PostViewModel
 import ai.saniou.nmb.workflow.reference.ReferenceViewModel
+import ai.saniou.nmb.workflow.subscription.SubscriptionViewModel
 import ai.saniou.nmb.workflow.thread.ThreadViewModel
 import ai.saniou.nmb.workflow.user.UserViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -66,6 +68,13 @@ val nmbdi = DI {
         )
     }
 
+    // 订阅存储
+    bindSingleton {
+        SubscriptionStorage(
+            scope = CoroutineScope(Dispatchers.Default)
+        )
+    }
+
     // 欢迎图片ViewModel
     bindProvider<GreetImageViewModel> { GreetImageViewModel(instance(), instance()) }
 
@@ -79,7 +88,7 @@ val nmbdi = DI {
 
     // 帖子相关
     bindProvider { ThreadUseCase(instance()) }
-    bindProvider { ThreadViewModel(instance()) }
+    bindProvider { ThreadViewModel(instance(), instance(), instance()) }
 
     // 发帖和回复相关
     bindProvider { PostUseCase(instance()) }
@@ -96,6 +105,9 @@ val nmbdi = DI {
     bindProvider<ReferenceUseCase> { ReferenceUseCase(instance()) }
     // 引用 ViewModel
     bindProvider<ReferenceViewModel> { ReferenceViewModel(instance()) }
+
+    // 订阅相关
+    bindProvider<SubscriptionViewModel> { SubscriptionViewModel(instance(), instance()) }
 }
 
 

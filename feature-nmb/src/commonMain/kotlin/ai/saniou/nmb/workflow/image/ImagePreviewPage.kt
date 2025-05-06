@@ -6,14 +6,29 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Place
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -22,12 +37,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import coil3.compose.LocalPlatformContext
-import coil3.compose.SubcomposeAsyncImage
-import coil3.request.CachePolicy
-import coil3.request.ImageRequest
-import coil3.request.crossfade
-import kotlinx.coroutines.launch
+import com.seiko.imageloader.ui.AutoSizeImage
 import org.kodein.di.instance
 
 /**
@@ -73,14 +83,15 @@ fun ImagePreviewPage(
     var offset by remember { mutableStateOf(Offset.Zero) }
 
     // 创建可变换状态
-    val transformableState = rememberTransformableState { zoomChange, offsetChange, rotationChange ->
-        // 更新缩放比例，限制在0.5到5倍之间
-        scale = (scale * zoomChange).coerceIn(0.5f, 5f)
-        // 更新旋转角度
-        rotation += rotationChange
-        // 更新偏移量
-        offset += offsetChange
-    }
+    val transformableState =
+        rememberTransformableState { zoomChange, offsetChange, rotationChange ->
+            // 更新缩放比例，限制在0.5到5倍之间
+            scale = (scale * zoomChange).coerceIn(0.5f, 5f)
+            // 更新旋转角度
+            rotation += rotationChange
+            // 更新偏移量
+            offset += offsetChange
+        }
 
     // 记住是否正在重试
     var isRetrying by remember { mutableStateOf(false) }
@@ -103,134 +114,166 @@ fun ImagePreviewPage(
             .fillMaxSize()
             .background(Color.Black)
     ) {
-            // 图片显示区域
-            SubcomposeAsyncImage(
-                model = ImageRequest.Builder(LocalPlatformContext.current)
-                    .data(imageUrl)
-                    .crossfade(true)
-                    .memoryCachePolicy(CachePolicy.ENABLED)
-                    .diskCachePolicy(CachePolicy.ENABLED)
-                    .build(),
-                contentDescription = "预览图片",
-                contentScale = ContentScale.Fit,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .graphicsLayer(
-                        scaleX = scale,
-                        scaleY = scale,
-                        rotationZ = rotation,
-                        translationX = offset.x,
-                        translationY = offset.y
-                    )
-                    .transformable(state = transformableState)
-                    .pointerInput(Unit) {
-                        detectTapGestures(
-                            onDoubleTap = { tapOffset ->
-                                // 双击放大/缩小功能
-                                if (scale > 1.5f) {
-                                    // 如果当前已经放大，则重置为原始大小
-                                    scale = 1f
-                                    offset = Offset.Zero
-                                    rotation = 0f
-                                } else {
-                                    // 否则放大到2.5倍
-                                    scale = 2.5f
-                                }
-                            }
-                        )
-                    },
-                loading = {
-                    // 加载中状态
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(48.dp),
-                            color = MaterialTheme.colorScheme.primary,
-                            strokeWidth = 4.dp
-                        )
-                    }
-                },
-                error = {
-                    // 加载失败状态
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.ArrowBack,
-                                contentDescription = "加载失败",
-                                tint = Color.White,
-                                modifier = Modifier.size(64.dp)
-                            )
 
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            Button(
-                                onClick = {
-                                    coroutineScope.launch {
-                                        // 切换CDN地址
-                                        cdnManager.switchToNextCdn()
-                                        // 触发重新加载
-                                        isRetrying = !isRetrying
-                                    }
-                                }
-                            ) {
-                                Text("点击重试")
+        AutoSizeImage(
+            url = imageUrl,
+            contentDescription = "预览图片",
+            contentScale = ContentScale.Fit,
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer(
+                    scaleX = scale,
+                    scaleY = scale,
+                    rotationZ = rotation,
+                    translationX = offset.x,
+                    translationY = offset.y
+                )
+                .transformable(state = transformableState)
+                .pointerInput(Unit) {
+                    detectTapGestures(
+                        onDoubleTap = { tapOffset ->
+                            // 双击放大/缩小功能
+                            if (scale > 1.5f) {
+                                // 如果当前已经放大，则重置为原始大小
+                                scale = 1f
+                                offset = Offset.Zero
+                                rotation = 0f
+                            } else {
+                                // 否则放大到2.5倍
+                                scale = 2.5f
                             }
                         }
-                    }
-                }
-            )
+                    )
+                },
+        )
+        // 图片显示区域
+//            SubcomposeAsyncImage(
+//                model = ImageRequest.Builder(LocalPlatformContext.current)
+//                    .data(imageUrl)
+//                    .crossfade(true)
+//                    .memoryCachePolicy(CachePolicy.ENABLED)
+//                    .diskCachePolicy(CachePolicy.ENABLED)
+//                    .build(),
+//                contentDescription = "预览图片",
+//                contentScale = ContentScale.Fit,
+//                modifier = Modifier
+//                    .fillMaxSize()
+//                    .graphicsLayer(
+//                        scaleX = scale,
+//                        scaleY = scale,
+//                        rotationZ = rotation,
+//                        translationX = offset.x,
+//                        translationY = offset.y
+//                    )
+//                    .transformable(state = transformableState)
+//                    .pointerInput(Unit) {
+//                        detectTapGestures(
+//                            onDoubleTap = { tapOffset ->
+//                                // 双击放大/缩小功能
+//                                if (scale > 1.5f) {
+//                                    // 如果当前已经放大，则重置为原始大小
+//                                    scale = 1f
+//                                    offset = Offset.Zero
+//                                    rotation = 0f
+//                                } else {
+//                                    // 否则放大到2.5倍
+//                                    scale = 2.5f
+//                                }
+//                            }
+//                        )
+//                    },
+//                loading = {
+//                    // 加载中状态
+//                    Box(
+//                        modifier = Modifier.fillMaxSize(),
+//                        contentAlignment = Alignment.Center
+//                    ) {
+//                        CircularProgressIndicator(
+//                            modifier = Modifier.size(48.dp),
+//                            color = MaterialTheme.colorScheme.primary,
+//                            strokeWidth = 4.dp
+//                        )
+//                    }
+//                },
+//                error = {
+//                    // 加载失败状态
+//                    Box(
+//                        modifier = Modifier.fillMaxSize(),
+//                        contentAlignment = Alignment.Center
+//                    ) {
+//                        Column(
+//                            horizontalAlignment = Alignment.CenterHorizontally
+//                        ) {
+//                            Icon(
+//                                imageVector = Icons.Default.ArrowBack,
+//                                contentDescription = "加载失败",
+//                                tint = Color.White,
+//                                modifier = Modifier.size(64.dp)
+//                            )
+//
+//                            Spacer(modifier = Modifier.height(16.dp))
+//
+//                            Button(
+//                                onClick = {
+//                                    coroutineScope.launch {
+//                                        // 切换CDN地址
+//                                        cdnManager.switchToNextCdn()
+//                                        // 触发重新加载
+//                                        isRetrying = !isRetrying
+//                                    }
+//                                }
+//                            ) {
+//                                Text("点击重试")
+//                            }
+//                        }
+//                    }
+//                }
+//            )
 
-            // 底部导航按钮
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.BottomCenter)
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                // 上一张按钮
-                FloatingActionButton(
-                    onClick = onPreviousImage,
-                    modifier = Modifier.size(48.dp),
-                    containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
+        // 底部导航按钮
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.BottomCenter)
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            // 上一张按钮
+            FloatingActionButton(
+                onClick = onPreviousImage,
+                modifier = Modifier.size(48.dp),
+                containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
+                contentColor = MaterialTheme.colorScheme.onPrimary,
 //                    enabled = hasPrevious
-                ) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "上一张")
-                }
+            ) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "上一张")
+            }
 
-                // 重置缩放按钮
-                FloatingActionButton(
-                    onClick = {
-                        // 重置所有变换
-                        scale = 1f
-                        rotation = 0f
-                        offset = Offset.Zero
-                    },
-                    modifier = Modifier.size(48.dp),
-                    containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                ) {
-                    Text("重置")
-                }
+            // 重置缩放按钮
+            FloatingActionButton(
+                onClick = {
+                    // 重置所有变换
+                    scale = 1f
+                    rotation = 0f
+                    offset = Offset.Zero
+                },
+                modifier = Modifier.size(48.dp),
+                containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            ) {
+                Text("重置")
+            }
 
-                // 下一张按钮
-                FloatingActionButton(
-                    onClick = onNextImage,
-                    modifier = Modifier.size(48.dp),
-                    containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
+            // 下一张按钮
+            FloatingActionButton(
+                onClick = onNextImage,
+                modifier = Modifier.size(48.dp),
+                containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
+                contentColor = MaterialTheme.colorScheme.onPrimary,
 //                    enabled = hasNext
-                ) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "下一张")
-                }
+            ) {
+                Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "下一张")
             }
         }
+    }
 }

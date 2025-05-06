@@ -6,6 +6,7 @@ import ai.saniou.nmb.ui.components.DrawerMenuItem
 import ai.saniou.nmb.ui.components.DrawerMenuRow
 import ai.saniou.nmb.workflow.forum.ForumContent
 import ai.saniou.nmb.workflow.image.ImagePreviewNavigationDestination
+import ai.saniou.nmb.workflow.subscription.SubscriptionNavigationDestination
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -117,7 +118,8 @@ fun ForumCategoryUi(
                                         icon = Icons.Default.Favorite,
                                         label = "订阅列表",
                                         onClick = {
-                                            // TODO: 导航到订阅列表页面
+                                            // 导航到订阅列表页面
+                                            navController.navigate(SubscriptionNavigationDestination.route)
                                             scope.launch {
                                                 drawerState.close()
                                             }
@@ -225,7 +227,10 @@ fun ForumCategoryUi(
                                                                     drawerState.close()
                                                                 }
                                                             }
-                                                            .padding(horizontal = 16.dp, vertical = 12.dp)
+                                                            .padding(
+                                                                horizontal = 16.dp,
+                                                                vertical = 12.dp
+                                                            )
                                                             .padding(start = 32.dp),
                                                         verticalAlignment = Alignment.CenterVertically
                                                     ) {

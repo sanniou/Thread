@@ -5,20 +5,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.unit.dp
-import coil3.compose.AsyncImage
-import coil3.compose.LocalPlatformContext
-import coil3.compose.SubcomposeAsyncImage
-import coil3.request.CachePolicy
-import coil3.request.ImageRequest
-import coil3.request.crossfade
+import com.seiko.imageloader.ui.AutoSizeImage
 
 /**
  * Drawer 头部组件，显示欢迎图片
@@ -42,17 +35,23 @@ fun DrawerHeader(
         ) {
             // 背景图片
             if (imageUrl != null) {
-                SubcomposeAsyncImage(
-                    model = ImageRequest.Builder(LocalPlatformContext.current)
-                        .data(imageUrl)
-                        .crossfade(true)
-                        .memoryCachePolicy(CachePolicy.ENABLED)
-                        .diskCachePolicy(CachePolicy.ENABLED)
-                        .build(),
+                AutoSizeImage(
+                    url = imageUrl,
                     contentDescription = "欢迎图片",
-                    contentScale = ContentScale.Crop, // 使用Crop而非FillWidth，确保图片填满区域
+                    contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()
                 )
+//                SubcomposeAsyncImage(
+//                    model = ImageRequest.Builder(LocalPlatformContext.current)
+//                        .data(imageUrl)
+//                        .crossfade(true)
+//                        .memoryCachePolicy(CachePolicy.ENABLED)
+//                        .diskCachePolicy(CachePolicy.ENABLED)
+//                        .build(),
+//                    contentDescription = "欢迎图片",
+//                    contentScale = ContentScale.Crop, // 使用Crop而非FillWidth，确保图片填满区域
+//                    modifier = Modifier.fillMaxSize()
+//                )
 
                 // 添加渐变遮罩，使图片与下方内容过渡更自然
                 Box(
