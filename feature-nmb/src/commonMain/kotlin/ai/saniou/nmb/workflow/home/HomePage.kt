@@ -127,41 +127,34 @@ fun SaniouAppBar(
 class HomeScreen : Screen {
     @Composable
     override fun Content() {
-        var currentDestination by rememberSaveable { mutableStateOf("it") }
+        var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.HOME) }
         NavigationSuiteScaffold(
             {
-                item(
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Default.Menu,
-                            contentDescription = stringResource(Res.string.back_button)
-                        )
-                    },
-                    label = { Text(stringResource(Res.string.back_button)) },
-                    selected = "it" == currentDestination,
-                    onClick = { currentDestination = "it" }
-                )
-                item(
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Default.Favorite,
-                            contentDescription = stringResource(Res.string.back_button)
-                        )
-                    },
-                    label = { Text(stringResource(Res.string.back_button)) },
-                    selected = "it2" == currentDestination,
-                    onClick = { currentDestination = "it2" }
-                )
+                AppDestinations.entries.forEach {
+                    item(
+                        icon = {
+                            Icon(
+                                it.icon,
+                                contentDescription = stringResource(it.contentDescription)
+                            )
+                        },
+                        label = { Text(stringResource(it.label)) },
+                        selected = it == currentDestination,
+                        onClick = { currentDestination = it }
+                    )
+                }
             }
         ) {
             val a = rememberNavController()
             when (currentDestination) {
-                "it" -> HomePage(navController = a)
-                "it2" -> SubscriptionPage(
+                AppDestinations.HOME -> HomePage(navController = a)
+                AppDestinations.FAVORITES -> SubscriptionPage(
                     onThreadClicked = {},
                     navController = a
                 )
 
+                AppDestinations.SHOPPING -> TODO()
+                AppDestinations.PROFILE -> TODO()
             }
 
         }

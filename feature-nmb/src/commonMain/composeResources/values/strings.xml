@@ -1,6 +1,15 @@
 <resources>
     <string name="back_button">My awesome app</string>
     <string name="title">Some title</string>
+    <string name="home">Home</string>
+    <string name="favorites">Favorites</string>
+    <string name="settings">Settings</string>
+    <string name="shopping">Shopping</string>
+    <string name="profile">Profile</string>
+    <string name="logout">Logout</string>
+    <string name="login">Login</string>
+    <string name="register">Register</string>
+    <string name="forgot_password">Forgot Password</string>
     <string name="core_ui_loading_wording">Some title</string>
     <string name="core_ui_list_loading_wording">Some title</string>
     <string name="core_ui_no_internet_retry">Some title</string>
