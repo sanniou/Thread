@@ -9,9 +9,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
-import java.util.UUID
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 /**
  * 管理订阅相关数据的持久化存储
@@ -62,8 +62,9 @@ class SubscriptionStorage(
     /**
      * 生成随机订阅ID
      */
+    @OptIn(ExperimentalUuidApi::class)
     fun generateRandomSubscriptionId(): String {
-        return UUID.randomUUID().toString()
+        return Uuid.random().toString()
     }
 
     /**

@@ -48,6 +48,7 @@ import org.jetbrains.compose.resources.stringResource
 import thread.feature_nmb.generated.resources.Res
 import thread.feature_nmb.generated.resources.back_button
 import ai.saniou.nmb.di.nmbdi
+import cafe.adriel.voyager.core.screen.Screen
 import org.kodein.di.instance
 
 
@@ -67,7 +68,10 @@ fun SaniouAppBar(
 ) {
     TopAppBar(
         title = {
-            if (customTitle != null && (customTitle.contains("<b>") || customTitle.contains("<br>") || customTitle.contains("<small>"))) {
+            if (customTitle != null && (customTitle.contains("<b>") || customTitle.contains("<br>") || customTitle.contains(
+                    "<small>"
+                ))
+            ) {
                 // 如果标题包含HTML标签，则使用HtmlTitleText组件
                 HtmlTitleText(text = customTitle)
             } else {
@@ -115,8 +119,20 @@ fun SaniouAppBar(
     )
 }
 
+class HomeScreen : Screen {
+    @Composable
+    override fun Content() {
+        HomePage()
+        // ...
+    }
+
+}
+
 @Composable
-fun HomePage(navController: NavHostController = rememberNavController(), di: org.kodein.di.DI = nmbdi) {
+fun HomePage(
+    navController: NavHostController = rememberNavController(),
+    di: org.kodein.di.DI = nmbdi
+) {
     // Get current back stack entry
     val backStackEntry by navController.currentBackStackEntryAsState()
     // Get the name of the current screen
@@ -275,8 +291,10 @@ fun HomePage(navController: NavHostController = rememberNavController(), di: org
                 )
             ) {
                 // 获取并解码路径参数
-                val encodedImgPath = it.arguments?.getString(ImagePreviewNavigationDestination.imgPathArg) ?: ""
-                val encodedExt = it.arguments?.getString(ImagePreviewNavigationDestination.extArg) ?: ""
+                val encodedImgPath =
+                    it.arguments?.getString(ImagePreviewNavigationDestination.imgPathArg) ?: ""
+                val encodedExt =
+                    it.arguments?.getString(ImagePreviewNavigationDestination.extArg) ?: ""
 
                 // 使用 ImagePreviewNavigationDestination 的解码方法
                 val imgPath = ImagePreviewNavigationDestination.decodePath(encodedImgPath)

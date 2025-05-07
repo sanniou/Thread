@@ -1,5 +1,4 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
-import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -14,7 +13,6 @@ plugins {
 
 kotlin {
     androidTarget {
-        @OptIn(ExperimentalKotlinGradlePluginApi::class)
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_11)
         }
@@ -45,20 +43,9 @@ kotlin {
             implementation(compose.components.resources)
             implementation(project(":core-ui"))
             implementation(project(":core-common"))
-//             implementation("io.coil-kt.coil3:coil-core:3.1.0")
-//             implementation("io.coil-kt.coil3:coil-compose-core:3.1.0")
-//             implementation("io.coil-kt.coil3:coil-compose:3.1.0")
-//             implementation("io.coil-kt.coil3:coil-network-ktor3:3.1.0")
-            // api("io.github.qdsfdhvh:image-loader:1.10.0")
-            // optional - Compose Multiplatform Resources Decoder
-            // api("io.github.qdsfdhvh:image-loader-extension-compose-resources:1.10.0")
-            // optional - Moko Resources Decoder
-            // api("io.github.qdsfdhvh:image-loader-extension-moko-resources:1.10.0")
-            // optional - Blur Interceptor (only support bitmap)
-            // api("io.github.qdsfdhvh:image-loader-extension-blur:1.10.0")
+            implementation(libs.voyager.navigator)
         }
         desktopMain.dependencies {
-            // api("io.github.qdsfdhvh:image-loader-extension-imageio:1.10.0")
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
         }

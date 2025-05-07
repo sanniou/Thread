@@ -82,6 +82,13 @@ kotlin {
             api(libs.coil.network)
 //            api(libs.paging.compose.common)
 //            api(libs.paging.common)
+            // voyager
+            api(libs.voyager.navigator)
+            api(libs.voyager.screenmodel)
+            api(libs.voyager.bottom.sheet.navigator)
+            api(libs.voyager.tab.navigator)
+            api(libs.voyager.transitions)
+            api(libs.voyager.kodein)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
