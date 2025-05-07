@@ -9,7 +9,8 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
-    kotlin("plugin.serialization") version "2.1.20"
+    alias(libs.plugins.kotlinxSerialization)
+    //alias(libs.plugins.sqldelight)
 }
 
 kotlin {
@@ -59,6 +60,8 @@ kotlin {
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
+            implementation(libs.ktor.client.android)
+//            implementation(libs.android.driver)
         }
         commonMain.dependencies {
             api(libs.androidx.lifecycle.viewmodel)
@@ -72,12 +75,22 @@ kotlin {
             implementation(libs.ktor.client.encoding)
             api(libs.ktor.serialization.kotlinx.json)
             api(libs.kodein.di)
+            api(libs.kottage)
+            api(libs.kotlinx.datetime)
+            // Coil for Multiplatform
+            api(libs.coil.compose)
+            api(libs.coil.network)
 //            api(libs.paging.compose.common)
 //            api(libs.paging.common)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
+            implementation(libs.ktor.client.java)
             implementation(libs.kotlinx.coroutines.swing)
+        }
+        iosMain.dependencies {
+            implementation(libs.ktor.client.darwin)
+//            implementation(libs.native.driver)
         }
     }
 }

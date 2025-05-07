@@ -45,11 +45,6 @@ kotlin {
             implementation(compose.components.resources)
             implementation(project(":core-ui"))
             implementation(project(":core-common"))
-            implementation(libs.kottage)
-            implementation(libs.kotlinx.datetime)
-            // Coil for Multiplatform
-            implementation(libs.coil.compose)
-            implementation(libs.coil.network)
 //             implementation("io.coil-kt.coil3:coil-core:3.1.0")
 //             implementation("io.coil-kt.coil3:coil-compose-core:3.1.0")
 //             implementation("io.coil-kt.coil3:coil-compose:3.1.0")
