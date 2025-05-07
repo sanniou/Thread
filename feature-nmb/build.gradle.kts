@@ -44,6 +44,9 @@ kotlin {
             implementation(project(":core-ui"))
             implementation(project(":core-common"))
             implementation(libs.voyager.navigator)
+            implementation(libs.material3)
+            implementation(libs.material3.window.size)
+            implementation(libs.material3.adaptive.navigation)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)

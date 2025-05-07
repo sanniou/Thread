@@ -78,7 +78,7 @@ kotlin {
 }
 
 android {
-    namespace = "ai.saniou.thread"
+    namespace = "ai.saniou.thread.ui"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {

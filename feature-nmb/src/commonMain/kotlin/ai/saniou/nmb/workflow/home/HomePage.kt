@@ -48,7 +48,12 @@ import org.jetbrains.compose.resources.stringResource
 import thread.feature_nmb.generated.resources.Res
 import thread.feature_nmb.generated.resources.back_button
 import ai.saniou.nmb.di.nmbdi
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import cafe.adriel.voyager.core.screen.Screen
+import org.kodein.di.DI
 import org.kodein.di.instance
 
 
@@ -122,8 +127,45 @@ fun SaniouAppBar(
 class HomeScreen : Screen {
     @Composable
     override fun Content() {
-        HomePage()
-        // ...
+        var currentDestination by rememberSaveable { mutableStateOf("it") }
+        NavigationSuiteScaffold(
+            {
+                item(
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.Menu,
+                            contentDescription = stringResource(Res.string.back_button)
+                        )
+                    },
+                    label = { Text(stringResource(Res.string.back_button)) },
+                    selected = "it" == currentDestination,
+                    onClick = { currentDestination = "it" }
+                )
+                item(
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.Favorite,
+                            contentDescription = stringResource(Res.string.back_button)
+                        )
+                    },
+                    label = { Text(stringResource(Res.string.back_button)) },
+                    selected = "it2" == currentDestination,
+                    onClick = { currentDestination = "it2" }
+                )
+            }
+        ) {
+            val a = rememberNavController()
+            when (currentDestination) {
+                "it" -> HomePage(navController = a)
+                "it2" -> SubscriptionPage(
+                    onThreadClicked = {},
+                    navController = a
+                )
+
+            }
+
+        }
+
     }
 
 }
@@ -131,7 +173,7 @@ class HomeScreen : Screen {
 @Composable
 fun HomePage(
     navController: NavHostController = rememberNavController(),
-    di: org.kodein.di.DI = nmbdi
+    di: DI = nmbdi
 ) {
     // Get current back stack entry
     val backStackEntry by navController.currentBackStackEntryAsState()

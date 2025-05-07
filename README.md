@@ -30,3 +30,7 @@ https://github.com/HuanCheng65/TiebaLite
 
 // nga api
 // rss feed
+
+https://m3.material.io/foundations/adaptive-design
+
+https://developer.android.com/develop/ui/compose/layouts/adaptive/build-adaptive-navigation

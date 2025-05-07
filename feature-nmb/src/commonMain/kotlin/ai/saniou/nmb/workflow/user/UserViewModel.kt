@@ -7,25 +7,26 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
 
 class UserViewModel(private val userUseCase: UserUseCase) : ViewModel() {
-    
+
     private val _uiState = MutableStateFlow<UserUiState>(UserUiState.Loading)
     val uiState = _uiState.asStateFlow()
-    
+
     var currentTabIndex = 0
         private set
-    
+
     private var email = ""
     private var password = ""
     private var passwordConfirm = ""
     private var verifyCode = ""
     private var verifyImageUrl = "https://www.nmbxd.com/Member/User/Index/verify.html"
-    
+
     init {
         refreshCookies()
     }
-    
+
     fun setCurrentTabIndex(index: Int) {
         currentTabIndex = index
         when (index) {
@@ -36,6 +37,7 @@ class UserViewModel(private val userUseCase: UserUseCase) : ViewModel() {
                 verifyCode = verifyCode,
                 verifyImageUrl = verifyImageUrl
             )
+
             2 -> _uiState.value = UserUiState.Register(
                 email = email,
                 password = password,
@@ -45,7 +47,7 @@ class UserViewModel(private val userUseCase: UserUseCase) : ViewModel() {
             )
         }
     }
-    
+
     fun refreshCookies() {
         viewModelScope.launch {
             _uiState.value = UserUiState.Loading
@@ -57,7 +59,7 @@ class UserViewModel(private val userUseCase: UserUseCase) : ViewModel() {
             }
         }
     }
-    
+
     fun applyNewCookie() {
         viewModelScope.launch {
             _uiState.value = UserUiState.Loading
@@ -70,33 +72,35 @@ class UserViewModel(private val userUseCase: UserUseCase) : ViewModel() {
             }
         }
     }
-    
+
     fun updateEmail(value: String) {
         email = value
         updateLoginOrRegisterState()
     }
-    
+
     fun updatePassword(value: String) {
         password = value
         updateLoginOrRegisterState()
     }
-    
+
     fun updatePasswordConfirm(value: String) {
         passwordConfirm = value
         updateLoginOrRegisterState()
     }
-    
+
     fun updateVerifyCode(value: String) {
         verifyCode = value
         updateLoginOrRegisterState()
     }
-    
+
     fun refreshVerifyCode() {
         // 刷新验证码
-        verifyImageUrl = "https://www.nmbxd.com/Member/User/Index/verify.html?t=${System.currentTimeMillis()}"
+        verifyImageUrl = "https://www.nmbxd.com/Member/User/Index/verify.html?t=${
+            Clock.System.now().toEpochMilliseconds()
+        }"
         updateLoginOrRegisterState()
     }
-    
+
     fun login() {
         viewModelScope.launch {
             _uiState.value = UserUiState.Loading
@@ -113,7 +117,7 @@ class UserViewModel(private val userUseCase: UserUseCase) : ViewModel() {
             }
         }
     }
-    
+
     fun register() {
         viewModelScope.launch {
             _uiState.value = UserUiState.Loading
@@ -130,7 +134,7 @@ class UserViewModel(private val userUseCase: UserUseCase) : ViewModel() {
             }
         }
     }
-    
+
     fun retry() {
         when (currentTabIndex) {
             0 -> refreshCookies()
@@ -140,6 +144,7 @@ class UserViewModel(private val userUseCase: UserUseCase) : ViewModel() {
                 verifyCode = verifyCode,
                 verifyImageUrl = verifyImageUrl
             )
+
             2 -> _uiState.value = UserUiState.Register(
                 email = email,
                 password = password,
@@ -149,7 +154,7 @@ class UserViewModel(private val userUseCase: UserUseCase) : ViewModel() {
             )
         }
     }
-    
+
     private fun updateLoginOrRegisterState() {
         when (currentTabIndex) {
             1 -> _uiState.value = UserUiState.Login(
@@ -158,6 +163,7 @@ class UserViewModel(private val userUseCase: UserUseCase) : ViewModel() {
                 verifyCode = verifyCode,
                 verifyImageUrl = verifyImageUrl
             )
+
             2 -> _uiState.value = UserUiState.Register(
                 email = email,
                 password = password,
@@ -179,6 +185,7 @@ sealed class UserUiState {
         val verifyCode: String,
         val verifyImageUrl: String
     ) : UserUiState()
+
     data class Register(
         val email: String,
         val password: String,

@@ -21,8 +21,5 @@ class NmbApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         instance = this
-
-        // 初始化Coil
-        SingletonImageLoader.setInstance(ImageLoaderFactory.getImageLoader())
     }
 }
