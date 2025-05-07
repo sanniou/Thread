@@ -25,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -106,7 +107,11 @@ fun ReferencePopup(
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(4.dp))
                                     .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-                                    .border(1.dp, Color.Gray.copy(alpha = 0.5f), RoundedCornerShape(4.dp))
+                                    .border(
+                                        1.dp,
+                                        Color.Gray.copy(alpha = 0.5f),
+                                        RoundedCornerShape(4.dp)
+                                    )
                                     .padding(8.dp)
                             ) {
                                 // 回复者信息
@@ -156,7 +161,7 @@ fun ReferencePopup(
                                         modifier = Modifier.fillMaxWidth(),
                                         isThumb = true,
                                         contentDescription = "回复图片",
-                                        autosize = true,
+                                        contentScale = ContentScale.FillWidth,
                                     )
                                 }
                             }

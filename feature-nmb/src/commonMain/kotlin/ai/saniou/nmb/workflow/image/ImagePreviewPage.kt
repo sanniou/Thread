@@ -2,6 +2,7 @@ package ai.saniou.nmb.workflow.image
 
 import ai.saniou.nmb.data.manager.CdnManager
 import ai.saniou.nmb.di.nmbdi
+import ai.saniou.nmb.ui.components.NmbImage
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.rememberTransformableState
@@ -37,7 +38,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import com.seiko.imageloader.ui.AutoSizeImage
 import org.kodein.di.instance
 
 /**
@@ -114,11 +114,11 @@ fun ImagePreviewPage(
             .fillMaxSize()
             .background(Color.Black)
     ) {
-
-        AutoSizeImage(
-            url = imageUrl,
+        // 图片显示区域
+        NmbImage(
+            imgPath, ext, false,
             contentDescription = "预览图片",
-            contentScale = ContentScale.Fit,
+            contentScale = ContentScale.FillWidth,
             modifier = Modifier
                 .fillMaxSize()
                 .graphicsLayer(
@@ -145,90 +145,7 @@ fun ImagePreviewPage(
                         }
                     )
                 },
-        )
-        // 图片显示区域
-//            SubcomposeAsyncImage(
-//                model = ImageRequest.Builder(LocalPlatformContext.current)
-//                    .data(imageUrl)
-//                    .crossfade(true)
-//                    .memoryCachePolicy(CachePolicy.ENABLED)
-//                    .diskCachePolicy(CachePolicy.ENABLED)
-//                    .build(),
-//                contentDescription = "预览图片",
-//                contentScale = ContentScale.Fit,
-//                modifier = Modifier
-//                    .fillMaxSize()
-//                    .graphicsLayer(
-//                        scaleX = scale,
-//                        scaleY = scale,
-//                        rotationZ = rotation,
-//                        translationX = offset.x,
-//                        translationY = offset.y
-//                    )
-//                    .transformable(state = transformableState)
-//                    .pointerInput(Unit) {
-//                        detectTapGestures(
-//                            onDoubleTap = { tapOffset ->
-//                                // 双击放大/缩小功能
-//                                if (scale > 1.5f) {
-//                                    // 如果当前已经放大，则重置为原始大小
-//                                    scale = 1f
-//                                    offset = Offset.Zero
-//                                    rotation = 0f
-//                                } else {
-//                                    // 否则放大到2.5倍
-//                                    scale = 2.5f
-//                                }
-//                            }
-//                        )
-//                    },
-//                loading = {
-//                    // 加载中状态
-//                    Box(
-//                        modifier = Modifier.fillMaxSize(),
-//                        contentAlignment = Alignment.Center
-//                    ) {
-//                        CircularProgressIndicator(
-//                            modifier = Modifier.size(48.dp),
-//                            color = MaterialTheme.colorScheme.primary,
-//                            strokeWidth = 4.dp
-//                        )
-//                    }
-//                },
-//                error = {
-//                    // 加载失败状态
-//                    Box(
-//                        modifier = Modifier.fillMaxSize(),
-//                        contentAlignment = Alignment.Center
-//                    ) {
-//                        Column(
-//                            horizontalAlignment = Alignment.CenterHorizontally
-//                        ) {
-//                            Icon(
-//                                imageVector = Icons.Default.ArrowBack,
-//                                contentDescription = "加载失败",
-//                                tint = Color.White,
-//                                modifier = Modifier.size(64.dp)
-//                            )
-//
-//                            Spacer(modifier = Modifier.height(16.dp))
-//
-//                            Button(
-//                                onClick = {
-//                                    coroutineScope.launch {
-//                                        // 切换CDN地址
-//                                        cdnManager.switchToNextCdn()
-//                                        // 触发重新加载
-//                                        isRetrying = !isRetrying
-//                                    }
-//                                }
-//                            ) {
-//                                Text("点击重试")
-//                            }
-//                        }
-//                    }
-//                }
-//            )
+            )
 
         // 底部导航按钮
         Row(

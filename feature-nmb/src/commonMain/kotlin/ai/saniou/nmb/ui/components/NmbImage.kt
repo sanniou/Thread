@@ -6,19 +6,37 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import com.seiko.imageloader.ui.AutoSizeImage
+import coil3.compose.LocalPlatformContext
+import coil3.compose.SubcomposeAsyncImage
+import coil3.request.CachePolicy
+import coil3.request.ImageRequest
+import coil3.request.crossfade
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import org.kodein.di.instance
 
 /**
@@ -38,10 +56,10 @@ import org.kodein.di.instance
 fun NmbImage(
     imgPath: String,
     ext: String,
-    modifier: Modifier = Modifier,
     isThumb: Boolean = true,
+    modifier: Modifier = Modifier,
     contentDescription: String? = null,
-    autosize: Boolean = false,
+    contentScale: ContentScale = ContentScale.Fit,
     onClick: (() -> Unit)? = null,
 ) {
     // 获取CDN管理器
@@ -54,6 +72,33 @@ fun NmbImage(
     // 记住是否正在重试
     var isRetrying by remember { mutableStateOf(false) }
 
+    ImageComponent(
+        imageUrl = imageUrl,
+        modifier = modifier,
+        contentDescription = contentDescription,
+        contentScale = contentScale,
+        onRetry = {
+            // 点击重试
+            coroutineScope.launch {
+                // 切换CDN地址
+                cdnManager.switchToNextCdn()
+                // 触发重新加载
+                isRetrying = !isRetrying
+            }
+        },
+        onClick = onClick
+    )
+}
+
+@Composable
+fun ImageComponent(
+    imageUrl: String,
+    modifier: Modifier = Modifier,
+    contentDescription: String?,
+    contentScale: ContentScale = ContentScale.Fit,
+    onRetry: (() -> Unit)? = null,
+    onClick: (() -> Unit)? = null,
+) {
     // 准备修饰符
     var boxModifier = modifier
         .clip(RoundedCornerShape(4.dp))
@@ -64,84 +109,67 @@ fun NmbImage(
     if (onClick != null) {
         boxModifier = boxModifier.clickable { onClick() }
     }
-    Box(modifier = boxModifier) {
-        AutoSizeImage(
-            url = imageUrl,
-            contentDescription = contentDescription,
-        )
-    }
-//    Box(modifier = boxModifier) {
-//        // 使用SubcomposeAsyncImage可以自定义加载、错误和成功状态
-//        SubcomposeAsyncImage(
-//            model = ImageRequest.Builder(LocalPlatformContext.current)
-//                .data(imageUrl)
-//                .crossfade(true)
-//                .memoryCachePolicy(CachePolicy.ENABLED)
-//                .diskCachePolicy(CachePolicy.ENABLED)
-//                .build(),
-//            contentDescription = contentDescription,
-//            contentScale = if (autosize) ContentScale.FillWidth else ContentScale.Crop,
-//            modifier = if (autosize) {
-//                // 自适应高度时，使用wrapContentHeight
-//                Modifier.fillMaxWidth()
-//            } else {
-//                // 固定高度时，使用fillMaxSize
-//                Modifier.fillMaxSize()
-//            },
-//            loading = {
-//                // 加载中状态
-//                Box(
-//                    modifier = Modifier.fillMaxSize(),
-//                    contentAlignment = Alignment.Center
-//                ) {
-//                    CircularProgressIndicator(
-//                        modifier = Modifier.size(24.dp),
-//                        color = MaterialTheme.colorScheme.primary,
-//                        strokeWidth = 2.dp
-//                    )
-//                }
-//            },
-//            error = {
-//                // 加载失败状态
-//                Box(
-//                    modifier = Modifier
-//                        .fillMaxSize()
-//                        .clickable {
-//                            // 点击重试
-//                            coroutineScope.launch {
-//                                // 切换CDN地址
-//                                cdnManager.switchToNextCdn()
-//                                // 触发重新加载
-//                                isRetrying = !isRetrying
-//                            }
-//                        },
-//                    contentAlignment = Alignment.Center
-//                ) {
-//                    Icon(
-//                        imageVector = Icons.Default.Delete,
-//                        contentDescription = "加载失败",
-//                        tint = MaterialTheme.colorScheme.error,
-//                        modifier = Modifier.size(48.dp)
-//                    )
-//
-//                    Icon(
-//                        imageVector = Icons.Default.Refresh,
-//                        contentDescription = "点击重试",
-//                        tint = MaterialTheme.colorScheme.primary,
-//                        modifier = Modifier
-//                            .size(24.dp)
-//                            .align(Alignment.BottomEnd)
-//                            .padding(4.dp)
-//                    )
-//
-//                    Text(
-//                        text = "加载失败，点击重试",
-//                        style = MaterialTheme.typography.bodySmall,
-//                        color = MaterialTheme.colorScheme.error,
-//                        modifier = Modifier.align(Alignment.BottomCenter)
-//                    )
-//                }
-//            }
-//        )
-//    }
+
+    // 使用SubComposeAsyncImage可以自定义加载、错误和成功状态
+    SubcomposeAsyncImage(
+        modifier = boxModifier,
+        model = ImageRequest.Builder(LocalPlatformContext.current)
+            .data(imageUrl)
+            .crossfade(true)
+            .memoryCachePolicy(CachePolicy.ENABLED)
+            .diskCachePolicy(CachePolicy.ENABLED)
+            .build(),
+        contentDescription = contentDescription,
+        contentScale = contentScale,
+        loading = {
+            // 加载中状态
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    color = MaterialTheme.colorScheme.primary,
+                    strokeWidth = 2.dp
+                )
+            }
+        },
+        error = {
+            // 加载失败状态
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .apply {
+                        onRetry?.let {
+                            this.clickable(onClick = it)
+                        }
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "加载失败",
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(48.dp)
+                )
+
+                Icon(
+                    imageVector = Icons.Default.Refresh,
+                    contentDescription = "点击重试",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .size(24.dp)
+                        .align(Alignment.BottomEnd)
+                        .padding(4.dp)
+                )
+
+                Text(
+                    text = "加载失败，点击重试",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.align(Alignment.BottomCenter)
+                )
+            }
+        }
+    )
 }

@@ -69,6 +69,7 @@ import kotlinx.coroutines.launch
 import org.kodein.di.DI
 import org.kodein.di.instance
 import ai.saniou.nmb.ui.components.NmbImage
+import androidx.compose.ui.layout.ContentScale
 
 /**
  * 订阅列表页面
@@ -412,7 +413,7 @@ fun SubscriptionCard(
                     modifier = Modifier.fillMaxWidth(),
                     isThumb = true,
                     contentDescription = "帖子图片",
-                    autosize = true,
+                    contentScale = ContentScale.FillWidth,
                     onClick = { onImageClick?.invoke(feed.img, feed.ext) }
                 )
             }

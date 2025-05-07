@@ -30,6 +30,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -128,7 +129,12 @@ fun ThreadPage(
                     },
                     onImageClick = { imgPath, ext ->
                         // 导航到图片预览页面
-                        navController.navigate(ImagePreviewNavigationDestination.createRoute(imgPath, ext))
+                        navController.navigate(
+                            ImagePreviewNavigationDestination.createRoute(
+                                imgPath,
+                                ext
+                            )
+                        )
                     }
                 )
             },
@@ -410,7 +416,8 @@ fun ThreadContent(
                 snapshotFlow {
                     val layoutInfo = scrollState.layoutInfo
                     val totalItemsCount = layoutInfo.totalItemsCount
-                    val lastVisibleItemIndex = (layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0) + 1
+                    val lastVisibleItemIndex =
+                        (layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0) + 1
 
                     // 当最后一个可见项是列表中的最后一项，且列表不为空
                     lastVisibleItemIndex >= totalItemsCount && totalItemsCount > 0
@@ -587,7 +594,7 @@ fun ThreadMainPost(
                     modifier = Modifier.fillMaxWidth(),
                     isThumb = false,
                     contentDescription = "帖子图片",
-                    autosize = true,
+                    contentScale = ContentScale.FillWidth,
                     onClick = { onImageClick(thread.img, thread.ext) }
                 )
             }
@@ -681,7 +688,7 @@ fun ThreadReply(
                     modifier = Modifier.fillMaxWidth(),
                     isThumb = true,
                     contentDescription = "回复图片",
-                    autosize = true,
+                    contentScale = ContentScale.FillWidth,
                     onClick = { onImageClick(reply.img, reply.ext) }
                 )
             }

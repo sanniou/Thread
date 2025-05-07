@@ -12,6 +12,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 
 /**
@@ -31,7 +32,9 @@ fun HtmlText(
     modifier: Modifier = Modifier,
     style: TextStyle = MaterialTheme.typography.bodyMedium,
     onReferenceClick: ((Long) -> Unit)? = null,
-    onLinkClick: ((String) -> Unit)? = null
+    onLinkClick: ((String) -> Unit)? = null,
+    overflow: TextOverflow = TextOverflow.Clip,
+    maxLines: Int = Int.MAX_VALUE,
 ) {
     // 处理URI链接的处理器
     val uriHandler = LocalUriHandler.current
@@ -50,6 +53,8 @@ fun HtmlText(
         text = annotatedString,
         modifier = modifier,
         style = style,
+        maxLines = maxLines,
+        overflow = overflow,
         onClick = { offset ->
             // 处理引用链接的点击事件
             annotatedString.getStringAnnotations(TAG_REFERENCE, offset, offset)
@@ -172,7 +177,12 @@ private fun parseHtml(
 
             // 处理<u>标签
             tag == "u" -> {
-                handleSimpleTag(text, tagEndIndex, "</u>", SpanStyle(textDecoration = TextDecoration.Underline))
+                handleSimpleTag(
+                    text,
+                    tagEndIndex,
+                    "</u>",
+                    SpanStyle(textDecoration = TextDecoration.Underline)
+                )
             }
 
             // 处理<font>标签

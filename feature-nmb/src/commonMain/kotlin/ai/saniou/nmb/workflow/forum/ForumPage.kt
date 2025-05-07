@@ -4,6 +4,7 @@ import ai.saniou.coreui.widgets.PullToRefreshWrapper
 import ai.saniou.nmb.data.entity.Reply
 import ai.saniou.nmb.data.entity.ShowF
 import ai.saniou.nmb.di.nmbdi
+import ai.saniou.nmb.ui.components.HtmlText
 import ai.saniou.nmb.ui.components.NmbImage
 import ai.saniou.nmb.workflow.image.ImagePreviewNavigationDestination
 import androidx.compose.foundation.background
@@ -16,8 +17,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -38,6 +37,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -50,10 +50,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.kodein.di.DI
@@ -329,11 +332,11 @@ fun ThreadCard(
             }
 
             Spacer(modifier = Modifier.height(8.dp))
-            Divider()
+            HorizontalDivider()
             Spacer(modifier = Modifier.height(8.dp))
 
             // 内容
-            Text(
+            HtmlText(
                 text = thread.content.replace(Regex("<.*?>"), ""), // 简单移除HTML标签
                 style = MaterialTheme.typography.bodyMedium,
                 maxLines = 3,
@@ -346,8 +349,8 @@ fun ThreadCard(
                 NmbImage(
                     imgPath = thread.img,
                     ext = thread.ext,
-                    modifier = Modifier
-                        .height(160.dp),
+                    modifier = Modifier.height(160.dp),
+                    contentScale = ContentScale.FillHeight,
                     isThumb = true,
                     contentDescription = "帖子图片",
                     onClick = onImageClick?.let { onClick -> { onClick(thread.img, thread.ext) } }
