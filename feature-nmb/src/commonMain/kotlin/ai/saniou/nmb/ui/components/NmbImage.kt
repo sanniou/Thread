@@ -6,8 +6,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -30,12 +30,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
+import coil3.compose.AsyncImagePainter
 import coil3.compose.LocalPlatformContext
-import coil3.compose.SubcomposeAsyncImage
 import coil3.request.CachePolicy
 import coil3.request.ImageRequest
 import coil3.request.crossfade
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.kodein.di.instance
 
@@ -100,76 +100,93 @@ fun ImageComponent(
     onClick: (() -> Unit)? = null,
 ) {
     // 准备修饰符
-    var boxModifier = modifier
+    var finalModifier = modifier
         .clip(RoundedCornerShape(4.dp))
         .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
         .border(1.dp, Color.Gray.copy(alpha = 0.5f), RoundedCornerShape(4.dp))
 
     // 如果提供了点击回调，添加点击修饰符
     if (onClick != null) {
-        boxModifier = boxModifier.clickable { onClick() }
+        finalModifier = finalModifier.clickable { onClick() }
     }
 
-    // 使用SubComposeAsyncImage可以自定义加载、错误和成功状态
-    SubcomposeAsyncImage(
-        modifier = boxModifier,
-        model = ImageRequest.Builder(LocalPlatformContext.current)
-            .data(imageUrl)
-            .crossfade(true)
-            .memoryCachePolicy(CachePolicy.ENABLED)
-            .diskCachePolicy(CachePolicy.ENABLED)
-            .build(),
-        contentDescription = contentDescription,
-        contentScale = contentScale,
-        loading = {
-            // 加载中状态
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(24.dp),
-                    color = MaterialTheme.colorScheme.primary,
-                    strokeWidth = 2.dp
-                )
+    // 使用 Box 自定义加载、错误和成功状态
+    var state by remember { mutableStateOf<AsyncImagePainter.State>(AsyncImagePainter.State.Empty) }
+    Box(
+        modifier = Modifier.defaultMinSize(minHeight = 100.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        AsyncImage(
+            modifier = finalModifier,
+            model = ImageRequest.Builder(LocalPlatformContext.current)
+                .data(imageUrl)
+                .crossfade(true)
+                .memoryCachePolicy(CachePolicy.ENABLED)
+                .diskCachePolicy(CachePolicy.ENABLED)
+                .build(),
+            contentDescription = contentDescription,
+            contentScale = contentScale,
+            onLoading = { state = it },
+            onSuccess = { state = it },
+            onError = { state = it },
+        )
+        when (state) {
+            is AsyncImagePainter.State.Success -> {
+
             }
-        },
-        error = {
-            // 加载失败状态
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .apply {
-                        onRetry?.let {
-                            this.clickable(onClick = it)
-                        }
-                    },
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = "加载失败",
-                    tint = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.size(48.dp)
-                )
 
-                Icon(
-                    imageVector = Icons.Default.Refresh,
-                    contentDescription = "点击重试",
-                    tint = MaterialTheme.colorScheme.primary,
+            is AsyncImagePainter.State.Error -> {
+
+                // 加载失败状态
+                Box(
                     modifier = Modifier
-                        .size(24.dp)
-                        .align(Alignment.BottomEnd)
-                        .padding(4.dp)
-                )
+                        .fillMaxSize()
+                        .apply {
+                            onRetry?.let {
+                                this.clickable(onClick = it)
+                            }
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "加载失败",
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(48.dp)
+                    )
 
-                Text(
-                    text = "加载失败，点击重试",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.align(Alignment.BottomCenter)
-                )
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = "点击重试",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .size(24.dp)
+                            .align(Alignment.BottomEnd)
+                            .padding(4.dp)
+                    )
+
+                    Text(
+                        text = "加载失败，点击重试",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.align(Alignment.BottomCenter)
+                    )
+                }
+            }
+
+            is AsyncImagePainter.State.Loading, is AsyncImagePainter.State.Empty -> {
+                // 加载中状态
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = MaterialTheme.colorScheme.primary,
+                        strokeWidth = 2.dp
+                    )
+                }
             }
         }
-    )
+    }
 }
