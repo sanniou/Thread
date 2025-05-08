@@ -51,6 +51,8 @@ fun ThreadDetailPane() {
         }
     }
 
+    val paneExpansionState = rememberPaneExpansionState(navigator.scaffoldValue)
+    paneExpansionState.setFirstPaneProportion(0.5f)
     SharedTransitionLayout {
         AnimatedContent(targetState = isListAndDetailVisible) {
             ListDetailPaneScaffold(
@@ -75,7 +77,7 @@ fun ThreadDetailPane() {
                         navigator.scaffoldValue[ListDetailPaneScaffoldRole.Detail] == PaneAdaptedValue.Expanded
                     ThreadPage(threadId, rememberNavController())
                 },
-                paneExpansionState = rememberPaneExpansionState(navigator.scaffoldValue),
+                paneExpansionState = paneExpansionState,
                 paneExpansionDragHandle = { state ->
                     val interactionSource =
                         remember { MutableInteractionSource() }
