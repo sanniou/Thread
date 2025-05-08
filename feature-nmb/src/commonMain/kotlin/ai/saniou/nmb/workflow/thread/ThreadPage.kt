@@ -48,10 +48,10 @@ import org.kodein.di.instance
 @Composable
 fun ThreadPage(
     threadId: Long?,
+    navController: NavController,
     di: DI = nmbdi,
     onUpdateTitle: ((String) -> Unit)? = null,
     onSetupMenuButton: ((@Composable () -> Unit) -> Unit)? = null,
-    navController: NavController
 ) {
     val threadViewModel: ThreadViewModel = viewModel {
         val viewModel by di.instance<ThreadViewModel>()

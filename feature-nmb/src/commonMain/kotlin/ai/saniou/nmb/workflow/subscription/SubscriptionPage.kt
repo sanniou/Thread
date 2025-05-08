@@ -1,14 +1,13 @@
 package ai.saniou.nmb.workflow.subscription
 
 import ai.saniou.coreui.state.LoadingWrapper
-import ai.saniou.nmb.di.nmbdi
 import ai.saniou.coreui.widgets.PullToRefreshWrapper
+import ai.saniou.nmb.di.nmbdi
+import ai.saniou.nmb.ui.components.NmbImage
 import ai.saniou.nmb.ui.components.SkeletonLoader
 import ai.saniou.nmb.workflow.image.ImagePreviewNavigationDestination
-import ai.saniou.nmb.workflow.thread.ThreadPageNavigationDestination
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -24,7 +23,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -35,8 +33,8 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -57,6 +55,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
@@ -64,12 +63,14 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.stringResource
 import org.kodein.di.DI
 import org.kodein.di.instance
-import ai.saniou.nmb.ui.components.NmbImage
-import androidx.compose.ui.layout.ContentScale
+import thread.feature_nmb.generated.resources.Res
+import thread.feature_nmb.generated.resources.empty_title
+import thread.feature_nmb.generated.resources.flag_admin
+import thread.feature_nmb.generated.resources.reply_count
+import thread.feature_nmb.generated.resources.unsubscribe
 
 /**
  * 订阅列表页面
@@ -77,8 +78,8 @@ import androidx.compose.ui.layout.ContentScale
 @Composable
 fun SubscriptionPage(
     di: DI = nmbdi,
-    onThreadClicked: (Long) -> Unit,
     onUpdateTitle: ((String) -> Unit)? = null,
+    onThreadClicked: (Long) -> Unit,
     navController: NavController
 ) {
     val subscriptionViewModel: SubscriptionViewModel = viewModel {
@@ -302,9 +303,7 @@ fun SubscriptionCard(
             .fillMaxWidth()
             .clickable(onClick = onClick),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
             modifier = Modifier.padding(12.dp)
@@ -314,7 +313,7 @@ fun SubscriptionCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // 管理员标记
-                if (feed.admin.toIntOrNull() ?: 0 > 0) {
+                if ((feed.admin.toIntOrNull() ?: 0) > 0) {
                     Box(
                         modifier = Modifier
                             .size(20.dp)
@@ -323,7 +322,7 @@ fun SubscriptionCard(
                             .padding(2.dp)
                     ) {
                         Text(
-                            text = "管",
+                            text = stringResource(Res.string.flag_admin),
                             color = Color.White,
                             style = MaterialTheme.typography.labelSmall,
                             modifier = Modifier.align(Alignment.Center)
@@ -334,7 +333,7 @@ fun SubscriptionCard(
 
                 // 标题
                 Text(
-                    text = if (feed.title.isNotBlank() && feed.title != "无标题") feed.title else "无标题",
+                    text = feed.title.ifBlank { stringResource(Res.string.empty_title) },
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
@@ -346,7 +345,7 @@ fun SubscriptionCard(
                 IconButton(onClick = onUnsubscribe) {
                     Icon(
                         imageVector = Icons.Default.Delete,
-                        contentDescription = "取消订阅",
+                        contentDescription = stringResource(Res.string.unsubscribe),
                         tint = MaterialTheme.colorScheme.error
                     )
                 }
@@ -386,14 +385,14 @@ fun SubscriptionCard(
                 Spacer(modifier = Modifier.width(8.dp))
 
                 Text(
-                    text = "回复: ${feed.replyCount}",
+                    text = stringResource(Res.string.reply_count, feed.replyCount),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.secondary
                 )
             }
 
             Spacer(modifier = Modifier.height(8.dp))
-            Divider()
+            HorizontalDivider()
             Spacer(modifier = Modifier.height(8.dp))
 
             // 内容
@@ -410,10 +409,10 @@ fun SubscriptionCard(
                 NmbImage(
                     imgPath = feed.img,
                     ext = feed.ext,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.height(240.dp),
                     isThumb = true,
                     contentDescription = "帖子图片",
-                    contentScale = ContentScale.FillWidth,
+                    contentScale = ContentScale.FillHeight,
                     onClick = { onImageClick?.invoke(feed.img, feed.ext) }
                 )
             }

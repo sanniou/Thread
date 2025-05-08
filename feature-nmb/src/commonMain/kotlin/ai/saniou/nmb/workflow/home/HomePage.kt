@@ -152,9 +152,8 @@ class HomeScreen : Screen {
                     onThreadClicked = {},
                     navController = a
                 )
-
-                AppDestinations.SHOPPING -> TODO()
-                AppDestinations.PROFILE -> TODO()
+                AppDestinations.SHOPPING -> ListDetailSample()
+                AppDestinations.PROFILE -> ThreadDetailPane()
             }
 
         }

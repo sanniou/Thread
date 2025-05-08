@@ -1,6 +1,6 @@
 [versions]
 kodeinDi = "7.25.0"
-ktorfitLib = "2.5.1"
+ktorfit = "2.5.1"
 kottage = "1.8.0"
 kotlinxDatetime = "0.6.0"
 agp = "8.9.2"
@@ -15,19 +15,21 @@ androidx-espresso-core = "3.6.1"
 androidx-lifecycle = "2.8.4"
 androidx-material = "1.12.0"
 androidx-test-junit = "1.2.1"
-compose-multiplatform = "1.7.3"
+compose-multiplatform = "1.8.0"
 junit = "4.13.2"
 kotlin = "2.1.20"
 kotlinx-coroutines = "1.10.2"
 ktor = "3.1.2"
 navigationCompose = "2.8.0-alpha10"
 pagingComposeCommon = "3.3.6"
-material3Desktop = "1.7.3"
-material3AdaptiveNavigation = "1.7.3"
+material = "1.7.3"
+material3 = "1.8.0"
 uiAndroid = "1.8.0"
 coil3 = "3.1.0"
 sqlDelight = "2.0.1"
 voyager = "1.1.0-beta03"
+ksp = "2.1.20-2.0.0"
+
 
 [libraries]
 kodein-di = { module = "org.kodein.di:kodein-di", version.ref = "kodeinDi" }
@@ -56,14 +58,15 @@ ktor-client-android = { module = "io.ktor:ktor-client-android", version.ref = "k
 ktor-client-java = { module = "io.ktor:ktor-client-java", version.ref = "ktor" }
 ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
 ktor-server-content-negotiation = { module = "io.ktor:ktor-server-content-negotiation", version.ref = "ktor" }
-ktorfit-lib = { module = "de.jensklingenberg.ktorfit:ktorfit-lib", version.ref = "ktorfitLib" }
+ktorfit-lib = { module = "de.jensklingenberg.ktorfit:ktorfit-lib", version.ref = "ktorfit" }
 navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 paging-common = { module = "androidx.paging:paging-runtime", version.ref = "pagingComposeCommon" }
 paging-compose-common = { module = "androidx.paging:paging-compose", version.ref = "pagingComposeCommon" }
-material3 = { group = "org.jetbrains.compose.material3", name = "material3", version.ref = "material3Desktop" }
-material3-desktop = { group = "org.jetbrains.compose.material3", name = "material3-desktop", version.ref = "material3Desktop" }
-material3-window-size = { group = "org.jetbrains.compose.material3", name = "material3-window-size-class", version.ref = "material3Desktop" }
-material3-adaptive-navigation = { group = "org.jetbrains.compose.material3", name = "material3-adaptive-navigation-suite", version.ref = "material3AdaptiveNavigation" }
+material-icons = { group = "org.jetbrains.compose.material", name = "material-icons-core", version.ref = "material" }
+material3 = { group = "org.jetbrains.compose.material3", name = "material3", version.ref = "material3" }
+material3-desktop = { group = "org.jetbrains.compose.material3", name = "material3-desktop", version.ref = "material3" }
+material3-window-size = { group = "org.jetbrains.compose.material3", name = "material3-window-size-class", version.ref = "material3" }
+material3-adaptive-navigation = { group = "org.jetbrains.compose.material3", name = "material3-adaptive-navigation-suite", version.ref = "material3" }
 androidx-ui-android = { group = "androidx.compose.ui", name = "ui-android", version.ref = "uiAndroid" }
 coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil3" }
 #coil-network = { group = "io.coil-kt.coil3", name = "coil-network-okhttp", version.ref = "coil3" }
@@ -87,4 +90,6 @@ composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "compose-mu
 composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlinxSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+ktorfit = { id = "de.jensklingenberg.ktorfit", version.ref = "ktorfit" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 sqldelight = { id = "app.cash.sqldelight", version.ref = "sqlDelight" }

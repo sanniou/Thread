@@ -6,9 +6,9 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
-    id("com.google.devtools.ksp") version "2.1.20-2.0.0"
-    id("de.jensklingenberg.ktorfit") version "2.5.1"
-    kotlin("plugin.serialization") version "2.1.20"
+    alias(libs.plugins.kotlinxSerialization)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.ktorfit)
 }
 
 kotlin {
@@ -47,6 +47,10 @@ kotlin {
             implementation(libs.material3)
             implementation(libs.material3.window.size)
             implementation(libs.material3.adaptive.navigation)
+            implementation("org.jetbrains.compose.ui:ui-backhandler:1.8.0")
+            implementation("org.jetbrains.compose.material3.adaptive:adaptive:1.1.0")
+            implementation("org.jetbrains.compose.material3.adaptive:adaptive-layout:1.1.0")
+            implementation("org.jetbrains.compose.material3.adaptive:adaptive-navigation:1.1.0")
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
