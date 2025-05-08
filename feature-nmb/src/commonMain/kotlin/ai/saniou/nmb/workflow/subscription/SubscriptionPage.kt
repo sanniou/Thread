@@ -2,10 +2,12 @@ package ai.saniou.nmb.workflow.subscription
 
 import ai.saniou.coreui.state.LoadingWrapper
 import ai.saniou.coreui.widgets.PullToRefreshWrapper
+import ai.saniou.nmb.data.entity.Feed
 import ai.saniou.nmb.di.nmbdi
 import ai.saniou.nmb.ui.components.NmbImage
 import ai.saniou.nmb.ui.components.SkeletonLoader
 import ai.saniou.nmb.workflow.image.ImagePreviewNavigationDestination
+import ai.saniou.nmb.workflow.image.ImagePreviewPage
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -63,6 +65,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import org.jetbrains.compose.resources.stringResource
 import org.kodein.di.DI
 import org.kodein.di.instance
@@ -90,6 +94,7 @@ fun SubscriptionPage(
     val uiState by subscriptionViewModel.uiState.collectAsStateWithLifecycle()
     val showSubscriptionIdDialog by subscriptionViewModel.showSubscriptionIdDialog.collectAsStateWithLifecycle()
     val subscriptionId by subscriptionViewModel.subscriptionId.collectAsStateWithLifecycle()
+    val navigator = LocalNavigator.currentOrThrow
 
     // 更新标题
     LaunchedEffect(Unit) {
@@ -118,12 +123,21 @@ fun SubscriptionPage(
                             uiState = state,
                             onThreadClicked = onThreadClicked,
                             onImageClick = { imgPath, ext ->
-                                navController.navigate(
-                                    ImagePreviewNavigationDestination.createRoute(
-                                        imgPath,
-                                        ext
+
+                                navigator.push(
+                                    ImagePreviewPage(
+                                        imgPath = imgPath,
+                                        ext = ext,
+                                        hasNext = true,
+                                        hasPrevious = true,
                                     )
                                 )
+//                                navController.navigate(
+//                                    ImagePreviewNavigationDestination.createRoute(
+//                                        imgPath,
+//                                        ext
+//                                    )
+//                                )
                             },
                             onUnsubscribe = { threadId ->
                                 subscriptionViewModel.unsubscribe(threadId)
@@ -293,7 +307,7 @@ fun SubscriptionContent(
  */
 @Composable
 fun SubscriptionCard(
-    feed: ai.saniou.nmb.data.entity.Feed,
+    feed: Feed,
     onClick: () -> Unit,
     onImageClick: ((String, String) -> Unit)? = null,
     onUnsubscribe: () -> Unit

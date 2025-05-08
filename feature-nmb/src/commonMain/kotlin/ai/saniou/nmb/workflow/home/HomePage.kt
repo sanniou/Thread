@@ -152,6 +152,7 @@ class HomeScreen : Screen {
                     onThreadClicked = {},
                     navController = a
                 )
+
                 AppDestinations.SHOPPING -> ListDetailSample()
                 AppDestinations.PROFILE -> ThreadDetailPane()
             }
@@ -334,20 +335,9 @@ fun HomePage(
                 val imgPath = ImagePreviewNavigationDestination.decodePath(encodedImgPath)
                 val ext = ImagePreviewNavigationDestination.decodePath(encodedExt)
 
-                val imagePreviewViewModel: ImagePreviewViewModel = viewModel {
-                    val viewModel by di.instance<ImagePreviewViewModel>()
-                    viewModel
-                }
-
                 ImagePreviewPage(
                     imgPath = imgPath,
                     ext = ext,
-                    onNavigateBack = { navController.navigateUp() },
-                    onSaveImage = { path, extension ->
-                        // 保存图片
-                        imagePreviewViewModel.setCurrentImage(path, extension)
-                        imagePreviewViewModel.saveCurrentImage()
-                    },
                     onUpdateTitle = { title ->
                         customTitle.value = title
                     },

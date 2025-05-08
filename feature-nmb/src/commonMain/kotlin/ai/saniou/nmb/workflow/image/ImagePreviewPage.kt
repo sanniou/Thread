@@ -38,6 +38,11 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
+import org.kodein.di.DI
 import org.kodein.di.instance
 
 /**
@@ -48,7 +53,6 @@ import org.kodein.di.instance
  *
  * @param imgPath 图片路径
  * @param ext 图片扩展名
- * @param onNavigateBack 返回回调
  * @param onSaveImage 保存图片回调
  * @param hasNext 是否有下一张图片
  * @param hasPrevious 是否有上一张图片
@@ -57,139 +61,152 @@ import org.kodein.di.instance
  * @param onUpdateTitle 更新标题回调
  * @param onSetupMenuButton 设置菜单按钮回调
  */
-@Composable
-fun ImagePreviewPage(
-    imgPath: String,
-    ext: String,
-    onNavigateBack: () -> Unit,
-    onSaveImage: (String, String) -> Unit,
-    hasNext: Boolean = false,
-    hasPrevious: Boolean = false,
-    onNextImage: () -> Unit = {},
-    onPreviousImage: () -> Unit = {},
-    onUpdateTitle: ((String) -> Unit)? = null,
-    onSetupMenuButton: ((@Composable () -> Unit) -> Unit)? = null
-) {
-    // 获取CDN管理器
-    val cdnManager by nmbdi.instance<CdnManager>()
-    val coroutineScope = rememberCoroutineScope()
+data class ImagePreviewPage(
+    val imgPath: String,
+    val ext: String,
+    val di: DI = nmbdi,
+    val hasNext: Boolean = false,
+    val hasPrevious: Boolean = false,
+    val onNextImage: () -> Unit = {},
+    val onPreviousImage: () -> Unit = {},
+    val onUpdateTitle: ((String) -> Unit)? = null,
+    val onSetupMenuButton: ((@Composable () -> Unit) -> Unit)? = null
+) : Screen {
 
-    // 构建完整的图片URL
-    val imageUrl = cdnManager.buildImageUrl(imgPath, ext, false)
+    @Composable
+    override fun Content() {
+        val navigator = LocalNavigator.currentOrThrow
 
-    // 缩放状态
-    var scale by remember { mutableStateOf(1f) }
-    var rotation by remember { mutableStateOf(0f) }
-    var offset by remember { mutableStateOf(Offset.Zero) }
-
-    // 创建可变换状态
-    val transformableState =
-        rememberTransformableState { zoomChange, offsetChange, rotationChange ->
-            // 更新缩放比例，限制在0.5到5倍之间
-            scale = (scale * zoomChange).coerceIn(0.5f, 5f)
-            // 更新旋转角度
-            rotation += rotationChange
-            // 更新偏移量
-            offset += offsetChange
+        val imagePreviewViewModel: ImagePreviewViewModel = viewModel {
+            val viewModel by di.instance<ImagePreviewViewModel>()
+            viewModel
         }
 
-    // 记住是否正在重试
-    var isRetrying by remember { mutableStateOf(false) }
+        // 获取CDN管理器
+        val cdnManager by nmbdi.instance<CdnManager>()
+        val coroutineScope = rememberCoroutineScope()
 
-    // 设置标题和菜单按钮
-    LaunchedEffect(Unit) {
-        // 设置标题
-        onUpdateTitle?.invoke("图片预览")
+        // 构建完整的图片URL
+        val imageUrl = cdnManager.buildImageUrl(imgPath, ext, false)
 
-        // 设置菜单按钮
-        onSetupMenuButton?.invoke {
-            // 保存图片按钮
-            IconButton(onClick = { onSaveImage(imgPath, ext) }) {
-                Icon(Icons.Default.Place, contentDescription = "保存图片")
+        // 缩放状态
+        var scale by remember { mutableStateOf(1f) }
+        var rotation by remember { mutableStateOf(0f) }
+        var offset by remember { mutableStateOf(Offset.Zero) }
+
+        // 创建可变换状态
+        val transformableState =
+            rememberTransformableState { zoomChange, offsetChange, rotationChange ->
+                // 更新缩放比例，限制在0.5到5倍之间
+                scale = (scale * zoomChange).coerceIn(0.5f, 5f)
+                // 更新旋转角度
+                rotation += rotationChange
+                // 更新偏移量
+                offset += offsetChange
+            }
+
+        // 记住是否正在重试
+        var isRetrying by remember { mutableStateOf(false) }
+
+        // 设置标题和菜单按钮
+        LaunchedEffect(Unit) {
+            // 设置标题
+            onUpdateTitle?.invoke("图片预览")
+
+            // 设置菜单按钮
+            onSetupMenuButton?.invoke {
+                // 保存图片按钮
+                IconButton(onClick = {
+                    // 保存图片
+                    imagePreviewViewModel.setCurrentImage(imgPath, ext)
+                    imagePreviewViewModel.saveCurrentImage()
+                }) {
+                    Icon(Icons.Default.Place, contentDescription = "保存图片")
+                }
             }
         }
-    }
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black)
-    ) {
-        // 图片显示区域
-        NmbImage(
-            imgPath, ext, false,
-            contentDescription = "预览图片",
-            contentScale = ContentScale.FillWidth,
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .graphicsLayer(
-                    scaleX = scale,
-                    scaleY = scale,
-                    rotationZ = rotation,
-                    translationX = offset.x,
-                    translationY = offset.y
-                )
-                .transformable(state = transformableState)
-                .pointerInput(Unit) {
-                    detectTapGestures(
-                        onDoubleTap = { tapOffset ->
-                            // 双击放大/缩小功能
-                            if (scale > 1.5f) {
-                                // 如果当前已经放大，则重置为原始大小
-                                scale = 1f
-                                offset = Offset.Zero
-                                rotation = 0f
-                            } else {
-                                // 否则放大到2.5倍
-                                scale = 2.5f
-                            }
-                        }
+                .background(Color.Black)
+        ) {
+            // 图片显示区域
+            NmbImage(
+                imgPath, ext, false,
+                contentDescription = "预览图片",
+                contentScale = ContentScale.FillWidth,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer(
+                        scaleX = scale,
+                        scaleY = scale,
+                        rotationZ = rotation,
+                        translationX = offset.x,
+                        translationY = offset.y
                     )
-                },
+                    .transformable(state = transformableState)
+                    .pointerInput(Unit) {
+                        detectTapGestures(
+                            onDoubleTap = { tapOffset ->
+                                // 双击放大/缩小功能
+                                if (scale > 1.5f) {
+                                    // 如果当前已经放大，则重置为原始大小
+                                    scale = 1f
+                                    offset = Offset.Zero
+                                    rotation = 0f
+                                } else {
+                                    // 否则放大到2.5倍
+                                    scale = 2.5f
+                                }
+                            }
+                        )
+                    },
             )
 
-        // 底部导航按钮
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter)
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            // 上一张按钮
-            FloatingActionButton(
-                onClick = onPreviousImage,
-                modifier = Modifier.size(48.dp),
-                containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
-                contentColor = MaterialTheme.colorScheme.onPrimary,
+            // 底部导航按钮
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter)
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                // 上一张按钮
+                FloatingActionButton(
+                    onClick = onPreviousImage,
+                    modifier = Modifier.size(48.dp),
+                    containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
 //                    enabled = hasPrevious
-            ) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "上一张")
-            }
+                ) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "上一张")
+                }
 
-            // 重置缩放按钮
-            FloatingActionButton(
-                onClick = {
-                    // 重置所有变换
-                    scale = 1f
-                    rotation = 0f
-                    offset = Offset.Zero
-                },
-                modifier = Modifier.size(48.dp),
-                containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            ) {
-                Text("重置")
-            }
+                // 重置缩放按钮
+                FloatingActionButton(
+                    onClick = {
+                        // 重置所有变换
+                        scale = 1f
+                        rotation = 0f
+                        offset = Offset.Zero
+                    },
+                    modifier = Modifier.size(48.dp),
+                    containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ) {
+                    Text("重置")
+                }
 
-            // 下一张按钮
-            FloatingActionButton(
-                onClick = onNextImage,
-                modifier = Modifier.size(48.dp),
-                containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
-                contentColor = MaterialTheme.colorScheme.onPrimary,
+                // 下一张按钮
+                FloatingActionButton(
+                    onClick = onNextImage,
+                    modifier = Modifier.size(48.dp),
+                    containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
 //                    enabled = hasNext
-            ) {
-                Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "下一张")
+                ) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "下一张")
+                }
             }
         }
     }
