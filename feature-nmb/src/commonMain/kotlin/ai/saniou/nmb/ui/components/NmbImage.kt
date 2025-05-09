@@ -28,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
@@ -126,12 +127,14 @@ fun ImageComponent(
                 .build(),
             contentDescription = contentDescription,
             contentScale = contentScale,
+            placeholder = ColorPainter(MaterialTheme.colorScheme.primaryContainer),
+            error = ColorPainter(MaterialTheme.colorScheme.errorContainer),
             onLoading = { state = it },
             onSuccess = { state = it },
             onError = { state = it },
         )
         when (state) {
-            is AsyncImagePainter.State.Success -> {
+            is AsyncImagePainter.State.Success, is AsyncImagePainter.State.Loading, is AsyncImagePainter.State.Empty -> {
 
             }
 
@@ -174,19 +177,6 @@ fun ImageComponent(
                 }
             }
 
-            is AsyncImagePainter.State.Loading, is AsyncImagePainter.State.Empty -> {
-                // 加载中状态
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = MaterialTheme.colorScheme.primary,
-                        strokeWidth = 2.dp
-                    )
-                }
-            }
         }
     }
 }

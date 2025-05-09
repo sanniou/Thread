@@ -2,11 +2,8 @@ package ai.saniou.nmb.workflow.image
 
 import ai.saniou.nmb.data.manager.CdnManager
 import ai.saniou.nmb.di.nmbdi
-import ai.saniou.nmb.ui.components.NmbImage
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.rememberTransformableState
-import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -28,22 +25,23 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.backhandler.PredictiveBackHandler
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import com.github.panpf.zoomimage.CoilZoomAsyncImage
+import kotlinx.coroutines.flow.drop
 import org.kodein.di.DI
 import org.kodein.di.instance
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * 图片预览页面
@@ -73,9 +71,20 @@ data class ImagePreviewPage(
     val onSetupMenuButton: ((@Composable () -> Unit) -> Unit)? = null
 ) : Screen {
 
+    @OptIn(ExperimentalComposeUiApi::class)
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
+        PredictiveBackHandler { progress ->
+            try {
+                progress.collect { backEvent ->
+
+                }
+                navigator.pop()
+            } catch (e: CancellationException) {
+//                callback.cancelPop()
+            }
+        }
 
         val imagePreviewViewModel: ImagePreviewViewModel = viewModel {
             val viewModel by di.instance<ImagePreviewViewModel>()
@@ -84,9 +93,6 @@ data class ImagePreviewPage(
 
         // 获取CDN管理器
         val cdnManager by nmbdi.instance<CdnManager>()
-        val coroutineScope = rememberCoroutineScope()
-
-        // 构建完整的图片URL
         val imageUrl = cdnManager.buildImageUrl(imgPath, ext, false)
 
         // 缩放状态
@@ -131,38 +137,11 @@ data class ImagePreviewPage(
                 .background(Color.Black)
         ) {
             // 图片显示区域
-            NmbImage(
-                imgPath, ext, false,
+            CoilZoomAsyncImage(
+                model = imageUrl,
                 contentDescription = "预览图片",
-                contentScale = ContentScale.FillWidth,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .graphicsLayer(
-                        scaleX = scale,
-                        scaleY = scale,
-                        rotationZ = rotation,
-                        translationX = offset.x,
-                        translationY = offset.y
-                    )
-                    .transformable(state = transformableState)
-                    .pointerInput(Unit) {
-                        detectTapGestures(
-                            onDoubleTap = { tapOffset ->
-                                // 双击放大/缩小功能
-                                if (scale > 1.5f) {
-                                    // 如果当前已经放大，则重置为原始大小
-                                    scale = 1f
-                                    offset = Offset.Zero
-                                    rotation = 0f
-                                } else {
-                                    // 否则放大到2.5倍
-                                    scale = 2.5f
-                                }
-                            }
-                        )
-                    },
+                modifier = Modifier.fillMaxSize(),
             )
-
             // 底部导航按钮
             Row(
                 modifier = Modifier

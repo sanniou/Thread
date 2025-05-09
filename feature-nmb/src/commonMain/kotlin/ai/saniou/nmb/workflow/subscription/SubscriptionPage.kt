@@ -93,7 +93,7 @@ fun SubscriptionPage(
 
     val uiState by subscriptionViewModel.uiState.collectAsStateWithLifecycle()
     val showSubscriptionIdDialog by subscriptionViewModel.showSubscriptionIdDialog.collectAsStateWithLifecycle()
-    val subscriptionId by subscriptionViewModel.subscriptionId.collectAsStateWithLifecycle()
+    val subscriptionId by subscriptionViewModel.getSubscriptionId().collectAsStateWithLifecycle()
     val navigator = LocalNavigator.currentOrThrow
 
     // 更新标题

@@ -28,6 +28,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.backhandler.PredictiveBackHandler
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
@@ -45,7 +46,7 @@ fun ThreadDetailPane() {
     val isListAndDetailVisible =
         navigator.scaffoldValue[ListDetailPaneScaffoldRole.Detail] == PaneAdaptedValue.Expanded && navigator.scaffoldValue[ListDetailPaneScaffoldRole.List] == PaneAdaptedValue.Expanded
 
-    PredictiveBackHandler(enabled = navigator.canNavigateBack()) {
+    BackHandler(enabled = navigator.canNavigateBack()) {
         scope.launch {
             navigator.navigateBack()
         }

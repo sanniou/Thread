@@ -1,10 +1,7 @@
 package ai.saniou.nmb.data.storage
 
 import ai.saniou.nmb.data.entity.ForumCategory
-import io.github.irgaly.kottage.Kottage
-import io.github.irgaly.kottage.KottageStorage
 import io.github.irgaly.kottage.getOrNull
-import io.github.irgaly.kottage.platform.KottageContext
 import io.github.irgaly.kottage.put
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,22 +14,7 @@ import kotlin.time.Duration.Companion.days
 /**
  * 管理论坛分类数据的持久化存储
  */
-class CategoryStorage(
-    private val scope: CoroutineScope
-) {
-    private val directoryPath by lazy { getStorageDirectory() }
-    private val kottage: Kottage by lazy {
-        Kottage(
-            name = "nmb-category-storage",
-            directoryPath = directoryPath,
-            environment = KottageEnvironment(),
-            scope = scope
-        )
-    }
-
-    private val storage: KottageStorage by lazy {
-        kottage.storage("forum-categories")
-    }
+class CategoryStorage(scope: CoroutineScope) : BasicStorage(scope, "forum-categories") {
 
     private val _lastOpenedForumId = MutableStateFlow<String?>(null)
     val lastOpenedForumId = _lastOpenedForumId.asStateFlow()
@@ -107,24 +89,9 @@ class CategoryStorage(
         return result
     }
 
-    /**
-     * 关闭存储
-     */
-    suspend fun close() {
-        kottage.close()
-    }
-
     @Serializable
     private data class CategoryCacheInfo(
         val lastUpdateTime: Long
     )
 
-    /**
-     * 创建 KottageEnvironment
-     */
-    private fun KottageEnvironment(): io.github.irgaly.kottage.KottageEnvironment {
-        return io.github.irgaly.kottage.KottageEnvironment(
-            context = KottageContext()
-        )
-    }
 }

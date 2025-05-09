@@ -8,6 +8,7 @@ import ai.saniou.nmb.data.entity.Thread
 import ai.saniou.nmb.data.entity.ThreadReply
 import ai.saniou.nmb.di.nmbdi
 import ai.saniou.nmb.ui.components.*
+import ai.saniou.nmb.workflow.home.LocalSnackbarHostState
 import ai.saniou.nmb.workflow.image.ImagePreviewNavigationDestination
 import ai.saniou.nmb.workflow.reference.ReferenceViewModel
 import androidx.compose.animation.core.*
@@ -83,7 +84,8 @@ fun ThreadPage(
     // 复制链接的处理
     val clipboardManager = LocalClipboardManager.current
     val scope = rememberCoroutineScope()
-    val snackbarHostState = remember { SnackbarHostState() }
+    val snackbarHostState = LocalSnackbarHostState.current
+
 
     // 监听状态变化，更新标题
     LaunchedEffect(uiState) {
@@ -99,6 +101,13 @@ fun ThreadPage(
             onUpdateTitle?.invoke(title)
         }
     }
+
+    LaunchedEffect((uiState as? UiStateWrapper.Success<ThreadUiState>)?.value?.subscribedMessage) {
+        (uiState as? UiStateWrapper.Success<ThreadUiState>)?.value?.subscribedMessage?.let {
+            snackbarHostState.showSnackbar(it)
+        }
+    }
+
 
     // 设置菜单按钮
     LaunchedEffect(Unit) {

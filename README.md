@@ -34,3 +34,8 @@ https://github.com/HuanCheng65/TiebaLite
 https://m3.material.io/foundations/adaptive-design
 
 https://developer.android.com/develop/ui/compose/layouts/adaptive/build-adaptive-navigation
+
+// sample
+https://github.com/kagg886/Pixiv-MultiPlatform
+https://github.com/0xZhangKe/Fread
+https://github.com/panpf/zoomimage/tree/main/sample/src/commonMain/kotlin/com/github/panpf/zoomimage/sample/ui/examples

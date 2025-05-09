@@ -9,7 +9,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
@@ -101,7 +100,7 @@ class ThreadViewModel(
 
         // 加载订阅ID
         viewModelScope.launch {
-            subscriptionStorage.getSubscriptionId()
+            subscriptionStorage.getLastSubscriptionId()
         }
     }
 
@@ -130,7 +129,8 @@ class ThreadViewModel(
             // 设置总页数，根据回复数量计算，每页显示19条回复
             val totalReplies = thread.replyCount
             val repliesPerPage = 19 // 每页显示的回复数量
-            val totalPages = (totalReplies / repliesPerPage) + if (totalReplies % repliesPerPage > 0) 1 else 0
+            val totalPages =
+                (totalReplies / repliesPerPage) + if (totalReplies % repliesPerPage > 0) 1 else 0
 
             updateUiState { state ->
                 state.copy(
@@ -158,14 +158,14 @@ class ThreadViewModel(
                     try {
                         _uiState.emit(UiStateWrapper.Loading)
                         val poThreads = threadUseCase.getThreadPo(currentId, 1)
-                            updateUiState { state ->
-                                state.copy(
-                                    thread = poThreads,
-                                    currentPage = 1,
-                                    isPoOnlyMode = true
-                                )
-                            }
-                            _uiState.emit(UiStateWrapper.Success(dataUiState.value))
+                        updateUiState { state ->
+                            state.copy(
+                                thread = poThreads,
+                                currentPage = 1,
+                                isPoOnlyMode = true
+                            )
+                        }
+                        _uiState.emit(UiStateWrapper.Success(dataUiState.value))
                     } catch (e: Throwable) {
                         _uiState.emit(UiStateWrapper.Error(e, "刷新帖子失败: ${e.message}"))
                     }
@@ -192,21 +192,21 @@ class ThreadViewModel(
                 if (_isPoOnlyMode.value) {
                     // 如果是只看PO模式，则使用getThreadPo方法加载下一页
                     val poThreads = threadUseCase.getThreadPo(currentId, nextPage.toLong())
-                        // 合并回复列表
-                        val currentThread = dataUiState.value.thread
-                        val newReplies = currentThread.replies + poThreads.replies
+                    // 合并回复列表
+                    val currentThread = dataUiState.value.thread
+                    val newReplies = currentThread.replies + poThreads.replies
 
-                        // 判断是否还有更多数据
-                        val hasMoreData = poThreads.replies.isNotEmpty()
+                    // 判断是否还有更多数据
+                    val hasMoreData = poThreads.replies.isNotEmpty()
 
-                        updateUiState { state ->
-                            state.copy(
-                                thread = currentThread.copy(replies = newReplies),
-                                currentPage = nextPage,
-                                hasMoreData = hasMoreData
-                            )
-                        }
-                        _uiState.emit(UiStateWrapper.Success(dataUiState.value))
+                    updateUiState { state ->
+                        state.copy(
+                            thread = currentThread.copy(replies = newReplies),
+                            currentPage = nextPage,
+                            hasMoreData = hasMoreData
+                        )
+                    }
+                    _uiState.emit(UiStateWrapper.Success(dataUiState.value))
                 } else {
                     // 如果不是只看PO模式，则使用常规API加载下一页
                     val threadData = threadUseCase(currentId, nextPage.toLong())
@@ -290,14 +290,14 @@ class ThreadViewModel(
                 if (newPoOnlyMode) {
                     // 切换到只看PO模式，使用getThreadPo方法
                     val poThreads = threadUseCase.getThreadPo(currentId, 1)
-                        updateUiState { state ->
-                            state.copy(
-                                thread = poThreads,
-                                currentPage = 1,
-                                isPoOnlyMode = true
-                            )
-                        }
-                        _uiState.emit(UiStateWrapper.Success(dataUiState.value))
+                    updateUiState { state ->
+                        state.copy(
+                            thread = poThreads,
+                            currentPage = 1,
+                            isPoOnlyMode = true
+                        )
+                    }
+                    _uiState.emit(UiStateWrapper.Success(dataUiState.value))
                 } else {
                     // 切换到正常模式，使用常规API加载
                     val threadData = threadUseCase(currentId, 1)
@@ -326,34 +326,27 @@ class ThreadViewModel(
 
         viewModelScope.launch {
             try {
-                val subscriptionId = subscriptionStorage.getSubscriptionId()
+                val subscriptionId = subscriptionStorage.subscriptionId.value
 
                 if (subscriptionId == null) {
-                    // 如果没有订阅ID，生成一个随机ID并保存
-                    val newId = subscriptionStorage.generateRandomSubscriptionId()
-                    subscriptionStorage.saveSubscriptionId(newId)
-
-                    // 使用新ID进行订阅/取消订阅操作
-                    if (subscribed) {
-                        nmbXdApi.addFeed(newId, currentId)
-                    } else {
-                        nmbXdApi.delFeed(newId, currentId)
-                    }
-                } else {
+                    // 如果没有订阅ID，show error
+                    throw Exception("没有订阅ID")
+                }
+                val resultMessage =
                     // 使用已有ID进行订阅/取消订阅操作
                     if (subscribed) {
                         nmbXdApi.addFeed(subscriptionId, currentId)
                     } else {
                         nmbXdApi.delFeed(subscriptionId, currentId)
                     }
-                }
+
 
                 // 更新订阅状态
                 _isSubscribed.value = subscribed
 
                 // 更新UI状态
                 updateUiState { state ->
-                    state.copy(isSubscribed = subscribed)
+                    state.copy(isSubscribed = subscribed, subscribedMessage = resultMessage)
                 }
 
                 // 更新UI
@@ -362,7 +355,7 @@ class ThreadViewModel(
                 // 订阅/取消订阅失败，恢复状态
                 _isSubscribed.value = !subscribed
                 updateUiState { state ->
-                    state.copy(isSubscribed = !subscribed)
+                    state.copy(isSubscribed = !subscribed, subscribedMessage = e.message)
                 }
                 _uiState.emit(UiStateWrapper.Success(dataUiState.value))
             }
@@ -395,6 +388,7 @@ data class ThreadUiState(
     val hasMoreData: Boolean = true,
     val isPoOnlyMode: Boolean = false,
     val isSubscribed: Boolean = false,
+    val subscribedMessage: String? = null,
     val forumName: String = "",
     val onRefresh: () -> Unit,
     val onLoadNextPage: () -> Unit,

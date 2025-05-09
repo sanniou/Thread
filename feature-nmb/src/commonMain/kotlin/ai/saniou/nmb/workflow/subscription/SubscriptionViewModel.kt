@@ -21,10 +21,6 @@ class SubscriptionViewModel(
     private val subscriptionStorage: SubscriptionStorage
 ) : ViewModel() {
 
-    // 订阅ID
-    private val _subscriptionId = MutableStateFlow<String?>(null)
-    val subscriptionId = _subscriptionId.asStateFlow()
-
     // 是否显示订阅ID设置对话框
     private val _showSubscriptionIdDialog = MutableStateFlow(false)
     val showSubscriptionIdDialog = _showSubscriptionIdDialog.asStateFlow()
@@ -57,8 +53,7 @@ class SubscriptionViewModel(
      */
     private fun loadSubscriptionId() {
         viewModelScope.launch {
-            val id = subscriptionStorage.getSubscriptionId()
-            _subscriptionId.value = id
+            val id = subscriptionStorage.getLastSubscriptionId()
 
             if (id == null) {
                 // 如果没有订阅ID，显示设置对话框
@@ -75,7 +70,7 @@ class SubscriptionViewModel(
      * 加载订阅列表
      */
     private fun loadSubscription() {
-        val id = _subscriptionId.value ?: return
+        val id = subscriptionStorage.subscriptionId.value ?: return
 
         viewModelScope.launch {
             try {
@@ -109,7 +104,7 @@ class SubscriptionViewModel(
      * 加载下一页
      */
     private fun loadNextPage() {
-        val id = _subscriptionId.value ?: return
+        val id = subscriptionStorage.subscriptionId.value ?: return
         val nextPage = _currentPage.value + 1
 
         viewModelScope.launch {
@@ -154,8 +149,7 @@ class SubscriptionViewModel(
      */
     fun setSubscriptionId(id: String) {
         viewModelScope.launch {
-            subscriptionStorage.saveSubscriptionId(id)
-            _subscriptionId.value = id
+            subscriptionStorage.addSubscriptionId(id)
             _showSubscriptionIdDialog.value = false
             loadSubscription()
         }
@@ -187,7 +181,7 @@ class SubscriptionViewModel(
      * 取消订阅
      */
     fun unsubscribe(threadId: Long) {
-        val id = _subscriptionId.value ?: return
+        val id = subscriptionStorage.subscriptionId.value ?: return
 
         viewModelScope.launch {
             try {
@@ -213,6 +207,8 @@ class SubscriptionViewModel(
     private fun updateUiState(invoke: (SubscriptionUiState) -> SubscriptionUiState) {
         dataUiState.update(invoke)
     }
+
+    fun getSubscriptionId() = subscriptionStorage.subscriptionId
 }
 
 /**

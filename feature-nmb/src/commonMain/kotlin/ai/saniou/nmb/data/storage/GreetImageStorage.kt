@@ -16,22 +16,7 @@ import kotlin.time.Duration.Companion.hours
 /**
  * 管理欢迎图片的持久化存储
  */
-class GreetImageStorage(
-    private val scope: CoroutineScope
-) {
-    private val directoryPath by lazy { getStorageDirectory() }
-    private val kottage: Kottage by lazy {
-        Kottage(
-            name = "nmb-greet-image-storage",
-            directoryPath = directoryPath,
-            environment = KottageEnvironment(),
-            scope = scope
-        )
-    }
-
-    private val storage: KottageStorage by lazy {
-        kottage.storage("greet-image")
-    }
+class GreetImageStorage(scope: CoroutineScope) : BasicStorage(scope, "greet-image") {
 
     private val _greetImageUrl = MutableStateFlow<String?>(null)
     val greetImageUrl = _greetImageUrl.asStateFlow()
@@ -70,24 +55,8 @@ class GreetImageStorage(
         _greetImageUrl.value = url
     }
 
-    /**
-     * 关闭存储
-     */
-    suspend fun close() {
-        kottage.close()
-    }
-
     @Serializable
     private data class GreetImageCacheInfo(
         val lastUpdateTime: Long
     )
-
-    /**
-     * 创建 KottageEnvironment
-     */
-    private fun KottageEnvironment(): io.github.irgaly.kottage.KottageEnvironment {
-        return io.github.irgaly.kottage.KottageEnvironment(
-            context = KottageContext()
-        )
-    }
 }

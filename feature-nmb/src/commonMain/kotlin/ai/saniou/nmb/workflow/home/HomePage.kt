@@ -49,7 +49,11 @@ import thread.feature_nmb.generated.resources.Res
 import thread.feature_nmb.generated.resources.back_button
 import ai.saniou.nmb.di.nmbdi
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import cafe.adriel.voyager.core.screen.Screen
@@ -124,39 +128,58 @@ fun SaniouAppBar(
     )
 }
 
+val LocalSnackbarHostState = compositionLocalOf<SnackbarHostState> {
+    error("No Snackbar Host State")
+}
+
 class HomeScreen : Screen {
     @Composable
     override fun Content() {
+
         var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.HOME) }
-        NavigationSuiteScaffold(
-            {
-                AppDestinations.entries.forEach {
-                    item(
-                        icon = {
-                            Icon(
-                                it.icon,
-                                contentDescription = stringResource(it.contentDescription)
+        MaterialTheme {
+            val snackbarHostState = remember { SnackbarHostState() }
+
+            CompositionLocalProvider(
+                values = arrayOf(
+                    LocalSnackbarHostState provides snackbarHostState
+                )
+            ) {
+                NavigationSuiteScaffold(
+                    navigationSuiteItems = {
+                        AppDestinations.entries.forEach {
+                            item(
+                                icon = {
+                                    Icon(
+                                        it.icon,
+                                        contentDescription = stringResource(it.contentDescription)
+                                    )
+                                },
+                                label = { Text(stringResource(it.label)) },
+                                selected = it == currentDestination,
+                                onClick = { currentDestination = it }
                             )
-                        },
-                        label = { Text(stringResource(it.label)) },
-                        selected = it == currentDestination,
-                        onClick = { currentDestination = it }
-                    )
+                        }
+                    }
+                ) {
+                    Scaffold(
+                        snackbarHost = { SnackbarHost(snackbarHostState) },
+                    ) {
+                        val a = rememberNavController()
+                        when (currentDestination) {
+                            AppDestinations.HOME -> HomePage(navController = a)
+                            AppDestinations.FAVORITES -> SubscriptionPage(
+                                onThreadClicked = {},
+                                navController = a
+                            )
+
+                            AppDestinations.SHOPPING -> ListDetailSample()
+                            AppDestinations.PROFILE -> ThreadDetailPane()
+                        }
+                    }
+
                 }
             }
-        ) {
-            val a = rememberNavController()
-            when (currentDestination) {
-                AppDestinations.HOME -> HomePage(navController = a)
-                AppDestinations.FAVORITES -> SubscriptionPage(
-                    onThreadClicked = {},
-                    navController = a
-                )
-
-                AppDestinations.SHOPPING -> ListDetailSample()
-                AppDestinations.PROFILE -> ThreadDetailPane()
-            }
-
         }
 
     }

@@ -51,6 +51,21 @@ kotlin {
             implementation("org.jetbrains.compose.material3.adaptive:adaptive:1.1.0")
             implementation("org.jetbrains.compose.material3.adaptive:adaptive-layout:1.1.0")
             implementation("org.jetbrains.compose.material3.adaptive:adaptive-navigation:1.1.0")
+
+            // zoom
+            implementation("io.github.panpf.zoomimage:zoomimage-compose-coil3:1.2.0")
+            implementation("io.github.panpf.zoomimage:zoomimage-compose:1.2.0")
+            implementation("io.github.panpf.zoomimage:zoomimage-compose-resources:1.2.0")
+
+
+            // https://saket.github.io/telephoto/zoomable-peek-overlay/
+            // not multi platform
+            // implementation("me.saket.telephoto:zoomable-image-coil3:0.15.1")
+            // for multi platform but not image subsampling
+            // implementation("me.saket.telephoto:zoomable-peek-overlay:0.15.1")
+            // implementation("me.saket.telephoto:zoomable-peek-overlay:0.15.1")
+
+
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)

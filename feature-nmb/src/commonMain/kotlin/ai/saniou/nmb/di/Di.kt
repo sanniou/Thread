@@ -76,7 +76,7 @@ val nmbdi = DI {
     }
 
     // 欢迎图片ViewModel
-    bindProvider<GreetImageViewModel> { GreetImageViewModel(instance(), instance()) }
+    bindProvider<GreetImageViewModel> { GreetImageViewModel(instance()) }
 
     // 论坛分类相关
     bindProvider<ForumCategoryUserCase> { ForumCategoryUserCase(instance()) }
