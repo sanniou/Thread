@@ -1,24 +1,25 @@
 package ai.saniou.nmb.domain
 
-import ai.saniou.corecommon.data.SaniouResponse
-import ai.saniou.nmb.data.entity.ForumCategory
 import ai.saniou.nmb.data.entity.ShowF
 import ai.saniou.nmb.data.repository.ForumRepository
+import ai.saniou.nmb.data.source.ForumPagingSource
+import app.cash.paging.Pager
+import app.cash.paging.PagingConfig
+import app.cash.paging.PagingData
+import kotlinx.coroutines.flow.Flow
 
 class ForumUserCase(
-    private val forumRepository: ForumRepository
+    private val forumRepository: ForumRepository,
+    private val forumPagingSource: ForumPagingSource
 ) {
-    suspend operator fun invoke(
+    operator fun invoke(
         id: Long, page: Long
-    ): List<ShowF> {
-        return try {
-            return when (val forumList = forumRepository.showf(id, page)) {
-                is SaniouResponse.Success -> forumList.data
-                else -> throw RuntimeException("")
-            }
-        } catch (e: Exception) {
-//            MBLoggerKit.e("applyOrExitGroup Exception ${e.message}")
-            throw e
-        }
+    ): Flow<PagingData<ShowF>> {
+        forumPagingSource.initCuisine(id)
+        return Pager(
+            config = PagingConfig(pageSize = 20, prefetchDistance = 3),
+            pagingSourceFactory = { forumPagingSource }
+        ).flow
+
     }
 }

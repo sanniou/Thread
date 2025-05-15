@@ -5,10 +5,13 @@ import ai.saniou.nmb.data.entity.ShowF
 import ai.saniou.nmb.domain.ForumUserCase
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.cash.paging.PagingData
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.stateIn
@@ -19,7 +22,7 @@ class ForumViewModel(private val forumUserCase: ForumUserCase) : ViewModel() {
 
     private val dataUiState = MutableStateFlow(
         ShowForumUiState(
-            showF = emptyList(),
+            showF = emptyFlow(),
             page = 1,
             id = 0,
             onUpdateForumId = {
@@ -82,13 +85,7 @@ class ForumViewModel(private val forumUserCase: ForumUserCase) : ViewModel() {
             val dataList = forumUserCase(fid, 1)
 
             // 获取论坛名称 - 如果有数据，使用第一个帖子的fid来确定论坛名称
-            var forumName = "论坛 $fid"
-            if (dataList.isNotEmpty()) {
-                // 这里可以从数据中获取论坛名称，或者从其他地方获取
-                // 暂时使用简单的名称
-                forumName = "论坛 $fid"
-            }
-
+            val forumName = "论坛 $fid"
             updateUiState { state ->
                 state.copy(
                     id = fid,
@@ -110,48 +107,49 @@ class ForumViewModel(private val forumUserCase: ForumUserCase) : ViewModel() {
 
     // 加载下一页
     fun loadNextPage() {
-        val currentId = _forumId.value
-        if (currentId == null || currentId <= 0) return
-
-        // 如果已经没有更多数据，则不再加载
-        if (!dataUiState.value.hasMoreData) return
-
-        val nextPage = dataUiState.value.page + 1
-
-        viewModelScope.launch {
-            try {
-                val newDataList = forumUserCase(currentId, nextPage)
-
-                // 合并帖子列表
-                val currentList = dataUiState.value.showF
-                val combinedList = currentList + newDataList
-
-                // 判断是否还有更多数据
-                // 如果返回的帖子为空，则认为没有更多数据
-                val hasMoreData = newDataList.isNotEmpty()
-
-                updateUiState { state ->
-                    state.copy(
-                        showF = combinedList,
-                        page = nextPage,
-                        hasMoreData = hasMoreData
-                    )
-                }
-                _uiState.emit(UiStateWrapper.Success(dataUiState.value))
-            } catch (e: Throwable) {
-                // 加载下一页失败，但不影响当前页面显示
-                // 将hasMoreData设置为false，避免继续尝试加载
-                updateUiState { state ->
-                    state.copy(hasMoreData = false)
-                }
-                _uiState.emit(UiStateWrapper.Success(dataUiState.value))
-            }
-        }
+        TODO()
+//        val currentId = _forumId.value
+//        if (currentId == null || currentId <= 0) return
+//
+//        // 如果已经没有更多数据，则不再加载
+//        if (!dataUiState.value.hasMoreData) return
+//
+//        val nextPage = dataUiState.value.page + 1
+//
+//        viewModelScope.launch {
+//            try {
+//                val newDataList = forumUserCase(currentId, nextPage)
+//
+//                // 合并帖子列表
+//                val currentList = dataUiState.value.showF
+//                val combinedList = currentList + newDataList
+//
+//                // 判断是否还有更多数据
+//                // 如果返回的帖子为空，则认为没有更多数据
+//                val hasMoreData = newDataList.isNotEmpty()
+//
+//                updateUiState { state ->
+//                    state.copy(
+//                        showF = combinedList,
+//                        page = nextPage,
+//                        hasMoreData = hasMoreData
+//                    )
+//                }
+//                _uiState.emit(UiStateWrapper.Success(dataUiState.value))
+//            } catch (e: Throwable) {
+//                // 加载下一页失败，但不影响当前页面显示
+//                // 将hasMoreData设置为false，避免继续尝试加载
+//                updateUiState { state ->
+//                    state.copy(hasMoreData = false)
+//                }
+//                _uiState.emit(UiStateWrapper.Success(dataUiState.value))
+//            }
+//        }
     }
 }
 
 data class ShowForumUiState(
-    var showF: List<ShowF>,
+    var showF: Flow<PagingData<ShowF>>,
     var page: Long = 1,
     var id: Long = 0,
     var forumName: String = "",

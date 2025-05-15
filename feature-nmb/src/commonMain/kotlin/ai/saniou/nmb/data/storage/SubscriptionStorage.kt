@@ -27,10 +27,9 @@ class SubscriptionStorage(scope: CoroutineScope) : BasicStorage(scope, "subscrip
      * 获取订阅ID
      * 如果不存在则返回null
      */
-    suspend fun getLastSubscriptionId(): String? {
+    suspend fun loadLastSubscriptionId() {
         val id = subscriptionList.getLast()?.value<SubscriptionInfo>()?.id
         _subscriptionId.value = id
-        return id
     }
 
     suspend fun getSubscriptionId(): List<String> {

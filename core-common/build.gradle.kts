@@ -78,8 +78,9 @@ kotlin {
             // Coil for Multiplatform
             api(libs.coil.compose)
             api(libs.coil.network)
-//            api(libs.paging.compose.common)
-//            api(libs.paging.common)
+            // pager
+            // api(libs.paging.compose.common)
+            // api(libs.paging.common)
             // voyager
             api(libs.voyager.navigator)
             api(libs.voyager.screenmodel)

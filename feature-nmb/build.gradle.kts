@@ -57,7 +57,8 @@ kotlin {
             implementation("io.github.panpf.zoomimage:zoomimage-compose:1.2.0")
             implementation("io.github.panpf.zoomimage:zoomimage-compose-resources:1.2.0")
 
-
+            implementation("app.cash.paging:paging-common:3.3.0-alpha02-0.5.1")
+            implementation("app.cash.paging:paging-compose-common:3.3.0-alpha02-0.5.1")
             // https://saket.github.io/telephoto/zoomable-peek-overlay/
             // not multi platform
             // implementation("me.saket.telephoto:zoomable-image-coil3:0.15.1")

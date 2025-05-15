@@ -39,3 +39,4 @@ https://developer.android.com/develop/ui/compose/layouts/adaptive/build-adaptive
 https://github.com/kagg886/Pixiv-MultiPlatform
 https://github.com/0xZhangKe/Fread
 https://github.com/panpf/zoomimage/tree/main/sample/src/commonMain/kotlin/com/github/panpf/zoomimage/sample/ui/examples
+https://github.com/TheChance101/beep-beep

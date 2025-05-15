@@ -7,6 +7,7 @@ import ai.saniou.nmb.data.manager.CdnManager
 import ai.saniou.nmb.data.repository.ForumRepository
 import ai.saniou.nmb.data.repository.NmbRepository
 import ai.saniou.nmb.data.repository.NmbRepositoryImpl
+import ai.saniou.nmb.data.source.ForumPagingSource
 import ai.saniou.nmb.data.storage.CategoryStorage
 import ai.saniou.nmb.data.storage.GreetImageStorage
 import ai.saniou.nmb.data.storage.SubscriptionStorage
@@ -80,10 +81,17 @@ val nmbdi = DI {
 
     // 论坛分类相关
     bindProvider<ForumCategoryUserCase> { ForumCategoryUserCase(instance()) }
-    bindProvider<ForumCategoryViewModel> { ForumCategoryViewModel(instance(), instance(), instance()) }
+    bindProvider<ForumCategoryViewModel> {
+        ForumCategoryViewModel(
+            instance(),
+            instance(),
+            instance()
+        )
+    }
 
     // 论坛相关
-    bindProvider { ForumUserCase(instance()) }
+    bindProvider { ForumPagingSource(instance()) }
+    bindProvider { ForumUserCase(instance(), instance()) }
     bindProvider { ForumViewModel(instance()) }
 
     // 帖子相关

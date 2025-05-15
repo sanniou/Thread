@@ -31,6 +31,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -57,6 +58,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import androidx.paging.LoadState
+import androidx.paging.filter
+import app.cash.paging.CombinedLoadStates
+import app.cash.paging.compose.collectAsLazyPagingItems
+import app.cash.paging.compose.itemKey
+import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.kodein.di.DI
@@ -102,6 +109,7 @@ fun Forum(
     onImageClick: ((String, String) -> Unit)? = null,
     innerPadding: PaddingValues? = null
 ) {
+    val forumList = uiState.showF.collectAsLazyPagingItems()
     PullToRefreshWrapper(
         onRefreshTrigger = {
             uiState.onUpdateForumId(uiState.id)
@@ -114,97 +122,111 @@ fun Forum(
             }
         }
     ) {
-        // 检查是否有帖子
-        if (uiState.showF.isEmpty()) {
-            // 空状态显示
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(32.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Info,
-                        contentDescription = null,
-                        modifier = Modifier.size(48.dp),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Text(
-                        text = "暂无帖子",
-                        style = MaterialTheme.typography.titleMedium
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = "该板块当前没有帖子，点击右下角按钮发布第一个帖子吧！",
-                        style = MaterialTheme.typography.bodyMedium,
-                        textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Button(
-                        onClick = { uiState.onUpdateForumId(uiState.id) }
-                    ) {
-                        Text("刷新")
-                    }
-                }
-            }
-        } else {
-            // 有帖子时显示列表
-            val scrollState = rememberLazyListState()
-            val coroutineScope = rememberCoroutineScope()
-
-            // 监听滚动到底部，加载更多
-            LaunchedEffect(scrollState) {
-                snapshotFlow {
-                    val layoutInfo = scrollState.layoutInfo
-                    val totalItemsCount = layoutInfo.totalItemsCount
-                    val lastVisibleItemIndex =
-                        (layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0) + 1
-
-                    // 当最后一个可见项是列表中的最后一项，且列表不为空
-                    lastVisibleItemIndex >= totalItemsCount && totalItemsCount > 0
-                }.collect { isAtBottom ->
-                    if (isAtBottom) {
-                        // 加载下一页
-                        uiState.onLoadNextPage()
-                    }
-                }
+        val scrollState = rememberLazyListState()
+        val coroutineScope = rememberCoroutineScope()
+        LazyColumn(
+            state = scrollState,
+            modifier = Modifier
+                .draggable(
+                    orientation = Orientation.Vertical,
+                    state = rememberDraggableState { delta ->
+                        coroutineScope.launch {
+                            scrollState.scrollBy(-delta)
+                        }
+                    },
+                ),
+            contentPadding = PaddingValues(8.dp)
+        ) {
+            items(forumList.itemCount, forumList.itemKey { it.id }) { index ->
+                val thread = forumList[index]!!
+                ThreadCard(
+                    thread = thread,
+                    onClick = { onThreadClicked(thread.id) },
+                    onImageClick = onImageClick
+                )
+                Spacer(modifier = Modifier.height(8.dp))
             }
 
-            LazyColumn(
-                state = scrollState,
-                modifier = Modifier
-                    .draggable(
-                        orientation = Orientation.Vertical,
-                        state = rememberDraggableState { delta ->
-                            coroutineScope.launch {
-                                scrollState.scrollBy(-delta)
+            when (forumList.loadState.refresh) {
+                is LoadState.Error -> {
+                    item {
+                        Box(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier.padding(32.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Refresh,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(48.dp)
+                                        .clickable(onClick = {
+                                            forumList.refresh()
+                                        }),
+                                )
                             }
-                        },
-                    ),
-                contentPadding = PaddingValues(8.dp)
-            ) {
-                items(uiState.showF) { thread ->
-                    ThreadCard(
-                        thread = thread,
-                        onClick = { onThreadClicked(thread.id) },
-                        onImageClick = onImageClick
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
+                        }
+                    }
                 }
 
-                // 底部加载指示器
-                item {
-                    if (uiState.showF.isNotEmpty() && uiState.hasMoreData) {
+                is LoadState.Loading,
+                is LoadState.NotLoading -> {
+                    // 加载完成，可以判断是否为空
+                    if (forumList.itemCount == 0) {
+                        // 空状态显示
+                        item {
+
+                            Box(
+                                modifier = Modifier.fillMaxWidth(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    modifier = Modifier.padding(32.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Info,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(48.dp),
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+
+                                    Spacer(modifier = Modifier.height(16.dp))
+
+                                    Text(
+                                        text = "暂无帖子",
+                                        style = MaterialTheme.typography.titleMedium
+                                    )
+
+                                    Spacer(modifier = Modifier.height(8.dp))
+
+                                    Text(
+                                        text = "该板块当前没有帖子，点击右下角按钮发布第一个帖子吧！",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        textAlign = TextAlign.Center,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+
+                                    Spacer(modifier = Modifier.height(16.dp))
+
+                                    Button(
+                                        onClick = { uiState.onUpdateForumId(uiState.id) }
+                                    ) {
+                                        Text("刷新")
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            when (forumList.loadState.append) {
+                /* 加载更多中 */
+                is LoadState.Loading -> {
+                    item {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -216,7 +238,28 @@ fun Forum(
                                 strokeWidth = 2.dp
                             )
                         }
-                    } else if (uiState.showF.isNotEmpty()) {
+                    }
+                }
+
+                is LoadState.Error -> {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "加载更多失败",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                            )
+                        }
+                    }
+                }
+
+                is LoadState.NotLoading -> {
+                    item {
                         // 显示已经加载完所有数据的提示
                         Box(
                             modifier = Modifier
@@ -231,11 +274,13 @@ fun Forum(
                             )
                         }
                     }
+
                 }
             }
         }
     }
 }
+
 
 @Composable
 fun ThreadCard(

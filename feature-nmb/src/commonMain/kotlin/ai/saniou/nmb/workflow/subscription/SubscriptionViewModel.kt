@@ -53,9 +53,9 @@ class SubscriptionViewModel(
      */
     private fun loadSubscriptionId() {
         viewModelScope.launch {
-            val id = subscriptionStorage.getLastSubscriptionId()
+            subscriptionStorage.loadLastSubscriptionId()
 
-            if (id == null) {
+            if (subscriptionStorage.subscriptionId.value == null) {
                 // 如果没有订阅ID，显示设置对话框
                 _showSubscriptionIdDialog.value = true
                 _uiState.value = UiStateWrapper.Error(Exception("请先设置订阅ID"), "请先设置订阅ID")

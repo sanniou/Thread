@@ -100,7 +100,7 @@ class ThreadViewModel(
 
         // 加载订阅ID
         viewModelScope.launch {
-            subscriptionStorage.getLastSubscriptionId()
+            subscriptionStorage.loadLastSubscriptionId()
         }
     }
 
