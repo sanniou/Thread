@@ -75,9 +75,6 @@ kotlin {
             api(libs.kodein.di)
             api(libs.kottage)
             api(libs.kotlinx.datetime)
-            // Coil for Multiplatform
-            api(libs.coil.compose)
-            api(libs.coil.network)
             // pager
             // api(libs.paging.compose.common)
             // api(libs.paging.common)

@@ -7,17 +7,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.defaultMinSize
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -28,15 +19,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import coil3.compose.AsyncImage
-import coil3.compose.AsyncImagePainter
-import coil3.compose.LocalPlatformContext
-import coil3.request.CachePolicy
-import coil3.request.ImageRequest
-import coil3.request.crossfade
+import com.github.panpf.sketch.AsyncImage
+import com.github.panpf.sketch.rememberAsyncImageState
+import com.github.panpf.sketch.request.ComposableImageOptions
+import com.github.panpf.sketch.state.ColorPainterStateImage
 import kotlinx.coroutines.launch
 import org.kodein.di.instance
 
@@ -111,72 +99,22 @@ fun ImageComponent(
         finalModifier = finalModifier.clickable { onClick() }
     }
 
-    // 使用 Box 自定义加载、错误和成功状态
-    var state by remember { mutableStateOf<AsyncImagePainter.State>(AsyncImagePainter.State.Empty) }
     Box(
         modifier = Modifier.defaultMinSize(minHeight = 100.dp),
         contentAlignment = Alignment.Center
     ) {
+
         AsyncImage(
-            modifier = finalModifier,
-            model = ImageRequest.Builder(LocalPlatformContext.current)
-                .data(imageUrl)
-                .crossfade(true)
-                .memoryCachePolicy(CachePolicy.ENABLED)
-                .diskCachePolicy(CachePolicy.ENABLED)
-                .build(),
+            uri = imageUrl,
+            state = rememberAsyncImageState(ComposableImageOptions {
+                placeholder(ColorPainterStateImage(MaterialTheme.colorScheme.primaryContainer))
+                error(ColorPainterStateImage(MaterialTheme.colorScheme.errorContainer))
+                crossfade()
+                // There is a lot more...
+            }),
             contentDescription = contentDescription,
+            modifier = finalModifier,
             contentScale = contentScale,
-            placeholder = ColorPainter(MaterialTheme.colorScheme.primaryContainer),
-            error = ColorPainter(MaterialTheme.colorScheme.errorContainer),
-            onLoading = { state = it },
-            onSuccess = { state = it },
-            onError = { state = it },
         )
-        when (state) {
-            is AsyncImagePainter.State.Success, is AsyncImagePainter.State.Loading, is AsyncImagePainter.State.Empty -> {
-
-            }
-
-            is AsyncImagePainter.State.Error -> {
-
-                // 加载失败状态
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .apply {
-                            onRetry?.let {
-                                this.clickable(onClick = it)
-                            }
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = "加载失败",
-                        tint = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.size(48.dp)
-                    )
-
-                    Icon(
-                        imageVector = Icons.Default.Refresh,
-                        contentDescription = "点击重试",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier
-                            .size(24.dp)
-                            .align(Alignment.BottomEnd)
-                            .padding(4.dp)
-                    )
-
-                    Text(
-                        text = "加载失败，点击重试",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.align(Alignment.BottomCenter)
-                    )
-                }
-            }
-
-        }
     }
 }

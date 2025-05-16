@@ -53,9 +53,27 @@ kotlin {
             implementation("org.jetbrains.compose.material3.adaptive:adaptive-navigation:1.1.0")
 
             // zoom
-            implementation("io.github.panpf.zoomimage:zoomimage-compose-coil3:1.2.0")
+            // implementation("io.github.panpf.zoomimage:zoomimage-compose-coil3:1.2.0")
             implementation("io.github.panpf.zoomimage:zoomimage-compose:1.2.0")
+            implementation("io.github.panpf.zoomimage:zoomimage-compose-sketch4:1.2.0")
             implementation("io.github.panpf.zoomimage:zoomimage-compose-resources:1.2.0")
+
+            implementation("io.github.panpf.sketch4:sketch-compose:4.0.6")
+            implementation("io.github.panpf.sketch4:sketch-http:4.0.6")
+            // 使用 Android 或 Skia 内置的解码器解码 gif 动图并播放
+            implementation("io.github.panpf.sketch4:sketch-animated-gif:4.0.6")
+            // 使用 Android 或 Skia 内置的解码器解码 webp 动图并播放
+            implementation("io.github.panpf.sketch4:sketch-animated-webp:4.0.6")
+            // 支持通过 uri 或 placeholder、fallback、error 访问 compose resources 资源
+            implementation("io.github.panpf.sketch4:sketch-compose-resources:4.0.6")
+            implementation("io.github.panpf.sketch4:sketch-extensions-compose-resources:4.0.6")
+            // 提供下载进度、图片类型角标、列表滚动中暂停加载、节省蜂窝流量等实用功能
+            implementation("io.github.panpf.sketch4:sketch-extensions-compose:4.0.6")
+            // 支持使用 3.x 版本的 ktor 访问网络图片
+            implementation("io.github.panpf.sketch4:sketch-http-ktor3:4.0.6")
+
+            // 支持 SVG 图片
+            implementation("io.github.panpf.sketch4:sketch-svg:4.0.6")
 
             implementation("app.cash.paging:paging-common:3.3.0-alpha02-0.5.1")
             implementation("app.cash.paging:paging-compose-common:3.3.0-alpha02-0.5.1")

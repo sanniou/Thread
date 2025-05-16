@@ -6,10 +6,10 @@ import ai.saniou.nmb.domain.ForumUserCase
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.cash.paging.PagingData
+import app.cash.paging.cachedIn
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filter
@@ -82,7 +82,7 @@ class ForumViewModel(private val forumUserCase: ForumUserCase) : ViewModel() {
     private suspend fun loadForumInternal(fid: Long) {
         try {
             _uiState.emit(UiStateWrapper.Loading)
-            val dataList = forumUserCase(fid, 1)
+            val dataList = forumUserCase(fid, 1).cachedIn(viewModelScope)
 
             // 获取论坛名称 - 如果有数据，使用第一个帖子的fid来确定论坛名称
             val forumName = "论坛 $fid"

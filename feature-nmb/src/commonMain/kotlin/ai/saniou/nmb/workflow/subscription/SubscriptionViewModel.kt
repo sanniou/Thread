@@ -189,7 +189,7 @@ class SubscriptionViewModel(
 
                 // 从列表中移除已取消订阅的帖子
                 val currentFeeds = dataUiState.value.feeds
-                val updatedFeeds = currentFeeds.filter { it.id != threadId.toString() }
+                val updatedFeeds = currentFeeds.filter { it.id != threadId }
 
                 updateUiState { state ->
                     state.copy(

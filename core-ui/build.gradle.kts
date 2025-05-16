@@ -70,6 +70,9 @@ kotlin {
             api(libs.androidx.lifecycle.runtime.compose)
             api(libs.navigation.compose)
             api(libs.material.icons)
+            // Coil for Multiplatform
+            // api(libs.coil.compose)
+            // api(libs.coil.network)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)

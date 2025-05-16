@@ -11,11 +11,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import coil3.compose.LocalPlatformContext
-import coil3.compose.SubcomposeAsyncImage
-import coil3.request.CachePolicy
-import coil3.request.ImageRequest
-import coil3.request.crossfade
 
 /**
  * Drawer 头部组件，显示欢迎图片

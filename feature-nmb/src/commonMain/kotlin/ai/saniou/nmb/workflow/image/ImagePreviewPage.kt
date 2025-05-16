@@ -37,8 +37,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.github.panpf.zoomimage.CoilZoomAsyncImage
-import kotlinx.coroutines.flow.drop
+import com.github.panpf.zoomimage.SketchZoomAsyncImage
 import org.kodein.di.DI
 import org.kodein.di.instance
 import kotlin.coroutines.cancellation.CancellationException
@@ -137,8 +136,8 @@ data class ImagePreviewPage(
                 .background(Color.Black)
         ) {
             // 图片显示区域
-            CoilZoomAsyncImage(
-                model = imageUrl,
+            SketchZoomAsyncImage(
+                uri = imageUrl,
                 contentDescription = "预览图片",
                 modifier = Modifier.fillMaxSize(),
             )
