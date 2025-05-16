@@ -6,9 +6,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.kodein.di.DI
 import org.kodein.di.instance
-import platform.Foundation.*
-import platform.UIKit.*
-import platform.Photos.*
+import platform.Foundation.NSData
+import platform.Foundation.NSURL
+import platform.Foundation.dataWithContentsOfURL
+import platform.UIKit.UIImage
+import platform.UIKit.UIImageWriteToSavedPhotosAlbum
 
 /**
  * iOS平台保存图片实现

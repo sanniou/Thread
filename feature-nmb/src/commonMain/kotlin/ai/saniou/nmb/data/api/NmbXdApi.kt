@@ -17,7 +17,6 @@ import ai.saniou.nmb.data.entity.Thread
 import ai.saniou.nmb.data.entity.TimeLine
 import de.jensklingenberg.ktorfit.http.Body
 import de.jensklingenberg.ktorfit.http.Field
-import de.jensklingenberg.ktorfit.http.FieldMap
 import de.jensklingenberg.ktorfit.http.FormUrlEncoded
 import de.jensklingenberg.ktorfit.http.GET
 import de.jensklingenberg.ktorfit.http.POST

@@ -8,7 +8,7 @@ import ai.saniou.nmb.ui.components.LoadingIndicator
 import ai.saniou.nmb.ui.components.RefreshCard
 import ai.saniou.nmb.ui.components.SkeletonLoader
 import ai.saniou.nmb.ui.components.ThreadCard
-import ai.saniou.nmb.workflow.image.ImagePreviewNavigationDestination
+import ai.saniou.nmb.workflow.image.ImagePreviewPage
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
@@ -36,13 +36,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import androidx.paging.LoadState
 import app.cash.paging.compose.collectAsLazyPagingItems
 import app.cash.paging.compose.itemKey
+import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.launch
-import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.kodein.di.DI
 
 
@@ -51,30 +51,34 @@ import org.kodein.di.DI
  *
  * 该组件主要用于从非Drawer入口（如搜索结果、收藏列表等）进入论坛
  */
-@Composable
-fun ForumScreen(
-    di: DI = nmbdi,
-    onThreadClicked: (Long) -> Unit = {},
-    onNewPostClicked: (Long) -> Unit = {},
-    forumId: Long = 0,
-    onUpdateTitle: ((String) -> Unit)? = null,
-    navController: NavController = rememberNavController()
-) {
-    Surface(
-        color = MaterialTheme.colorScheme.background
-    ) {
-        // 使用可复用的ForumContent组件
-        ForumContent(
-            forumId = forumId,
-            onThreadClicked = onThreadClicked,
-            onNewPostClicked = onNewPostClicked,
-            onUpdateTitle = onUpdateTitle,
-            showFloatingActionButton = true,
-            onImageClick = { imgPath, ext ->
-                // 导航到图片预览页面
-                navController.navigate(ImagePreviewNavigationDestination.createRoute(imgPath, ext))
-            }
-        )
+
+data class ForumScreen(
+    val di: DI = nmbdi,
+    val onThreadClicked: (Long) -> Unit = {},
+    val onNewPostClicked: (Long) -> Unit = {},
+    val forumId: Long = 0,
+) : Screen {
+
+    @Composable
+    override fun Content() {
+
+        val navigator = LocalNavigator.currentOrThrow
+
+        Surface(
+            color = MaterialTheme.colorScheme.background
+        ) {
+            // 使用可复用的ForumContent组件
+            ForumContent(
+                forumId = forumId,
+                onThreadClicked = onThreadClicked,
+                onNewPostClicked = onNewPostClicked,
+                showFloatingActionButton = true,
+                onImageClick = { imgPath, ext ->
+                    // 导航到图片预览页面
+                    navigator.push(ImagePreviewPage(imgPath, ext))
+                }
+            )
+        }
     }
 }
 

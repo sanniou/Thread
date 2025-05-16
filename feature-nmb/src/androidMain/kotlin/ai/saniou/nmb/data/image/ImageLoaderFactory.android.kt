@@ -16,7 +16,7 @@ import java.io.File
 @OptIn(ExperimentalCoilApi::class)
 actual object ImageLoaderFactory {
     private var imageLoader: ImageLoader? = null
-    
+
     /**
      * 获取单例ImageLoader实例
      */
@@ -24,7 +24,7 @@ actual object ImageLoaderFactory {
         if (imageLoader == null) {
             val context = NmbApplication.instance
             val cacheDirectory = File(context.cacheDir, "image_cache")
-            
+
             imageLoader = ImageLoader.Builder(context)
                 .networkFetcher(OkHttpNetworkFetcher(OkHttpClient.Builder().build()))
                 .diskCache {
@@ -39,10 +39,10 @@ actual object ImageLoaderFactory {
                 .logger(DebugLogger())
                 .build()
         }
-        
+
         return imageLoader!!
     }
-    
+
     /**
      * 清除图片缓存
      */

@@ -28,7 +28,7 @@ class UserUseCase(
             )
         }
     }
-    
+
     /**
      * 获取用户饼干列表
      */
@@ -46,7 +46,7 @@ class UserUseCase(
             throw e
         }
     }
-    
+
     /**
      * 申请新饼干
      */
@@ -59,7 +59,7 @@ class UserUseCase(
             "申请饼干失败: ${e.message}"
         }
     }
-    
+
     /**
      * 注册账号
      */
@@ -77,7 +77,7 @@ class UserUseCase(
             "注册失败: ${e.message}"
         }
     }
-    
+
     /**
      * 重置密码
      */

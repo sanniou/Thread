@@ -11,9 +11,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.material3.BottomSheetDefaults.DragHandle
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
-import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
-import androidx.compose.material3.adaptive.layout.AnimatedPane
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffold
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
 import androidx.compose.material3.adaptive.layout.PaneAdaptedValue
@@ -29,8 +27,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.backhandler.BackHandler
-import androidx.compose.ui.backhandler.PredictiveBackHandler
-import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
 
 
@@ -60,23 +56,18 @@ fun ThreadDetailPane() {
                 directive = navigator.scaffoldDirective,
                 value = navigator.scaffoldValue,
                 listPane = {
-                    val currentSelectedWordIndex = threadId
-                    val isDetailVisible =
-                        navigator.scaffoldValue[ListDetailPaneScaffoldRole.Detail] == PaneAdaptedValue.Expanded
                     SubscriptionPage(
                         onThreadClicked = {
                             threadId = it
                             scope.launch {
                                 navigator.navigateTo(ListDetailPaneScaffoldRole.Detail)
                             }
-                        },
-                        navController = rememberNavController()
+                        }
                     )
                 },
                 detailPane = {
-                    val isDetailVisible =
-                        navigator.scaffoldValue[ListDetailPaneScaffoldRole.Detail] == PaneAdaptedValue.Expanded
-                    ThreadPage(threadId, rememberNavController())
+                    // val isDetailVisible = navigator.scaffoldValue[ListDetailPaneScaffoldRole.Detail] == PaneAdaptedValue.Expanded
+                    ThreadPage(threadId)
                 },
                 paneExpansionState = paneExpansionState,
                 paneExpansionDragHandle = { state ->

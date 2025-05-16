@@ -1,8 +1,7 @@
 package ai.saniou.nmb.workflow.user
 
-import ai.saniou.coreui.state.LoadingWrapper
-import ai.saniou.nmb.di.nmbdi
 import ai.saniou.nmb.data.entity.Cookie
+import ai.saniou.nmb.di.nmbdi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -21,12 +20,10 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -40,9 +37,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -52,120 +46,134 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.kodein.di.DI
 import org.kodein.di.instance
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun UserPage(
-    onNavigateBack: () -> Unit,
-    di: DI = nmbdi
-) {
-    val userViewModel: UserViewModel = viewModel {
-        val viewModel by di.instance<UserViewModel>()
-        viewModel
-    }
-    
-    val uiState by userViewModel.uiState.collectAsStateWithLifecycle()
-    
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("用户中心") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "返回")
-                    }
-                }
-            )
-        },
-        floatingActionButton = {
-            if (uiState is UserUiState.CookieList) {
-                FloatingActionButton(
-                    onClick = { userViewModel.applyNewCookie() }
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = "申请新饼干")
-                }
-            }
+
+data class UserPage(
+    val di: DI = nmbdi
+) : Screen {
+
+    @OptIn(ExperimentalMaterial3Api::class)
+    @Composable
+    override fun Content() {
+        val navigator = LocalNavigator.currentOrThrow
+
+        val userViewModel: UserViewModel = viewModel {
+            val viewModel by di.instance<UserViewModel>()
+            viewModel
         }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier.padding(paddingValues)
-        ) {
-            // 标签页
-            TabRow(
-                selectedTabIndex = userViewModel.currentTabIndex
-            ) {
-                listOf("饼干管理", "登录", "注册").forEachIndexed { index, title ->
-                    Tab(
-                        selected = userViewModel.currentTabIndex == index,
-                        onClick = { userViewModel.setCurrentTabIndex(index) },
-                        text = { Text(title) }
-                    )
-                }
-            }
-            
-            // 内容区域
-            when (val state = uiState) {
-                is UserUiState.Loading -> {
-                    Box(
-                        modifier = Modifier.fillMaxWidth().weight(1f),
-                        contentAlignment = Alignment.Center
+
+        val uiState by userViewModel.uiState.collectAsStateWithLifecycle()
+
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("用户中心") },
+                    navigationIcon = {
+                        IconButton(onClick = { navigator.pop() }) {
+                            Icon(Icons.Default.ArrowBack, contentDescription = "返回")
+                        }
+                    }
+                )
+            },
+            floatingActionButton = {
+                if (uiState is UserUiState.CookieList) {
+                    FloatingActionButton(
+                        onClick = { userViewModel.applyNewCookie() }
                     ) {
-                        Text("加载中...")
+                        Icon(Icons.Default.Add, contentDescription = "申请新饼干")
                     }
                 }
-                is UserUiState.Error -> {
-                    Box(
-                        modifier = Modifier.fillMaxWidth().weight(1f),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("错误: ${state.message}")
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Button(onClick = { userViewModel.retry() }) {
-                                Text("重试")
+            }
+        ) { paddingValues ->
+            Column(
+                modifier = Modifier.padding(paddingValues)
+            ) {
+                // 标签页
+                TabRow(
+                    selectedTabIndex = userViewModel.currentTabIndex
+                ) {
+                    listOf("饼干管理", "登录", "注册").forEachIndexed { index, title ->
+                        Tab(
+                            selected = userViewModel.currentTabIndex == index,
+                            onClick = { userViewModel.setCurrentTabIndex(index) },
+                            text = { Text(title) }
+                        )
+                    }
+                }
+
+                // 内容区域
+                when (val state = uiState) {
+                    is UserUiState.Loading -> {
+                        Box(
+                            modifier = Modifier.fillMaxWidth().weight(1f),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("加载中...")
+                        }
+                    }
+
+                    is UserUiState.Error -> {
+                        Box(
+                            modifier = Modifier.fillMaxWidth().weight(1f),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text("错误: ${state.message}")
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Button(onClick = { userViewModel.retry() }) {
+                                    Text("重试")
+                                }
                             }
                         }
                     }
-                }
-                is UserUiState.CookieList -> {
-                    CookieListContent(
-                        cookies = state.cookies,
-                        onRefresh = { userViewModel.refreshCookies() }
-                    )
-                }
-                is UserUiState.Login -> {
-                    LoginContent(
-                        email = state.email,
-                        password = state.password,
-                        verifyCode = state.verifyCode,
-                        verifyImageUrl = state.verifyImageUrl,
-                        onEmailChanged = { userViewModel.updateEmail(it) },
-                        onPasswordChanged = { userViewModel.updatePassword(it) },
-                        onVerifyCodeChanged = { userViewModel.updateVerifyCode(it) },
-                        onRefreshVerifyCode = { userViewModel.refreshVerifyCode() },
-                        onLogin = { userViewModel.login() }
-                    )
-                }
-                is UserUiState.Register -> {
-                    RegisterContent(
-                        email = state.email,
-                        password = state.password,
-                        passwordConfirm = state.passwordConfirm,
-                        verifyCode = state.verifyCode,
-                        verifyImageUrl = state.verifyImageUrl,
-                        onEmailChanged = { userViewModel.updateEmail(it) },
-                        onPasswordChanged = { userViewModel.updatePassword(it) },
-                        onPasswordConfirmChanged = { userViewModel.updatePasswordConfirm(it) },
-                        onVerifyCodeChanged = { userViewModel.updateVerifyCode(it) },
-                        onRefreshVerifyCode = { userViewModel.refreshVerifyCode() },
-                        onRegister = { userViewModel.register() }
-                    )
+
+                    is UserUiState.CookieList -> {
+                        CookieListContent(
+                            cookies = state.cookies,
+                            onRefresh = { userViewModel.refreshCookies() }
+                        )
+                    }
+
+                    is UserUiState.Login -> {
+                        LoginContent(
+                            email = state.email,
+                            password = state.password,
+                            verifyCode = state.verifyCode,
+                            verifyImageUrl = state.verifyImageUrl,
+                            onEmailChanged = { userViewModel.updateEmail(it) },
+                            onPasswordChanged = { userViewModel.updatePassword(it) },
+                            onVerifyCodeChanged = { userViewModel.updateVerifyCode(it) },
+                            onRefreshVerifyCode = { userViewModel.refreshVerifyCode() },
+                            onLogin = { userViewModel.login() }
+                        )
+                    }
+
+                    is UserUiState.Register -> {
+                        RegisterContent(
+                            email = state.email,
+                            password = state.password,
+                            passwordConfirm = state.passwordConfirm,
+                            verifyCode = state.verifyCode,
+                            verifyImageUrl = state.verifyImageUrl,
+                            onEmailChanged = { userViewModel.updateEmail(it) },
+                            onPasswordChanged = { userViewModel.updatePassword(it) },
+                            onPasswordConfirmChanged = { userViewModel.updatePasswordConfirm(it) },
+                            onVerifyCodeChanged = { userViewModel.updateVerifyCode(it) },
+                            onRefreshVerifyCode = { userViewModel.refreshVerifyCode() },
+                            onRegister = { userViewModel.register() }
+                        )
+                    }
                 }
             }
         }
+
+
     }
 }
 
@@ -185,16 +193,16 @@ fun CookieListContent(
                 text = "我的饼干",
                 style = MaterialTheme.typography.titleMedium
             )
-            
+
             Spacer(modifier = Modifier.weight(1f))
-            
+
             IconButton(onClick = onRefresh) {
                 Icon(Icons.Default.Refresh, contentDescription = "刷新")
             }
         }
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         if (cookies.isEmpty()) {
             Box(
                 modifier = Modifier.fillMaxWidth().weight(1f),
@@ -229,9 +237,9 @@ fun CookieItem(cookie: Cookie) {
                     text = cookie.name,
                     style = MaterialTheme.typography.titleMedium
                 )
-                
+
                 Spacer(modifier = Modifier.width(8.dp))
-                
+
                 if (cookie.isActive) {
                     Box(
                         modifier = Modifier
@@ -247,25 +255,25 @@ fun CookieItem(cookie: Cookie) {
                             .background(Color.Red)
                     )
                 }
-                
+
                 Spacer(modifier = Modifier.weight(1f))
-                
+
                 Text(
                     text = if (cookie.isActive) "有效" else "无效",
                     color = if (cookie.isActive) Color.Green else Color.Red,
                     style = MaterialTheme.typography.bodySmall
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             Text(
                 text = "饼干值: ${cookie.value}",
                 style = MaterialTheme.typography.bodyMedium
             )
-            
+
             Spacer(modifier = Modifier.height(4.dp))
-            
+
             Text(
                 text = "用户标识: ${cookie.userHash}",
                 style = MaterialTheme.typography.bodyMedium
@@ -296,9 +304,9 @@ fun LoginContent(
             modifier = Modifier.fillMaxWidth(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
         )
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         OutlinedTextField(
             value = password,
             onValueChange = onPasswordChanged,
@@ -307,9 +315,9 @@ fun LoginContent(
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
         )
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         Row(
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -319,9 +327,9 @@ fun LoginContent(
                 label = { Text("验证码") },
                 modifier = Modifier.weight(1f)
             )
-            
+
             Spacer(modifier = Modifier.width(8.dp))
-            
+
             // 验证码图片
             Box(
                 modifier = Modifier
@@ -336,9 +344,9 @@ fun LoginContent(
                 )
             }
         }
-        
+
         Spacer(modifier = Modifier.height(24.dp))
-        
+
         Button(
             onClick = onLogin,
             modifier = Modifier.fillMaxWidth()
@@ -372,9 +380,9 @@ fun RegisterContent(
             modifier = Modifier.fillMaxWidth(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
         )
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         OutlinedTextField(
             value = password,
             onValueChange = onPasswordChanged,
@@ -383,9 +391,9 @@ fun RegisterContent(
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
         )
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         OutlinedTextField(
             value = passwordConfirm,
             onValueChange = onPasswordConfirmChanged,
@@ -394,9 +402,9 @@ fun RegisterContent(
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
         )
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         Row(
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -406,9 +414,9 @@ fun RegisterContent(
                 label = { Text("验证码") },
                 modifier = Modifier.weight(1f)
             )
-            
+
             Spacer(modifier = Modifier.width(8.dp))
-            
+
             // 验证码图片
             Box(
                 modifier = Modifier
@@ -423,9 +431,9 @@ fun RegisterContent(
                 )
             }
         }
-        
+
         Spacer(modifier = Modifier.height(24.dp))
-        
+
         Button(
             onClick = onRegister,
             modifier = Modifier.fillMaxWidth()

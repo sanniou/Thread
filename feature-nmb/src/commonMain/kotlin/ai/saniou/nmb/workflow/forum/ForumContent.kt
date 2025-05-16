@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -40,7 +39,6 @@ fun ForumContent(
     forumId: Long,
     onThreadClicked: (Long) -> Unit,
     onNewPostClicked: (Long) -> Unit = {},
-    onUpdateTitle: ((String) -> Unit)? = null,
     showFloatingActionButton: Boolean = true,
     onImageClick: ((String, String) -> Unit)? = null,
     di: DI = nmbdi
@@ -56,16 +54,6 @@ fun ForumContent(
     }
 
     val forumContent by forumViewModel.uiState.collectAsStateWithLifecycle()
-
-    // 当论坛数据加载成功后，更新标题
-    LaunchedEffect(forumContent) {
-        if (forumContent is UiStateWrapper.Success<*>) {
-            val state = (forumContent as UiStateWrapper.Success<ShowForumUiState>).value
-            if (state != null && state.forumName.isNotBlank()) {
-                onUpdateTitle?.invoke(state.forumName)
-            }
-        }
-    }
 
     Box(modifier = Modifier.fillMaxWidth()) {
         forumContent.LoadingWrapper<ShowForumUiState>(

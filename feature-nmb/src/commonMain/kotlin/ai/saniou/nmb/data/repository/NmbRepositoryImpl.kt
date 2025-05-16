@@ -10,7 +10,7 @@ import ai.saniou.nmb.data.entity.Reply
 class NmbRepositoryImpl(
     private val nmbXdApi: NmbXdApi
 ) : NmbRepository {
-    
+
     /**
      * 获取引用的回复内容
      */

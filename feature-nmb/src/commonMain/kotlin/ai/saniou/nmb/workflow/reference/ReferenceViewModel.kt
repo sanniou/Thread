@@ -1,11 +1,12 @@
 package ai.saniou.nmb.workflow.reference
 
 import ai.saniou.coreui.state.UiStateWrapper
-import ai.saniou.nmb.data.entity.Reply
 import ai.saniou.nmb.data.usecase.ReferenceUseCase
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /**
@@ -37,7 +38,12 @@ class ReferenceViewModel(
                 if (reply != null) {
                     _uiState.emit(UiStateWrapper.Success(reply))
                 } else {
-                    _uiState.emit(UiStateWrapper.Error(RuntimeException("未找到引用内容"), "未找到引用内容"))
+                    _uiState.emit(
+                        UiStateWrapper.Error(
+                            RuntimeException("未找到引用内容"),
+                            "未找到引用内容"
+                        )
+                    )
                 }
             } catch (e: Throwable) {
                 _uiState.emit(UiStateWrapper.Error(e, "获取引用内容失败: ${e.message}"))

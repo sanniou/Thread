@@ -5,8 +5,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.kodein.di.DI
 import org.kodein.di.instance
-import java.awt.FileDialog
-import java.awt.Frame
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream

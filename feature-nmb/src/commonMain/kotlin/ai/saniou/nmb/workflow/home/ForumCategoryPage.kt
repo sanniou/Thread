@@ -5,19 +5,39 @@ import ai.saniou.nmb.ui.components.DrawerHeader
 import ai.saniou.nmb.ui.components.DrawerMenuItem
 import ai.saniou.nmb.ui.components.DrawerMenuRow
 import ai.saniou.nmb.workflow.forum.ForumContent
-import ai.saniou.nmb.workflow.image.ImagePreviewNavigationDestination
-import ai.saniou.nmb.workflow.subscription.SubscriptionNavigationDestination
+import ai.saniou.nmb.workflow.image.ImagePreviewPage
+import ai.saniou.nmb.workflow.subscription.SubscriptionPage
+import ai.saniou.nmb.workflow.thread.ThreadPage
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Send
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DrawerState
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -28,8 +48,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -42,9 +62,7 @@ fun ForumCategoryPage(
     di: DI = nmbdi,
     onThreadClicked: (Long) -> Unit,
     onNewPostClicked: (Long) -> Unit,
-    onUpdateTitle: ((String) -> Unit)?,
-    drawerState: DrawerState,
-    navController: NavController = rememberNavController()
+    drawerState: DrawerState
 ) {
     val forumCategoryViewModel: ForumCategoryViewModel = viewModel {
         val forumCategoryViewModel by di.instance<ForumCategoryViewModel>()
@@ -65,7 +83,7 @@ fun ForumCategoryPage(
     // 监听当前选中的 forum 并自动加载
     LaunchedEffect(categoryContent.currentForum) {
         categoryContent.currentForum?.let { forumId ->
-            onUpdateTitle?.invoke(categoryContent.currentForum ?: "")
+            //onUpdateTitle?.invoke(categoryContent.currentForum ?: "")
         }
     }
 
@@ -73,10 +91,8 @@ fun ForumCategoryPage(
         uiState = categoryContent,
         onThreadClicked = onThreadClicked,
         onNewPostClicked = onNewPostClicked,
-        onUpdateTitle = onUpdateTitle,
         drawerState = drawerState,
         scope = scope,
-        navController = navController,
         greetImageUrl = greetImageUrl,
         isGreetImageLoading = isGreetImageLoading
     )
@@ -88,13 +104,12 @@ fun ForumCategoryUi(
     uiState: ForumCategoryUiState,
     onThreadClicked: (Long) -> Unit,
     onNewPostClicked: (Long) -> Unit,
-    onUpdateTitle: ((String) -> Unit)?,
     drawerState: DrawerState,
     scope: CoroutineScope = rememberCoroutineScope(),
-    navController: NavController = rememberNavController(),
     greetImageUrl: String? = null,
     isGreetImageLoading: Boolean = false
 ) {
+    val navigator = LocalNavigator.currentOrThrow
     MaterialTheme {
         ModalNavigationDrawer(
             drawerState = drawerState,
@@ -119,7 +134,9 @@ fun ForumCategoryUi(
                                         label = "订阅列表",
                                         onClick = {
                                             // 导航到订阅列表页面
-                                            navController.navigate(SubscriptionNavigationDestination.route)
+                                            navigator.push(SubscriptionPage(onThreadClicked = {
+                                                navigator.push(ThreadPage(it))
+                                            }))
                                             scope.launch {
                                                 drawerState.close()
                                             }
@@ -276,16 +293,10 @@ fun ForumCategoryUi(
                     forumId = id,
                     onThreadClicked = onThreadClicked,
                     onNewPostClicked = onNewPostClicked,
-                    onUpdateTitle = onUpdateTitle,
                     showFloatingActionButton = true,
                     onImageClick = { imgPath, ext ->
                         // 导航到图片预览页面
-                        navController.navigate(
-                            ImagePreviewNavigationDestination.createRoute(
-                                imgPath,
-                                ext
-                            )
-                        )
+                        navigator.push(ImagePreviewPage(imgPath, ext))
                     }
                 )
             } ?: run {
