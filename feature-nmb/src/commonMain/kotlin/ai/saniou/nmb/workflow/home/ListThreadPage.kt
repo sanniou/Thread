@@ -27,65 +27,70 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.backhandler.BackHandler
+import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.navigator.CurrentScreen
 import kotlinx.coroutines.launch
 
 
-@OptIn(
-    ExperimentalMaterial3AdaptiveApi::class, ExperimentalComposeUiApi::class,
-    ExperimentalMaterial3Api::class
-)
-@Composable
-fun ThreadDetailPane() {
-    var threadId: Long? by rememberSaveable { mutableStateOf(null) }
-    val navigator = rememberListDetailPaneScaffoldNavigator<Nothing>()
-    val scope = rememberCoroutineScope()
-    val isListAndDetailVisible =
-        navigator.scaffoldValue[ListDetailPaneScaffoldRole.Detail] == PaneAdaptedValue.Expanded && navigator.scaffoldValue[ListDetailPaneScaffoldRole.List] == PaneAdaptedValue.Expanded
+class SubscriptionPaneScreen : Screen {
+    @OptIn(
+        ExperimentalMaterial3AdaptiveApi::class, ExperimentalComposeUiApi::class,
+        ExperimentalMaterial3Api::class
+    )
+    @Composable
+    override fun Content() {
+        var threadId: Long? by rememberSaveable { mutableStateOf(null) }
+        val navigator = rememberListDetailPaneScaffoldNavigator<Nothing>()
+        val scope = rememberCoroutineScope()
+        val isListAndDetailVisible =
+            navigator.scaffoldValue[ListDetailPaneScaffoldRole.Detail] == PaneAdaptedValue.Expanded && navigator.scaffoldValue[ListDetailPaneScaffoldRole.List] == PaneAdaptedValue.Expanded
 
-    BackHandler(enabled = navigator.canNavigateBack()) {
-        scope.launch {
-            navigator.navigateBack()
+        BackHandler(enabled = navigator.canNavigateBack()) {
+            scope.launch {
+                navigator.navigateBack()
+            }
         }
-    }
 
-    val paneExpansionState = rememberPaneExpansionState(navigator.scaffoldValue)
-    paneExpansionState.setFirstPaneProportion(0.5f)
-    SharedTransitionLayout {
-        AnimatedContent(targetState = isListAndDetailVisible) {
-            ListDetailPaneScaffold(
-                directive = navigator.scaffoldDirective,
-                value = navigator.scaffoldValue,
-                listPane = {
-                    SubscriptionPage(
-                        onThreadClicked = {
-                            threadId = it
-                            scope.launch {
-                                navigator.navigateTo(ListDetailPaneScaffoldRole.Detail)
-                            }
-                        }
-                    )
-                },
-                detailPane = {
-                    // val isDetailVisible = navigator.scaffoldValue[ListDetailPaneScaffoldRole.Detail] == PaneAdaptedValue.Expanded
-                    ThreadPage(threadId)
-                },
-                paneExpansionState = paneExpansionState,
-                paneExpansionDragHandle = { state ->
-                    val interactionSource =
-                        remember { MutableInteractionSource() }
-                    DragHandle(
-                        modifier =
-                            Modifier.paneExpansionDraggable(
-                                state,
-                                LocalMinimumInteractiveComponentSize.current,
-                                interactionSource = interactionSource,
-                                semanticsProperties = {
-
+        val paneExpansionState = rememberPaneExpansionState(navigator.scaffoldValue)
+        paneExpansionState.setFirstPaneProportion(0.5f)
+        SharedTransitionLayout {
+            AnimatedContent(targetState = isListAndDetailVisible) {
+                ListDetailPaneScaffold(
+                    directive = navigator.scaffoldDirective,
+                    value = navigator.scaffoldValue,
+                    listPane = {
+                        // val isDetailVisible = navigator.scaffoldValue[ListDetailPaneScaffoldRole.Detail] == PaneAdaptedValue.Expanded
+                        SubscriptionPage(
+                            onThreadClicked = {
+                                threadId = it
+                                scope.launch {
+                                    navigator.navigateTo(ListDetailPaneScaffoldRole.Detail)
                                 }
-                            )
-                    )
-                }
-            )
+                            }
+                        ).Content()
+                    },
+                    detailPane = {
+                        // val isDetailVisible = navigator.scaffoldValue[ListDetailPaneScaffoldRole.Detail] == PaneAdaptedValue.Expanded
+                        ThreadPage(threadId).Content()
+                    },
+                    paneExpansionState = paneExpansionState,
+                    paneExpansionDragHandle = { state ->
+                        val interactionSource =
+                            remember { MutableInteractionSource() }
+                        DragHandle(
+                            modifier =
+                                Modifier.paneExpansionDraggable(
+                                    state,
+                                    LocalMinimumInteractiveComponentSize.current,
+                                    interactionSource = interactionSource,
+                                    semanticsProperties = {
+
+                                    }
+                                )
+                        )
+                    }
+                )
+            }
         }
     }
 }

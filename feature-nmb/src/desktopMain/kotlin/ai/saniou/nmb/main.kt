@@ -8,8 +8,12 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
+import cafe.adriel.voyager.core.annotation.ExperimentalVoyagerApi
 import cafe.adriel.voyager.navigator.Navigator
+import cafe.adriel.voyager.navigator.NavigatorDisposeBehavior
+import cafe.adriel.voyager.transitions.ScaleTransition
 
+@OptIn(ExperimentalVoyagerApi::class)
 fun main() = application {
     val windowState = rememberWindowState(
         position = WindowPosition(Alignment.Center),
@@ -22,6 +26,14 @@ fun main() = application {
         undecorated = true,
         state = windowState
     ) {
-        Navigator(HomeScreen())
+        Navigator(
+            screen = HomeScreen(),
+            disposeBehavior = NavigatorDisposeBehavior(disposeSteps = false),
+        ) { navigator ->
+            ScaleTransition(
+                navigator = navigator,
+                disposeScreenAfterTransitionEnd = true
+            )
+        }
     }
 }

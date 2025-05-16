@@ -13,7 +13,6 @@ import ai.saniou.nmb.ui.components.PageJumpDialog
 import ai.saniou.nmb.ui.components.ReferencePopup
 import ai.saniou.nmb.ui.components.SkeletonReplyItem
 import ai.saniou.nmb.ui.components.ThreadMenu
-import ai.saniou.nmb.workflow.home.LocalSnackbarHostState
 import ai.saniou.nmb.workflow.image.ImagePreviewPage
 import ai.saniou.nmb.workflow.reference.ReferenceViewModel
 import androidx.compose.animation.core.RepeatMode
@@ -121,8 +120,6 @@ data class ThreadPage(
         // 复制链接的处理
         val clipboardManager = LocalClipboardManager.current
         val scope = rememberCoroutineScope()
-        val snackbarHostState = LocalSnackbarHostState.current
-
 
         // 监听状态变化，更新标题
         LaunchedEffect(uiState) {
@@ -141,7 +138,7 @@ data class ThreadPage(
 
         LaunchedEffect((uiState as? UiStateWrapper.Success<ThreadUiState>)?.value?.subscribedMessage) {
             (uiState as? UiStateWrapper.Success<ThreadUiState>)?.value?.subscribedMessage?.let {
-                snackbarHostState.showSnackbar(it)
+                //snackbarHostState.showSnackbar(it)
             }
         }
 
@@ -353,7 +350,7 @@ data class ThreadPage(
                     val url = "https://nmb.com/t/${threadId}"
                     clipboardManager.setText(AnnotatedString(url))
                     scope.launch {
-                        snackbarHostState.showSnackbar("链接已复制到剪贴板")
+                        // snackbarHostState.showSnackbar("链接已复制到剪贴板")
                     }
                 },
                 isSubscribed = state.isSubscribed,
