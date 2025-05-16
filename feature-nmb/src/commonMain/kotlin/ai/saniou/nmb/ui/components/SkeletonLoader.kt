@@ -46,7 +46,7 @@ fun SkeletonLoader(
         MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
         MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
     )
-    
+
     val transition = rememberInfiniteTransition()
     val translateAnim by transition.animateFloat(
         initialValue = 0f,
@@ -56,17 +56,17 @@ fun SkeletonLoader(
             repeatMode = RepeatMode.Restart
         )
     )
-    
+
     val brush = Brush.linearGradient(
         colors = shimmerColors,
         start = Offset(10f, 10f),
         end = Offset(translateAnim, translateAnim)
     )
-    
-    LazyColumn(
+
+    Column(
         modifier = modifier.padding(8.dp)
     ) {
-        items(itemCount) {
+        repeat(itemCount) {
             SkeletonThreadItem(brush)
             Spacer(modifier = Modifier.height(8.dp))
         }
@@ -101,9 +101,9 @@ fun SkeletonThreadItem(brush: Brush) {
                         .background(brush)
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             // 作者信息
             Row(
                 verticalAlignment = Alignment.CenterVertically
@@ -116,9 +116,9 @@ fun SkeletonThreadItem(brush: Brush) {
                         .clip(RoundedCornerShape(4.dp))
                         .background(brush)
                 )
-                
+
                 Spacer(modifier = Modifier.width(8.dp))
-                
+
                 // 时间
                 Box(
                     modifier = Modifier
@@ -128,9 +128,9 @@ fun SkeletonThreadItem(brush: Brush) {
                         .background(brush)
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(12.dp))
-            
+
             // 内容
             Box(
                 modifier = Modifier
@@ -139,9 +139,9 @@ fun SkeletonThreadItem(brush: Brush) {
                     .clip(RoundedCornerShape(4.dp))
                     .background(brush)
             )
-            
+
             Spacer(modifier = Modifier.height(4.dp))
-            
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth(0.7f)
@@ -149,9 +149,9 @@ fun SkeletonThreadItem(brush: Brush) {
                     .clip(RoundedCornerShape(4.dp))
                     .background(brush)
             )
-            
+
             Spacer(modifier = Modifier.height(12.dp))
-            
+
             // 图片占位
             Box(
                 modifier = Modifier
@@ -189,9 +189,9 @@ fun SkeletonReplyItem(brush: Brush) {
                         .clip(RoundedCornerShape(4.dp))
                         .background(brush)
                 )
-                
+
                 Spacer(modifier = Modifier.width(8.dp))
-                
+
                 // 时间
                 Box(
                     modifier = Modifier
@@ -201,9 +201,9 @@ fun SkeletonReplyItem(brush: Brush) {
                         .background(brush)
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             // 回复内容
             Box(
                 modifier = Modifier
@@ -212,9 +212,9 @@ fun SkeletonReplyItem(brush: Brush) {
                     .clip(RoundedCornerShape(4.dp))
                     .background(brush)
             )
-            
+
             Spacer(modifier = Modifier.height(4.dp))
-            
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth(0.5f)

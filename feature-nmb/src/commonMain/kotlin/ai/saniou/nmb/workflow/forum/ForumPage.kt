@@ -6,6 +6,7 @@ import ai.saniou.nmb.data.entity.ShowF
 import ai.saniou.nmb.di.nmbdi
 import ai.saniou.nmb.ui.components.HtmlText
 import ai.saniou.nmb.ui.components.NmbImage
+import ai.saniou.nmb.ui.components.SkeletonLoader
 import ai.saniou.nmb.workflow.image.ImagePreviewNavigationDestination
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -24,7 +25,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -44,9 +44,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -59,11 +57,8 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import androidx.paging.LoadState
-import androidx.paging.filter
-import app.cash.paging.CombinedLoadStates
 import app.cash.paging.compose.collectAsLazyPagingItems
 import app.cash.paging.compose.itemKey
-import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.kodein.di.DI
@@ -171,55 +166,63 @@ fun Forum(
                     }
                 }
 
-                is LoadState.Loading,
+
+                is LoadState.Loading -> {
+                    // 加载状态显示骨架屏
+                    item {
+                        Box(modifier = Modifier.padding()) {
+                            SkeletonLoader()
+                        }
+                    }
+                }
+
                 is LoadState.NotLoading -> {
                     // 加载完成，可以判断是否为空
-                    if (forumList.itemCount == 0) {
-                        // 空状态显示
-                        item {
+                    // 空状态显示
+                    item {
 
-                            Box(
-                                modifier = Modifier.fillMaxWidth(),
-                                contentAlignment = Alignment.Center
+                        Box(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier.padding(32.dp)
                             ) {
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    modifier = Modifier.padding(32.dp)
+                                Icon(
+                                    imageVector = Icons.Default.Info,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(48.dp),
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+
+                                Spacer(modifier = Modifier.height(16.dp))
+
+                                Text(
+                                    text = "暂无帖子",
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                Text(
+                                    text = "该板块当前没有帖子，点击右下角按钮发布第一个帖子吧！",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    textAlign = TextAlign.Center,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+
+                                Spacer(modifier = Modifier.height(16.dp))
+
+                                Button(
+                                    onClick = { uiState.onUpdateForumId(uiState.id) }
                                 ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Info,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(48.dp),
-                                        tint = MaterialTheme.colorScheme.primary
-                                    )
-
-                                    Spacer(modifier = Modifier.height(16.dp))
-
-                                    Text(
-                                        text = "暂无帖子",
-                                        style = MaterialTheme.typography.titleMedium
-                                    )
-
-                                    Spacer(modifier = Modifier.height(8.dp))
-
-                                    Text(
-                                        text = "该板块当前没有帖子，点击右下角按钮发布第一个帖子吧！",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        textAlign = TextAlign.Center,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-
-                                    Spacer(modifier = Modifier.height(16.dp))
-
-                                    Button(
-                                        onClick = { uiState.onUpdateForumId(uiState.id) }
-                                    ) {
-                                        Text("刷新")
-                                    }
+                                    Text("刷新")
                                 }
                             }
                         }
                     }
+
                 }
             }
 
