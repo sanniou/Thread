@@ -121,10 +121,10 @@ class ForumCategoryViewModel(
 
 data class ForumCategoryUiState(
     var forums: List<ForumCategory>,
-    var expandCategory: String? = null,
-    var currentForum: String? = null,
+    var expandCategory: Long? = null,
+    var currentForum: Long? = null,
     var checkState: Boolean,
     val onForwardChange: (Boolean) -> Unit,
-    val onCategoryClick: (String) -> Unit,
-    val onForumClick: (String) -> Unit,
+    val onCategoryClick: (Long) -> Unit,
+    val onForumClick: (Long) -> Unit,
 )

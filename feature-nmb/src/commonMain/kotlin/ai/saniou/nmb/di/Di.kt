@@ -91,7 +91,7 @@ val nmbdi = DI {
 
     // 论坛相关
     bindProvider { ForumPagingSource(instance()) }
-    bindProvider { ForumUserCase(instance(), instance()) }
+    bindProvider { ForumUserCase(instance()) }
     bindProvider { ForumViewModel(instance()) }
 
     // 帖子相关

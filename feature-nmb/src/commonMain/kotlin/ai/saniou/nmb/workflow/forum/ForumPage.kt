@@ -56,7 +56,8 @@ data class ForumScreen(
     val di: DI = nmbdi,
     val onThreadClicked: (Long) -> Unit = {},
     val onNewPostClicked: (Long) -> Unit = {},
-    val forumId: Long = 0,
+    val forumId: Long,
+    val fgroupId: Long,
 ) : Screen {
 
     @Composable
@@ -70,6 +71,7 @@ data class ForumScreen(
             // 使用可复用的ForumContent组件
             ForumContent(
                 forumId = forumId,
+                fgroupId = fgroupId,
                 onThreadClicked = onThreadClicked,
                 onNewPostClicked = onNewPostClicked,
                 showFloatingActionButton = true,
@@ -92,7 +94,7 @@ fun Forum(
     val forumList = uiState.showF.collectAsLazyPagingItems()
     PullToRefreshWrapper(
         onRefreshTrigger = {
-            uiState.onUpdateForumId(uiState.id)
+            forumList.refresh()
         },
         modifier = Modifier.run {
             if (innerPadding != null) {
@@ -142,7 +144,7 @@ fun Forum(
 
                 is LoadState.NotLoading -> {
                     item {
-                        EmptyForumCard { uiState.onUpdateForumId(uiState.id) }
+                        EmptyForumCard { forumList.refresh() }
                     }
 
                 }

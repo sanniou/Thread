@@ -288,9 +288,10 @@ fun ForumCategoryUi(
         ) {
             // 内容区域 - 使用可复用的ForumContent组件
             uiState.currentForum?.let { forumId ->
-                val id = forumId.toLong()
+                val id = forumId
                 ForumContent(
                     forumId = id,
+                    fgroupId = uiState.expandCategory ?: 0,
                     onThreadClicked = onThreadClicked,
                     onNewPostClicked = onNewPostClicked,
                     showFloatingActionButton = true,

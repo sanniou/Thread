@@ -37,6 +37,7 @@ import org.kodein.di.instance
 @Composable
 fun ForumContent(
     forumId: Long,
+    fgroupId: Long,
     onThreadClicked: (Long) -> Unit,
     onNewPostClicked: (Long) -> Unit = {},
     showFloatingActionButton: Boolean = true,
@@ -49,8 +50,8 @@ fun ForumContent(
     }
 
     // 使用LaunchedEffect设置forumId，确保只在forumId变化时触发
-    LaunchedEffect(forumId) {
-        forumViewModel.setForumId(forumId)
+    LaunchedEffect(forumId, fgroupId) {
+        forumViewModel.setForumId(fgroupId to forumId)
     }
 
     val forumContent by forumViewModel.uiState.collectAsStateWithLifecycle()
@@ -77,7 +78,7 @@ fun ForumContent(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Button(
-                            onClick = { forumViewModel.refreshForum() }
+                            onClick = { }
                         ) {
                             Text("重试")
                         }
