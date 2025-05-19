@@ -50,7 +50,7 @@ fun ForumContent(
     }
 
     // 使用LaunchedEffect设置forumId，确保只在forumId变化时触发
-    LaunchedEffect(forumId, fgroupId) {
+    LaunchedEffect(forumId) {
         forumViewModel.setForumId(fgroupId to forumId)
     }
 

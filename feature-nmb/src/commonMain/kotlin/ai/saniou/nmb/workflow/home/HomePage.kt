@@ -4,6 +4,8 @@ import ai.saniou.nmb.ui.components.HtmlTitleText
 import ai.saniou.nmb.workflow.post.PostPage
 import ai.saniou.nmb.workflow.thread.ThreadPage
 import ai.saniou.nmb.workflow.user.UserPage
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccountCircle
@@ -125,18 +127,20 @@ fun HomePage() {
             )
         }
     ) { innerPadding ->
-        ForumCategoryPage(
-            onThreadClicked = {
-                navController.push(
-                    ThreadPage(it)
-                )
-            },
-            onNewPostClicked = { fid ->
-                navController.push(
-                    PostPage(fid)
-                )
-            },
-            drawerState = drawerState,
-        )
+        Box(modifier = Modifier.padding(innerPadding)) {
+            ForumCategoryPage(
+                onThreadClicked = {
+                    navController.push(
+                        ThreadPage(it)
+                    )
+                },
+                onNewPostClicked = { fid ->
+                    navController.push(
+                        PostPage(fid)
+                    )
+                },
+                drawerState = drawerState,
+            )
+        }
     }
 }

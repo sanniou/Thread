@@ -4,6 +4,7 @@ import ai.saniou.nmb.data.entity.Feed
 import ai.saniou.nmb.data.entity.IBaseAuthor
 import ai.saniou.nmb.data.entity.IBaseThread
 import ai.saniou.nmb.data.entity.IBaseThreadReply
+import ai.saniou.nmb.data.entity.IThreadBody
 import ai.saniou.nmb.data.entity.Reply
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -143,11 +145,13 @@ fun ThreadCard(
                 NmbImage(
                     imgPath = thread.img,
                     ext = thread.ext,
-                    modifier = Modifier.height(160.dp),
+                    modifier = Modifier.height(240.dp)
+                        .clickable {
+                            onImageClick?.let { onClick -> { onClick(thread.img, thread.ext) } }
+                        },
                     contentScale = ContentScale.FillHeight,
                     isThumb = true,
                     contentDescription = "帖子图片",
-                    onClick = onImageClick?.let { onClick -> { onClick(thread.img, thread.ext) } }
                 )
             }
 
@@ -203,6 +207,41 @@ fun ThreadCard(
                 RecentReplies(threadReply.replies)
             }
         }
+    }
+}
+
+@Composable
+fun ThreadSpacer(
+) {
+    Spacer(modifier = Modifier.height(8.dp))
+}
+
+@Composable
+fun ThreadBody(
+    body: IThreadBody,
+    onReferenceClick: ((Long) -> Unit)? = null,
+    onImageClick: (String, String) -> Unit
+) {
+    // 内容 - 使用HtmlText支持HTML标签
+    HtmlText(
+        text = body.content,
+        style = MaterialTheme.typography.bodyMedium,
+        onReferenceClick = onReferenceClick
+    )
+
+    // 如果有图片，显示图片
+    if (body.img.isNotEmpty() && body.ext.isNotEmpty()) {
+        Spacer(modifier = Modifier.height(8.dp))
+        NmbImage(
+            imgPath = body.img,
+            ext = body.ext,
+            isThumb = true,
+            contentDescription = "帖子图片",
+            modifier = Modifier.height(240.dp)
+                .wrapContentWidth(Alignment.Start)
+                .clickable { onImageClick(body.img, body.ext) },
+            contentScale = ContentScale.FillHeight,
+        )
     }
 }
 

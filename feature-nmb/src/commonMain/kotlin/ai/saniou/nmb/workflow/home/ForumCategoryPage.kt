@@ -1,5 +1,6 @@
 package ai.saniou.nmb.workflow.home
 
+import ai.saniou.nmb.data.entity.ForumCategory
 import ai.saniou.nmb.di.nmbdi
 import ai.saniou.nmb.ui.components.DrawerHeader
 import ai.saniou.nmb.ui.components.DrawerMenuItem
@@ -11,6 +12,7 @@ import ai.saniou.nmb.workflow.thread.ThreadPage
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -41,6 +43,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -110,6 +113,16 @@ fun ForumCategoryUi(
     isGreetImageLoading: Boolean = false
 ) {
     val navigator = LocalNavigator.currentOrThrow
+    val favoriteForums by uiState.favoriteForums.collectAsStateWithLifecycle()
+    val favoriteCategory = remember(favoriteForums) {
+        ForumCategory(
+            id = Long.MIN_VALUE,
+            sort = Long.MIN_VALUE,
+            name = "收藏",
+            status = "n",
+            forums = favoriteForums
+        )
+    }
     MaterialTheme {
         ModalNavigationDrawer(
             drawerState = drawerState,
@@ -198,7 +211,11 @@ fun ForumCategoryUi(
                                 LazyColumn(
                                     modifier = Modifier.weight(1f)
                                 ) {
-                                    items(uiState.forums) { category ->
+                                    items(buildList {
+                                        add(favoriteCategory)
+                                        addAll(uiState.forums)
+                                    }
+                                    ) { category ->
                                         // 分类项
                                         Row(
                                             modifier = Modifier
@@ -236,14 +253,18 @@ fun ForumCategoryUi(
                                                     Row(
                                                         modifier = Modifier
                                                             .fillMaxWidth()
-                                                            .clickable {
-                                                                // 选择论坛
-                                                                uiState.onForumClick(forum.id)
-                                                                // 关闭抽屉
-                                                                scope.launch {
-                                                                    drawerState.close()
+                                                            .combinedClickable(
+                                                                onClick = {
+                                                                    uiState.onForumClick(forum)
+                                                                    scope.launch {
+                                                                        drawerState.close()
+                                                                    }
+                                                                },
+                                                                onClickLabel = "Favorite",
+                                                                onLongClick = {
+                                                                    uiState.onFavoriteChange(forum)
                                                                 }
-                                                            }
+                                                            )
                                                             .padding(
                                                                 horizontal = 16.dp,
                                                                 vertical = 12.dp
@@ -252,7 +273,7 @@ fun ForumCategoryUi(
                                                         verticalAlignment = Alignment.CenterVertically
                                                     ) {
                                                         // 论坛选中指示器
-                                                        if (uiState.currentForum == forum.id) {
+                                                        if (uiState.currentForum?.id == forum.id) {
                                                             Box(
                                                                 modifier = Modifier
                                                                     .size(8.dp)
@@ -266,9 +287,9 @@ fun ForumCategoryUi(
 
                                                         // 论坛名称
                                                         Text(
-                                                            text = forum.name,
+                                                            text = if (forum.showName.isNullOrBlank()) forum.name else forum.showName,
                                                             style = MaterialTheme.typography.bodyMedium,
-                                                            color = if (uiState.currentForum == forum.id)
+                                                            color = if (uiState.currentForum?.id == forum.id)
                                                                 MaterialTheme.colorScheme.primary
                                                             else
                                                                 MaterialTheme.colorScheme.onSurfaceVariant
@@ -286,12 +307,11 @@ fun ForumCategoryUi(
                 }
             }
         ) {
-            // 内容区域 - 使用可复用的ForumContent组件
             uiState.currentForum?.let { forumId ->
-                val id = forumId
+                val forum = forumId
                 ForumContent(
-                    forumId = id,
-                    fgroupId = uiState.expandCategory ?: 0,
+                    forumId = forum.id,
+                    fgroupId = forum.fGroup,
                     onThreadClicked = onThreadClicked,
                     onNewPostClicked = onNewPostClicked,
                     showFloatingActionButton = true,

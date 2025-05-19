@@ -49,7 +49,6 @@ fun NmbImage(
     modifier: Modifier = Modifier,
     contentDescription: String? = null,
     contentScale: ContentScale = ContentScale.Fit,
-    onClick: (() -> Unit)? = null,
 ) {
     // 获取CDN管理器
     val cdnManager by nmbdi.instance<CdnManager>()
@@ -75,7 +74,6 @@ fun NmbImage(
                 isRetrying = !isRetrying
             }
         },
-        onClick = onClick
     )
 }
 
@@ -85,36 +83,19 @@ fun ImageComponent(
     modifier: Modifier = Modifier,
     contentDescription: String?,
     contentScale: ContentScale = ContentScale.Fit,
-    onRetry: (() -> Unit)? = null,
-    onClick: (() -> Unit)? = null,
+    onRetry: (() -> Unit)? = null
 ) {
-    // 准备修饰符
-    var finalModifier = modifier
-        .clip(RoundedCornerShape(4.dp))
-        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-        .border(1.dp, Color.Gray.copy(alpha = 0.5f), RoundedCornerShape(4.dp))
 
-    // 如果提供了点击回调，添加点击修饰符
-    if (onClick != null) {
-        finalModifier = finalModifier.clickable { onClick() }
-    }
-
-    Box(
-        modifier = Modifier.defaultMinSize(minHeight = 100.dp),
-        contentAlignment = Alignment.Center
-    ) {
-
-        AsyncImage(
-            uri = imageUrl,
-            state = rememberAsyncImageState(ComposableImageOptions {
-                placeholder(ColorPainterStateImage(MaterialTheme.colorScheme.primaryContainer))
-                error(ColorPainterStateImage(MaterialTheme.colorScheme.errorContainer))
-                crossfade()
-                // There is a lot more...
-            }),
-            contentDescription = contentDescription,
-            modifier = finalModifier,
-            contentScale = contentScale,
-        )
-    }
+    AsyncImage(
+        uri = imageUrl,
+        state = rememberAsyncImageState(ComposableImageOptions {
+            placeholder(ColorPainterStateImage(MaterialTheme.colorScheme.primaryContainer))
+            error(ColorPainterStateImage(MaterialTheme.colorScheme.errorContainer))
+            crossfade()
+            // There is a lot more...
+        }),
+        contentDescription = contentDescription,
+        modifier = modifier,
+        contentScale = contentScale,
+    )
 }

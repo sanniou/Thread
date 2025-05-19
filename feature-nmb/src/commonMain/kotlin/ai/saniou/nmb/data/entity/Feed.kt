@@ -74,6 +74,12 @@ interface IBaseAuthor {
     val name: String
 }
 
+interface IThreadBody {
+    val content: String
+    val img: String
+    val ext: String
+}
+
 interface IBaseThreadReply {
     val replies: List<Reply>
     val remainReplies: Long?

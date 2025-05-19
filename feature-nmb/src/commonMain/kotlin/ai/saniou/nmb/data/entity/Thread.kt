@@ -12,33 +12,33 @@ data class Thread(
     val fid: Long,
     @JsonNames("ReplyCount")
     val replyCount: Long,
-    val img: String,
-    val ext: String,
-    val now: String,
+    override val img: String,
+    override val ext: String,
+    override val now: String,
     @JsonNames("user_hash")
-    val userHash: String,
-    val name: String,
+    override val userHash: String,
+    override val name: String,
     val title: String,
-    val content: String,
+    override val content: String,
     val sage: Long,
     val admin: Long,
     @JsonNames("Hide")
     val hide: Long,
     @JsonNames("Replies")
     val replies: List<ThreadReply>,
-)
+) : IBaseAuthor, IThreadBody
 
 @Serializable
 @OptIn(ExperimentalSerializationApi::class)
 data class ThreadReply(
     val id: Long,
     @JsonNames("user_hash")
-    val userHash: String,
+    override val userHash: String,
     val admin: Long,
     val title: String,
-    val now: String,
-    val content: String,
-    val img: String,
-    val ext: String,
-    val name: String,
-)
+    override val now: String,
+    override val content: String,
+    override val img: String,
+    override val ext: String,
+    override val name: String,
+) : IBaseAuthor, IThreadBody

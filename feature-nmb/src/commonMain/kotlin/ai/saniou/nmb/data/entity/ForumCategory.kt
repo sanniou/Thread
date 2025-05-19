@@ -18,7 +18,7 @@ data class ForumCategory(
 data class ForumDetail(
     val id: Long, //版面分类下每个版面的 ID
     @JsonNames("fgroup")
-    val fGroup: Long? = null, //版面所属的版面分类 ID
+    val fGroup: Long, //版面所属的版面分类 ID
     val sort: Long? = null, //版面在版面分类内的排序值
     val name: String, //版面名称
     val showName: String? = null, //导航栏用的版面名称，使用 HTML
