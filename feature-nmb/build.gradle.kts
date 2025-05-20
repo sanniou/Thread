@@ -9,6 +9,7 @@ plugins {
     alias(libs.plugins.kotlinxSerialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.ktorfit)
+    alias(libs.plugins.sqldelight)
 }
 
 kotlin {
@@ -37,6 +38,7 @@ kotlin {
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
+            implementation(libs.android.driver)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -83,16 +85,21 @@ kotlin {
             // for multi platform but not image subsampling
             // implementation("me.saket.telephoto:zoomable-peek-overlay:0.15.1")
             // implementation("me.saket.telephoto:zoomable-peek-overlay:0.15.1")
+//            implementation(libs.room.runtime)
+//            implementation(libs.sqlite.bundled)
+            implementation(libs.runtime)
+            implementation("app.cash.sqldelight:androidx-paging3-extensions:2.1.0")
 
 
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
+            implementation(libs.sqlite.driver)
         }
 
         iosMain.dependencies {
-
+            implementation(libs.native.driver)
         }
     }
 }
@@ -122,6 +129,7 @@ android {
 
 dependencies {
     debugImplementation(compose.uiTooling)
+    ksp(libs.room.compiler)
 }
 
 compose.desktop {
@@ -141,5 +149,13 @@ tasks.withType<com.google.devtools.ksp.gradle.KspAATask>().configureEach {
         dependsOn(tasks.withType<com.google.devtools.ksp.gradle.KspAATask>().filter {
             it.name.contains("CommonMainKotlinMetadata")
         })
+    }
+}
+
+sqldelight {
+    databases {
+        create("Database") {
+            packageName.set("ai.saniou.nmb.db")
+        }
     }
 }

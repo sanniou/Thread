@@ -1,7 +1,7 @@
 package ai.saniou.nmb.workflow.forum
 
 import ai.saniou.coreui.state.UiStateWrapper
-import ai.saniou.nmb.data.entity.ShowF
+import ai.saniou.nmb.data.entity.Forum
 import ai.saniou.nmb.domain.ForumUserCase
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -21,7 +21,7 @@ class ForumViewModel(private val forumUserCase: ForumUserCase) : ViewModel() {
 
     private val dataUiState = MutableStateFlow(
         ShowForumUiState(
-            showF = emptyFlow(),
+            forum = emptyFlow(),
             page = 1,
             id = 0,
             onClickThread = {
@@ -81,7 +81,7 @@ class ForumViewModel(private val forumUserCase: ForumUserCase) : ViewModel() {
             updateUiState { state ->
                 state.copy(
                     id = fid,
-                    showF = dataList,
+                    forum = dataList,
                     page = 1,
                     forumName = forumName
                 )
@@ -99,7 +99,7 @@ class ForumViewModel(private val forumUserCase: ForumUserCase) : ViewModel() {
 }
 
 data class ShowForumUiState(
-    var showF: Flow<PagingData<ShowF>>,
+    var forum: Flow<PagingData<Forum>>,
     var page: Long = 1,
     var id: Long = 0,
     var forumName: String = "",

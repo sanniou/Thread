@@ -13,7 +13,7 @@ import kotlinx.serialization.json.JsonNames
  */
 @Serializable
 @OptIn(ExperimentalSerializationApi::class)
-data class ShowF(
+data class Forum(
     override val id: Long,// 串的 ID
     override val fid: Long,// 串所属的版面 ID
     @JsonNames("ReplyCount")
@@ -56,3 +56,74 @@ data class Reply(
     @JsonNames("Hide")
     val hide: Long? = null,// ？
 ) : IBaseAuthor
+
+
+fun ai.saniou.nmb.db.table.Forum.toForumWithReply(reply: List<ai.saniou.nmb.db.table.Reply>) =
+    Forum(
+        id = this.id,
+        fid = this.fid,
+        replyCount = this.ReplyCount,
+        img = this.img,
+        ext = this.ext,
+        now = this.now,
+        userHash = this.user_hash,
+        name = this.name,
+        title = this.title,
+        content = this.content,
+        sage = this.sage,
+        admin = this.admin,
+        hide = this.Hide,
+        replies = reply.map {
+            Reply(
+                id = it.id,
+                fid = it.fid,
+                replyCount = it.ReplyCount,
+                img = it.img,
+                ext = it.ext,
+                now = it.now,
+                userHash = it.user_hash,
+                name = it.name,
+                title = it.title,
+                content = it.content,
+                sage = it.sage,
+                admin = it.admin,
+                hide = it.Hide,
+            )
+        },
+    )
+
+fun Forum.toTableForum() = ai.saniou.nmb.db.table.Forum(
+    id = this.id,
+    fid = this.fid,
+    ReplyCount = this.replyCount,
+    img = this.img,
+    ext = this.ext,
+    now = this.now,
+    user_hash = this.userHash,
+    name = this.name,
+    title = this.title,
+    content = this.content,
+    sage = this.sage,
+    admin = this.admin,
+    Hide = this.hide,
+    RemainReplies = this.remainReplies,
+)
+
+fun Forum.toTableReply() = this.replies.map { reply ->
+    ai.saniou.nmb.db.table.Reply(
+        id = reply.id,
+        fid = reply.fid,
+        ReplyCount = reply.replyCount,
+        img = reply.img,
+        ext = reply.ext,
+        now = reply.now,
+        user_hash = reply.userHash,
+        name = reply.name,
+        title = reply.title,
+        content = reply.content,
+        sage = reply.sage,
+        admin = reply.admin,
+        Hide = reply.hide,
+        tid = this.id,
+    )
+}

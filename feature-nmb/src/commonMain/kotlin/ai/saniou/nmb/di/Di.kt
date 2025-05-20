@@ -3,11 +3,12 @@ package ai.saniou.nmb.di
 import ai.saniou.corecommon.data.di.coreCommon
 import ai.saniou.nmb.data.api.NmbXdApi
 import ai.saniou.nmb.data.api._NmbXdApiImpl
+import ai.saniou.nmb.data.database.DriverFactory
+import ai.saniou.nmb.data.database.createDatabase
 import ai.saniou.nmb.data.manager.CdnManager
 import ai.saniou.nmb.data.repository.ForumRepository
 import ai.saniou.nmb.data.repository.NmbRepository
 import ai.saniou.nmb.data.repository.NmbRepositoryImpl
-import ai.saniou.nmb.data.source.ForumPagingSource
 import ai.saniou.nmb.data.storage.CategoryStorage
 import ai.saniou.nmb.data.storage.GreetImageStorage
 import ai.saniou.nmb.data.storage.SubscriptionStorage
@@ -90,8 +91,8 @@ val nmbdi = DI {
     }
 
     // 论坛相关
-    bindProvider { ForumPagingSource(instance()) }
-    bindProvider { ForumUserCase(instance()) }
+//    bindProvider { ForumPagingSource(instance()) }
+    bindProvider { ForumUserCase(instance(), instance()) }
     bindProvider { ForumViewModel(instance()) }
 
     // 帖子相关
@@ -116,6 +117,10 @@ val nmbdi = DI {
 
     // 订阅相关
     bindProvider<SubscriptionViewModel> { SubscriptionViewModel(instance(), instance()) }
+
+    bindSingleton {
+        createDatabase(DriverFactory())
+    }
 }
 
 

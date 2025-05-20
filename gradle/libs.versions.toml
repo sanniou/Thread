@@ -26,9 +26,11 @@ material = "1.7.3"
 material3 = "1.8.0"
 uiAndroid = "1.8.0"
 coil3 = "3.1.0"
-sqlDelight = "2.0.1"
 voyager = "1.1.0-beta03"
 ksp = "2.1.20-2.0.0"
+room = "2.7.1"
+sqlite = "2.5.1"
+sqlDelight = "2.1.0"
 
 
 [libraries]
@@ -71,9 +73,6 @@ androidx-ui-android = { group = "androidx.compose.ui", name = "ui-android", vers
 coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil3" }
 #coil-network = { group = "io.coil-kt.coil3", name = "coil-network-okhttp", version.ref = "coil3" }
 coil-network = { group = "io.coil-kt.coil3", name = "coil-network-ktor3", version.ref = "coil3" }
-# sql
-android-driver = { module = "app.cash.sqldelight:android-driver", version.ref = "sqlDelight" }
-native-driver = { module = "app.cash.sqldelight:native-driver", version.ref = "sqlDelight" }
 # voyager
 voyager-navigator = { group = "cafe.adriel.voyager", name = "voyager-navigator", version.ref = "voyager" }
 voyager-screenmodel = { group = "cafe.adriel.voyager", name = "voyager-screenmodel", version.ref = "voyager" }
@@ -81,7 +80,15 @@ voyager-bottom-sheet-navigator = { group = "cafe.adriel.voyager", name = "voyage
 voyager-tab-navigator = { group = "cafe.adriel.voyager", name = "voyager-tab-navigator", version.ref = "voyager" }
 voyager-transitions = { group = "cafe.adriel.voyager", name = "voyager-transitions", version.ref = "voyager" }
 voyager-kodein = { group = "cafe.adriel.voyager", name = "voyager-kodein", version.ref = "voyager" }
-
+# Room
+room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
+room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
+sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version.ref = "sqlite" }
+# sqlDelight
+android-driver = { module = "app.cash.sqldelight:android-driver", version.ref = "sqlDelight" }
+native-driver = { module = "app.cash.sqldelight:native-driver", version.ref = "sqlDelight" }
+sqlite-driver = { module = "app.cash.sqldelight:sqlite-driver", version.ref = "sqlDelight" }
+runtime = { module = "app.cash.sqldelight:runtime", version.ref = "sqlDelight" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
@@ -93,3 +100,4 @@ kotlinxSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", versi
 ktorfit = { id = "de.jensklingenberg.ktorfit", version.ref = "ktorfit" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 sqldelight = { id = "app.cash.sqldelight", version.ref = "sqlDelight" }
+room = { id = "androidx.room", version.ref = "room" }

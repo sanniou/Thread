@@ -91,7 +91,7 @@ fun Forum(
     onImageClick: ((String, String) -> Unit)? = null,
     innerPadding: PaddingValues? = null
 ) {
-    val forumList = uiState.showF.collectAsLazyPagingItems()
+    val forumList = uiState.forum.collectAsLazyPagingItems()
     PullToRefreshWrapper(
         onRefreshTrigger = {
             forumList.refresh()
@@ -120,13 +120,14 @@ fun Forum(
             contentPadding = PaddingValues(8.dp)
         ) {
             items(forumList.itemCount, forumList.itemKey { it.id }) { index ->
-                val thread = forumList[index]!!
-                ThreadCard(
-                    thread = thread,
-                    onClick = { onThreadClicked(thread.id) },
-                    onImageClick = onImageClick
-                )
-                Spacer(modifier = Modifier.height(8.dp))
+                forumList[index]?.let { thread ->
+                    ThreadCard(
+                        thread = thread,
+                        onClick = { onThreadClicked(thread.id) },
+                        onImageClick = onImageClick
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
             }
 
             when (forumList.loadState.refresh) {

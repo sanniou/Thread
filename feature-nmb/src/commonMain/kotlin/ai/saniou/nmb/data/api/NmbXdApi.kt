@@ -12,7 +12,7 @@ import ai.saniou.nmb.data.entity.NmbNotice
 import ai.saniou.nmb.data.entity.NmbReference
 import ai.saniou.nmb.data.entity.PostReplyRequest
 import ai.saniou.nmb.data.entity.PostThreadRequest
-import ai.saniou.nmb.data.entity.ShowF
+import ai.saniou.nmb.data.entity.Forum
 import ai.saniou.nmb.data.entity.Thread
 import ai.saniou.nmb.data.entity.TimeLine
 import de.jensklingenberg.ktorfit.http.Body
@@ -64,7 +64,7 @@ interface NmbXdApi {
     suspend fun showf(
         @Query("id") id: Long,//版面 ID
         @Query("page") page: Long,//页数，默认为 1
-    ): SaniouResponse<List<ShowF>>
+    ): SaniouResponse<List<Forum>>
 
     /**
      * 查看时间线
@@ -77,7 +77,7 @@ interface NmbXdApi {
     suspend fun timeline(
         @Query("id") id: Long,//版面 ID
         @Query("page") page: Long,//页数，默认为 1
-    ): SaniouResponse<List<ShowF>>
+    ): SaniouResponse<List<Forum>>
 
     /**
      * 查看串

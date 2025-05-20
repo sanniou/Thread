@@ -294,6 +294,11 @@ fun ForumCategoryUi(
                                                             else
                                                                 MaterialTheme.colorScheme.onSurfaceVariant
                                                         )
+                                                        Text(
+                                                            text = forum.threadCount.toString(),
+                                                            style = MaterialTheme.typography.bodySmall,
+                                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                        )
                                                     }
                                                 }
                                             }

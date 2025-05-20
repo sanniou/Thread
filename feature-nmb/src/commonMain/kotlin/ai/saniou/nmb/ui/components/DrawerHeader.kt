@@ -37,7 +37,7 @@ fun DrawerHeader(
                 ImageComponent(
                     imageUrl,
                     contentDescription = "欢迎图片",
-                    contentScale = ContentScale.Crop, // 使用Crop而非FillWidth，确保图片填满区域
+                    contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()
                 )
 
