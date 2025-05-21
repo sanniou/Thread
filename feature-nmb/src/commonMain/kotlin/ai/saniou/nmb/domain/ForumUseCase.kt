@@ -16,7 +16,7 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-class ForumUserCase(
+class ForumUseCase(
     private val forumRepository: ForumRepository,
     private val db: Database,
 ) {

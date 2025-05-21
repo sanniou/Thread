@@ -1,0 +1,58 @@
+-- 创建 Subscription 表
+CREATE TABLE IF NOT EXISTS Subscription (
+    subscriptionKey TEXT NOT NULL,
+    threadId INTEGER NOT NULL,
+    subscriptionTime INTEGER NOT NULL,
+    PRIMARY KEY (subscriptionKey, threadId)
+);
+
+-- 为 threadId 字段创建索引
+CREATE INDEX IF NOT EXISTS idx_subscription_thread_id ON Subscription(threadId);
+
+-- 为 subscriptionKey 字段创建索引
+CREATE INDEX IF NOT EXISTS idx_subscription_key ON Subscription(subscriptionKey);
+
+-- 插入 Subscription 数据
+insertSubscription:
+INSERT OR REPLACE INTO Subscription (
+    subscriptionKey, threadId, subscriptionTime
+) VALUES (?, ?, ?);
+
+-- 更新 Subscription 数据
+updateSubscription:
+UPDATE Subscription SET
+    subscriptionTime = ?
+WHERE subscriptionKey = ? AND threadId = ?;
+
+-- 删除 Subscription 数据
+deleteSubscription:
+DELETE FROM Subscription WHERE subscriptionKey = ? AND threadId = ?;
+
+-- 查询指定 subscriptionKey 的 Subscription 数据
+getSubscriptionsBySubscriptionKey:
+SELECT * FROM Subscription WHERE subscriptionKey = :subscriptionKey;
+
+-- 查询指定 threadId 的 Subscription 数据
+getSubscriptionsByThreadId:
+SELECT * FROM Subscription WHERE threadId = :threadId;
+
+-- 统计 Subscription 数量
+countSubscriptions:
+SELECT count(*) FROM Subscription;
+
+-- 统计指定 subscriptionKey 的 Subscription 数量
+countSubscriptionsBySubscriptionKey:
+SELECT count(*) FROM Subscription WHERE subscriptionKey = :subscriptionKey;
+
+-- 统计指定 threadId 的 Subscription 数量
+countSubscriptionsByThreadId:
+SELECT count(*) FROM Subscription WHERE threadId = :threadId;
+
+-- 联表查询 key Thread 数据
+selectSubscriptionThread:
+SELECT Thread.*
+FROM Subscription
+JOIN Thread ON Subscription.threadId = Thread.id
+WHERE Subscription.subscriptionKey = :subscriptionKey
+ORDER BY Subscription.subscriptionTime DESC
+LIMIT :limit OFFSET :offset;

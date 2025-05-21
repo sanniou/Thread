@@ -1,5 +1,6 @@
 package ai.saniou.nmb.data.entity
 
+import ai.saniou.nmb.db.table.Thread
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonNames
@@ -54,6 +55,47 @@ data class Feed(
     val po: String,// ？
     override val sage: Long = 0,
 ) : IBaseThread
+
+
+fun Thread.toFeed() = Feed(
+    id = id,
+    fid = fid,
+    replyCount = replyCount,
+    img = img,
+    ext = ext,
+    title = title,
+    content = content,
+    admin = admin,
+    hide = hide,
+    now = now,
+    userHash = userHash,
+    name = name,
+    sage = sage,
+    userId = "",
+    recentReplies = "[]",
+    category = "",
+    fileId = "",
+    email = "",
+    status = "",
+    po = ""
+)
+
+fun Feed.toTable() = Thread(
+    id = id,
+    fid = fid,
+    replyCount = replyCount,
+    img = img,
+    ext = ext,
+    title = title,
+    content = content,
+    admin = admin,
+    hide = hide,
+    now = now,
+    userHash = userHash,
+    name = name,
+    sage = sage
+)
+
 
 interface IBaseThread : IBaseAuthor {
     val id: Long

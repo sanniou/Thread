@@ -3,20 +3,18 @@ package ai.saniou.nmb.workflow.home
 import ai.saniou.nmb.data.entity.ForumCategory
 import ai.saniou.nmb.data.entity.ForumDetail
 import ai.saniou.nmb.data.storage.CategoryStorage
-import ai.saniou.nmb.domain.ForumCategoryUserCase
+import ai.saniou.nmb.domain.ForumCategoryUseCase
 import ai.saniou.nmb.initializer.AppInitializer
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class ForumCategoryViewModel(
-    private val forumCategoryUserCase: ForumCategoryUserCase,
+    private val forumCategoryUseCase: ForumCategoryUseCase,
     private val appInitializer: AppInitializer,
     private val categoryStorage: CategoryStorage
 ) : ViewModel() {
@@ -88,7 +86,7 @@ class ForumCategoryViewModel(
                     }
                 } else {
                     // 从网络加载新数据
-                    val forums = forumCategoryUserCase()
+                    val forums = forumCategoryUseCase()
 
                     // 保存到缓存
                     categoryStorage.saveCategories(forums)

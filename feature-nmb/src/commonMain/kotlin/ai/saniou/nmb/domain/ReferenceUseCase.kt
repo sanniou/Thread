@@ -1,4 +1,4 @@
-package ai.saniou.nmb.data.usecase
+package ai.saniou.nmb.domain
 
 import ai.saniou.nmb.data.entity.Reply
 import ai.saniou.nmb.data.repository.NmbRepository

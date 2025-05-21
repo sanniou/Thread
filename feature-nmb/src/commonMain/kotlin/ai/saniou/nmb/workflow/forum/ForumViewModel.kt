@@ -2,7 +2,7 @@ package ai.saniou.nmb.workflow.forum
 
 import ai.saniou.coreui.state.UiStateWrapper
 import ai.saniou.nmb.data.entity.Forum
-import ai.saniou.nmb.domain.ForumUserCase
+import ai.saniou.nmb.domain.ForumUseCase
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.cash.paging.PagingData
@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class ForumViewModel(private val forumUserCase: ForumUserCase) : ViewModel() {
+class ForumViewModel(private val forumUserCase: ForumUseCase) : ViewModel() {
 
     private val dataUiState = MutableStateFlow(
         ShowForumUiState(

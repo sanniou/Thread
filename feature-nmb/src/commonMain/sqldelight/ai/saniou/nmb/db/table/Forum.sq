@@ -1,0 +1,94 @@
+
+-- 创建 Forum 表
+CREATE TABLE IF NOT EXISTS Forum (
+    id INTEGER PRIMARY KEY,
+    fGroup INTEGER NOT NULL,
+    sort INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    showName TEXT,
+    msg TEXT NOT NULL,
+    interval INTEGER,
+    safeMode TEXT,
+    autoDelete INTEGER,
+    threadCount INTEGER,
+    permissionLevel TEXT,
+    forumFuseId TEXT,
+    createdAt TEXT,
+    updateAt TEXT,
+    status TEXT
+);
+
+-- 创建 ForumCategory 表
+CREATE TABLE IF NOT EXISTS ForumCategory (
+    id INTEGER PRIMARY KEY,
+    sort INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    status TEXT NOT NULL
+);
+
+-- 为 Forum 表的 id 字段创建索引
+CREATE INDEX IF NOT EXISTS idx_forum_id ON Forum(id);
+
+-- 为 ForumCategory 表的 id 字段创建索引
+CREATE INDEX IF NOT EXISTS idx_forum_category_id ON ForumCategory(id);
+
+-- 插入 Forum 数据
+insertForum:
+INSERT OR REPLACE INTO Forum (
+    id, fGroup, sort, name, showName, msg, interval, safeMode, autoDelete, threadCount, permissionLevel, forumFuseId, createdAt, updateAt, status
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+-- 插入 ForumCategory 数据
+insertForumCategory:
+INSERT OR REPLACE INTO ForumCategory (
+    id, sort, name, status
+) VALUES (?, ?, ?, ?);
+
+-- 更新 Forum 数据
+updateForum:
+UPDATE Forum SET
+    fGroup = ?,
+    sort = ?,
+    name = ?,
+    showName = ?,
+    msg = ?,
+    interval = ?,
+    safeMode = ?,
+    autoDelete = ?,
+    threadCount = ?,
+    permissionLevel = ?,
+    forumFuseId = ?,
+    createdAt = ?,
+    updateAt = ?,
+    status = ?
+WHERE id = ?;
+
+-- 更新 ForumCategory 数据
+updateForumCategory:
+UPDATE ForumCategory SET
+    sort = ?,
+    name = ?,
+    status = ?
+WHERE id = ?;
+
+-- 删除 Forum 数据
+deleteForum:
+DELETE FROM Forum WHERE id = ?;
+
+-- 删除 ForumCategory 数据
+deleteForumCategory:
+DELETE FROM ForumCategory WHERE id = ?;
+
+-- 查询所有 Forum 数据
+SELECT * FROM Forum;
+
+-- 查询所有 ForumCategory 数据
+SELECT * FROM ForumCategory;
+
+-- 查询指定 Forum 数据
+getForum:
+SELECT * FROM Forum WHERE id = :id;
+
+-- 查询指定 ForumCategory 数据
+getForumCategory:
+SELECT * FROM ForumCategory WHERE id = :id;

@@ -8,7 +8,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlin.collections.filter
 
-class ForumCategoryUserCase(
+class ForumCategoryUseCase(
     private val forumRepository: ForumRepository
 ) {
     suspend operator fun invoke(): List<ForumCategory> = coroutineScope {

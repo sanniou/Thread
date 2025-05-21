@@ -1,6 +1,6 @@
 CREATE TABLE forum_remote_keys (
     type TEXT NOT NULL,
-    id INTEGER NOT NULL,
+    id TEXT NOT NULL,
     prevKey INTEGER,
     nextKey INTEGER,
     PRIMARY KEY (type, id)

@@ -2,9 +2,9 @@ package ai.saniou.nmb.workflow.subscription
 
 import ai.saniou.corecommon.data.SaniouResponse
 import ai.saniou.coreui.state.UiStateWrapper
-import ai.saniou.nmb.data.api.NmbXdApi
 import ai.saniou.nmb.data.entity.Feed
 import ai.saniou.nmb.data.storage.SubscriptionStorage
+import ai.saniou.nmb.domain.SubscriptionUseCase
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,7 +17,7 @@ import kotlinx.coroutines.launch
  * 订阅列表ViewModel
  */
 class SubscriptionViewModel(
-    private val nmbXdApi: NmbXdApi,
+    private val nmbXdApi: SubscriptionUseCase,
     private val subscriptionStorage: SubscriptionStorage
 ) : ViewModel() {
 

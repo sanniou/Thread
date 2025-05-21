@@ -12,9 +12,9 @@ import ai.saniou.nmb.data.repository.NmbRepositoryImpl
 import ai.saniou.nmb.data.storage.CategoryStorage
 import ai.saniou.nmb.data.storage.GreetImageStorage
 import ai.saniou.nmb.data.storage.SubscriptionStorage
-import ai.saniou.nmb.data.usecase.ReferenceUseCase
-import ai.saniou.nmb.domain.ForumCategoryUserCase
-import ai.saniou.nmb.domain.ForumUserCase
+import ai.saniou.nmb.domain.ReferenceUseCase
+import ai.saniou.nmb.domain.ForumCategoryUseCase
+import ai.saniou.nmb.domain.ForumUseCase
 import ai.saniou.nmb.domain.PostUseCase
 import ai.saniou.nmb.domain.ThreadDetailUseCase
 import ai.saniou.nmb.domain.UserUseCase
@@ -81,7 +81,7 @@ val nmbdi = DI {
     bindProvider<GreetImageViewModel> { GreetImageViewModel(instance()) }
 
     // 论坛分类相关
-    bindProvider<ForumCategoryUserCase> { ForumCategoryUserCase(instance()) }
+    bindProvider<ForumCategoryUseCase> { ForumCategoryUseCase(instance()) }
     bindProvider<ForumCategoryViewModel> {
         ForumCategoryViewModel(
             instance(),
@@ -92,7 +92,7 @@ val nmbdi = DI {
 
     // 论坛相关
 //    bindProvider { ForumPagingSource(instance()) }
-    bindProvider { ForumUserCase(instance(), instance()) }
+    bindProvider { ForumUseCase(instance(), instance()) }
     bindProvider { ForumViewModel(instance()) }
 
     // 帖子相关

@@ -77,10 +77,4 @@ class ForumRemoteMediator(
             forumRepository.showf(fid, page)
 }
 
-enum class RemoteKeyType {
-    FORUM,
-    REPLY,
-    THREAD,
-    SUBSCRIBE,
-    HISTORY,
-}
+

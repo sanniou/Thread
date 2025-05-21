@@ -1,7 +1,7 @@
 package ai.saniou.nmb.workflow.reference
 
 import ai.saniou.coreui.state.UiStateWrapper
-import ai.saniou.nmb.data.usecase.ReferenceUseCase
+import ai.saniou.nmb.domain.ReferenceUseCase
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
