@@ -1,5 +1,6 @@
 package ai.saniou.nmb.data.entity
 
+import ai.saniou.nmb.workflow.thread.ThreadReply
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonNames
@@ -42,3 +43,66 @@ data class ThreadReply(
     override val ext: String,
     override val name: String,
 ) : IBaseAuthor, IThreadBody
+
+
+fun Thread.toTableReply(page: Long) = this.replies.mapIndexed { index, it ->
+    ai.saniou.nmb.db.table.ThreadReply(
+        id = it.id,
+        userHash = it.userHash,
+        admin = it.admin,
+        title = it.title,
+        now = it.now,
+        content = it.content,
+        img = it.img,
+        ext = it.ext,
+        name = it.name,
+        threadId = this.id,
+        indexInThread = (page - 1) * 20 + index,
+    )
+}
+
+fun ai.saniou.nmb.db.table.ThreadReply.toThreadReply() = ThreadReply(
+    id = id,
+    userHash = userHash,
+    admin = admin,
+    title = title,
+    now = now,
+    content = content,
+    img = img,
+    ext = ext,
+    name = name,
+)
+
+fun ai.saniou.nmb.db.table.Thread.toThread() = Thread(
+    id = id,
+    fid = fid,
+    replyCount = replyCount,
+    img = img,
+    ext = ext,
+    now = now,
+    userHash = userHash,
+    name = name,
+    title = title,
+    content = content,
+    sage = sage,
+    admin = admin,
+    hide = hide,
+    replies = emptyList()
+)
+
+
+fun Thread.toTable() = ai.saniou.nmb.db.table.Thread(
+    id = id,
+    fid = fid,
+    replyCount = replyCount,
+    img = img,
+    ext = ext,
+    now = now,
+    userHash = userHash,
+    name = name,
+    title = title,
+    content = content,
+    sage = sage,
+    admin = admin,
+    hide = hide,
+)

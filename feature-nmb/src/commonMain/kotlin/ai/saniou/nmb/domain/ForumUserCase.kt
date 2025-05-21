@@ -1,7 +1,7 @@
 package ai.saniou.nmb.domain
 
 import ai.saniou.nmb.data.entity.Forum
-import ai.saniou.nmb.data.entity.toForumWithReply
+import ai.saniou.nmb.data.entity.toForumThreadWithReply
 import ai.saniou.nmb.data.repository.ForumRepository
 import ai.saniou.nmb.data.source.ForumRemoteMediator
 import ai.saniou.nmb.db.Database
@@ -18,31 +18,41 @@ import kotlinx.coroutines.flow.map
 
 class ForumUserCase(
     private val forumRepository: ForumRepository,
-    private val db: Database
-
+    private val db: Database,
 ) {
     @OptIn(ExperimentalPagingApi::class)
     operator fun invoke(
-        id: Long,
+        fid: Long,
         fgroup: Long
     ): Flow<PagingData<Forum>> {
         return Pager(
-            config = PagingConfig(pageSize = 20, prefetchDistance = 3),
-            remoteMediator = ForumRemoteMediator(id, fgroup, forumRepository, db),
+            config = PagingConfig(
+                pageSize = 20,
+                prefetchDistance = 5,
+                enablePlaceholders = false,
+                initialLoadSize = 20 * 2,
+                maxSize = 20 * 5,
+            ),
+            remoteMediator = ForumRemoteMediator(fid, fgroup, forumRepository, db),
             pagingSourceFactory = {
                 QueryPagingSource(
-                    countQuery = db.forumQueries.countForum(),
-                    transacter = db.forumQueries,
+                    countQuery = db.threadQueries.countThread(fid),
+                    transacter = db.threadQueries,
                     context = Dispatchers.IO,
                     queryProvider = { limit, offset ->
-                        db.forumQueries.queryForums(fid = id, limit = limit, offset = offset)
+                        db.threadQueries.queryThreadsInForum(
+                            fid = fid,
+                            limit = limit,
+                            offset = offset
+                        )
                     }
                 )
             }
         ).flow.map { pagingData ->
-            pagingData.map { forum ->
-                forum.toForumWithReply(
-                    db.forumQueries.queryReply(forum.id, 10L, 0L).executeAsList()
+            pagingData.map { thread ->
+                thread.toForumThreadWithReply(
+                    db.threadReplyQueries.getLastFiveReplies(thread.id)
+                        .executeAsList().sortedBy { it.id }
                 )
             }
         }

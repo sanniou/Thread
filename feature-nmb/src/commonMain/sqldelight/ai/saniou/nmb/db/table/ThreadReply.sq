@@ -1,0 +1,61 @@
+
+-- 创建 ThreadReply 表
+CREATE TABLE IF NOT EXISTS ThreadReply (
+    id INTEGER PRIMARY KEY,
+    threadId INTEGER NOT NULL,
+    indexInThread INTEGER NOT NULL,
+    userHash TEXT NOT NULL,
+    admin INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    now TEXT NOT NULL,
+    content TEXT NOT NULL,
+    img TEXT NOT NULL,
+    ext TEXT NOT NULL,
+    name TEXT NOT NULL,
+    FOREIGN KEY (threadId) REFERENCES Thread(id) ON DELETE CASCADE
+);
+
+-- 为 ThreadReply 表的 thread_id 字段创建索引
+CREATE INDEX IF NOT EXISTS idx_thread_reply_thread_id ON ThreadReply(threadId);
+
+-- 插入 ThreadReply 数据
+insertThreadReply:
+INSERT OR REPLACE INTO ThreadReply (
+    id, threadId, indexInThread, userHash, admin, title, now, content, img, ext, name
+) VALUES ?;
+
+-- 更新 ThreadReply 数据
+updateThreadReply:
+UPDATE ThreadReply SET
+    threadId=?,
+    indexInThread=?,
+    userHash = ?,
+    admin = ?,
+    title = ?,
+    now = ?,
+    content = ?,
+    img = ?,
+    ext = ?,
+    name = ?
+WHERE id = ?;
+
+-- 删除 ThreadReply 数据
+deleteThreadReply:
+DELETE FROM ThreadReply WHERE id = ?;
+
+-- 查询指定 thread_id 的 ThreadReply 数据
+queryThreadRepliesByPage:
+SELECT * FROM ThreadReply WHERE threadId = :threadId ORDER BY id ASC LIMIT :limit OFFSET :offset;
+
+getLastFiveReplies:
+SELECT * FROM ThreadReply WHERE threadId = :threadId ORDER BY id DESC LIMIT 5;
+
+queryThreadRepliesByIndex:
+SELECT * FROM ThreadReply WHERE threadId = :threadId AND indexInThread BETWEEN :start AND :end ORDER BY id ASC;
+
+-- 统计 ThreadReply 数量
+countThreadReplies:
+SELECT count(*) FROM ThreadReply WHERE threadId = :threadId;
+
+countPageThreadReplies:
+SELECT count(*) FROM ThreadReply WHERE threadId = :threadId AND indexInThread BETWEEN :start AND :end;

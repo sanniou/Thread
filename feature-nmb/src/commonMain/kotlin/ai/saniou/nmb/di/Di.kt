@@ -16,7 +16,7 @@ import ai.saniou.nmb.data.usecase.ReferenceUseCase
 import ai.saniou.nmb.domain.ForumCategoryUserCase
 import ai.saniou.nmb.domain.ForumUserCase
 import ai.saniou.nmb.domain.PostUseCase
-import ai.saniou.nmb.domain.ThreadUseCase
+import ai.saniou.nmb.domain.ThreadDetailUseCase
 import ai.saniou.nmb.domain.UserUseCase
 import ai.saniou.nmb.initializer.AppInitializer
 import ai.saniou.nmb.workflow.forum.ForumViewModel
@@ -96,7 +96,7 @@ val nmbdi = DI {
     bindProvider { ForumViewModel(instance()) }
 
     // 帖子相关
-    bindProvider { ThreadUseCase(instance()) }
+    bindProvider { ThreadDetailUseCase(instance(), instance()) }
     bindProvider { ThreadViewModel(instance(), instance(), instance()) }
 
     // 发帖和回复相关

@@ -1,0 +1,91 @@
+-- 创建 Thread 表
+CREATE TABLE IF NOT EXISTS ThreadInformation (
+    id INTEGER PRIMARY KEY,
+    remainReplies INTEGER,
+    lastKey INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS Thread (
+    id INTEGER PRIMARY KEY,
+    fid INTEGER NOT NULL,
+    replyCount INTEGER NOT NULL,
+    img TEXT NOT NULL,
+    ext TEXT NOT NULL,
+    now TEXT NOT NULL,
+    userHash TEXT NOT NULL,
+    name TEXT NOT NULL,
+    title TEXT NOT NULL,
+    content TEXT NOT NULL,
+    sage INTEGER NOT NULL,
+    admin INTEGER NOT NULL,
+    hide INTEGER NOT NULL
+);
+
+-- 为 ThreadInformation last_replay_at 表创建索引
+CREATE INDEX IF NOT EXISTS idx_thraed_last_replay_at ON ThreadInformation(lastKey);
+
+-- 为 Thread 表的 fid 字段创建索引
+CREATE INDEX IF NOT EXISTS idx_thraed_fid ON Thread(fid);
+
+-- 插入 ThreadThread 数据
+insertThread:
+INSERT OR REPLACE INTO Thread (
+    id, fid, replyCount, img, ext, now, userHash, name, title, content, sage, admin, hide
+) VALUES ?;
+
+-- 插入 ThreadInformation 数据
+insertThreadInformation:
+INSERT OR REPLACE INTO ThreadInformation (
+    id, remainReplies, lastKey
+) VALUES ?;
+
+-- 查询 ThreadInformation 数据
+SELECT * FROM ThreadInformation;
+
+-- 查询所有 Thread 数据
+SELECT * FROM Thread;
+
+-- 更新 ThreadInformation 数据
+updateThreadInformation:
+UPDATE ThreadInformation SET
+    remainReplies = ?,
+    lastKey = ?
+WHERE id = ?;
+
+-- 更新 Thread 数据
+upddateThread:
+UPDATE Thread SET
+    fid = ?,
+    replyCount = ?,
+    img = ?,
+    ext = ?,
+    now = ?,
+    userHash = ?,
+    name = ?,
+    title = ?,
+    content = ?,
+    sage = ?,
+    admin = ?,
+    hide = ?
+WHERE id = ?;
+
+-- 删除 ThreadInformation 数据
+deleteThreadInformation:
+DELETE FROM ThreadInformation WHERE id = ?;
+
+-- 删除 Thread 数据
+deleteThread:
+DELETE FROM Thread WHERE id = ?;
+
+-- 删除 Thread 页的数据
+deleteThreadPage:
+DELETE FROM Thread WHERE fid = ?;
+
+getThread:
+SELECT * FROM Thread WHERE id = :id;
+
+countThread:
+SELECT count(*) FROM Thread WHERE fid = :fid;
+
+queryThreadsInForum:
+SELECT * FROM Thread  LEFT JOIN ThreadInformation ON Thread.id = ThreadInformation.id WHERE fid = :fid ORDER BY lastKey DESC LIMIT :limit OFFSET :offset ;

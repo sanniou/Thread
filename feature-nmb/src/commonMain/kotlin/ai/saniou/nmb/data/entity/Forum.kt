@@ -1,5 +1,9 @@
 package ai.saniou.nmb.data.entity
 
+import ai.saniou.nmb.db.table.QueryThreadsInForum
+import ai.saniou.nmb.db.table.ThreadInformation
+import ai.saniou.nmb.db.table.ThreadReply
+import kotlinx.datetime.Clock
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonNames
@@ -58,72 +62,75 @@ data class Reply(
 ) : IBaseAuthor
 
 
-fun ai.saniou.nmb.db.table.Forum.toForumWithReply(reply: List<ai.saniou.nmb.db.table.Reply>) =
+fun QueryThreadsInForum.toForumThreadWithReply(reply: List<ThreadReply>) =
     Forum(
         id = this.id,
         fid = this.fid,
-        replyCount = this.ReplyCount,
+        replyCount = this.replyCount,
         img = this.img,
         ext = this.ext,
         now = this.now,
-        userHash = this.user_hash,
+        userHash = this.userHash,
         name = this.name,
         title = this.title,
         content = this.content,
         sage = this.sage,
         admin = this.admin,
-        hide = this.Hide,
+        hide = this.hide,
+        remainReplies = this.remainReplies,
         replies = reply.map {
             Reply(
                 id = it.id,
-                fid = it.fid,
-                replyCount = it.ReplyCount,
+                fid = this.fid,
+                replyCount = this.replyCount,
                 img = it.img,
                 ext = it.ext,
                 now = it.now,
-                userHash = it.user_hash,
+                userHash = it.userHash,
                 name = it.name,
                 title = it.title,
                 content = it.content,
-                sage = it.sage,
+                sage = this.sage,
                 admin = it.admin,
-                hide = it.Hide,
+                hide = this.hide,
             )
         },
     )
 
-fun Forum.toTableForum() = ai.saniou.nmb.db.table.Forum(
+fun Forum.toTableInformation() = ThreadInformation(
+    id = this.id,
+    remainReplies = this.remainReplies,
+    lastKey = this.replies.lastOrNull()?.id ?: this.id
+)
+
+fun Forum.toTable() = ai.saniou.nmb.db.table.Thread(
     id = this.id,
     fid = this.fid,
-    ReplyCount = this.replyCount,
+    replyCount = this.replyCount,
     img = this.img,
     ext = this.ext,
     now = this.now,
-    user_hash = this.userHash,
+    userHash = this.userHash,
     name = this.name,
     title = this.title,
     content = this.content,
     sage = this.sage,
     admin = this.admin,
-    Hide = this.hide,
-    RemainReplies = this.remainReplies,
+    hide = this.hide,
 )
 
 fun Forum.toTableReply() = this.replies.map { reply ->
-    ai.saniou.nmb.db.table.Reply(
+    ThreadReply(
         id = reply.id,
-        fid = reply.fid,
-        ReplyCount = reply.replyCount,
         img = reply.img,
         ext = reply.ext,
         now = reply.now,
-        user_hash = reply.userHash,
+        userHash = reply.userHash,
         name = reply.name,
         title = reply.title,
         content = reply.content,
-        sage = reply.sage,
         admin = reply.admin,
-        Hide = reply.hide,
-        tid = this.id,
+        threadId = this.id,
+        indexInThread = Long.MIN_VALUE //unknown
     )
 }

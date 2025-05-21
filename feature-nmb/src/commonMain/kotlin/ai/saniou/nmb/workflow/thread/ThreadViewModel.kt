@@ -2,14 +2,18 @@ package ai.saniou.nmb.workflow.thread
 
 import ai.saniou.coreui.state.UiStateWrapper
 import ai.saniou.nmb.data.api.NmbXdApi
-import ai.saniou.nmb.data.entity.Thread
 import ai.saniou.nmb.data.storage.SubscriptionStorage
-import ai.saniou.nmb.domain.ThreadUseCase
+import ai.saniou.nmb.data.entity.Thread
+import ai.saniou.nmb.data.entity.ThreadReply
+import ai.saniou.nmb.domain.ThreadDetailUseCase
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.PagingData
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.stateIn
@@ -17,8 +21,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class ThreadViewModel(
-    private val threadUseCase: ThreadUseCase,
     private val nmbXdApi: NmbXdApi,
+    private val threadDetailUseCase: ThreadDetailUseCase,
     private val subscriptionStorage: SubscriptionStorage
 ) : ViewModel() {
 
@@ -37,7 +41,7 @@ class ThreadViewModel(
         sage = 0,
         admin = 0,
         hide = 0,
-        replies = emptyList()
+        replies = emptyList(),
     )
 
     // 是否只显示PO的帖子
@@ -52,14 +56,9 @@ class ThreadViewModel(
     private val dataUiState = MutableStateFlow(
         ThreadUiState(
             thread = emptyThread,
+            threadReplies = emptyFlow(),
             currentPage = 1,
             totalPages = 1,
-            onRefresh = {
-                refreshThread()
-            },
-            onLoadNextPage = {
-                loadNextPage()
-            },
             onJumpToPage = { page ->
                 jumpToPage(page)
             },
@@ -121,20 +120,22 @@ class ThreadViewModel(
     private suspend fun loadThreadInternal(threadId: Long) {
         try {
             _uiState.emit(UiStateWrapper.Loading)
-            val thread = threadUseCase(threadId, 1)
 
+            val thread = threadDetailUseCase.getThread(threadId)
             // 获取论坛名称
             getForumName(thread.fid)
 
             // 设置总页数，根据回复数量计算，每页显示19条回复
             val totalReplies = thread.replyCount
-            val repliesPerPage = 19 // 每页显示的回复数量
+            val repliesPerPage = 20 // 每页显示的回复数量
             val totalPages =
                 (totalReplies / repliesPerPage) + if (totalReplies % repliesPerPage > 0) 1 else 0
 
+            val threadReplies = threadDetailUseCase(threadId, _isPoOnlyMode.value)
             updateUiState { state ->
                 state.copy(
                     thread = thread,
+                    threadReplies = threadReplies,
                     currentPage = 1,
                     totalPages = totalPages.toInt().coerceAtLeast(1),
                     forumName = _forumName.value,
@@ -148,171 +149,30 @@ class ThreadViewModel(
         }
     }
 
-    // 刷新当前帖子
-    private fun refreshThread() {
-        val currentId = _threadId.value
-        if (currentId != null && currentId > 0) {
-            viewModelScope.launch {
-                if (_isPoOnlyMode.value) {
-                    // 如果是只看PO模式，则使用getThreadPo方法
-                    try {
-                        _uiState.emit(UiStateWrapper.Loading)
-                        val poThreads = threadUseCase.getThreadPo(currentId, 1)
-                        updateUiState { state ->
-                            state.copy(
-                                thread = poThreads,
-                                currentPage = 1,
-                                isPoOnlyMode = true
-                            )
-                        }
-                        _uiState.emit(UiStateWrapper.Success(dataUiState.value))
-                    } catch (e: Throwable) {
-                        _uiState.emit(UiStateWrapper.Error(e, "刷新帖子失败: ${e.message}"))
-                    }
-                } else {
-                    // 如果不是只看PO模式，则使用正常的加载方法
-                    loadThreadInternal(currentId)
-                }
-            }
-        }
-    }
-
-    // 加载下一页回复
-    private fun loadNextPage() {
-        val currentId = _threadId.value
-        if (currentId == null || currentId <= 0) return
-
-        // 如果已经没有更多数据，则不再加载
-        if (!dataUiState.value.hasMoreData) return
-
-        val nextPage = dataUiState.value.currentPage + 1
-
-        viewModelScope.launch {
-            try {
-                if (_isPoOnlyMode.value) {
-                    // 如果是只看PO模式，则使用getThreadPo方法加载下一页
-                    val poThreads = threadUseCase.getThreadPo(currentId, nextPage.toLong())
-                    // 合并回复列表
-                    val currentThread = dataUiState.value.thread
-                    val newReplies = currentThread.replies + poThreads.replies
-
-                    // 判断是否还有更多数据
-                    val hasMoreData = poThreads.replies.isNotEmpty()
-
-                    updateUiState { state ->
-                        state.copy(
-                            thread = currentThread.copy(replies = newReplies),
-                            currentPage = nextPage,
-                            hasMoreData = hasMoreData
-                        )
-                    }
-                    _uiState.emit(UiStateWrapper.Success(dataUiState.value))
-                } else {
-                    // 如果不是只看PO模式，则使用常规API加载下一页
-                    val threadData = threadUseCase(currentId, nextPage.toLong())
-
-                    // 合并回复列表
-                    val currentThread = dataUiState.value.thread
-                    val newReplies = currentThread.replies + threadData.replies
-
-                    // 判断是否还有更多数据
-                    // 如果返回的回复为空，则认为没有更多数据
-                    val hasMoreData = threadData.replies.isNotEmpty()
-
-                    updateUiState { state ->
-                        state.copy(
-                            thread = currentThread.copy(replies = newReplies),
-                            currentPage = nextPage,
-                            hasMoreData = hasMoreData
-                        )
-                    }
-                    _uiState.emit(UiStateWrapper.Success(dataUiState.value))
-                }
-            } catch (e: Throwable) {
-                // 加载下一页失败，但不影响当前页面显示
-                // 将hasMoreData设置为false，避免继续尝试加载
-                updateUiState { state ->
-                    state.copy(hasMoreData = false)
-                }
-                _uiState.emit(UiStateWrapper.Success(dataUiState.value))
-            }
-        }
-    }
 
     fun onReplyClicked(replyId: Long) {
         // 处理回复点击事件，可以实现引用回复等功能
-    }
-
-    fun navigateToReply(threadId: Long) {
-        // 导航到回复页面
     }
 
     /**
      * 跳转到指定页面
      */
     private fun jumpToPage(page: Int) {
-        val currentId = _threadId.value
-        if (currentId == null || currentId <= 0) return
-        if (page <= 0 || page > dataUiState.value.totalPages) return
-
-        viewModelScope.launch {
-            try {
-                _uiState.emit(UiStateWrapper.Loading)
-                val threadData = threadUseCase(currentId, page.toLong())
-
-                updateUiState { state ->
-                    state.copy(
-                        thread = threadData,
-                        currentPage = page
-                    )
-                }
-                _uiState.emit(UiStateWrapper.Success(dataUiState.value))
-            } catch (e: Throwable) {
-                _uiState.emit(UiStateWrapper.Error(e, "加载页面失败: ${e.message}"))
-            }
-        }
+        TODO()
     }
 
     /**
      * 切换只看PO模式
      */
     private fun togglePoOnlyMode() {
-        val currentId = _threadId.value
-        if (currentId == null || currentId <= 0) return
-
-        val newPoOnlyMode = !_isPoOnlyMode.value
-        _isPoOnlyMode.value = newPoOnlyMode
-
-        viewModelScope.launch {
-            try {
-                _uiState.emit(UiStateWrapper.Loading)
-
-                if (newPoOnlyMode) {
-                    // 切换到只看PO模式，使用getThreadPo方法
-                    val poThreads = threadUseCase.getThreadPo(currentId, 1)
-                    updateUiState { state ->
-                        state.copy(
-                            thread = poThreads,
-                            currentPage = 1,
-                            isPoOnlyMode = true
-                        )
-                    }
-                    _uiState.emit(UiStateWrapper.Success(dataUiState.value))
-                } else {
-                    // 切换到正常模式，使用常规API加载
-                    val threadData = threadUseCase(currentId, 1)
-                    updateUiState { state ->
-                        state.copy(
-                            thread = threadData,
-                            currentPage = 1,
-                            isPoOnlyMode = false
-                        )
-                    }
-                    _uiState.emit(UiStateWrapper.Success(dataUiState.value))
-                }
-            } catch (e: Throwable) {
-                _isPoOnlyMode.value = !newPoOnlyMode // 切换失败，恢复状态
-                _uiState.emit(UiStateWrapper.Error(e, "切换模式失败: ${e.message}"))
+        _isPoOnlyMode.value = !_isPoOnlyMode.value
+        _threadId.value?.run {
+            val threadReplies = threadDetailUseCase(this, _isPoOnlyMode.value)
+            updateUiState { state ->
+                state.copy(
+                    threadReplies = threadReplies,
+                    isPoOnlyMode = _isPoOnlyMode.value
+                )
             }
         }
     }
@@ -383,6 +243,7 @@ class ThreadViewModel(
 
 data class ThreadUiState(
     val thread: Thread,
+    val threadReplies: Flow<PagingData<ThreadReply>>,
     val currentPage: Int,
     val totalPages: Int,
     val hasMoreData: Boolean = true,
@@ -390,8 +251,6 @@ data class ThreadUiState(
     val isSubscribed: Boolean = false,
     val subscribedMessage: String? = null,
     val forumName: String = "",
-    val onRefresh: () -> Unit,
-    val onLoadNextPage: () -> Unit,
     val onJumpToPage: (Int) -> Unit = {},
     val onTogglePoOnly: () -> Unit = {},
     val onToggleSubscribe: (Boolean) -> Unit = {}

@@ -2,7 +2,8 @@ package ai.saniou.nmb.data.source
 
 import ai.saniou.corecommon.data.SaniouResponse
 import ai.saniou.nmb.data.entity.Forum
-import ai.saniou.nmb.data.entity.toTableForum
+import ai.saniou.nmb.data.entity.toTable
+import ai.saniou.nmb.data.entity.toTableInformation
 import ai.saniou.nmb.data.entity.toTableReply
 import ai.saniou.nmb.data.repository.ForumRepository
 import ai.saniou.nmb.db.Database
@@ -17,38 +18,49 @@ class ForumRemoteMediator(
     private val fgroup: Long,
     private val forumRepository: ForumRepository,
     private val db: Database,
-) : RemoteMediator<Int, ai.saniou.nmb.db.table.Forum>() {
+) : RemoteMediator<Int, ai.saniou.nmb.db.table.QueryThreadsInForum>() {
 
     override suspend fun load(
         loadType: LoadType,
-        state: PagingState<Int, ai.saniou.nmb.db.table.Forum>
+        state: PagingState<Int, ai.saniou.nmb.db.table.QueryThreadsInForum>
     ): MediatorResult {
         val page = when (loadType) {
             LoadType.REFRESH -> 1L
             LoadType.PREPEND -> return MediatorResult.Success(endOfPaginationReached = true)
             LoadType.APPEND -> {
-                val last = state.lastItemOrNull() ?: return MediatorResult.Success(true)
-                (last.id / state.config.pageSize + 1)
+                // 查 RemoteKeys 拿 nextPage
+                db.remoteKeyQueries.remoteKeyById(type = RemoteKeyType.FORUM.name, id = fid)
+                    .executeAsOneOrNull()?.nextKey ?: return MediatorResult.Success(true)
             }
         }
 
 
         return when (val result = threadList(page = page)) {
             is SaniouResponse.Success -> {
-                val forumList = result.data
-                if (loadType == LoadType.REFRESH) {
-                    // 可选
-                    // db.forumQueries.deleteForumPage(fid)
-                    // db.forumQueries.deleteReplyPage(fid)
-                }
-                forumList.forEach {
-                    db.forumQueries.insertForum(it.toTableForum())
-                    it.toTableReply().forEach { reply ->
-                        db.forumQueries.insertReply(reply)
+                val forums = result.data
+                val endOfPagination = forums.isEmpty()
+
+                db.transaction {
+                    if (loadType == LoadType.REFRESH) {
+                        //db.forumQueries.clearForum(fid)
+                        //db.remoteKeyQueries.insertKey(forumId = fid, nextPage = null)
                     }
+
+                    forums.forEach { forum ->
+                        db.threadQueries.insertThread(forum.toTable())
+                        db.threadQueries.insertThreadInformation(forum.toTableInformation())
+                        forum.toTableReply().forEach(db.threadReplyQueries::insertThreadReply)
+
+                    }
+                    db.remoteKeyQueries.insertKey(
+                        type = RemoteKeyType.FORUM.name,
+                        id = fid,
+                        prevKey = if (page == 1L) null else page - 1,
+                        nextKey = if (endOfPagination) null else page + 1
+                    )
                 }
 
-                MediatorResult.Success(forumList.isEmpty())
+                return MediatorResult.Success(endOfPagination)
             }
 
             is SaniouResponse.Error -> MediatorResult.Error(result.ex)
@@ -63,4 +75,12 @@ class ForumRemoteMediator(
             forumRepository.timeline(fid, page)
         else
             forumRepository.showf(fid, page)
+}
+
+enum class RemoteKeyType {
+    FORUM,
+    REPLY,
+    THREAD,
+    SUBSCRIBE,
+    HISTORY,
 }

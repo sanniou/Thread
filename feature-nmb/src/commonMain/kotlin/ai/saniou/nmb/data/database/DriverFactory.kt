@@ -13,4 +13,4 @@ fun createDatabase(driverFactory: DriverFactory): Database {
     return database
 }
 
-internal val DATABADE_FILE_NAME = "nmb.db";
+internal val DATABADE_FILE_NAME = "nmb.db"

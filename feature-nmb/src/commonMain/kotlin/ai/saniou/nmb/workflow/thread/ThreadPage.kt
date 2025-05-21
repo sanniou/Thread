@@ -7,11 +7,12 @@ import ai.saniou.nmb.data.entity.Reply
 import ai.saniou.nmb.data.entity.Thread
 import ai.saniou.nmb.data.entity.ThreadReply
 import ai.saniou.nmb.di.nmbdi
-import ai.saniou.nmb.ui.components.HtmlText
-import ai.saniou.nmb.ui.components.NmbImage
+import ai.saniou.nmb.ui.components.ListEndIndicator
+import ai.saniou.nmb.ui.components.LoadingFailedIndicator
+import ai.saniou.nmb.ui.components.LoadingIndicator
 import ai.saniou.nmb.ui.components.PageJumpDialog
 import ai.saniou.nmb.ui.components.ReferencePopup
-import ai.saniou.nmb.ui.components.ReplyItem
+import ai.saniou.nmb.ui.components.ShimmerContainer
 import ai.saniou.nmb.ui.components.SkeletonReplyItem
 import ai.saniou.nmb.ui.components.ThreadAuthor
 import ai.saniou.nmb.ui.components.ThreadBody
@@ -19,11 +20,6 @@ import ai.saniou.nmb.ui.components.ThreadMenu
 import ai.saniou.nmb.ui.components.ThreadSpacer
 import ai.saniou.nmb.workflow.image.ImagePreviewPage
 import ai.saniou.nmb.workflow.reference.ReferenceViewModel
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -36,19 +32,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -68,22 +60,19 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.paging.LoadState
+import app.cash.paging.compose.collectAsLazyPagingItems
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -95,9 +84,8 @@ import org.kodein.di.instance
 data class ThreadPage(
     val threadId: Long?,
     val di: DI = nmbdi,
-    val onUpdateTitle: ((String) -> Unit)? = null,
-    val onSetupMenuButton: ((@Composable () -> Unit) -> Unit)? = null,
 ) : Screen {
+
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
@@ -105,11 +93,14 @@ data class ThreadPage(
         val navigator = LocalNavigator.currentOrThrow
         val snackbarHostState = remember { SnackbarHostState() }
 
+        var titleBar = remember { "" }
+        val onSetupMenuButton: ((@Composable () -> Unit) -> Unit) = {}
+
         Scaffold(
             topBar = {
                 TopAppBar(
                     title = {
-                        Text("Thread Page")
+                        Text(titleBar)
                     },
                     navigationIcon = {
                         IconButton(onClick = { navigator.pop() }) {
@@ -120,6 +111,7 @@ data class ThreadPage(
                         }
                     },
                     actions = {
+                        onSetupMenuButton
                         // 原本在Content里的菜单按钮现在移到这里
                         val (showMenu, setShowMenu) = remember { mutableStateOf(false) }
                         IconButton(onClick = { setShowMenu(true) }) {
@@ -162,7 +154,7 @@ data class ThreadPage(
                 ThreadContent(
                     threadId = threadId,
                     di = di,
-                    onUpdateTitle = onUpdateTitle,
+                    onUpdateTitle = { titleBar = it },
                     onSetupMenuButton = onSetupMenuButton,
                 )
             }
@@ -296,128 +288,7 @@ fun ThreadContent(
                 }
             },
             loading = {
-                // 加载状态显示骨架屏
-                Column(
-                    modifier = Modifier.padding(8.dp)
-                ) {
-                    // 创建动画效果
-                    val shimmerColors = listOf(
-                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-                    )
-
-                    val transition = rememberInfiniteTransition()
-                    val translateAnim by transition.animateFloat(
-                        initialValue = 0f,
-                        targetValue = 1000f,
-                        animationSpec = infiniteRepeatable(
-                            animation = tween(durationMillis = 1200, delayMillis = 300),
-                            repeatMode = RepeatMode.Restart
-                        )
-                    )
-
-                    val brush = Brush.linearGradient(
-                        colors = shimmerColors,
-                        start = Offset(10f, 10f),
-                        end = Offset(translateAnim, translateAnim)
-                    )
-
-                    // 主帖骨架屏
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surface
-                        )
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            // 标题和作者信息
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(24.dp)
-                                        .clip(CircleShape)
-                                        .background(brush)
-                                )
-
-                                Spacer(modifier = Modifier.width(8.dp))
-
-                                Column {
-                                    Box(
-                                        modifier = Modifier
-                                            .width(200.dp)
-                                            .height(20.dp)
-                                            .clip(RoundedCornerShape(4.dp))
-                                            .background(brush)
-                                    )
-
-                                    Spacer(modifier = Modifier.height(4.dp))
-
-                                    Box(
-                                        modifier = Modifier
-                                            .width(150.dp)
-                                            .height(12.dp)
-                                            .clip(RoundedCornerShape(4.dp))
-                                            .background(brush)
-                                    )
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            // 内容
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(16.dp)
-                                    .clip(RoundedCornerShape(4.dp))
-                                    .background(brush)
-                            )
-
-                            ThreadSpacer()
-
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth(0.8f)
-                                    .height(16.dp)
-                                    .clip(RoundedCornerShape(4.dp))
-                                    .background(brush)
-                            )
-
-                            ThreadSpacer()
-
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth(0.6f)
-                                    .height(16.dp)
-                                    .clip(RoundedCornerShape(4.dp))
-                                    .background(brush)
-                            )
-
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            // 图片占位
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(200.dp)
-                                    .clip(RoundedCornerShape(4.dp))
-                                    .background(brush)
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // 回复骨架屏
-                    repeat(3) {
-                        SkeletonReplyItem(brush)
-                        ThreadSpacer()
-                    }
-                }
+                ThreadShimmer()
             },
             onRetryClick = {
                 // 重试时重新设置threadId，触发重新加载
@@ -481,144 +352,214 @@ fun ThreadContent(
 }
 
 @Composable
+private fun ThreadShimmer() {
+    ShimmerContainer { brush ->
+        Column(
+            modifier = Modifier.padding(8.dp)
+        ) {
+            // 主帖骨架屏
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    // 标题和作者信息
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(24.dp)
+                                .clip(CircleShape)
+                                .background(brush)
+                        )
+
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        Column {
+                            Box(
+                                modifier = Modifier
+                                    .width(200.dp)
+                                    .height(20.dp)
+                                    .clip(RoundedCornerShape(4.dp))
+                                    .background(brush)
+                            )
+
+                            Spacer(modifier = Modifier.height(4.dp))
+
+                            Box(
+                                modifier = Modifier
+                                    .width(150.dp)
+                                    .height(12.dp)
+                                    .clip(RoundedCornerShape(4.dp))
+                                    .background(brush)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // 内容
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(16.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(brush)
+                    )
+
+                    ThreadSpacer()
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(0.8f)
+                            .height(16.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(brush)
+                    )
+
+                    ThreadSpacer()
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(0.6f)
+                            .height(16.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(brush)
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // 图片占位
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(brush)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // 回复骨架屏
+            repeat(3) {
+                SkeletonReplyItem(brush)
+                ThreadSpacer()
+            }
+        }
+    }
+}
+
+@Composable
 fun ThreadContent(
     uiState: ThreadUiState,
     onReplyClicked: (Long) -> Unit,
     refClick: (Long) -> Unit,
     onImageClick: (String, String) -> Unit
 ) {
+    val replies = uiState.threadReplies.collectAsLazyPagingItems()
     PullToRefreshWrapper(
         onRefreshTrigger = {
-            uiState.onRefresh()
+            replies.refresh()
         }
     ) {
-        // 检查是否有回复
-        if (uiState.thread.replies.isEmpty() && uiState.thread.replyCount == 0L) {
-            // 空回复状态
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(32.dp)
-                ) {
-                    // 主帖
-                    ThreadMainPost(
-                        uiState.thread,
-                        refClick = refClick,
-                        onImageClick = onImageClick
-                    )
-
-                    Spacer(modifier = Modifier.height(32.dp))
-
-                    Icon(
-                        imageVector = Icons.Default.Info,
-                        contentDescription = null,
-                        modifier = Modifier.size(48.dp),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Text(
-                        text = "暂无回复",
-                        style = MaterialTheme.typography.titleMedium
-                    )
-
-                    ThreadSpacer()
-
-                    Text(
-                        text = "成为第一个回复的人吧！",
-                        style = MaterialTheme.typography.bodyMedium,
-                        textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Button(
-                        onClick = { uiState.onRefresh() }
-                    ) {
-                        Text("刷新")
-                    }
-                }
-            }
-        } else {
-            // 有回复时显示列表
-            val scrollState = rememberLazyListState()
-
-            // 监听滚动到底部，加载更多
-            LaunchedEffect(scrollState) {
-                snapshotFlow {
-                    val layoutInfo = scrollState.layoutInfo
-                    val totalItemsCount = layoutInfo.totalItemsCount
-                    val lastVisibleItemIndex =
-                        (layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0) + 1
-
-                    // 当最后一个可见项是列表中的最后一项，且列表不为空
-                    lastVisibleItemIndex >= totalItemsCount && totalItemsCount > 0
-                }.collect { isAtBottom ->
-                    if (isAtBottom) {
-                        // 加载下一页
-                        uiState.onLoadNextPage()
-                    }
-                }
+        LazyColumn(
+            modifier = Modifier.padding(8.dp)
+        ) {
+            // 主帖
+            item {
+                ThreadMainPost(
+                    thread = uiState.thread,
+                    forumName = uiState.forumName,
+                    refClick = refClick,
+                    onImageClick = onImageClick
+                )
+                Spacer(modifier = Modifier.height(16.dp))
             }
 
-            LazyColumn(
-                state = scrollState,
-                modifier = Modifier.padding(8.dp)
-            ) {
-                // 主帖
-                item {
-                    ThreadMainPost(
-                        thread = uiState.thread,
-                        forumName = "",
-                        refClick = refClick,
-                        onImageClick = onImageClick
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
-
-                // 回复列表
-                items(uiState.thread.replies) { reply ->
+            // 回复列表
+            items(replies.itemCount) { replyIndex ->
+                replies[replyIndex]?.let { reply ->
                     ThreadReply(reply, onReplyClicked, refClick, onImageClick)
                     ThreadSpacer()
+                } ?: ShimmerContainer {
+                    SkeletonReplyItem(it)
                 }
+            }
 
-                // 底部加载指示器
-                item {
-                    if (uiState.thread.replies.isNotEmpty() && uiState.hasMoreData) {
+            item {
+                when {
+                    replies.loadState.refresh is LoadState.Loading
+                            && replies.itemCount == 0 -> ThreadShimmer()
+
+                    replies.loadState.refresh is LoadState.Loading -> {
+                        // 显示初始加载中
+                    }
+
+                    replies.loadState.refresh is LoadState.Error -> {
+                        val error = (replies.loadState.refresh as LoadState.Error).error
+                        // 显示初始加载失败UI
+                    }
+
+                    replies.loadState.append is LoadState.Error -> LoadingFailedIndicator()
+                    replies.loadState.append is LoadState.Loading -> LoadingIndicator()
+
+                    replies.loadState.append.endOfPaginationReached && replies.itemCount == 0 -> {
+                        // 空回复状态
                         Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
+                            modifier = Modifier.fillMaxWidth(),
                             contentAlignment = Alignment.Center
                         ) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp),
-                                strokeWidth = 2.dp
-                            )
-                        }
-                    } else if (uiState.thread.replies.isNotEmpty()) {
-                        // 显示已经加载完所有数据的提示
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "已加载全部回复",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                            )
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier.padding(32.dp)
+                            ) {
+                                Spacer(modifier = Modifier.height(32.dp))
+
+                                Icon(
+                                    imageVector = Icons.Default.Info,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(48.dp),
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+
+                                Spacer(modifier = Modifier.height(16.dp))
+
+                                Text(
+                                    text = "暂无回复",
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+
+                                ThreadSpacer()
+
+                                Text(
+                                    text = "成为第一个回复的人吧！",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    textAlign = TextAlign.Center,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+
+                                Spacer(modifier = Modifier.height(16.dp))
+
+                                Button(
+                                    onClick = { replies.refresh() }
+                                ) {
+                                    Text("刷新")
+                                }
+                            }
                         }
                     }
+
+                    replies.loadState.append.endOfPaginationReached -> ListEndIndicator()
                 }
             }
         }
+
     }
 }
 
