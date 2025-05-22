@@ -29,11 +29,10 @@ class ThreadRemoteMediator(
                 db.remoteKeyQueries.remoteKeyById(
                     type = RemoteKeyType.THREAD.name,
                     id = threadId.toString()
-                )
-                    .executeAsOneOrNull()?.run {
-                        // 本地有数据，就不请求网络
-                        return MediatorResult.Success(endOfPaginationReached = false)
-                    }
+                ).executeAsOneOrNull()?.run {
+                    // 本地有数据，就不请求网络
+                    return MediatorResult.Success(endOfPaginationReached = false)
+                }
                 1L
             }
 

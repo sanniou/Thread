@@ -44,22 +44,26 @@ data class ThreadReply(
     override val name: String,
 ) : IBaseAuthor, IThreadBody
 
-fun ThreadReply.toTable(indexInThread: Long = Long.MIN_VALUE) = ai.saniou.nmb.db.table.ThreadReply(
-    id = this.id,
-    userHash = this.userHash,
-    admin = this.admin,
-    title = this.title,
-    now = this.now,
-    content = this.content,
-    img = this.img,
-    ext = this.ext,
-    name = this.name,
-    threadId = this.id,
-    indexInThread = indexInThread,
-)
+fun ThreadReply.toTable(threadId: Long, indexInThread: Long = Long.MIN_VALUE) =
+    ai.saniou.nmb.db.table.ThreadReply(
+        id = this.id,
+        userHash = this.userHash,
+        admin = this.admin,
+        title = this.title,
+        now = this.now,
+        content = this.content,
+        img = this.img,
+        ext = this.ext,
+        name = this.name,
+        threadId = threadId,
+        indexInThread = indexInThread,
+    )
 
 fun Thread.toTableReply(page: Long) = this.replies.mapIndexed { index, it ->
-    it.toTable(indexInThread = (page - 1) * 20 + index)
+    it.toTable(
+        threadId = this.id,
+        indexInThread = (page - 1) * 20 + index,
+    )
 }
 
 fun ai.saniou.nmb.db.table.ThreadReply.toThreadReply() = ThreadReply(

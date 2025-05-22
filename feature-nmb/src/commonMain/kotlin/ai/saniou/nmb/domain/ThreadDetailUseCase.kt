@@ -84,7 +84,7 @@ class ThreadDetailUseCase(
                         name = it.name,
                     )
                 }.also {
-                    db.threadReplyQueries.insertThreadReply(it.toTable())
+                    db.threadReplyQueries.insertThreadReply(it.toTable(Long.MIN_VALUE))
                 }
 
                 else -> throw RuntimeException("获取引用失败")
