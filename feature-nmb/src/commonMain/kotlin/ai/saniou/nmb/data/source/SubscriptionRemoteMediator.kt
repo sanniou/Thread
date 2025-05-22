@@ -81,7 +81,7 @@ class SubscriptionRemoteMediator(
                         )
 
                         db.remoteKeyQueries.insertKey(
-                            type = RemoteKeyType.THREAD.name,
+                            type = RemoteKeyType.SUBSCRIBE.name,
                             id = subscriptionKey,
                             prevKey = if (page == 1L) null else page - 1,
                             nextKey = if (endOfPagination) null else page + 1

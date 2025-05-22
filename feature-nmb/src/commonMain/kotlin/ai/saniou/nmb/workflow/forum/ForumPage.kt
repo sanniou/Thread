@@ -9,10 +9,6 @@ import ai.saniou.nmb.ui.components.RefreshCard
 import ai.saniou.nmb.ui.components.SkeletonLoader
 import ai.saniou.nmb.ui.components.ThreadCard
 import ai.saniou.nmb.workflow.image.ImagePreviewPage
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.draggable
-import androidx.compose.foundation.gestures.rememberDraggableState
-import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -42,7 +38,6 @@ import app.cash.paging.compose.itemKey
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import kotlinx.coroutines.launch
 import org.kodein.di.DI
 
 
@@ -108,15 +103,6 @@ fun Forum(
         val coroutineScope = rememberCoroutineScope()
         LazyColumn(
             state = scrollState,
-            modifier = Modifier
-                .draggable(
-                    orientation = Orientation.Vertical,
-                    state = rememberDraggableState { delta ->
-                        coroutineScope.launch {
-                            scrollState.scrollBy(-delta)
-                        }
-                    },
-                ),
             contentPadding = PaddingValues(8.dp)
         ) {
             items(forumList.itemCount, forumList.itemKey { it.id }) { index ->

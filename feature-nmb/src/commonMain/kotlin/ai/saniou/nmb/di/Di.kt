@@ -15,6 +15,7 @@ import ai.saniou.nmb.data.storage.SubscriptionStorage
 import ai.saniou.nmb.domain.ForumCategoryUseCase
 import ai.saniou.nmb.domain.ForumUseCase
 import ai.saniou.nmb.domain.PostUseCase
+import ai.saniou.nmb.domain.SubscriptionUseCase
 import ai.saniou.nmb.domain.ThreadDetailUseCase
 import ai.saniou.nmb.domain.UserUseCase
 import ai.saniou.nmb.initializer.AppInitializer
@@ -90,7 +91,6 @@ val nmbdi = DI {
     }
 
     // 论坛相关
-//    bindProvider { ForumPagingSource(instance()) }
     bindProvider { ForumUseCase(instance(), instance()) }
     bindProvider { ForumViewModel(instance()) }
 
@@ -110,14 +110,16 @@ val nmbdi = DI {
     bindProvider { ImagePreviewViewModel(di) }
 
     // 引用 ViewModel
-    bindProvider<ReferenceViewModel> { ReferenceViewModel(instance()) }
+    bindProvider { ReferenceViewModel(instance()) }
 
     // 订阅相关
-    bindProvider<SubscriptionViewModel> { SubscriptionViewModel(instance(), instance()) }
+    bindProvider { SubscriptionViewModel(instance(), instance()) }
 
     bindSingleton {
         createDatabase(DriverFactory())
     }
+
+    bindProvider { SubscriptionUseCase(instance(), instance()) }
 }
 
 
