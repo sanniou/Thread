@@ -2,7 +2,7 @@ package ai.saniou.nmb.workflow.forum
 
 import ai.saniou.coreui.widgets.PullToRefreshWrapper
 import ai.saniou.nmb.di.nmbdi
-import ai.saniou.nmb.ui.components.ListEndIndicator
+import ai.saniou.nmb.ui.components.LoadEndIndicator
 import ai.saniou.nmb.ui.components.LoadingFailedIndicator
 import ai.saniou.nmb.ui.components.LoadingIndicator
 import ai.saniou.nmb.ui.components.RefreshCard
@@ -166,7 +166,7 @@ fun Forum(
 
                 is LoadState.NotLoading -> {
                     item {
-                        ListEndIndicator()
+                        LoadEndIndicator()
                     }
 
                 }

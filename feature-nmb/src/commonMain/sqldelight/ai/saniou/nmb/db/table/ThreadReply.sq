@@ -47,6 +47,11 @@ DELETE FROM ThreadReply WHERE id = ?;
 queryThreadRepliesByPage:
 SELECT * FROM ThreadReply WHERE threadId = :threadId ORDER BY id ASC LIMIT :limit OFFSET :offset;
 
+-- 获取指定 id 的 ThreadReply
+getThreadReplyById:
+SELECT * FROM ThreadReply WHERE id = :id;
+
+-- 获取指定 thread_id 的最后五条回复
 getLastFiveReplies:
 SELECT * FROM ThreadReply WHERE threadId = :threadId ORDER BY id DESC LIMIT 5;
 

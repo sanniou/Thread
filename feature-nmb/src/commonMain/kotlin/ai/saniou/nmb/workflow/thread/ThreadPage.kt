@@ -7,7 +7,7 @@ import ai.saniou.nmb.data.entity.Reply
 import ai.saniou.nmb.data.entity.Thread
 import ai.saniou.nmb.data.entity.ThreadReply
 import ai.saniou.nmb.di.nmbdi
-import ai.saniou.nmb.ui.components.ListEndIndicator
+import ai.saniou.nmb.ui.components.LoadEndIndicator
 import ai.saniou.nmb.ui.components.LoadingFailedIndicator
 import ai.saniou.nmb.ui.components.LoadingIndicator
 import ai.saniou.nmb.ui.components.PageJumpDialog
@@ -337,7 +337,7 @@ fun ThreadContent(
         ReferencePopup(
             refId = currentReferenceId,
             reply = if (referenceState is UiStateWrapper.Success<*>) {
-                (referenceState as UiStateWrapper.Success<Reply>).value
+                (referenceState as UiStateWrapper.Success<ThreadReply>).value
             } else null,
             isLoading = referenceState is UiStateWrapper.Loading,
             error = if (referenceState is UiStateWrapper.Error) {
@@ -555,7 +555,7 @@ fun ThreadContent(
                         }
                     }
 
-                    replies.loadState.append.endOfPaginationReached -> ListEndIndicator()
+                    replies.loadState.append.endOfPaginationReached -> LoadEndIndicator()
                 }
             }
         }

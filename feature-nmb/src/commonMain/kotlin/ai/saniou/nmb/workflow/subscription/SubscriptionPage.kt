@@ -3,6 +3,9 @@ package ai.saniou.nmb.workflow.subscription
 import ai.saniou.coreui.state.LoadingWrapper
 import ai.saniou.coreui.widgets.PullToRefreshWrapper
 import ai.saniou.nmb.di.nmbdi
+import ai.saniou.nmb.ui.components.LoadEndIndicator
+import ai.saniou.nmb.ui.components.LoadingFailedIndicator
+import ai.saniou.nmb.ui.components.LoadingIndicator
 import ai.saniou.nmb.ui.components.SkeletonLoader
 import ai.saniou.nmb.ui.components.SubscriptionCard
 import ai.saniou.nmb.workflow.image.ImagePreviewPage
@@ -17,8 +20,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -39,15 +40,15 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.paging.LoadState
+import app.cash.paging.compose.collectAsLazyPagingItems
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -177,8 +178,7 @@ data class SubscriptionPage(
                             }
                         },
                         onRetryClick = {
-                            // 重试时刷新订阅列表
-                            subscriptionViewModel.refreshSubscription()
+
                         }
                     )
                 }
@@ -207,78 +207,71 @@ data class SubscriptionPage(
         onUnsubscribe: (Long) -> Unit,
         innerPadding: PaddingValues
     ) {
+
+        val feeds = uiState.feeds.collectAsLazyPagingItems()
         PullToRefreshWrapper(
-            onRefreshTrigger = uiState.onRefresh,
+            onRefreshTrigger = { feeds.refresh() },
             modifier = Modifier.padding(innerPadding)
         ) {
-            if (uiState.feeds.isEmpty()) {
-                // 空列表状态
-                Box(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.padding(32.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Info,
-                            contentDescription = null,
-                            modifier = Modifier.size(48.dp),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
 
-                        Spacer(modifier = Modifier.height(16.dp))
 
-                        Text(
-                            text = "暂无订阅",
-                            style = MaterialTheme.typography.titleMedium
-                        )
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        Text(
-                            text = "在帖子页面点击菜单可以添加订阅",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+            LazyColumn(
+                contentPadding = PaddingValues(8.dp)
+            ) {
+                items(feeds.itemCount) { feed ->
+                    val feed = feeds[feed] ?: return@items
+                    SubscriptionCard(
+                        feed = feed,
+                        onClick = { onThreadClicked(feed.id) },
+                        onImageClick = onImageClick,
+                        onUnsubscribe = { onUnsubscribe(feed.id) }
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
                 }
-            } else {
-                // 有订阅时显示列表
-                val scrollState = rememberLazyListState()
-                val coroutineScope = rememberCoroutineScope()
 
-                // 监听滚动到底部，加载更多
-                LaunchedEffect(scrollState) {
-                    snapshotFlow {
-                        val layoutInfo = scrollState.layoutInfo
-                        val totalItemsCount = layoutInfo.totalItemsCount
-                        val lastVisibleItemIndex =
-                            (layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0) + 1
+                item {
+                    when {
+                        feeds.loadState.append is LoadState.Error -> LoadingFailedIndicator()
+                        feeds.loadState.append is LoadState.Loading -> LoadingIndicator()
 
-                        // 当最后一个可见项是列表中的最后一项，且列表不为空
-                        lastVisibleItemIndex >= totalItemsCount && totalItemsCount > 0
-                    }.collect { isAtBottom ->
-                        if (isAtBottom && uiState.hasNextPage) {
-                            // 加载下一页
-                            uiState.onLoadNextPage()
+                        feeds.loadState.append.endOfPaginationReached && feeds.itemCount == 0 -> {
+                            // 空列表状态
+                            Box(
+                                modifier = Modifier.fillMaxWidth(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    modifier = Modifier.padding(32.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Info,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(48.dp),
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+
+                                    Spacer(modifier = Modifier.height(16.dp))
+
+                                    Text(
+                                        text = "暂无订阅",
+                                        style = MaterialTheme.typography.titleMedium
+                                    )
+
+                                    Spacer(modifier = Modifier.height(8.dp))
+
+                                    Text(
+                                        text = "在帖子页面点击菜单可以添加订阅",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
                         }
-                    }
-                }
 
-                LazyColumn(
-                    state = scrollState,
-                    contentPadding = PaddingValues(8.dp)
-                ) {
-                    items(uiState.feeds) { feed ->
-                        SubscriptionCard(
-                            feed = feed,
-                            onClick = { onThreadClicked(feed.id.toLong()) },
-                            onImageClick = onImageClick,
-                            onUnsubscribe = { onUnsubscribe(feed.id.toLong()) }
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
+                        feeds.loadState.append.endOfPaginationReached -> {
+                            LoadEndIndicator()
+                        }
                     }
                 }
             }

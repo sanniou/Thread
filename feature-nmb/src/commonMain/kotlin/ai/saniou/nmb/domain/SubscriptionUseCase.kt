@@ -1,9 +1,7 @@
 package ai.saniou.nmb.domain
 
 import ai.saniou.nmb.data.entity.Feed
-import ai.saniou.nmb.data.entity.Forum
 import ai.saniou.nmb.data.entity.toFeed
-import ai.saniou.nmb.data.entity.toForumThreadWithReply
 import ai.saniou.nmb.data.repository.ForumRepository
 import ai.saniou.nmb.data.source.SubscriptionRemoteMediator
 import ai.saniou.nmb.db.Database

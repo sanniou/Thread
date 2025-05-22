@@ -26,7 +26,10 @@ class ThreadRemoteMediator(
     ): MediatorResult {
         val page = when (loadType) {
             LoadType.REFRESH -> {
-                db.remoteKeyQueries.remoteKeyById(type = RemoteKeyType.THREAD.name, id = threadId)
+                db.remoteKeyQueries.remoteKeyById(
+                    type = RemoteKeyType.THREAD.name,
+                    id = threadId.toString()
+                )
                     .executeAsOneOrNull()?.run {
                         // 本地有数据，就不请求网络
                         return MediatorResult.Success(endOfPaginationReached = false)
@@ -47,7 +50,10 @@ class ThreadRemoteMediator(
                     return MediatorResult.Success(false)
 
                 // 本地掏空 → 查 remoteKeys 决定请求第几页
-                db.remoteKeyQueries.remoteKeyById(type = RemoteKeyType.THREAD.name, id = threadId)
+                db.remoteKeyQueries.remoteKeyById(
+                    type = RemoteKeyType.THREAD.name,
+                    id = threadId.toString()
+                )
                     .executeAsOneOrNull()?.nextKey ?: return MediatorResult.Success(true)
             }
         }
@@ -71,7 +77,7 @@ class ThreadRemoteMediator(
 
                     db.remoteKeyQueries.insertKey(
                         type = RemoteKeyType.THREAD.name,
-                        id = threadId,
+                        id = threadId.toString(),
                         prevKey = if (page == 1L) null else page - 1,
                         nextKey = if (endOfPagination) null else page + 1
                     )

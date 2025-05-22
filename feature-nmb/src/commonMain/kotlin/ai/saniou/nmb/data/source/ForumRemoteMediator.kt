@@ -29,8 +29,10 @@ class ForumRemoteMediator(
             LoadType.PREPEND -> return MediatorResult.Success(endOfPaginationReached = true)
             LoadType.APPEND -> {
                 // 查 RemoteKeys 拿 nextPage
-                db.remoteKeyQueries.remoteKeyById(type = RemoteKeyType.FORUM.name, id = fid)
-                    .executeAsOneOrNull()?.nextKey ?: return MediatorResult.Success(true)
+                db.remoteKeyQueries.remoteKeyById(
+                    type = RemoteKeyType.FORUM.name,
+                    id = fid.toString()
+                ).executeAsOneOrNull()?.nextKey ?: return MediatorResult.Success(true)
             }
         }
 
@@ -54,7 +56,7 @@ class ForumRemoteMediator(
                     }
                     db.remoteKeyQueries.insertKey(
                         type = RemoteKeyType.FORUM.name,
-                        id = fid,
+                        id = fid.toString(),
                         prevKey = if (page == 1L) null else page - 1,
                         nextKey = if (endOfPagination) null else page + 1
                     )

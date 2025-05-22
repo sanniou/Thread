@@ -1,6 +1,6 @@
 package ai.saniou.nmb.ui.components
 
-import ai.saniou.nmb.data.entity.Reply
+import ai.saniou.nmb.data.entity.ThreadReply
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -39,7 +39,7 @@ import androidx.compose.ui.window.Dialog
 @Composable
 fun ReferencePopup(
     refId: Long,
-    reply: Reply?,
+    reply: ThreadReply?,
     isLoading: Boolean,
     error: String?,
     onDismiss: () -> Unit

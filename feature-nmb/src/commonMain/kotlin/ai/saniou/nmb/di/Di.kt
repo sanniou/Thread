@@ -12,7 +12,6 @@ import ai.saniou.nmb.data.repository.NmbRepositoryImpl
 import ai.saniou.nmb.data.storage.CategoryStorage
 import ai.saniou.nmb.data.storage.GreetImageStorage
 import ai.saniou.nmb.data.storage.SubscriptionStorage
-import ai.saniou.nmb.domain.ReferenceUseCase
 import ai.saniou.nmb.domain.ForumCategoryUseCase
 import ai.saniou.nmb.domain.ForumUseCase
 import ai.saniou.nmb.domain.PostUseCase
@@ -110,8 +109,6 @@ val nmbdi = DI {
     // 图片预览相关
     bindProvider { ImagePreviewViewModel(di) }
 
-    // 引用 UseCase
-    bindProvider<ReferenceUseCase> { ReferenceUseCase(instance()) }
     // 引用 ViewModel
     bindProvider<ReferenceViewModel> { ReferenceViewModel(instance()) }
 

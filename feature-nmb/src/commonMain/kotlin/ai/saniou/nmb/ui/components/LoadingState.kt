@@ -13,7 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun ListEndIndicator() {
+fun LoadEndIndicator() {
     Box(
         modifier = Modifier
             .fillMaxWidth()

@@ -8,6 +8,7 @@ import ai.saniou.nmb.data.repository.ForumRepository
 import ai.saniou.nmb.data.source.ThreadRemoteMediator
 import ai.saniou.nmb.db.Database
 import ai.saniou.nmb.data.entity.ThreadReply
+import ai.saniou.nmb.data.entity.toTable
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.map
 import app.cash.paging.Pager
@@ -67,9 +68,26 @@ class ThreadDetailUseCase(
         }
     }
 
-    suspend fun getReference(id: Long) =
-        when (val refResponse = forumRepository.ref(id)) {
-            is SaniouResponse.Success -> refResponse.data
-            else -> throw RuntimeException("获取引用失败")
+    suspend fun getReference(id: Long): ThreadReply =
+        db.threadReplyQueries.getThreadReplyById(id).executeAsOneOrNull()?.toThreadReply() ?: let {
+            when (val refResponse = forumRepository.ref(id)) {
+                is SaniouResponse.Success -> refResponse.data.let {
+                    ThreadReply(
+                        id = it.id,
+                        userHash = it.userHash,
+                        admin = 0,
+                        title = it.title,
+                        now = it.now,
+                        content = it.content,
+                        img = it.img,
+                        ext = it.ext,
+                        name = it.name,
+                    )
+                }.also {
+                    db.threadReplyQueries.insertThreadReply(it.toTable())
+                }
+
+                else -> throw RuntimeException("获取引用失败")
+            }
         }
 }
