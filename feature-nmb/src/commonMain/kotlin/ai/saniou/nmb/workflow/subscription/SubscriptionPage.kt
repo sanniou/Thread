@@ -213,8 +213,6 @@ data class SubscriptionPage(
             onRefreshTrigger = { feeds.refresh() },
             modifier = Modifier.padding(innerPadding)
         ) {
-
-
             LazyColumn(
                 contentPadding = PaddingValues(8.dp)
             ) {

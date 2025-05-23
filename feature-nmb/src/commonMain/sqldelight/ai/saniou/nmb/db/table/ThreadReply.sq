@@ -43,6 +43,10 @@ WHERE id = ?;
 deleteThreadReply:
 DELETE FROM ThreadReply WHERE id = ?;
 
+--  删除指定 thread_id 的 ThreadReply 数据
+deleteThreadRepliesByThreadId:
+DELETE FROM ThreadReply WHERE threadId = ?;
+
 -- 查询指定 thread_id 的 ThreadReply 数据
 queryThreadRepliesByPage:
 SELECT * FROM ThreadReply WHERE threadId = :threadId ORDER BY id ASC LIMIT :limit OFFSET :offset;

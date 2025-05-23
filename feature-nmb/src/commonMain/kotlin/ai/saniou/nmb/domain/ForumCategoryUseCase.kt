@@ -55,6 +55,7 @@ class ForumCategoryUseCase(
                         }
                     }.apply {
                         forEach { forumCategory ->
+                            db.forumQueries.insertForumCategory(forumCategory.toTable())
                             forumCategory.forums.forEach { forumDetail ->
                                 db.forumQueries.insertForum(forumDetail.toTable())
                             }

@@ -58,7 +58,6 @@ fun SubscriptionCard(
         onClick = onClick,
         onImageClick = onImageClick
     )
-
 }
 
 
@@ -146,9 +145,7 @@ fun ThreadCard(
                     imgPath = thread.img,
                     ext = thread.ext,
                     modifier = Modifier.height(240.dp)
-                        .clickable {
-                            onImageClick?.let { onClick -> { onClick(thread.img, thread.ext) } }
-                        },
+                        .clickable { onImageClick?.invoke(thread.img, thread.ext) },
                     contentScale = ContentScale.FillHeight,
                     isThumb = true,
                     contentDescription = "帖子图片",

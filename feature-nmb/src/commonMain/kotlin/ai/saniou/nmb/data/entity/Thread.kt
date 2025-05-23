@@ -62,7 +62,7 @@ fun ThreadReply.toTable(threadId: Long, indexInThread: Long = Long.MIN_VALUE) =
 fun Thread.toTableReply(page: Long) = this.replies.mapIndexed { index, it ->
     it.toTable(
         threadId = this.id,
-        indexInThread = (page - 1) * 20 + index,
+        indexInThread = (page - 1) * this.replies.size + index,
     )
 }
 
