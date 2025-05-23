@@ -1,4 +1,4 @@
-package ai.saniou.nmb.data.source
+package ai.saniou.nmb.data.entity
 
 enum class RemoteKeyType {
     FORUM_CATEGORY,

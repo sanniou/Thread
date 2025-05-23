@@ -2,6 +2,7 @@ package ai.saniou.nmb.data.source
 
 import ai.saniou.corecommon.data.SaniouResponse
 import ai.saniou.nmb.data.entity.Forum
+import ai.saniou.nmb.data.entity.RemoteKeyType
 import ai.saniou.nmb.data.entity.toTable
 import ai.saniou.nmb.data.entity.toTableInformation
 import ai.saniou.nmb.data.entity.toTableReply
@@ -31,7 +32,7 @@ class ForumRemoteMediator(
             LoadType.APPEND -> {
                 // 查 RemoteKeys 拿 nextPage
                 db.remoteKeyQueries.getRemoteKeyById(
-                    type = RemoteKeyType.FORUM.name,
+                    type = RemoteKeyType.FORUM,
                     id = fid.toString()
                 ).executeAsOneOrNull()?.nextKey ?: return MediatorResult.Success(true)
             }
@@ -56,7 +57,7 @@ class ForumRemoteMediator(
 
                     }
                     db.remoteKeyQueries.insertKey(
-                        type = RemoteKeyType.FORUM.name,
+                        type = RemoteKeyType.FORUM,
                         id = fid.toString(),
                         prevKey = if (page == 1L) null else page - 1,
                         nextKey = if (endOfPagination) null else page + 1,

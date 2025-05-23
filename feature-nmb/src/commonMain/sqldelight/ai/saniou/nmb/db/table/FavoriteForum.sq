@@ -1,0 +1,30 @@
+import ai.saniou.nmb.data.entity.FavoriteForumType;
+
+-- 创建 FavoriteForum 表
+CREATE TABLE IF NOT EXISTS FavoriteForum (
+    id INTEGER PRIMARY KEY,
+    favoriteTime INTEGER NOT NULL,
+    type TEXT AS FavoriteForumType NOT NULL
+);
+
+-- Count FavoriteForum
+countFavoriteForum:
+SELECT COUNT(*) FROM FavoriteForum WHERE id = ?;
+
+
+-- 插入 FavoriteForum 数据
+insertFavoriteForum:
+INSERT OR REPLACE INTO FavoriteForum (id, favoriteTime,  type)
+VALUES (?, ?,?);
+
+-- 删除 FavoriteForum 数据
+deleteFavoriteForum:
+DELETE FROM FavoriteForum WHERE id = ?;
+
+-- 查询所有 FavoriteForum 数据
+getAllFavoriteForum:
+SELECT Forum.* FROM FavoriteForum JOIN Forum ON FavoriteForum.id = Forum.id;
+
+-- 查询指定 FavoriteForum 数据
+getFavoriteForum:
+SELECT * FROM FavoriteForum WHERE id = :id;

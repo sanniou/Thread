@@ -1,13 +1,15 @@
 package ai.saniou.nmb.domain
 
 import ai.saniou.corecommon.data.SaniouResponse
+import ai.saniou.nmb.data.entity.FavoriteForumType
 import ai.saniou.nmb.data.entity.ForumCategory
 import ai.saniou.nmb.data.entity.ForumDetail
 import ai.saniou.nmb.data.entity.toForumCategory
 import ai.saniou.nmb.data.entity.toForumDetail
 import ai.saniou.nmb.data.entity.toTable
+import ai.saniou.nmb.data.entity.toTimeLine
 import ai.saniou.nmb.data.repository.ForumRepository
-import ai.saniou.nmb.data.source.RemoteKeyType
+import ai.saniou.nmb.data.entity.RemoteKeyType
 import ai.saniou.nmb.db.Database
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
@@ -33,39 +35,64 @@ class ForumCategoryUseCase(
         val now = Clock.System.now()
         val lastQueryTime =
             db.remoteKeyQueries.getRemoteKeyById(
-                RemoteKeyType.FORUM_CATEGORY.name,
+                RemoteKeyType.FORUM_CATEGORY,
                 RemoteKeyType.FORUM_CATEGORY.name
             ).executeAsOneOrNull()?.updateAt ?: 0L
 
         val lastUpdateInstant = Instant.fromEpochMilliseconds(lastQueryTime)
-        if (now - lastUpdateInstant <= 1.days) {
-            // return db
-            return@coroutineScope db.forumQueries.getAllForumCategory().executeAsList()
+        val needUpdateForumCache = now - lastUpdateInstant <= 1.days
+
+
+        val forumList = async {
+            if (needUpdateForumCache)
+                when (val forumList = forumRepository.getForumList()) {
+                    is SaniouResponse.Success -> forumList.data.apply {
+                        // 过滤一个多余的时间线
+                        forEach { forumCategory ->
+                            forumCategory.forums = forumCategory.forums.filter { forumDetail ->
+                                forumDetail.id > 0
+                            }
+                        }
+                    }.apply {
+                        forEach { forumCategory ->
+                            forumCategory.forums.forEach { forumDetail ->
+                                db.forumQueries.insertForum(forumDetail.toTable())
+                            }
+                        }
+                    }
+
+                    is SaniouResponse.Error -> throw forumList.ex
+                }
+            else db.forumQueries.getAllForumCategory().executeAsList()
                 .map {
                     it.toForumCategory(db.forumQueries.getGroupForum(it.id).executeAsList())
                 }
         }
-
-        val forumList = async {
-            when (val forumList = forumRepository.getForumList()) {
-                is SaniouResponse.Success -> forumList.data.apply {
-                    forEach { forumCategory ->
-                        forumCategory.forums = forumCategory.forums.filter { forumDetail ->
-                            forumDetail.id > 0
+        val timeLineList = async {
+            if (needUpdateForumCache)
+                when (val forumList = forumRepository.getTimelineList()) {
+                    is SaniouResponse.Success -> forumList.data.also { timeLines ->
+                        timeLines.forEach { timeLine ->
+                            db.timeLineQueries.insertTimeLine(timeLine.toTable())
                         }
                     }
+
+                    is SaniouResponse.Error -> throw forumList.ex
                 }
-
-                is SaniouResponse.Error -> throw forumList.ex
-            }
+            else
+                db.timeLineQueries.getAllTimeLines().executeAsList().map { it.toTimeLine() }
         }
-        val timeLineList = async {
-            when (val forumList = forumRepository.getTimelineList()) {
-                is SaniouResponse.Success -> forumList.data
-                is SaniouResponse.Error -> throw forumList.ex
-            }
 
+        if (needUpdateForumCache) {
+            db.remoteKeyQueries.insertKey(
+                type = RemoteKeyType.FORUM_CATEGORY,
+                id = RemoteKeyType.FORUM_CATEGORY.name,
+                nextKey = null,
+                prevKey = null,
+                updateAt = now.toEpochMilliseconds(),
+            )
         }
+
         buildList {
             add(
                 ForumCategory(
@@ -88,20 +115,6 @@ class ForumCategoryUseCase(
             )
 
             addAll(forumList.await())
-        }.also { categories ->
-            categories.forEach { category ->
-                db.forumQueries.insertForumCategory(category.toTable())
-                category.forums.forEach { forumDetail ->
-                    db.forumQueries.insertForum(forumDetail.toTable())
-                }
-                db.remoteKeyQueries.insertKey(
-                    type = RemoteKeyType.FORUM_CATEGORY.name,
-                    id = RemoteKeyType.FORUM_CATEGORY.name,
-                    nextKey = null,
-                    prevKey = null,
-                    updateAt = now.toEpochMilliseconds(),
-                )
-            }
         }
     }
 
@@ -117,7 +130,8 @@ class ForumCategoryUseCase(
         if (db.favoriteForumQueries.countFavoriteForum(forum.id).executeAsOne() < 1L) {
             db.favoriteForumQueries.insertFavoriteForum(
                 id = forum.id,
-                favoriteTime = Clock.System.now().toEpochMilliseconds()
+                favoriteTime = Clock.System.now().toEpochMilliseconds(),
+                type = if (forum.fGroup == -1L) FavoriteForumType.TIMELINE else FavoriteForumType.FORUM
             )
         } else {
             db.favoriteForumQueries.deleteFavoriteForum(forum.id)

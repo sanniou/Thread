@@ -1,0 +1,42 @@
+-- 创建 TimeLine 表
+CREATE TABLE IF NOT EXISTS TimeLine (
+    id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL,
+    displayName TEXT NOT NULL,
+    notice TEXT NOT NULL,
+    maxPage INTEGER NOT NULL
+);
+
+-- 为 TimeLine 表的 name 字段创建索引
+CREATE INDEX IF NOT EXISTS idx_timeline_name ON TimeLine(name);
+
+-- 插入 TimeLine 数据
+insertTimeLine:
+INSERT OR REPLACE INTO TimeLine (
+    id, name, displayName, notice, maxPage
+) VALUES ?;
+
+-- 更新 TimeLine 数据
+updateTimeLine:
+UPDATE TimeLine SET
+    name = ?,
+    displayName = ?,
+    notice = ?,
+    maxPage = ?
+WHERE id = ?;
+
+-- 删除 TimeLine 数据
+deleteTimeLine:
+DELETE FROM TimeLine WHERE id = ?;
+
+-- 查询所有 TimeLine 数据
+getAllTimeLines:
+SELECT * FROM TimeLine;
+
+-- 查询指定 TimeLine 数据
+getTimeLineById:
+SELECT * FROM TimeLine WHERE id = :id;
+
+-- 统计 TimeLine 数量
+countTimeLines:
+SELECT count(*) FROM TimeLine;

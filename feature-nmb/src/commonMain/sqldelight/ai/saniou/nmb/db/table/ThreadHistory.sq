@@ -1,0 +1,39 @@
+-- 创建 ThreadHistory 表
+CREATE TABLE IF NOT EXISTS ThreadHistory (
+    id INTEGER PRIMARY KEY,
+    threadId INTEGER NOT NULL,
+    accessTime INTEGER NOT NULL,
+    FOREIGN KEY (threadId) REFERENCES Thread(id) ON DELETE CASCADE
+);
+
+-- 为 ThreadHistory 表的 threadId 字段创建索引
+CREATE INDEX IF NOT EXISTS idx_thread_history_thread_id ON ThreadHistory(threadId);
+
+-- 插入 ThreadHistory 数据
+insertThreadHistory:
+INSERT OR REPLACE INTO ThreadHistory (id, threadId, accessTime)
+VALUES (?, ?, ?);
+
+-- 删除 ThreadHistory 数据
+deleteThreadHistory:
+DELETE FROM ThreadHistory WHERE id = ?;
+
+-- 查询所有 ThreadHistory 数据
+getAllThreadHistory:
+SELECT * FROM ThreadHistory;
+
+-- 查询指定 threadId 的 ThreadHistory 数据
+getThreadHistoryByThreadId:
+SELECT * FROM ThreadHistory WHERE threadId = :threadId ORDER BY accessTime DESC;
+
+-- 查询最近访问的 ThreadHistory 数据
+getRecentThreadHistory:
+SELECT * FROM ThreadHistory ORDER BY accessTime DESC LIMIT :limit;
+
+-- 统计 ThreadHistory 数量
+countThreadHistory:
+SELECT count(*) FROM ThreadHistory;
+
+-- 统计指定 threadId 的 ThreadHistory 数量
+countThreadHistoryByThreadId:
+SELECT count(*) FROM ThreadHistory WHERE threadId = :threadId;
