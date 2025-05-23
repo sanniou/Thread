@@ -31,7 +31,9 @@ ksp = "2.1.20-2.0.0"
 room = "2.7.1"
 sqlite = "2.5.1"
 sqlDelight = "2.1.0"
-
+sketch = "4.1.0"
+zoomimage = "1.3.0"
+cashPaging = "3.3.0-alpha02-0.5.1"
 
 [libraries]
 kodein-di = { module = "org.kodein.di:kodein-di", version.ref = "kodeinDi" }
@@ -85,12 +87,35 @@ room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version.ref = "sqlite" }
 # sqlDelight
-sqldelight-android-driver = { module = "app.cash.sqldelight:android-driver", version.ref = "sqlDelight" }
-sqldelight-native-driver = { module = "app.cash.sqldelight:native-driver", version.ref = "sqlDelight" }
-sqldelight-sqlite-driver = { module = "app.cash.sqldelight:sqlite-driver", version.ref = "sqlDelight" }
-sqldelight-coroutines = { module = "app.cash.sqldelight:coroutines-extensions", version.ref = "sqlDelight" }
-sqldelight-paging3 = { module = "app.cash.sqldelight:androidx-paging3-extensions", version.ref = "sqlDelight" }
-runtime = { module = "app.cash.sqldelight:runtime", version.ref = "sqlDelight" }
+sqldelight-android-driver = { group = "app.cash.sqldelight", name = "android-driver", version.ref = "sqlDelight" }
+sqldelight-native-driver = { group = "app.cash.sqldelight", name = "native-driver", version.ref = "sqlDelight" }
+sqldelight-sqlite-driver = { group = "app.cash.sqldelight", name = "sqlite-driver", version.ref = "sqlDelight" }
+sqldelight-coroutines = { group = "app.cash.sqldelight", name = "coroutines-extensions", version.ref = "sqlDelight" }
+sqldelight-paging3 = { group = "app.cash.sqldelight", name = "androidx-paging3-extensions", version.ref = "sqlDelight" }
+runtime = { group = "app.cash.sqldelight", name = "runtime", version.ref = "sqlDelight" }
+# sketch
+sketch-compose = { group = "io.github.panpf.sketch4", name = 'sketch-compose', version.ref = "sketch" }
+sketch-http = { group = "io.github.panpf.sketch4", name = 'sketch-http', version.ref = "sketch" }
+#使用 Android 或 Skia 内置的解码器解码 gif 动图并播放
+sketch-animated-gif = { group = "io.github.panpf.sketch4", name = 'sketch-animated-gif', version.ref = "sketch" }
+#使用 Android 或 Skia 内置的解码器解码 webp 动图并播放
+sketch-animated-webp = { group = "io.github.panpf.sketch4", name = 'sketch-animated-webp', version.ref = "sketch" }
+# 支持通过 uri 或 placeholder、fallback、error 访问 compose resources 资源
+sketch-compose-resources = { group = "io.github.panpf.sketch4", name = 'sketch-compose-resources', version.ref = "sketch" }
+sketch-extensions-compose-resources = { group = "io.github.panpf.sketch4", name = 'sketch-extensions-compose-resources', version.ref = "sketch" }
+#提供下载进度、图片类型角标、列表滚动中暂停加载、节省蜂窝流量等实用功能
+sketch-extensions-compose = { group = "io.github.panpf.sketch4", name = 'sketch-extensions-compose', version.ref = "sketch" }
+sketch-ktor = { group = "io.github.panpf.sketch4", name = 'sketch-http-ktor3', version.ref = "sketch" }
+sketch-svg = { group = "io.github.panpf.sketch4", name = 'sketch-svg', version.ref = "sketch" }
+#cash paging
+cash-paging = { group = "app.cash.paging", name = "paging-common", version.ref = "cashPaging" }
+cash-paging-common = { group = "app.cash.paging", name = "paging-compose-common", version.ref = "cashPaging" }
+
+# zoom
+zoom = { group = "io.github.panpf.zoomimage", name = "zoomimage-compose", version.ref = "zoomimage" }
+zoom-sketch = { group = "io.github.panpf.zoomimage", name = "zoomimage-compose-sketch4", version.ref = "zoomimage" }
+zoom-resources = { group = "io.github.panpf.zoomimage", name = "zoomimage-compose-resources", version.ref = "zoomimage" }
+
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

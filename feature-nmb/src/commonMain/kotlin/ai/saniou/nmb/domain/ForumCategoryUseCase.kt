@@ -40,7 +40,7 @@ class ForumCategoryUseCase(
             ).executeAsOneOrNull()?.updateAt ?: 0L
 
         val lastUpdateInstant = Instant.fromEpochMilliseconds(lastQueryTime)
-        val needUpdateForumCache = now - lastUpdateInstant <= 1.days
+        val needUpdateForumCache = now - lastUpdateInstant >= 1.days
 
 
         val forumList = async {
