@@ -54,7 +54,7 @@ fun SaniouAppBar(
                 HtmlTitleText(text = customTitle)
             } else {
                 // 否则使用普通Text
-                Text(customTitle ?: "X")
+                Text(customTitle ?: "")
             }
         },
         colors = TopAppBarDefaults.mediumTopAppBarColors(

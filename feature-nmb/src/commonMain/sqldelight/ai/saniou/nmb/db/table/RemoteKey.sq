@@ -3,6 +3,7 @@ CREATE TABLE forum_remote_keys (
     id TEXT NOT NULL,
     prevKey INTEGER,
     nextKey INTEGER,
+    updateAt INTEGER NOT NULL,
     PRIMARY KEY (type, id)
 );
 
@@ -10,12 +11,12 @@ CREATE TABLE forum_remote_keys (
 CREATE INDEX IF NOT EXISTS forum_remote_keys_type_index ON forum_remote_keys(type);
 
 insertKey:
-INSERT OR REPLACE INTO forum_remote_keys(type, id, prevKey, nextKey)
-VALUES (?, ?, ?, ?);
+INSERT OR REPLACE INTO forum_remote_keys(type, id, prevKey, nextKey, updateAt)
+VALUES (?, ?, ?, ?,?);
 
-remoteKeyById:
+getRemoteKeyById:
 SELECT * FROM forum_remote_keys
 WHERE type = ? AND id = ? ;
 
-remoteKeyByType:
+deleteKeyByType:
 DELETE FROM forum_remote_keys WHERE type = ?;

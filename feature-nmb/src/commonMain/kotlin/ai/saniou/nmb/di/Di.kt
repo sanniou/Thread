@@ -81,7 +81,7 @@ val nmbdi = DI {
     bindProvider<GreetImageViewModel> { GreetImageViewModel(instance()) }
 
     // 论坛分类相关
-    bindProvider<ForumCategoryUseCase> { ForumCategoryUseCase(instance()) }
+    bindProvider<ForumCategoryUseCase> { ForumCategoryUseCase(instance(), instance()) }
     bindProvider<ForumCategoryViewModel> {
         ForumCategoryViewModel(
             instance(),

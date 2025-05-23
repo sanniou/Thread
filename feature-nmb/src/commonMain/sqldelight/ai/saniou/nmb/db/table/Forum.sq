@@ -3,7 +3,7 @@
 CREATE TABLE IF NOT EXISTS Forum (
     id INTEGER PRIMARY KEY,
     fGroup INTEGER NOT NULL,
-    sort INTEGER NOT NULL,
+    sort INTEGER ,
     name TEXT NOT NULL,
     showName TEXT,
     msg TEXT NOT NULL,
@@ -13,8 +13,6 @@ CREATE TABLE IF NOT EXISTS Forum (
     threadCount INTEGER,
     permissionLevel TEXT,
     forumFuseId TEXT,
-    createdAt TEXT,
-    updateAt TEXT,
     status TEXT
 );
 
@@ -35,14 +33,14 @@ CREATE INDEX IF NOT EXISTS idx_forum_category_id ON ForumCategory(id);
 -- 插入 Forum 数据
 insertForum:
 INSERT OR REPLACE INTO Forum (
-    id, fGroup, sort, name, showName, msg, interval, safeMode, autoDelete, threadCount, permissionLevel, forumFuseId, createdAt, updateAt, status
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+    id, fGroup, sort, name, showName, msg, interval, safeMode, autoDelete, threadCount, permissionLevel, forumFuseId,  status
+) VALUES ?;
 
 -- 插入 ForumCategory 数据
 insertForumCategory:
 INSERT OR REPLACE INTO ForumCategory (
     id, sort, name, status
-) VALUES (?, ?, ?, ?);
+) VALUES ?;
 
 -- 更新 Forum 数据
 updateForum:
@@ -58,8 +56,6 @@ UPDATE Forum SET
     threadCount = ?,
     permissionLevel = ?,
     forumFuseId = ?,
-    createdAt = ?,
-    updateAt = ?,
     status = ?
 WHERE id = ?;
 
@@ -80,14 +76,20 @@ deleteForumCategory:
 DELETE FROM ForumCategory WHERE id = ?;
 
 -- 查询所有 Forum 数据
+getAllForum:
 SELECT * FROM Forum;
 
 -- 查询所有 ForumCategory 数据
+getAllForumCategory:
 SELECT * FROM ForumCategory;
 
 -- 查询指定 Forum 数据
 getForum:
 SELECT * FROM Forum WHERE id = :id;
+
+-- 获取指定 Forum 的所有子 Forum 数据
+getGroupForum:
+SELECT * FROM Forum WHERE fGroup = :id;
 
 -- 查询指定 ForumCategory 数据
 getForumCategory:

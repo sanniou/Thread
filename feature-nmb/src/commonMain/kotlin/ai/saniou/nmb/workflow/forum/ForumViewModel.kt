@@ -77,7 +77,7 @@ class ForumViewModel(private val forumUserCase: ForumUseCase) : ViewModel() {
             val dataList = forumUserCase(fid, fgroup).cachedIn(viewModelScope)
 
             // 获取论坛名称 - 如果有数据，使用第一个帖子的fid来确定论坛名称
-            val forumName = "论坛 $fid"
+            val forumName = forumUserCase.getForumName(fid)
             updateUiState { state ->
                 state.copy(
                     id = fid,

@@ -1,5 +1,6 @@
 package ai.saniou.nmb.data.entity
 
+import ai.saniou.nmb.db.table.Forum
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonNames
@@ -39,4 +40,52 @@ data class ForumDetail(
     @JsonNames("updateAt")
     val updateAt: String? = null, //?
     val status: String? = null, //原版 API 文档所述：始终为 n
+)
+
+fun ai.saniou.nmb.db.table.ForumCategory.toForumCategory(forums: List<ai.saniou.nmb.db.table.Forum>) =
+    ForumCategory(
+        id = id,
+        sort = sort,
+        name = name,
+        status = status,
+        forums = forums.map { it.toForumDetail() }
+    )
+
+fun ai.saniou.nmb.db.table.Forum.toForumDetail() = ForumDetail(
+    id = id,
+    fGroup = fGroup,
+    sort = sort,
+    name = name,
+    showName = showName,
+    msg = msg,
+    interval = interval,
+    safeMode = safeMode,
+    autoDelete = autoDelete,
+    threadCount = threadCount,
+    permissionLevel = permissionLevel,
+    forumFuseId = forumFuseId,
+    status = status,
+)
+
+fun ForumCategory.toTable() = ai.saniou.nmb.db.table.ForumCategory(
+    id = id,
+    sort = sort,
+    name = name,
+    status = status
+)
+
+fun ForumDetail.toTable() = Forum(
+    id = id,
+    fGroup = fGroup,
+    sort = sort,
+    name = name,
+    showName = showName,
+    msg = msg,
+    interval = interval,
+    safeMode = safeMode,
+    autoDelete = autoDelete,
+    threadCount = threadCount,
+    permissionLevel = permissionLevel,
+    forumFuseId = forumFuseId,
+    status = status,
 )

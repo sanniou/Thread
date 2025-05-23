@@ -38,7 +38,7 @@ kotlin {
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
-            implementation(libs.android.driver)
+            implementation(libs.sqldelight.android.driver)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -88,18 +88,17 @@ kotlin {
 //            implementation(libs.room.runtime)
 //            implementation(libs.sqlite.bundled)
             implementation(libs.runtime)
-            implementation("app.cash.sqldelight:androidx-paging3-extensions:2.1.0")
-
-
+            implementation(libs.sqldelight.paging3)
+            implementation(libs.sqldelight.coroutines)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
-            implementation(libs.sqlite.driver)
+            implementation(libs.sqldelight.sqlite.driver)
         }
 
         iosMain.dependencies {
-            implementation(libs.native.driver)
+            implementation(libs.sqldelight.native.driver)
         }
     }
 }

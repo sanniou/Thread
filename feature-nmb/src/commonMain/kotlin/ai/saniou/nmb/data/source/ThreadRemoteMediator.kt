@@ -10,6 +10,8 @@ import app.cash.paging.ExperimentalPagingApi
 import app.cash.paging.LoadType
 import app.cash.paging.PagingState
 import app.cash.paging.RemoteMediator
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalPagingApi::class)
 class ThreadRemoteMediator(
@@ -20,13 +22,14 @@ class ThreadRemoteMediator(
 ) : RemoteMediator<Int, ai.saniou.nmb.db.table.ThreadReply>() {
 
 
+    @OptIn(ExperimentalTime::class)
     override suspend fun load(
         loadType: LoadType,
         state: PagingState<Int, ai.saniou.nmb.db.table.ThreadReply>
     ): MediatorResult {
         val page = when (loadType) {
             LoadType.REFRESH -> {
-                db.remoteKeyQueries.remoteKeyById(
+                db.remoteKeyQueries.getRemoteKeyById(
                     type = RemoteKeyType.THREAD.name,
                     id = threadId.toString()
                 ).executeAsOneOrNull()?.run {
@@ -49,7 +52,7 @@ class ThreadRemoteMediator(
                     return MediatorResult.Success(false)
 
                 // 本地掏空 → 查 remoteKeys 决定请求第几页
-                db.remoteKeyQueries.remoteKeyById(
+                db.remoteKeyQueries.getRemoteKeyById(
                     type = RemoteKeyType.THREAD.name,
                     id = threadId.toString()
                 )
@@ -62,7 +65,8 @@ class ThreadRemoteMediator(
         return when (val result = threadDetail(page = page)) {
             is SaniouResponse.Success -> {
                 val threadDetail = result.data
-                val endOfPagination = threadDetail.replies.isEmpty()
+                // 9999999 是系统 Tips ,所以等于空数据就是最后一页
+                val endOfPagination = threadDetail.replies.none { it.id != 9999999L }
 
                 db.transaction {
                     if (loadType == LoadType.REFRESH) {
@@ -78,7 +82,8 @@ class ThreadRemoteMediator(
                         type = RemoteKeyType.THREAD.name,
                         id = threadId.toString(),
                         prevKey = if (page == 1L) null else page - 1,
-                        nextKey = if (endOfPagination) null else page + 1
+                        nextKey = if (endOfPagination) null else page + 1,
+                        updateAt = Clock.System.now().toEpochMilliseconds(),
                     )
                 }
 

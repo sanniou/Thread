@@ -3,7 +3,6 @@ package ai.saniou.nmb.data.source
 import ai.saniou.corecommon.data.SaniouResponse
 import ai.saniou.nmb.data.entity.Feed
 import ai.saniou.nmb.data.entity.toTable
-import ai.saniou.nmb.data.entity.toTableReply
 import ai.saniou.nmb.data.repository.ForumRepository
 import ai.saniou.nmb.db.Database
 import app.cash.paging.ExperimentalPagingApi
@@ -28,7 +27,7 @@ class SubscriptionRemoteMediator(
     ): MediatorResult {
         val page = when (loadType) {
             LoadType.REFRESH -> {
-                db.remoteKeyQueries.remoteKeyById(
+                db.remoteKeyQueries.getRemoteKeyById(
                     type = RemoteKeyType.SUBSCRIBE.name,
                     id = subscriptionKey
                 )
@@ -52,7 +51,7 @@ class SubscriptionRemoteMediator(
                     return MediatorResult.Success(false)
 
                 // 本地掏空 → 查 remoteKeys 决定请求第几页
-                db.remoteKeyQueries.remoteKeyById(
+                db.remoteKeyQueries.getRemoteKeyById(
                     type = RemoteKeyType.THREAD.name,
                     id = subscriptionKey
                 ).executeAsOneOrNull()?.nextKey ?: return MediatorResult.Success(true)
@@ -84,7 +83,8 @@ class SubscriptionRemoteMediator(
                             type = RemoteKeyType.SUBSCRIBE.name,
                             id = subscriptionKey,
                             prevKey = if (page == 1L) null else page - 1,
-                            nextKey = if (endOfPagination) null else page + 1
+                            nextKey = if (endOfPagination) null else page + 1,
+                            updateAt = Clock.System.now().toEpochMilliseconds(),
                         )
                     }
                 }

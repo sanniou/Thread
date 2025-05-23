@@ -7,6 +7,7 @@ import ai.saniou.nmb.domain.ForumCategoryUseCase
 import ai.saniou.nmb.initializer.AppInitializer
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -53,7 +54,7 @@ class ForumCategoryViewModel(
             },
             onFavoriteChange = { forum ->
                 viewModelScope.launch {
-                    categoryStorage.changeFavoriteForum(forum)
+                    forumCategoryUseCase.changeFavoriteForum(forum)
                 }
             }
         )
@@ -70,49 +71,18 @@ class ForumCategoryViewModel(
     private fun loadForumCategories() {
         viewModelScope.launch {
             // 尝试从缓存加载
-            val cachedCategories = categoryStorage.getCachedCategories()
             val lastOpenedForum = categoryStorage.getLastOpenedForum()
-            val favoriteForums = categoryStorage.getFavoriteForums()
-            try {
-                if (cachedCategories != null && !categoryStorage.isCategoryDataExpired()) {
-                    // 使用缓存数据
-                    updateUiState { state ->
-                        state.copy(
-                            favoriteForums = favoriteForums,
-                            forums = cachedCategories,
-                            expandCategory = lastOpenedForum?.fGroup,
-                            currentForum = lastOpenedForum
-                        )
-                    }
-                } else {
-                    // 从网络加载新数据
-                    val forums = forumCategoryUseCase()
+            val favoriteForums = forumCategoryUseCase.getFavoriteForums()
+            // 从网络加载新数据
+            val forums = forumCategoryUseCase()
 
-                    // 保存到缓存
-                    categoryStorage.saveCategories(forums)
-
-                    updateUiState { state ->
-                        state.copy(
-                            favoriteForums = favoriteForums,
-                            forums = forums,
-                            expandCategory = lastOpenedForum?.fGroup,
-                            currentForum = lastOpenedForum
-                        )
-                    }
-                }
-            } catch (e: Exception) {
-                // 如果加载失败但有缓存，使用缓存
-                if (cachedCategories != null) {
-                    updateUiState { state ->
-                        state.copy(
-                            favoriteForums = favoriteForums,
-                            forums = cachedCategories,
-                            expandCategory = lastOpenedForum?.fGroup,
-                            currentForum = lastOpenedForum
-                        )
-                    }
-                }
-                // 可以添加错误处理逻辑
+            updateUiState { state ->
+                state.copy(
+                    favoriteForums = favoriteForums,
+                    forums = forums,
+                    expandCategory = lastOpenedForum?.fGroup,
+                    currentForum = lastOpenedForum
+                )
             }
         }
     }
@@ -125,7 +95,7 @@ class ForumCategoryViewModel(
 }
 
 data class ForumCategoryUiState(
-    var favoriteForums: StateFlow<List<ForumDetail>>,
+    var favoriteForums: Flow<List<ForumDetail>>,
     var forums: List<ForumCategory>,
     var expandCategory: Long? = null,
     var currentForum: ForumDetail? = null,

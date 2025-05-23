@@ -78,7 +78,6 @@ fun ForumCategoryPage(
         greetImageViewModel
     }
     val greetImageUrl by greetImageViewModel.greetImageUrl.collectAsStateWithLifecycle()
-    val isGreetImageLoading by greetImageViewModel.isLoading.collectAsStateWithLifecycle()
 
     // 创建协程作用域用于控制抽屉
     val scope = rememberCoroutineScope()
@@ -96,8 +95,7 @@ fun ForumCategoryPage(
         onNewPostClicked = onNewPostClicked,
         drawerState = drawerState,
         scope = scope,
-        greetImageUrl = greetImageUrl,
-        isGreetImageLoading = isGreetImageLoading
+        greetImageUrl = greetImageUrl
     )
 }
 
@@ -109,11 +107,10 @@ fun ForumCategoryUi(
     onNewPostClicked: (Long) -> Unit,
     drawerState: DrawerState,
     scope: CoroutineScope = rememberCoroutineScope(),
-    greetImageUrl: String? = null,
-    isGreetImageLoading: Boolean = false
+    greetImageUrl: String? = null
 ) {
     val navigator = LocalNavigator.currentOrThrow
-    val favoriteForums by uiState.favoriteForums.collectAsStateWithLifecycle()
+    val favoriteForums by uiState.favoriteForums.collectAsStateWithLifecycle(emptyList())
     val favoriteCategory = remember(favoriteForums) {
         ForumCategory(
             id = Long.MIN_VALUE,

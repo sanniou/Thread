@@ -57,4 +57,7 @@ class ForumUseCase(
             }
         }
     }
+
+    fun getForumName(fid: Long): String =
+        db.forumQueries.getForum(fid).executeAsOneOrNull()?.name ?: "未知版面"
 }
