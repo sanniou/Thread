@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.composeHotReload)
     alias(libs.plugins.kotlinxSerialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.ktorfit)
@@ -41,10 +42,15 @@ kotlin {
             implementation(libs.sqldelight.android.driver)
         }
         commonMain.dependencies {
-            implementation(compose.runtime)
-            implementation(compose.components.resources)
             implementation(project(":core-ui"))
             implementation(project(":core-common"))
+            implementation(compose.foundation)
+            implementation(compose.material3)
+            implementation(compose.ui)
+            implementation(compose.components.resources)
+            implementation(compose.components.uiToolingPreview)
+            implementation(libs.androidx.lifecycle.viewmodel)
+            implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(libs.voyager.navigator)
             implementation(libs.material3)
             implementation(libs.material3.window.size)
@@ -83,9 +89,12 @@ kotlin {
             implementation(libs.sqldelight.paging3)
             implementation(libs.sqldelight.coroutines)
         }
+        commonTest.dependencies {
+            implementation(libs.kotlin.test)
+        }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
-            implementation(libs.kotlinx.coroutines.swing)
+            implementation(libs.kotlinx.coroutinesSwing)
             implementation(libs.sqldelight.sqlite.driver)
         }
 
@@ -120,7 +129,6 @@ android {
 
 dependencies {
     debugImplementation(compose.uiTooling)
-    ksp(libs.room.compiler)
 }
 
 compose.desktop {
@@ -152,6 +160,7 @@ sqldelight {
 }
 
 composeCompiler {
+    // for sketch
     stabilityConfigurationFile =
         rootProject.layout.projectDirectory.file("compose_compiler_config.conf")
 }

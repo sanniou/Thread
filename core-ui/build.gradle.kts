@@ -61,13 +61,14 @@ kotlin {
         }
         commonMain.dependencies {
             implementation(compose.runtime)
-            api(compose.foundation)
-            api(compose.ui)
-            api(compose.material3)
+            implementation(compose.foundation)
+            implementation(compose.material3)
+            implementation(compose.ui)
             implementation(compose.components.resources)
-            api(compose.components.uiToolingPreview)
-            api(libs.androidx.lifecycle.viewmodel)
-            api(libs.androidx.lifecycle.runtime.compose)
+            implementation(compose.components.uiToolingPreview)
+            implementation(libs.androidx.lifecycle.viewmodel)
+            implementation(libs.androidx.lifecycle.runtimeCompose)
+            implementation(libs.navigation.compose)
             api(libs.navigation.compose)
             api(libs.material.icons)
             // Coil for Multiplatform
@@ -76,7 +77,7 @@ kotlin {
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
-            implementation(libs.kotlinx.coroutines.swing)
+            implementation(libs.kotlinx.coroutinesSwing)
         }
     }
 }

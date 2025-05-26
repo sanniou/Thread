@@ -62,8 +62,8 @@ kotlin {
 //            implementation(libs.android.driver)
         }
         commonMain.dependencies {
-            api(libs.androidx.lifecycle.viewmodel)
-            api(libs.androidx.lifecycle.runtime.compose)
+            implementation(libs.androidx.lifecycle.viewmodel)
+            implementation(libs.androidx.lifecycle.runtimeCompose)
             api(libs.navigation.compose)
             api(libs.ktorfit.lib)
             implementation(libs.ktor.serialization.kotlinx.json)
@@ -89,7 +89,7 @@ kotlin {
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.ktor.client.java)
-            implementation(libs.kotlinx.coroutines.swing)
+            implementation(libs.kotlinx.coroutinesSwing)
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
