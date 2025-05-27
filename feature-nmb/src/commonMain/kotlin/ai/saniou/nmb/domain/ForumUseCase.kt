@@ -14,6 +14,7 @@ import app.cash.sqldelight.paging3.QueryPagingSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 
 class ForumUseCase(
@@ -40,7 +41,7 @@ class ForumUseCase(
                     transacter = db.threadQueries,
                     context = Dispatchers.IO,
                     queryProvider = { limit, offset ->
-                        db.threadQueries.queryThreadsInForum(
+                        db.threadQueries.getThreadsInForum(
                             fid = fid,
                             limit = limit,
                             offset = offset

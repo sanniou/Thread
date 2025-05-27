@@ -100,7 +100,6 @@ fun Forum(
         }
     ) {
         val scrollState = rememberLazyListState()
-        val coroutineScope = rememberCoroutineScope()
         LazyColumn(
             state = scrollState,
             contentPadding = PaddingValues(8.dp)

@@ -87,5 +87,5 @@ SELECT * FROM Thread WHERE id = :id;
 countThread:
 SELECT count(*) FROM Thread WHERE fid = :fid;
 
-queryThreadsInForum:
+getThreadsInForum:
 SELECT * FROM Thread  LEFT JOIN ThreadInformation ON Thread.id = ThreadInformation.id WHERE fid = :fid ORDER BY lastKey DESC LIMIT :limit OFFSET :offset ;

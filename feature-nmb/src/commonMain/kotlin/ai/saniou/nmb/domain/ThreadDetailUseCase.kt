@@ -44,10 +44,10 @@ class ThreadDetailUseCase(
                     transacter = db.threadReplyQueries,
                     context = Dispatchers.IO,
                     queryProvider = { limit, offset ->
-                        db.threadReplyQueries.queryThreadRepliesByIndex(
+                        db.threadReplyQueries.getThreadReplies(
                             threadId = threadId,
-                            start = offset,
-                            end = offset + limit,
+                            limit = limit,
+                            offset = offset
                         )
                     }
                 )

@@ -44,7 +44,7 @@ data class ThreadReply(
     override val name: String,
 ) : IBaseAuthor, IThreadBody
 
-fun ThreadReply.toTable(threadId: Long, indexInThread: Long = Long.MIN_VALUE) =
+fun ThreadReply.toTable(threadId: Long, page: Long = Long.MIN_VALUE) =
     ai.saniou.nmb.db.table.ThreadReply(
         id = this.id,
         userHash = this.userHash,
@@ -56,13 +56,13 @@ fun ThreadReply.toTable(threadId: Long, indexInThread: Long = Long.MIN_VALUE) =
         ext = this.ext,
         name = this.name,
         threadId = threadId,
-        indexInThread = indexInThread,
+        page = page,
     )
 
 fun Thread.toTableReply(page: Long) = this.replies.mapIndexed { index, it ->
     it.toTable(
         threadId = this.id,
-        indexInThread = (page - 1) * this.replies.size + index,
+        page = page,
     )
 }
 

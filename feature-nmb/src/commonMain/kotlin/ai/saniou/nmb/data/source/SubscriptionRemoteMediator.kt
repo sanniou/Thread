@@ -31,31 +31,30 @@ class SubscriptionRemoteMediator(
                 db.remoteKeyQueries.getRemoteKeyById(
                     type = RemoteKeyType.SUBSCRIBE,
                     id = subscriptionKey
-                )
-                    .executeAsOneOrNull()?.run {
-                        // 本地有数据，就不请求网络
-                        return MediatorResult.Success(endOfPaginationReached = false)
-                    }
+                ).executeAsOneOrNull()?.run {
+                    // 本地有数据，就不请求网络
+                    return MediatorResult.Success(endOfPaginationReached = false)
+                }
                 1L
             }
 
             LoadType.PREPEND -> return MediatorResult.Success(true) // 不向前翻
 
             LoadType.APPEND -> {
-                // 本地还有数据可读？→ 直接 Success，不请求
-                val localCount = db.subscriptionQueries
-                    .countSubscriptionsBySubscriptionKey(subscriptionKey)
-                    .executeAsOne()
+                val showId = state.pages.last().last().id
+                val showPage = db.subscriptionQueries.getSubscription(subscriptionKey, showId)
+                    .executeAsOneOrNull()?.page ?: return MediatorResult.Success(true)
 
-                val alreadyRead = state.pages.sumOf { it.data.size }
-                if (alreadyRead < localCount)      // 说明本地还有缓存页
-                    return MediatorResult.Success(false)
 
-                // 本地掏空 → 查 remoteKeys 决定请求第几页
-                db.remoteKeyQueries.getRemoteKeyById(
+                val remoteKey = db.remoteKeyQueries.getRemoteKeyById(
                     type = RemoteKeyType.SUBSCRIBE,
                     id = subscriptionKey
-                ).executeAsOneOrNull()?.nextKey ?: return MediatorResult.Success(true)
+                ).executeAsOneOrNull() ?: return MediatorResult.Success(true)
+
+                if (remoteKey.currKey > showPage) {
+                    return MediatorResult.Success(true)
+                }
+                remoteKey.nextKey ?: return MediatorResult.Success(true)
             }
         }
 
@@ -77,17 +76,18 @@ class SubscriptionRemoteMediator(
 
                         db.subscriptionQueries.insertSubscription(
                             subscriptionKey = subscriptionKey, threadId = feed.id,
+                            page = page,
                             subscriptionTime = Clock.System.now().toEpochMilliseconds()
                         )
-
-                        db.remoteKeyQueries.insertKey(
-                            type = RemoteKeyType.SUBSCRIBE,
-                            id = subscriptionKey,
-                            prevKey = if (page == 1L) null else page - 1,
-                            nextKey = if (endOfPagination) null else page + 1,
-                            updateAt = Clock.System.now().toEpochMilliseconds(),
-                        )
                     }
+                    db.remoteKeyQueries.insertKey(
+                        type = RemoteKeyType.SUBSCRIBE,
+                        id = subscriptionKey,
+                        prevKey = if (page == 1L) null else page - 1,
+                        currKey = page,
+                        nextKey = if (endOfPagination) null else page + 1,
+                        updateAt = Clock.System.now().toEpochMilliseconds(),
+                    )
                 }
 
                 return MediatorResult.Success(endOfPagination)

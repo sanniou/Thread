@@ -3,7 +3,7 @@
 CREATE TABLE IF NOT EXISTS ThreadReply (
     id INTEGER PRIMARY KEY,
     threadId INTEGER NOT NULL,
-    indexInThread INTEGER NOT NULL,
+    page INTEGER NOT NULL,
     userHash TEXT NOT NULL,
     admin INTEGER NOT NULL,
     title TEXT NOT NULL,
@@ -21,14 +21,14 @@ CREATE INDEX IF NOT EXISTS idx_thread_reply_thread_id ON ThreadReply(threadId);
 -- 插入 ThreadReply 数据
 insertThreadReply:
 INSERT OR REPLACE INTO ThreadReply (
-    id, threadId, indexInThread, userHash, admin, title, now, content, img, ext, name
+    id, threadId, page, userHash, admin, title, now, content, img, ext, name
 ) VALUES ?;
 
 -- 更新 ThreadReply 数据
 updateThreadReply:
 UPDATE ThreadReply SET
     threadId=?,
-    indexInThread=?,
+    page=?,
     userHash = ?,
     admin = ?,
     title = ?,
@@ -48,7 +48,10 @@ deleteThreadRepliesByThreadId:
 DELETE FROM ThreadReply WHERE threadId = ?;
 
 -- 查询指定 thread_id 的 ThreadReply 数据
-queryThreadRepliesByPage:
+getThreadRepliesByPage:
+SELECT * FROM ThreadReply WHERE threadId = :threadId AND page = :page ORDER BY id ASC;
+
+getThreadReplies:
 SELECT * FROM ThreadReply WHERE threadId = :threadId ORDER BY id ASC LIMIT :limit OFFSET :offset;
 
 -- 获取指定 id 的 ThreadReply
@@ -59,12 +62,6 @@ SELECT * FROM ThreadReply WHERE id = :id;
 getLastFiveReplies:
 SELECT * FROM ThreadReply WHERE threadId = :threadId ORDER BY id DESC LIMIT 5;
 
-queryThreadRepliesByIndex:
-SELECT * FROM ThreadReply WHERE threadId = :threadId AND indexInThread BETWEEN :start AND :end ORDER BY id ASC;
-
 -- 统计 ThreadReply 数量
 countThreadReplies:
-SELECT count(*) FROM ThreadReply WHERE threadId = :threadId;
-
-countPageThreadReplies:
-SELECT count(*) FROM ThreadReply WHERE threadId = :threadId AND indexInThread BETWEEN :start AND :end;
+SELECT count(*) FROM ThreadReply WHERE threadId = :threadId AND page >=0;

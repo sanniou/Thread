@@ -4,6 +4,7 @@ CREATE TABLE RemoteKeys (
     type TEXT AS RemoteKeyType NOT NULL,
     id TEXT NOT NULL,
     prevKey INTEGER,
+    currKey INTEGER NOT NULL,
     nextKey INTEGER,
     updateAt INTEGER NOT NULL,
     PRIMARY KEY (type, id)
@@ -13,8 +14,8 @@ CREATE TABLE RemoteKeys (
 CREATE INDEX IF NOT EXISTS forum_remote_keys_type_index ON RemoteKeys(type);
 
 insertKey:
-INSERT OR REPLACE INTO RemoteKeys(type, id, prevKey, nextKey, updateAt)
-VALUES (?, ?, ?, ?,?);
+INSERT OR REPLACE INTO RemoteKeys(type, id, prevKey,currKey, nextKey, updateAt)
+VALUES (?, ?, ?,?, ?,?);
 
 getRemoteKeyById:
 SELECT * FROM RemoteKeys

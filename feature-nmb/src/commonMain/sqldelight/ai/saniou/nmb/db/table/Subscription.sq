@@ -2,6 +2,7 @@
 CREATE TABLE IF NOT EXISTS Subscription (
     subscriptionKey TEXT NOT NULL,
     threadId INTEGER NOT NULL,
+    page INTEGER NOT NULL,
     subscriptionTime INTEGER NOT NULL,
     PRIMARY KEY (subscriptionKey, threadId)
 );
@@ -15,8 +16,8 @@ CREATE INDEX IF NOT EXISTS idx_subscription_key ON Subscription(subscriptionKey)
 -- 插入 Subscription 数据
 insertSubscription:
 INSERT OR REPLACE INTO Subscription (
-    subscriptionKey, threadId, subscriptionTime
-) VALUES (?, ?, ?);
+    subscriptionKey, threadId,page, subscriptionTime
+) VALUES (?, ?, ?,?);
 
 -- 更新 Subscription 数据
 updateSubscription:
@@ -31,6 +32,10 @@ DELETE FROM Subscription WHERE subscriptionKey = ? AND threadId = ?;
 -- 查询指定 subscriptionKey 的 Subscription 数据
 getSubscriptionsBySubscriptionKey:
 SELECT * FROM Subscription WHERE subscriptionKey = :subscriptionKey;
+
+-- 查询指定 subscriptionKey 和 threadId 的 Subscription 数据
+getSubscription:
+SELECT * FROM Subscription WHERE subscriptionKey = :subscriptionKey AND threadId = :threadId;
 
 -- 查询指定 threadId 的 Subscription 数据
 getSubscriptionsByThreadId:

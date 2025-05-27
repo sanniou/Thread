@@ -20,11 +20,11 @@ class ForumRemoteMediator(
     private val fgroup: Long,
     private val forumRepository: ForumRepository,
     private val db: Database,
-) : RemoteMediator<Int, ai.saniou.nmb.db.table.QueryThreadsInForum>() {
+) : RemoteMediator<Int, ai.saniou.nmb.db.table.GetThreadsInForum>() {
 
     override suspend fun load(
         loadType: LoadType,
-        state: PagingState<Int, ai.saniou.nmb.db.table.QueryThreadsInForum>
+        state: PagingState<Int, ai.saniou.nmb.db.table.GetThreadsInForum>
     ): MediatorResult {
         val page = when (loadType) {
             LoadType.REFRESH -> 1L
@@ -60,6 +60,7 @@ class ForumRemoteMediator(
                         type = RemoteKeyType.FORUM,
                         id = fid.toString(),
                         prevKey = if (page == 1L) null else page - 1,
+                        currKey = page,
                         nextKey = if (endOfPagination) null else page + 1,
                         updateAt = Clock.System.now().toEpochMilliseconds(),
                     )

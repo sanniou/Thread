@@ -89,6 +89,7 @@ class ForumCategoryUseCase(
                 type = RemoteKeyType.FORUM_CATEGORY,
                 id = RemoteKeyType.FORUM_CATEGORY.name,
                 nextKey = null,
+                currKey = Long.MIN_VALUE,
                 prevKey = null,
                 updateAt = now.toEpochMilliseconds(),
             )

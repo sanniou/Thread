@@ -1,9 +1,8 @@
 package ai.saniou.nmb.data.entity
 
-import ai.saniou.nmb.db.table.QueryThreadsInForum
+import ai.saniou.nmb.db.table.GetThreadsInForum
 import ai.saniou.nmb.db.table.ThreadInformation
 import ai.saniou.nmb.db.table.ThreadReply
-import kotlinx.datetime.Clock
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonNames
@@ -62,7 +61,7 @@ data class Reply(
 ) : IBaseAuthor
 
 
-fun QueryThreadsInForum.toForumThreadWithReply(reply: List<ThreadReply>) =
+fun GetThreadsInForum.toForumThreadWithReply(reply: List<ThreadReply>) =
     Forum(
         id = this.id,
         fid = this.fid,
@@ -131,6 +130,6 @@ fun Forum.toTableReply() = this.replies.map { reply ->
         content = reply.content,
         admin = reply.admin,
         threadId = this.id,
-        indexInThread = Long.MIN_VALUE //unknown
+        page = Long.MIN_VALUE //unknown
     )
 }
