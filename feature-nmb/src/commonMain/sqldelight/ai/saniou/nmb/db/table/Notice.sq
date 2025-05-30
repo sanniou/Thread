@@ -1,0 +1,24 @@
+CREATE TABLE Notice (
+    id TEXT PRIMARY KEY, -- content的hash
+    content TEXT NOT NULL,
+    date INTEGER NOT NULL,
+    enable INTEGER NOT NULL,
+    readed INTEGER DEFAULT 0 NOT NULL
+);
+
+-- 插入Notice
+insertNotice:
+INSERT OR REPLACE INTO Notice (
+    id, content, date, enable
+) VALUES (?, ?, ?, ?);
+
+-- 查询所有Notice
+SELECT * FROM Notice;
+
+-- 查询启用的Notice
+getEnabledNotices:
+SELECT * FROM Notice WHERE enable = 1 ORDER BY date DESC;
+
+-- 查询LatestNotice
+getLatestNotice:
+SELECT * FROM Notice WHERE enable = 1 AND readed = 0 ORDER BY date DESC LIMIT 1;

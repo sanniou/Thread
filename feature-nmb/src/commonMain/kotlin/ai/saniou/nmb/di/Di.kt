@@ -14,6 +14,7 @@ import ai.saniou.nmb.data.storage.GreetImageStorage
 import ai.saniou.nmb.data.storage.SubscriptionStorage
 import ai.saniou.nmb.domain.ForumCategoryUseCase
 import ai.saniou.nmb.domain.ForumUseCase
+import ai.saniou.nmb.domain.NoticeUseCase
 import ai.saniou.nmb.domain.PostUseCase
 import ai.saniou.nmb.domain.SubscriptionUseCase
 import ai.saniou.nmb.domain.ThreadDetailUseCase
@@ -22,6 +23,7 @@ import ai.saniou.nmb.initializer.AppInitializer
 import ai.saniou.nmb.workflow.forum.ForumViewModel
 import ai.saniou.nmb.workflow.home.ForumCategoryViewModel
 import ai.saniou.nmb.workflow.home.GreetImageViewModel
+import ai.saniou.nmb.workflow.home.HomeViewModel
 import ai.saniou.nmb.workflow.image.ImagePreviewViewModel
 import ai.saniou.nmb.workflow.post.PostViewModel
 import ai.saniou.nmb.workflow.reference.ReferenceViewModel
@@ -120,6 +122,9 @@ val nmbdi = DI {
     }
 
     bindProvider { SubscriptionUseCase(instance(), instance()) }
+
+    bindProvider { NoticeUseCase(instance(), instance()) }
+    bindProvider { HomeViewModel(instance()) }
 }
 
 
