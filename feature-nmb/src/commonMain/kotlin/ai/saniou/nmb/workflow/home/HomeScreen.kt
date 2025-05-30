@@ -48,9 +48,8 @@ data class HomeScreen(val di: DI = nmbdi) : Screen {
         val noticeState by viewModel.noticeState.collectAsStateWithLifecycle()
 
         var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.HOME) }
+        val snackbarHostState = remember { SnackbarHostState() }
         MaterialTheme {
-            val snackbarHostState = remember { SnackbarHostState() }
-
             NavigationSuiteScaffold(
                 navigationSuiteItems = {
                     AppDestinations.entries.forEach {
