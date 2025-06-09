@@ -82,7 +82,7 @@ data class HomeScreen(val di: DI = nmbdi) : Screen {
                     }
 
                     noticeState?.let { notice ->
-                        NoticeDisplay(notice)
+                        // NoticeDisplay(notice)
                     }
 
                 }
