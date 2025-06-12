@@ -107,13 +107,6 @@ data class HomeScreen(val di: DI = nmbdi) : Screen {
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
-                    text = "notice.title", // 假设Notice类有title字段
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Text(
                     text = notice.content,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface

@@ -22,6 +22,7 @@ import ai.saniou.nmb.workflow.image.ImagePreviewPage
 import ai.saniou.nmb.workflow.reference.ReferenceViewModel
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -36,8 +37,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -77,9 +80,13 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.kodein.di.DI
 import org.kodein.di.instance
+import thread.feature_nmb.generated.resources.Res
+import thread.feature_nmb.generated.resources.favorites
+import thread.feature_nmb.generated.resources.jump_to_page
 
 data class ThreadPage(
     val threadId: Long?,
@@ -305,7 +312,7 @@ fun ThreadContent(
             onDismissRequest = { showMenu = false },
             onJumpToPage = { showJumpDialog = true },
             onTogglePoOnly = { state.onTogglePoOnly() },
-            onToggleSubscribe = { state.onToggleSubscribe(it) },
+            onToggleSubscribe = { state.onToggleSubscribe() },
             onCopyLink = {
                 // 复制帖子链接
                 val url = "https://nmb.com/t/${threadId}"
@@ -460,7 +467,7 @@ fun ThreadContent(
     uiState: ThreadUiState,
     onReplyClicked: (Long) -> Unit,
     refClick: (Long) -> Unit,
-    onImageClick: (String, String) -> Unit
+    onImageClick: (String, String) -> Unit,
 ) {
     val replies = uiState.threadReplies.collectAsLazyPagingItems()
     PullToRefreshWrapper(
@@ -468,94 +475,133 @@ fun ThreadContent(
             replies.refresh()
         }
     ) {
-        LazyColumn(
-            modifier = Modifier.padding(8.dp)
-        ) {
-            // 主帖
-            item {
-                ThreadMainPost(
-                    thread = uiState.thread,
-                    forumName = uiState.forumName,
-                    refClick = refClick,
-                    onImageClick = onImageClick
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-
-            // 回复列表
-            items(replies.itemCount) { replyIndex ->
-                replies[replyIndex]?.let { reply ->
-                    ThreadReply(reply, onReplyClicked, refClick, onImageClick)
-                    ThreadSpacer()
-                } ?: ShimmerContainer {
-                    SkeletonReplyItem(it)
+        Column {
+            LazyColumn(
+                modifier = Modifier.padding(8.dp)
+                    .weight(1f)
+            ) {
+                // 主帖
+                item {
+                    ThreadMainPost(
+                        thread = uiState.thread,
+                        forumName = uiState.forumName,
+                        refClick = refClick,
+                        onImageClick = onImageClick
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
-            }
 
-            item {
-                when {
-                    replies.loadState.refresh is LoadState.Loading
-                            && replies.itemCount == 0 -> ThreadShimmer()
-
-                    replies.loadState.refresh is LoadState.Loading -> {
-                        // 显示初始加载中
+                // 回复列表
+                items(replies.itemCount) { replyIndex ->
+                    replies[replyIndex]?.let { reply ->
+                        ThreadReply(reply, onReplyClicked, refClick, onImageClick)
+                        ThreadSpacer()
+                    } ?: ShimmerContainer {
+                        SkeletonReplyItem(it)
                     }
+                }
 
-                    replies.loadState.refresh is LoadState.Error -> {
-                        val error = (replies.loadState.refresh as LoadState.Error).error
-                        // 显示初始加载失败UI
-                    }
+                item {
+                    when {
+                        replies.loadState.refresh is LoadState.Loading
+                                && replies.itemCount == 0 -> ThreadShimmer()
 
-                    replies.loadState.append is LoadState.Error -> LoadingFailedIndicator()
-                    replies.loadState.append is LoadState.Loading -> LoadingIndicator()
+                        replies.loadState.refresh is LoadState.Loading -> {
+                            // 显示初始加载中
+                        }
 
-                    replies.loadState.append.endOfPaginationReached && replies.itemCount == 0 -> {
-                        // 空回复状态
-                        Box(
-                            modifier = Modifier.fillMaxWidth(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                modifier = Modifier.padding(32.dp)
+                        replies.loadState.refresh is LoadState.Error -> {
+                            val error = (replies.loadState.refresh as LoadState.Error).error
+                            // 显示初始加载失败UI
+                        }
+
+                        replies.loadState.append is LoadState.Error -> LoadingFailedIndicator()
+                        replies.loadState.append is LoadState.Loading -> LoadingIndicator()
+
+                        replies.loadState.append.endOfPaginationReached && replies.itemCount == 0 -> {
+                            // 空回复状态
+                            Box(
+                                modifier = Modifier.fillMaxWidth(),
+                                contentAlignment = Alignment.Center
                             ) {
-                                Spacer(modifier = Modifier.height(32.dp))
-
-                                Icon(
-                                    imageVector = Icons.Default.Info,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(48.dp),
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-
-                                Spacer(modifier = Modifier.height(16.dp))
-
-                                Text(
-                                    text = "暂无回复",
-                                    style = MaterialTheme.typography.titleMedium
-                                )
-
-                                ThreadSpacer()
-
-                                Text(
-                                    text = "成为第一个回复的人吧！",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    textAlign = TextAlign.Center,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-
-                                Spacer(modifier = Modifier.height(16.dp))
-
-                                Button(
-                                    onClick = { replies.refresh() }
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    modifier = Modifier.padding(32.dp)
                                 ) {
-                                    Text("刷新")
+                                    Spacer(modifier = Modifier.height(32.dp))
+
+                                    Icon(
+                                        imageVector = Icons.Default.Info,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(48.dp),
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+
+                                    Spacer(modifier = Modifier.height(16.dp))
+
+                                    Text(
+                                        text = "暂无回复",
+                                        style = MaterialTheme.typography.titleMedium
+                                    )
+
+                                    ThreadSpacer()
+
+                                    Text(
+                                        text = "成为第一个回复的人吧！",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        textAlign = TextAlign.Center,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+
+                                    Spacer(modifier = Modifier.height(16.dp))
+
+                                    Button(
+                                        onClick = { replies.refresh() }
+                                    ) {
+                                        Text("刷新")
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    replies.loadState.append.endOfPaginationReached -> LoadEndIndicator()
+                        replies.loadState.append.endOfPaginationReached -> LoadEndIndicator()
+                    }
+                }
+            }
+
+            Row(
+                modifier = Modifier
+                    .background(MaterialTheme.colorScheme.surface)
+                    .padding(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Button({
+                    uiState.onToggleSubscribe()
+                }) {
+                    Icon(
+                        imageVector = Icons.Default.Favorite,
+                        tint = if (uiState.isSubscribed) {
+                            MaterialTheme.colorScheme.onPrimary
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                        contentDescription = stringResource(Res.string.favorites),
+                    )
+                }
+
+                Button({
+
+                }) {
+                    Icon(
+                        imageVector = Icons.Default.PlayArrow,
+                        tint = if (uiState.isSubscribed) {
+                            MaterialTheme.colorScheme.onPrimary
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                        contentDescription = stringResource(Res.string.jump_to_page),
+                    )
                 }
             }
         }
@@ -568,7 +614,7 @@ fun ThreadMainPost(
     thread: Thread,
     forumName: String = "",
     refClick: (Long) -> Unit,
-    onImageClick: (String, String) -> Unit
+    onImageClick: (String, String) -> Unit,
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -650,7 +696,7 @@ fun ThreadReply(
     reply: ThreadReply,
     onReplyClicked: (Long) -> Unit,
     refClick: (Long) -> Unit,
-    onImageClick: (String, String) -> Unit
+    onImageClick: (String, String) -> Unit,
 ) {
     Card(
         modifier = Modifier

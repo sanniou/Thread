@@ -24,7 +24,7 @@ class SubscriptionRemoteMediator(
     @OptIn(ExperimentalTime::class)
     override suspend fun load(
         loadType: LoadType,
-        state: PagingState<Int, ai.saniou.nmb.db.table.Thread>
+        state: PagingState<Int, ai.saniou.nmb.db.table.Thread>,
     ): MediatorResult {
         val page = when (loadType) {
             LoadType.REFRESH -> {
@@ -41,10 +41,10 @@ class SubscriptionRemoteMediator(
             LoadType.PREPEND -> return MediatorResult.Success(true) // 不向前翻
 
             LoadType.APPEND -> {
-                val showId = state.pages.last().last().id
+                val showId = state.pages.lastOrNull()?.lastOrNull()?.id
+                    ?: return MediatorResult.Success(true)
                 val showPage = db.subscriptionQueries.getSubscription(subscriptionKey, showId)
                     .executeAsOneOrNull()?.page ?: return MediatorResult.Success(true)
-
 
                 val remoteKey = db.remoteKeyQueries.getRemoteKeyById(
                     type = RemoteKeyType.SUBSCRIBE,
@@ -98,7 +98,7 @@ class SubscriptionRemoteMediator(
     }
 
     private suspend fun feedDetail(
-        page: Long
+        page: Long,
     ): SaniouResponse<List<Feed>> =
         forumRepository.feed(subscriptionKey, page)
 }

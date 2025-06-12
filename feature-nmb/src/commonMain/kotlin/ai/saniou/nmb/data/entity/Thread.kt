@@ -1,6 +1,5 @@
 package ai.saniou.nmb.data.entity
 
-import ai.saniou.nmb.workflow.thread.ThreadReply
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonNames

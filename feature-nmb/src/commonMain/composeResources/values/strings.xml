@@ -21,4 +21,6 @@
     <string name="empty_title">无标题</string>
     <string name="unsubscribe">取消订阅</string>
     <string name="reply_count">回复: %1$s</string>
+    <string name="jump_to_top">回顶</string>
+    <string name="jump_to_page">跳转至</string>
 </resources>

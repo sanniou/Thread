@@ -21,5 +21,5 @@ getRemoteKeyById:
 SELECT * FROM RemoteKeys
 WHERE type = ? AND id = ? ;
 
-deleteKeyByType:
-DELETE FROM RemoteKeys WHERE type = ?;
+deleteKeyByTypeAndId:
+DELETE FROM RemoteKeys WHERE type = ? AND id = ?;

@@ -23,7 +23,7 @@ import kotlinx.coroutines.launch
 class ThreadViewModel(
     private val nmbXdApi: NmbXdApi,
     private val threadDetailUseCase: ThreadDetailUseCase,
-    private val subscriptionStorage: SubscriptionStorage
+    private val subscriptionStorage: SubscriptionStorage,
 ) : ViewModel() {
 
     // 默认空状态
@@ -65,8 +65,8 @@ class ThreadViewModel(
             onTogglePoOnly = {
                 togglePoOnlyMode()
             },
-            onToggleSubscribe = { subscribed ->
-                toggleSubscribe(subscribed)
+            onToggleSubscribe = { ->
+                toggleSubscribe()
             }
         )
     )
@@ -180,7 +180,8 @@ class ThreadViewModel(
     /**
      * 切换订阅状态
      */
-    private fun toggleSubscribe(subscribed: Boolean) {
+    private fun toggleSubscribe() {
+        val subscribed = !_isSubscribed.value
         val currentId = _threadId.value
         if (currentId == null || currentId <= 0) return
 
@@ -253,5 +254,5 @@ data class ThreadUiState(
     val forumName: String = "",
     val onJumpToPage: (Int) -> Unit = {},
     val onTogglePoOnly: () -> Unit = {},
-    val onToggleSubscribe: (Boolean) -> Unit = {}
+    val onToggleSubscribe: () -> Unit = {},
 ) : UiStateWrapper
