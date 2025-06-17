@@ -9,11 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -22,7 +17,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import org.jetbrains.compose.ui.tooling.preview.Preview
 
 /**
  * Drawer菜单行组件，显示一排菜单入口
@@ -99,33 +93,3 @@ data class DrawerMenuItem(
     val onClick: () -> Unit
 )
 
-@Composable
-@Preview
-fun DrawerMenuRowPreview() {
-    MaterialTheme {
-        DrawerMenuRow(
-            menuItems = listOf(
-                DrawerMenuItem(
-                    icon = Icons.Default.Favorite,
-                    label = "订阅列表",
-                    onClick = {}
-                ),
-                DrawerMenuItem(
-                    icon = Icons.Default.Home,
-                    label = "访问历史",
-                    onClick = {}
-                ),
-                DrawerMenuItem(
-                    icon = Icons.Default.Send,
-                    label = "发言记录",
-                    onClick = {}
-                ),
-                DrawerMenuItem(
-                    icon = Icons.Default.Search,
-                    label = "搜索",
-                    onClick = {}
-                )
-            )
-        )
-    }
-}

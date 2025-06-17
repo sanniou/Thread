@@ -55,7 +55,7 @@ import org.kodein.di.instance
 
 
 data class UserPage(
-    val di: DI = nmbdi
+    val di: DI = nmbdi,
 ) : Screen {
 
     @OptIn(ExperimentalMaterial3Api::class)
@@ -180,7 +180,7 @@ data class UserPage(
 @Composable
 fun CookieListContent(
     cookies: List<Cookie>,
-    onRefresh: () -> Unit
+    onRefresh: () -> Unit,
 ) {
     Column(
         modifier = Modifier.padding(16.dp)
@@ -292,7 +292,7 @@ fun LoginContent(
     onPasswordChanged: (String) -> Unit,
     onVerifyCodeChanged: (String) -> Unit,
     onRefreshVerifyCode: () -> Unit,
-    onLogin: () -> Unit
+    onLogin: () -> Unit,
 ) {
     Column(
         modifier = Modifier.padding(16.dp)
@@ -368,7 +368,7 @@ fun RegisterContent(
     onPasswordConfirmChanged: (String) -> Unit,
     onVerifyCodeChanged: (String) -> Unit,
     onRefreshVerifyCode: () -> Unit,
-    onRegister: () -> Unit
+    onRegister: () -> Unit,
 ) {
     Column(
         modifier = Modifier.padding(16.dp)
@@ -440,13 +440,5 @@ fun RegisterContent(
         ) {
             Text("注册")
         }
-    }
-}
-
-@Preview
-@Composable
-fun UserPagePreview() {
-    MaterialTheme {
-        // 预览内容
     }
 }

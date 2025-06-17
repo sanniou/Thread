@@ -1,5 +1,6 @@
 package ai.saniou.nmb
 
+import ai.saniou.coreui.theme.CupcakeTheme
 import ai.saniou.nmb.workflow.home.HomeScreen
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.DpSize
@@ -19,21 +20,23 @@ fun main() = application {
         position = WindowPosition(Alignment.Center),
         size = DpSize(480.dp, 768.dp),
     )
-    Window(
-        onCloseRequest = ::exitApplication,
-        title = "Thread",
-        // Hide default window title
-        undecorated = true,
-        state = windowState
-    ) {
-        Navigator(
-            screen = HomeScreen(),
-            disposeBehavior = NavigatorDisposeBehavior(disposeSteps = false),
-        ) { navigator ->
-            ScaleTransition(
-                navigator = navigator,
-                disposeScreenAfterTransitionEnd = true
-            )
+    CupcakeTheme {
+        Window(
+            onCloseRequest = ::exitApplication,
+            title = "Thread",
+            // Hide default window title
+            undecorated = true,
+            state = windowState
+        ) {
+            Navigator(
+                screen = HomeScreen(),
+                disposeBehavior = NavigatorDisposeBehavior(disposeSteps = false),
+            ) { navigator ->
+                ScaleTransition(
+                    navigator = navigator,
+                    disposeScreenAfterTransitionEnd = true
+                )
+            }
         }
     }
 }

@@ -49,48 +49,45 @@ data class HomeScreen(val di: DI = nmbdi) : Screen {
 
         var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.HOME) }
         val snackbarHostState = remember { SnackbarHostState() }
-        MaterialTheme {
-            NavigationSuiteScaffold(
-                navigationSuiteItems = {
-                    AppDestinations.entries.forEach {
-                        item(
-                            icon = {
-                                Icon(
-                                    it.icon,
-                                    contentDescription = stringResource(it.contentDescription)
-                                )
-                            },
-                            label = { Text(stringResource(it.label)) },
-                            selected = it == currentDestination,
-                            onClick = { currentDestination = it }
-                        )
-                    }
+        NavigationSuiteScaffold(
+            navigationSuiteItems = {
+                AppDestinations.entries.forEach {
+                    item(
+                        icon = {
+                            Icon(
+                                it.icon,
+                                contentDescription = stringResource(it.contentDescription)
+                            )
+                        },
+                        label = { Text(stringResource(it.label)) },
+                        selected = it == currentDestination,
+                        onClick = { currentDestination = it }
+                    )
                 }
+            }
+        ) {
+            Scaffold(
+                snackbarHost = { SnackbarHost(snackbarHostState) },
             ) {
-                Scaffold(
-                    snackbarHost = { SnackbarHost(snackbarHostState) },
-                ) {
 
-                    when (currentDestination) {
-                        AppDestinations.HOME -> HomePage()
-                        AppDestinations.FAVORITES -> SubscriptionPage(onThreadClicked = {
-                            navigator.push(ThreadPage(it))
-                        }).Content()
+                when (currentDestination) {
+                    AppDestinations.HOME -> HomePage()
+                    AppDestinations.FAVORITES -> SubscriptionPage(onThreadClicked = {
+                        navigator.push(ThreadPage(it))
+                    }).Content()
 
-                        AppDestinations.SHOPPING -> SubscriptionPaneScreen().Content()
-                        AppDestinations.PROFILE -> SubscriptionPaneScreen().Content()
-                    }
+                    AppDestinations.SHOPPING -> SubscriptionPaneScreen().Content()
+                    AppDestinations.PROFILE -> SubscriptionPaneScreen().Content()
+                }
 
-                    noticeState?.let { notice ->
-                        // NoticeDisplay(notice)
-                    }
-
+                noticeState?.let { notice ->
+                    // NoticeDisplay(notice)
                 }
 
             }
+
         }
     }
-
 
     @Composable
     fun NoticeDisplay(notice: Notice) {

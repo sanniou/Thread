@@ -3,7 +3,6 @@ package ai.saniou.nmb.workflow.thread
 import ai.saniou.coreui.state.LoadingWrapper
 import ai.saniou.coreui.state.UiStateWrapper
 import ai.saniou.coreui.widgets.PullToRefreshWrapper
-import ai.saniou.nmb.data.entity.Reply
 import ai.saniou.nmb.data.entity.Thread
 import ai.saniou.nmb.data.entity.ThreadReply
 import ai.saniou.nmb.di.nmbdi
@@ -81,7 +80,6 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
-import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.kodein.di.DI
 import org.kodein.di.instance
 import thread.feature_nmb.generated.resources.Res
@@ -102,7 +100,6 @@ data class ThreadPage(
 
         var titleBar = remember { "" }
         val onSetupMenuButton: ((@Composable () -> Unit) -> Unit) = {}
-
         Scaffold(
             topBar = {
                 TopAppBar(
@@ -119,7 +116,6 @@ data class ThreadPage(
                     },
                     actions = {
                         onSetupMenuButton
-                        // 原本在Content里的菜单按钮现在移到这里
                         val (showMenu, setShowMenu) = remember { mutableStateOf(false) }
                         IconButton(onClick = { setShowMenu(true) }) {
                             Icon(
@@ -128,7 +124,6 @@ data class ThreadPage(
                             )
                         }
 
-                        // 菜单弹出框保持在这里，但实际菜单内容可能需要根据你的需求调整
                         if (showMenu) {
                             DropdownMenu(
                                 expanded = showMenu,
@@ -137,14 +132,12 @@ data class ThreadPage(
                                 DropdownMenuItem(
                                     text = { Text("刷新") },
                                     onClick = {
-                                        // 添加刷新逻辑
                                         setShowMenu(false)
                                     }
                                 )
                                 DropdownMenuItem(
                                     text = { Text("分享") },
                                     onClick = {
-                                        // 添加分享逻辑
                                         setShowMenu(false)
                                     }
                                 )
@@ -730,13 +723,5 @@ fun ThreadReply(
             ThreadBody(reply, onReferenceClick = refClick, onImageClick = onImageClick)
 
         }
-    }
-}
-
-@Preview
-@Composable
-fun ThreadPagePreview() {
-    MaterialTheme {
-        // 预览内容
     }
 }

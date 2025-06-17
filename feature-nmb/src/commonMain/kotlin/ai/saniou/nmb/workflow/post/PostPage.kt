@@ -48,7 +48,7 @@ import org.kodein.di.instance
 data class PostPage(
     val forumId: Long,
     val threadId: Long? = null,
-    val di: DI = nmbdi
+    val di: DI = nmbdi,
 ) : Screen {
 
     @Composable
@@ -107,7 +107,7 @@ data class PostPage(
     fun PostContent(
         state: PostUiState,
         isReply: Boolean,
-        modifier: Modifier = Modifier
+        modifier: Modifier = Modifier,
     ) {
         Column(
             modifier = modifier.padding(16.dp)
@@ -203,13 +203,5 @@ data class PostPage(
                 Text(if (isReply) "回复" else "发帖")
             }
         }
-    }
-}
-
-@Preview
-@Composable
-fun PostPagePreview() {
-    MaterialTheme {
-        // 预览内容
     }
 }
