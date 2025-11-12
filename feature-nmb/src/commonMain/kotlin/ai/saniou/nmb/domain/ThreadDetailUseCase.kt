@@ -9,12 +9,12 @@ import ai.saniou.nmb.data.source.ThreadRemoteMediator
 import ai.saniou.nmb.db.Database
 import ai.saniou.nmb.data.entity.ThreadReply
 import ai.saniou.nmb.data.entity.toTable
+import ai.saniou.nmb.data.source.SqlDelightPagingSource
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.map
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
-import app.cash.sqldelight.paging3.QueryPagingSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
@@ -39,10 +39,10 @@ class ThreadDetailUseCase(
             ),
             remoteMediator = ThreadRemoteMediator(threadId, po, forumRepository, db),
             pagingSourceFactory = {
-                QueryPagingSource(
-                    countQuery = db.threadReplyQueries.countThreadReplies(threadId),
+                SqlDelightPagingSource(
+//                    countQuery = db.threadReplyQueries.countThreadReplies(threadId),
                     transacter = db.threadReplyQueries,
-                    context = Dispatchers.IO,
+                    context = Dispatchers.Default,
                     queryProvider = { limit, offset ->
                         db.threadReplyQueries.getThreadReplies(
                             threadId = threadId,

@@ -4,13 +4,13 @@ import ai.saniou.nmb.data.entity.Forum
 import ai.saniou.nmb.data.entity.toForumThreadWithReply
 import ai.saniou.nmb.data.repository.ForumRepository
 import ai.saniou.nmb.data.source.ForumRemoteMediator
+import ai.saniou.nmb.data.source.SqlDelightPagingSource
 import ai.saniou.nmb.db.Database
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
-import app.cash.sqldelight.paging3.QueryPagingSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
@@ -35,10 +35,10 @@ class ForumUseCase(
             ),
             remoteMediator = ForumRemoteMediator(fid, fgroup, forumRepository, db),
             pagingSourceFactory = {
-                QueryPagingSource(
-                    countQuery = db.threadQueries.countThread(fid),
+                SqlDelightPagingSource(
+//                    countQuery = db.threadQueries.countThread(fid),
                     transacter = db.threadQueries,
-                    context = Dispatchers.IO,
+                    context = Dispatchers.Default,
                     queryProvider = { limit, offset ->
                         db.threadQueries.getThreadsInForum(
                             fid = fid,

@@ -96,8 +96,8 @@ kotlin {
             // implementation("me.saket.telephoto:zoomable-peek-overlay:0.15.1")
 //            implementation(libs.room.runtime)
 //            implementation(libs.sqlite.bundled)
-            implementation(libs.runtime)
-            implementation(libs.sqldelight.paging3)
+            implementation(libs.sqldelight.runtime)
+//            implementation(libs.sqldelight.paging3)
             implementation(libs.sqldelight.coroutines)
         }
         commonTest.dependencies {

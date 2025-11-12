@@ -93,7 +93,7 @@ sqldelight-native-driver = { group = "app.cash.sqldelight", name = "native-drive
 sqldelight-sqlite-driver = { group = "app.cash.sqldelight", name = "sqlite-driver", version.ref = "sqlDelight" }
 sqldelight-coroutines = { group = "app.cash.sqldelight", name = "coroutines-extensions", version.ref = "sqlDelight" }
 sqldelight-paging3 = { group = "app.cash.sqldelight", name = "androidx-paging3-extensions", version.ref = "sqlDelight" }
-runtime = { group = "app.cash.sqldelight", name = "runtime", version.ref = "sqlDelight" }
+sqldelight-runtime = { group = "app.cash.sqldelight", name = "runtime", version.ref = "sqlDelight" }
 # sketch
 sketch-compose = { group = "io.github.panpf.sketch4", name = 'sketch-compose', version.ref = "sketch" }
 sketch-http = { group = "io.github.panpf.sketch4", name = 'sketch-http', version.ref = "sketch" }
