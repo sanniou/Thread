@@ -7,9 +7,9 @@ import ai.saniou.nmb.data.source.SubscriptionRemoteMediator
 import ai.saniou.nmb.db.Database
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.map
-import app.cash.paging.Pager
-import app.cash.paging.PagingConfig
-import app.cash.paging.PagingData
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
 import app.cash.sqldelight.paging3.QueryPagingSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO

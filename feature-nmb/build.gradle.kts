@@ -1,4 +1,5 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -20,10 +21,7 @@ kotlin {
         }
     }
 
-    jvm("desktop")
-
     listOf(
-        iosX64(),
         iosArm64(),
         iosSimulatorArm64()
     ).forEach { iosTarget ->
@@ -33,9 +31,20 @@ kotlin {
         }
     }
 
-    sourceSets {
-        val desktopMain by getting
+    jvm()
 
+    js {
+        browser()
+        binaries.executable()
+    }
+
+//    @OptIn(ExperimentalWasmDsl::class)
+//    wasmJs {
+//        browser()
+//        binaries.executable()
+//    }
+
+    sourceSets {
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
@@ -75,8 +84,10 @@ kotlin {
             implementation(libs.sketch.ktor)
             implementation(libs.sketch.svg)
 
-            implementation(libs.cash.paging)
-            implementation(libs.cash.paging.common)
+            implementation(libs.paging.common)
+            implementation(libs.paging.compose)
+//            implementation(libs.cash.paging)
+//            implementation(libs.cash.paging.common)
             // https://saket.github.io/telephoto/zoomable-peek-overlay/
             // not multi platform
             // implementation("me.saket.telephoto:zoomable-image-coil3:0.15.1")
@@ -92,7 +103,7 @@ kotlin {
         commonTest.dependencies {
             implementation(libs.kotlin.test)
         }
-        desktopMain.dependencies {
+        jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutinesSwing)
             implementation(libs.sqldelight.sqlite.driver)
@@ -161,6 +172,5 @@ sqldelight {
 
 composeCompiler {
     // for sketch
-    stabilityConfigurationFile =
-        rootProject.layout.projectDirectory.file("compose_compiler_config.conf")
+    stabilityConfigurationFile = rootProject.layout.projectDirectory.file("compose_compiler_config.conf")
 }

@@ -5,8 +5,9 @@ import io.github.irgaly.kottage.add
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -41,6 +42,7 @@ class SubscriptionStorage(scope: CoroutineScope) : BasicStorage(scope, "subscrip
     /**
      * 保存订阅ID
      */
+    @OptIn(ExperimentalTime::class)
     suspend fun addSubscriptionId(id: String) {
         subscriptionList.add(
             "subscription_info",

@@ -5,10 +5,11 @@ import io.github.irgaly.kottage.put
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.hours
+import kotlin.time.ExperimentalTime
 
 /**
  * 管理欢迎图片的持久化存储
@@ -21,6 +22,7 @@ class GreetImageStorage(scope: CoroutineScope) : BasicStorage(scope, "greet-imag
     /**
      * 检查缓存的欢迎图片是否过期（超过3小时）
      */
+    @OptIn(ExperimentalTime::class)
     suspend fun isGreetImageExpired(): Boolean {
         val lastUpdateTime = storage.getOrNull<GreetImageCacheInfo>("cache_info")?.lastUpdateTime
         if (lastUpdateTime == null) return true
@@ -42,6 +44,7 @@ class GreetImageStorage(scope: CoroutineScope) : BasicStorage(scope, "greet-imag
     /**
      * 保存欢迎图片URL到缓存
      */
+    @OptIn(ExperimentalTime::class)
     suspend fun saveGreetImageUrl(url: String) {
         storage.put("greet_image_url", url)
         storage.put(

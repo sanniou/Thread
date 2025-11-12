@@ -1,18 +1,12 @@
 package ai.saniou.nmb.data.storage
 
 import ai.saniou.nmb.data.entity.ForumDetail
-import io.github.irgaly.kottage.KottageList
-import io.github.irgaly.kottage.add
 import io.github.irgaly.kottage.getOrNull
 import io.github.irgaly.kottage.put
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
-import kotlin.time.Duration.Companion.days
 
 /**
  * 管理论坛分类数据的持久化存储

@@ -7,7 +7,8 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 
 class UserViewModel(private val userUseCase: UserUseCase) : ViewModel() {
 
@@ -93,6 +94,7 @@ class UserViewModel(private val userUseCase: UserUseCase) : ViewModel() {
         updateLoginOrRegisterState()
     }
 
+    @OptIn(ExperimentalTime::class)
     fun refreshVerifyCode() {
         // 刷新验证码
         verifyImageUrl = "https://www.nmbxd.com/Member/User/Index/verify.html?t=${

@@ -8,11 +8,13 @@ import ai.saniou.nmb.data.entity.toTableInformation
 import ai.saniou.nmb.data.entity.toTableReply
 import ai.saniou.nmb.data.repository.ForumRepository
 import ai.saniou.nmb.db.Database
-import app.cash.paging.ExperimentalPagingApi
-import app.cash.paging.LoadType
-import app.cash.paging.PagingState
-import app.cash.paging.RemoteMediator
-import kotlinx.datetime.Clock
+import ai.saniou.nmb.db.table.GetThreadsInForum
+import androidx.paging.LoadType
+import androidx.paging.PagingState
+import androidx.paging.RemoteMediator
+import androidx.paging.ExperimentalPagingApi
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalPagingApi::class)
 class ForumRemoteMediator(
@@ -20,11 +22,12 @@ class ForumRemoteMediator(
     private val fgroup: Long,
     private val forumRepository: ForumRepository,
     private val db: Database,
-) : RemoteMediator<Int, ai.saniou.nmb.db.table.GetThreadsInForum>() {
+) : RemoteMediator<Int, GetThreadsInForum>() {
 
+    @OptIn(ExperimentalTime::class)
     override suspend fun load(
         loadType: LoadType,
-        state: PagingState<Int, ai.saniou.nmb.db.table.GetThreadsInForum>
+        state: PagingState<Int, GetThreadsInForum>
     ): MediatorResult {
         val page = when (loadType) {
             LoadType.REFRESH -> 1L

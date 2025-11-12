@@ -7,7 +7,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 
 /**
  * 欢迎图片ViewModel
@@ -33,6 +34,7 @@ class GreetImageViewModel(
      *
      * 使用 https://nmb.ovear.info/h.php?time=currenttimestamp 格式
      */
+    @OptIn(ExperimentalTime::class)
     private fun getGreetImageUrlWithTimestamp(): String {
         val timestamp = Clock.System.now().toEpochMilliseconds()
         return "https://nmb.ovear.info/h.php?time=$timestamp"

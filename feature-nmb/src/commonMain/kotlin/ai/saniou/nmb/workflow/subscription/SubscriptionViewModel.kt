@@ -6,7 +6,7 @@ import ai.saniou.nmb.data.storage.SubscriptionStorage
 import ai.saniou.nmb.domain.SubscriptionUseCase
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import app.cash.paging.PagingData
+import androidx.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

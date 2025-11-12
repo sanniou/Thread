@@ -1,3 +1,7 @@
-TEAM_ID=
-BUNDLE_ID=ai.saniou.thread.Thread
-APP_NAME=Thread
+TEAM_ID=saniou
+
+PRODUCT_NAME=Thread
+PRODUCT_BUNDLE_IDENTIFIER=ai.saniou.thread.Thread$(TEAM_ID)
+
+CURRENT_PROJECT_VERSION=1
+MARKETING_VERSION=1.0
