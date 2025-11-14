@@ -5,10 +5,13 @@ import de.jensklingenberg.ktorfit.ktorfit
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.DefaultRequest
 import io.ktor.client.plugins.compression.ContentEncoding
+import io.ktor.client.plugins.compression.ContentEncodingConfig
 import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.plugins.logging.DEFAULT
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
+import io.ktor.client.plugins.logging.LoggingFormat
 import io.ktor.client.request.header
 import io.ktor.http.HttpHeaders
 import io.ktor.serialization.kotlinx.json.*
@@ -19,20 +22,21 @@ internal fun SaniouKtorfit(string: String): Ktorfit = ktorfit {
     baseUrl(string)
     httpClient(
         HttpClient {
-            ContentEncoding {
+            install(ContentEncoding) {
+                mode = ContentEncodingConfig.Mode.All
                 gzip()
             }
 
             useDefaultTransformers = false
             install(ContentNegotiation) {
-                json(
-                    Json {
-                        isLenient = true
-                        ignoreUnknownKeys = true
-                    }
-                )
+                json(Json {
+                    prettyPrint = true
+                    isLenient = true
+                    ignoreUnknownKeys = true
+                })
             }
             install(Logging) {
+                format = LoggingFormat.OkHttp
                 logger = object : Logger {
                     override fun log(message: String) {
                         println(message)

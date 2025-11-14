@@ -15,7 +15,7 @@ class SaniouResponseConverterFactory : Converter.Factory {
 
     override fun suspendResponseConverter(
         typeData: TypeData,
-        ktorfit: Ktorfit
+        ktorfit: Ktorfit,
     ): Converter.SuspendResponseConverter<HttpResponse, *>? {
         return when (typeData.typeInfo.type) {
             SaniouResponse::class -> object :
@@ -46,7 +46,8 @@ class SaniouResponseConverterFactory : Converter.Factory {
                 override suspend fun convert(result: KtorfitResult): String {
                     return when (result) {
                         is Success -> {
-                            result.response.bodyAsChannel().toByteArray().decodeUnicodeEscapes().drop(1).dropLast(1)
+                            result.response.bodyAsChannel().toByteArray().decodeUnicodeEscapes()
+                                .drop(1).dropLast(1)
                         }
 
                         is Failure -> {
@@ -67,9 +68,9 @@ fun ByteArray.decodeUnicodeEscapes(): String {
     val result = StringBuilder(str.length)
     var i = 0
     while (i < str.length) {
-        if (i + 5 < str.length && str[i] == '\\' && str[i+1] == 'u') {
+        if (i + 5 < str.length && str[i] == '\\' && str[i + 1] == 'u') {
             try {
-                val hex = str.substring(i+2, i+6)
+                val hex = str.substring(i + 2, i + 6)
                 val codePoint = hex.toInt(16)
                 result.append(codePoint.toChar())
                 i += 6
