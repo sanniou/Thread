@@ -46,7 +46,6 @@ kotlin {
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
-            implementation(libs.ktor.client.android)
 //            implementation(libs.android.driver)
         }
         commonMain.dependencies {
@@ -59,7 +58,7 @@ kotlin {
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.client.logging)
             implementation(libs.ktor.client.encoding)
-            api(libs.ktor.serialization.kotlinx.json)
+            implementation(libs.ktor.client.cio)
             api(libs.kodein.di)
             api(libs.kottage)
             api(libs.kotlinx.datetime)

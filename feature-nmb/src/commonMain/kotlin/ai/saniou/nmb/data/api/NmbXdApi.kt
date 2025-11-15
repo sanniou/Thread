@@ -4,6 +4,7 @@ import ai.saniou.corecommon.data.SaniouResponse
 import ai.saniou.nmb.data.entity.CdnPath
 import ai.saniou.nmb.data.entity.CookieListResponse
 import ai.saniou.nmb.data.entity.Feed
+import ai.saniou.nmb.data.entity.Forum
 import ai.saniou.nmb.data.entity.ForumCategory
 import ai.saniou.nmb.data.entity.LastPost
 import ai.saniou.nmb.data.entity.LoginRequest
@@ -12,7 +13,6 @@ import ai.saniou.nmb.data.entity.NmbNotice
 import ai.saniou.nmb.data.entity.NmbReference
 import ai.saniou.nmb.data.entity.PostReplyRequest
 import ai.saniou.nmb.data.entity.PostThreadRequest
-import ai.saniou.nmb.data.entity.Forum
 import ai.saniou.nmb.data.entity.Thread
 import ai.saniou.nmb.data.entity.TimeLine
 import de.jensklingenberg.ktorfit.http.Body

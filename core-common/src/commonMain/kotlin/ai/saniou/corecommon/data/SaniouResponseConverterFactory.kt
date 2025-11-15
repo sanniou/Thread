@@ -3,13 +3,12 @@ package ai.saniou.corecommon.data;
 import de.jensklingenberg.ktorfit.Ktorfit
 import de.jensklingenberg.ktorfit.converter.Converter
 import de.jensklingenberg.ktorfit.converter.KtorfitResult
-import de.jensklingenberg.ktorfit.converter.KtorfitResult.Failure
-import de.jensklingenberg.ktorfit.converter.KtorfitResult.Success
 import de.jensklingenberg.ktorfit.converter.TypeData
 import io.ktor.client.call.body
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsChannel
 import io.ktor.utils.io.toByteArray
+
 
 class SaniouResponseConverterFactory : Converter.Factory {
 
@@ -19,13 +18,13 @@ class SaniouResponseConverterFactory : Converter.Factory {
     ): Converter.SuspendResponseConverter<HttpResponse, *>? {
         return when (typeData.typeInfo.type) {
             SaniouResponse::class -> object :
-                Converter.SuspendResponseConverter<HttpResponse, SaniouResponse<*>> {
-                override suspend fun convert(result: KtorfitResult): SaniouResponse<*> {
+                Converter.SuspendResponseConverter<HttpResponse, Any> {
+                override suspend fun convert(result: KtorfitResult): Any {
                     return when (result) {
-                        is Success -> {
+                        is KtorfitResult.Success -> {
                             return try {
                                 SaniouResponse.success(
-                                    result.response.body<SaniouResponse<*>>(
+                                    result.response.body<Any>(
                                         typeData.typeArgs.first().typeInfo
                                     )
                                 )
@@ -34,7 +33,7 @@ class SaniouResponseConverterFactory : Converter.Factory {
                             }
                         }
 
-                        is Failure -> {
+                        is KtorfitResult.Failure -> {
                             SaniouResponse.error(result.throwable)
                         }
                     }
@@ -45,12 +44,12 @@ class SaniouResponseConverterFactory : Converter.Factory {
                 Converter.SuspendResponseConverter<HttpResponse, String> {
                 override suspend fun convert(result: KtorfitResult): String {
                     return when (result) {
-                        is Success -> {
+                        is KtorfitResult.Success -> {
                             result.response.bodyAsChannel().toByteArray().decodeUnicodeEscapes()
                                 .drop(1).dropLast(1)
                         }
 
-                        is Failure -> {
+                        is KtorfitResult.Failure -> {
                             result.throwable.message ?: "Unknown error"
                         }
                     }
