@@ -35,11 +35,13 @@ class SubscriptionUseCase(
             remoteMediator = SubscriptionRemoteMediator(subscriptionKey, forumRepository, db),
             pagingSourceFactory = {
                 SqlDelightPagingSource(
-//                    countQuery = db.subscriptionQueries.countSubscriptionsBySubscriptionKey(
-//                        subscriptionKey
-//                    ),
+                    countQueryProvider = {
+                        db.subscriptionQueries.countSubscriptionsBySubscriptionKey(
+                            subscriptionKey
+                        )
+                    },
                     transacter = db.subscriptionQueries,
-                    context = Dispatchers.Default,
+                    context = Dispatchers.IO,
                     queryProvider = { limit, offset ->
                         db.subscriptionQueries.selectSubscriptionThread(
                             subscriptionKey = subscriptionKey,

@@ -36,9 +36,9 @@ class ForumUseCase(
             remoteMediator = ForumRemoteMediator(fid, fgroup, forumRepository, db),
             pagingSourceFactory = {
                 SqlDelightPagingSource(
-//                    countQuery = db.threadQueries.countThread(fid),
                     transacter = db.threadQueries,
-                    context = Dispatchers.Default,
+                    context = Dispatchers.IO,
+                    countQueryProvider = { db.threadQueries.countThread(fid) },
                     queryProvider = { limit, offset ->
                         db.threadQueries.getThreadsInForum(
                             fid = fid,

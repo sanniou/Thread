@@ -40,9 +40,11 @@ class ThreadDetailUseCase(
             remoteMediator = ThreadRemoteMediator(threadId, po, forumRepository, db),
             pagingSourceFactory = {
                 SqlDelightPagingSource(
-//                    countQuery = db.threadReplyQueries.countThreadReplies(threadId),
+                    countQueryProvider = {
+                        db.threadReplyQueries.countThreadReplies(threadId)
+                    },
                     transacter = db.threadReplyQueries,
-                    context = Dispatchers.Default,
+                    context = Dispatchers.IO,
                     queryProvider = { limit, offset ->
                         db.threadReplyQueries.getThreadReplies(
                             threadId = threadId,
