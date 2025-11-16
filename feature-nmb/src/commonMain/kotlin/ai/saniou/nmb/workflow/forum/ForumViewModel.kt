@@ -19,17 +19,6 @@ import kotlinx.coroutines.launch
 
 class ForumViewModel(private val forumUserCase: ForumUseCase) : ViewModel() {
 
-    private val dataUiState = MutableStateFlow(
-        ShowForumUiState(
-            forum = emptyFlow(),
-            page = 1,
-            id = 0,
-            onClickThread = {
-                // 处理帖子点击事件
-            },
-        )
-    )
-
     // 使用StateFlow管理forumId，确保只在值变化时触发加载
     private val _forumId = MutableStateFlow<Pair<Long, Long>?>(null)
 
@@ -55,8 +44,8 @@ class ForumViewModel(private val forumUserCase: ForumUseCase) : ViewModel() {
     }
 
     // 公开方法，设置forumId
-    fun setForumId(forumId: Pair<Long, Long>) {
-        _forumId.value = forumId
+    fun setForumId(forumId: Long, fgroupId: Long) {
+        _forumId.value = fgroupId to forumId
     }
 
     // 刷新当前论坛
@@ -64,7 +53,7 @@ class ForumViewModel(private val forumUserCase: ForumUseCase) : ViewModel() {
         val currentId = _forumId.value
         if (currentId != null) {
             viewModelScope.launch {
-                _uiState.emit(UiStateWrapper.Loading)
+                // 直接调用loadForumInternal会发出Loading状态
                 loadForumInternal(currentId.second, currentId.first)
             }
         }
@@ -72,29 +61,25 @@ class ForumViewModel(private val forumUserCase: ForumUseCase) : ViewModel() {
 
     // 私有方法，实际加载数据
     private suspend fun loadForumInternal(fid: Long, fgroup: Long) {
+        _uiState.emit(UiStateWrapper.Loading)
         try {
-            _uiState.emit(UiStateWrapper.Loading)
             val dataList = forumUserCase(fid, fgroup).cachedIn(viewModelScope)
-
-            // 获取论坛名称 - 如果有数据，使用第一个帖子的fid来确定论坛名称
             val forumName = forumUserCase.getForumName(fid)
-            updateUiState { state ->
-                state.copy(
-                    id = fid,
-                    forum = dataList,
-                    page = 1,
-                    forumName = forumName
+            _uiState.emit(
+                UiStateWrapper.Success(
+                    ShowForumUiState(
+                        forum = dataList,
+                        id = fid,
+                        forumName = forumName,
+                        onClickThread = {
+                            // 处理帖子点击事件
+                        },
+                    )
                 )
-            }
-            _uiState.emit(UiStateWrapper.Success(dataUiState.value))
+            )
         } catch (e: Throwable) {
             _uiState.emit(UiStateWrapper.Error(e, "加载论坛失败: ${e.message}"))
         }
-    }
-
-
-    private fun updateUiState(invoke: (ShowForumUiState) -> ShowForumUiState) {
-        dataUiState.update(invoke)
     }
 }
 

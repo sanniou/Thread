@@ -51,7 +51,7 @@ fun ForumContent(
 
     // 使用LaunchedEffect设置forumId，确保只在forumId变化时触发
     LaunchedEffect(forumId) {
-        forumViewModel.setForumId(fgroupId to forumId)
+        forumViewModel.setForumId(forumId, fgroupId)
     }
 
     val forumContent by forumViewModel.uiState.collectAsStateWithLifecycle()
@@ -78,7 +78,7 @@ fun ForumContent(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Button(
-                            onClick = { }
+                            onClick = { forumViewModel.refreshForum() }
                         ) {
                             Text("重试")
                         }
