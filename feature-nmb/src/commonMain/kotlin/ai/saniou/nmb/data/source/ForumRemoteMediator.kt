@@ -54,9 +54,9 @@ class ForumRemoteMediator(
                     }
 
                     forums.forEach { forum ->
-                        db.threadQueries.insertThread(forum.toTable())
+                        db.threadQueries.upsetThread(forum.toTable())
                         db.threadQueries.insertThreadInformation(forum.toTableInformation())
-                        forum.toTableReply().forEach(db.threadReplyQueries::insertThreadReply)
+                        forum.toTableReply().forEach(db.threadReplyQueries::upsertThreadReply)
 
                     }
                     db.remoteKeyQueries.insertKey(

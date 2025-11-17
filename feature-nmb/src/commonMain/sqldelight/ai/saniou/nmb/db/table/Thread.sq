@@ -28,7 +28,7 @@ CREATE INDEX IF NOT EXISTS idx_thraed_last_replay_at ON ThreadInformation(lastKe
 CREATE INDEX IF NOT EXISTS idx_thraed_fid ON Thread(fid);
 
 -- 插入 ThreadThread 数据
-insertThread:
+upsetThread:
 INSERT OR REPLACE INTO Thread (
     id, fid, replyCount, img, ext, now, userHash, name, title, content, sage, admin, hide
 ) VALUES ?;

@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS ThreadReply (
 CREATE INDEX IF NOT EXISTS idx_thread_reply_thread_id ON ThreadReply(threadId);
 
 -- 插入 ThreadReply 数据
-insertThreadReply:
+upsertThreadReply:
 INSERT OR REPLACE INTO ThreadReply (
     id, threadId, page, userHash, admin, title, now, content, img, ext, name
 ) VALUES ?;
@@ -64,7 +64,7 @@ SELECT * FROM ThreadReply WHERE threadId = :threadId ORDER BY id DESC LIMIT 5;
 
 -- 统计 ThreadReply 数量
 countThreadReplies:
-SELECT count(*) FROM ThreadReply WHERE threadId = :threadId AND page >=0;
+SELECT count(*) FROM ThreadReply WHERE threadId = :threadId AND page >=0 AND userHash!='Tips';
 
 
 getThreadRepliesByUserHash:
@@ -75,3 +75,9 @@ SELECT count(*) FROM ThreadReply WHERE threadId = :threadId AND userHash = :user
 
 isPageExist:
 SELECT EXISTS(SELECT 1 FROM ThreadReply WHERE threadId = :threadId AND page = :page);
+
+deleteThreadRepliesByPage:
+DELETE FROM ThreadReply WHERE threadId = :threadId AND page = :page;
+
+countRepliesByPage:
+SELECT count(*) FROM ThreadReply WHERE threadId = :threadId AND page = :page;

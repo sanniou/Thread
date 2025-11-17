@@ -33,7 +33,7 @@ class GetReferenceUseCase(
                     name = refResponse.data.name,
                 )
                 // 存入数据库，注意 threadId 设为特殊值以作区分
-                db.threadReplyQueries.insertThreadReply(reply.toTable(Long.MIN_VALUE))
+                db.threadReplyQueries.upsertThreadReply(reply.toTable(Long.MIN_VALUE))
                 Result.success(reply)
             }
 //            is SaniouResponse.Failure -> Result.failure(Exception(refResponse.message))

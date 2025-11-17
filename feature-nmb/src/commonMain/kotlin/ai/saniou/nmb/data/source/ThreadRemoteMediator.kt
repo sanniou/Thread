@@ -58,18 +58,22 @@ class ThreadRemoteMediator(
             }
         }
 
-
-
         return when (val result = threadDetail(page = page)) {
             is SaniouResponse.Success -> {
                 val threadDetail = result.data
-                // 9999999 是系统 Tips ,所以等于空数据就是最后一页
-                val endOfPagination = threadDetail.replies.none { it.id != 9999999L }
+                val endOfPagination =
+                    if (threadDetail.replyCount == db.threadReplyQueries.countThreadReplies(threadId)
+                            .executeAsOne()
+                    ) {
+                        true
+                    } else {
+                        threadDetail.replies.count { it.id != 9999999L } == 0
+                    }
 
                 db.transaction {
-                    db.threadQueries.insertThread(threadDetail.toTable())
+                    db.threadQueries.upsetThread(threadDetail.toTable())
                     threadDetail.toTableReply(page)
-                        .forEach(db.threadReplyQueries::insertThreadReply)
+                        .forEach(db.threadReplyQueries::upsertThreadReply)
 
                     db.remoteKeyQueries.insertKey(
                         type = RemoteKeyType.THREAD,
