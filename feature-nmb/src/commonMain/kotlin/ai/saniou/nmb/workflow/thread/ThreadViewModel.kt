@@ -66,7 +66,7 @@ class ThreadViewModel(
                         _state.update { it.copy(isLoading = false, error = "加载主楼失败: ${e.message}") }
                     }
                     .collectLatest { thread ->
-                        val totalPages = (thread.replyCount / 20) + if (thread.replyCount % 20 > 0) 1 else 0
+                        val totalPages = (thread.replyCount / 19) + if (thread.replyCount % 19 > 0) 1 else 0
                         _state.update {
                             it.copy(
                                 isLoading = false,
