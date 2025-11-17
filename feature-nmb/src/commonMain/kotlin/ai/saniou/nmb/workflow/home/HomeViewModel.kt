@@ -23,4 +23,10 @@ class HomeViewModel(private val noticeUseCase: NoticeUseCase) : ViewModel() {
             }
         }
     }
+
+    fun markAsRead() {
+        _noticeState.value?.let {
+            noticeUseCase.markAsRead(it.id)
+        }
+    }
 }

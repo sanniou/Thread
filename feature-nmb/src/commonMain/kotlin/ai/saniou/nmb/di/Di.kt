@@ -10,6 +10,7 @@ import ai.saniou.nmb.data.repository.ForumRepository
 import ai.saniou.nmb.data.repository.NmbRepository
 import ai.saniou.nmb.data.repository.NmbRepositoryImpl
 import ai.saniou.nmb.data.storage.CategoryStorage
+import ai.saniou.nmb.data.storage.CommonStorage
 import ai.saniou.nmb.data.storage.GreetImageStorage
 import ai.saniou.nmb.data.storage.SubscriptionStorage
 import ai.saniou.nmb.domain.ForumCategoryUseCase
@@ -123,8 +124,11 @@ val nmbdi = DI {
 
     bindProvider { SubscriptionUseCase(instance(), instance()) }
 
-    bindProvider { NoticeUseCase(instance(), instance()) }
+    bindProvider { NoticeUseCase(instance(), instance(), instance()) }
     bindProvider { HomeViewModel(instance()) }
+    bindSingleton {
+        CommonStorage(scope = CoroutineScope(Dispatchers.Default))
+    }
 }
 
 

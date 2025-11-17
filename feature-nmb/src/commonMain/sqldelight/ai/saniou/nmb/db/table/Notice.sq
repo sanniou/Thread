@@ -22,3 +22,7 @@ SELECT * FROM Notice WHERE enable = 1 ORDER BY date DESC;
 -- 查询LatestNotice
 getLatestNotice:
 SELECT * FROM Notice WHERE enable = 1 AND readed = 0 ORDER BY date DESC LIMIT 1;
+
+-- 标记为已读
+markAsRead:
+UPDATE Notice SET readed = 1 WHERE id = ?;
