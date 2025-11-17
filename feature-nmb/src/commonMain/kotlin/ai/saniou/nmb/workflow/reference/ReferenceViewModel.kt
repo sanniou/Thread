@@ -1,8 +1,7 @@
 package ai.saniou.nmb.workflow.reference
 
 import ai.saniou.coreui.state.UiStateWrapper
-import ai.saniou.nmb.domain.ThreadDetailUseCase
-import ai.saniou.nmb.workflow.thread.ThreadUiState
+import ai.saniou.nmb.domain.GetReferenceUseCase
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,7 +15,7 @@ import kotlinx.coroutines.launch
  * 用于获取引用的回复内容
  */
 class ReferenceViewModel(
-    private val referenceUseCase: ThreadDetailUseCase
+    private val referenceUseCase: GetReferenceUseCase
 ) : ViewModel() {
 
     // UI状态
@@ -35,7 +34,7 @@ class ReferenceViewModel(
         viewModelScope.launch {
             try {
                 _uiState.emit(UiStateWrapper.Loading)
-                val reply = referenceUseCase.getReference(refId)
+                val reply = referenceUseCase(refId)
                 _uiState.emit(UiStateWrapper.Success(reply))
             } catch (e: Throwable) {
                 _uiState.emit(UiStateWrapper.Error(e, "获取引用内容失败: ${e.message}"))

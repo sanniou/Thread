@@ -20,6 +20,7 @@ class ThreadRemoteMediator(
     private val po: Boolean,
     private val forumRepository: ForumRepository,
     private val db: Database,
+    private val initialPage: Int? = null
 ) : RemoteMediator<Int, ai.saniou.nmb.db.table.ThreadReply>() {
 
 
@@ -30,14 +31,18 @@ class ThreadRemoteMediator(
     ): MediatorResult {
         val page = when (loadType) {
             LoadType.REFRESH -> {
-                db.remoteKeyQueries.getRemoteKeyById(
-                    type = RemoteKeyType.THREAD,
-                    id = threadId.toString()
-                ).executeAsOneOrNull()?.run {
-                    // 本地有数据，就不请求网络
-                    return MediatorResult.Success(endOfPaginationReached = false)
+                if (initialPage != null) {
+                    initialPage.toLong()
+                } else {
+                    db.remoteKeyQueries.getRemoteKeyById(
+                        type = RemoteKeyType.THREAD,
+                        id = threadId.toString()
+                    ).executeAsOneOrNull()?.run {
+                        // 本地有数据，就不请求网络
+                        return MediatorResult.Success(endOfPaginationReached = false)
+                    }
+                    1L
                 }
-                1L
             }
 
             LoadType.PREPEND -> return MediatorResult.Success(true) // 不向前翻

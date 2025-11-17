@@ -16,9 +16,11 @@ import ai.saniou.nmb.data.storage.SubscriptionStorage
 import ai.saniou.nmb.domain.ForumCategoryUseCase
 import ai.saniou.nmb.domain.ForumUseCase
 import ai.saniou.nmb.domain.NoticeUseCase
+import ai.saniou.nmb.domain.GetReferenceUseCase
+import ai.saniou.nmb.domain.GetThreadDetailUseCase
+import ai.saniou.nmb.domain.GetThreadRepliesPagingUseCase
 import ai.saniou.nmb.domain.PostUseCase
 import ai.saniou.nmb.domain.SubscriptionUseCase
-import ai.saniou.nmb.domain.ThreadDetailUseCase
 import ai.saniou.nmb.domain.UserUseCase
 import ai.saniou.nmb.initializer.AppInitializer
 import ai.saniou.nmb.workflow.forum.ForumViewModel
@@ -98,8 +100,10 @@ val nmbdi = DI {
     bindProvider { ForumViewModel(instance()) }
 
     // 帖子相关
-    bindProvider { ThreadDetailUseCase(instance(), instance()) }
-    bindProvider { ThreadViewModel(instance(), instance(), instance()) }
+    bindProvider { GetThreadDetailUseCase(instance()) }
+    bindProvider { GetThreadRepliesPagingUseCase(instance(), instance()) }
+    bindProvider { GetReferenceUseCase(instance(), instance()) }
+    bindProvider { ThreadViewModel(instance(), instance(), instance(), instance(), instance()) }
 
     // 发帖和回复相关
     bindProvider { PostUseCase(instance()) }

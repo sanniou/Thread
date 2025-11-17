@@ -1,6 +1,5 @@
 package ai.saniou.nmb.workflow.thread
 
-import ai.saniou.coreui.state.LoadingWrapper
 import ai.saniou.coreui.state.UiStateWrapper
 import ai.saniou.coreui.widgets.PullToRefreshWrapper
 import ai.saniou.nmb.data.entity.Thread
@@ -19,8 +18,11 @@ import ai.saniou.nmb.ui.components.ThreadMenu
 import ai.saniou.nmb.ui.components.ThreadSpacer
 import ai.saniou.nmb.workflow.image.ImagePreviewPage
 import ai.saniou.nmb.workflow.reference.ReferenceViewModel
+import ai.saniou.nmb.workflow.thread.ThreadContract.Event
+import ai.saniou.nmb.workflow.thread.ThreadContract.State
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,6 +34,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -40,12 +44,12 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -66,6 +70,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -91,263 +96,188 @@ data class ThreadPage(
     val di: DI = nmbdi,
 ) : Screen {
 
-
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val snackbarHostState = remember { SnackbarHostState() }
+        val lazyListState = rememberLazyListState()
+        val coroutineScope = rememberCoroutineScope()
+        val clipboardManager = LocalClipboardManager.current
 
-        var titleBar = remember { "" }
-        val onSetupMenuButton: ((@Composable () -> Unit) -> Unit) = {}
+        val viewModel: ThreadViewModel = viewModel {
+            val viewModel by di.instance<ThreadViewModel>()
+            viewModel
+        }
+        val state by viewModel.state.collectAsStateWithLifecycle()
+
+        // 菜单状态
+        var showMenu by remember { mutableStateOf(false) }
+        var showJumpDialog by remember { mutableStateOf(false) }
+
+        // 引用弹窗状态
+        val referenceViewModel: ReferenceViewModel = viewModel {
+            val viewModel by di.instance<ReferenceViewModel>()
+            viewModel
+        }
+        var showReferencePopup by remember { mutableStateOf(false) }
+        var currentReferenceId by remember { mutableStateOf(0L) }
+        val referenceState by referenceViewModel.uiState.collectAsStateWithLifecycle()
+
+
+        // 加载数据
+        LaunchedEffect(threadId) {
+            if (threadId != null) {
+                viewModel.onEvent(Event.LoadThread(threadId))
+            }
+        }
+
+        // 处理 Snackbar
+        LaunchedEffect(state.snackbarMessage) {
+            state.snackbarMessage?.let {
+                snackbarHostState.showSnackbar(it)
+                viewModel.onEvent(Event.SnackbarMessageShown)
+            }
+        }
+
         Scaffold(
             topBar = {
                 TopAppBar(
+                    modifier = Modifier.pointerInput(Unit) {
+                        detectTapGestures(onDoubleTap = {
+                            coroutineScope.launch { lazyListState.animateScrollToItem(0) }
+                        })
+                    },
                     title = {
-                        Text(titleBar)
+                        if (state.thread != null) {
+                            Column {
+                                Text(
+                                    text = "No.${state.thread?.id}",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                if (state.forumName.isNotBlank()) {
+                                    Text(
+                                        text = state.forumName,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+                        }
                     },
                     navigationIcon = {
                         IconButton(onClick = { navigator.pop() }) {
-                            Icon(
-                                imageVector = Icons.Default.ArrowBack,
-                                contentDescription = "返回"
-                            )
+                            Icon(Icons.Default.ArrowBack, contentDescription = "返回")
                         }
                     },
                     actions = {
-                        onSetupMenuButton
-                        val (showMenu, setShowMenu) = remember { mutableStateOf(false) }
-                        IconButton(onClick = { setShowMenu(true) }) {
-                            Icon(
-                                imageVector = Icons.Default.MoreVert,
-                                contentDescription = "菜单"
-                            )
-                        }
-
-                        if (showMenu) {
-                            DropdownMenu(
-                                expanded = showMenu,
-                                onDismissRequest = { setShowMenu(false) }
-                            ) {
-                                DropdownMenuItem(
-                                    text = { Text("刷新") },
-                                    onClick = {
-                                        setShowMenu(false)
-                                    }
-                                )
-                                DropdownMenuItem(
-                                    text = { Text("分享") },
-                                    onClick = {
-                                        setShowMenu(false)
-                                    }
-                                )
-                            }
+                        IconButton(onClick = { showMenu = true }) {
+                            Icon(Icons.Default.MoreVert, contentDescription = "菜单")
                         }
                     }
                 )
             },
-            snackbarHost = {
-                SnackbarHost(hostState = snackbarHostState)
+            snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+            floatingActionButton = {
+                FloatingActionButton(onClick = { viewModel.onEvent(Event.Refresh) }) {
+                    Icon(Icons.Filled.Refresh, "刷新")
+                }
             }
         ) { innerPadding ->
             Box(modifier = Modifier.padding(innerPadding)) {
-                ThreadContent(
-                    threadId = threadId,
-                    di = di,
-                    onUpdateTitle = { titleBar = it },
-                    onSetupMenuButton = onSetupMenuButton,
-                )
-            }
-        }
-    }
-
-}
-
-@Composable
-fun ThreadContent(
-    threadId: Long?,
-    di: DI = nmbdi,
-    onUpdateTitle: ((String) -> Unit)? = null,
-    onSetupMenuButton: ((@Composable () -> Unit) -> Unit)? = null,
-) {
-    val navigator = LocalNavigator.currentOrThrow
-
-    val threadViewModel: ThreadViewModel = viewModel {
-        val viewModel by di.instance<ThreadViewModel>()
-        viewModel
-    }
-
-    // 引用ViewModel
-    val referenceViewModel: ReferenceViewModel = viewModel {
-        val viewModel by di.instance<ReferenceViewModel>()
-        viewModel
-    }
-
-    // 使用LaunchedEffect设置threadId，确保只在threadId变化时触发
-    LaunchedEffect(threadId) {
-        threadViewModel.setThreadId(threadId)
-    }
-
-    val uiState by threadViewModel.uiState.collectAsStateWithLifecycle()
-
-    // 菜单状态
-    var showMenu by remember { mutableStateOf(false) }
-    var showJumpDialog by remember { mutableStateOf(false) }
-
-    // 引用弹窗状态
-    var showReferencePopup by remember { mutableStateOf(false) }
-    var currentReferenceId by remember { mutableStateOf(0L) }
-    val referenceState by referenceViewModel.uiState.collectAsStateWithLifecycle()
-
-    // 复制链接的处理
-    val clipboardManager = LocalClipboardManager.current
-    val scope = rememberCoroutineScope()
-
-    // 监听状态变化，更新标题
-    LaunchedEffect(uiState) {
-        if (uiState is UiStateWrapper.Success<*>) {
-            val state = (uiState as UiStateWrapper.Success<ThreadUiState>).value!!
-            // 使用HTML标签来实现大标题和小标题的样式
-            val title = buildString {
-                append("<b>No.${threadId}</b>")
-                if (state.forumName.isNotBlank()) {
-                    append("<br><small>${state.forumName}</small>")
-                }
-            }
-            onUpdateTitle?.invoke(title)
-        }
-    }
-
-    LaunchedEffect((uiState as? UiStateWrapper.Success<ThreadUiState>)?.value?.subscribedMessage) {
-        (uiState as? UiStateWrapper.Success<ThreadUiState>)?.value?.subscribedMessage?.let {
-            //snackbarHostState.showSnackbar(it)
-        }
-    }
-
-
-    // 设置菜单按钮
-    LaunchedEffect(Unit) {
-        onSetupMenuButton?.invoke {
-            IconButton(onClick = { showMenu = true }) {
-                Icon(
-                    imageVector = Icons.Default.MoreVert,
-                    contentDescription = "菜单"
-                )
-            }
-        }
-    }
-
-    Box {
-        uiState.LoadingWrapper<ThreadUiState>(
-            content = { state ->
-                ThreadContent(
-                    uiState = state,
-                    onReplyClicked = { replyId ->
-                        // 处理回复点击
-                        threadViewModel.onReplyClicked(replyId)
-                    },
-                    refClick = { refId ->
-                        // 显示引用弹窗
-                        currentReferenceId = refId
-                        referenceViewModel.getReference(refId)
-                        showReferencePopup = true
-                    },
-                    onImageClick = { imgPath, ext ->
-                        // 导航到图片预览页面
-                        navigator.push(
-                            ImagePreviewPage(
-                                imgPath,
-                                ext
-                            )
-                        )
-                    }
-                )
-            },
-            error = {
-                // 错误状态显示
-                Box(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.padding(16.dp)
-                    ) {
-                        Text(
-                            text = "加载失败",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.error
-                        )
-                        ThreadSpacer()
-                        Button(
-                            onClick = { threadViewModel.setThreadId(threadId) }
+                when {
+                    state.isLoading && state.thread == null -> ThreadShimmer()
+                    state.error != null -> {
+                        Box(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Text("重试")
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier.padding(16.dp)
+                            ) {
+                                Text(
+                                    text = state.error ?: "加载失败",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                                ThreadSpacer()
+                                Button(onClick = { viewModel.onEvent(Event.Refresh) }) {
+                                    Text("重试")
+                                }
+                            }
                         }
                     }
+
+                    state.thread != null -> {
+                        ThreadSuccessContent(
+                            state = state,
+                            lazyListState = lazyListState,
+                            onRefresh = { viewModel.onEvent(Event.Refresh) },
+                            onReplyClicked = { /* TODO */ },
+                            onRefClick = { refId ->
+                                currentReferenceId = refId
+                                referenceViewModel.getReference(refId)
+                                showReferencePopup = true
+                            },
+                            onImageClick = { imgPath, ext ->
+                                navigator.push(ImagePreviewPage(imgPath, ext))
+                            },
+                            onJumpToPageClicked = { showJumpDialog = true },
+                            onToggleSubscribe = { viewModel.onEvent(Event.ToggleSubscription) }
+                        )
+                    }
                 }
-            },
-            loading = {
-                ThreadShimmer()
-            },
-            onRetryClick = {
-                // 重试时重新设置threadId，触发重新加载
-                threadViewModel.setThreadId(threadId)
             }
-        )
-    }
+        }
 
-    // 显示菜单
-    if (showMenu && uiState is UiStateWrapper.Success<*>) {
-        val state = (uiState as UiStateWrapper.Success<ThreadUiState>).value!!
-        ThreadMenu(
-            expanded = showMenu,
-            onDismissRequest = { showMenu = false },
-            onJumpToPage = { showJumpDialog = true },
-            onTogglePoOnly = { state.onTogglePoOnly() },
-            onToggleSubscribe = { state.onToggleSubscribe() },
-            onCopyLink = {
-                // 复制帖子链接
-                val url = "https://nmb.com/t/${threadId}"
-                clipboardManager.setText(AnnotatedString(url))
-                scope.launch {
-                    // snackbarHostState.showSnackbar("链接已复制到剪贴板")
+        // 菜单
+        if (showMenu) {
+            ThreadMenu(
+                expanded = true,
+                onDismissRequest = { showMenu = false },
+                onJumpToPage = {
+                    showMenu = false
+                    showJumpDialog = true
+                },
+                onTogglePoOnly = { viewModel.onEvent(Event.TogglePoOnlyMode) },
+                onToggleSubscribe = { viewModel.onEvent(Event.ToggleSubscription) },
+                onCopyLink = {
+                    val url = "https://nmb.com/t/${threadId}"
+                    clipboardManager.setText(AnnotatedString(url))
+                    coroutineScope.launch {
+                        snackbarHostState.showSnackbar("链接已复制到剪贴板")
+                    }
+                },
+                isSubscribed = state.isSubscribed,
+                isPoOnlyMode = state.isPoOnlyMode
+            )
+        }
+
+        // 跳页对话框
+        if (showJumpDialog) {
+            PageJumpDialog(
+                currentPage = state.currentPage,
+                totalPages = state.totalPages,
+                onDismissRequest = { showJumpDialog = false },
+                onJumpToPage = { page -> viewModel.onEvent(Event.JumpToPage(page)) }
+            )
+        }
+
+        // 引用弹窗
+        if (showReferencePopup) {
+            ReferencePopup(
+                refId = currentReferenceId,
+                reply = (referenceState as? UiStateWrapper.Success<ThreadReply>)?.value,
+                isLoading = referenceState is UiStateWrapper.Loading,
+                error = (referenceState as? UiStateWrapper.Error)?.message,
+                onDismiss = {
+                    showReferencePopup = false
+                    referenceViewModel.clear()
                 }
-            },
-            isSubscribed = state.isSubscribed,
-            isPoOnlyMode = state.isPoOnlyMode
-        )
-    }
-
-    // 显示跳转页面对话框
-    if (showJumpDialog && uiState is UiStateWrapper.Success<*>) {
-        val state = (uiState as UiStateWrapper.Success<ThreadUiState>).value!!
-        PageJumpDialog(
-            currentPage = state.currentPage,
-            totalPages = state.totalPages,
-            onDismissRequest = { showJumpDialog = false },
-            onJumpToPage = { page ->
-                state.onJumpToPage(page)
-            }
-        )
-    }
-
-    // 显示引用弹窗
-    if (showReferencePopup) {
-        ReferencePopup(
-            refId = currentReferenceId,
-            reply = if (referenceState is UiStateWrapper.Success<*>) {
-                (referenceState as UiStateWrapper.Success<ThreadReply>).value
-            } else null,
-            isLoading = referenceState is UiStateWrapper.Loading,
-            error = if (referenceState is UiStateWrapper.Error) {
-                (referenceState as UiStateWrapper.Error).message
-            } else null,
-            onDismiss = {
-                showReferencePopup = false
-                referenceViewModel.clear()
-            }
-        )
+            )
+        }
     }
 }
 
@@ -456,149 +386,127 @@ private fun ThreadShimmer() {
 }
 
 @Composable
-fun ThreadContent(
-    uiState: ThreadUiState,
+fun ThreadSuccessContent(
+    state: State,
+    lazyListState: LazyListState,
+    onRefresh: () -> Unit,
     onReplyClicked: (Long) -> Unit,
-    refClick: (Long) -> Unit,
+    onRefClick: (Long) -> Unit,
     onImageClick: (String, String) -> Unit,
+    onJumpToPageClicked: () -> Unit,
+    onToggleSubscribe: () -> Unit
 ) {
-    val replies = uiState.threadReplies.collectAsLazyPagingItems()
-    PullToRefreshWrapper(
-        onRefreshTrigger = {
-            replies.refresh()
-        }
-    ) {
+    val replies = state.replies.collectAsLazyPagingItems()
+    PullToRefreshWrapper(onRefreshTrigger = { replies.refresh() }) {
         Column {
             LazyColumn(
-                modifier = Modifier.padding(8.dp)
-                    .weight(1f)
+                state = lazyListState,
+                modifier = Modifier.padding(8.dp).weight(1f)
             ) {
                 // 主帖
                 item {
-                    ThreadMainPost(
-                        thread = uiState.thread,
-                        forumName = uiState.forumName,
-                        refClick = refClick,
-                        onImageClick = onImageClick
-                    )
+                    state.thread?.let {
+                        ThreadMainPost(
+                            thread = it,
+                            forumName = state.forumName,
+                            refClick = onRefClick,
+                            onImageClick = onImageClick
+                        )
+                    }
                     Spacer(modifier = Modifier.height(16.dp))
                 }
 
                 // 回复列表
                 items(replies.itemCount) { replyIndex ->
                     replies[replyIndex]?.let { reply ->
-                        ThreadReply(reply, onReplyClicked, refClick, onImageClick)
+                        ThreadReply(reply, onReplyClicked, onRefClick, onImageClick)
                         ThreadSpacer()
-                    } ?: ShimmerContainer {
-                        SkeletonReplyItem(it)
-                    }
+                    } ?: ShimmerContainer { SkeletonReplyItem(it) }
                 }
 
+                // Paging 加载状态
                 item {
                     when {
-                        replies.loadState.refresh is LoadState.Loading
-                                && replies.itemCount == 0 -> ThreadShimmer()
-
-                        replies.loadState.refresh is LoadState.Loading -> {
-                            // 显示初始加载中
-                        }
-
+                        replies.loadState.refresh is LoadState.Loading && replies.itemCount == 0 -> ThreadShimmer()
                         replies.loadState.refresh is LoadState.Error -> {
-                            val error = (replies.loadState.refresh as LoadState.Error).error
-                            // 显示初始加载失败UI
+                            // 错误状态已在顶层处理
                         }
-
                         replies.loadState.append is LoadState.Error -> LoadingFailedIndicator()
                         replies.loadState.append is LoadState.Loading -> LoadingIndicator()
-
                         replies.loadState.append.endOfPaginationReached && replies.itemCount == 0 -> {
-                            // 空回复状态
-                            Box(
-                                modifier = Modifier.fillMaxWidth(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    modifier = Modifier.padding(32.dp)
-                                ) {
-                                    Spacer(modifier = Modifier.height(32.dp))
-
-                                    Icon(
-                                        imageVector = Icons.Default.Info,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(48.dp),
-                                        tint = MaterialTheme.colorScheme.primary
-                                    )
-
-                                    Spacer(modifier = Modifier.height(16.dp))
-
-                                    Text(
-                                        text = "暂无回复",
-                                        style = MaterialTheme.typography.titleMedium
-                                    )
-
-                                    ThreadSpacer()
-
-                                    Text(
-                                        text = "成为第一个回复的人吧！",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        textAlign = TextAlign.Center,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-
-                                    Spacer(modifier = Modifier.height(16.dp))
-
-                                    Button(
-                                        onClick = { replies.refresh() }
-                                    ) {
-                                        Text("刷新")
-                                    }
-                                }
-                            }
+                            EmptyReplyContent(onRefresh)
                         }
-
                         replies.loadState.append.endOfPaginationReached -> LoadEndIndicator()
                     }
                 }
             }
 
+            // 底部操作栏
             Row(
                 modifier = Modifier
+                    .fillMaxWidth()
                     .background(MaterialTheme.colorScheme.surface)
                     .padding(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
+                horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                Button({
-                    uiState.onToggleSubscribe()
-                }) {
+                Button(onClick = onToggleSubscribe) {
                     Icon(
                         imageVector = Icons.Default.Favorite,
-                        tint = if (uiState.isSubscribed) {
-                            MaterialTheme.colorScheme.onPrimary
-                        } else {
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                        },
+                        tint = if (state.isSubscribed) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                         contentDescription = stringResource(Res.string.favorites),
                     )
+                    Spacer(Modifier.size(4.dp))
+                    Text(if (state.isSubscribed) "已收藏" else "收藏")
                 }
 
-                Button({
-
-                }) {
+                Button(onClick = onJumpToPageClicked) {
                     Icon(
                         imageVector = Icons.Default.PlayArrow,
-                        tint = if (uiState.isSubscribed) {
-                            MaterialTheme.colorScheme.onPrimary
-                        } else {
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                        },
                         contentDescription = stringResource(Res.string.jump_to_page),
                     )
+                    Spacer(Modifier.size(4.dp))
+                    Text("跳页")
                 }
             }
         }
+    }
+}
 
+@Composable
+private fun EmptyReplyContent(onRefresh: () -> Unit) {
+    Box(
+        modifier = Modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(32.dp)
+        ) {
+            Spacer(modifier = Modifier.height(32.dp))
+            Icon(
+                imageVector = Icons.Default.Info,
+                contentDescription = null,
+                modifier = Modifier.size(48.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "暂无回复",
+                style = MaterialTheme.typography.titleMedium
+            )
+            ThreadSpacer()
+            Text(
+                text = "成为第一个回复的人吧！",
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(onClick = onRefresh) {
+                Text("刷新")
+            }
+        }
     }
 }
 
