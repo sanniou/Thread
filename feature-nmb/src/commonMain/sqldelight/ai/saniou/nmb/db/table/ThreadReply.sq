@@ -72,3 +72,6 @@ SELECT * FROM ThreadReply WHERE threadId = :threadId AND userHash = :userHash OR
 
 countThreadRepliesByUserHash:
 SELECT count(*) FROM ThreadReply WHERE threadId = :threadId AND userHash = :userHash;
+
+isPageExist:
+SELECT EXISTS(SELECT 1 FROM ThreadReply WHERE threadId = :threadId AND page = :page);

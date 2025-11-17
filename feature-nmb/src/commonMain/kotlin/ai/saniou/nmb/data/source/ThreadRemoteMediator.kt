@@ -31,6 +31,12 @@ class ThreadRemoteMediator(
         val page = when (loadType) {
             LoadType.REFRESH -> {
                 if (initialPage != null) {
+                    val isPageExist =
+                        db.threadReplyQueries.isPageExist(threadId, initialPage.toLong())
+                            .executeAsOne()
+                    if (isPageExist) {
+                        return MediatorResult.Success(endOfPaginationReached = false)
+                    }
                     initialPage.toLong()
                 } else {
                     val remoteKey = db.remoteKeyQueries.getRemoteKeyById(
@@ -65,9 +71,6 @@ class ThreadRemoteMediator(
                 val endOfPagination = threadDetail.replies.none { it.id != 9999999L }
 
                 db.transaction {
-                    if (loadType == LoadType.REFRESH && initialPage != null) {
-                        db.threadReplyQueries.deleteThreadRepliesByThreadId(threadId)
-                    }
                     db.threadQueries.insertThread(threadDetail.toTable())
                     threadDetail.toTableReply(page)
                         .forEach(db.threadReplyQueries::insertThreadReply)
