@@ -14,9 +14,9 @@ import ai.saniou.nmb.ui.components.ShimmerContainer
 import ai.saniou.nmb.ui.components.SkeletonReplyItem
 import ai.saniou.nmb.ui.components.ThreadAuthor
 import ai.saniou.nmb.ui.components.ThreadBody
-import ai.saniou.nmb.ui.components.ThreadMenu
 import ai.saniou.nmb.ui.components.ThreadSpacer
 import ai.saniou.nmb.workflow.image.ImagePreviewPage
+import ai.saniou.nmb.workflow.post.PostPage
 import ai.saniou.nmb.workflow.reference.ReferenceViewModel
 import ai.saniou.nmb.workflow.thread.ThreadContract.Event
 import ai.saniou.nmb.workflow.thread.ThreadContract.State
@@ -37,14 +37,26 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.updateTransition
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -55,6 +67,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -69,7 +82,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
@@ -111,8 +126,6 @@ data class ThreadPage(
         }
         val state by viewModel.state.collectAsStateWithLifecycle()
 
-        // 菜单状态
-        var showMenu by remember { mutableStateOf(false) }
         var showJumpDialog by remember { mutableStateOf(false) }
 
         // 引用弹窗状态
@@ -170,18 +183,32 @@ data class ThreadPage(
                         IconButton(onClick = { navigator.pop() }) {
                             Icon(Icons.Default.ArrowBack, contentDescription = "返回")
                         }
-                    },
-                    actions = {
-                        IconButton(onClick = { showMenu = true }) {
-                            Icon(Icons.Default.MoreVert, contentDescription = "菜单")
-                        }
                     }
                 )
             },
             snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
             floatingActionButton = {
-                FloatingActionButton(onClick = { viewModel.onEvent(Event.Refresh) }) {
-                    Icon(Icons.Filled.Refresh, "刷新")
+                if (state.thread != null) {
+                    ThreadActionsFab(
+                        isSubscribed = state.isSubscribed,
+                        isPoOnlyMode = state.isPoOnlyMode,
+                        onRefresh = { viewModel.onEvent(Event.Refresh) },
+                        onToggleSubscription = { viewModel.onEvent(Event.ToggleSubscription) },
+                        onJumpToPage = { showJumpDialog = true },
+                        onTogglePoOnly = { viewModel.onEvent(Event.TogglePoOnlyMode) },
+                        onCopyLink = {
+                            val url = "https://nmb.com/t/${threadId}"
+                            clipboardManager.setText(AnnotatedString(url))
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar("链接已复制到剪贴板")
+                            }
+                        },
+                        onPost = {
+                            state.thread?.let {
+                                navigator.push(PostPage(it.fid, it.id))
+                            }
+                        }
+                    )
                 }
             }
         ) { innerPadding ->
@@ -223,36 +250,11 @@ data class ThreadPage(
                             },
                             onImageClick = { imgPath, ext ->
                                 navigator.push(ImagePreviewPage(imgPath, ext))
-                            },
-                            onJumpToPageClicked = { showJumpDialog = true },
-                            onToggleSubscribe = { viewModel.onEvent(Event.ToggleSubscription) }
+                            }
                         )
                     }
                 }
             }
-        }
-
-        // 菜单
-        if (showMenu) {
-            ThreadMenu(
-                expanded = true,
-                onDismissRequest = { showMenu = false },
-                onJumpToPage = {
-                    showMenu = false
-                    showJumpDialog = true
-                },
-                onTogglePoOnly = { viewModel.onEvent(Event.TogglePoOnlyMode) },
-                onToggleSubscribe = { viewModel.onEvent(Event.ToggleSubscription) },
-                onCopyLink = {
-                    val url = "https://nmb.com/t/${threadId}"
-                    clipboardManager.setText(AnnotatedString(url))
-                    coroutineScope.launch {
-                        snackbarHostState.showSnackbar("链接已复制到剪贴板")
-                    }
-                },
-                isSubscribed = state.isSubscribed,
-                isPoOnlyMode = state.isPoOnlyMode
-            )
         }
 
         // 跳页对话框
@@ -393,8 +395,6 @@ fun ThreadSuccessContent(
     onReplyClicked: (Long) -> Unit,
     onRefClick: (Long) -> Unit,
     onImageClick: (String, String) -> Unit,
-    onJumpToPageClicked: () -> Unit,
-    onToggleSubscribe: () -> Unit
 ) {
     val replies = state.replies.collectAsLazyPagingItems()
     PullToRefreshWrapper(onRefreshTrigger = { replies.refresh() }) {
@@ -431,44 +431,18 @@ fun ThreadSuccessContent(
                         replies.loadState.refresh is LoadState.Error -> {
                             // 错误状态已在顶层处理
                         }
+
                         replies.loadState.append is LoadState.Error -> LoadingFailedIndicator()
                         replies.loadState.append is LoadState.Loading -> LoadingIndicator()
                         replies.loadState.append.endOfPaginationReached && replies.itemCount == 0 -> {
                             EmptyReplyContent(onRefresh)
                         }
+
                         replies.loadState.append.endOfPaginationReached -> LoadEndIndicator()
                     }
                 }
             }
 
-            // 底部操作栏
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surface)
-                    .padding(8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                Button(onClick = onToggleSubscribe) {
-                    Icon(
-                        imageVector = Icons.Default.Favorite,
-                        tint = if (state.isSubscribed) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                        contentDescription = stringResource(Res.string.favorites),
-                    )
-                    Spacer(Modifier.size(4.dp))
-                    Text(if (state.isSubscribed) "已收藏" else "收藏")
-                }
-
-                Button(onClick = onJumpToPageClicked) {
-                    Icon(
-                        imageVector = Icons.Default.PlayArrow,
-                        contentDescription = stringResource(Res.string.jump_to_page),
-                    )
-                    Spacer(Modifier.size(4.dp))
-                    Text("跳页")
-                }
-            }
         }
     }
 }
@@ -631,5 +605,88 @@ fun ThreadReply(
             ThreadBody(reply, onReferenceClick = refClick, onImageClick = onImageClick)
 
         }
+
     }
 }
+
+@Composable
+fun ThreadActionsFab(
+    isSubscribed: Boolean,
+    isPoOnlyMode: Boolean,
+    onRefresh: () -> Unit,
+    onToggleSubscription: () -> Unit,
+    onJumpToPage: () -> Unit,
+    onTogglePoOnly: () -> Unit,
+    onCopyLink: () -> Unit,
+    onPost: () -> Unit,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val transition = updateTransition(targetState = expanded, label = "fab_transition")
+
+    val rotation by transition.animateFloat(label = "fab_rotation") { isExpanded ->
+        if (isExpanded) 45f else 0f
+    }
+
+    Column(
+        horizontalAlignment = Alignment.End,
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        AnimatedVisibility(
+            visible = expanded,
+            enter = fadeIn() + slideInVertically(initialOffsetY = { it / 2 }),
+            exit = fadeOut() + slideOutVertically(targetOffsetY = { it / 2 })
+        ) {
+            Column(
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                FabAction(icon = Icons.Default.Refresh, text = "刷新", onClick = onRefresh)
+                FabAction(
+                    icon = if (isSubscribed) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                    text = "收藏",
+                    onClick = onToggleSubscription
+                )
+                FabAction(icon = Icons.Default.PlayArrow, text = "跳页", onClick = onJumpToPage)
+                FabAction(
+                    icon = if (isPoOnlyMode) Icons.Filled.Person else Icons.Outlined.Person,
+                    text = "仅看PO",
+                    onClick = onTogglePoOnly
+                )
+                FabAction(icon = Icons.Default.Call, text = "复制链接", onClick = onCopyLink)
+                FabAction(icon = Icons.Default.Edit, text = "回复", onClick = onPost)
+            }
+        }
+
+        FloatingActionButton(onClick = { expanded = !expanded }) {
+            Icon(
+                Icons.Default.Add,
+                contentDescription = "操作",
+                modifier = Modifier.rotate(rotation)
+            )
+        }
+    }
+}
+
+@Composable
+fun FabAction(icon: ImageVector, text: String, onClick: () -> Unit) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.clickable(onClick = onClick)
+    ) {
+        Card(
+            shape = RoundedCornerShape(8.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        ) {
+            Text(text, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
+        }
+        SmallFloatingActionButton(
+            onClick = onClick,
+            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+        ) {
+            Icon(icon, contentDescription = text)
+        }
+    }
+}
+
