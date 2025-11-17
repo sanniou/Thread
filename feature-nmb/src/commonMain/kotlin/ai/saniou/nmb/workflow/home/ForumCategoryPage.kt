@@ -5,8 +5,9 @@ import ai.saniou.nmb.di.nmbdi
 import ai.saniou.nmb.ui.components.DrawerHeader
 import ai.saniou.nmb.ui.components.DrawerMenuItem
 import ai.saniou.nmb.ui.components.DrawerMenuRow
-import ai.saniou.nmb.workflow.forum.ForumContent
-import ai.saniou.nmb.workflow.image.ImagePreviewPage
+import ai.saniou.nmb.workflow.forum.ForumPage
+import ai.saniou.nmb.workflow.home.ForumCategoryContract.Event
+import ai.saniou.nmb.workflow.home.ForumCategoryContract.State
 import ai.saniou.nmb.workflow.subscription.SubscriptionPage
 import ai.saniou.nmb.workflow.thread.ThreadPage
 import androidx.compose.animation.AnimatedVisibility
@@ -41,7 +42,6 @@ import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -53,252 +53,111 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.kodein.di.DI
 import org.kodein.di.instance
-
 
 @Composable
 fun ForumCategoryPage(
     di: DI = nmbdi,
-    onThreadClicked: (Long) -> Unit,
-    onNewPostClicked: (Long) -> Unit,
     drawerState: DrawerState,
 ) {
-    val forumCategoryViewModel: ForumCategoryViewModel = viewModel {
-        val forumCategoryViewModel by di.instance<ForumCategoryViewModel>()
-        forumCategoryViewModel;
+    val viewModel: ForumCategoryViewModel = viewModel {
+        val vm by di.instance<ForumCategoryViewModel>()
+        vm
     }
-    val categoryContent by forumCategoryViewModel.uiState.collectAsStateWithLifecycle()
+    val state by viewModel.state.collectAsStateWithLifecycle()
 
     val greetImageViewModel: GreetImageViewModel = viewModel {
-        val greetImageViewModel by di.instance<GreetImageViewModel>()
-        greetImageViewModel
+        val vm by di.instance<GreetImageViewModel>()
+        vm
     }
     val greetImageUrl by greetImageViewModel.greetImageUrl.collectAsStateWithLifecycle()
 
-    // 创建协程作用域用于控制抽屉
+    val navigator = LocalNavigator.currentOrThrow
     val scope = rememberCoroutineScope()
 
-    // 监听当前选中的 forum 并自动加载
-    LaunchedEffect(categoryContent.currentForum) {
-        categoryContent.currentForum?.let { forumId ->
-            //onUpdateTitle?.invoke(categoryContent.currentForum ?: "")
-        }
-    }
-
-    ForumCategoryUi(
-        uiState = categoryContent,
-        onThreadClicked = onThreadClicked,
-        onNewPostClicked = onNewPostClicked,
-        drawerState = drawerState,
-        scope = scope,
-        greetImageUrl = greetImageUrl
-    )
-}
-
-@Composable
-@Preview
-fun ForumCategoryUi(
-    uiState: ForumCategoryUiState,
-    onThreadClicked: (Long) -> Unit,
-    onNewPostClicked: (Long) -> Unit,
-    drawerState: DrawerState,
-    scope: CoroutineScope = rememberCoroutineScope(),
-    greetImageUrl: String? = null,
-) {
-    val navigator = LocalNavigator.currentOrThrow
-    val favoriteForums by uiState.favoriteForums.collectAsStateWithLifecycle(emptyList())
-    val favoriteCategory = remember(favoriteForums) {
+    val favoriteCategory = remember(state.favoriteForums) {
         ForumCategory(
-            id = Long.MIN_VALUE,
-            sort = Long.MIN_VALUE,
+            id = -1L, // 使用一个固定的特殊ID
+            sort = -1L,
             name = "收藏",
             status = "n",
-            forums = favoriteForums
+            forums = state.favoriteForums
         )
     }
+
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
             ModalDrawerSheet {
-                // 使用Box将DrawerHeader作为背景层，其他内容可以叠加在上面
                 Box(modifier = Modifier.fillMaxSize()) {
-                    // 欢迎图片作为背景，高度为drawer的1/3
                     DrawerHeader(imageUrl = greetImageUrl)
-
-                    // 内容区域，包含菜单和论坛列表
                     Column(
                         modifier = Modifier.fillMaxSize()
                             .padding(top = 140.dp)
                             .background(Color.White.copy(alpha = 0.8f))
                     ) {
-                        // 菜单入口行：订阅列表、访问历史、发言记录、搜索按钮
                         DrawerMenuRow(
                             menuItems = listOf(
-                                DrawerMenuItem(
-                                    icon = Icons.Default.Favorite,
-                                    label = "订阅列表",
-                                    onClick = {
-                                        // 导航到订阅列表页面
-                                        navigator.push(SubscriptionPage(onThreadClicked = {
-                                            navigator.push(ThreadPage(it))
-                                        }))
-                                        scope.launch {
-                                            drawerState.close()
-                                        }
-                                    }
-                                ),
-                                DrawerMenuItem(
-                                    icon = Icons.Default.Home,
-                                    label = "访问历史",
-                                    onClick = {
-                                        // TODO: 导航到访问历史页面
-                                        scope.launch {
-                                            drawerState.close()
-                                        }
-                                    }
-                                ),
-                                DrawerMenuItem(
-                                    icon = Icons.Default.Send,
-                                    label = "发言记录",
-                                    onClick = {
-                                        // TODO: 导航到发言记录页面
-                                        scope.launch {
-                                            drawerState.close()
-                                        }
-                                    }
-                                ),
-                                DrawerMenuItem(
-                                    icon = Icons.Default.Search,
-                                    label = "搜索",
-                                    onClick = {
-                                        // TODO: 导航到搜索页面
-                                        scope.launch {
-                                            drawerState.close()
-                                        }
-                                    }
-                                )
-                            ),
-                            modifier = Modifier
+                                DrawerMenuItem(Icons.Default.Favorite, "订阅列表") {
+                                    navigator.push(SubscriptionPage { threadId ->
+                                        navigator.push(ThreadPage(threadId))
+                                    })
+                                    scope.launch { drawerState.close() }
+                                },
+                                DrawerMenuItem(Icons.Default.Home, "访问历史") { /* TODO */ },
+                                DrawerMenuItem(Icons.Default.Send, "发言记录") { /* TODO */ },
+                                DrawerMenuItem(Icons.Default.Search, "搜索") { /* TODO */ }
+                            )
                         )
-
-                        // 分隔线
                         HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
-                        // 如果论坛列表为空，显示加载提示
-                        if (uiState.forums.isEmpty()) {
+                        if (state.isLoading) {
                             Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
+                                modifier = Modifier.fillMaxWidth().padding(16.dp),
                                 contentAlignment = Alignment.Center
                             ) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(24.dp),
-                                    color = MaterialTheme.colorScheme.primary,
-                                    strokeWidth = 2.dp
-                                )
+                                CircularProgressIndicator()
                             }
                         } else {
-                            // 使用LazyColumn显示论坛列表，并确保它可以滚动
-                            LazyColumn(
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                items(buildList {
+                            LazyColumn(modifier = Modifier.weight(1f)) {
+                                val categories = buildList {
                                     add(favoriteCategory)
-                                    addAll(uiState.forums)
+                                    addAll(state.categories)
                                 }
-                                ) { category ->
-                                    // 分类项
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .clickable {
-                                                uiState.onCategoryClick(category.id)
-                                            }
-                                            .padding(horizontal = 16.dp, vertical = 12.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        // 分类图标
-                                        Icon(
-                                            imageVector = if (uiState.expandCategory == category.id)
-                                                Icons.Default.KeyboardArrowDown else Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                                            contentDescription = null,
-                                            tint = if (uiState.expandCategory == category.id)
-                                                MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-                                        )
-
-                                        Spacer(modifier = Modifier.width(8.dp))
-
-                                        // 分类名称
-                                        Text(
-                                            text = category.name,
-                                            style = MaterialTheme.typography.titleMedium,
-                                            color = if (uiState.expandCategory == category.id)
-                                                MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-                                        )
-                                    }
-
-                                    // 子论坛列表
-                                    AnimatedVisibility(uiState.expandCategory == category.id) {
+                                items(categories, key = { it.name }) { category ->
+                                    CategoryItem(
+                                        category = category,
+                                        isExpanded = state.expandedCategoryId == category.id,
+                                        onCategoryClick = {
+                                            viewModel.onEvent(
+                                                Event.ToggleCategory(
+                                                    category.id
+                                                )
+                                            )
+                                        }
+                                    )
+                                    AnimatedVisibility(visible = state.expandedCategoryId == category.id) {
                                         Column {
                                             category.forums.forEach { forum ->
-                                                Row(
-                                                    modifier = Modifier
-                                                        .fillMaxWidth()
-                                                        .combinedClickable(
-                                                            onClick = {
-                                                                uiState.onForumClick(forum)
-                                                                scope.launch {
-                                                                    drawerState.close()
-                                                                }
-                                                            },
-                                                            onClickLabel = "Favorite",
-                                                            onLongClick = {
-                                                                uiState.onFavoriteChange(forum)
-                                                            }
+                                                ForumItem(
+                                                    forum = forum,
+                                                    isSelected = state.currentForum?.id == forum.id,
+                                                    onForumClick = {
+                                                        viewModel.onEvent(Event.SelectForum(forum))
+                                                        scope.launch { drawerState.close() }
+                                                    },
+                                                    onFavoriteToggle = {
+                                                        viewModel.onEvent(
+                                                            Event.ToggleFavorite(
+                                                                forum
+                                                            )
                                                         )
-                                                        .padding(
-                                                            horizontal = 16.dp,
-                                                            vertical = 12.dp
-                                                        )
-                                                        .padding(start = 32.dp),
-                                                    verticalAlignment = Alignment.CenterVertically
-                                                ) {
-                                                    // 论坛选中指示器
-                                                    if (uiState.currentForum?.id == forum.id) {
-                                                        Box(
-                                                            modifier = Modifier
-                                                                .size(8.dp)
-                                                                .background(
-                                                                    MaterialTheme.colorScheme.primary,
-                                                                    CircleShape
-                                                                )
-                                                        )
-                                                        Spacer(modifier = Modifier.width(8.dp))
                                                     }
-
-                                                    // 论坛名称
-                                                    Text(
-                                                        text = if (forum.showName.isNullOrBlank()) forum.name else forum.showName,
-                                                        style = MaterialTheme.typography.bodyMedium,
-                                                        color = if (uiState.currentForum?.id == forum.id)
-                                                            MaterialTheme.colorScheme.primary
-                                                        else
-                                                            MaterialTheme.colorScheme.onSurfaceVariant
-                                                    )
-                                                    Text(
-                                                        text = forum.threadCount.toString(),
-                                                        style = MaterialTheme.typography.bodySmall,
-                                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                                    )
-                                                }
+                                                )
                                             }
                                         }
-
                                     }
                                 }
                             }
@@ -308,28 +167,77 @@ fun ForumCategoryUi(
             }
         }
     ) {
-        uiState.currentForum?.let { forumId ->
-            val forum = forumId
-            ForumContent(
-                forumId = forum.id,
-                fgroupId = forum.fGroup,
-                onThreadClicked = onThreadClicked,
-                onNewPostClicked = onNewPostClicked,
-                showFloatingActionButton = true,
-                onImageClick = { imgPath, ext ->
-                    // 导航到图片预览页面
-                    navigator.push(ImagePreviewPage(imgPath, ext))
-                }
-            )
+        state.currentForum?.let { forum ->
+            ForumPage(forumId = forum.id, fgroupId = forum.fGroup).Content()
         } ?: run {
-            // 未选择论坛时显示提示
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("请从左侧选择一个论坛")
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("请从左侧选择一个板块")
             }
         }
+    }
+}
+
+@Composable
+private fun CategoryItem(
+    category: ForumCategory,
+    isExpanded: Boolean,
+    onCategoryClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onCategoryClick)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        val icon =
+            if (isExpanded) Icons.Default.KeyboardArrowDown else Icons.AutoMirrored.Filled.KeyboardArrowRight
+        val color =
+            if (isExpanded) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+        Icon(imageVector = icon, contentDescription = null, tint = color)
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(text = category.name, style = MaterialTheme.typography.titleMedium, color = color)
+    }
+}
+
+@Composable
+private fun ForumItem(
+    forum: ai.saniou.nmb.data.entity.ForumDetail,
+    isSelected: Boolean,
+    onForumClick: () -> Unit,
+    onFavoriteToggle: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .combinedClickable(
+                onClick = onForumClick,
+                onLongClick = onFavoriteToggle
+            )
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (isSelected) {
+            Box(
+                modifier = Modifier
+                    .size(8.dp)
+                    .background(MaterialTheme.colorScheme.primary, CircleShape)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+        }
+        val color =
+            if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+        Text(
+            text = if (forum.showName.isNullOrBlank()) forum.name else forum.showName,
+            style = MaterialTheme.typography.bodyMedium,
+            color = color
+        )
+        Spacer(modifier = Modifier.weight(1f))
+        Text(
+            text = forum.threadCount.toString(),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 

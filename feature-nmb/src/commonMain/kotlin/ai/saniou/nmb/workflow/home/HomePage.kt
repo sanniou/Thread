@@ -129,16 +129,6 @@ fun HomePage() {
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {
             ForumCategoryPage(
-                onThreadClicked = {
-                    navController.push(
-                        ThreadPage(it)
-                    )
-                },
-                onNewPostClicked = { fid ->
-                    navController.push(
-                        PostPage(fid)
-                    )
-                },
                 drawerState = drawerState,
             )
         }

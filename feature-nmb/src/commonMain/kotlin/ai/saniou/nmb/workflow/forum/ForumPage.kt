@@ -8,20 +8,31 @@ import ai.saniou.nmb.ui.components.LoadingIndicator
 import ai.saniou.nmb.ui.components.RefreshCard
 import ai.saniou.nmb.ui.components.SkeletonLoader
 import ai.saniou.nmb.ui.components.ThreadCard
+import ai.saniou.nmb.workflow.forum.ForumContract.Event
 import ai.saniou.nmb.workflow.image.ImagePreviewPage
-import androidx.compose.foundation.layout.Box
+import ai.saniou.nmb.workflow.thread.ThreadPage
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
@@ -29,73 +40,88 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import org.kodein.di.DI
+import org.kodein.di.instance
 
-
-/**
- * ForumScreen 作为一个轻量级包装器，用于独立页面导航
- *
- * 该组件主要用于从非Drawer入口（如搜索结果、收藏列表等）进入论坛
- */
-
-data class ForumScreen(
+data class ForumPage(
     val di: DI = nmbdi,
-    val onThreadClicked: (Long) -> Unit = {},
-    val onNewPostClicked: (Long) -> Unit = {},
     val forumId: Long,
     val fgroupId: Long,
 ) : Screen {
 
+    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
-
         val navigator = LocalNavigator.currentOrThrow
+        val viewModel: ForumViewModel = viewModel {
+            val vm by di.instance<ForumViewModel>()
+            vm
+        }
+        val state by viewModel.state.collectAsStateWithLifecycle()
 
-        Surface(
-            color = MaterialTheme.colorScheme.background
-        ) {
-            // 使用可复用的ForumContent组件
-            ForumContent(
-                forumId = forumId,
-                fgroupId = fgroupId,
-                onThreadClicked = onThreadClicked,
-                onNewPostClicked = onNewPostClicked,
-                showFloatingActionButton = true,
-                onImageClick = { imgPath, ext ->
-                    // 导航到图片预览页面
-                    navigator.push(ImagePreviewPage(imgPath, ext))
+        LaunchedEffect(forumId, fgroupId) {
+            viewModel.onEvent(Event.LoadForum(forumId, fgroupId))
+        }
+
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text(state.forumName) },
+                    navigationIcon = {
+                        IconButton(onClick = { navigator.pop() }) {
+                            Icon(Icons.Default.ArrowBack, contentDescription = "返回")
+                        }
+                    }
+                )
+            }
+        ) { innerPadding ->
+            when {
+                state.isLoading -> SkeletonLoader()
+                state.error != null -> {
+                    Button(onClick = { viewModel.onEvent(Event.Refresh) }) {
+                        Text("加载失败，点击重试")
+                    }
                 }
-            )
+
+                else -> ForumContent(
+                    state = state,
+                    innerPadding = innerPadding,
+                    onThreadClicked = { threadId -> navigator.push(ThreadPage(threadId)) },
+                    onImageClick = { imgPath, ext ->
+                        navigator.push(
+                            ImagePreviewPage(
+                                imgPath,
+                                ext
+                            )
+                        )
+                    }
+                )
+            }
         }
     }
 }
 
 @Composable
-fun Forum(
-    uiState: ShowForumUiState,
+fun ForumContent(
+    state: ForumContract.State,
+    innerPadding: PaddingValues,
     onThreadClicked: (Long) -> Unit,
-    onImageClick: ((String, String) -> Unit)? = null,
-    innerPadding: PaddingValues? = null
+    onImageClick: (String, String) -> Unit,
 ) {
-    val forumList = uiState.forum.collectAsLazyPagingItems()
+    val threads = state.threads.collectAsLazyPagingItems()
+
     PullToRefreshWrapper(
-        onRefreshTrigger = {
-            forumList.refresh()
-        },
-        modifier = Modifier.run {
-            if (innerPadding != null) {
-                padding(innerPadding)
-            } else {
-                this
-            }
-        }
+        onRefreshTrigger = { threads.refresh() },
+        modifier = Modifier.padding(innerPadding)
     ) {
         val scrollState = rememberLazyListState()
         LazyColumn(
             state = scrollState,
             contentPadding = PaddingValues(8.dp)
         ) {
-            items(forumList.itemCount, forumList.itemKey { it.id }) { index ->
-                forumList[index]?.let { thread ->
+            items(threads.itemCount, threads.itemKey {
+                it.id
+            }) { index ->
+                threads[index]?.let { thread ->
                     ThreadCard(
                         thread = thread,
                         onClick = { onThreadClicked(thread.id) },
@@ -105,47 +131,20 @@ fun Forum(
                 }
             }
 
-            when (forumList.loadState.refresh) {
-                is LoadState.Error -> {
-                    item {
-                        RefreshCard(forumList)
-                    }
-                }
-
-                is LoadState.Loading -> {
-                    item {
-                        SkeletonLoader()
-                    }
-                }
-
+            when (threads.loadState.refresh) {
+                is LoadState.Error -> item { RefreshCard(threads) }
+                is LoadState.Loading -> item { SkeletonLoader() }
                 is LoadState.NotLoading -> {
-                    item {
-                        if (forumList.itemCount == 0) {
-                            LoadEndIndicator()
-                        }
+                    if (threads.itemCount == 0) {
+                        item { LoadEndIndicator() }
                     }
                 }
             }
 
-            when (forumList.loadState.append) {
-                is LoadState.Loading -> {
-                    item {
-                        LoadingIndicator()
-                    }
-                }
-
-                is LoadState.Error -> {
-                    item {
-                        LoadingFailedIndicator()
-                    }
-                }
-
-                is LoadState.NotLoading -> {
-                    item {
-                        LoadEndIndicator()
-                    }
-
-                }
+            when (threads.loadState.append) {
+                is LoadState.Loading -> item { LoadingIndicator() }
+                is LoadState.Error -> item { LoadingFailedIndicator() }
+                is LoadState.NotLoading -> item { LoadEndIndicator() }
             }
         }
     }

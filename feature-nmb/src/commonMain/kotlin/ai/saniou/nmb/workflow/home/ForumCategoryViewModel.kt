@@ -1,16 +1,16 @@
 package ai.saniou.nmb.workflow.home
 
-import ai.saniou.nmb.data.entity.ForumCategory
-import ai.saniou.nmb.data.entity.ForumDetail
 import ai.saniou.nmb.data.storage.CategoryStorage
 import ai.saniou.nmb.domain.ForumCategoryUseCase
 import ai.saniou.nmb.initializer.AppInitializer
+import ai.saniou.nmb.workflow.home.ForumCategoryContract.Event
+import ai.saniou.nmb.workflow.home.ForumCategoryContract.State
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -20,88 +20,74 @@ class ForumCategoryViewModel(
     private val categoryStorage: CategoryStorage
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(
-        ForumCategoryUiState(
-            favoriteForums = MutableStateFlow(emptyList()),
-            forums = emptyList(),
-            checkState = false,
-            onForwardChange = { checked ->
-                updateUiState {
-                    it.copy(checkState = checked)
-                }
-            },
-            onCategoryClick = { id ->
-                updateUiState { state ->
-                    // 保存展开的分类ID
-                    viewModelScope.launch {
-                        val newExpandId = if (state.expandCategory == id) null else id
-                    }
-                    state.copy(
-                        expandCategory = if (state.expandCategory == id) null else id
-                    )
-                }
-            },
-            onForumClick = { forum ->
-                // 保存选中的论坛ID
-                viewModelScope.launch {
-                    categoryStorage.saveLastOpenedForum(forum)
-                }
-                updateUiState { state ->
-                    state.copy(
-                        currentForum = forum
-                    )
-                }
-            },
-            onFavoriteChange = { forum ->
-                viewModelScope.launch {
-                    forumCategoryUseCase.changeFavoriteForum(forum)
-                }
-            }
-        )
-    )
+    private val _state = MutableStateFlow(State())
+    val state = _state.asStateFlow()
 
     init {
-        // 初始化应用
-        appInitializer.initialize()
-
-        // 加载论坛分类
-        loadForumCategories()
+        onEvent(Event.LoadCategories)
     }
 
-    private fun loadForumCategories() {
-        viewModelScope.launch {
-            // 尝试从缓存加载
-            val lastOpenedForum = categoryStorage.getLastOpenedForum()
-            val favoriteForums = forumCategoryUseCase.getFavoriteForums()
-            // 从网络加载新数据
-            val forums = forumCategoryUseCase()
+    fun onEvent(event: Event) {
+        when (event) {
+            Event.LoadCategories -> loadCategories()
+            is Event.SelectForum -> selectForum(event.forum)
+            is Event.ToggleCategory -> toggleCategory(event.categoryId)
+            is Event.ToggleFavorite -> toggleFavorite(event.forum)
+        }
+    }
 
-            updateUiState { state ->
-                state.copy(
-                    favoriteForums = favoriteForums,
-                    forums = forums,
-                    expandCategory = lastOpenedForum?.fGroup,
-                    currentForum = lastOpenedForum
-                )
+    private fun loadCategories() {
+        viewModelScope.launch {
+            _state.update { it.copy(isLoading = true, error = null) }
+            try {
+                // 初始化应用
+                appInitializer.initialize()
+
+                // 尝试从缓存加载
+                val lastOpenedForum = categoryStorage.getLastOpenedForum()
+                // 从网络加载新数据
+                val categories = forumCategoryUseCase()
+
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        categories = categories,
+                        expandedCategoryId = lastOpenedForum?.fGroup,
+                        currentForum = lastOpenedForum
+                    )
+                }
+
+                // 监听收藏夹变化
+                forumCategoryUseCase.getFavoriteForums()
+                    .catch { e -> _state.update { it.copy(error = "加载收藏夹失败: ${e.message}") } }
+                    .collect { favorites ->
+                        _state.update { it.copy(favoriteForums = favorites) }
+                    }
+
+            } catch (e: Exception) {
+                _state.update { it.copy(isLoading = false, error = "加载板块列表失败: ${e.message}") }
             }
         }
     }
 
-    private fun updateUiState(invoke: (ForumCategoryUiState) -> ForumCategoryUiState) {
-        _uiState.update(invoke)
+    private fun toggleCategory(categoryId: Long) {
+        _state.update {
+            it.copy(
+                expandedCategoryId = if (it.expandedCategoryId == categoryId) null else categoryId
+            )
+        }
     }
 
-    val uiState = _uiState.asStateFlow()
-}
+    private fun selectForum(forum: ai.saniou.nmb.data.entity.ForumDetail) {
+        viewModelScope.launch {
+            categoryStorage.saveLastOpenedForum(forum)
+        }
+        _state.update { it.copy(currentForum = forum) }
+    }
 
-data class ForumCategoryUiState(
-    var favoriteForums: Flow<List<ForumDetail>>,
-    var forums: List<ForumCategory>,
-    var expandCategory: Long? = null,
-    var currentForum: ForumDetail? = null,
-    var checkState: Boolean,
-    val onForwardChange: (Boolean) -> Unit,
-    val onCategoryClick: (Long) -> Unit,
-    val onForumClick: (ForumDetail) -> Unit,
-    val onFavoriteChange: (ForumDetail) -> Unit,
-)
+    private fun toggleFavorite(forum: ai.saniou.nmb.data.entity.ForumDetail) {
+        viewModelScope.launch {
+            forumCategoryUseCase.changeFavoriteForum(forum)
+        }
+    }
+}
