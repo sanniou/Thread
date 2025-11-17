@@ -1,5 +1,6 @@
 package ai.saniou.nmb.ui.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -13,10 +14,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun LoadEndIndicator() {
+fun LoadEndIndicator(onClick: (() -> Unit)? = null) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
+            .run {
+                if (onClick != null) {
+                    this.clickable(onClick = onClick)
+                } else {
+                    this
+                }
+            }
             .padding(16.dp),
         contentAlignment = Alignment.Center
     ) {

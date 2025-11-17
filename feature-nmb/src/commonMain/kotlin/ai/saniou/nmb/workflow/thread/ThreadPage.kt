@@ -438,7 +438,9 @@ fun ThreadSuccessContent(
                             EmptyReplyContent(onRefresh)
                         }
 
-                        replies.loadState.append.endOfPaginationReached -> LoadEndIndicator()
+                        replies.loadState.append.endOfPaginationReached -> LoadEndIndicator(
+                            onClick = { replies.refresh() }
+                        )
                     }
                 }
             }

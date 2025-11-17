@@ -43,11 +43,7 @@ class ThreadRemoteMediator(
                         type = RemoteKeyType.THREAD,
                         id = threadId.toString()
                     ).executeAsOneOrNull()
-
-                    if (remoteKey != null) {
-                        return MediatorResult.Success(endOfPaginationReached = false)
-                    }
-                    1L
+                    remoteKey?.currKey ?: 1L
                 }
             }
 
