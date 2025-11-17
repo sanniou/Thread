@@ -3,6 +3,7 @@ package ai.saniou.nmb.data.source
 import ai.saniou.corecommon.data.SaniouResponse
 import ai.saniou.nmb.data.entity.Feed
 import ai.saniou.nmb.data.entity.RemoteKeyType
+import ai.saniou.nmb.data.entity.nowToEpochMilliseconds
 import ai.saniou.nmb.data.entity.toTable
 import ai.saniou.nmb.data.repository.ForumRepository
 import ai.saniou.nmb.db.Database
@@ -77,7 +78,7 @@ class SubscriptionRemoteMediator(
                         db.subscriptionQueries.insertSubscription(
                             subscriptionKey = subscriptionKey, threadId = feed.id,
                             page = page,
-                            subscriptionTime = Clock.System.now().toEpochMilliseconds()
+                            subscriptionTime =  feed.nowToEpochMilliseconds(),
                         )
                     }
                     db.remoteKeyQueries.insertKey(
