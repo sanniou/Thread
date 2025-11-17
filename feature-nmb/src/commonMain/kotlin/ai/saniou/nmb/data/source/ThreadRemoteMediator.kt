@@ -17,28 +17,28 @@ import kotlin.time.ExperimentalTime
 @OptIn(ExperimentalPagingApi::class)
 class ThreadRemoteMediator(
     private val threadId: Long,
-    private val po: Boolean,
     private val forumRepository: ForumRepository,
     private val db: Database,
-    private val initialPage: Int? = null
+    private val initialPage: Int? = null,
 ) : RemoteMediator<Int, ai.saniou.nmb.db.table.ThreadReply>() {
 
 
     @OptIn(ExperimentalTime::class)
     override suspend fun load(
         loadType: LoadType,
-        state: PagingState<Int, ai.saniou.nmb.db.table.ThreadReply>
+        state: PagingState<Int, ai.saniou.nmb.db.table.ThreadReply>,
     ): MediatorResult {
         val page = when (loadType) {
             LoadType.REFRESH -> {
                 if (initialPage != null) {
                     initialPage.toLong()
                 } else {
-                    db.remoteKeyQueries.getRemoteKeyById(
+                    val remoteKey = db.remoteKeyQueries.getRemoteKeyById(
                         type = RemoteKeyType.THREAD,
                         id = threadId.toString()
-                    ).executeAsOneOrNull()?.run {
-                        // 本地有数据，就不请求网络
+                    ).executeAsOneOrNull()
+
+                    if (remoteKey != null) {
                         return MediatorResult.Success(endOfPaginationReached = false)
                     }
                     1L
@@ -48,18 +48,11 @@ class ThreadRemoteMediator(
             LoadType.PREPEND -> return MediatorResult.Success(true) // 不向前翻
 
             LoadType.APPEND -> {
-
-                val showPage = state.pages.last().last().page
-
                 val remoteKey = db.remoteKeyQueries.getRemoteKeyById(
                     type = RemoteKeyType.THREAD,
                     id = threadId.toString()
-                ).executeAsOneOrNull() ?: return MediatorResult.Success(true)
-
-                if (remoteKey.currKey > showPage) {
-                    return MediatorResult.Success(true)
-                }
-                remoteKey.nextKey ?: return MediatorResult.Success(true)
+                ).executeAsOneOrNull()
+                remoteKey?.nextKey ?: return MediatorResult.Success(endOfPaginationReached = true)
             }
         }
 
@@ -72,11 +65,9 @@ class ThreadRemoteMediator(
                 val endOfPagination = threadDetail.replies.none { it.id != 9999999L }
 
                 db.transaction {
-                    if (loadType == LoadType.REFRESH) {
-                        //db.forumQueries.clearForum(fid)
-                        //db.remoteKeyQueries.insertKey(forumId = fid, nextPage = null)
+                    if (loadType == LoadType.REFRESH && initialPage != null) {
+                        db.threadReplyQueries.deleteThreadRepliesByThreadId(threadId)
                     }
-
                     db.threadQueries.insertThread(threadDetail.toTable())
                     threadDetail.toTableReply(page)
                         .forEach(db.threadReplyQueries::insertThreadReply)
@@ -99,7 +90,7 @@ class ThreadRemoteMediator(
     }
 
     private suspend fun threadDetail(
-        page: Long
+        page: Long,
     ): SaniouResponse<Thread> =
-        if (po) forumRepository.po(threadId, page) else forumRepository.thread(threadId, page)
+        forumRepository.thread(threadId, page)
 }

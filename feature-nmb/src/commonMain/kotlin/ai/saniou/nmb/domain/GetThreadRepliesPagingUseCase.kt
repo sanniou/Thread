@@ -34,22 +34,41 @@ class GetThreadRepliesPagingUseCase(
                 initialLoadSize = 20 * 2,
                 maxSize = 20 * 5,
             ),
-            remoteMediator = ThreadRemoteMediator(threadId, po, forumRepository, db, initialPage),
+            remoteMediator = ThreadRemoteMediator(threadId, forumRepository, db, initialPage),
             pagingSourceFactory = {
-                SqlDelightPagingSource(
-                    countQueryProvider = {
-                        db.threadReplyQueries.countThreadReplies(threadId)
-                    },
-                    transacter = db.threadReplyQueries,
-                    context = Dispatchers.IO,
-                    queryProvider = { limit, offset ->
-                        db.threadReplyQueries.getThreadReplies(
-                            threadId = threadId,
-                            limit = limit,
-                            offset = offset
-                        )
-                    }
-                )
+                if (po) {
+                    val poUserHash = db.threadQueries.getThread(threadId).executeAsOne().userHash
+                    SqlDelightPagingSource(
+                        countQueryProvider = {
+                            db.threadReplyQueries.countThreadRepliesByUserHash(threadId, poUserHash)
+                        },
+                        transacter = db.threadReplyQueries,
+                        context = Dispatchers.IO,
+                        queryProvider = { limit, offset ->
+                            db.threadReplyQueries.getThreadRepliesByUserHash(
+                                threadId = threadId,
+                                userHash = poUserHash,
+                                limit = limit,
+                                offset = offset
+                            )
+                        }
+                    )
+                } else {
+                    SqlDelightPagingSource(
+                        countQueryProvider = {
+                            db.threadReplyQueries.countThreadReplies(threadId)
+                        },
+                        transacter = db.threadReplyQueries,
+                        context = Dispatchers.IO,
+                        queryProvider = { limit, offset ->
+                            db.threadReplyQueries.getThreadReplies(
+                                threadId = threadId,
+                                limit = limit,
+                                offset = offset
+                            )
+                        }
+                    )
+                }
             }
         ).flow.map { page -> page.map { reply -> reply.toThreadReply() } }
     }

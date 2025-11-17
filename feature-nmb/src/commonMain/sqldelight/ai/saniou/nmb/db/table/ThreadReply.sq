@@ -65,3 +65,10 @@ SELECT * FROM ThreadReply WHERE threadId = :threadId ORDER BY id DESC LIMIT 5;
 -- 统计 ThreadReply 数量
 countThreadReplies:
 SELECT count(*) FROM ThreadReply WHERE threadId = :threadId AND page >=0;
+
+
+getThreadRepliesByUserHash:
+SELECT * FROM ThreadReply WHERE threadId = :threadId AND userHash = :userHash ORDER BY id ASC LIMIT :limit OFFSET :offset;
+
+countThreadRepliesByUserHash:
+SELECT count(*) FROM ThreadReply WHERE threadId = :threadId AND userHash = :userHash;
