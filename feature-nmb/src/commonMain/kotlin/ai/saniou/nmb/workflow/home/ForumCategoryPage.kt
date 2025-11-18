@@ -43,7 +43,6 @@ import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -76,16 +75,6 @@ fun ForumCategoryPage(
 
     val navigator = LocalNavigator.currentOrThrow
     val scope = rememberCoroutineScope()
-
-    val favoriteCategory = remember(state.favoriteForums) {
-        ForumCategory(
-            id = -1L, // 使用一个固定的特殊ID
-            sort = -1L,
-            name = "收藏",
-            status = "n",
-            forums = state.favoriteForums
-        )
-    }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -122,11 +111,7 @@ fun ForumCategoryPage(
                             }
                         } else {
                             LazyColumn(modifier = Modifier.weight(1f)) {
-                                val categories = buildList {
-                                    add(favoriteCategory)
-                                    addAll(state.categories)
-                                }
-                                items(categories, key = { it.name }) { category ->
+                                items(state.categories, key = { it.name }) { category ->
                                     CategoryItem(
                                         category = category,
                                         isExpanded = state.expandedCategoryId == category.id,

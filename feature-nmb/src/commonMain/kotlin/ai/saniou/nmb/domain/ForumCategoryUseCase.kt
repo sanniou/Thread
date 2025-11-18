@@ -15,9 +15,9 @@ import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
@@ -29,8 +29,7 @@ class ForumCategoryUseCase(
     private val db: Database
 ) {
     @OptIn(ExperimentalTime::class)
-    suspend operator fun invoke(): List<ForumCategory> = coroutineScope {
-
+    operator fun invoke(): Flow<List<ForumCategory>> = flow {
         //如果超出一天时间
         val now = Clock.System.now()
         val lastQueryTime =
@@ -43,48 +42,35 @@ class ForumCategoryUseCase(
         val needUpdateForumCache = now - lastUpdateInstant >= 1.days
 
 
-        val forumList = async {
-            if (needUpdateForumCache)
-                when (val forumList = forumRepository.getForumList()) {
-                    is SaniouResponse.Success -> forumList.data.apply {
-                        // 过滤一个多余的时间线
-                        forEach { forumCategory ->
-                            forumCategory.forums = forumCategory.forums.filter { forumDetail ->
-                                forumDetail.id > 0
-                            }
-                        }
-                    }.apply {
-                        forEach { forumCategory ->
-                            db.forumQueries.insertForumCategory(forumCategory.toTable())
-                            forumCategory.forums.forEach { forumDetail ->
-                                db.forumQueries.insertForum(forumDetail.toTable())
-                            }
-                        }
-                    }
-
-                    is SaniouResponse.Error -> throw forumList.ex
-                }
-            else db.forumQueries.getAllForumCategory().executeAsList()
-                .map {
-                    it.toForumCategory(db.forumQueries.getGroupForum(it.id).executeAsList())
-                }
-        }
-        val timeLineList = async {
-            if (needUpdateForumCache)
-                when (val forumList = forumRepository.getTimelineList()) {
-                    is SaniouResponse.Success -> forumList.data.also { timeLines ->
-                        timeLines.forEach { timeLine ->
-                            db.timeLineQueries.insertTimeLine(timeLine.toTable())
-                        }
-                    }
-
-                    is SaniouResponse.Error -> throw forumList.ex
-                }
-            else
-                db.timeLineQueries.getAllTimeLines().executeAsList().map { it.toTimeLine() }
-        }
-
         if (needUpdateForumCache) {
+            when (val forumList = forumRepository.getForumList()) {
+                is SaniouResponse.Success -> forumList.data.apply {
+                    // 过滤一个多余的时间线
+                    forEach { forumCategory ->
+                        forumCategory.forums = forumCategory.forums.filter { forumDetail ->
+                            forumDetail.id > 0
+                        }
+                    }
+                }.apply {
+                    forEach { forumCategory ->
+                        db.forumQueries.insertForumCategory(forumCategory.toTable())
+                        forumCategory.forums.forEach { forumDetail ->
+                            db.forumQueries.insertForum(forumDetail.toTable())
+                        }
+                    }
+                }
+
+                is SaniouResponse.Error -> throw forumList.ex
+            }
+            when (val forumList = forumRepository.getTimelineList()) {
+                is SaniouResponse.Success -> forumList.data.also { timeLines ->
+                    timeLines.forEach { timeLine ->
+                        db.timeLineQueries.insertTimeLine(timeLine.toTable())
+                    }
+                }
+
+                is SaniouResponse.Error -> throw forumList.ex
+            }
             db.remoteKeyQueries.insertKey(
                 type = RemoteKeyType.FORUM_CATEGORY,
                 id = RemoteKeyType.FORUM_CATEGORY.name,
@@ -95,28 +81,41 @@ class ForumCategoryUseCase(
             )
         }
 
-        buildList {
-            add(
-                ForumCategory(
-                    id = -1,
-                    sort = -1,
-                    name = "时间线",
-                    status = "n",
-                    forums = timeLineList.await().map { timeLine ->
-                        ForumDetail(
-                            id = timeLine.id,
-                            name = timeLine.name,
-                            fGroup = -1,
-                            sort = -1,
-                            showName = timeLine.displayName,
-                            msg = timeLine.notice,
-                            threadCount = timeLine.maxPage * 20,
-                        )
-                    },
-                )
-            )
+        val forumListFlow =
+            db.forumQueries.getAllForumCategory().asFlow().mapToList(Dispatchers.IO).map { list ->
+                list.map {
+                    it.toForumCategory(db.forumQueries.getGroupForum(it.id).executeAsList())
+                }
+            }
+        val timeLineListFlow =
+            db.timeLineQueries.getAllTimeLines().asFlow().mapToList(Dispatchers.IO)
+                .map { list -> list.map { it.toTimeLine() } }
 
-            addAll(forumList.await())
+        combine(forumListFlow, timeLineListFlow) { forumList, timeLineList ->
+            buildList {
+                add(
+                    ForumCategory(
+                        id = -1,
+                        sort = -1,
+                        name = "时间线",
+                        status = "n",
+                        forums = timeLineList.map { timeLine ->
+                            ForumDetail(
+                                id = timeLine.id,
+                                name = timeLine.name,
+                                fGroup = -1,
+                                sort = -1,
+                                showName = timeLine.displayName,
+                                msg = timeLine.notice,
+                                threadCount = timeLine.maxPage * 20,
+                            )
+                        },
+                    )
+                )
+                addAll(forumList)
+            }
+        }.collect {
+            emit(it)
         }
     }
 

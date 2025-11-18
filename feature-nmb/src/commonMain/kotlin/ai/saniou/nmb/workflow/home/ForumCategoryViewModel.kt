@@ -1,5 +1,6 @@
 package ai.saniou.nmb.workflow.home
 
+import ai.saniou.nmb.data.entity.ForumCategory
 import ai.saniou.nmb.data.storage.CategoryStorage
 import ai.saniou.nmb.domain.ForumCategoryUseCase
 import ai.saniou.nmb.initializer.AppInitializer
@@ -10,7 +11,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -46,24 +47,30 @@ class ForumCategoryViewModel(
                 // 尝试从缓存加载
                 val lastOpenedForum = categoryStorage.getLastOpenedForum()
                 // 从网络加载新数据
-                val categories = forumCategoryUseCase()
-
-                _state.update {
-                    it.copy(
-                        isLoading = false,
-                        categories = categories,
-                        expandedCategoryId = lastOpenedForum?.fGroup,
-                        currentForum = lastOpenedForum
+                combine(
+                    forumCategoryUseCase.getFavoriteForums(),
+                    forumCategoryUseCase()
+                ) { favorites, categories ->
+                    val favoriteCategory = ForumCategory(
+                        id = -2L, // 使用一个固定的特殊ID
+                        sort = -2L,
+                        name = "收藏",
+                        status = "n",
+                        forums = favorites
                     )
-                }
-
-                // 监听收藏夹变化
-                forumCategoryUseCase.getFavoriteForums()
-                    .catch { e -> _state.update { it.copy(error = "加载收藏夹失败: ${e.message}") } }
-                    .collect { favorites ->
-                        _state.update { it.copy(favoriteForums = favorites) }
+                    listOf(favoriteCategory) + categories
+                }.catch { e ->
+                    _state.update { it.copy(error = "加载板块列表失败: ${e.message}") }
+                }.collect { combinedCategories ->
+                    _state.update {
+                        it.copy(
+                            isLoading = false,
+                            categories = combinedCategories,
+                            expandedCategoryId = lastOpenedForum?.fGroup,
+                            currentForum = lastOpenedForum
+                        )
                     }
-
+                }
             } catch (e: Exception) {
                 _state.update { it.copy(isLoading = false, error = "加载板块列表失败: ${e.message}") }
             }

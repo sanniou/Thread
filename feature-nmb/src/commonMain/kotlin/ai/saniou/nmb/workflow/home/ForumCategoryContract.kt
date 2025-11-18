@@ -13,7 +13,6 @@ interface ForumCategoryContract {
      * @property isLoading 是否正在加载板块列表
      * @property error 错误信息
      * @property categories 板块分类列表
-     * @property favoriteForums 收藏的板块列表
      * @property expandedCategoryId 当前展开的分类 ID
      * @property currentForum 当前选中的板块
      */
@@ -21,7 +20,6 @@ interface ForumCategoryContract {
         val isLoading: Boolean = true,
         val error: String? = null,
         val categories: List<ForumCategory> = emptyList(),
-        val favoriteForums: List<ForumDetail> = emptyList(),
         val expandedCategoryId: Long? = null,
         val currentForum: ForumDetail? = null
     )
