@@ -22,7 +22,7 @@ import ai.saniou.nmb.domain.GetReferenceUseCase
 import ai.saniou.nmb.domain.GetThreadDetailUseCase
 import ai.saniou.nmb.domain.GetThreadRepliesPagingUseCase
 import ai.saniou.nmb.domain.PostUseCase
-import ai.saniou.nmb.domain.SubscriptionUseCase
+import ai.saniou.nmb.domain.SubscriptionFeedUseCase
 import ai.saniou.nmb.domain.UserUseCase
 import ai.saniou.nmb.initializer.AppInitializer
 import ai.saniou.nmb.workflow.forum.ForumViewModel
@@ -147,7 +147,7 @@ val nmbdi = DI {
         createDatabase(DriverFactory())
     }
 
-    bindProvider { SubscriptionUseCase(instance(), instance()) }
+    bindProvider { SubscriptionFeedUseCase(instance(), instance()) }
 
     bindProvider { NoticeUseCase(instance(), instance(), instance()) }
     bindProvider { HomeViewModel(instance()) }

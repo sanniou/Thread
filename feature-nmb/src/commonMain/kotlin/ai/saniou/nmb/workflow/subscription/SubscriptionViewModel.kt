@@ -1,7 +1,7 @@
 package ai.saniou.nmb.workflow.subscription
 
 import ai.saniou.nmb.data.storage.SubscriptionStorage
-import ai.saniou.nmb.domain.SubscriptionUseCase
+import ai.saniou.nmb.domain.SubscriptionFeedUseCase
 import ai.saniou.nmb.workflow.subscription.SubscriptionContract.Effect
 import ai.saniou.nmb.workflow.subscription.SubscriptionContract.Event
 import ai.saniou.nmb.workflow.subscription.SubscriptionContract.State
@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class SubscriptionViewModel(
-    private val subscriptionUseCase: SubscriptionUseCase,
+    private val subscriptionFeedUseCase: SubscriptionFeedUseCase,
     private val subscriptionStorage: SubscriptionStorage
 ) : ScreenModel {
 
@@ -48,7 +48,7 @@ class SubscriptionViewModel(
                 .collect { id ->
                     _state.update { it.copy(subscriptionId = id, isLoading = true) }
                     try {
-                        val feeds = subscriptionUseCase.feed(id)
+                        val feeds = subscriptionFeedUseCase.feed(id)
                         _state.update {
                             it.copy(feeds = feeds, isLoading = false, error = null)
                         }
@@ -87,7 +87,7 @@ class SubscriptionViewModel(
         val id = state.value.subscriptionId ?: return
         screenModelScope.launch {
             try {
-                subscriptionUseCase.delFeed(id, threadId)
+                subscriptionFeedUseCase.delFeed(id, threadId)
                 _effect.send(Effect.OnUnsubscribeResult(true, "取消订阅成功"))
             } catch (e: Exception) {
                 _effect.send(Effect.OnUnsubscribeResult(false, "取消订阅失败: ${e.message}"))

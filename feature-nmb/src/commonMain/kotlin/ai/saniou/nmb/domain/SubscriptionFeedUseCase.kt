@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 
-class SubscriptionUseCase(
+class SubscriptionFeedUseCase(
     private val forumRepository: ForumRepository,
     private val db: Database,
 ) {
