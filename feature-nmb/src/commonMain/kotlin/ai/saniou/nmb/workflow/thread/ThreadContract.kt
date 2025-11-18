@@ -42,12 +42,6 @@ interface ThreadContract {
      */
     sealed interface Event {
         /**
-         * 加载指定的帖子
-         * @param id 帖子 ID
-         */
-        data class LoadThread(val id: Long) : Event
-
-        /**
          * 刷新当前帖子
          */
         object Refresh : Event

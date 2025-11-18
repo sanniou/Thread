@@ -5,7 +5,6 @@ import ai.saniou.coreui.widgets.ShimmerContainer
 import ai.saniou.coreui.widgets.VerticalSpacerSmall
 import ai.saniou.nmb.data.entity.Thread
 import ai.saniou.nmb.data.entity.ThreadReply
-import ai.saniou.nmb.di.nmbdi
 import ai.saniou.nmb.ui.components.LoadEndIndicator
 import ai.saniou.nmb.ui.components.LoadingFailedIndicator
 import ai.saniou.nmb.ui.components.LoadingIndicator
@@ -101,11 +100,9 @@ import cafe.adriel.voyager.kodein.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.launch
-import org.kodein.di.DI
 
 data class ThreadPage(
-    val threadId: Long?,
-    val di: DI = nmbdi,
+    val threadId: Long,
 ) : Screen {
 
     @OptIn(ExperimentalMaterial3Api::class)
@@ -117,7 +114,7 @@ data class ThreadPage(
         val coroutineScope = rememberCoroutineScope()
         val clipboardManager = LocalClipboardManager.current
 
-        val viewModel: ThreadViewModel = rememberScreenModel()
+        val viewModel: ThreadViewModel = rememberScreenModel(arg = threadId)
         val state by viewModel.state.collectAsState()
 
         var showJumpDialog by remember { mutableStateOf(false) }
@@ -127,14 +124,6 @@ data class ThreadPage(
         var showReferencePopup by remember { mutableStateOf(false) }
         var currentReferenceId by remember { mutableStateOf(0L) }
         val referenceState by referenceViewModel.uiState.collectAsState()
-
-
-        // 加载数据
-        LaunchedEffect(threadId) {
-            if (threadId != null) {
-                viewModel.onEvent(Event.LoadThread(threadId))
-            }
-        }
 
         // TODO: [AUTO-SCROLL] Implement auto-scroll to last read position and update on scroll.
 //        LaunchedEffect(lazyListState, state.thread) {

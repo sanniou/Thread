@@ -67,7 +67,7 @@ class SubscriptionPaneScreen : Screen {
                     },
                     detailPane = {
                         // val isDetailVisible = navigator.scaffoldValue[ListDetailPaneScaffoldRole.Detail] == PaneAdaptedValue.Expanded
-                        ThreadPage(threadId).Content()
+                        threadId?.let { ThreadPage(it).Content() }
                     },
                     paneExpansionState = paneExpansionState,
                     paneExpansionDragHandle = { state ->

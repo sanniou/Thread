@@ -8,6 +8,7 @@ import ai.saniou.nmb.domain.GetThreadDetailUseCase
 import ai.saniou.nmb.domain.GetThreadRepliesPagingUseCase
 import ai.saniou.nmb.workflow.thread.ThreadContract.Event
 import ai.saniou.nmb.workflow.thread.ThreadContract.State
+import androidx.paging.cachedIn
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.Job
@@ -21,6 +22,7 @@ import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
 class ThreadViewModel(
+    private val threadId: Long,
     // TODO: 订阅功能也应抽象为 UseCase
     private val nmbXdApi: NmbXdApi,
     private val subscriptionStorage: SubscriptionStorage,
@@ -33,7 +35,6 @@ class ThreadViewModel(
     private val _state = MutableStateFlow(State())
     val state = _state.asStateFlow()
 
-    private var threadId: Long? = null
     private var loadJob: Job? = null
 
     init {
@@ -41,16 +42,12 @@ class ThreadViewModel(
         screenModelScope.launch {
             subscriptionStorage.loadLastSubscriptionId()
         }
+        loadThread()
+        updateLastAccessTime()
     }
 
     fun onEvent(event: Event) {
         when (event) {
-            is Event.LoadThread -> {
-                threadId = event.id
-                loadThread()
-                updateLastAccessTime()
-            }
-
             is Event.JumpToPage -> jumpToPage(event.page)
             Event.Refresh -> loadThread()
             Event.TogglePoOnlyMode -> togglePoOnlyMode()
@@ -62,28 +59,25 @@ class ThreadViewModel(
 
     @OptIn(ExperimentalTime::class)
     private fun updateLastAccessTime() {
-        val id = threadId ?: return
         screenModelScope.launch {
-            nmbRepository.updateThreadLastAccessTime(id, Clock.System.now().epochSeconds)
+            nmbRepository.updateThreadLastAccessTime(threadId, Clock.System.now().epochSeconds)
         }
     }
 
     private fun updateLastReadReplyId(replyId: Long) {
-        val id = threadId ?: return
         screenModelScope.launch {
-            nmbRepository.updateThreadLastReadReplyId(id, replyId)
+            nmbRepository.updateThreadLastReadReplyId(threadId, replyId)
         }
     }
 
     private fun loadThread() {
-        val id = threadId ?: return
         loadJob?.cancel()
         loadJob = screenModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
 
             // 开始监听帖子主楼信息
             launch {
-                getThreadDetailUseCase(id)
+                getThreadDetailUseCase(threadId)
                     .catch { e ->
                         _state.update {
                             it.copy(
@@ -107,29 +101,27 @@ class ThreadViewModel(
             }
 
             // 加载回复
-            loadReplies(id, state.value.isPoOnlyMode)
+            loadReplies(threadId, state.value.isPoOnlyMode)
         }
     }
 
     private fun loadReplies(threadId: Long, isPoOnly: Boolean, page: Int? = null) {
-        val repliesFlow = getThreadRepliesPagingUseCase(threadId, isPoOnly, page)
+        val repliesFlow =
+            getThreadRepliesPagingUseCase(threadId, isPoOnly, page).cachedIn(screenModelScope)
         _state.update { it.copy(replies = repliesFlow, currentPage = page ?: 1) }
     }
 
     private fun jumpToPage(page: Int) {
-        val id = threadId ?: return
-        loadReplies(id, state.value.isPoOnlyMode, page)
+        loadReplies(threadId, state.value.isPoOnlyMode, page)
     }
 
     private fun togglePoOnlyMode() {
-        val id = threadId ?: return
         val newPoOnlyMode = !state.value.isPoOnlyMode
         _state.update { it.copy(isPoOnlyMode = newPoOnlyMode) }
-        loadReplies(id, newPoOnlyMode)
+        loadReplies(threadId, newPoOnlyMode)
     }
 
     private fun toggleSubscription() {
-        val id = threadId ?: return
         val currentSubscribed = state.value.isSubscribed
         val newSubscribed = !currentSubscribed
 
@@ -139,9 +131,9 @@ class ThreadViewModel(
                     ?: throw IllegalStateException("订阅ID未加载")
 
                 val resultMessage = if (newSubscribed) {
-                    nmbXdApi.addFeed(subscriptionId, id)
+                    nmbXdApi.addFeed(subscriptionId, threadId)
                 } else {
-                    nmbXdApi.delFeed(subscriptionId, id)
+                    nmbXdApi.delFeed(subscriptionId, threadId)
                 }
 
                 _state.update {

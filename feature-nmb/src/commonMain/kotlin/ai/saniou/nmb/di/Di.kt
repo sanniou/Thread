@@ -110,7 +110,17 @@ val nmbdi = DI {
     bindProvider { GetThreadDetailUseCase(instance()) }
     bindProvider { GetThreadRepliesPagingUseCase(instance(), instance()) }
     bindProvider { GetReferenceUseCase(instance(), instance()) }
-    bindProvider { ThreadViewModel(instance(), instance(), instance(), instance(), instance(), instance()) }
+    bindFactory<Long, ThreadViewModel> { threadId ->
+        ThreadViewModel(
+            threadId = threadId,
+            nmbXdApi = instance(),
+            subscriptionStorage = instance(),
+            getThreadDetailUseCase = instance(),
+            getThreadRepliesPagingUseCase = instance(),
+            forumUseCase = instance(),
+            nmbRepository = instance()
+        )
+    }
 
     // 发帖和回复相关
     bindProvider { PostUseCase(instance()) }
