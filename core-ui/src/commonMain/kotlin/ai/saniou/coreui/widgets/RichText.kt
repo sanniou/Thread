@@ -274,11 +274,11 @@ private fun AnnotatedString.Builder.handleSpanTag(
  */
 private fun decodeHtmlEntities(text: String): String {
     return text
-        .replace("<", "<")
-        .replace(">", ">")
-        .replace("&", "&")
-        .replace("\"", "\"")
-        .replace("'", "'")
+        .replace("&lt;", "<")
+        .replace("&gt;", ">")
+        .replace("&amp;", "&")
+        .replace("&quot;", "\"")
+        .replace("&#39;", "'")
         .replace("&nbsp;", " ")
 }
 
