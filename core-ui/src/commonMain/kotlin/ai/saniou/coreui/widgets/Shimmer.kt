@@ -23,7 +23,7 @@ private const val SHIMMER_DURATION = 1200
 private const val SHIMMER_DELAY = 300
 
 @Composable
-fun ShimmerBrush(): Brush {
+fun rememberShimmerBrush(): Brush {
     val shimmerColors = listOf(
         MaterialTheme.colorScheme.surfaceContainer,
         MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -52,7 +52,7 @@ fun ShimmerContainer(
     modifier: Modifier = Modifier,
     content: @Composable (Brush) -> Unit,
 ) {
-    val brush = ShimmerBrush()
+    val brush = rememberShimmerBrush()
     Box(modifier) { content(brush) }
 }
 
@@ -60,12 +60,12 @@ fun ShimmerContainer(
 fun SkeletonLine(
     modifier: Modifier = Modifier,
     height: Dp = 16.dp,
-    brush: Brush = ShimmerBrush()
+    brush: Brush = rememberShimmerBrush()
 ) {
     Box(
         modifier = modifier
             .height(height)
-            .clip(RoundedCornerShape(4.dp))
+            .clip(MaterialTheme.shapes.small)
             .background(brush)
     )
 }

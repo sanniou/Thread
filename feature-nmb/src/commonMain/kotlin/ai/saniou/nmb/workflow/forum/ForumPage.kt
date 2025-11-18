@@ -6,8 +6,8 @@ import ai.saniou.nmb.ui.components.LoadEndIndicator
 import ai.saniou.nmb.ui.components.LoadingFailedIndicator
 import ai.saniou.nmb.ui.components.LoadingIndicator
 import ai.saniou.nmb.ui.components.RefreshCard
-import ai.saniou.nmb.ui.components.SkeletonLoader
 import ai.saniou.nmb.ui.components.ThreadCard
+import ai.saniou.nmb.ui.components.ThreadListSkeleton
 import ai.saniou.nmb.workflow.forum.ForumContract.Event
 import ai.saniou.nmb.workflow.image.ImagePreviewPage
 import ai.saniou.nmb.workflow.thread.ThreadPage
@@ -73,7 +73,7 @@ data class ForumPage(
             }
         ) { innerPadding ->
             when {
-                state.isLoading -> SkeletonLoader()
+                state.isLoading -> ThreadListSkeleton()
                 state.error != null -> {
                     Button(onClick = { viewModel.onEvent(Event.Refresh) }) {
                         Text("加载失败，点击重试")
@@ -131,7 +131,7 @@ fun ForumContent(
 
             when (threads.loadState.refresh) {
                 is LoadState.Error -> item { RefreshCard(threads) }
-                is LoadState.Loading -> item { SkeletonLoader() }
+                is LoadState.Loading -> item { ThreadListSkeleton() }
                 is LoadState.NotLoading -> {
                     if (threads.itemCount == 0) {
                         item { LoadEndIndicator() }

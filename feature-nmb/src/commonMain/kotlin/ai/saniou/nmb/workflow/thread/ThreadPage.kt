@@ -1,8 +1,6 @@
 package ai.saniou.nmb.workflow.thread
 
-import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.PullToRefreshWrapper
-import ai.saniou.coreui.widgets.ShimmerBrush
 import ai.saniou.coreui.widgets.ShimmerContainer
 import ai.saniou.coreui.widgets.VerticalSpacerSmall
 import ai.saniou.nmb.data.entity.Thread
@@ -86,7 +84,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
@@ -511,9 +508,7 @@ fun ThreadMainPost(
     forumName: String = "",
     refClick: (Long) -> Unit,
     onImageClick: (String, String) -> Unit,
-    isLoading: Boolean = false,
 ) {
-    val brush = ShimmerBrush()
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
@@ -530,109 +525,56 @@ fun ThreadMainPost(
                     modifier = Modifier
                         .size(24.dp)
                         .clip(CircleShape)
-                        .run {
-                            if (isLoading) this.background(brush) else this.background(MaterialTheme.colorScheme.primary)
-                        }
+                        .background(MaterialTheme.colorScheme.primary)
                 ) {
-                    if (!isLoading) {
-                        Text(
-                            text = "PO",
-                            color = Color.White,
-                            modifier = Modifier.align(Alignment.Center),
-                            style = MaterialTheme.typography.labelSmall
-                        )
-                    }
+                    Text(
+                        text = "PO",
+                        color = Color.White,
+                        modifier = Modifier.align(Alignment.Center),
+                        style = MaterialTheme.typography.labelSmall
+                    )
                 }
 
                 VerticalSpacerSmall()
 
                 Column(modifier = Modifier.weight(1f)) {
-                    // 大标题 = 帖子号码
-                    if (isLoading) {
-                        Box(
-                            modifier = Modifier
-                                .width(200.dp)
-                                .height(20.dp)
-                                .clip(RoundedCornerShape(4.dp))
-                                .background(brush)
-                        )
-                    } else {
-                        Text(
-                            text = "No.${thread.id}",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
+                    Text(
+                        text = "No.${thread.id}",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
 
-                    // 小标题 = 论坛名称
                     if (forumName.isNotBlank()) {
-                        if (isLoading) {
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Box(
-                                modifier = Modifier
-                                    .width(150.dp)
-                                    .height(12.dp)
-                                    .clip(RoundedCornerShape(4.dp))
-                                    .background(brush)
-                            )
-                        } else {
-                            Text(
-                                text = forumName,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
+                        Text(
+                            text = forumName,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary
+                        )
                     }
 
-                    // 帖子标题
                     if (thread.title.isNotBlank() && thread.title != "无标题") {
-                        if (isLoading) {
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Box(
-                                modifier = Modifier
-                                    .width(100.dp)
-                                    .height(16.dp)
-                                    .clip(RoundedCornerShape(4.dp))
-                                    .background(brush)
-                            )
-                        } else {
-                            Text(
-                                text = thread.title,
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
+                        Text(
+                            text = thread.title,
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Medium
+                        )
                     }
 
-                    ThreadAuthor(thread, isLoading)
+                    ThreadAuthor(thread)
                 }
-
             }
 
             VerticalSpacerSmall()
             HorizontalDivider()
             VerticalSpacerSmall()
-            if (isLoading) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(100.dp)
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(brush)
-                )
-            } else {
-                ThreadBody(thread, onReferenceClick = refClick, onImageClick = onImageClick)
-            }
+            ThreadBody(thread, onReferenceClick = refClick, onImageClick = onImageClick)
             VerticalSpacerSmall()
 
-            // 回复数量
-            if (!isLoading) {
-                Text(
-                    text = "回复: ${thread.replyCount}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
+            Text(
+                text = "回复: ${thread.replyCount}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.primary
+            )
         }
     }
 }
@@ -643,9 +585,7 @@ fun ThreadReply(
     onReplyClicked: (Long) -> Unit,
     refClick: (Long) -> Unit,
     onImageClick: (String, String) -> Unit,
-    isLoading: Boolean = false,
 ) {
-    val brush = ShimmerBrush()
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -661,44 +601,21 @@ fun ThreadReply(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                ThreadAuthor(reply, isLoading)
+                ThreadAuthor(reply)
                 Spacer(modifier = Modifier.weight(1f))
 
-                // 显示回复号码
-                if (isLoading) {
-                    Box(
-                        modifier = Modifier
-                            .width(50.dp)
-                            .height(12.dp)
-                            .clip(RoundedCornerShape(4.dp))
-                            .background(brush)
-                    )
-                } else {
-                    Text(
-                        text = "No.${reply.id}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                Text(
+                    text = "No.${reply.id}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold
+                )
             }
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            if (isLoading) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(60.dp)
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(brush)
-                )
-            } else {
-                ThreadBody(reply, onReferenceClick = refClick, onImageClick = onImageClick)
-            }
-
+            ThreadBody(reply, onReferenceClick = refClick, onImageClick = onImageClick)
         }
-
     }
 }
 

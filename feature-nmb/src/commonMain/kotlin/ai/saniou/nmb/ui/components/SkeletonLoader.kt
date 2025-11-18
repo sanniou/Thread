@@ -1,7 +1,9 @@
 package ai.saniou.nmb.ui.components
 
-import ai.saniou.coreui.widgets.ShimmerBrush
+import ai.saniou.coreui.theme.Dimens
+import ai.saniou.coreui.widgets.ShimmerContainer
 import ai.saniou.coreui.widgets.SkeletonLine
+import ai.saniou.coreui.widgets.rememberShimmerBrush
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -23,17 +25,16 @@ import androidx.compose.ui.unit.dp
  * 用于显示内容加载中的占位UI
  */
 @Composable
-fun SkeletonLoader(
+fun ThreadListSkeleton(
     modifier: Modifier = Modifier,
     itemCount: Int = 5
 ) {
-    val brush = ShimmerBrush()
-    Column(
-        modifier = modifier.padding(8.dp)
-    ) {
-        repeat(itemCount) {
-            SkeletonThreadItem(brush)
-            Spacer(modifier = Modifier.height(8.dp))
+    ShimmerContainer(modifier = modifier.padding(Dimens.padding_small)) { brush ->
+        Column {
+            repeat(itemCount) {
+                SkeletonThreadItem(brush)
+                Spacer(modifier = Modifier.height(Dimens.padding_small))
+            }
         }
     }
 }
@@ -42,7 +43,7 @@ fun SkeletonLoader(
  * 骨架屏帖子项
  */
 @Composable
-fun SkeletonThreadItem(brush: Brush) {
+private fun SkeletonThreadItem(brush: Brush) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
@@ -51,33 +52,35 @@ fun SkeletonThreadItem(brush: Brush) {
         )
     ) {
         Column(
-            modifier = Modifier.padding(12.dp)
+            modifier = Modifier.padding(Dimens.padding_medium)
         ) {
             // 标题
-            SkeletonLine(modifier = Modifier.fillMaxWidth(), height = 20.dp, brush = brush)
+            SkeletonLine(
+                modifier = Modifier.fillMaxWidth(),
+                height = Dimens.icon_size_medium,
+                brush = brush
+            )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(Dimens.padding_small))
 
             // 作者信息
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                SkeletonLine(modifier = Modifier.width(60.dp), height = 12.dp, brush = brush)
-                Spacer(modifier = Modifier.width(8.dp))
-                SkeletonLine(modifier = Modifier.width(100.dp), height = 12.dp, brush = brush)
-            }
+            SkeletonAuthor(brush)
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(Dimens.padding_medium))
 
             // 内容
             SkeletonLine(modifier = Modifier.fillMaxWidth(), brush = brush)
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(Dimens.padding_extra_small))
             SkeletonLine(modifier = Modifier.fillMaxWidth(0.7f), brush = brush)
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(Dimens.padding_medium))
 
             // 图片占位
-            SkeletonLine(modifier = Modifier.fillMaxWidth(), height = 160.dp, brush = brush)
+            SkeletonLine(
+                modifier = Modifier.fillMaxWidth(),
+                height = Dimens.image_height_medium,
+                brush = brush
+            )
         }
     }
 }
@@ -94,22 +97,35 @@ fun SkeletonReplyItem(brush: Brush) {
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
         )
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
+        Column(modifier = Modifier.padding(Dimens.padding_medium)) {
             // 回复者信息
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                SkeletonLine(modifier = Modifier.width(60.dp), height = 12.dp, brush = brush)
-                Spacer(modifier = Modifier.width(8.dp))
-                SkeletonLine(modifier = Modifier.width(100.dp), height = 12.dp, brush = brush)
-            }
+            SkeletonAuthor(brush)
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(Dimens.padding_small))
 
             // 回复内容
             SkeletonLine(modifier = Modifier.fillMaxWidth(), brush = brush)
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(Dimens.padding_extra_small))
             SkeletonLine(modifier = Modifier.fillMaxWidth(0.5f), brush = brush)
         }
+    }
+}
+
+@Composable
+internal fun SkeletonAuthor(brush: Brush) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        SkeletonLine(
+            modifier = Modifier.width(60.dp),
+            height = Dimens.padding_medium,
+            brush = brush
+        )
+        Spacer(modifier = Modifier.width(Dimens.padding_small))
+        SkeletonLine(
+            modifier = Modifier.width(100.dp),
+            height = Dimens.padding_medium,
+            brush = brush
+        )
     }
 }

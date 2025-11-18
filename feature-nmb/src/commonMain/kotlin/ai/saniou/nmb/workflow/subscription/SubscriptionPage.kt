@@ -5,8 +5,8 @@ import ai.saniou.nmb.di.nmbdi
 import ai.saniou.nmb.ui.components.LoadEndIndicator
 import ai.saniou.nmb.ui.components.LoadingFailedIndicator
 import ai.saniou.nmb.ui.components.LoadingIndicator
-import ai.saniou.nmb.ui.components.SkeletonLoader
 import ai.saniou.nmb.ui.components.SubscriptionCard
+import ai.saniou.nmb.ui.components.ThreadListSkeleton
 import ai.saniou.nmb.workflow.image.ImagePreviewPage
 import ai.saniou.nmb.workflow.subscription.SubscriptionContract.Event
 import androidx.compose.foundation.layout.Box
@@ -100,7 +100,7 @@ data class SubscriptionPage(
             ) { innerPadding ->
                 when {
                     state.isLoading -> Box(modifier = Modifier.padding(innerPadding)) {
-                        SkeletonLoader()
+                        ThreadListSkeleton()
                     }
 
                     state.error != null -> ErrorContent(

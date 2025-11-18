@@ -3,7 +3,6 @@ package ai.saniou.nmb.ui.components
 import ai.saniou.coreui.widgets.NetworkImage
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.MaterialTheme
@@ -25,44 +24,39 @@ fun DrawerHeader(
     imageUrl: String?,
     modifier: Modifier = Modifier
 ) {
-    BoxWithConstraints(
+    Box(
         modifier = modifier
             .fillMaxWidth()
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-        ) {
-            // 背景图片
-            if (imageUrl != null) {
-                NetworkImage(
-                    imageUrl,
-                    contentDescription = "欢迎图片",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
+        // 背景图片
+        if (imageUrl != null) {
+            NetworkImage(
+                imageUrl,
+                contentDescription = "欢迎图片",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
 
-                // 添加渐变遮罩，使图片与下方内容过渡更自然
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(
-                                    MaterialTheme.colorScheme.scrim.copy(alpha = 0.3f),
-                                    MaterialTheme.colorScheme.scrim.copy(alpha = 0.1f)
-                                )
+            // 添加渐变遮罩，使图片与下方内容过渡更自然
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                MaterialTheme.colorScheme.scrim.copy(alpha = 0.6f)
                             )
                         )
-                )
-            } else {
-                // 如果没有图片，显示纯色背景
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.primaryContainer)
-                )
-            }
+                    )
+            )
+        } else {
+            // 如果没有图片，显示纯色背景
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.primaryContainer)
+            )
         }
     }
 }
