@@ -35,6 +35,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -70,6 +71,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -134,7 +136,7 @@ data class ThreadPage(
             }
         }
 
-        // 自动滚动和更新已读
+        // TODO: [AUTO-SCROLL] Implement auto-scroll to last read position and update on scroll.
 //        LaunchedEffect(lazyListState, state.thread) {
 //            if (state.thread == null) return@LaunchedEffect
 //            val lastReadId = state.thread?.last_read_reply_id ?: 0
@@ -224,53 +226,24 @@ data class ThreadPage(
                 }
             }
         ) { innerPadding ->
-            Box(modifier = Modifier.padding(innerPadding)) {
-                when {
-                    state.isLoading && state.thread == null -> ThreadShimmer()
-                    state.error != null -> {
-                        Box(
-                            modifier = Modifier.fillMaxWidth(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                modifier = Modifier.padding(16.dp)
-                            ) {
-                                Text(
-                                    text = state.error ?: "加载失败",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = MaterialTheme.colorScheme.error
-                                )
-                                VerticalSpacerSmall()
-                                Button(onClick = { viewModel.onEvent(Event.Refresh) }) {
-                                    Text("重试")
-                                }
-                            }
-                        }
-                    }
-
-                    state.thread != null -> {
-                        ThreadSuccessContent(
-                            state = state,
-                            lazyListState = lazyListState,
-                            onRefresh = { viewModel.onEvent(Event.Refresh) },
-                            onReplyClicked = { /* TODO */ },
-                            onRefClick = { refId ->
-                                currentReferenceId = refId
-                                referenceViewModel.onEvent(
-                                    ReferenceContract.Event.GetReference(
-                                        refId
-                                    )
-                                )
-                                showReferencePopup = true
-                            },
-                            onImageClick = { imgPath, ext ->
-                                navigator.push(ImagePreviewPage(imgPath, ext))
-                            }
+            ThreadContentRouter(
+                modifier = Modifier.padding(innerPadding),
+                state = state,
+                lazyListState = lazyListState,
+                onRefresh = { viewModel.onEvent(Event.Refresh) },
+                onRefClick = { refId ->
+                    currentReferenceId = refId
+                    referenceViewModel.onEvent(
+                        ReferenceContract.Event.GetReference(
+                            refId
                         )
-                    }
+                    )
+                    showReferencePopup = true
+                },
+                onImageClick = { imgPath, ext ->
+                    navigator.push(ImagePreviewPage(imgPath, ext))
                 }
-            }
+            )
         }
 
         // 跳页对话框
@@ -298,6 +271,69 @@ data class ThreadPage(
         }
     }
 }
+
+// =================================================================================
+// region UI Content Routers
+// =================================================================================
+
+@Composable
+private fun ThreadContentRouter(
+    modifier: Modifier = Modifier,
+    state: State,
+    lazyListState: LazyListState,
+    onRefresh: () -> Unit,
+    onRefClick: (Long) -> Unit,
+    onImageClick: (String, String) -> Unit
+) {
+    Box(modifier = modifier) {
+        when {
+            state.isLoading && state.thread == null -> ThreadShimmer()
+            state.error != null -> ThreadErrorContent(
+                error = state.error,
+                onRetry = onRefresh
+            )
+
+            state.thread != null -> ThreadSuccessContent(
+                state = state,
+                lazyListState = lazyListState,
+                onRefresh = { /* Handled by PullToRefresh */ },
+                onReplyClicked = { /* TODO */ },
+                onRefClick = onRefClick,
+                onImageClick = onImageClick
+            )
+        }
+    }
+}
+
+@Composable
+private fun ThreadErrorContent(error: String, onRetry: () -> Unit) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.padding(32.dp)
+        ) {
+            Text(
+                text = error,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.error,
+                textAlign = TextAlign.Center
+            )
+            Button(onClick = onRetry) {
+                Text("重试")
+            }
+        }
+    }
+}
+
+// endregion
+
+// =================================================================================
+// region Shimmer / Loading States
+// =================================================================================
 
 @Composable
 private fun ThreadShimmer() {
@@ -403,6 +439,12 @@ private fun ThreadShimmer() {
     }
 }
 
+// endregion
+
+// =================================================================================
+// region Success State UI Components
+// =================================================================================
+
 @Composable
 fun ThreadSuccessContent(
     state: State,
@@ -414,53 +456,50 @@ fun ThreadSuccessContent(
 ) {
     val replies = state.replies.collectAsLazyPagingItems()
     PullToRefreshWrapper(onRefreshTrigger = { replies.refresh() }) {
-        Column {
-            LazyColumn(
-                state = lazyListState,
-                modifier = Modifier.padding(8.dp).weight(1f)
-            ) {
-                // 主帖
-                item {
-                    state.thread?.let {
-                        ThreadMainPost(
-                            thread = it,
-                            forumName = state.forumName,
-                            refClick = onRefClick,
-                            onImageClick = onImageClick
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(16.dp))
+        LazyColumn(
+            state = lazyListState,
+            modifier = Modifier.padding(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // 主帖
+            item {
+                state.thread?.let {
+                    ThreadMainPost(
+                        thread = it,
+                        forumName = state.forumName,
+                        refClick = onRefClick,
+                        onImageClick = onImageClick
+                    )
                 }
-
-                // 回复列表
-                items(replies.itemCount) { replyIndex ->
-                    replies[replyIndex]?.let { reply ->
-                        ThreadReply(reply, onReplyClicked, onRefClick, onImageClick)
-                        VerticalSpacerSmall()
-                    } ?: ShimmerContainer { SkeletonReplyItem(it) }
-                }
-
-                // Paging 加载状态
-                item {
-                    when {
-                        replies.loadState.refresh is LoadState.Loading && replies.itemCount == 0 -> ThreadShimmer()
-                        replies.loadState.refresh is LoadState.Error -> {
-                            // 错误状态已在顶层处理
-                        }
-
-                        replies.loadState.append is LoadState.Error -> LoadingFailedIndicator()
-                        replies.loadState.append is LoadState.Loading -> LoadingIndicator()
-                        replies.loadState.append.endOfPaginationReached && replies.itemCount == 0 -> {
-                            EmptyReplyContent(onRefresh)
-                        }
-
-                        replies.loadState.append.endOfPaginationReached -> LoadEndIndicator(
-                            onClick = { replies.refresh() }
-                        )
-                    }
-                }
+                Spacer(modifier = Modifier.height(8.dp))
             }
 
+            // 回复列表
+            items(replies.itemCount) { replyIndex ->
+                replies[replyIndex]?.let { reply ->
+                    ThreadReply(reply, onReplyClicked, onRefClick, onImageClick)
+                } ?: ShimmerContainer { SkeletonReplyItem(it) }
+            }
+
+            // Paging 加载状态
+            item {
+                when {
+                    replies.loadState.refresh is LoadState.Loading && replies.itemCount == 0 -> ThreadShimmer()
+                    replies.loadState.refresh is LoadState.Error -> {
+                        // 错误状态已在顶层处理
+                    }
+
+                    replies.loadState.append is LoadState.Error -> LoadingFailedIndicator()
+                    replies.loadState.append is LoadState.Loading -> LoadingIndicator()
+                    replies.loadState.append.endOfPaginationReached && replies.itemCount == 0 -> {
+                        EmptyReplyContent(onRefresh)
+                    }
+
+                    replies.loadState.append.endOfPaginationReached -> LoadEndIndicator(
+                        onClick = { replies.refresh() }
+                    )
+                }
+            }
         }
     }
 }
@@ -468,33 +507,31 @@ fun ThreadSuccessContent(
 @Composable
 private fun EmptyReplyContent(onRefresh: () -> Unit) {
     Box(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 32.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(32.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Spacer(modifier = Modifier.height(32.dp))
             Icon(
                 imageVector = Icons.Default.Info,
                 contentDescription = null,
                 modifier = Modifier.size(48.dp),
                 tint = MaterialTheme.colorScheme.primary
             )
-            Spacer(modifier = Modifier.height(16.dp))
             Text(
                 text = "暂无回复",
                 style = MaterialTheme.typography.titleMedium
             )
-            VerticalSpacerSmall()
             Text(
                 text = "成为第一个回复的人吧！",
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Spacer(modifier = Modifier.height(16.dp))
             Button(onClick = onRefresh) {
                 Text("刷新")
             }
@@ -511,33 +548,38 @@ fun ThreadMainPost(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
             // 标题和作者信息
             Row(
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.Top,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Box(
                     modifier = Modifier
                         .size(24.dp)
                         .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary)
+                        .background(MaterialTheme.colorScheme.primary),
+                    contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = "PO",
                         color = Color.White,
-                        modifier = Modifier.align(Alignment.Center),
                         style = MaterialTheme.typography.labelSmall
                     )
                 }
 
-                VerticalSpacerSmall()
-
-                Column(modifier = Modifier.weight(1f)) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
                     Text(
                         text = "No.${thread.id}",
                         style = MaterialTheme.typography.titleMedium,
@@ -559,16 +601,12 @@ fun ThreadMainPost(
                             fontWeight = FontWeight.Medium
                         )
                     }
-
                     ThreadAuthor(thread)
                 }
             }
 
-            VerticalSpacerSmall()
             HorizontalDivider()
-            VerticalSpacerSmall()
             ThreadBody(thread, onReferenceClick = refClick, onImageClick = onImageClick)
-            VerticalSpacerSmall()
 
             Text(
                 text = "回复: ${thread.replyCount}",
@@ -595,7 +633,10 @@ fun ThreadReply(
             containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
+        Column(
+            modifier = Modifier.padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
             // 回复者信息
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -611,13 +652,16 @@ fun ThreadReply(
                     fontWeight = FontWeight.Bold
                 )
             }
-
-            Spacer(modifier = Modifier.height(4.dp))
-
             ThreadBody(reply, onReferenceClick = refClick, onImageClick = onImageClick)
         }
     }
 }
+
+// endregion
+
+// =================================================================================
+// region Floating Action Buttons
+// =================================================================================
 
 @Composable
 fun ThreadActionsFab(
@@ -639,7 +683,7 @@ fun ThreadActionsFab(
 
     Column(
         horizontalAlignment = Alignment.End,
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         AnimatedVisibility(
             visible = expanded,
@@ -648,7 +692,7 @@ fun ThreadActionsFab(
         ) {
             Column(
                 horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 FabAction(icon = Icons.Default.Refresh, text = "刷新", onClick = onRefresh)
                 FabAction(
@@ -678,26 +722,33 @@ fun ThreadActionsFab(
 }
 
 @Composable
-fun FabAction(icon: ImageVector, text: String, onClick: () -> Unit) {
+private fun FabAction(icon: ImageVector, text: String, onClick: () -> Unit) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = Modifier.clickable(onClick = onClick)
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = Modifier
+            .clip(MaterialTheme.shapes.medium)
+            .clickable(onClick = onClick)
     ) {
-        Card(
-            shape = RoundedCornerShape(8.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        Surface(
+            shape = MaterialTheme.shapes.medium,
+            color = MaterialTheme.colorScheme.surface,
+            tonalElevation = 2.dp
         ) {
-            Text(text, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
+            Text(
+                text = text,
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                style = MaterialTheme.typography.labelLarge
+            )
         }
         SmallFloatingActionButton(
             onClick = onClick,
-            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
         ) {
             Icon(icon, contentDescription = text)
         }
     }
 }
 
-
+// endregion
