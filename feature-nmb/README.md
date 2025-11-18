@@ -36,7 +36,7 @@
     -   负责与 `Repository` 或 `Database` 交互，执行具体的业务逻辑。
 
 4.  **`Page` / `Screen` (View)**
-    -   UI 的实现层，使用 Jetpack Compose 构建。
+    -   UI 的实现层，使用 Voyager 导航库和 Jetpack Compose 构建。
     -   职责非常纯粹：
         1.  订阅 `ViewModel` 暴露的 `StateFlow<State>`，并根据 `State` 的内容来渲染界面。
         2.  将用户的交互（如点击按钮）转换为对应的 `Event`，并发送给 `ViewModel`。
