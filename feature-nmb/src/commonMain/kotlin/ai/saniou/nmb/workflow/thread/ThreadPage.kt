@@ -5,6 +5,7 @@ import ai.saniou.coreui.widgets.ShimmerContainer
 import ai.saniou.coreui.widgets.VerticalSpacerSmall
 import ai.saniou.nmb.data.entity.Thread
 import ai.saniou.nmb.data.entity.ThreadReply
+import ai.saniou.nmb.di.nmbdi
 import ai.saniou.nmb.ui.components.LoadEndIndicator
 import ai.saniou.nmb.ui.components.LoadingFailedIndicator
 import ai.saniou.nmb.ui.components.LoadingIndicator
@@ -95,11 +96,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
+import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.kodein.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.launch
+import org.kodein.di.direct
+import org.kodein.di.instance
 
 data class ThreadPage(
     val threadId: Long,
@@ -114,7 +118,9 @@ data class ThreadPage(
         val coroutineScope = rememberCoroutineScope()
         val clipboardManager = LocalClipboardManager.current
 
-        val viewModel: ThreadViewModel = rememberScreenModel(arg = threadId)
+        val viewModel: ThreadViewModel = rememberScreenModel(tag = threadId.toString()) {
+            nmbdi.direct.instance(arg = threadId)
+        }
         val state by viewModel.state.collectAsState()
 
         var showJumpDialog by remember { mutableStateOf(false) }

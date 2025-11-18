@@ -44,11 +44,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
+import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.kodein.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import org.kodein.di.DI
+import org.kodein.di.direct
+import org.kodein.di.instance
 
 data class ForumPage(
     val di: DI = nmbdi,
@@ -60,7 +63,9 @@ data class ForumPage(
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val viewModel: ForumViewModel = rememberScreenModel(arg = forumId to fgroupId)
+        val viewModel: ForumViewModel = rememberScreenModel(tag = "${fgroupId}_${forumId}") {
+            di.direct.instance(arg = forumId to fgroupId)
+        }
         val state by viewModel.state.collectAsStateWithLifecycle()
         val threads = viewModel.threads.collectAsLazyPagingItems()
         val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
