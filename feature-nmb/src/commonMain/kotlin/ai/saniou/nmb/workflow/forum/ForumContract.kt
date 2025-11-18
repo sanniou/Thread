@@ -18,8 +18,6 @@ interface ForumContract {
      * @property threads 帖子列表的分页数据流
      */
     data class State(
-        val isLoading: Boolean = true,
-        val error: String? = null,
         val forumName: String = "",
         val threads: Flow<PagingData<Forum>> = emptyFlow()
     )
