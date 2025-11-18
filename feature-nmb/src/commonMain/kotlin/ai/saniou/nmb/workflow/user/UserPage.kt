@@ -51,6 +51,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.kodein.di.DI
+import org.kodein.di.compose.viewmodel.rememberViewModel
 import org.kodein.di.instance
 
 
@@ -63,10 +64,7 @@ data class UserPage(
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
 
-        val userViewModel: UserViewModel = viewModel {
-            val viewModel by di.instance<UserViewModel>()
-            viewModel
-        }
+        val userViewModel: UserViewModel by rememberViewModel()
 
         val uiState by userViewModel.uiState.collectAsStateWithLifecycle()
 

@@ -39,6 +39,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.github.panpf.zoomimage.SketchZoomAsyncImage
 import org.kodein.di.DI
+import org.kodein.di.compose.viewmodel.rememberViewModel
 import org.kodein.di.instance
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -85,10 +86,7 @@ data class ImagePreviewPage(
             }
         }
 
-        val imagePreviewViewModel: ImagePreviewViewModel = viewModel {
-            val viewModel by di.instance<ImagePreviewViewModel>()
-            viewModel
-        }
+        val imagePreviewViewModel: ImagePreviewViewModel by rememberViewModel()
 
         // 获取CDN管理器
         val cdnManager by nmbdi.instance<CdnManager>()

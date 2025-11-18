@@ -42,6 +42,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.kodein.di.DI
+import org.kodein.di.compose.viewmodel.rememberViewModel
 import org.kodein.di.instance
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -58,10 +59,7 @@ data class PostPage(
         val isReply = threadId != null
         val title = if (isReply) "回复" else "发帖"
 
-        val postViewModel: PostViewModel = viewModel {
-            val viewModel by di.instance<PostViewModel>()
-            viewModel
-        }
+        val postViewModel: PostViewModel by rememberViewModel()
 
         val uiState by postViewModel.uiState.collectAsStateWithLifecycle()
 

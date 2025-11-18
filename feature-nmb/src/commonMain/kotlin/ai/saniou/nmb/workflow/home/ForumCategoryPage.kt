@@ -59,6 +59,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.launch
 import org.kodein.di.DI
+import org.kodein.di.compose.viewmodel.rememberViewModel
 import org.kodein.di.instance
 
 @Composable
@@ -66,16 +67,10 @@ fun ForumCategoryPage(
     di: DI = nmbdi,
     drawerState: DrawerState,
 ) {
-    val viewModel: ForumCategoryViewModel = viewModel {
-        val vm by di.instance<ForumCategoryViewModel>()
-        vm
-    }
+    val viewModel: ForumCategoryViewModel by rememberViewModel()
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    val greetImageViewModel: GreetImageViewModel = viewModel {
-        val vm by di.instance<GreetImageViewModel>()
-        vm
-    }
+    val greetImageViewModel: GreetImageViewModel by rememberViewModel()
     val greetImageUrl by greetImageViewModel.greetImageUrl.collectAsStateWithLifecycle()
 
     val navigator = LocalNavigator.currentOrThrow

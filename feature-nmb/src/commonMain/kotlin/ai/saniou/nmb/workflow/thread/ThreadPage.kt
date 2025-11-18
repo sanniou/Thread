@@ -1,6 +1,5 @@
 package ai.saniou.nmb.workflow.thread
 
-import ai.saniou.coreui.state.UiStateWrapper
 import ai.saniou.coreui.widgets.PullToRefreshWrapper
 import ai.saniou.nmb.data.entity.Thread
 import ai.saniou.nmb.data.entity.ThreadReply
@@ -17,6 +16,7 @@ import ai.saniou.nmb.ui.components.ThreadBody
 import ai.saniou.nmb.ui.components.ThreadSpacer
 import ai.saniou.nmb.workflow.image.ImagePreviewPage
 import ai.saniou.nmb.workflow.post.PostPage
+import ai.saniou.nmb.workflow.reference.ReferenceContract
 import ai.saniou.nmb.workflow.reference.ReferenceViewModel
 import ai.saniou.nmb.workflow.thread.ThreadContract.Event
 import ai.saniou.nmb.workflow.thread.ThreadContract.State
@@ -74,6 +74,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -91,8 +92,6 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import cafe.adriel.voyager.core.screen.Screen
@@ -101,6 +100,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import org.kodein.di.DI
+import org.kodein.di.compose.viewmodel.rememberViewModel
 import org.kodein.di.instance
 import thread.feature_nmb.generated.resources.Res
 import thread.feature_nmb.generated.resources.favorites
@@ -120,22 +120,16 @@ data class ThreadPage(
         val coroutineScope = rememberCoroutineScope()
         val clipboardManager = LocalClipboardManager.current
 
-        val viewModel: ThreadViewModel = viewModel {
-            val viewModel by di.instance<ThreadViewModel>()
-            viewModel
-        }
-        val state by viewModel.state.collectAsStateWithLifecycle()
+        val viewModel: ThreadViewModel by rememberViewModel()
+        val state by viewModel.state.collectAsState()
 
         var showJumpDialog by remember { mutableStateOf(false) }
 
         // 引用弹窗状态
-        val referenceViewModel: ReferenceViewModel = viewModel {
-            val viewModel by di.instance<ReferenceViewModel>()
-            viewModel
-        }
+        val referenceViewModel: ReferenceViewModel by rememberViewModel()
         var showReferencePopup by remember { mutableStateOf(false) }
         var currentReferenceId by remember { mutableStateOf(0L) }
-        val referenceState by referenceViewModel.uiState.collectAsStateWithLifecycle()
+        val referenceState by referenceViewModel.uiState.collectAsState()
 
 
         // 加载数据
@@ -245,7 +239,11 @@ data class ThreadPage(
                             onReplyClicked = { /* TODO */ },
                             onRefClick = { refId ->
                                 currentReferenceId = refId
-                                referenceViewModel.getReference(refId)
+                                referenceViewModel.onEvent(
+                                    ReferenceContract.Event.GetReference(
+                                        refId
+                                    )
+                                )
                                 showReferencePopup = true
                             },
                             onImageClick = { imgPath, ext ->
@@ -271,12 +269,12 @@ data class ThreadPage(
         if (showReferencePopup) {
             ReferencePopup(
                 refId = currentReferenceId,
-                reply = (referenceState as? UiStateWrapper.Success<ThreadReply>)?.value,
-                isLoading = referenceState is UiStateWrapper.Loading,
-                error = (referenceState as? UiStateWrapper.Error)?.message,
+                reply = referenceState.reply,
+                isLoading = referenceState.isLoading,
+                error = referenceState.error,
                 onDismiss = {
                     showReferencePopup = false
-                    referenceViewModel.clear()
+                    referenceViewModel.onEvent(ReferenceContract.Event.Clear)
                 }
             )
         }

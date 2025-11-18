@@ -1,6 +1,7 @@
 package ai.saniou.nmb
 
 import ai.saniou.coreui.theme.CupcakeTheme
+import ai.saniou.nmb.di.nmbdi
 import ai.saniou.nmb.workflow.home.HomeScreen
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.DpSize
@@ -13,6 +14,7 @@ import cafe.adriel.voyager.core.annotation.ExperimentalVoyagerApi
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.NavigatorDisposeBehavior
 import cafe.adriel.voyager.transitions.ScaleTransition
+import org.kodein.di.compose.withDI
 
 @OptIn(ExperimentalVoyagerApi::class)
 fun main() = application {
@@ -28,14 +30,16 @@ fun main() = application {
             undecorated = true,
             state = windowState
         ) {
-            Navigator(
-                screen = HomeScreen(),
-                disposeBehavior = NavigatorDisposeBehavior(disposeSteps = false),
-            ) { navigator ->
-                ScaleTransition(
-                    navigator = navigator,
-                    disposeScreenAfterTransitionEnd = true
-                )
+            withDI(nmbdi) {
+                Navigator(
+                    screen = HomeScreen(),
+                    disposeBehavior = NavigatorDisposeBehavior(disposeSteps = false),
+                ) { navigator ->
+                    ScaleTransition(
+                        navigator = navigator,
+                        disposeScreenAfterTransitionEnd = true
+                    )
+                }
             }
         }
     }

@@ -59,7 +59,7 @@ kotlin {
             implementation(libs.ktor.client.logging)
             implementation(libs.ktor.client.encoding)
             implementation(libs.ktor.client.cio)
-            api(libs.kodein.di)
+            api(libs.kodein.di.compose)
             api(libs.kottage)
             api(libs.kotlinx.datetime)
             // pager

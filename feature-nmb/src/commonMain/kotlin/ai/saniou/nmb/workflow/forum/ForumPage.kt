@@ -40,6 +40,7 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import org.kodein.di.DI
+import org.kodein.di.compose.viewmodel.rememberViewModel
 import org.kodein.di.instance
 
 data class ForumPage(
@@ -52,10 +53,7 @@ data class ForumPage(
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val viewModel: ForumViewModel = viewModel {
-            val vm by di.instance<ForumViewModel>()
-            vm
-        }
+        val viewModel: ForumViewModel by rememberViewModel()
         val state by viewModel.state.collectAsStateWithLifecycle()
 
         LaunchedEffect(forumId, fgroupId) {

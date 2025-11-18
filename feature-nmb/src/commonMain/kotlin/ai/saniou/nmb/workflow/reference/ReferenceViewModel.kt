@@ -1,52 +1,49 @@
 package ai.saniou.nmb.workflow.reference
 
-import ai.saniou.coreui.state.UiStateWrapper
 import ai.saniou.nmb.domain.GetReferenceUseCase
+import ai.saniou.nmb.workflow.reference.ReferenceContract.Event
+import ai.saniou.nmb.workflow.reference.ReferenceContract.State
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/**
- * 引用ViewModel
- *
- * 用于获取引用的回复内容
- */
 class ReferenceViewModel(
-    private val referenceUseCase: GetReferenceUseCase
+    private val getReferenceUseCase: GetReferenceUseCase,
+    private val scope: CoroutineScope = CoroutineScope(Dispatchers.Main),
 ) : ViewModel() {
+    private val _uiState = MutableStateFlow(State())
+    val uiState = _uiState.asStateFlow()
 
-    // UI状态
-    private val _uiState = MutableStateFlow<UiStateWrapper>(UiStateWrapper.Loading)
-
-    val uiState = _uiState.stateIn(
-        viewModelScope,
-        SharingStarted.WhileSubscribed(3000),
-        UiStateWrapper.Loading
-    )
-
-    /**
-     * 获取引用的回复内容
-     */
-    fun getReference(refId: Long) {
-        viewModelScope.launch {
-            try {
-                _uiState.emit(UiStateWrapper.Loading)
-                val reply = referenceUseCase(refId)
-                _uiState.emit(UiStateWrapper.Success(reply))
-            } catch (e: Throwable) {
-                _uiState.emit(UiStateWrapper.Error(e, "获取引用内容失败: ${e.message}"))
-            }
+    fun onEvent(event: Event) {
+        when (event) {
+            is Event.GetReference -> getReference(event.refId)
+            Event.Clear -> clear()
         }
     }
 
-    /**
-     * 清除状态
-     */
-    fun clear() {
-        _uiState.value = UiStateWrapper.Loading
+    private fun getReference(refId: Long) {
+        scope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            getReferenceUseCase(refId)
+                .onSuccess { reply ->
+                    _uiState.update {
+                        it.copy(isLoading = false, reply = reply)
+                    }
+                }
+                .onFailure { error ->
+                    _uiState.update {
+                        it.copy(isLoading = false, error = "获取引用内容失败: ${error.message}")
+                    }
+                }
+        }
+    }
+
+    private fun clear() {
+        _uiState.update { State() }
     }
 }
 

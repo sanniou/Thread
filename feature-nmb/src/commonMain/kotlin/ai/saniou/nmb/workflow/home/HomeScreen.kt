@@ -35,16 +35,14 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import org.jetbrains.compose.resources.stringResource
 import org.kodein.di.DI
+import org.kodein.di.compose.viewmodel.rememberViewModel
 import org.kodein.di.instance
 
 data class HomeScreen(val di: DI = nmbdi) : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val viewModel: HomeViewModel = viewModel {
-            val homeViewModel by di.instance<HomeViewModel>()
-            homeViewModel;
-        }
+        val viewModel: HomeViewModel by rememberViewModel()
         val noticeState by viewModel.noticeState.collectAsStateWithLifecycle()
 
         var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.HOME) }

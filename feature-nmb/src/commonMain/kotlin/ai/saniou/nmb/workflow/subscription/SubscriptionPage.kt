@@ -56,6 +56,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.flow.collectLatest
 import org.kodein.di.DI
+import org.kodein.di.compose.viewmodel.rememberViewModel
 import org.kodein.di.instance
 
 data class SubscriptionPage(
@@ -68,10 +69,7 @@ data class SubscriptionPage(
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val snackbarHostState = remember { SnackbarHostState() }
-        val viewModel: SubscriptionViewModel = viewModel {
-            val viewModel by di.instance<SubscriptionViewModel>()
-            viewModel
-        }
+        val viewModel: SubscriptionViewModel by rememberViewModel()
         val state by viewModel.state.collectAsStateWithLifecycle()
 
         LaunchedEffect(Unit) {
