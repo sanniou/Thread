@@ -9,6 +9,7 @@ import ai.saniou.nmb.ui.components.ThreadCard
 import ai.saniou.nmb.ui.components.ThreadListSkeleton
 import ai.saniou.nmb.workflow.image.ImagePreviewPage
 import ai.saniou.nmb.workflow.thread.ThreadPage
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -31,9 +32,11 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -60,12 +63,32 @@ data class ForumPage(
         val state by viewModel.state.collectAsStateWithLifecycle()
         val threads = viewModel.threads.collectAsLazyPagingItems()
         val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
+        val lazyListState = rememberLazyListState()
+
+        LaunchedEffect(Unit) {
+            viewModel.effect.collect { effect ->
+                when (effect) {
+                    ForumContract.Effect.ScrollToTop -> lazyListState.animateScrollToItem(0)
+                }
+            }
+        }
 
         Scaffold(
             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
                 TopAppBar(
-                    title = { Text(state.forumName) },
+                    title = {
+                        Text(
+                            text = state.forumName,
+                            modifier = Modifier.pointerInput(Unit) {
+                                detectTapGestures(
+                                    onDoubleTap = {
+                                        viewModel.onEvent(ForumContract.Event.ScrollToTop)
+                                    }
+                                )
+                            }
+                        )
+                    },
                     navigationIcon = {
                         IconButton(onClick = { navigator.pop() }) {
                             Icon(Icons.Default.ArrowBack, contentDescription = "返回")
@@ -102,9 +125,8 @@ data class ForumPage(
                                     Text("什么都没有", modifier = Modifier.align(Alignment.Center))
                                 }
                             } else {
-                                val scrollState = rememberLazyListState()
                                 LazyColumn(
-                                    state = scrollState,
+                                    state = lazyListState,
                                     contentPadding = PaddingValues(8.dp)
                                 ) {
                                     items(threads.itemCount, threads.itemKey { it.id }) { index ->

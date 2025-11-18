@@ -30,5 +30,20 @@ interface ForumContract {
          * 刷新当前板块
          */
         object Refresh : Event
+
+        /**
+         * 滚动到顶部
+         */
+        object ScrollToTop : Event
+    }
+
+    /**
+     * UI 副作用，用于处理一次性事件，如导航、Toast 等
+     */
+    sealed interface Effect {
+        /**
+         * 滚动到顶部
+         */
+        object ScrollToTop : Effect
     }
 }
