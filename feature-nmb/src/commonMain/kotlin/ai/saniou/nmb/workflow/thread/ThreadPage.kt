@@ -18,6 +18,7 @@ import ai.saniou.nmb.workflow.image.ImagePreviewPage
 import ai.saniou.nmb.workflow.post.PostPage
 import ai.saniou.nmb.workflow.reference.ReferenceContract
 import ai.saniou.nmb.workflow.reference.ReferenceViewModel
+import ai.saniou.nmb.workflow.thread.ThreadContract.Effect
 import ai.saniou.nmb.workflow.thread.ThreadContract.Event
 import ai.saniou.nmb.workflow.thread.ThreadContract.State
 import androidx.compose.animation.AnimatedVisibility
@@ -154,11 +155,14 @@ data class ThreadPage(
 //                }
 //        }
 
-        // 处理 Snackbar
-        LaunchedEffect(state.snackbarMessage) {
-            state.snackbarMessage?.let {
-                snackbarHostState.showSnackbar(it)
-                viewModel.onEvent(Event.SnackbarMessageShown)
+        // 处理副作用
+        LaunchedEffect(Unit) {
+            viewModel.effect.collect { effect ->
+                when (effect) {
+                    is Effect.ShowSnackbar -> {
+                        snackbarHostState.showSnackbar(effect.message)
+                    }
+                }
             }
         }
 

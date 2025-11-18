@@ -22,7 +22,7 @@ interface ThreadContract {
      * @property isPoOnlyMode 是否开启“只看PO”模式
      * @property isSubscribed 是否已订阅
      * @property forumName 板块名称
-     * @property snackbarMessage 用于显示 Snackbar 的临时消息
+     * @property forumName 板块名称
      */
     data class State(
         val isLoading: Boolean = true,
@@ -33,8 +33,7 @@ interface ThreadContract {
         val totalPages: Int = 1,
         val isPoOnlyMode: Boolean = false,
         val isSubscribed: Boolean = false,
-        val forumName: String = "",
-        val snackbarMessage: String? = null
+        val forumName: String = ""
     )
 
     /**
@@ -63,14 +62,20 @@ interface ThreadContract {
         object ToggleSubscription : Event
 
         /**
-         * Snackbar 消息已显示，用于清空消息状态
-         */
-        object SnackbarMessageShown : Event
-
-        /**
          * 更新最后阅读的回复ID
          * @param id 回复 ID
          */
         data class UpdateLastReadReplyId(val id: Long) : Event
+    }
+
+    /**
+     * 单次副作用事件，用于处理如 Snackbar、Toast、导航等一次性操作
+     */
+    sealed interface Effect {
+        /**
+         * 显示 Snackbar 消息
+         * @param message 要显示的消息
+         */
+        data class ShowSnackbar(val message: String) : Effect
     }
 }

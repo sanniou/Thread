@@ -6,16 +6,19 @@ import ai.saniou.nmb.data.storage.SubscriptionStorage
 import ai.saniou.nmb.domain.ForumUseCase
 import ai.saniou.nmb.domain.GetThreadDetailUseCase
 import ai.saniou.nmb.domain.GetThreadRepliesPagingUseCase
+import ai.saniou.nmb.workflow.thread.ThreadContract.Effect
 import ai.saniou.nmb.workflow.thread.ThreadContract.Event
 import ai.saniou.nmb.workflow.thread.ThreadContract.State
 import androidx.paging.cachedIn
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlin.time.Clock
@@ -35,6 +38,9 @@ class ThreadViewModel(
     private val _state = MutableStateFlow(State())
     val state = _state.asStateFlow()
 
+    private val _effect = Channel<Effect>()
+    val effect = _effect.receiveAsFlow()
+
     private var loadJob: Job? = null
 
     init {
@@ -52,7 +58,6 @@ class ThreadViewModel(
             Event.Refresh -> loadThread()
             Event.TogglePoOnlyMode -> togglePoOnlyMode()
             Event.ToggleSubscription -> toggleSubscription()
-            Event.SnackbarMessageShown -> _state.update { it.copy(snackbarMessage = null) }
             is Event.UpdateLastReadReplyId -> updateLastReadReplyId(event.id)
         }
     }
@@ -136,19 +141,11 @@ class ThreadViewModel(
                     nmbXdApi.delFeed(subscriptionId, threadId)
                 }
 
-                _state.update {
-                    it.copy(
-                        isSubscribed = newSubscribed,
-                        snackbarMessage = resultMessage
-                    )
-                }
+                _state.update { it.copy(isSubscribed = newSubscribed) }
+                _effect.send(Effect.ShowSnackbar(resultMessage))
             } catch (e: Exception) {
-                _state.update {
-                    it.copy(
-                        isSubscribed = currentSubscribed, // 恢复原状
-                        snackbarMessage = "操作失败: ${e.message}"
-                    )
-                }
+                _state.update { it.copy(isSubscribed = currentSubscribed) } // 恢复原状
+                _effect.send(Effect.ShowSnackbar("操作失败: ${e.message}"))
             }
         }
     }
