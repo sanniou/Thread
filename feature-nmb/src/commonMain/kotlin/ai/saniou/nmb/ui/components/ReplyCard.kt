@@ -14,25 +14,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-
-private val PADDING_SMALL = 8.dp
-private val PADDING_EXTRA_SMALL = 4.dp
+import ai.saniou.coreui.widgets.RichText
+import ai.saniou.coreui.theme.Dimens
 
 @Composable
 fun RecentReplies(replies: List<Reply>) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(PADDING_EXTRA_SMALL))
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-            .padding(PADDING_SMALL),
-        verticalArrangement = Arrangement.spacedBy(PADDING_EXTRA_SMALL)
+            .clip(RoundedCornerShape(Dimens.padding_extra_small))
+            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .padding(Dimens.padding_small),
+        verticalArrangement = Arrangement.spacedBy(Dimens.padding_extra_small)
     ) {
         replies.forEachIndexed { index, reply ->
             if (index > 0) {
-                HorizontalDivider(
-                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                )
+                HorizontalDivider()
             }
             ReplyItem(reply)
         }
@@ -43,10 +40,10 @@ fun RecentReplies(replies: List<Reply>) {
 fun ReplyItem(reply: Reply) {
     Column(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(PADDING_EXTRA_SMALL)
+        verticalArrangement = Arrangement.spacedBy(Dimens.padding_extra_small)
     ) {
         ThreadAuthor(reply)
-        HtmlText(
+        RichText(
             text = reply.content,
             style = MaterialTheme.typography.bodySmall,
             maxLines = 2,

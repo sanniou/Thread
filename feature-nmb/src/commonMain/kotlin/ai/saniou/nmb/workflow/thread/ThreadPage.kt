@@ -1,6 +1,10 @@
 package ai.saniou.nmb.workflow.thread
 
+import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.PullToRefreshWrapper
+import ai.saniou.coreui.widgets.ShimmerBrush
+import ai.saniou.coreui.widgets.ShimmerContainer
+import ai.saniou.coreui.widgets.VerticalSpacerSmall
 import ai.saniou.nmb.data.entity.Thread
 import ai.saniou.nmb.data.entity.ThreadReply
 import ai.saniou.nmb.di.nmbdi
@@ -9,17 +13,22 @@ import ai.saniou.nmb.ui.components.LoadingFailedIndicator
 import ai.saniou.nmb.ui.components.LoadingIndicator
 import ai.saniou.nmb.ui.components.PageJumpDialog
 import ai.saniou.nmb.ui.components.ReferencePopup
-import ai.saniou.nmb.ui.components.ShimmerContainer
 import ai.saniou.nmb.ui.components.SkeletonReplyItem
 import ai.saniou.nmb.ui.components.ThreadAuthor
 import ai.saniou.nmb.ui.components.ThreadBody
-import ai.saniou.nmb.ui.components.ThreadSpacer
 import ai.saniou.nmb.workflow.image.ImagePreviewPage
 import ai.saniou.nmb.workflow.post.PostPage
 import ai.saniou.nmb.workflow.reference.ReferenceContract
 import ai.saniou.nmb.workflow.reference.ReferenceViewModel
 import ai.saniou.nmb.workflow.thread.ThreadContract.Event
 import ai.saniou.nmb.workflow.thread.ThreadContract.State
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.updateTransition
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -37,13 +46,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.updateTransition
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -84,6 +86,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
@@ -98,13 +101,8 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.launch
-import org.jetbrains.compose.resources.stringResource
 import org.kodein.di.DI
 import org.kodein.di.compose.viewmodel.rememberViewModel
-import org.kodein.di.instance
-import thread.feature_nmb.generated.resources.Res
-import thread.feature_nmb.generated.resources.favorites
-import thread.feature_nmb.generated.resources.jump_to_page
 
 data class ThreadPage(
     val threadId: Long?,
@@ -246,7 +244,7 @@ data class ThreadPage(
                                     style = MaterialTheme.typography.titleMedium,
                                     color = MaterialTheme.colorScheme.error
                                 )
-                                ThreadSpacer()
+                                VerticalSpacerSmall()
                                 Button(onClick = { viewModel.onEvent(Event.Refresh) }) {
                                     Text("重试")
                                 }
@@ -364,7 +362,7 @@ private fun ThreadShimmer() {
                             .background(brush)
                     )
 
-                    ThreadSpacer()
+                    VerticalSpacerSmall()
 
                     Box(
                         modifier = Modifier
@@ -374,7 +372,7 @@ private fun ThreadShimmer() {
                             .background(brush)
                     )
 
-                    ThreadSpacer()
+                    VerticalSpacerSmall()
 
                     Box(
                         modifier = Modifier
@@ -402,7 +400,7 @@ private fun ThreadShimmer() {
             // 回复骨架屏
             repeat(3) {
                 SkeletonReplyItem(brush)
-                ThreadSpacer()
+                VerticalSpacerSmall()
             }
         }
     }
@@ -441,7 +439,7 @@ fun ThreadSuccessContent(
                 items(replies.itemCount) { replyIndex ->
                     replies[replyIndex]?.let { reply ->
                         ThreadReply(reply, onReplyClicked, onRefClick, onImageClick)
-                        ThreadSpacer()
+                        VerticalSpacerSmall()
                     } ?: ShimmerContainer { SkeletonReplyItem(it) }
                 }
 
@@ -492,7 +490,7 @@ private fun EmptyReplyContent(onRefresh: () -> Unit) {
                 text = "暂无回复",
                 style = MaterialTheme.typography.titleMedium
             )
-            ThreadSpacer()
+            VerticalSpacerSmall()
             Text(
                 text = "成为第一个回复的人吧！",
                 style = MaterialTheme.typography.bodyMedium,
@@ -513,7 +511,9 @@ fun ThreadMainPost(
     forumName: String = "",
     refClick: (Long) -> Unit,
     onImageClick: (String, String) -> Unit,
+    isLoading: Boolean = false,
 ) {
+    val brush = ShimmerBrush()
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
@@ -530,61 +530,109 @@ fun ThreadMainPost(
                     modifier = Modifier
                         .size(24.dp)
                         .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary)
+                        .run {
+                            if (isLoading) this.background(brush) else this.background(MaterialTheme.colorScheme.primary)
+                        }
                 ) {
-                    Text(
-                        text = "PO",
-                        color = Color.White,
-                        modifier = Modifier.align(Alignment.Center),
-                        style = MaterialTheme.typography.labelSmall
-                    )
+                    if (!isLoading) {
+                        Text(
+                            text = "PO",
+                            color = Color.White,
+                            modifier = Modifier.align(Alignment.Center),
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
                 }
 
-                ThreadSpacer()
+                VerticalSpacerSmall()
 
                 Column(modifier = Modifier.weight(1f)) {
                     // 大标题 = 帖子号码
-                    Text(
-                        text = "No.${thread.id}",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
+                    if (isLoading) {
+                        Box(
+                            modifier = Modifier
+                                .width(200.dp)
+                                .height(20.dp)
+                                .clip(RoundedCornerShape(4.dp))
+                                .background(brush)
+                        )
+                    } else {
+                        Text(
+                            text = "No.${thread.id}",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
 
                     // 小标题 = 论坛名称
                     if (forumName.isNotBlank()) {
-                        Text(
-                            text = forumName,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.primary
-                        )
+                        if (isLoading) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Box(
+                                modifier = Modifier
+                                    .width(150.dp)
+                                    .height(12.dp)
+                                    .clip(RoundedCornerShape(4.dp))
+                                    .background(brush)
+                            )
+                        } else {
+                            Text(
+                                text = forumName,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
                     }
 
                     // 帖子标题
                     if (thread.title.isNotBlank() && thread.title != "无标题") {
-                        Text(
-                            text = thread.title,
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Medium
-                        )
+                        if (isLoading) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Box(
+                                modifier = Modifier
+                                    .width(100.dp)
+                                    .height(16.dp)
+                                    .clip(RoundedCornerShape(4.dp))
+                                    .background(brush)
+                            )
+                        } else {
+                            Text(
+                                text = thread.title,
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
                     }
 
-                    ThreadAuthor(thread)
+                    ThreadAuthor(thread, isLoading)
                 }
 
             }
 
-            ThreadSpacer()
+            VerticalSpacerSmall()
             HorizontalDivider()
-            ThreadSpacer()
-            ThreadBody(thread, onReferenceClick = refClick, onImageClick = onImageClick)
-            ThreadSpacer()
+            VerticalSpacerSmall()
+            if (isLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(100.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(brush)
+                )
+            } else {
+                ThreadBody(thread, onReferenceClick = refClick, onImageClick = onImageClick)
+            }
+            VerticalSpacerSmall()
 
             // 回复数量
-            Text(
-                text = "回复: ${thread.replyCount}",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.primary
-            )
+            if (!isLoading) {
+                Text(
+                    text = "回复: ${thread.replyCount}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
         }
     }
 }
@@ -595,7 +643,9 @@ fun ThreadReply(
     onReplyClicked: (Long) -> Unit,
     refClick: (Long) -> Unit,
     onImageClick: (String, String) -> Unit,
+    isLoading: Boolean = false,
 ) {
+    val brush = ShimmerBrush()
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -611,21 +661,41 @@ fun ThreadReply(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                ThreadAuthor(reply)
+                ThreadAuthor(reply, isLoading)
                 Spacer(modifier = Modifier.weight(1f))
 
                 // 显示回复号码
-                Text(
-                    text = "No.${reply.id}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold
-                )
+                if (isLoading) {
+                    Box(
+                        modifier = Modifier
+                            .width(50.dp)
+                            .height(12.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(brush)
+                    )
+                } else {
+                    Text(
+                        text = "No.${reply.id}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            ThreadBody(reply, onReferenceClick = refClick, onImageClick = onImageClick)
+            if (isLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(60.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(brush)
+                )
+            } else {
+                ThreadBody(reply, onReferenceClick = refClick, onImageClick = onImageClick)
+            }
 
         }
 
@@ -712,4 +782,5 @@ fun FabAction(icon: ImageVector, text: String, onClick: () -> Unit) {
         }
     }
 }
+
 

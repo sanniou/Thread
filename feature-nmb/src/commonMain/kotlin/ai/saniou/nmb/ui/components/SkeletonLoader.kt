@@ -1,5 +1,7 @@
 package ai.saniou.nmb.ui.components
 
+import ai.saniou.coreui.widgets.ShimmerBrush
+import ai.saniou.coreui.widgets.SkeletonLine
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer

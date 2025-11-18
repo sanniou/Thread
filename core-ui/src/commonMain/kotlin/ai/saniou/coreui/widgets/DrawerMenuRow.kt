@@ -1,4 +1,4 @@
-package ai.saniou.nmb.ui.components
+package ai.saniou.coreui.widgets
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -92,4 +92,3 @@ data class DrawerMenuItem(
     val label: String,
     val onClick: () -> Unit
 )
-

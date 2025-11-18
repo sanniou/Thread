@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.paging.compose.LazyPagingItems
+import ai.saniou.coreui.theme.Dimens
 
 @Composable
 fun RefreshCard(forumList: LazyPagingItems<*>) {
@@ -23,12 +24,12 @@ fun RefreshCard(forumList: LazyPagingItems<*>) {
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(32.dp)
+            modifier = Modifier.padding(Dimens.padding_medium * 2)
         ) {
             Icon(
                 imageVector = Icons.Default.Refresh,
                 contentDescription = null,
-                modifier = Modifier.size(48.dp)
+                modifier = Modifier.size(Dimens.icon_size_medium * 2)
                     .clickable(onClick = {
                         forumList.refresh()
                     }),

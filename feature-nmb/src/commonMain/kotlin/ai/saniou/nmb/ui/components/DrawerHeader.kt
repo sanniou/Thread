@@ -1,5 +1,6 @@
 package ai.saniou.nmb.ui.components
 
+import ai.saniou.coreui.widgets.NetworkImage
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -34,7 +35,7 @@ fun DrawerHeader(
         ) {
             // 背景图片
             if (imageUrl != null) {
-                ImageComponent(
+                NetworkImage(
                     imageUrl,
                     contentDescription = "欢迎图片",
                     contentScale = ContentScale.Crop,
@@ -48,8 +49,8 @@ fun DrawerHeader(
                         .background(
                             Brush.verticalGradient(
                                 colors = listOf(
-                                    Color.Black.copy(alpha = 0.3f),
-                                    Color.Black.copy(alpha = 0.1f)
+                                    MaterialTheme.colorScheme.scrim.copy(alpha = 0.3f),
+                                    MaterialTheme.colorScheme.scrim.copy(alpha = 0.1f)
                                 )
                             )
                         )

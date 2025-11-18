@@ -162,7 +162,7 @@ private fun SubscriptionContent(
                     feed = feed,
                     onClick = { onThreadClicked(feed.id) },
                     onImageClick = onImageClick,
-                    onUnsubscribe = { onEvent(Event.OnUnsubscribe(feed.id)) }
+//                    onUnsubscribe = { onEvent(Event.OnUnsubscribe(feed.id)) }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
             }

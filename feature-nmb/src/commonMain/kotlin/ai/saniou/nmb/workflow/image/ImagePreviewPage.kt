@@ -37,7 +37,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.github.panpf.zoomimage.SketchZoomAsyncImage
+import ai.saniou.coreui.widgets.ZoomAsyncImage
 import org.kodein.di.DI
 import org.kodein.di.compose.viewmodel.rememberViewModel
 import org.kodein.di.instance
@@ -68,7 +68,7 @@ data class ImagePreviewPage(
     val onNextImage: () -> Unit = {},
     val onPreviousImage: () -> Unit = {},
     val onUpdateTitle: ((String) -> Unit)? = null,
-    val onSetupMenuButton: ((@Composable () -> Unit) -> Unit)? = null
+    val onSetupMenuButton: ((@Composable () -> Unit) -> Unit)? = null,
 ) : Screen {
 
     @OptIn(ExperimentalComposeUiApi::class)
@@ -134,7 +134,7 @@ data class ImagePreviewPage(
                 .background(Color.Black)
         ) {
             // 图片显示区域
-            SketchZoomAsyncImage(
+            ZoomAsyncImage(
                 uri = imageUrl,
                 contentDescription = "预览图片",
                 modifier = Modifier.fillMaxSize(),

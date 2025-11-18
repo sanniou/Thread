@@ -1,4 +1,4 @@
-package ai.saniou.nmb.ui.components
+package ai.saniou.coreui.widgets
 
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material3.MaterialTheme
@@ -27,11 +27,12 @@ import androidx.compose.ui.text.withStyle
  * - <a href="https://example.com">链接</a>
  */
 @Composable
-fun HtmlText(
+fun RichText(
     text: String,
     modifier: Modifier = Modifier,
     style: TextStyle = MaterialTheme.typography.bodyMedium,
-    onReferenceClick: ((Long) -> Unit)? = null,
+    onReferenceClick: ((String) -> Unit)? = null,
+    referencePattern: Regex? = null,
     onLinkClick: ((String) -> Unit)? = null,
     overflow: TextOverflow = TextOverflow.Clip,
     maxLines: Int = Int.MAX_VALUE,
@@ -45,7 +46,7 @@ fun HtmlText(
     // 解析HTML并构建AnnotatedString
     val annotatedString = parseHtml(
         processedText,
-        onReferenceClick != null
+        referencePattern
     )
 
     // 使用ClickableText替代Text，以支持点击事件
@@ -59,10 +60,7 @@ fun HtmlText(
             // 处理引用链接的点击事件
             annotatedString.getStringAnnotations(TAG_REFERENCE, offset, offset)
                 .firstOrNull()?.let { annotation ->
-                    val refId = annotation.item.toLongOrNull()
-                    if (refId != null) {
-                        onReferenceClick?.invoke(refId)
-                    }
+                    onReferenceClick?.invoke(annotation.item)
                 }
 
             // 处理URL链接的点击事件
@@ -113,15 +111,10 @@ private fun preprocessHtmlText(text: String): String {
 @Composable
 private fun parseHtml(
     text: String,
-    enableReferenceDetection: Boolean
+    referencePattern: Regex?,
 ): AnnotatedString = buildAnnotatedString {
     var currentIndex = 0
     val length = text.length
-
-    // 引用链接的正则表达式
-    val referencePattern = if (enableReferenceDetection) {
-        ">>No\\.(\\d+)".toRegex()
-    } else null
 
     while (currentIndex < length) {
         val tagStartIndex = text.indexOf("<", currentIndex)
@@ -207,7 +200,7 @@ private fun AnnotatedString.Builder.handleSpanTag(
     tag: String,
     tagStartIndex: Int,
     tagEndIndex: Int,
-    referencePattern: Regex?
+    referencePattern: Regex?,
 ): Int {
     // 提取style属性
     val styleAttr = extractAttribute(tag, "style")
@@ -232,25 +225,23 @@ private fun AnnotatedString.Builder.handleSpanTag(
                     if (referencePattern != null) {
                         val referenceMatch = referencePattern.find(decodedText)
                         if (referenceMatch != null) {
-                            val refId = referenceMatch.groupValues[1].toLongOrNull()
-                            if (refId != null) {
-                                // 添加引用链接
-                                pushStringAnnotation(
-                                    tag = TAG_REFERENCE,
-                                    annotation = refId.toString()
+                            val refId = referenceMatch.groupValues[1]
+                            // 添加引用链接
+                            pushStringAnnotation(
+                                tag = TAG_REFERENCE,
+                                annotation = refId
+                            )
+                            withStyle(
+                                SpanStyle(
+                                    color = color,
+                                    textDecoration = TextDecoration.Underline
                                 )
-                                withStyle(
-                                    SpanStyle(
-                                        color = color,
-                                        textDecoration = TextDecoration.Underline
-                                    )
-                                ) {
-                                    // 递归处理span内部的HTML标签
-                                    append(parseNestedHtml(processedSpanText, referencePattern))
-                                }
-                                pop()
-                                return endTagIndex + 7 // 7 是 </span> 的长度
+                            ) {
+                                // 递归处理span内部的HTML标签
+                                append(parseNestedHtml(processedSpanText, referencePattern))
                             }
+                            pop()
+                            return endTagIndex + 7 // 7 是 </span> 的长度
                         }
                     }
 
@@ -283,11 +274,11 @@ private fun AnnotatedString.Builder.handleSpanTag(
  */
 private fun decodeHtmlEntities(text: String): String {
     return text
-        .replace("&lt;", "<")
-        .replace("&gt;", ">")
-        .replace("&amp;", "&")
-        .replace("&quot;", "\"")
-        .replace("&apos;", "'")
+        .replace("<", "<")
+        .replace(">", ">")
+        .replace("&", "&")
+        .replace("\"", "\"")
+        .replace("'", "'")
         .replace("&nbsp;", " ")
 }
 
@@ -296,7 +287,7 @@ private fun decodeHtmlEntities(text: String): String {
  */
 private fun parseNestedHtml(
     text: String,
-    referencePattern: Regex?
+    referencePattern: Regex?,
 ): String {
     // 处理<br>标签
     val brProcessed = text.replace(Regex("<br\\s*/?>"), "\n")
@@ -315,7 +306,7 @@ private fun AnnotatedString.Builder.handleAnchorTag(
     text: String,
     tag: String,
     tagStartIndex: Int,
-    tagEndIndex: Int
+    tagEndIndex: Int,
 ): Int {
     // 提取href属性
     val hrefValue = extractAttribute(tag, "href")
@@ -356,7 +347,7 @@ private fun AnnotatedString.Builder.handleFontTag(
     tag: String,
     tagStartIndex: Int,
     tagEndIndex: Int,
-    referencePattern: Regex?
+    referencePattern: Regex?,
 ): Int {
     // 提取color属性
     val colorValue = extractAttribute(tag, "color")
@@ -377,24 +368,22 @@ private fun AnnotatedString.Builder.handleFontTag(
                 if (referencePattern != null) {
                     val referenceMatch = referencePattern.find(decodedText)
                     if (referenceMatch != null) {
-                        val refId = referenceMatch.groupValues[1].toLongOrNull()
-                        if (refId != null) {
-                            // 添加引用链接
-                            pushStringAnnotation(
-                                tag = TAG_REFERENCE,
-                                annotation = refId.toString()
+                        val refId = referenceMatch.groupValues[1]
+                        // 添加引用链接
+                        pushStringAnnotation(
+                            tag = TAG_REFERENCE,
+                            annotation = refId
+                        )
+                        withStyle(
+                            SpanStyle(
+                                color = color,
+                                textDecoration = TextDecoration.Underline
                             )
-                            withStyle(
-                                SpanStyle(
-                                    color = color,
-                                    textDecoration = TextDecoration.Underline
-                                )
-                            ) {
-                                append(parseNestedHtml(processedFontText, referencePattern))
-                            }
-                            pop()
-                            return endTagIndex + 7 // 7 是 </font> 的长度
+                        ) {
+                            append(parseNestedHtml(processedFontText, referencePattern))
                         }
+                        pop()
+                        return endTagIndex + 7 // 7 是 </font> 的长度
                     }
                 }
 
@@ -423,7 +412,7 @@ private fun AnnotatedString.Builder.handleSimpleTag(
     text: String,
     tagEndIndex: Int,
     endTag: String,
-    style: SpanStyle
+    style: SpanStyle,
 ): Int {
     val endTagIndex = text.indexOf(endTag, tagEndIndex, ignoreCase = true)
     if (endTagIndex != -1) {

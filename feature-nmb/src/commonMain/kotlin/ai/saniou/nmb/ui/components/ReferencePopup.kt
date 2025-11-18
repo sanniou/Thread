@@ -30,6 +30,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import ai.saniou.coreui.theme.Dimens
+import ai.saniou.coreui.widgets.RichText
 
 /**
  * 引用弹窗组件
@@ -48,12 +50,12 @@ fun ReferencePopup(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-            shape = RoundedCornerShape(8.dp)
+                .padding(Dimens.padding_medium),
+            elevation = CardDefaults.cardElevation(defaultElevation = Dimens.padding_small),
+            shape = RoundedCornerShape(Dimens.padding_small)
         ) {
             Column(
-                modifier = Modifier.padding(16.dp)
+                modifier = Modifier.padding(Dimens.padding_medium)
             ) {
                 // 标题栏
                 Row(
@@ -79,7 +81,7 @@ fun ReferencePopup(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 8.dp)
+                        .padding(vertical = Dimens.padding_small)
                 ) {
                     when {
                         isLoading -> {
@@ -105,14 +107,14 @@ fun ReferencePopup(
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clip(RoundedCornerShape(4.dp))
-                                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                                    .clip(RoundedCornerShape(Dimens.padding_extra_small))
+                                    .background(MaterialTheme.colorScheme.surfaceContainer)
                                     .border(
                                         1.dp,
-                                        Color.Gray.copy(alpha = 0.5f),
-                                        RoundedCornerShape(4.dp)
+                                        MaterialTheme.colorScheme.outlineVariant,
+                                        RoundedCornerShape(Dimens.padding_extra_small)
                                     )
-                                    .padding(8.dp)
+                                    .padding(Dimens.padding_small)
                             ) {
                                 // 回复者信息
                                 Row(
@@ -124,7 +126,7 @@ fun ReferencePopup(
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
 
-                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Spacer(modifier = Modifier.width(Dimens.padding_small))
 
                                     Text(
                                         text = reply.userHash ?: "",
@@ -132,7 +134,7 @@ fun ReferencePopup(
                                         color = MaterialTheme.colorScheme.primary
                                     )
 
-                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Spacer(modifier = Modifier.width(Dimens.padding_small))
 
                                     Text(
                                         text = reply.now,
@@ -143,10 +145,10 @@ fun ReferencePopup(
                                     )
                                 }
 
-                                Spacer(modifier = Modifier.padding(4.dp))
+                                Spacer(modifier = Modifier.padding(Dimens.padding_extra_small))
 
                                 // 回复内容
-                                HtmlText(
+                                RichText(
                                     text = reply.content,
                                     style = MaterialTheme.typography.bodyMedium,
                                     onReferenceClick = null // 不允许在引用中再次引用
@@ -154,7 +156,7 @@ fun ReferencePopup(
 
                                 // 如果有图片，显示图片
                                 if (reply.img.isNotEmpty() && reply.ext.isNotEmpty()) {
-                                    Spacer(modifier = Modifier.padding(4.dp))
+                                    Spacer(modifier = Modifier.padding(Dimens.padding_extra_small))
                                     NmbImage(
                                         imgPath = reply.img,
                                         ext = reply.ext,

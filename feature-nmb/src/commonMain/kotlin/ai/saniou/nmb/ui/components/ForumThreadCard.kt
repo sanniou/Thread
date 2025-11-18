@@ -2,6 +2,7 @@ package ai.saniou.nmb.ui.components
 
 import ai.saniou.nmb.data.entity.Feed
 import ai.saniou.nmb.data.entity.IBaseThread
+import ai.saniou.coreui.widgets.RichText
 import ai.saniou.nmb.data.entity.IBaseThreadReply
 import ai.saniou.nmb.data.entity.IThreadBody
 import androidx.compose.foundation.background
@@ -38,14 +39,7 @@ import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import thread.feature_nmb.generated.resources.Res
 import thread.feature_nmb.generated.resources.empty_title
-
-// 统一管理边距和尺寸
-private val PADDING_MEDIUM = 12.dp
-private val PADDING_SMALL = 8.dp
-private val PADDING_EXTRA_SMALL = 4.dp
-private val ICON_SIZE_SMALL = 16.dp
-private val ICON_SIZE_MEDIUM = 20.dp
-private val IMAGE_HEIGHT = 240.dp
+import ai.saniou.coreui.theme.Dimens
 
 /**
  * 订阅卡片，对 ThreadCard 的封装
@@ -77,13 +71,13 @@ fun ThreadCard(
             .fillMaxWidth()
             .clickable(onClick = onClick)
     ) {
-        Column(modifier = Modifier.padding(PADDING_MEDIUM)) {
+        Column(modifier = Modifier.padding(Dimens.padding_medium)) {
             ThreadCardHeader(thread)
-            Spacer(modifier = Modifier.height(PADDING_SMALL))
+            Spacer(modifier = Modifier.height(Dimens.padding_small))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 ThreadAuthor(thread)
                 if (thread.sage > 0) {
-                    Spacer(modifier = Modifier.width(PADDING_SMALL))
+                    Spacer(modifier = Modifier.width(Dimens.padding_small))
                     Text(
                         text = "SAGE",
                         style = MaterialTheme.typography.bodySmall,
@@ -91,11 +85,11 @@ fun ThreadCard(
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(PADDING_SMALL))
+            Spacer(modifier = Modifier.height(Dimens.padding_small))
             HorizontalDivider()
-            Spacer(modifier = Modifier.height(PADDING_SMALL))
+            Spacer(modifier = Modifier.height(Dimens.padding_small))
             ThreadCardContent(thread, onImageClick)
-            Spacer(modifier = Modifier.height(PADDING_SMALL))
+            Spacer(modifier = Modifier.height(Dimens.padding_small))
             ThreadCardFooter(thread)
         }
     }
@@ -105,7 +99,7 @@ fun ThreadCard(
 private fun ThreadCardHeader(thread: IBaseThread) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(PADDING_SMALL)
+        horizontalArrangement = Arrangement.spacedBy(Dimens.padding_small)
     ) {
         if (thread.admin > 0) {
             AdminIcon()
@@ -125,17 +119,17 @@ private fun ThreadCardHeader(thread: IBaseThread) {
 private fun AdminIcon() {
     Box(
         modifier = Modifier
-            .size(ICON_SIZE_MEDIUM)
+            .size(Dimens.icon_size_medium)
             .clip(CircleShape)
             .background(MaterialTheme.colorScheme.primary)
-            .padding(PADDING_EXTRA_SMALL),
+            .padding(Dimens.padding_extra_small),
         contentAlignment = Alignment.Center
     ) {
         Icon(
             imageVector = Icons.Default.Star,
             contentDescription = "管理员",
             tint = Color.White,
-            modifier = Modifier.size(ICON_SIZE_SMALL)
+            modifier = Modifier.size(Dimens.icon_size_small)
         )
     }
 }
@@ -145,7 +139,7 @@ private fun ThreadCardContent(
     thread: IBaseThread,
     onImageClick: ((String, String) -> Unit)?,
 ) {
-    HtmlText(
+    RichText(
         text = thread.content,
         style = MaterialTheme.typography.bodyMedium,
         maxLines = 3,
@@ -153,12 +147,12 @@ private fun ThreadCardContent(
     )
 
     if (thread.img.isNotBlank() && thread.ext.isNotBlank()) {
-        Spacer(modifier = Modifier.height(PADDING_SMALL))
+        Spacer(modifier = Modifier.height(Dimens.padding_small))
         NmbImage(
             imgPath = thread.img,
             ext = thread.ext,
             modifier = Modifier
-                .height(IMAGE_HEIGHT)
+                .height(Dimens.image_height_medium)
                 .clickable { onImageClick?.invoke(thread.img, thread.ext) },
             contentScale = ContentScale.FillHeight,
             isThumb = true,
@@ -176,9 +170,9 @@ private fun ThreadCardFooter(thread: IBaseThread) {
             imageVector = Icons.Default.Face,
             contentDescription = "回复",
             tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(ICON_SIZE_SMALL)
+            modifier = Modifier.size(Dimens.icon_size_small)
         )
-        Spacer(modifier = Modifier.width(PADDING_EXTRA_SMALL))
+        Spacer(modifier = Modifier.width(Dimens.padding_extra_small))
         Text(
             text = thread.replyCount.toString(),
             style = MaterialTheme.typography.bodySmall,
@@ -187,7 +181,7 @@ private fun ThreadCardFooter(thread: IBaseThread) {
 
         threadReply?.run {
             if ((remainReplies ?: 0) > 0) {
-                Spacer(modifier = Modifier.width(PADDING_SMALL))
+                Spacer(modifier = Modifier.width(Dimens.padding_small))
                 Text(
                     text = "(省略${remainReplies}条回复)",
                     style = MaterialTheme.typography.bodySmall,
@@ -206,7 +200,7 @@ private fun ThreadCardFooter(thread: IBaseThread) {
     }
 
     if (!threadReply?.replies.isNullOrEmpty()) {
-        Spacer(modifier = Modifier.height(PADDING_SMALL))
+        Spacer(modifier = Modifier.height(Dimens.padding_small))
         RecentReplies(threadReply.replies)
     }
 }
@@ -217,21 +211,22 @@ fun ThreadBody(
     onReferenceClick: ((Long) -> Unit)? = null,
     onImageClick: (String, String) -> Unit,
 ) {
-    HtmlText(
+    RichText(
         text = body.content,
         style = MaterialTheme.typography.bodyMedium,
-        onReferenceClick = onReferenceClick
+        onReferenceClick = { onReferenceClick?.invoke(it.toLong()) },
+        referencePattern = ">>No\\.(\\d+)".toRegex()
     )
 
     if (body.img.isNotEmpty() && body.ext.isNotEmpty()) {
-        Spacer(modifier = Modifier.height(PADDING_SMALL))
+        Spacer(modifier = Modifier.height(Dimens.padding_small))
         NmbImage(
             imgPath = body.img,
             ext = body.ext,
             isThumb = true,
             contentDescription = "帖子图片",
             modifier = Modifier
-                .height(IMAGE_HEIGHT)
+                .height(Dimens.image_height_medium)
                 .wrapContentWidth(Alignment.Start)
                 .clickable { onImageClick(body.img, body.ext) },
             contentScale = ContentScale.FillHeight,

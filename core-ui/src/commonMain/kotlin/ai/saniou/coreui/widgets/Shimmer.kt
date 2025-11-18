@@ -1,4 +1,4 @@
-package ai.saniou.nmb.ui.components
+package ai.saniou.coreui.widgets
 
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -25,9 +25,9 @@ private const val SHIMMER_DELAY = 300
 @Composable
 fun ShimmerBrush(): Brush {
     val shimmerColors = listOf(
-        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+        MaterialTheme.colorScheme.surfaceContainer,
+        MaterialTheme.colorScheme.surfaceContainerHigh,
+        MaterialTheme.colorScheme.surfaceContainer
     )
 
     val transition = rememberInfiniteTransition()
@@ -45,6 +45,15 @@ fun ShimmerBrush(): Brush {
         start = Offset(10f, 10f),
         end = Offset(translateAnim, translateAnim)
     )
+}
+
+@Composable
+fun ShimmerContainer(
+    modifier: Modifier = Modifier,
+    content: @Composable (Brush) -> Unit,
+) {
+    val brush = ShimmerBrush()
+    Box(modifier) { content(brush) }
 }
 
 @Composable

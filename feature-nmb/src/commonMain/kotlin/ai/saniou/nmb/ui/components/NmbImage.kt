@@ -1,8 +1,8 @@
 package ai.saniou.nmb.ui.components
 
+import ai.saniou.coreui.widgets.NetworkImage
 import ai.saniou.nmb.data.manager.CdnManager
 import ai.saniou.nmb.di.nmbdi
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -11,13 +11,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
-import com.github.panpf.sketch.AsyncImage
-import com.github.panpf.sketch.ability.progressIndicator
-import com.github.panpf.sketch.painter.rememberMaskProgressPainter
-import com.github.panpf.sketch.painter.rememberRingProgressPainter
-import com.github.panpf.sketch.rememberAsyncImageState
-import com.github.panpf.sketch.request.ComposableImageOptions
-import com.github.panpf.sketch.state.ColorPainterStateImage
 import kotlinx.coroutines.launch
 import org.kodein.di.instance
 
@@ -51,44 +44,10 @@ fun NmbImage(
     // 记住是否正在重试
     var isRetrying by remember { mutableStateOf(false) }
 
-    ImageComponent(
+    NetworkImage(
         imageUrl = imageUrl,
         modifier = modifier,
         contentDescription = contentDescription,
-        contentScale = contentScale,
-        onRetry = {
-            // 点击重试
-            coroutineScope.launch {
-                // 切换CDN地址
-                cdnManager.switchToNextCdn()
-                // 触发重新加载
-                isRetrying = !isRetrying
-            }
-        },
-    )
-}
-
-@Composable
-fun ImageComponent(
-    imageUrl: String,
-    modifier: Modifier = Modifier,
-    contentDescription: String?,
-    contentScale: ContentScale = ContentScale.Fit,
-    onRetry: (() -> Unit)? = null
-) {
-
-    val progressPainter = rememberMaskProgressPainter()
-    val state = rememberAsyncImageState(ComposableImageOptions {
-        placeholder(ColorPainterStateImage(MaterialTheme.colorScheme.primaryContainer))
-        error(ColorPainterStateImage(MaterialTheme.colorScheme.errorContainer))
-        crossfade()
-        resizeOnDraw()
-        // There is a lot more...
-    })
-    AsyncImage(
-        uri = imageUrl,
-        contentDescription = contentDescription,
-        modifier = modifier.progressIndicator(state, progressPainter),
         contentScale = contentScale,
     )
 }

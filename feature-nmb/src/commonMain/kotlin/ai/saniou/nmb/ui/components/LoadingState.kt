@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import ai.saniou.coreui.theme.Dimens
 
 @Composable
 fun LoadEndIndicator(onClick: (() -> Unit)? = null) {
@@ -25,13 +26,13 @@ fun LoadEndIndicator(onClick: (() -> Unit)? = null) {
                     this
                 }
             }
-            .padding(16.dp),
+            .padding(Dimens.padding_medium),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = "已加载全部帖子",
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
@@ -41,13 +42,13 @@ fun LoadingFailedIndicator() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(Dimens.padding_medium),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = "加载更多失败",
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
@@ -57,11 +58,11 @@ fun LoadingIndicator() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(Dimens.padding_medium),
         contentAlignment = Alignment.Center
     ) {
         CircularProgressIndicator(
-            modifier = Modifier.size(24.dp),
+            modifier = Modifier.size(Dimens.icon_size_medium),
             strokeWidth = 2.dp
         )
     }

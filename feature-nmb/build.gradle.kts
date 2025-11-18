@@ -69,21 +69,6 @@ kotlin {
             implementation("org.jetbrains.compose.material3.adaptive:adaptive-layout:1.1.0")
             implementation("org.jetbrains.compose.material3.adaptive:adaptive-navigation:1.1.0")
 
-            // zoom
-            implementation(libs.zoom)
-            implementation(libs.zoom.sketch)
-            implementation(libs.zoom.resources)
-
-            implementation(libs.sketch.compose)
-            // implementation("io.github.panpf.sketch4:sketch-http:4.0.6")
-            implementation(libs.sketch.animated.gif)
-            implementation(libs.sketch.animated.webp)
-            implementation(libs.sketch.compose.resources)
-            implementation(libs.sketch.extensions.compose.resources)
-            implementation(libs.sketch.extensions.compose)
-            implementation(libs.sketch.ktor)
-            implementation(libs.sketch.svg)
-
             implementation(libs.paging.common)
             implementation(libs.paging.compose)
 //            implementation(libs.cash.paging)

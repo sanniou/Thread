@@ -56,9 +56,20 @@ kotlin {
             implementation(libs.navigation.compose)
             api(libs.navigation.compose)
             api(libs.material.icons)
-            // Coil for Multiplatform
-            // api(libs.coil.compose)
-            // api(libs.coil.network)
+            // zoom
+            implementation(libs.zoom)
+            implementation(libs.zoom.sketch)
+            implementation(libs.zoom.resources)
+
+            implementation(libs.sketch.compose)
+            // implementation("io.github.panpf.sketch4:sketch-http:4.0.6")
+            implementation(libs.sketch.animated.gif)
+            implementation(libs.sketch.animated.webp)
+            implementation(libs.sketch.compose.resources)
+            implementation(libs.sketch.extensions.compose.resources)
+            implementation(libs.sketch.extensions.compose)
+            implementation(libs.sketch.ktor)
+            implementation(libs.sketch.svg)
         }
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
