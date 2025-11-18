@@ -6,8 +6,8 @@ import ai.saniou.nmb.domain.ForumCategoryUseCase
 import ai.saniou.nmb.initializer.AppInitializer
 import ai.saniou.nmb.workflow.home.ForumCategoryContract.Event
 import ai.saniou.nmb.workflow.home.ForumCategoryContract.State
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import cafe.adriel.voyager.core.model.ScreenModel
+import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
@@ -19,7 +19,7 @@ class ForumCategoryViewModel(
     private val forumCategoryUseCase: ForumCategoryUseCase,
     private val appInitializer: AppInitializer,
     private val categoryStorage: CategoryStorage
-) : ViewModel() {
+) : ScreenModel {
 
     private val _state = MutableStateFlow(State())
     val state = _state.asStateFlow()
@@ -39,7 +39,7 @@ class ForumCategoryViewModel(
     }
 
     private fun loadCategories() {
-        viewModelScope.launch {
+        screenModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
             try {
                 // 初始化应用
@@ -95,14 +95,14 @@ class ForumCategoryViewModel(
     }
 
     private fun selectForum(forum: ai.saniou.nmb.data.entity.ForumDetail) {
-        viewModelScope.launch {
+        screenModelScope.launch {
             categoryStorage.saveLastOpenedForum(forum)
         }
         _state.update { it.copy(currentForum = forum) }
     }
 
     private fun toggleFavorite(forum: ai.saniou.nmb.data.entity.ForumDetail) {
-        viewModelScope.launch {
+        screenModelScope.launch {
             val isCurrentlyFavorite = state.value.favoriteForumIds.contains(forum.id)
             forumCategoryUseCase.changeFavoriteForum(forum)
             val message = if (isCurrentlyFavorite) "已取消收藏 ${forum.name}" else "已收藏 ${forum.name}"

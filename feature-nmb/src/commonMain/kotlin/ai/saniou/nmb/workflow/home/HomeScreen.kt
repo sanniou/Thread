@@ -30,20 +30,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.kodein.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import org.jetbrains.compose.resources.stringResource
 import org.kodein.di.DI
-import org.kodein.di.compose.viewmodel.rememberViewModel
-import org.kodein.di.instance
 
 data class HomeScreen(val di: DI = nmbdi) : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val viewModel: HomeViewModel by rememberViewModel()
+        val viewModel: HomeViewModel = rememberScreenModel()
         val noticeState by viewModel.noticeState.collectAsStateWithLifecycle()
 
         var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.HOME) }

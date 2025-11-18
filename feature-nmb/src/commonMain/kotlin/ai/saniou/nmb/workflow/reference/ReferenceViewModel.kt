@@ -4,6 +4,7 @@ import ai.saniou.nmb.domain.GetReferenceUseCase
 import ai.saniou.nmb.workflow.reference.ReferenceContract.Event
 import ai.saniou.nmb.workflow.reference.ReferenceContract.State
 import androidx.lifecycle.ViewModel
+import cafe.adriel.voyager.core.model.ScreenModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,7 +15,7 @@ import kotlinx.coroutines.launch
 class ReferenceViewModel(
     private val getReferenceUseCase: GetReferenceUseCase,
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.Main),
-) : ViewModel() {
+) : ScreenModel {
     private val _uiState = MutableStateFlow(State())
     val uiState = _uiState.asStateFlow()
 

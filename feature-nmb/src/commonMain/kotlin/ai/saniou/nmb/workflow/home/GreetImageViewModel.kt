@@ -1,8 +1,8 @@
 package ai.saniou.nmb.workflow.home
 
 import ai.saniou.nmb.data.storage.GreetImageStorage
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import cafe.adriel.voyager.core.model.ScreenModel
+import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,7 +17,7 @@ import kotlin.time.ExperimentalTime
  */
 class GreetImageViewModel(
     private val greetImageStorage: GreetImageStorage
-) : ViewModel() {
+) : ScreenModel {
 
     private val _greetImageUrl = MutableStateFlow<String?>(null)
     val greetImageUrl: StateFlow<String?> = _greetImageUrl.asStateFlow()
@@ -44,7 +44,7 @@ class GreetImageViewModel(
      * 加载欢迎图片
      */
     fun loadGreetImage() {
-        viewModelScope.launch {
+        screenModelScope.launch {
             try {
                 _isLoading.value = true
 

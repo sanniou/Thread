@@ -38,8 +38,8 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import ai.saniou.coreui.widgets.ZoomAsyncImage
+import cafe.adriel.voyager.kodein.rememberScreenModel
 import org.kodein.di.DI
-import org.kodein.di.compose.viewmodel.rememberViewModel
 import org.kodein.di.instance
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -86,7 +86,7 @@ data class ImagePreviewPage(
             }
         }
 
-        val imagePreviewViewModel: ImagePreviewViewModel by rememberViewModel()
+        val imagePreviewViewModel: ImagePreviewViewModel = rememberScreenModel()
 
         // 获取CDN管理器
         val cdnManager by nmbdi.instance<CdnManager>()

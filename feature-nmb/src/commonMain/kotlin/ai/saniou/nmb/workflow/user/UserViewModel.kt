@@ -2,15 +2,15 @@ package ai.saniou.nmb.workflow.user
 
 import ai.saniou.nmb.data.entity.Cookie
 import ai.saniou.nmb.domain.UserUseCase
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import cafe.adriel.voyager.core.model.ScreenModel
+import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
-class UserViewModel(private val userUseCase: UserUseCase) : ViewModel() {
+class UserViewModel(private val userUseCase: UserUseCase) : ScreenModel {
 
     private val _uiState = MutableStateFlow<UserUiState>(UserUiState.Loading)
     val uiState = _uiState.asStateFlow()
@@ -50,7 +50,7 @@ class UserViewModel(private val userUseCase: UserUseCase) : ViewModel() {
     }
 
     fun refreshCookies() {
-        viewModelScope.launch {
+        screenModelScope.launch {
             _uiState.value = UserUiState.Loading
             try {
                 val cookies = userUseCase.getCookiesList()
@@ -62,7 +62,7 @@ class UserViewModel(private val userUseCase: UserUseCase) : ViewModel() {
     }
 
     fun applyNewCookie() {
-        viewModelScope.launch {
+        screenModelScope.launch {
             _uiState.value = UserUiState.Loading
             try {
                 val result = userUseCase.applyNewCookie()
@@ -104,7 +104,7 @@ class UserViewModel(private val userUseCase: UserUseCase) : ViewModel() {
     }
 
     fun login() {
-        viewModelScope.launch {
+        screenModelScope.launch {
             _uiState.value = UserUiState.Loading
             try {
                 val response = userUseCase.login(email, password, verifyCode)
@@ -121,7 +121,7 @@ class UserViewModel(private val userUseCase: UserUseCase) : ViewModel() {
     }
 
     fun register() {
-        viewModelScope.launch {
+        screenModelScope.launch {
             _uiState.value = UserUiState.Loading
             try {
                 val result = userUseCase.register(email, password, passwordConfirm, verifyCode)

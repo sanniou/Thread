@@ -4,15 +4,15 @@ import ai.saniou.coreui.state.UiStateWrapper
 import ai.saniou.nmb.data.entity.PostReplyRequest
 import ai.saniou.nmb.data.entity.PostThreadRequest
 import ai.saniou.nmb.domain.PostUseCase
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import cafe.adriel.voyager.core.model.ScreenModel
+import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class PostViewModel(private val postUseCase: PostUseCase) : ViewModel() {
+class PostViewModel(private val postUseCase: PostUseCase) : ScreenModel {
 
     private val dataUiState = MutableStateFlow(
         PostUiState(
@@ -58,7 +58,7 @@ class PostViewModel(private val postUseCase: PostUseCase) : ViewModel() {
         MutableStateFlow<UiStateWrapper>(UiStateWrapper.Success(dataUiState.value))
 
     val uiState = _uiState.stateIn(
-        viewModelScope,
+        screenModelScope,
         SharingStarted.WhileSubscribed(3000),
         UiStateWrapper.Success(dataUiState.value)
     )
@@ -90,7 +90,7 @@ class PostViewModel(private val postUseCase: PostUseCase) : ViewModel() {
             return
         }
 
-        viewModelScope.launch {
+        screenModelScope.launch {
             try {
                 _uiState.value = UiStateWrapper.Loading
 
@@ -147,7 +147,7 @@ class PostViewModel(private val postUseCase: PostUseCase) : ViewModel() {
             return
         }
 
-        viewModelScope.launch {
+        screenModelScope.launch {
             try {
                 _uiState.value = UiStateWrapper.Loading
 

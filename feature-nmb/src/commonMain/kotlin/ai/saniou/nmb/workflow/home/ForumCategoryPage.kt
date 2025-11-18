@@ -53,206 +53,210 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.kodein.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.launch
 import org.kodein.di.DI
-import org.kodein.di.compose.viewmodel.rememberViewModel
 
-@Composable
-fun ForumCategoryPage(
-    di: DI = nmbdi,
-    drawerState: DrawerState,
-) {
-    val viewModel: ForumCategoryViewModel by rememberViewModel()
-    val state by viewModel.state.collectAsStateWithLifecycle()
+data class ForumCategoryPage(
+    val di: DI = nmbdi,
+    val drawerState: DrawerState,
+) : Screen {
 
-    val greetImageViewModel: GreetImageViewModel by rememberViewModel()
-    val greetImageUrl by greetImageViewModel.greetImageUrl.collectAsStateWithLifecycle()
+    @Composable
+    override fun Content() {
+        val viewModel: ForumCategoryViewModel = rememberScreenModel()
+        val state by viewModel.state.collectAsStateWithLifecycle()
 
-    val navigator = LocalNavigator.currentOrThrow
-    val scope = rememberCoroutineScope()
-    val snackbarHostState = remember { SnackbarHostState() }
+        val greetImageViewModel: GreetImageViewModel = rememberScreenModel()
+        val greetImageUrl by greetImageViewModel.greetImageUrl.collectAsStateWithLifecycle()
 
-    LaunchedEffect(state.toastMessage) {
-        state.toastMessage?.let { message ->
-            snackbarHostState.showSnackbar(message)
-            viewModel.onEvent(Event.ToastShown)
+        val navigator = LocalNavigator.currentOrThrow
+        val scope = rememberCoroutineScope()
+        val snackbarHostState = remember { SnackbarHostState() }
+
+        LaunchedEffect(state.toastMessage) {
+            state.toastMessage?.let { message ->
+                snackbarHostState.showSnackbar(message)
+                viewModel.onEvent(Event.ToastShown)
+            }
         }
-    }
 
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        drawerContent = {
-            ModalDrawerSheet {
-                Box(modifier = Modifier.fillMaxSize()) {
-                    DrawerHeader(imageUrl = greetImageUrl)
-                    Column(
-                        modifier = Modifier.fillMaxSize()
-                            .padding(top = 140.dp)
-                            .background(Color.White.copy(alpha = 0.8f))
-                    ) {
-                        DrawerMenuRow(
-                            menuItems = listOf(
-                                DrawerMenuItem(Icons.Default.Favorite, "订阅列表") {
-                                    navigator.push(SubscriptionPage { threadId ->
-                                        navigator.push(ThreadPage(threadId))
-                                    })
-                                    scope.launch { drawerState.close() }
-                                },
-                                DrawerMenuItem(Icons.Default.Home, "访问历史") { /* TODO */ },
-                                DrawerMenuItem(Icons.Default.Send, "发言记录") { /* TODO */ },
-                                DrawerMenuItem(Icons.Default.Search, "搜索") { /* TODO */ }
+        ModalNavigationDrawer(
+            drawerState = drawerState,
+            drawerContent = {
+                ModalDrawerSheet {
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        DrawerHeader(imageUrl = greetImageUrl)
+                        Column(
+                            modifier = Modifier.fillMaxSize()
+                                .padding(top = 140.dp)
+                                .background(Color.White.copy(alpha = 0.8f))
+                        ) {
+                            DrawerMenuRow(
+                                menuItems = listOf(
+                                    DrawerMenuItem(Icons.Default.Favorite, "订阅列表") {
+                                        navigator.push(SubscriptionPage { threadId ->
+                                            navigator.push(ThreadPage(threadId))
+                                        })
+                                        scope.launch { drawerState.close() }
+                                    },
+                                    DrawerMenuItem(Icons.Default.Home, "访问历史") { /* TODO */ },
+                                    DrawerMenuItem(Icons.Default.Send, "发言记录") { /* TODO */ },
+                                    DrawerMenuItem(Icons.Default.Search, "搜索") { /* TODO */ }
+                                )
                             )
-                        )
-                        HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
-                        if (state.isLoading) {
-                            Box(
-                                modifier = Modifier.fillMaxWidth().padding(16.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                CircularProgressIndicator()
-                            }
-                        } else {
-                            LazyColumn(modifier = Modifier.weight(1f)) {
-                                items(state.categories, key = { it.name }) { category ->
-                                    CategoryItem(
-                                        category = category,
-                                        isExpanded = state.expandedCategoryId == category.id,
-                                        onCategoryClick = {
-                                            viewModel.onEvent(
-                                                Event.ToggleCategory(
-                                                    category.id
+                            if (state.isLoading) {
+                                Box(
+                                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator()
+                                }
+                            } else {
+                                LazyColumn(modifier = Modifier.weight(1f)) {
+                                    items(state.categories, key = { it.name }) { category ->
+                                        CategoryItem(
+                                            category = category,
+                                            isExpanded = state.expandedCategoryId == category.id,
+                                            onCategoryClick = {
+                                                viewModel.onEvent(
+                                                    Event.ToggleCategory(
+                                                        category.id
+                                                    )
                                                 )
-                                            )
-                                        },
-                                        onCategoryLongClick = {
-                                            // Consume long click
-                                        }
-                                    )
-                                    AnimatedVisibility(visible = state.expandedCategoryId == category.id) {
-                                        Column {
-                                            category.forums.forEach { forum ->
-                                                ForumItem(
-                                                    forum = forum,
-                                                    isSelected = state.currentForum?.id == forum.id,
-                                                    isFavorite = state.favoriteForumIds.contains(
-                                                        forum.id
-                                                    ),
-                                                    onForumClick = {
-                                                        viewModel.onEvent(Event.SelectForum(forum))
-                                                        scope.launch { drawerState.close() }
-                                                    },
-                                                    onFavoriteToggle = {
-                                                        viewModel.onEvent(
-                                                            Event.ToggleFavorite(
-                                                                forum
+                                            },
+                                            onCategoryLongClick = {
+                                                // Consume long click
+                                            }
+                                        )
+                                        AnimatedVisibility(visible = state.expandedCategoryId == category.id) {
+                                            Column {
+                                                category.forums.forEach { forum ->
+                                                    ForumItem(
+                                                        forum = forum,
+                                                        isSelected = state.currentForum?.id == forum.id,
+                                                        isFavorite = state.favoriteForumIds.contains(
+                                                            forum.id
+                                                        ),
+                                                        onForumClick = {
+                                                            viewModel.onEvent(Event.SelectForum(forum))
+                                                            scope.launch { drawerState.close() }
+                                                        },
+                                                        onFavoriteToggle = {
+                                                            viewModel.onEvent(
+                                                                Event.ToggleFavorite(
+                                                                    forum
+                                                                )
                                                             )
-                                                        )
-                                                    }
-                                                )
+                                                        }
+                                                    )
+                                                }
                                             }
                                         }
                                     }
                                 }
                             }
                         }
+                        SnackbarHost(
+                            hostState = snackbarHostState,
+                            modifier = Modifier.align(Alignment.BottomCenter)
+                        )
                     }
-                    SnackbarHost(
-                        hostState = snackbarHostState,
-                        modifier = Modifier.align(Alignment.BottomCenter)
-                    )
+                }
+            }
+        ) {
+            state.currentForum?.let { forum ->
+                ForumPage(forumId = forum.id, fgroupId = forum.fGroup).Content()
+            } ?: run {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("请从左侧选择一个板块")
                 }
             }
         }
-    ) {
-        state.currentForum?.let { forum ->
-            ForumPage(forumId = forum.id, fgroupId = forum.fGroup).Content()
-        } ?: run {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("请从左侧选择一个板块")
-            }
-        }
     }
-}
 
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-private fun CategoryItem(
-    category: ForumCategory,
-    isExpanded: Boolean,
-    onCategoryClick: () -> Unit,
-    onCategoryLongClick: () -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .combinedClickable(
-                onClick = onCategoryClick,
-                onLongClick = onCategoryLongClick
-            )
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
+    @OptIn(ExperimentalFoundationApi::class)
+    @Composable
+    private fun CategoryItem(
+        category: ForumCategory,
+        isExpanded: Boolean,
+        onCategoryClick: () -> Unit,
+        onCategoryLongClick: () -> Unit,
     ) {
-        val icon =
-            if (isExpanded) Icons.Default.KeyboardArrowDown else Icons.AutoMirrored.Filled.KeyboardArrowRight
-        val color =
-            if (isExpanded) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-        Icon(imageVector = icon, contentDescription = null, tint = color)
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(text = category.name, style = MaterialTheme.typography.titleMedium, color = color)
-    }
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-private fun ForumItem(
-    forum: ai.saniou.nmb.data.entity.ForumDetail,
-    isSelected: Boolean,
-    isFavorite: Boolean,
-    onForumClick: () -> Unit,
-    onFavoriteToggle: () -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .combinedClickable(
-                onClick = onForumClick,
-                onLongClick = onFavoriteToggle
-            )
-            .padding(start = 32.dp, end = 16.dp, top = 12.dp, bottom = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        if (isSelected) {
-            Box(
-                modifier = Modifier
-                    .size(8.dp)
-                    .background(MaterialTheme.colorScheme.primary, CircleShape)
-            )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .combinedClickable(
+                    onClick = onCategoryClick,
+                    onLongClick = onCategoryLongClick
+                )
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            val icon =
+                if (isExpanded) Icons.Default.KeyboardArrowDown else Icons.AutoMirrored.Filled.KeyboardArrowRight
+            val color =
+                if (isExpanded) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+            Icon(imageVector = icon, contentDescription = null, tint = color)
             Spacer(modifier = Modifier.width(8.dp))
+            Text(text = category.name, style = MaterialTheme.typography.titleMedium, color = color)
         }
-        val color =
-            if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-        Text(
-            text = if (forum.showName.isNullOrBlank()) forum.name else forum.showName,
-            style = MaterialTheme.typography.bodyMedium,
-            color = color
-        )
-        Spacer(modifier = Modifier.weight(1f))
-        if (isFavorite) {
-            Icon(
-                imageVector = Icons.Default.Star,
-                contentDescription = "已收藏",
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(16.dp)
+    }
+
+    @OptIn(ExperimentalFoundationApi::class)
+    @Composable
+    private fun ForumItem(
+        forum: ai.saniou.nmb.data.entity.ForumDetail,
+        isSelected: Boolean,
+        isFavorite: Boolean,
+        onForumClick: () -> Unit,
+        onFavoriteToggle: () -> Unit,
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .combinedClickable(
+                    onClick = onForumClick,
+                    onLongClick = onFavoriteToggle
+                )
+                .padding(start = 32.dp, end = 16.dp, top = 12.dp, bottom = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (isSelected) {
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .background(MaterialTheme.colorScheme.primary, CircleShape)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+            }
+            val color =
+                if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+            Text(
+                text = if (forum.showName.isNullOrBlank()) forum.name else forum.showName,
+                style = MaterialTheme.typography.bodyMedium,
+                color = color
             )
-            Spacer(modifier = Modifier.width(4.dp))
+            Spacer(modifier = Modifier.weight(1f))
+            if (isFavorite) {
+                Icon(
+                    imageVector = Icons.Default.Star,
+                    contentDescription = "已收藏",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+            }
+            Text(
+                text = forum.threadCount.toString(),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
-        Text(
-            text = forum.threadCount.toString(),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
     }
 }

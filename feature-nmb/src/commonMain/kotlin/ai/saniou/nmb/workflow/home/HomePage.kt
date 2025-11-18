@@ -130,7 +130,7 @@ fun HomePage() {
         Box(modifier = Modifier.padding(innerPadding)) {
             ForumCategoryPage(
                 drawerState = drawerState,
-            )
+            ).Content()
         }
     }
 }

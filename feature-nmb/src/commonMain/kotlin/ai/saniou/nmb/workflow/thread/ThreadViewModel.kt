@@ -8,8 +8,8 @@ import ai.saniou.nmb.domain.GetThreadDetailUseCase
 import ai.saniou.nmb.domain.GetThreadRepliesPagingUseCase
 import ai.saniou.nmb.workflow.thread.ThreadContract.Event
 import ai.saniou.nmb.workflow.thread.ThreadContract.State
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import cafe.adriel.voyager.core.model.ScreenModel
+import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -28,7 +28,7 @@ class ThreadViewModel(
     private val getThreadRepliesPagingUseCase: GetThreadRepliesPagingUseCase,
     private val forumUseCase: ForumUseCase,
     private val nmbRepository: NmbRepository,
-) : ViewModel() {
+) : ScreenModel {
 
     private val _state = MutableStateFlow(State())
     val state = _state.asStateFlow()
@@ -38,7 +38,7 @@ class ThreadViewModel(
 
     init {
         // 加载订阅ID，为订阅功能做准备
-        viewModelScope.launch {
+        screenModelScope.launch {
             subscriptionStorage.loadLastSubscriptionId()
         }
     }
@@ -63,14 +63,14 @@ class ThreadViewModel(
     @OptIn(ExperimentalTime::class)
     private fun updateLastAccessTime() {
         val id = threadId ?: return
-        viewModelScope.launch {
+        screenModelScope.launch {
             nmbRepository.updateThreadLastAccessTime(id, Clock.System.now().epochSeconds)
         }
     }
 
     private fun updateLastReadReplyId(replyId: Long) {
         val id = threadId ?: return
-        viewModelScope.launch {
+        screenModelScope.launch {
             nmbRepository.updateThreadLastReadReplyId(id, replyId)
         }
     }
@@ -78,7 +78,7 @@ class ThreadViewModel(
     private fun loadThread() {
         val id = threadId ?: return
         loadJob?.cancel()
-        loadJob = viewModelScope.launch {
+        loadJob = screenModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
 
             // 开始监听帖子主楼信息
@@ -133,7 +133,7 @@ class ThreadViewModel(
         val currentSubscribed = state.value.isSubscribed
         val newSubscribed = !currentSubscribed
 
-        viewModelScope.launch {
+        screenModelScope.launch {
             try {
                 val subscriptionId = subscriptionStorage.subscriptionId.value
                     ?: throw IllegalStateException("订阅ID未加载")

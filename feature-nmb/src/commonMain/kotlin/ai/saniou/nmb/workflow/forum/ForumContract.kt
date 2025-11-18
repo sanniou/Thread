@@ -27,13 +27,6 @@ interface ForumContract {
      */
     sealed interface Event {
         /**
-         * 加载指定的板块
-         * @param fid 板块 ID
-         * @param fgroup 板块分组 ID
-         */
-        data class LoadForum(val fid: Long, val fgroup: Long) : Event
-
-        /**
          * 刷新当前板块
          */
         object Refresh : Event

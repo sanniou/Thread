@@ -40,6 +40,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import org.kodein.di.DI
 import org.kodein.di.bindConstant
+import org.kodein.di.bindFactory
 import org.kodein.di.bindProvider
 import org.kodein.di.bindSingleton
 import org.kodein.di.instance
@@ -101,7 +102,9 @@ val nmbdi = DI {
 
     // 论坛相关
     bindProvider { ForumUseCase(instance(), instance()) }
-    bindProvider { ForumViewModel(instance()) }
+    bindFactory<Pair<Long, Long>, ForumViewModel> { params ->
+        ForumViewModel(instance(), params.first, params.second)
+    }
 
     // 帖子相关
     bindProvider { GetThreadDetailUseCase(instance()) }

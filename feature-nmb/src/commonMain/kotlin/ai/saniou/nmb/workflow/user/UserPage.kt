@@ -45,14 +45,11 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.kodein.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.kodein.di.DI
-import org.kodein.di.compose.viewmodel.rememberViewModel
-import org.kodein.di.instance
 
 
 data class UserPage(
@@ -64,7 +61,7 @@ data class UserPage(
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
 
-        val userViewModel: UserViewModel by rememberViewModel()
+        val userViewModel: UserViewModel = rememberScreenModel()
 
         val uiState by userViewModel.uiState.collectAsStateWithLifecycle()
 

@@ -5,8 +5,8 @@ import ai.saniou.nmb.domain.SubscriptionUseCase
 import ai.saniou.nmb.workflow.subscription.SubscriptionContract.Effect
 import ai.saniou.nmb.workflow.subscription.SubscriptionContract.Event
 import ai.saniou.nmb.workflow.subscription.SubscriptionContract.State
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import cafe.adriel.voyager.core.model.ScreenModel
+import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,7 +19,7 @@ import kotlinx.coroutines.launch
 class SubscriptionViewModel(
     private val subscriptionUseCase: SubscriptionUseCase,
     private val subscriptionStorage: SubscriptionStorage
-) : ViewModel() {
+) : ScreenModel {
 
     private val _state = MutableStateFlow(State())
     val state = _state.asStateFlow()
@@ -28,7 +28,7 @@ class SubscriptionViewModel(
     val effect = _effect.receiveAsFlow()
 
     init {
-        viewModelScope.launch {
+        screenModelScope.launch {
             subscriptionStorage.loadLastSubscriptionId()
             if (subscriptionStorage.subscriptionId.value == null) {
                 _state.update {
@@ -41,7 +41,7 @@ class SubscriptionViewModel(
             }
         }
 
-        viewModelScope.launch {
+        screenModelScope.launch {
             subscriptionStorage.subscriptionId
                 .filterNotNull()
                 .distinctUntilChanged()
@@ -72,7 +72,7 @@ class SubscriptionViewModel(
     }
 
     private fun setSubscriptionId(id: String) {
-        viewModelScope.launch {
+        screenModelScope.launch {
             subscriptionStorage.addSubscriptionId(id)
             _state.update { it.copy(isShowSubscriptionIdDialog = false) }
         }
@@ -85,7 +85,7 @@ class SubscriptionViewModel(
 
     private fun unsubscribe(threadId: Long) {
         val id = state.value.subscriptionId ?: return
-        viewModelScope.launch {
+        screenModelScope.launch {
             try {
                 subscriptionUseCase.delFeed(id, threadId)
                 _effect.send(Effect.OnUnsubscribeResult(true, "取消订阅成功"))

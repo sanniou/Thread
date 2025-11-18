@@ -24,7 +24,6 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -36,14 +35,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.kodein.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.kodein.di.DI
-import org.kodein.di.compose.viewmodel.rememberViewModel
-import org.kodein.di.instance
 
 @OptIn(ExperimentalMaterial3Api::class)
 data class PostPage(
@@ -59,7 +55,7 @@ data class PostPage(
         val isReply = threadId != null
         val title = if (isReply) "回复" else "发帖"
 
-        val postViewModel: PostViewModel by rememberViewModel()
+        val postViewModel: PostViewModel = rememberScreenModel()
 
         val uiState by postViewModel.uiState.collectAsStateWithLifecycle()
 

@@ -51,11 +51,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.kodein.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.flow.collectLatest
 import org.kodein.di.DI
-import org.kodein.di.compose.viewmodel.rememberViewModel
 
 data class SubscriptionPage(
     val di: DI = nmbdi,
@@ -67,7 +67,7 @@ data class SubscriptionPage(
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val snackbarHostState = remember { SnackbarHostState() }
-        val viewModel: SubscriptionViewModel by rememberViewModel()
+        val viewModel: SubscriptionViewModel = rememberScreenModel()
         val state by viewModel.state.collectAsStateWithLifecycle()
 
         LaunchedEffect(Unit) {

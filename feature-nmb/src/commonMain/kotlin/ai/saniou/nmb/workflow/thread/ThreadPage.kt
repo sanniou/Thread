@@ -97,11 +97,11 @@ import androidx.compose.ui.unit.dp
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.kodein.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.launch
 import org.kodein.di.DI
-import org.kodein.di.compose.viewmodel.rememberViewModel
 
 data class ThreadPage(
     val threadId: Long?,
@@ -117,13 +117,13 @@ data class ThreadPage(
         val coroutineScope = rememberCoroutineScope()
         val clipboardManager = LocalClipboardManager.current
 
-        val viewModel: ThreadViewModel by rememberViewModel()
+        val viewModel: ThreadViewModel = rememberScreenModel()
         val state by viewModel.state.collectAsState()
 
         var showJumpDialog by remember { mutableStateOf(false) }
 
         // 引用弹窗状态
-        val referenceViewModel: ReferenceViewModel by rememberViewModel()
+        val referenceViewModel: ReferenceViewModel = rememberScreenModel()
         var showReferencePopup by remember { mutableStateOf(false) }
         var currentReferenceId by remember { mutableStateOf(0L) }
         val referenceState by referenceViewModel.uiState.collectAsState()

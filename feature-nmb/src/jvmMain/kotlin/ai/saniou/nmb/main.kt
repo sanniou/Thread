@@ -34,12 +34,7 @@ fun main() = application {
                 Navigator(
                     screen = HomeScreen(),
                     disposeBehavior = NavigatorDisposeBehavior(disposeSteps = false),
-                ) { navigator ->
-                    ScaleTransition(
-                        navigator = navigator,
-                        disposeScreenAfterTransitionEnd = true
-                    )
-                }
+                )
             }
         }
     }

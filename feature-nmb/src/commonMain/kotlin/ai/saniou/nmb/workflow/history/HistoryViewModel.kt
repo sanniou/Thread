@@ -1,12 +1,12 @@
 package ai.saniou.nmb.workflow.history
 
 import ai.saniou.nmb.domain.HistoryUseCase
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import androidx.paging.cachedIn
+import cafe.adriel.voyager.core.model.ScreenModel
+import cafe.adriel.voyager.core.model.screenModelScope
 
 class HistoryViewModel(
     historyUseCase: HistoryUseCase
-) : ViewModel() {
-    val historyThreads = historyUseCase.getHistoryThreads().cachedIn(viewModelScope)
+) : ScreenModel {
+    val historyThreads = historyUseCase.getHistoryThreads().cachedIn(screenModelScope)
 }

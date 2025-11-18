@@ -1,8 +1,8 @@
 package ai.saniou.nmb.workflow.image
 
 import ai.saniou.nmb.data.manager.CdnManager
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import cafe.adriel.voyager.core.model.ScreenModel
+import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -38,7 +38,7 @@ data class ImagePreviewUiState(
  */
 class ImagePreviewViewModel(
     private val di: DI
-) : ViewModel() {
+) : ScreenModel {
 
     private val cdnManager: CdnManager by di.instance()
 
@@ -116,7 +116,7 @@ class ImagePreviewViewModel(
             )
         }
 
-        viewModelScope.launch {
+        screenModelScope.launch {
             try {
                 // 这里实现保存图片的逻辑
                 // 由于平台差异，具体实现会在平台特定的代码中完成
