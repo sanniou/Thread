@@ -66,11 +66,12 @@ class ForumCategoryViewModel(
                     _state.update { it.copy(error = "加载板块列表失败: ${e.message}") }
                 }.collect { (combinedCategories, favoriteIds) ->
                     _state.update {
+                        val isInitialLoad = it.categories.isEmpty()
                         it.copy(
                             isLoading = false,
                             categories = combinedCategories,
-                            expandedCategoryId = lastOpenedForum?.fGroup,
-                            currentForum = lastOpenedForum,
+                            expandedCategoryId = if (isInitialLoad) lastOpenedForum?.fGroup else it.expandedCategoryId,
+                            currentForum = if (isInitialLoad) lastOpenedForum else it.currentForum,
                             favoriteForumIds = favoriteIds
                         )
                     }
