@@ -38,11 +38,13 @@ INSERT OR REPLACE INTO Thread (
     id, fid, replyCount, img, ext, now, userHash, name, title, content, sage, admin, hide
 ) VALUES ?;
 
--- 插入 ThreadInformation 数据
-insertThreadInformation:
-INSERT OR REPLACE INTO ThreadInformation (
-    id, remainReplies, lastKey
-) VALUES ?;
+-- 插入或更新 ThreadInformation 数据，但不影响 last_access_time 和 last_read_reply_id
+upsertThreadInformation:
+INSERT INTO ThreadInformation (id, remainReplies, lastKey)
+VALUES (?, ?, ?)
+ON CONFLICT(id) DO UPDATE SET
+    remainReplies = excluded.remainReplies,
+    lastKey = excluded.lastKey;
 
 -- 查询 ThreadInformation 数据
 getThreadInformation:
@@ -50,13 +52,6 @@ SELECT * FROM ThreadInformation WHERE id = :id;
 
 -- 查询所有 Thread 数据
 SELECT * FROM Thread;
-
--- 更新 ThreadInformation 数据
-updateThreadInformation:
-UPDATE ThreadInformation SET
-    remainReplies = ?,
-    lastKey = ?
-WHERE id = ?;
 
 -- 更新 Thread 数据
 upddateThread:

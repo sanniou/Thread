@@ -4,7 +4,6 @@ import ai.saniou.corecommon.data.SaniouResponse
 import ai.saniou.nmb.data.entity.Forum
 import ai.saniou.nmb.data.entity.RemoteKeyType
 import ai.saniou.nmb.data.entity.toTable
-import ai.saniou.nmb.data.entity.toTableInformation
 import ai.saniou.nmb.data.entity.toTableReply
 import ai.saniou.nmb.data.repository.ForumRepository
 import ai.saniou.nmb.db.Database
@@ -55,9 +54,12 @@ class ForumRemoteMediator(
 
                     forums.forEach { forum ->
                         db.threadQueries.upsetThread(forum.toTable())
-                        db.threadQueries.insertThreadInformation(forum.toTableInformation())
+                        db.threadQueries.upsertThreadInformation(
+                            id = forum.id,
+                            remainReplies = forum.remainReplies,
+                            lastKey = forum.replies.lastOrNull()?.id ?: forum.id
+                        )
                         forum.toTableReply().forEach(db.threadReplyQueries::upsertThreadReply)
-
                     }
                     db.remoteKeyQueries.insertKey(
                         type = RemoteKeyType.FORUM,
