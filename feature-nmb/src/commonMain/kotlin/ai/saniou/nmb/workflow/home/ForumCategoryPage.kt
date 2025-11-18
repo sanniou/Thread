@@ -11,8 +11,8 @@ import ai.saniou.nmb.workflow.home.ForumCategoryContract.State
 import ai.saniou.nmb.workflow.subscription.SubscriptionPage
 import ai.saniou.nmb.workflow.thread.ThreadPage
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.HorizontalDivider
@@ -40,9 +41,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -75,6 +80,14 @@ fun ForumCategoryPage(
 
     val navigator = LocalNavigator.currentOrThrow
     val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(state.toastMessage) {
+        state.toastMessage?.let { message ->
+            snackbarHostState.showSnackbar(message)
+            viewModel.onEvent(Event.ToastShown)
+        }
+    }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -121,6 +134,9 @@ fun ForumCategoryPage(
                                                     category.id
                                                 )
                                             )
+                                        },
+                                        onCategoryLongClick = {
+                                            // Consume long click
                                         }
                                     )
                                     AnimatedVisibility(visible = state.expandedCategoryId == category.id) {
@@ -129,6 +145,9 @@ fun ForumCategoryPage(
                                                 ForumItem(
                                                     forum = forum,
                                                     isSelected = state.currentForum?.id == forum.id,
+                                                    isFavorite = state.favoriteForumIds.contains(
+                                                        forum.id
+                                                    ),
                                                     onForumClick = {
                                                         viewModel.onEvent(Event.SelectForum(forum))
                                                         scope.launch { drawerState.close() }
@@ -148,6 +167,10 @@ fun ForumCategoryPage(
                             }
                         }
                     }
+                    SnackbarHost(
+                        hostState = snackbarHostState,
+                        modifier = Modifier.align(Alignment.BottomCenter)
+                    )
                 }
             }
         }
@@ -162,16 +185,21 @@ fun ForumCategoryPage(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun CategoryItem(
     category: ForumCategory,
     isExpanded: Boolean,
     onCategoryClick: () -> Unit,
+    onCategoryLongClick: () -> Unit,
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onCategoryClick)
+            .combinedClickable(
+                onClick = onCategoryClick,
+                onLongClick = onCategoryLongClick
+            )
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -185,10 +213,12 @@ private fun CategoryItem(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun ForumItem(
     forum: ai.saniou.nmb.data.entity.ForumDetail,
     isSelected: Boolean,
+    isFavorite: Boolean,
     onForumClick: () -> Unit,
     onFavoriteToggle: () -> Unit,
 ) {
@@ -199,7 +229,7 @@ private fun ForumItem(
                 onClick = onForumClick,
                 onLongClick = onFavoriteToggle
             )
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(start = 32.dp, end = 16.dp, top = 12.dp, bottom = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (isSelected) {
@@ -218,6 +248,15 @@ private fun ForumItem(
             color = color
         )
         Spacer(modifier = Modifier.weight(1f))
+        if (isFavorite) {
+            Icon(
+                imageVector = Icons.Default.Star,
+                contentDescription = "已收藏",
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(16.dp)
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+        }
         Text(
             text = forum.threadCount.toString(),
             style = MaterialTheme.typography.bodySmall,
@@ -225,5 +264,3 @@ private fun ForumItem(
         )
     }
 }
-
-

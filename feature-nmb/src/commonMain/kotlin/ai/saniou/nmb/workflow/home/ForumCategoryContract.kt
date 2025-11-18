@@ -15,13 +15,17 @@ interface ForumCategoryContract {
      * @property categories 板块分类列表
      * @property expandedCategoryId 当前展开的分类 ID
      * @property currentForum 当前选中的板块
+     * @property favoriteForumIds 收藏的板块ID列表
+     * @property toastMessage 提示信息
      */
     data class State(
         val isLoading: Boolean = true,
         val error: String? = null,
         val categories: List<ForumCategory> = emptyList(),
         val expandedCategoryId: Long? = null,
-        val currentForum: ForumDetail? = null
+        val currentForum: ForumDetail? = null,
+        val favoriteForumIds: Set<Long> = emptySet(),
+        val toastMessage: String? = null
     )
 
     /**
@@ -50,5 +54,10 @@ interface ForumCategoryContract {
          * @param forum 板块详情
          */
         data class ToggleFavorite(val forum: ForumDetail) : Event
+
+        /**
+         * 提示信息已显示
+         */
+        object ToastShown : Event
     }
 }

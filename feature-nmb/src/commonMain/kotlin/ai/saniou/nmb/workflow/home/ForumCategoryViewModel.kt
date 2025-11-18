@@ -34,6 +34,7 @@ class ForumCategoryViewModel(
             is Event.SelectForum -> selectForum(event.forum)
             is Event.ToggleCategory -> toggleCategory(event.categoryId)
             is Event.ToggleFavorite -> toggleFavorite(event.forum)
+            Event.ToastShown -> onToastShown()
         }
     }
 
@@ -58,16 +59,19 @@ class ForumCategoryViewModel(
                         status = "n",
                         forums = favorites
                     )
-                    listOf(favoriteCategory) + categories
+                    val combined = listOf(favoriteCategory) + categories
+                    val favoriteIds = favorites.map { it.id }.toSet()
+                    Pair(combined, favoriteIds)
                 }.catch { e ->
                     _state.update { it.copy(error = "加载板块列表失败: ${e.message}") }
-                }.collect { combinedCategories ->
+                }.collect { (combinedCategories, favoriteIds) ->
                     _state.update {
                         it.copy(
                             isLoading = false,
                             categories = combinedCategories,
                             expandedCategoryId = lastOpenedForum?.fGroup,
-                            currentForum = lastOpenedForum
+                            currentForum = lastOpenedForum,
+                            favoriteForumIds = favoriteIds
                         )
                     }
                 }
@@ -75,6 +79,10 @@ class ForumCategoryViewModel(
                 _state.update { it.copy(isLoading = false, error = "加载板块列表失败: ${e.message}") }
             }
         }
+    }
+
+    private fun onToastShown() {
+        _state.update { it.copy(toastMessage = null) }
     }
 
     private fun toggleCategory(categoryId: Long) {
@@ -94,7 +102,10 @@ class ForumCategoryViewModel(
 
     private fun toggleFavorite(forum: ai.saniou.nmb.data.entity.ForumDetail) {
         viewModelScope.launch {
+            val isCurrentlyFavorite = state.value.favoriteForumIds.contains(forum.id)
             forumCategoryUseCase.changeFavoriteForum(forum)
+            val message = if (isCurrentlyFavorite) "已取消收藏 ${forum.name}" else "已收藏 ${forum.name}"
+            _state.update { it.copy(toastMessage = message) }
         }
     }
 }
