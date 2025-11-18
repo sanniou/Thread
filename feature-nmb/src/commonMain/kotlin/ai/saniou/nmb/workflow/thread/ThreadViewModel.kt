@@ -1,6 +1,7 @@
 package ai.saniou.nmb.workflow.thread
 
 import ai.saniou.nmb.data.api.NmbXdApi
+import ai.saniou.nmb.data.repository.NmbRepository
 import ai.saniou.nmb.data.storage.SubscriptionStorage
 import ai.saniou.nmb.domain.ForumUseCase
 import ai.saniou.nmb.domain.GetThreadDetailUseCase
@@ -16,6 +17,8 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 
 class ThreadViewModel(
     // TODO: 订阅功能也应抽象为 UseCase
@@ -24,6 +27,7 @@ class ThreadViewModel(
     private val getThreadDetailUseCase: GetThreadDetailUseCase,
     private val getThreadRepliesPagingUseCase: GetThreadRepliesPagingUseCase,
     private val forumUseCase: ForumUseCase,
+    private val nmbRepository: NmbRepository,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(State())
@@ -44,12 +48,30 @@ class ThreadViewModel(
             is Event.LoadThread -> {
                 threadId = event.id
                 loadThread()
+                updateLastAccessTime()
             }
+
             is Event.JumpToPage -> jumpToPage(event.page)
             Event.Refresh -> loadThread()
             Event.TogglePoOnlyMode -> togglePoOnlyMode()
             Event.ToggleSubscription -> toggleSubscription()
             Event.SnackbarMessageShown -> _state.update { it.copy(snackbarMessage = null) }
+            is Event.UpdateLastReadReplyId -> updateLastReadReplyId(event.id)
+        }
+    }
+
+    @OptIn(ExperimentalTime::class)
+    private fun updateLastAccessTime() {
+        val id = threadId ?: return
+        viewModelScope.launch {
+            nmbRepository.updateThreadLastAccessTime(id, Clock.System.now().epochSeconds)
+        }
+    }
+
+    private fun updateLastReadReplyId(replyId: Long) {
+        val id = threadId ?: return
+        viewModelScope.launch {
+            nmbRepository.updateThreadLastReadReplyId(id, replyId)
         }
     }
 
@@ -63,10 +85,16 @@ class ThreadViewModel(
             launch {
                 getThreadDetailUseCase(id)
                     .catch { e ->
-                        _state.update { it.copy(isLoading = false, error = "加载主楼失败: ${e.message}") }
+                        _state.update {
+                            it.copy(
+                                isLoading = false,
+                                error = "加载主楼失败: ${e.message}"
+                            )
+                        }
                     }
                     .collectLatest { thread ->
-                        val totalPages = (thread.replyCount / 19) + if (thread.replyCount % 19 > 0) 1 else 0
+                        val totalPages =
+                            (thread.replyCount / 19) + if (thread.replyCount % 19 > 0) 1 else 0
                         _state.update {
                             it.copy(
                                 isLoading = false,

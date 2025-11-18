@@ -48,7 +48,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import cafe.adriel.voyager.core.screen.Screen
@@ -57,7 +56,6 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.flow.collectLatest
 import org.kodein.di.DI
 import org.kodein.di.compose.viewmodel.rememberViewModel
-import org.kodein.di.instance
 
 data class SubscriptionPage(
     val di: DI = nmbdi,

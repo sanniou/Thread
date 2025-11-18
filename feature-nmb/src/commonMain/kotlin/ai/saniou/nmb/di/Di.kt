@@ -7,6 +7,7 @@ import ai.saniou.nmb.data.database.DriverFactory
 import ai.saniou.nmb.data.database.createDatabase
 import ai.saniou.nmb.data.manager.CdnManager
 import ai.saniou.nmb.data.repository.ForumRepository
+import ai.saniou.nmb.data.repository.HistoryRepository
 import ai.saniou.nmb.data.repository.NmbRepository
 import ai.saniou.nmb.data.repository.NmbRepositoryImpl
 import ai.saniou.nmb.data.storage.CategoryStorage
@@ -15,6 +16,7 @@ import ai.saniou.nmb.data.storage.GreetImageStorage
 import ai.saniou.nmb.data.storage.SubscriptionStorage
 import ai.saniou.nmb.domain.ForumCategoryUseCase
 import ai.saniou.nmb.domain.ForumUseCase
+import ai.saniou.nmb.domain.HistoryUseCase
 import ai.saniou.nmb.domain.NoticeUseCase
 import ai.saniou.nmb.domain.GetReferenceUseCase
 import ai.saniou.nmb.domain.GetThreadDetailUseCase
@@ -27,6 +29,7 @@ import ai.saniou.nmb.workflow.forum.ForumViewModel
 import ai.saniou.nmb.workflow.home.ForumCategoryViewModel
 import ai.saniou.nmb.workflow.home.GreetImageViewModel
 import ai.saniou.nmb.workflow.home.HomeViewModel
+import ai.saniou.nmb.workflow.history.HistoryViewModel
 import ai.saniou.nmb.workflow.image.ImagePreviewViewModel
 import ai.saniou.nmb.workflow.post.PostViewModel
 import ai.saniou.nmb.workflow.reference.ReferenceViewModel
@@ -52,7 +55,8 @@ val nmbdi = DI {
     bindSingleton<ForumRepository> { ForumRepository(instance()) }
 
     // NMB 仓库
-    bindSingleton<NmbRepository> { NmbRepositoryImpl(instance()) }
+    bindSingleton<NmbRepository> { NmbRepositoryImpl(instance(), instance()) }
+    bindSingleton<HistoryRepository> { NmbRepositoryImpl(instance(), instance()) }
 
     // CDN管理器
     bindSingleton<CdnManager> { CdnManager(instance()) }
@@ -103,7 +107,7 @@ val nmbdi = DI {
     bindProvider { GetThreadDetailUseCase(instance()) }
     bindProvider { GetThreadRepliesPagingUseCase(instance(), instance()) }
     bindProvider { GetReferenceUseCase(instance(), instance()) }
-    bindProvider { ThreadViewModel(instance(), instance(), instance(), instance(), instance()) }
+    bindProvider { ThreadViewModel(instance(), instance(), instance(), instance(), instance(), instance()) }
 
     // 发帖和回复相关
     bindProvider { PostUseCase(instance()) }
@@ -121,6 +125,10 @@ val nmbdi = DI {
 
     // 订阅相关
     bindProvider { SubscriptionViewModel(instance(), instance()) }
+
+    // 历史相关
+    bindProvider { HistoryUseCase(instance()) }
+    bindProvider { HistoryViewModel(instance()) }
 
     bindSingleton {
         createDatabase(DriverFactory())

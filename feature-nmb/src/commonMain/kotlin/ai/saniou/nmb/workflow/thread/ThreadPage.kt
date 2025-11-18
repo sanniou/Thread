@@ -139,6 +139,29 @@ data class ThreadPage(
             }
         }
 
+        // 自动滚动和更新已读
+//        LaunchedEffect(lazyListState, state.thread) {
+//            if (state.thread == null) return@LaunchedEffect
+//            val lastReadId = state.thread?.last_read_reply_id ?: 0
+//            if (lastReadId > 0) {
+//                val replies = state.replies.collectAsLazyPagingItems()
+//                val index = replies.itemSnapshotList.indexOfFirst { it?.id == lastReadId }
+//                if (index != -1) {
+//                    lazyListState.scrollToItem(index + 1) // +1 for the main post
+//                }
+//            }
+//
+//            snapshotFlow { lazyListState.firstVisibleItemIndex }
+//                .collect { index ->
+//                    val replies = state.replies.collectAsLazyPagingItems()
+//                    if (index > 0 && index < replies.itemCount) {
+//                        replies[index - 1]?.let {
+//                            viewModel.onEvent(Event.UpdateLastReadReplyId(it.id))
+//                        }
+//                    }
+//                }
+//        }
+
         // 处理 Snackbar
         LaunchedEffect(state.snackbarMessage) {
             state.snackbarMessage?.let {

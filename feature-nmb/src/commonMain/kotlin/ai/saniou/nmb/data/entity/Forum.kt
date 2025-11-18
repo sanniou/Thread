@@ -99,7 +99,9 @@ fun GetThreadsInForum.toForumThreadWithReply(reply: List<ThreadReply>) =
 fun Forum.toTableInformation() = ThreadInformation(
     id = this.id,
     remainReplies = this.remainReplies,
-    lastKey = this.replies.lastOrNull()?.id ?: this.id
+    lastKey = this.replies.lastOrNull()?.id ?: this.id,
+    last_access_time = 0,
+    last_read_reply_id = 0,
 )
 
 fun Forum.toTable() = ai.saniou.nmb.db.table.Thread(

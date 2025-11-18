@@ -72,5 +72,11 @@ interface ThreadContract {
          * Snackbar 消息已显示，用于清空消息状态
          */
         object SnackbarMessageShown : Event
+
+        /**
+         * 更新最后阅读的回复ID
+         * @param id 回复 ID
+         */
+        data class UpdateLastReadReplyId(val id: Long) : Event
     }
 }

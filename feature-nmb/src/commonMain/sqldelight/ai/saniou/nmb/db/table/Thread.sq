@@ -2,7 +2,9 @@
 CREATE TABLE IF NOT EXISTS ThreadInformation (
     id INTEGER PRIMARY KEY,
     remainReplies INTEGER,
-    lastKey INTEGER NOT NULL
+    lastKey INTEGER NOT NULL,
+    last_access_time INTEGER NOT NULL DEFAULT 0,
+    last_read_reply_id INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS Thread (
@@ -24,6 +26,9 @@ CREATE TABLE IF NOT EXISTS Thread (
 -- 为 ThreadInformation last_replay_at 表创建索引
 CREATE INDEX IF NOT EXISTS idx_thraed_last_replay_at ON ThreadInformation(lastKey);
 
+-- 为 ThreadInformation last_access_time 表创建索引
+CREATE INDEX IF NOT EXISTS idx_thread_last_access_time ON ThreadInformation(last_access_time);
+
 -- 为 Thread 表的 fid 字段创建索引
 CREATE INDEX IF NOT EXISTS idx_thraed_fid ON Thread(fid);
 
@@ -40,7 +45,8 @@ INSERT OR REPLACE INTO ThreadInformation (
 ) VALUES ?;
 
 -- 查询 ThreadInformation 数据
-SELECT * FROM ThreadInformation;
+getThreadInformation:
+SELECT * FROM ThreadInformation WHERE id = :id;
 
 -- 查询所有 Thread 数据
 SELECT * FROM Thread;
@@ -89,3 +95,19 @@ SELECT count(*) FROM Thread WHERE fid = :fid;
 
 getThreadsInForum:
 SELECT * FROM Thread  LEFT JOIN ThreadInformation ON Thread.id = ThreadInformation.id WHERE fid = :fid ORDER BY lastKey DESC LIMIT :limit OFFSET :offset ;
+
+updateThreadLastAccessTime:
+UPDATE ThreadInformation SET last_access_time = :last_access_time WHERE id = :id;
+
+updateThreadLastReadReplyId:
+UPDATE ThreadInformation SET last_read_reply_id = :last_read_reply_id WHERE id = :id;
+
+getHistoryThreads:
+SELECT * FROM Thread
+JOIN ThreadInformation ON Thread.id = ThreadInformation.id
+WHERE last_access_time > 0
+ORDER BY last_access_time DESC
+LIMIT :limit OFFSET :offset;
+
+countHistoryThreads:
+SELECT count(*) FROM ThreadInformation WHERE last_access_time > 0;

@@ -8,25 +8,25 @@ import kotlinx.serialization.json.JsonNames
 @Serializable
 @OptIn(ExperimentalSerializationApi::class)
 data class Thread(
-    val id: Long,
-    val fid: Long,
+    override val id: Long,
+    override val fid: Long,
     @JsonNames("ReplyCount")
-    val replyCount: Long,
+    override val replyCount: Long,
     override val img: String,
     override val ext: String,
     override val now: String,
     @JsonNames("user_hash")
     override val userHash: String,
     override val name: String,
-    val title: String,
+    override val title: String,
     override val content: String,
-    val sage: Long,
-    val admin: Long,
+    override val sage: Long,
+    override val admin: Long,
     @JsonNames("Hide")
-    val hide: Long,
+    override val hide: Long,
     @JsonNames("Replies")
     val replies: List<ThreadReply>,
-) : IBaseAuthor, IThreadBody
+) : IBaseThread, IThreadBody
 
 @Serializable
 @OptIn(ExperimentalSerializationApi::class)

@@ -2,6 +2,7 @@ package ai.saniou.nmb.workflow.home
 
 import ai.saniou.nmb.db.table.Notice
 import ai.saniou.nmb.di.nmbdi
+import ai.saniou.nmb.workflow.history.HistoryPage
 import ai.saniou.nmb.workflow.subscription.SubscriptionPage
 import ai.saniou.nmb.workflow.thread.ThreadPage
 import androidx.compose.foundation.layout.Arrangement
@@ -74,6 +75,7 @@ data class HomeScreen(val di: DI = nmbdi) : Screen {
                         navigator.push(ThreadPage(it))
                     }).Content()
 
+                    AppDestinations.HISTORY -> HistoryPage().Content()
                     AppDestinations.SHOPPING -> SubscriptionPaneScreen().Content()
                     AppDestinations.PROFILE -> SubscriptionPaneScreen().Content()
                 }
