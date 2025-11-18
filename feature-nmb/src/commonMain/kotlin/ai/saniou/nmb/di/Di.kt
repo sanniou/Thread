@@ -23,6 +23,7 @@ import ai.saniou.nmb.domain.GetThreadDetailUseCase
 import ai.saniou.nmb.domain.GetThreadRepliesPagingUseCase
 import ai.saniou.nmb.domain.PostUseCase
 import ai.saniou.nmb.domain.SubscriptionFeedUseCase
+import ai.saniou.nmb.domain.ToggleSubscriptionUseCase
 import ai.saniou.nmb.domain.UserUseCase
 import ai.saniou.nmb.initializer.AppInitializer
 import ai.saniou.nmb.workflow.forum.ForumViewModel
@@ -113,14 +114,14 @@ val nmbdi = DI {
     bindFactory<Long, ThreadViewModel> { threadId ->
         ThreadViewModel(
             threadId = threadId,
-            nmbXdApi = instance(),
-            subscriptionStorage = instance(),
-            getThreadDetailUseCase = instance(),
-            getThreadRepliesPagingUseCase = instance(),
-            forumUseCase = instance(),
-            nmbRepository = instance()
+            instance(),
+            instance(),
+            instance(),
+            instance(),
+            instance(),
         )
     }
+    bindProvider { ToggleSubscriptionUseCase(instance(), instance()) }
 
     // 发帖和回复相关
     bindProvider { PostUseCase(instance()) }

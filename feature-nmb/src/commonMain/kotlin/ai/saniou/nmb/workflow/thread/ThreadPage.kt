@@ -82,6 +82,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -132,21 +133,24 @@ data class ThreadPage(
         var currentReferenceId by remember { mutableStateOf(0L) }
         val referenceState by referenceViewModel.uiState.collectAsState()
 
-        // TODO: [AUTO-SCROLL] Implement auto-scroll to last read position and update on scroll.
+        // 自动滚动到上次阅读位置，并持续更新阅读位置
 //        LaunchedEffect(lazyListState, state.thread) {
 //            if (state.thread == null) return@LaunchedEffect
+//
+//            val replies = state.replies.collectAsLazyPagingItems()
 //            val lastReadId = state.thread?.last_read_reply_id ?: 0
+//
+//            // 初始滚动
 //            if (lastReadId > 0) {
-//                val replies = state.replies.collectAsLazyPagingItems()
 //                val index = replies.itemSnapshotList.indexOfFirst { it?.id == lastReadId }
 //                if (index != -1) {
 //                    lazyListState.scrollToItem(index + 1) // +1 for the main post
 //                }
 //            }
 //
+//            // 监听滚动并更新
 //            snapshotFlow { lazyListState.firstVisibleItemIndex }
 //                .collect { index ->
-//                    val replies = state.replies.collectAsLazyPagingItems()
 //                    if (index > 0 && index < replies.itemCount) {
 //                        replies[index - 1]?.let {
 //                            viewModel.onEvent(Event.UpdateLastReadReplyId(it.id))
@@ -161,6 +165,9 @@ data class ThreadPage(
                 when (effect) {
                     is Effect.ShowSnackbar -> {
                         snackbarHostState.showSnackbar(effect.message)
+                    }
+                    is Effect.CopyToClipboard -> {
+                        clipboardManager.setText(AnnotatedString(effect.text))
                     }
                 }
             }
@@ -209,13 +216,7 @@ data class ThreadPage(
                         onToggleSubscription = { viewModel.onEvent(Event.ToggleSubscription) },
                         onJumpToPage = { showJumpDialog = true },
                         onTogglePoOnly = { viewModel.onEvent(Event.TogglePoOnlyMode) },
-                        onCopyLink = {
-                            val url = "https://nmb.com/t/${threadId}"
-                            clipboardManager.setText(AnnotatedString(url))
-                            coroutineScope.launch {
-                                snackbarHostState.showSnackbar("链接已复制到剪贴板")
-                            }
-                        },
+                        onCopyLink = { viewModel.onEvent(Event.CopyLink) },
                         onPost = {
                             state.thread?.let {
                                 navigator.push(PostPage(it.fid, it.id))

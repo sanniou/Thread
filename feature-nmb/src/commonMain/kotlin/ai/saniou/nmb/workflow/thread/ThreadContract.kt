@@ -62,6 +62,11 @@ interface ThreadContract {
         object ToggleSubscription : Event
 
         /**
+         * 复制帖子链接
+         */
+        object CopyLink : Event
+
+        /**
          * 更新最后阅读的回复ID
          * @param id 回复 ID
          */
@@ -77,5 +82,11 @@ interface ThreadContract {
          * @param message 要显示的消息
          */
         data class ShowSnackbar(val message: String) : Effect
+
+        /**
+         * 将文本复制到剪贴板
+         * @param text 要复制的文本
+         */
+        data class CopyToClipboard(val text: String) : Effect
     }
 }

@@ -1,11 +1,10 @@
 package ai.saniou.nmb.workflow.thread
 
-import ai.saniou.nmb.data.api.NmbXdApi
 import ai.saniou.nmb.data.repository.NmbRepository
-import ai.saniou.nmb.data.storage.SubscriptionStorage
 import ai.saniou.nmb.domain.ForumUseCase
 import ai.saniou.nmb.domain.GetThreadDetailUseCase
 import ai.saniou.nmb.domain.GetThreadRepliesPagingUseCase
+import ai.saniou.nmb.domain.ToggleSubscriptionUseCase
 import ai.saniou.nmb.workflow.thread.ThreadContract.Effect
 import ai.saniou.nmb.workflow.thread.ThreadContract.Event
 import ai.saniou.nmb.workflow.thread.ThreadContract.State
@@ -26,13 +25,11 @@ import kotlin.time.ExperimentalTime
 
 class ThreadViewModel(
     private val threadId: Long,
-    // TODO: 订阅功能也应抽象为 UseCase
-    private val nmbXdApi: NmbXdApi,
-    private val subscriptionStorage: SubscriptionStorage,
     private val getThreadDetailUseCase: GetThreadDetailUseCase,
     private val getThreadRepliesPagingUseCase: GetThreadRepliesPagingUseCase,
     private val forumUseCase: ForumUseCase,
     private val nmbRepository: NmbRepository,
+    private val toggleSubscriptionUseCase: ToggleSubscriptionUseCase
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(State())
@@ -44,10 +41,6 @@ class ThreadViewModel(
     private var loadJob: Job? = null
 
     init {
-        // 加载订阅ID，为订阅功能做准备
-        screenModelScope.launch {
-            subscriptionStorage.loadLastSubscriptionId()
-        }
         loadThread()
         updateLastAccessTime()
     }
@@ -58,6 +51,7 @@ class ThreadViewModel(
             Event.Refresh -> loadThread()
             Event.TogglePoOnlyMode -> togglePoOnlyMode()
             Event.ToggleSubscription -> toggleSubscription()
+            Event.CopyLink -> copyLink()
             is Event.UpdateLastReadReplyId -> updateLastReadReplyId(event.id)
         }
     }
@@ -128,25 +122,24 @@ class ThreadViewModel(
 
     private fun toggleSubscription() {
         val currentSubscribed = state.value.isSubscribed
-        val newSubscribed = !currentSubscribed
 
         screenModelScope.launch {
-            try {
-                val subscriptionId = subscriptionStorage.subscriptionId.value
-                    ?: throw IllegalStateException("订阅ID未加载")
-
-                val resultMessage = if (newSubscribed) {
-                    nmbXdApi.addFeed(subscriptionId, threadId)
-                } else {
-                    nmbXdApi.delFeed(subscriptionId, threadId)
+            toggleSubscriptionUseCase(threadId, currentSubscribed)
+                .onSuccess { resultMessage ->
+                    _state.update { it.copy(isSubscribed = !currentSubscribed) }
+                    _effect.send(Effect.ShowSnackbar(resultMessage))
                 }
+                .onFailure { e ->
+                    _effect.send(Effect.ShowSnackbar("操作失败: ${e.message}"))
+                }
+        }
+    }
 
-                _state.update { it.copy(isSubscribed = newSubscribed) }
-                _effect.send(Effect.ShowSnackbar(resultMessage))
-            } catch (e: Exception) {
-                _state.update { it.copy(isSubscribed = currentSubscribed) } // 恢复原状
-                _effect.send(Effect.ShowSnackbar("操作失败: ${e.message}"))
-            }
+    private fun copyLink() {
+        screenModelScope.launch {
+            val url = "https://nmb.com/t/$threadId"
+            _effect.send(Effect.CopyToClipboard(url))
+            _effect.send(Effect.ShowSnackbar("链接已复制到剪贴板"))
         }
     }
 }
