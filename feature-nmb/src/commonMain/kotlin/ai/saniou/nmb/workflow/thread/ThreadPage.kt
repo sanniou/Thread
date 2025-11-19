@@ -149,6 +149,14 @@ data class ThreadPage(
                     is Effect.CopyToClipboard -> {
                         clipboardManager.setText(AnnotatedString(effect.text))
                     }
+                    is Effect.NavigateToImagePreview -> {
+                        navigator.push(
+                            ImagePreviewPage(
+                                uiState = state.imagePreviewState,
+                                onLoadMore = { viewModel.onEvent(Event.LoadMoreImages) }
+                            )
+                        )
+                    }
                 }
             }
         }
@@ -222,10 +230,8 @@ data class ThreadPage(
                     )
                     showReferencePopup = true
                 },
-                onImageClick = { imgPath, ext ->
-                    state.thread?.let { thread ->
-                        navigator.push(ImagePreviewPage(thread.id, imgPath, ext))
-                    }
+                onImageClick = { imgPath, _ ->
+                    viewModel.onEvent(Event.ShowImagePreview(imgPath))
                 },
                 onUpdateLastReadId = { id -> viewModel.onEvent(Event.UpdateLastReadReplyId(id)) }
             )

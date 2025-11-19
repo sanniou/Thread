@@ -8,6 +8,7 @@ import ai.saniou.nmb.ui.components.LoadingIndicator
 import ai.saniou.nmb.ui.components.ThreadCard
 import ai.saniou.nmb.ui.components.ThreadListSkeleton
 import ai.saniou.nmb.workflow.image.ImagePreviewPage
+import ai.saniou.nmb.workflow.image.ImagePreviewUiState
 import ai.saniou.nmb.workflow.thread.ThreadPage
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
@@ -146,7 +147,10 @@ data class ForumPage(
                                                 thread = thread,
                                                 onClick = { navigator.push(ThreadPage(thread.id)) },
                                                 onImageClick = { imgPath, ext ->
-                                                    navigator.push(ImagePreviewPage(thread.id, imgPath, ext))
+                                                    navigator.push(
+                                                        ImagePreviewPage(
+                                                            ImagePreviewUiState(), di, {})
+                                                    )
                                                 }
                                             )
                                         }

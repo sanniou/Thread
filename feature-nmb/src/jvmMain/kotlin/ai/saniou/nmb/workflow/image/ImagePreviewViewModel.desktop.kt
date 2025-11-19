@@ -15,7 +15,7 @@ import javax.swing.filechooser.FileNameExtensionFilter
 /**
  * 桌面平台保存图片实现
  */
-actual suspend fun ImagePreviewViewModel.saveImage(di: DI, imgPath: String, ext: String) {
+actual suspend fun ImagePreviewUiState.saveImage(di: DI, imgPath: String, ext: String) {
     val cdnManager: CdnManager by di.instance()
 
     // 构建完整的图片URL

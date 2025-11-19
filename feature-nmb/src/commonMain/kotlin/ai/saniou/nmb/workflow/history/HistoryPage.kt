@@ -1,7 +1,9 @@
 package ai.saniou.nmb.workflow.history
 
+import ai.saniou.nmb.di.nmbdi
 import ai.saniou.nmb.workflow.home.ListThreadPage
 import ai.saniou.nmb.workflow.image.ImagePreviewPage
+import ai.saniou.nmb.workflow.image.ImagePreviewUiState
 import ai.saniou.nmb.workflow.thread.ThreadPage
 import androidx.compose.runtime.Composable
 import cafe.adriel.voyager.core.screen.Screen
@@ -22,9 +24,7 @@ class HistoryPage : Screen {
             onImageClick = { threadId, imgPath, ext ->
                 navigator.push(
                     ImagePreviewPage(
-                        threadId = threadId,
-                        imgPath = imgPath,
-                        ext = ext,
+                        ImagePreviewUiState(), nmbdi, null,null,{}
                     )
                 )
             }

@@ -16,22 +16,21 @@ import ai.saniou.nmb.data.storage.GreetImageStorage
 import ai.saniou.nmb.data.storage.SubscriptionStorage
 import ai.saniou.nmb.domain.ForumCategoryUseCase
 import ai.saniou.nmb.domain.ForumUseCase
-import ai.saniou.nmb.domain.HistoryUseCase
-import ai.saniou.nmb.domain.NoticeUseCase
 import ai.saniou.nmb.domain.GetReferenceUseCase
 import ai.saniou.nmb.domain.GetThreadDetailUseCase
 import ai.saniou.nmb.domain.GetThreadRepliesPagingUseCase
+import ai.saniou.nmb.domain.HistoryUseCase
+import ai.saniou.nmb.domain.NoticeUseCase
 import ai.saniou.nmb.domain.PostUseCase
 import ai.saniou.nmb.domain.SubscriptionFeedUseCase
 import ai.saniou.nmb.domain.ToggleSubscriptionUseCase
 import ai.saniou.nmb.domain.UserUseCase
 import ai.saniou.nmb.initializer.AppInitializer
 import ai.saniou.nmb.workflow.forum.ForumViewModel
+import ai.saniou.nmb.workflow.history.HistoryViewModel
 import ai.saniou.nmb.workflow.home.ForumCategoryViewModel
 import ai.saniou.nmb.workflow.home.GreetImageViewModel
 import ai.saniou.nmb.workflow.home.HomeViewModel
-import ai.saniou.nmb.workflow.history.HistoryViewModel
-import ai.saniou.nmb.workflow.image.ImagePreviewViewModel
 import ai.saniou.nmb.workflow.post.PostViewModel
 import ai.saniou.nmb.workflow.reference.ReferenceViewModel
 import ai.saniou.nmb.workflow.subscription.SubscriptionViewModel
@@ -114,11 +113,13 @@ val nmbdi = DI {
     bindFactory<Long, ThreadViewModel> { threadId ->
         ThreadViewModel(
             threadId = threadId,
-            instance(),
-            instance(),
-            instance(),
-            instance(),
-            instance(),
+            getThreadDetailUseCase = instance(),
+            getThreadRepliesPagingUseCase = instance(),
+            forumUseCase = instance(),
+            nmbRepository = instance(),
+            toggleSubscriptionUseCase = instance(),
+            db = instance(),
+            forumRepository = instance()
         )
     }
     bindProvider { ToggleSubscriptionUseCase(instance(), instance()) }
@@ -130,15 +131,6 @@ val nmbdi = DI {
     // 用户认证相关
     bindProvider { UserUseCase(instance()) }
     bindProvider { UserViewModel(instance()) }
-
-    // 图片预览相关
-    bindFactory<Pair<Long, String>, ImagePreviewViewModel> { params ->
-        ImagePreviewViewModel(
-            threadId = params.first,
-            initialImgPath = params.second,
-            di = di
-        )
-    }
 
     // 引用 ViewModel
     bindProvider { ReferenceViewModel(instance()) }

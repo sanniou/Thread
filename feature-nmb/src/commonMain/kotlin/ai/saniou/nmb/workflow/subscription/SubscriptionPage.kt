@@ -8,6 +8,7 @@ import ai.saniou.nmb.ui.components.LoadingIndicator
 import ai.saniou.nmb.ui.components.SubscriptionCard
 import ai.saniou.nmb.ui.components.ThreadListSkeleton
 import ai.saniou.nmb.workflow.image.ImagePreviewPage
+import ai.saniou.nmb.workflow.image.ImagePreviewUiState
 import ai.saniou.nmb.workflow.subscription.SubscriptionContract.Event
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -116,9 +117,7 @@ data class SubscriptionPage(
                         onImageClick = { threadId, imgPath, ext ->
                             navigator.push(
                                 ImagePreviewPage(
-                                    threadId = threadId,
-                                    imgPath = imgPath,
-                                    ext = ext,
+                                    ImagePreviewUiState(), nmbdi, null,null,{}
                                 )
                             )
                         },

@@ -36,13 +36,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
-import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import ai.saniou.coreui.widgets.ZoomAsyncImage
 import org.kodein.di.DI
-import org.kodein.di.direct
 import org.kodein.di.instance
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -52,19 +50,13 @@ import kotlin.coroutines.cancellation.CancellationException
  * 支持图片缩放、查看上一张/下一张、保存图片等功能
  * 支持双击放大功能
  *
- * @param threadId 帖子ID
- * @param imgPath 图片路径
- * @param ext 图片扩展名
- * @param onUpdateTitle 更新标题回调
- * @param onSetupMenuButton 设置菜单按钮回调
+ * @param uiState 页面状态
+ * @param onLoadMore 加载更多回调
  */
 data class ImagePreviewPage(
-    val threadId: Long,
-    val imgPath: String,
-    val ext: String,
+    val uiState: ImagePreviewUiState,
     val di: DI = nmbdi,
-    val onUpdateTitle: ((String) -> Unit)? = null,
-    val onSetupMenuButton: ((@Composable () -> Unit) -> Unit)? = null,
+    val onLoadMore: () -> Unit,
 ) : Screen {
 
     @OptIn(ExperimentalComposeUiApi::class, ExperimentalFoundationApi::class)
@@ -81,11 +73,6 @@ data class ImagePreviewPage(
 //                callback.cancelPop()
             }
         }
-
-        val imagePreviewViewModel: ImagePreviewViewModel = rememberScreenModel(tag = "$threadId-$imgPath") {
-            nmbdi.direct.instance(arg = threadId to imgPath)
-        }
-        val uiState by imagePreviewViewModel.uiState.collectAsState()
 
         // 获取CDN管理器
         val cdnManager by nmbdi.instance<CdnManager>()
@@ -106,27 +93,7 @@ data class ImagePreviewPage(
         // Load next page when reaching the end
         LaunchedEffect(pagerState.currentPage) {
             if (pagerState.currentPage >= uiState.images.size - 1 && !uiState.endReached && !uiState.isLoading) {
-                imagePreviewViewModel.loadNextPage()
-            }
-        }
-
-        // 设置标题和菜单按钮
-        LaunchedEffect(pagerState.currentPage, uiState.images) {
-            if (uiState.images.isNotEmpty() && pagerState.currentPage < uiState.images.size) {
-                val currentImage = uiState.images[pagerState.currentPage]
-                
-                // 设置标题
-                onUpdateTitle?.invoke("图片预览 (${pagerState.currentPage + 1}/${uiState.images.size})")
-
-                // 设置菜单按钮
-                onSetupMenuButton?.invoke {
-                    // 保存图片按钮
-                    IconButton(onClick = {
-                        imagePreviewViewModel.saveCurrentImage(currentImage)
-                    }) {
-                        Icon(Icons.Default.Place, contentDescription = "保存图片")
-                    }
-                }
+                onLoadMore()
             }
         }
 
@@ -137,49 +104,54 @@ data class ImagePreviewPage(
         ) {
             if (uiState.images.isEmpty()) {
                 // Show loading or empty state
-                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                     CircularProgressIndicator(color = Color.White)
-                 }
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = Color.White)
+                }
             } else {
                 HorizontalPager(
                     state = pagerState,
                     modifier = Modifier.fillMaxSize(),
-                    key = { index -> 
-                         if (index < uiState.images.size) uiState.images[index].imgPath + uiState.images[index].ext else index
+                    key = { index ->
+                        if (index < uiState.images.size) uiState.images[index].imgPath + uiState.images[index].ext else index
                     }
                 ) { page ->
                     if (page < uiState.images.size) {
                         val imageInfo = uiState.images[page]
-                        val imageUrl = cdnManager.buildImageUrl(imageInfo.imgPath, imageInfo.ext, false)
-                        
+                        val imageUrl =
+                            cdnManager.buildImageUrl(imageInfo.imgPath, imageInfo.ext, false)
+
                         ImageItem(imageUrl)
                     }
                 }
             }
-            
+
             // Loading indicator for next page
             if (uiState.isLoading) {
-                 Box(modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 80.dp)) {
-                     CircularProgressIndicator(color = Color.White)
-                 }
+                Box(modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 80.dp)) {
+                    CircularProgressIndicator(color = Color.White)
+                }
             }
-            
+
             // End indicator
             if (uiState.endReached && pagerState.currentPage == uiState.images.size - 1) {
-                 Box(modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 80.dp)) {
-                     Text("没有更多图片了", color = Color.White)
-                 }
+                Box(modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 80.dp)) {
+                    Text("没有更多图片了", color = Color.White)
+                }
             }
 
             // 底部导航按钮 (Optional, Pager handles swipe, but buttons are good for accessibility)
             // For now, let's keep it simple and rely on swipe, or add simple arrows overlay
-            
+
             // Back button
             IconButton(
                 onClick = { navigator.pop() },
                 modifier = Modifier.align(Alignment.TopStart).padding(16.dp)
             ) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回", tint = Color.White)
+                Icon(
+                    Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "返回",
+                    tint = Color.White
+                )
             }
         }
     }
@@ -199,7 +171,7 @@ fun ImageItem(imageUrl: String) {
             rotation += rotationChange
             offset += offsetChange
         }
-        
+
     Box(
         modifier = Modifier
             .fillMaxSize()

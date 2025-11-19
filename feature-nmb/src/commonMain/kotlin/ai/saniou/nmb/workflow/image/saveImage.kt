@@ -6,7 +6,7 @@ import org.kodein.di.DI
 /**
  * 桌面平台保存图片实现
  */
-expect suspend fun ImagePreviewViewModel.saveImage(
+expect suspend fun ImagePreviewUiState.saveImage(
     di: DI,
     imgPath: String,
     ext: String

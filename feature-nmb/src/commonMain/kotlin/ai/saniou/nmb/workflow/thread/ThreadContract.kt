@@ -2,6 +2,7 @@ package ai.saniou.nmb.workflow.thread
 
 import ai.saniou.nmb.data.entity.Thread
 import ai.saniou.nmb.data.entity.ThreadReply
+import ai.saniou.nmb.workflow.image.ImagePreviewUiState
 import androidx.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
@@ -34,7 +35,8 @@ interface ThreadContract {
         val isPoOnlyMode: Boolean = false,
         val isSubscribed: Boolean = false,
         val forumName: String = "",
-        val lastReadReplyId: Long = 0
+        val lastReadReplyId: Long = 0,
+        val imagePreviewState: ImagePreviewUiState = ImagePreviewUiState()
     )
 
     /**
@@ -72,6 +74,17 @@ interface ThreadContract {
          * @param id 回复 ID
          */
         data class UpdateLastReadReplyId(val id: Long) : Event
+
+        /**
+         * 显示图片预览
+         * @param imgPath 初始图片路径
+         */
+        data class ShowImagePreview(val imgPath: String) : Event
+
+        /**
+         * 加载更多图片
+         */
+        object LoadMoreImages : Event
     }
 
     /**
@@ -89,5 +102,10 @@ interface ThreadContract {
          * @param text 要复制的文本
          */
         data class CopyToClipboard(val text: String) : Effect
+
+        /**
+         * 导航到图片预览页面
+         */
+        object NavigateToImagePreview : Effect
     }
 }
