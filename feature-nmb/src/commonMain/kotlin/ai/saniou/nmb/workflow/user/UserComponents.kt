@@ -1,14 +1,15 @@
 package ai.saniou.nmb.workflow.user
 
 import ai.saniou.nmb.db.table.Cookie
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -22,6 +23,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -54,14 +56,20 @@ fun CookieListContent(
     LazyColumn(
         state = lazyListState,
         modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         items(localCookies, key = { it.cookie }) { cookie ->
-            ReorderableItem(state, key = cookie.cookie) {
-                CookieItem(
-                    cookie = cookie,
-                    onDelete = { onDelete(cookie) },
-                    modifier = Modifier.draggableHandle(),
-                )
+            ReorderableItem(state, key = cookie.cookie) { isDragging ->
+                val elevation by animateDpAsState(if (isDragging) 4.dp else 0.dp)
+
+                Surface(shadowElevation = elevation) {
+                    CookieItem(
+                        cookie = cookie,
+                        onDelete = { onDelete(cookie) },
+                        modifier = Modifier.draggableHandle(),
+                    )
+                }
             }
         }
     }
