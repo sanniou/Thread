@@ -7,6 +7,7 @@ import ai.saniou.nmb.ui.components.LoadingFailedIndicator
 import ai.saniou.nmb.ui.components.LoadingIndicator
 import ai.saniou.nmb.ui.components.SubscriptionCard
 import ai.saniou.nmb.ui.components.ThreadListSkeleton
+import ai.saniou.nmb.workflow.image.ImageInfo
 import ai.saniou.nmb.workflow.image.ImagePreviewPage
 import ai.saniou.nmb.workflow.image.ImagePreviewUiState
 import ai.saniou.nmb.workflow.subscription.SubscriptionContract.Event
@@ -114,10 +115,17 @@ data class SubscriptionPage(
                         state = state,
                         onEvent = viewModel::onEvent,
                         onThreadClicked = onThreadClicked,
-                        onImageClick = { threadId, imgPath, ext ->
+                        onImageClick = { _, imgPath, ext ->
+                            val imageInfo = ImageInfo(imgPath, ext)
+                            val uiState = ImagePreviewUiState(
+                                images = listOf(imageInfo),
+                                initialIndex = 0,
+                                endReached = true
+                            )
                             navigator.push(
                                 ImagePreviewPage(
-                                    ImagePreviewUiState(), nmbdi, null,null,{}
+                                    uiState = uiState,
+                                    onLoadMore = {}
                                 )
                             )
                         },
