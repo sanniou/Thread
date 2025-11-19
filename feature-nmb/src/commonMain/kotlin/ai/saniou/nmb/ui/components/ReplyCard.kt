@@ -23,14 +23,11 @@ fun RecentReplies(replies: List<Reply>) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(Dimens.padding_extra_small))
-            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .background(MaterialTheme.colorScheme.surfaceContainerLow)
             .padding(Dimens.padding_small),
-        verticalArrangement = Arrangement.spacedBy(Dimens.padding_extra_small)
+        verticalArrangement = Arrangement.spacedBy(Dimens.padding_small)
     ) {
-        replies.forEachIndexed { index, reply ->
-            if (index > 0) {
-                HorizontalDivider()
-            }
+        replies.forEach { reply ->
             ReplyItem(reply)
         }
     }
@@ -40,7 +37,7 @@ fun RecentReplies(replies: List<Reply>) {
 fun ReplyItem(reply: Reply) {
     Column(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(Dimens.padding_extra_small)
+        verticalArrangement = Arrangement.spacedBy(Dimens.padding_small)
     ) {
         ThreadAuthor(reply)
         RichText(

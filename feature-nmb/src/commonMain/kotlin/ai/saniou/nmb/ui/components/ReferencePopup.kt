@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -104,66 +105,16 @@ fun ReferencePopup(
 
                         reply != null -> {
                             // 显示引用内容
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(Dimens.padding_extra_small))
-                                    .background(MaterialTheme.colorScheme.surfaceContainer)
-                                    .border(
-                                        1.dp,
-                                        MaterialTheme.colorScheme.outlineVariant,
-                                        RoundedCornerShape(Dimens.padding_extra_small)
-                                    )
-                                    .padding(Dimens.padding_small)
-                            ) {
-                                // 回复者信息
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically
+                            ElevatedCard {
+                                Column(
+                                    modifier = Modifier.padding(Dimens.padding_medium)
                                 ) {
-                                    Text(
-                                        text = reply.name,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-
-                                    Spacer(modifier = Modifier.width(Dimens.padding_small))
-
-                                    Text(
-                                        text = reply.userHash ?: "",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
-
-                                    Spacer(modifier = Modifier.width(Dimens.padding_small))
-
-                                    Text(
-                                        text = reply.now,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                }
-
-                                Spacer(modifier = Modifier.padding(Dimens.padding_extra_small))
-
-                                // 回复内容
-                                RichText(
-                                    text = reply.content,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    onReferenceClick = null // 不允许在引用中再次引用
-                                )
-
-                                // 如果有图片，显示图片
-                                if (reply.img.isNotEmpty() && reply.ext.isNotEmpty()) {
-                                    Spacer(modifier = Modifier.padding(Dimens.padding_extra_small))
-                                    NmbImage(
-                                        imgPath = reply.img,
-                                        ext = reply.ext,
-                                        modifier = Modifier.fillMaxWidth(),
-                                        isThumb = true,
-                                        contentDescription = "回复图片",
-                                        contentScale = ContentScale.FillWidth,
+                                    ThreadAuthor(reply)
+                                    Spacer(modifier = Modifier.padding(Dimens.padding_small))
+                                    ThreadBody(
+                                        body = reply,
+                                        onImageClick = { _, _ -> },
+                                        onReferenceClick = null // 不允许在引用中再次引用
                                     )
                                 }
                             }
