@@ -33,7 +33,7 @@ import kotlinx.coroutines.flow.Flow
 fun ListThreadPage(
     threads: Flow<PagingData<ThreadWithInformation>>,
     onThreadClicked: (Long) -> Unit,
-    onImageClick: (String, String) -> Unit,
+    onImageClick: (Long, String, String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val feeds = threads.collectAsLazyPagingItems()
@@ -49,7 +49,7 @@ fun ListThreadPage(
                 ThreadCard(
                     thread = feed.thread,
                     onClick = { onThreadClicked(feed.thread.id) },
-                    onImageClick = onImageClick
+                    onImageClick = { img, ext -> onImageClick(feed.thread.id, img, ext) }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
             }

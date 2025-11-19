@@ -132,7 +132,13 @@ val nmbdi = DI {
     bindProvider { UserViewModel(instance()) }
 
     // 图片预览相关
-    bindProvider { ImagePreviewViewModel(di) }
+    bindFactory<Pair<Long, String>, ImagePreviewViewModel> { params ->
+        ImagePreviewViewModel(
+            threadId = params.first,
+            initialImgPath = params.second,
+            di = di
+        )
+    }
 
     // 引用 ViewModel
     bindProvider { ReferenceViewModel(instance()) }

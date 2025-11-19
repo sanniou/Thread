@@ -113,13 +113,12 @@ data class SubscriptionPage(
                         state = state,
                         onEvent = viewModel::onEvent,
                         onThreadClicked = onThreadClicked,
-                        onImageClick = { imgPath, ext ->
+                        onImageClick = { threadId, imgPath, ext ->
                             navigator.push(
                                 ImagePreviewPage(
+                                    threadId = threadId,
                                     imgPath = imgPath,
                                     ext = ext,
-                                    hasNext = true,
-                                    hasPrevious = true,
                                 )
                             )
                         },
@@ -145,7 +144,7 @@ private fun SubscriptionContent(
     state: SubscriptionContract.State,
     onEvent: (Event) -> Unit,
     onThreadClicked: (Long) -> Unit,
-    onImageClick: (String, String) -> Unit,
+    onImageClick: (Long, String, String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val feeds = state.feeds.collectAsLazyPagingItems()
@@ -161,7 +160,7 @@ private fun SubscriptionContent(
                 SubscriptionCard(
                     feed = feed,
                     onClick = { onThreadClicked(feed.id) },
-                    onImageClick = onImageClick,
+                    onImageClick = { img, ext -> onImageClick(feed.id, img, ext) },
 //                    onUnsubscribe = { onEvent(Event.OnUnsubscribe(feed.id)) }
                 )
                 Spacer(modifier = Modifier.height(8.dp))

@@ -223,7 +223,9 @@ data class ThreadPage(
                     showReferencePopup = true
                 },
                 onImageClick = { imgPath, ext ->
-                    navigator.push(ImagePreviewPage(imgPath, ext))
+                    state.thread?.let { thread ->
+                        navigator.push(ImagePreviewPage(thread.id, imgPath, ext))
+                    }
                 },
                 onUpdateLastReadId = { id -> viewModel.onEvent(Event.UpdateLastReadReplyId(id)) }
             )

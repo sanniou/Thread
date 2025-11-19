@@ -19,13 +19,12 @@ class HistoryPage : Screen {
         ListThreadPage(
             threads = viewModel.historyThreads,
             onThreadClicked = { navigator.push(ThreadPage(it)) },
-            onImageClick = { imgPath, ext ->
+            onImageClick = { threadId, imgPath, ext ->
                 navigator.push(
                     ImagePreviewPage(
+                        threadId = threadId,
                         imgPath = imgPath,
                         ext = ext,
-                        hasNext = true,
-                        hasPrevious = true,
                     )
                 )
             }

@@ -81,3 +81,9 @@ DELETE FROM ThreadReply WHERE threadId = :threadId AND page = :page;
 
 countRepliesByPage:
 SELECT count(*) FROM ThreadReply WHERE threadId = :threadId AND page = :page;
+
+getThreadImages:
+SELECT * FROM ThreadReply WHERE threadId = :threadId AND img != '' AND ext != '' ORDER BY id ASC;
+
+getMaxPage:
+SELECT MAX(page) FROM ThreadReply WHERE threadId = :threadId;

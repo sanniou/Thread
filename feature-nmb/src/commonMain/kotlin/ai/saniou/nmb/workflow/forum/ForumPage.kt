@@ -146,7 +146,7 @@ data class ForumPage(
                                                 thread = thread,
                                                 onClick = { navigator.push(ThreadPage(thread.id)) },
                                                 onImageClick = { imgPath, ext ->
-                                                    navigator.push(ImagePreviewPage(imgPath, ext))
+                                                    navigator.push(ImagePreviewPage(thread.id, imgPath, ext))
                                                 }
                                             )
                                         }
