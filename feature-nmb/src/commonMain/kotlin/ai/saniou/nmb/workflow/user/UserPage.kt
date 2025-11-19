@@ -54,7 +54,6 @@ data class UserPage(
         val userViewModel: UserViewModel = rememberScreenModel()
         val state by userViewModel.state.collectAsStateWithLifecycle()
         var showAddCookieDialog by remember { mutableStateOf(false) }
-        val uriHandler = LocalUriHandler.current
         val snackbarHostState = remember { SnackbarHostState() }
 
         LaunchedEffect(Unit) {
@@ -83,50 +82,11 @@ data class UserPage(
                 }
             }
         ) { paddingValues ->
-            Column(
-                modifier = Modifier.padding(paddingValues).padding(horizontal = 16.dp)
-            ) {
-                Text(
-                    text = "在网页端登录后，请访问 https://www.nmbxd.com/Member/User/Index/home.html 获取饼干并在此处添加。",
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(vertical = 8.dp).clickable {
-                        uriHandler.openUri("https://www.nmbxd.com/Member/User/Index/home.html")
-                    }
-                )
-                if (state.isLoading) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
-                } else if (state.error != null) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("错误: ${state.error}")
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Button(onClick = { userViewModel.handleEvent(Event.LoadCookies) }) {
-                                Text("重试")
-                            }
-                        }
-                    }
-                } else {
-                    CookieListContent(
-                        cookies = state.cookies,
-                        onDelete = { userViewModel.handleEvent(Event.DeleteCookie(it)) },
-                        onSortFinished = { newList ->
-                            userViewModel.handleEvent(
-                                Event.UpdateCookieOrder(
-                                    newList
-                                )
-                            )
-                        }
-                    )
-                }
-            }
+            UserScreenContent(
+                modifier = Modifier.padding(paddingValues),
+                state = state,
+                onEvent = userViewModel::handleEvent
+            )
         }
 
         if (showAddCookieDialog) {
@@ -137,6 +97,63 @@ data class UserPage(
                     showAddCookieDialog = false
                 }
             )
+        }
+    }
+}
+
+@Composable
+private fun UserScreenContent(
+    state: UserContract.State,
+    onEvent: (Event) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val uriHandler = LocalUriHandler.current
+
+    Column(
+        modifier = modifier.padding(horizontal = 16.dp)
+    ) {
+        UserGuideCard(
+            onOpenUri = { uriHandler.openUri("https://www.nmbxd.com/Member/User/Index/home.html") },
+            modifier = Modifier.padding(vertical = 8.dp)
+        )
+        when {
+            state.isLoading -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
+
+            state.error != null -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("错误: ${state.error}")
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(onClick = { onEvent(Event.LoadCookies) }) {
+                            Text("重试")
+                        }
+                    }
+                }
+            }
+
+            else -> {
+                CookieListContent(
+                    cookies = state.cookies,
+                    onDelete = { onEvent(Event.DeleteCookie(it)) },
+                    onSortFinished = { newList ->
+                        onEvent(
+                            Event.UpdateCookieOrder(
+                                newList
+                            )
+                        )
+                    }
+                )
+            }
         }
     }
 }
