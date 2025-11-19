@@ -105,7 +105,7 @@ class ThreadViewModel(
                     .collectLatest { detail ->
                         val thread = detail.thread
                         val totalPages =
-                            (thread.replyCount / 19) + if (thread.replyCount % 19 > 0) 1 else 0
+                            (thread.replyCount / NmbRepository.REPLIES_PER_PAGE) + if (thread.replyCount % NmbRepository.REPLIES_PER_PAGE > 0) 1 else 0
                         _state.update {
                             it.copy(
                                 isLoading = false,

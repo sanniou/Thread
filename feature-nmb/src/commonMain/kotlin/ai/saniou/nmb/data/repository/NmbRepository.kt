@@ -7,6 +7,9 @@ import ai.saniou.nmb.db.table.Cookie
  * NMB 仓库接口
  */
 interface NmbRepository {
+    companion object {
+        const val REPLIES_PER_PAGE = 19
+    }
 
     /**
      * 获取引用的回复内容
