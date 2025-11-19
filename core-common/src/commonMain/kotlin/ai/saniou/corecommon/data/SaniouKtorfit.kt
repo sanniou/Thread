@@ -48,12 +48,6 @@ internal fun SaniouKtorfit(string: String): Ktorfit = ktorfit {
                 level = LogLevel.ALL
                 sanitizeHeader { header -> header == HttpHeaders.Authorization }
             }
-            install(DefaultRequest) {
-                header(
-                    "Cookie",
-                    "userhash=%B2%21%02%14%A4%23t%A5%E8%7D%81%3E%FC%40%0F%A8T%AD%1A%A8%B5%C6%CFI"
-                )
-            }
         }
     )
     converterFactories(

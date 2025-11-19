@@ -45,3 +45,9 @@ SELECT * FROM Cookie ORDER BY sort ASC;
 -- 查询所有 Cookie 数据按最后使用时间排序
 getLastUsedCookies:
 SELECT * FROM Cookie ORDER BY lastUsedAt DESC;
+
+countCookies:
+SELECT * FROM Cookie;
+
+updateCookieSort:
+UPDATE Cookie SET sort = ? WHERE cookie = ?;

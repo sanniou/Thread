@@ -1,29 +1,31 @@
 package ai.saniou.nmb.workflow.user
 
-import ai.saniou.nmb.data.entity.Cookie
+import ai.saniou.nmb.db.table.Cookie
 import ai.saniou.nmb.di.nmbdi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -31,18 +33,20 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
@@ -50,6 +54,8 @@ import cafe.adriel.voyager.kodein.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import org.kodein.di.DI
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.rememberReorderableLazyListState
 
 
 data class UserPage(
@@ -60,10 +66,10 @@ data class UserPage(
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-
         val userViewModel: UserViewModel = rememberScreenModel()
-
         val uiState by userViewModel.uiState.collectAsStateWithLifecycle()
+        var showAddCookieDialog by remember { mutableStateOf(false) }
+        val uriHandler = LocalUriHandler.current
 
         Scaffold(
             topBar = {
@@ -77,139 +83,132 @@ data class UserPage(
                 )
             },
             floatingActionButton = {
-                if (uiState is UserUiState.CookieList) {
-                    FloatingActionButton(
-                        onClick = { userViewModel.applyNewCookie() }
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = "申请新饼干")
-                    }
+                FloatingActionButton(onClick = { showAddCookieDialog = true }) {
+                    Icon(Icons.Default.Add, contentDescription = "添加饼干")
                 }
             }
         ) { paddingValues ->
             Column(
-                modifier = Modifier.padding(paddingValues)
+                modifier = Modifier.padding(paddingValues).padding(horizontal = 16.dp)
             ) {
-                // 标签页
-                TabRow(
-                    selectedTabIndex = userViewModel.currentTabIndex
-                ) {
-                    listOf("饼干管理", "登录", "注册").forEachIndexed { index, title ->
-                        Tab(
-                            selected = userViewModel.currentTabIndex == index,
-                            onClick = { userViewModel.setCurrentTabIndex(index) },
-                            text = { Text(title) }
-                        )
+                Text(
+                    text = "在网页端登录后，请访问 https://www.nmbxd.com/Member/User/Index/home.html 获取饼干并在此处添加。",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(vertical = 8.dp).clickable {
+                        uriHandler.openUri("https://www.nmbxd.com/Member/User/Index/home.html")
                     }
-                }
-
-                // 内容区域
+                )
                 when (val state = uiState) {
                     is UserUiState.Loading -> {
                         Box(
-                            modifier = Modifier.fillMaxWidth().weight(1f),
+                            modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text("加载中...")
+                            CircularProgressIndicator()
                         }
                     }
 
                     is UserUiState.Error -> {
                         Box(
-                            modifier = Modifier.fillMaxWidth().weight(1f),
+                            modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text("错误: ${state.message}")
                                 Spacer(modifier = Modifier.height(16.dp))
-                                Button(onClick = { userViewModel.retry() }) {
+                                Button(onClick = { userViewModel.loadCookies() }) {
                                     Text("重试")
                                 }
                             }
                         }
                     }
 
-                    is UserUiState.CookieList -> {
+                    is UserUiState.Success -> {
                         CookieListContent(
                             cookies = state.cookies,
-                            onRefresh = { userViewModel.refreshCookies() }
-                        )
-                    }
-
-                    is UserUiState.Login -> {
-                        LoginContent(
-                            email = state.email,
-                            password = state.password,
-                            verifyCode = state.verifyCode,
-                            verifyImageUrl = state.verifyImageUrl,
-                            onEmailChanged = { userViewModel.updateEmail(it) },
-                            onPasswordChanged = { userViewModel.updatePassword(it) },
-                            onVerifyCodeChanged = { userViewModel.updateVerifyCode(it) },
-                            onRefreshVerifyCode = { userViewModel.refreshVerifyCode() },
-                            onLogin = { userViewModel.login() }
-                        )
-                    }
-
-                    is UserUiState.Register -> {
-                        RegisterContent(
-                            email = state.email,
-                            password = state.password,
-                            passwordConfirm = state.passwordConfirm,
-                            verifyCode = state.verifyCode,
-                            verifyImageUrl = state.verifyImageUrl,
-                            onEmailChanged = { userViewModel.updateEmail(it) },
-                            onPasswordChanged = { userViewModel.updatePassword(it) },
-                            onPasswordConfirmChanged = { userViewModel.updatePasswordConfirm(it) },
-                            onVerifyCodeChanged = { userViewModel.updateVerifyCode(it) },
-                            onRefreshVerifyCode = { userViewModel.refreshVerifyCode() },
-                            onRegister = { userViewModel.register() }
+                            onDelete = { userViewModel.deleteCookie(it) },
+                            onSortFinished = { newList -> userViewModel.updateCookieOrder(newList) }
                         )
                     }
                 }
             }
         }
 
-
+        if (showAddCookieDialog) {
+            AddCookieDialog(
+                onDismiss = { showAddCookieDialog = false },
+                onConfirm = { name, value ->
+                    userViewModel.addCookie(name, value)
+                    showAddCookieDialog = false
+                }
+            )
+        }
     }
 }
 
 @Composable
 fun CookieListContent(
     cookies: List<Cookie>,
-    onRefresh: () -> Unit,
+    onDelete: (Cookie) -> Unit,
+    onSortFinished: (List<Cookie>) -> Unit,
 ) {
-    Column(
-        modifier = Modifier.padding(16.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "我的饼干",
-                style = MaterialTheme.typography.titleMedium
-            )
+    var localCookies by remember(cookies) { mutableStateOf(cookies) }
+    val lazyListState = rememberLazyListState()
 
-            Spacer(modifier = Modifier.weight(1f))
-
-            IconButton(onClick = onRefresh) {
-                Icon(Icons.Default.Refresh, contentDescription = "刷新")
-            }
+    val state = rememberReorderableLazyListState(lazyListState) { from, to ->
+        localCookies = localCookies.toMutableList().apply {
+            add(to.index, removeAt(from.index))
         }
+        onSortFinished(localCookies)
+    }
 
-        Spacer(modifier = Modifier.height(16.dp))
+    LazyColumn(
+        state = lazyListState,
+        modifier = Modifier.fillMaxSize(),
+    ) {
+        itemsIndexed(localCookies, key = { _, it -> it.cookie }) { index, cookie ->
+            ReorderableItem(state, key = cookie.cookie) {
+                val interactionSource = remember { MutableInteractionSource() }
 
-        if (cookies.isEmpty()) {
-            Box(
-                modifier = Modifier.fillMaxWidth().weight(1f),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("没有饼干，点击右下角按钮申请新饼干")
-            }
-        } else {
-            LazyColumn {
-                items(cookies) { cookie ->
-                    CookieItem(cookie)
-                    Spacer(modifier = Modifier.height(8.dp))
+                Card(
+                    onClick = {},
+                    modifier = Modifier
+                        .semantics {
+                            customActions = listOf(
+                                CustomAccessibilityAction(
+                                    label = "Move Up",
+                                    action = {
+                                        if (index > 0) {
+                                            localCookies = localCookies.toMutableList().apply {
+                                                add(index - 1, removeAt(index))
+                                            }
+                                            true
+                                        } else {
+                                            false
+                                        }
+                                    }
+                                ),
+                                CustomAccessibilityAction(
+                                    label = "Move Down",
+                                    action = {
+                                        if (index < localCookies.size - 1) {
+                                            localCookies = localCookies.toMutableList().apply {
+                                                add(index + 1, removeAt(index))
+                                            }
+                                            true
+                                        } else {
+                                            false
+                                        }
+                                    }
+                                ),
+                            )
+                        },
+                    interactionSource = interactionSource,
+                ) {
+                    CookieItem(
+                        cookie = cookie,
+                        onDelete = { onDelete(cookie) },
+                    )
                 }
             }
         }
@@ -217,223 +216,89 @@ fun CookieListContent(
 }
 
 @Composable
-fun CookieItem(cookie: Cookie) {
+fun CookieItem(
+    cookie: Cookie,
+    onDelete: () -> Unit,
+    elevation: androidx.compose.material3.CardElevation = CardDefaults.cardElevation(
+        defaultElevation = 1.dp
+    ),
+) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        elevation = elevation
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = cookie.name,
+                    text = cookie.alias ?: "未命名",
                     style = MaterialTheme.typography.titleMedium
                 )
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                if (cookie.isActive) {
-                    Box(
-                        modifier = Modifier
-                            .size(8.dp)
-                            .clip(CircleShape)
-                            .background(Color.Green)
-                    )
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .size(8.dp)
-                            .clip(CircleShape)
-                            .background(Color.Red)
-                    )
-                }
-
-                Spacer(modifier = Modifier.weight(1f))
-
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = if (cookie.isActive) "有效" else "无效",
-                    color = if (cookie.isActive) Color.Green else Color.Red,
+                    text = "值: ${cookie.cookie}",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "添加时间: ${cookie.createdAt}",
                     style = MaterialTheme.typography.bodySmall
                 )
             }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "饼干值: ${cookie.value}",
-                style = MaterialTheme.typography.bodyMedium
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Text(
-                text = "用户标识: ${cookie.userHash}",
-                style = MaterialTheme.typography.bodyMedium
-            )
+            IconButton(onClick = onDelete) {
+                Icon(Icons.Default.Delete, contentDescription = "删除饼干")
+            }
         }
     }
 }
 
 @Composable
-fun LoginContent(
-    email: String,
-    password: String,
-    verifyCode: String,
-    verifyImageUrl: String,
-    onEmailChanged: (String) -> Unit,
-    onPasswordChanged: (String) -> Unit,
-    onVerifyCodeChanged: (String) -> Unit,
-    onRefreshVerifyCode: () -> Unit,
-    onLogin: () -> Unit,
+fun AddCookieDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (name: String, value: String) -> Unit,
 ) {
-    Column(
-        modifier = Modifier.padding(16.dp)
-    ) {
-        OutlinedTextField(
-            value = email,
-            onValueChange = onEmailChanged,
-            label = { Text("邮箱") },
-            modifier = Modifier.fillMaxWidth(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
-        )
+    var name by remember { mutableStateOf("") }
+    var value by remember { mutableStateOf("") }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        OutlinedTextField(
-            value = password,
-            onValueChange = onPasswordChanged,
-            label = { Text("密码") },
-            modifier = Modifier.fillMaxWidth(),
-            visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            OutlinedTextField(
-                value = verifyCode,
-                onValueChange = onVerifyCodeChanged,
-                label = { Text("验证码") },
-                modifier = Modifier.weight(1f)
-            )
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            // 验证码图片
-            Box(
-                modifier = Modifier
-                    .size(120.dp, 40.dp)
-                    .background(Color.LightGray)
-                    .clickable { onRefreshVerifyCode() }
-            ) {
-                // 这里应该显示验证码图片
-                Text(
-                    text = "点击刷新",
-                    modifier = Modifier.align(Alignment.Center)
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("添加饼干") },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("名称 (可选)") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = value,
+                    onValueChange = { value = it },
+                    label = { Text("值") },
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Button(
-            onClick = onLogin,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("登录")
-        }
-    }
-}
-
-@Composable
-fun RegisterContent(
-    email: String,
-    password: String,
-    passwordConfirm: String,
-    verifyCode: String,
-    verifyImageUrl: String,
-    onEmailChanged: (String) -> Unit,
-    onPasswordChanged: (String) -> Unit,
-    onPasswordConfirmChanged: (String) -> Unit,
-    onVerifyCodeChanged: (String) -> Unit,
-    onRefreshVerifyCode: () -> Unit,
-    onRegister: () -> Unit,
-) {
-    Column(
-        modifier = Modifier.padding(16.dp)
-    ) {
-        OutlinedTextField(
-            value = email,
-            onValueChange = onEmailChanged,
-            label = { Text("邮箱") },
-            modifier = Modifier.fillMaxWidth(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        OutlinedTextField(
-            value = password,
-            onValueChange = onPasswordChanged,
-            label = { Text("密码") },
-            modifier = Modifier.fillMaxWidth(),
-            visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        OutlinedTextField(
-            value = passwordConfirm,
-            onValueChange = onPasswordConfirmChanged,
-            label = { Text("确认密码") },
-            modifier = Modifier.fillMaxWidth(),
-            visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            OutlinedTextField(
-                value = verifyCode,
-                onValueChange = onVerifyCodeChanged,
-                label = { Text("验证码") },
-                modifier = Modifier.weight(1f)
-            )
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            // 验证码图片
-            Box(
-                modifier = Modifier
-                    .size(120.dp, 40.dp)
-                    .background(Color.LightGray)
-                    .clickable { onRefreshVerifyCode() }
+        },
+        confirmButton = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
             ) {
-                // 这里应该显示验证码图片
-                Text(
-                    text = "点击刷新",
-                    modifier = Modifier.align(Alignment.Center)
-                )
+                TextButton(onClick = onDismiss) {
+                    Text("取消")
+                }
+                Button(
+                    onClick = { onConfirm(name, value) },
+                    enabled = value.isNotBlank()
+                ) {
+                    Text("确认")
+                }
             }
         }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Button(
-            onClick = onRegister,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("注册")
-        }
-    }
+    )
 }

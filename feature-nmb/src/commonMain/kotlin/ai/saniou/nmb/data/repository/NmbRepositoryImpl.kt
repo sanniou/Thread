@@ -7,13 +7,19 @@ import ai.saniou.nmb.data.entity.ThreadWithInformation
 import ai.saniou.nmb.data.entity.toThreadWithInformation
 import ai.saniou.nmb.data.source.SqlDelightPagingSource
 import ai.saniou.nmb.db.Database
+import ai.saniou.nmb.db.table.Cookie
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
+import app.cash.sqldelight.coroutines.asFlow
+import app.cash.sqldelight.coroutines.mapToList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 
 /**
  * NMB 仓库实现类
@@ -45,6 +51,40 @@ class NmbRepositoryImpl(
 
     override suspend fun updateThreadLastReadReplyId(threadId: Long, replyId: Long) {
         database.threadQueries.updateThreadLastReadReplyId(replyId, threadId)
+    }
+
+    override suspend fun getSortedCookies(): List<Cookie> {
+        return database.cookieQueries.getSortedCookies().asFlow().mapToList(Dispatchers.IO).first()
+    }
+
+    @OptIn(ExperimentalTime::class)
+    override suspend fun insertCookie(alias: String, cookie: String) {
+        val now = Clock.System.now().epochSeconds
+        val count = database.cookieQueries.countCookies().asFlow().mapToList(Dispatchers.IO).first().size
+        database.cookieQueries.insertCookie(
+            cookie = cookie,
+            alias = alias,
+            sort = count.toLong(),
+            createdAt = now,
+            lastUsedAt = now
+        )
+    }
+
+    override suspend fun deleteCookie(cookie: String) {
+        database.cookieQueries.deleteCookie(cookie)
+    }
+
+    override suspend fun updateCookiesSort(cookies: List<Cookie>) {
+        database.cookieQueries.transaction {
+            cookies.forEachIndexed { index, cookie ->
+                database.cookieQueries.updateCookieSort(index.toLong(), cookie.cookie)
+            }
+        }
+    }
+
+    override suspend fun getFirstCookie(): Cookie? {
+        return database.cookieQueries.getSortedCookies().asFlow().mapToList(Dispatchers.IO).first()
+            .firstOrNull()
     }
 
     /**
