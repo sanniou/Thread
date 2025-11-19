@@ -1,6 +1,8 @@
 package ai.saniou.nmb.di
 
+import ai.saniou.corecommon.data.CookieProvider
 import ai.saniou.corecommon.data.di.coreCommon
+import ai.saniou.nmb.data.NmbCookieProvider
 import ai.saniou.nmb.data.api.NmbXdApi
 import ai.saniou.nmb.data.api._NmbXdApiImpl
 import ai.saniou.nmb.data.database.DriverFactory
@@ -50,6 +52,8 @@ val nmbdi = DI {
     import(coreCommon)
 
     bindConstant<String>(tag = "nmbBaseUrl") { "https://api.nmb.best/api/" }
+
+    bindSingleton<CookieProvider> { NmbCookieProvider(instance()) }
 
     bindSingleton<NmbXdApi> { _NmbXdApiImpl(instance(arg = instance<String>("nmbBaseUrl"))) }
 
