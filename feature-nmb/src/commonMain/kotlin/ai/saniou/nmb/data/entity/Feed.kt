@@ -135,16 +135,13 @@ fun Feed.nowToEpochMilliseconds(): Long {
 }
 
 
-interface IBaseThread : IBaseAuthor {
+interface IBaseThread : IBaseAuthor, IThreadBody {
 
     val id: Long
     val sage: Long
     val fid: Long
     val replyCount: Long
-    val img: String
-    val ext: String
     val title: String
-    val content: String
     val admin: Long
     val hide: Long
 }

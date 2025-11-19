@@ -55,6 +55,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.outlined.FavoriteBorder
@@ -62,6 +63,8 @@ import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
@@ -129,6 +132,7 @@ data class ThreadPage(
         val state by viewModel.state.collectAsState()
 
         var showJumpDialog by remember { mutableStateOf(false) }
+        var showMenu by remember { mutableStateOf(false) }
 
         // 引用弹窗状态
         val referenceViewModel: ReferenceViewModel = rememberScreenModel()
@@ -193,26 +197,63 @@ data class ThreadPage(
                             Icon(Icons.Default.ArrowBack, contentDescription = "返回")
                         }
                     },
+                    actions = {
+                        if (state.thread != null) {
+                            IconButton(onClick = { viewModel.onEvent(Event.Refresh) }) {
+                                Icon(Icons.Default.Refresh, contentDescription = "刷新")
+                            }
+                            IconButton(onClick = { viewModel.onEvent(Event.ToggleSubscription) }) {
+                                Icon(
+                                    imageVector = if (state.isSubscribed) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                                    contentDescription = "收藏"
+                                )
+                            }
+                            IconButton(onClick = { showMenu = !showMenu }) {
+                                Icon(Icons.Default.MoreVert, contentDescription = "更多选项")
+                            }
+                            DropdownMenu(
+                                expanded = showMenu,
+                                onDismissRequest = { showMenu = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text(if (state.isPoOnlyMode) "查看全部" else "仅看PO") },
+                                    onClick = {
+                                        viewModel.onEvent(Event.TogglePoOnlyMode)
+                                        showMenu = false
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("跳页") },
+                                    onClick = {
+                                        showJumpDialog = true
+                                        showMenu = false
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("复制链接") },
+                                    onClick = {
+                                        viewModel.onEvent(Event.CopyLink)
+                                        showMenu = false
+                                    }
+                                )
+                            }
+                        }
+                    },
                     scrollBehavior = scrollBehavior
                 )
             },
             snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
             floatingActionButton = {
                 if (state.thread != null) {
-                    ThreadActionsFab(
-                        isSubscribed = state.isSubscribed,
-                        isPoOnlyMode = state.isPoOnlyMode,
-                        onRefresh = { viewModel.onEvent(Event.Refresh) },
-                        onToggleSubscription = { viewModel.onEvent(Event.ToggleSubscription) },
-                        onJumpToPage = { showJumpDialog = true },
-                        onTogglePoOnly = { viewModel.onEvent(Event.TogglePoOnlyMode) },
-                        onCopyLink = { viewModel.onEvent(Event.CopyLink) },
-                        onPost = {
+                    FloatingActionButton(
+                        onClick = {
                             state.thread?.let {
                                 navigator.push(PostPage(it.fid, it.id))
                             }
                         }
-                    )
+                    ) {
+                        Icon(Icons.Default.Edit, contentDescription = "回复")
+                    }
                 }
             }
         ) { innerPadding ->
@@ -478,50 +519,69 @@ fun ThreadSuccessContent(
     }
 
     PullToRefreshWrapper(onRefreshTrigger = { replies.refresh() }) {
-        LazyColumn(
-            state = lazyListState,
-            modifier = Modifier.padding(horizontal = 8.dp),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(top = 8.dp, bottom = 88.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            // 主帖
-            item {
-                state.thread?.let {
-                    ThreadMainPost(
-                        thread = it,
-                        forumName = state.forumName,
-                        refClick = onRefClick,
-                        onImageClick = onImageClick
-                    )
-                }
-                Spacer(modifier = Modifier.height(8.dp))
+        ThreadList(
+            state = state,
+            lazyListState = lazyListState,
+            onReplyClicked = onReplyClicked,
+            onRefClick = onRefClick,
+            onImageClick = onImageClick,
+            onRefresh = onRefresh
+        )
+    }
+}
+
+@Composable
+private fun ThreadList(
+    state: State,
+    lazyListState: LazyListState,
+    onReplyClicked: (Long) -> Unit,
+    onRefClick: (Long) -> Unit,
+    onImageClick: (String, String) -> Unit,
+    onRefresh: () -> Unit
+) {
+    val replies = state.replies.collectAsLazyPagingItems()
+    LazyColumn(
+        state = lazyListState,
+        modifier = Modifier.padding(horizontal = 16.dp),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // 主帖
+        item {
+            state.thread?.let {
+                ThreadMainPost(
+                    thread = it,
+                    forumName = state.forumName,
+                    refClick = onRefClick,
+                    onImageClick = onImageClick
+                )
             }
+        }
 
-            // 回复列表
-            items(replies.itemCount) { replyIndex ->
-                replies[replyIndex]?.let { reply ->
-                    ThreadReply(reply, onReplyClicked, onRefClick, onImageClick)
-                } ?: ShimmerContainer { SkeletonReplyItem(it) }
-            }
+        // 回复列表
+        items(replies.itemCount) { replyIndex ->
+            replies[replyIndex]?.let { reply ->
+                ThreadReply(reply, onReplyClicked, onRefClick, onImageClick)
+            } ?: ShimmerContainer { SkeletonReplyItem(it) }
+        }
 
-            // Paging 加载状态
-            item {
-                when {
-                    replies.loadState.refresh is LoadState.Loading && replies.itemCount == 0 -> ThreadShimmer()
-                    replies.loadState.refresh is LoadState.Error -> {
-                        // 错误状态已在顶层处理
-                    }
-
-                    replies.loadState.append is LoadState.Error -> LoadingFailedIndicator()
-                    replies.loadState.append is LoadState.Loading -> LoadingIndicator()
-                    replies.loadState.append.endOfPaginationReached && replies.itemCount == 0 -> {
-                        EmptyReplyContent(onRefresh)
-                    }
-
-                    replies.loadState.append.endOfPaginationReached -> LoadEndIndicator(
-                        onClick = { replies.refresh() }
-                    )
+        // Paging 加载状态
+        item {
+            when {
+                replies.loadState.refresh is LoadState.Loading && replies.itemCount == 0 -> ThreadShimmer()
+                replies.loadState.refresh is LoadState.Error -> {
+                    // 错误状态已在顶层处理
                 }
+
+                replies.loadState.append is LoadState.Error -> LoadingFailedIndicator()
+                replies.loadState.append is LoadState.Loading -> LoadingIndicator()
+                replies.loadState.append.endOfPaginationReached && replies.itemCount == 0 -> {
+                    EmptyReplyContent(onRefresh)
+                }
+
+                replies.loadState.append.endOfPaginationReached -> LoadEndIndicator(
+                    onClick = { replies.refresh() }
+                )
             }
         }
     }
@@ -532,7 +592,7 @@ private fun EmptyReplyContent(onRefresh: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 32.dp),
+            .padding(vertical = 64.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -574,63 +634,46 @@ fun ThreadMainPost(
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // 标题和作者信息
-            Row(
-                verticalAlignment = Alignment.Top,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(24.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "PO",
-                        color = Color.White,
-                        style = MaterialTheme.typography.labelSmall
-                    )
-                }
-
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Text(
-                        text = "No.${thread.id}",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-
+            // 头部信息
+            PostHeader(
+                author = { ThreadAuthor(thread, isPo = true) },
+                info = {
                     if (forumName.isNotBlank()) {
                         Text(
                             text = forumName,
-                            style = MaterialTheme.typography.bodySmall,
+                            style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.primary
                         )
                     }
+                },
+                id = thread.id
+            )
 
-                    if (thread.title.isNotBlank() && thread.title != "无标题") {
-                        Text(
-                            text = thread.title,
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-                    ThreadAuthor(thread)
-                }
+            // 标题
+            if (thread.title.isNotBlank() && thread.title != "无标题") {
+                Text(
+                    text = thread.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
             }
 
+            Spacer(modifier = Modifier.height(8.dp))
             HorizontalDivider()
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // 正文
             ThreadBody(thread, onReferenceClick = refClick, onImageClick = onImageClick)
 
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // 回复数
             Text(
                 text = "回复: ${thread.replyCount}",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.primary
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.align(Alignment.End)
             )
         }
     }
@@ -649,124 +692,40 @@ fun ThreadReply(
             .clickable { onReplyClicked(reply.id) },
     ) {
         Column(
-            modifier = Modifier.padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
         ) {
-            // 回复者信息
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                ThreadAuthor(reply)
-                Spacer(modifier = Modifier.weight(1f))
-
-                Text(
-                    text = "No.${reply.id}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold
-                )
-            }
+            PostHeader(
+                author = { ThreadAuthor(reply) },
+                id = reply.id
+            )
+            Spacer(modifier = Modifier.height(8.dp))
             ThreadBody(reply, onReferenceClick = refClick, onImageClick = onImageClick)
         }
     }
 }
 
-// endregion
-
-// =================================================================================
-// region Floating Action Buttons
-// =================================================================================
-
 @Composable
-fun ThreadActionsFab(
-    isSubscribed: Boolean,
-    isPoOnlyMode: Boolean,
-    onRefresh: () -> Unit,
-    onToggleSubscription: () -> Unit,
-    onJumpToPage: () -> Unit,
-    onTogglePoOnly: () -> Unit,
-    onCopyLink: () -> Unit,
-    onPost: () -> Unit,
+private fun PostHeader(
+    author: @Composable () -> Unit,
+    info: @Composable () -> Unit = {},
+    id: Long
 ) {
-    var expanded by remember { mutableStateOf(false) }
-    val transition = updateTransition(targetState = expanded, label = "fab_transition")
-
-    val rotation by transition.animateFloat(label = "fab_rotation") { isExpanded ->
-        if (isExpanded) 45f else 0f
-    }
-
-    Column(
-        horizontalAlignment = Alignment.End,
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        AnimatedVisibility(
-            visible = expanded,
-            enter = fadeIn() + slideInVertically(initialOffsetY = { it / 2 }),
-            exit = fadeOut() + slideOutVertically(targetOffsetY = { it / 2 })
-        ) {
-            Column(
-                horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                FabAction(icon = Icons.Default.Refresh, text = "刷新", onClick = onRefresh)
-                FabAction(
-                    icon = if (isSubscribed) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                    text = "收藏",
-                    onClick = onToggleSubscription
-                )
-                FabAction(icon = Icons.Default.PlayArrow, text = "跳页", onClick = onJumpToPage)
-                FabAction(
-                    icon = if (isPoOnlyMode) Icons.Filled.Person else Icons.Outlined.Person,
-                    text = "仅看PO",
-                    onClick = onTogglePoOnly
-                )
-                FabAction(icon = Icons.Default.Call, text = "复制链接", onClick = onCopyLink)
-                FabAction(icon = Icons.Default.Edit, text = "回复", onClick = onPost)
-            }
-        }
-
-        FloatingActionButton(onClick = { expanded = !expanded }) {
-            Icon(
-                Icons.Default.Add,
-                contentDescription = "操作",
-                modifier = Modifier.rotate(rotation)
-            )
-        }
-    }
-}
-
-@Composable
-private fun FabAction(icon: ImageVector, text: String, onClick: () -> Unit) {
     Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        modifier = Modifier
-            .padding(end = 8.dp)
-            .clip(MaterialTheme.shapes.medium)
-            .clickable(onClick = onClick)
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Surface(
-            shape = MaterialTheme.shapes.medium,
-            color = MaterialTheme.colorScheme.surfaceContainerHigh, // Use MD3 container color
-            tonalElevation = 2.dp,
-            shadowElevation = 2.dp
-        ) {
-            Text(
-                text = text,
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurface
-            )
+        Column(modifier = Modifier.weight(1f)) {
+            author()
+            info()
         }
-        SmallFloatingActionButton(
-            onClick = onClick,
-            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-        ) {
-            Icon(icon, contentDescription = text)
-        }
+        Text(
+            text = "No.$id",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
+
+// endregion
 
 // endregion

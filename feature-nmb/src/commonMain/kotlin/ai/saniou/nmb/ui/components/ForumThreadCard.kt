@@ -40,6 +40,7 @@ import org.jetbrains.compose.resources.stringResource
 import thread.feature_nmb.generated.resources.Res
 import thread.feature_nmb.generated.resources.empty_title
 import ai.saniou.coreui.theme.Dimens
+import androidx.compose.material3.Surface
 
 /**
  * 订阅卡片，对 ThreadCard 的封装
@@ -71,129 +72,104 @@ fun ThreadCard(
             .fillMaxWidth()
             .clickable(onClick = onClick)
     ) {
-        Column(modifier = Modifier.padding(Dimens.padding_medium)) {
-            ThreadCardHeader(thread)
-            Spacer(modifier = Modifier.height(Dimens.padding_small))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                ThreadAuthor(thread)
-                if (thread.sage > 0) {
-                    Spacer(modifier = Modifier.width(Dimens.padding_small))
+        Column(
+            modifier = Modifier.padding(Dimens.padding_medium),
+            verticalArrangement = Arrangement.spacedBy(Dimens.padding_small)
+        ) {
+            // 统一的头部
+            Column {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.padding_small)
+                ) {
+                    if (thread.admin > 0) {
+                        AdminIcon()
+                    }
                     Text(
-                        text = "SAGE",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.error
+                        text = thread.title.ifBlank { stringResource(Res.string.empty_title) },
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
                     )
+                    if (thread.sage > 0) {
+                        Text(
+                            text = "SAGE",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
                 }
+                Spacer(modifier = Modifier.height(Dimens.padding_extra_small))
+                ThreadAuthor(thread)
             }
-            Spacer(modifier = Modifier.height(Dimens.padding_small))
+
             HorizontalDivider()
-            Spacer(modifier = Modifier.height(Dimens.padding_small))
-            ThreadCardContent(thread, onImageClick)
-            Spacer(modifier = Modifier.height(Dimens.padding_small))
+
+            // 内容区域
+            ThreadBody(
+                body = thread,
+                onImageClick = { img, ext -> onImageClick?.invoke(img, ext) }
+            )
+
+            // 尾部
             ThreadCardFooter(thread)
         }
     }
 }
 
 @Composable
-private fun ThreadCardHeader(thread: IBaseThread) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Dimens.padding_small)
-    ) {
-        if (thread.admin > 0) {
-            AdminIcon()
-        }
-        Text(
-            text = thread.title.ifBlank { stringResource(Res.string.empty_title) },
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f)
-        )
-    }
-}
-
-@Composable
 private fun AdminIcon() {
-    Box(
-        modifier = Modifier
-            .size(Dimens.icon_size_medium)
-            .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.primary)
-            .padding(Dimens.padding_extra_small),
-        contentAlignment = Alignment.Center
+    Surface(
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.primaryContainer
     ) {
         Icon(
             imageVector = Icons.Default.Star,
             contentDescription = "管理员",
-            tint = Color.White,
-            modifier = Modifier.size(Dimens.icon_size_small)
-        )
-    }
-}
-
-@Composable
-private fun ThreadCardContent(
-    thread: IBaseThread,
-    onImageClick: ((String, String) -> Unit)?,
-) {
-    RichText(
-        text = thread.content,
-        style = MaterialTheme.typography.bodyMedium,
-        maxLines = 3,
-        overflow = TextOverflow.Ellipsis
-    )
-
-    if (thread.img.isNotBlank() && thread.ext.isNotBlank()) {
-        Spacer(modifier = Modifier.height(Dimens.padding_small))
-        NmbImage(
-            imgPath = thread.img,
-            ext = thread.ext,
+            tint = MaterialTheme.colorScheme.onPrimaryContainer,
             modifier = Modifier
-                .height(Dimens.image_height_medium)
-                .clickable { onImageClick?.invoke(thread.img, thread.ext) },
-            contentScale = ContentScale.FillHeight,
-            isThumb = true,
-            contentDescription = "帖子图片",
+                .size(Dimens.icon_size_medium)
+                .padding(Dimens.padding_extra_small)
         )
     }
 }
+
 
 @Composable
 private fun ThreadCardFooter(thread: IBaseThread) {
     val threadReply = thread as? IBaseThreadReply
 
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Icon(
-            imageVector = Icons.Default.Face,
-            contentDescription = "回复",
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(Dimens.icon_size_small)
-        )
-        Spacer(modifier = Modifier.width(Dimens.padding_extra_small))
-        Text(
-            text = thread.replyCount.toString(),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.primary
-        )
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Dimens.padding_extra_small)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Face,
+                contentDescription = "回复",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(Dimens.icon_size_small)
+            )
+            Text(
+                text = thread.replyCount.toString(),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        Spacer(modifier = Modifier.weight(1f))
 
         threadReply?.run {
             if ((remainReplies ?: 0) > 0) {
-                Spacer(modifier = Modifier.width(Dimens.padding_small))
                 Text(
-                    text = "(省略${remainReplies}条回复)",
-                    style = MaterialTheme.typography.bodySmall,
+                    text = "省略${remainReplies}条",
+                    style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            Spacer(modifier = Modifier.weight(1f))
-            if (replies.isNotEmpty()) {
-                Text(
-                    text = "查看全部",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary
                 )
             }
         }
@@ -213,6 +189,8 @@ fun ThreadBody(
 ) {
     RichText(
         text = body.content,
+        maxLines = 3,
+        overflow = TextOverflow.Ellipsis,
         style = MaterialTheme.typography.bodyMedium,
         onReferenceClick = { onReferenceClick?.invoke(it.toLong()) },
         referencePattern = ">>No\\.(\\d+)".toRegex()
