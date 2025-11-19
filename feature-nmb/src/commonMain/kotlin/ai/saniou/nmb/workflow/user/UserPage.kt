@@ -2,6 +2,7 @@ package ai.saniou.nmb.workflow.user
 
 import ai.saniou.nmb.di.nmbdi
 import ai.saniou.nmb.workflow.user.UserContract.Event
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
@@ -24,14 +26,19 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -55,6 +62,13 @@ data class UserPage(
         val state by userViewModel.state.collectAsStateWithLifecycle()
         var showAddCookieDialog by remember { mutableStateOf(false) }
         val snackbarHostState = remember { SnackbarHostState() }
+        val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
+        val listState = rememberLazyListState()
+        val isFabVisible by remember {
+            derivedStateOf {
+                listState.firstVisibleItemIndex == 0 || listState.isScrollInProgress.not()
+            }
+        }
 
         LaunchedEffect(Unit) {
             userViewModel.effect.collectLatest { effect ->
@@ -65,6 +79,7 @@ data class UserPage(
         }
 
         Scaffold(
+            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
                 TopAppBar(
@@ -73,19 +88,24 @@ data class UserPage(
                         IconButton(onClick = { navigator.pop() }) {
                             Icon(Icons.Default.ArrowBack, contentDescription = "返回")
                         }
-                    }
+                    },
+                    scrollBehavior = scrollBehavior
                 )
             },
             floatingActionButton = {
-                FloatingActionButton(onClick = { showAddCookieDialog = true }) {
-                    Icon(Icons.Default.Add, contentDescription = "添加饼干")
+                AnimatedVisibility(visible = isFabVisible) {
+                    FloatingActionButton(onClick = { showAddCookieDialog = true }) {
+                        Icon(Icons.Default.Add, contentDescription = "添加饼干")
+                    }
                 }
             }
         ) { paddingValues ->
             UserScreenContent(
                 modifier = Modifier.padding(paddingValues),
                 state = state,
-                onEvent = userViewModel::handleEvent
+                onEvent = userViewModel::handleEvent,
+                scrollBehavior = scrollBehavior,
+                listState = listState,
             )
         }
 
@@ -101,21 +121,26 @@ data class UserPage(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun UserScreenContent(
     state: UserContract.State,
     onEvent: (Event) -> Unit,
+    scrollBehavior: TopAppBarScrollBehavior,
+    listState: androidx.compose.foundation.lazy.LazyListState,
     modifier: Modifier = Modifier
 ) {
     val uriHandler = LocalUriHandler.current
 
     Column(
-        modifier = modifier.padding(horizontal = 16.dp)
+        modifier = modifier
     ) {
+        // This content should not scroll
         UserGuideCard(
             onOpenUri = { uriHandler.openUri("https://www.nmbxd.com/Member/User/Index/home.html") },
-            modifier = Modifier.padding(vertical = 8.dp)
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
         )
+
         when {
             state.isLoading -> {
                 Box(
@@ -151,9 +176,11 @@ private fun UserScreenContent(
                                 newList
                             )
                         )
-                    }
+                    },
+                    listState = listState,
+                    modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
                 )
             }
         }
-    }
+}
 }

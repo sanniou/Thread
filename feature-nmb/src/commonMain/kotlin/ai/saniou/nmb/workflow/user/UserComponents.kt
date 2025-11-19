@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
@@ -54,11 +55,12 @@ fun CookieListContent(
     cookies: List<Cookie>,
     onDelete: (Cookie) -> Unit,
     onSortFinished: (List<Cookie>) -> Unit,
+    listState: LazyListState,
+    modifier: Modifier = Modifier
 ) {
     var localCookies by remember(cookies) { mutableStateOf(cookies) }
-    val lazyListState = rememberLazyListState()
 
-    val state = rememberReorderableLazyListState(lazyListState) { from, to ->
+    val state = rememberReorderableLazyListState(listState) { from, to ->
         localCookies = localCookies.toMutableList().apply {
             add(to.index, removeAt(from.index))
         }
@@ -69,8 +71,8 @@ fun CookieListContent(
         EmptyCookieList()
     } else {
         LazyColumn(
-            state = lazyListState,
-            modifier = Modifier.fillMaxSize(),
+            state = listState,
+            modifier = modifier,
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
