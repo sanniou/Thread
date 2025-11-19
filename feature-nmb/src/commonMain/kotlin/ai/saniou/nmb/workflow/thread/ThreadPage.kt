@@ -104,6 +104,9 @@ import cafe.adriel.voyager.kodein.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.launch
+import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import org.kodein.di.direct
 import org.kodein.di.instance
 
@@ -133,31 +136,8 @@ data class ThreadPage(
         var currentReferenceId by remember { mutableStateOf(0L) }
         val referenceState by referenceViewModel.uiState.collectAsState()
 
-        // 自动滚动到上次阅读位置，并持续更新阅读位置
-//        LaunchedEffect(lazyListState, state.thread) {
-//            if (state.thread == null) return@LaunchedEffect
-//
-//            val replies = state.replies.collectAsLazyPagingItems()
-//            val lastReadId = state.thread?.last_read_reply_id ?: 0
-//
-//            // 初始滚动
-//            if (lastReadId > 0) {
-//                val index = replies.itemSnapshotList.indexOfFirst { it?.id == lastReadId }
-//                if (index != -1) {
-//                    lazyListState.scrollToItem(index + 1) // +1 for the main post
-//                }
-//            }
-//
-//            // 监听滚动并更新
-//            snapshotFlow { lazyListState.firstVisibleItemIndex }
-//                .collect { index ->
-//                    if (index > 0 && index < replies.itemCount) {
-//                        replies[index - 1]?.let {
-//                            viewModel.onEvent(Event.UpdateLastReadReplyId(it.id))
-//                        }
-//                    }
-//                }
-//        }
+        // Scroll Behavior for TopAppBar
+        val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
         // 处理副作用
         LaunchedEffect(Unit) {
@@ -174,6 +154,7 @@ data class ThreadPage(
         }
 
         Scaffold(
+            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
                 TopAppBar(
                     modifier = Modifier.pointerInput(Unit) {
@@ -203,7 +184,8 @@ data class ThreadPage(
                         IconButton(onClick = { navigator.pop() }) {
                             Icon(Icons.Default.ArrowBack, contentDescription = "返回")
                         }
-                    }
+                    },
+                    scrollBehavior = scrollBehavior
                 )
             },
             snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
@@ -342,12 +324,8 @@ private fun ThreadShimmer() {
             modifier = Modifier.padding(8.dp)
         ) {
             // 主帖骨架屏
-            Card(
+            ElevatedCard(
                 modifier = Modifier.fillMaxWidth(),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     // 标题和作者信息
@@ -458,8 +436,9 @@ fun ThreadSuccessContent(
     PullToRefreshWrapper(onRefreshTrigger = { replies.refresh() }) {
         LazyColumn(
             state = lazyListState,
-            modifier = Modifier.padding(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier.padding(horizontal = 8.dp),
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(top = 8.dp, bottom = 88.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             // 主帖
             item {
@@ -546,12 +525,8 @@ fun ThreadMainPost(
     refClick: (Long) -> Unit,
     onImageClick: (String, String) -> Unit,
 ) {
-    Card(
+    ElevatedCard(
         modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -624,14 +599,10 @@ fun ThreadReply(
     refClick: (Long) -> Unit,
     onImageClick: (String, String) -> Unit,
 ) {
-    Card(
+    ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onReplyClicked(reply.id) },
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
     ) {
         Column(
             modifier = Modifier.padding(12.dp),
@@ -727,24 +698,27 @@ private fun FabAction(icon: ImageVector, text: String, onClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         modifier = Modifier
+            .padding(end = 8.dp)
             .clip(MaterialTheme.shapes.medium)
             .clickable(onClick = onClick)
     ) {
         Surface(
             shape = MaterialTheme.shapes.medium,
-            color = MaterialTheme.colorScheme.surface,
-            tonalElevation = 2.dp
+            color = MaterialTheme.colorScheme.surfaceContainerHigh, // Use MD3 container color
+            tonalElevation = 2.dp,
+            shadowElevation = 2.dp
         ) {
             Text(
                 text = text,
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                style = MaterialTheme.typography.labelLarge
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
         SmallFloatingActionButton(
             onClick = onClick,
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
         ) {
             Icon(icon, contentDescription = text)
         }
