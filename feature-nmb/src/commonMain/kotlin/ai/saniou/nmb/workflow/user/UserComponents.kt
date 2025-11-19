@@ -22,13 +22,13 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -39,9 +39,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
+import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -66,20 +71,17 @@ fun CookieListContent(
         LazyColumn(
             state = lazyListState,
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             items(localCookies, key = { it.cookie }) { cookie ->
                 ReorderableItem(state, key = cookie.cookie) { isDragging ->
-                    val elevation by animateDpAsState(if (isDragging) 4.dp else 0.dp)
-
-                    Surface(shadowElevation = elevation) {
-                        CookieItem(
-                            cookie = cookie,
-                            onDelete = { onDelete(cookie) },
-                            modifier = Modifier.draggableHandle(),
-                        )
-                    }
+                    CookieItem(
+                        cookie = cookie,
+                        onDelete = { onDelete(cookie) },
+                        isDragging = isDragging,
+                        modifier = Modifier.draggableHandle(),
+                    )
                 }
             }
         }
@@ -90,30 +92,45 @@ fun CookieListContent(
 fun CookieItem(
     cookie: Cookie,
     onDelete: () -> Unit,
+    isDragging: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    ListItem(
-        modifier = modifier,
-        headlineContent = { Text(cookie.alias ?: "未命名") },
-        supportingContent = {
-            Column {
+    val elevation by animateDpAsState(if (isDragging) 8.dp else 2.dp)
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = elevation)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
                 Text(
-                    text = "值: ${cookie.cookie}",
-                    style = MaterialTheme.typography.bodyMedium
+                    text = cookie.alias ?: "未命名",
+                    style = MaterialTheme.typography.titleMedium
                 )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "添加时间: ${cookie.createdAt}",
-                    style = MaterialTheme.typography.bodySmall
-                )
+                IconButton(onClick = onDelete) {
+                    Icon(Icons.Default.Delete, contentDescription = "删除饼干")
+                }
             }
-        },
-        trailingContent = {
-            IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, contentDescription = "删除饼干")
-            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = cookie.cookie,
+                style = MaterialTheme.typography.bodyMedium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = formatEpochSeconds(cookie.createdAt),
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.align(Alignment.End),
+                color = MaterialTheme.colorScheme.outline
+            )
         }
-    )
+    }
 }
 
 @Composable
@@ -175,6 +192,22 @@ fun UserGuideCard(onOpenUri: () -> Unit, modifier: Modifier = Modifier) {
             }
         )
     }
+}
+
+@OptIn(ExperimentalTime::class)
+private fun formatEpochSeconds(epochSeconds: Long): String {
+   return try {
+       val instant = Instant.fromEpochSeconds(epochSeconds)
+       val localDateTime = instant.toLocalDateTime(TimeZone.currentSystemDefault())
+       val year = localDateTime.year
+       val month = localDateTime.monthNumber.toString().padStart(2, '0')
+       val day = localDateTime.dayOfMonth.toString().padStart(2, '0')
+       val hour = localDateTime.hour.toString().padStart(2, '0')
+       val minute = localDateTime.minute.toString().padStart(2, '0')
+       "$year-$month-$day $hour:$minute"
+   } catch (e: Exception) {
+       "Invalid Date"
+   }
 }
 
 @Composable
