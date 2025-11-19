@@ -85,13 +85,15 @@ class ThreadViewModel(
                             )
                         }
                     }
-                    .collectLatest { thread ->
+                    .collectLatest { detail ->
+                        val thread = detail.thread
                         val totalPages =
                             (thread.replyCount / 19) + if (thread.replyCount % 19 > 0) 1 else 0
                         _state.update {
                             it.copy(
                                 isLoading = false,
                                 thread = thread,
+                                lastReadReplyId = detail.lastReadReplyId,
                                 totalPages = totalPages.toInt().coerceAtLeast(1),
                                 forumName = forumUseCase.getForumName(thread.fid)
                             )

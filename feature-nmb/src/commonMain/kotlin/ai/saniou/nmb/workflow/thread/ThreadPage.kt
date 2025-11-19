@@ -224,7 +224,8 @@ data class ThreadPage(
                 },
                 onImageClick = { imgPath, ext ->
                     navigator.push(ImagePreviewPage(imgPath, ext))
-                }
+                },
+                onUpdateLastReadId = { id -> viewModel.onEvent(Event.UpdateLastReadReplyId(id)) }
             )
         }
 
@@ -265,7 +266,8 @@ private fun ThreadContentRouter(
     lazyListState: LazyListState,
     onRefresh: () -> Unit,
     onRefClick: (Long) -> Unit,
-    onImageClick: (String, String) -> Unit
+    onImageClick: (String, String) -> Unit,
+    onUpdateLastReadId: (Long) -> Unit
 ) {
     Box(modifier = modifier) {
         when {
@@ -281,7 +283,8 @@ private fun ThreadContentRouter(
                 onRefresh = { /* Handled by PullToRefresh */ },
                 onReplyClicked = { /* TODO */ },
                 onRefClick = onRefClick,
-                onImageClick = onImageClick
+                onImageClick = onImageClick,
+                onUpdateLastReadId = onUpdateLastReadId
             )
         }
     }
@@ -431,8 +434,41 @@ fun ThreadSuccessContent(
     onReplyClicked: (Long) -> Unit,
     onRefClick: (Long) -> Unit,
     onImageClick: (String, String) -> Unit,
+    onUpdateLastReadId: (Long) -> Unit,
 ) {
     val replies = state.replies.collectAsLazyPagingItems()
+
+    // Auto-scroll to last read position
+    var hasScrolledToLastRead by remember { mutableStateOf(false) }
+
+    LaunchedEffect(replies.itemSnapshotList) {
+        if (!hasScrolledToLastRead) {
+            val lastReadId = state.lastReadReplyId
+            if (lastReadId > 0L) {
+                val index = replies.itemSnapshotList.indexOfFirst { it?.id == lastReadId }
+                if (index != -1) {
+                    lazyListState.scrollToItem(index + 1)
+                    hasScrolledToLastRead = true
+                }
+            }
+        }
+    }
+
+    // Update last read position
+    LaunchedEffect(lazyListState) {
+        snapshotFlow { lazyListState.firstVisibleItemIndex }
+            .collect { index ->
+                if (index > 0) {
+                    val replyIndex = index - 1
+                    if (replyIndex >= 0 && replyIndex < replies.itemCount) {
+                        replies[replyIndex]?.let { reply ->
+                            onUpdateLastReadId(reply.id)
+                        }
+                    }
+                }
+            }
+    }
+
     PullToRefreshWrapper(onRefreshTrigger = { replies.refresh() }) {
         LazyColumn(
             state = lazyListState,

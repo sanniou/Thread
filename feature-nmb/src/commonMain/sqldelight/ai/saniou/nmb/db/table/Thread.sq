@@ -83,7 +83,10 @@ deleteThreadPage:
 DELETE FROM Thread WHERE fid = ?;
 
 getThread:
-SELECT * FROM Thread WHERE id = :id;
+SELECT Thread.*, ThreadInformation.last_read_reply_id
+FROM Thread
+LEFT JOIN ThreadInformation ON Thread.id = ThreadInformation.id
+WHERE Thread.id = :id;
 
 countThread:
 SELECT count(*) FROM Thread WHERE fid = :fid;

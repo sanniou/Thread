@@ -33,7 +33,8 @@ interface ThreadContract {
         val totalPages: Int = 1,
         val isPoOnlyMode: Boolean = false,
         val isSubscribed: Boolean = false,
-        val forumName: String = ""
+        val forumName: String = "",
+        val lastReadReplyId: Long = 0
     )
 
     /**
