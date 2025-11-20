@@ -43,7 +43,6 @@ fun ReplyItem(reply: Reply) {
         RichText(
             text = reply.content,
             style = MaterialTheme.typography.bodySmall,
-            maxLines = 2,
             overflow = TextOverflow.Ellipsis
         )
     }
