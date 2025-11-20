@@ -1,6 +1,7 @@
 package ai.saniou.nmb.data.entity
 
 import ai.saniou.nmb.db.table.GetHistoryThreads
+import ai.saniou.nmb.db.table.GetThreadsInForum
 
 data class ThreadWithInformation(
     val thread: Thread,
@@ -8,6 +9,29 @@ data class ThreadWithInformation(
     val lastKey: Long,
     val last_access_time: Long,
     val last_read_reply_id: Long,
+)
+
+fun GetThreadsInForum.toThreadWithInformation() = ThreadWithInformation(
+    thread = Thread(
+        id = id,
+        fid = fid,
+        replyCount = replyCount,
+        img = img,
+        ext = ext,
+        now = now,
+        userHash = userHash,
+        name = name,
+        title = title,
+        content = content,
+        sage = sage,
+        admin = admin,
+        hide = hide,
+        replies = emptyList()
+    ),
+    remainReplies = remainReplies,
+    lastKey = lastKey!!,
+    last_access_time = last_access_time!!,
+    last_read_reply_id = last_read_reply_id!!
 )
 
 fun GetHistoryThreads.toThreadWithInformation() = ThreadWithInformation(

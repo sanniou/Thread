@@ -98,7 +98,7 @@ fun Thread.toFeed() = Feed(
     po = ""
 )
 
-fun Feed.toTable() = Thread(
+fun Feed.toTable(page: Long) = Thread(
     id = id,
     fid = fid,
     replyCount = replyCount,
@@ -111,7 +111,8 @@ fun Feed.toTable() = Thread(
     now = now,
     userHash = userHash,
     name = name,
-    sage = sage
+    sage = sage,
+    page = page
 )
 
 @OptIn(ExperimentalTime::class)

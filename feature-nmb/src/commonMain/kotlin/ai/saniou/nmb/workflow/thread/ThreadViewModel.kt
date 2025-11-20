@@ -218,7 +218,7 @@ class ThreadViewModel(
                             _state.update { it.copy(imagePreviewState = it.imagePreviewState.copy(isLoading = false, endReached = true)) }
                         } else {
                             db.transaction {
-                                db.threadQueries.upsetThread(threadDetail.toTable())
+                                db.threadQueries.upsetThread(threadDetail.toTable(nextPage))
                                 threadDetail.toTableReply(nextPage).forEach(db.threadReplyQueries::upsertThreadReply)
                             }
                             _state.update { it.copy(imagePreviewState = it.imagePreviewState.copy(isLoading = false)) }

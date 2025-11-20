@@ -2,12 +2,16 @@ package ai.saniou.nmb.data.repository
 
 import ai.saniou.corecommon.data.SaniouResponse
 import ai.saniou.nmb.data.api.NmbXdApi
+import ai.saniou.nmb.data.entity.Forum
 import ai.saniou.nmb.data.entity.Reply
 import ai.saniou.nmb.data.entity.ThreadWithInformation
 import ai.saniou.nmb.data.entity.toThreadWithInformation
+import ai.saniou.nmb.data.source.ForumRemoteMediator
 import ai.saniou.nmb.data.source.SqlDelightPagingSource
 import ai.saniou.nmb.db.Database
 import ai.saniou.nmb.db.table.Cookie
+import ai.saniou.nmb.db.table.GetThreadsInForum
+import androidx.paging.ExperimentalPagingApi
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
@@ -28,6 +32,32 @@ class NmbRepositoryImpl(
     private val nmbXdApi: NmbXdApi,
     private val database: Database,
 ) : NmbRepository, HistoryRepository {
+
+    override fun getTimelinePager(
+        fid: Long,
+        policy: DataPolicy,
+        initialPage: Int,
+    ): Flow<PagingData<ThreadWithInformation>> {
+        return createPager(
+            fid = fid,
+            policy = policy,
+            initialPage = initialPage,
+            fetcher = { page -> nmbXdApi.timeline(fid.toLong(), page.toLong()) }
+        ).flow.map { pagingData -> pagingData.map { it.toThreadWithInformation() } }
+    }
+
+    override fun getShowfPager(
+        fid: Long,
+        policy: DataPolicy,
+        initialPage: Int,
+    ): Flow<PagingData<ThreadWithInformation>> {
+        return createPager(
+            fid = fid,
+            policy = policy,
+            initialPage = initialPage,
+            fetcher = { page -> nmbXdApi.showf(fid.toLong(), page.toLong()) }
+        ).flow.map { pagingData -> pagingData.map { it.toThreadWithInformation() } }
+    }
 
     override fun getHistoryThreads(): Flow<PagingData<ThreadWithInformation>> {
         return Pager(
@@ -60,7 +90,8 @@ class NmbRepositoryImpl(
     @OptIn(ExperimentalTime::class)
     override suspend fun insertCookie(alias: String, cookie: String) {
         val now = Clock.System.now().epochSeconds
-        val count = database.cookieQueries.countCookies().asFlow().mapToList(Dispatchers.IO).first().size
+        val count =
+            database.cookieQueries.countCookies().asFlow().mapToList(Dispatchers.IO).first().size
         database.cookieQueries.insertCookie(
             cookie = cookie,
             alias = alias,
@@ -117,5 +148,37 @@ class NmbRepositoryImpl(
         } catch (e: Exception) {
             null
         }
+    }
+
+    @OptIn(ExperimentalPagingApi::class)
+    private fun createPager(
+        fid: Long,
+        policy: DataPolicy,
+        initialPage: Int,
+        fetcher: suspend (page: Int) -> SaniouResponse<List<Forum>>,
+    ): Pager<Int, GetThreadsInForum> {
+        return Pager(
+            config = PagingConfig(pageSize = 20),
+            remoteMediator = ForumRemoteMediator(
+                sourceId = fid,
+                db = database,
+                dataPolicy = policy,
+                fetcher = fetcher
+            ),
+            pagingSourceFactory = {
+                SqlDelightPagingSource(
+                    transacter = database.threadQueries,
+                    context = Dispatchers.IO,
+                    countQueryProvider = { database.threadQueries.countThreadsByFid(fid) },
+                    queryProvider = { limit, offset ->
+                        database.threadQueries.getThreadsInForum(
+                            fid = fid,
+                            limit = limit,
+                            offset = offset
+                        )
+                    }
+                )
+            }
+        )
     }
 }

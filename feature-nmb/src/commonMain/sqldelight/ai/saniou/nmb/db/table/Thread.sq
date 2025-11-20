@@ -20,7 +20,8 @@ CREATE TABLE IF NOT EXISTS Thread (
     content TEXT NOT NULL,
     sage INTEGER NOT NULL,
     admin INTEGER NOT NULL,
-    hide INTEGER NOT NULL
+    hide INTEGER NOT NULL,
+    page INTEGER NOT NULL
 );
 
 -- 为 ThreadInformation last_replay_at 表创建索引
@@ -35,7 +36,7 @@ CREATE INDEX IF NOT EXISTS idx_thraed_fid ON Thread(fid);
 -- 插入 ThreadThread 数据
 upsetThread:
 INSERT OR REPLACE INTO Thread (
-    id, fid, replyCount, img, ext, now, userHash, name, title, content, sage, admin, hide
+    id, fid, replyCount, img, ext, now, userHash, name, title, content, sage, admin, hide, page
 ) VALUES ?;
 
 -- 插入或更新 ThreadInformation 数据，但不影响 last_access_time 和 last_read_reply_id
@@ -45,6 +46,13 @@ VALUES (?, ?, ?)
 ON CONFLICT(id) DO UPDATE SET
     remainReplies = excluded.remainReplies,
     lastKey = excluded.lastKey;
+
+-- 查询 Thread 数据
+countThreadsByFidAndPage:
+SELECT count(1) FROM Thread WHERE fid = :fid AND page = :page;
+
+deleteThreadsByFidAndPage:
+DELETE FROM Thread WHERE fid = :fid AND page = :page;
 
 -- 查询 ThreadInformation 数据
 getThreadInformation:
@@ -88,7 +96,7 @@ FROM Thread
 LEFT JOIN ThreadInformation ON Thread.id = ThreadInformation.id
 WHERE Thread.id = :id;
 
-countThread:
+countThreadsByFid:
 SELECT count(*) FROM Thread WHERE fid = :fid;
 
 getThreadsInForum:
@@ -108,4 +116,4 @@ ORDER BY last_access_time DESC
 LIMIT :limit OFFSET :offset;
 
 countHistoryThreads:
-SELECT count(*) FROM ThreadInformation WHERE last_access_time > 0;
+SELECT count(1) FROM ThreadInformation WHERE last_access_time > 0;

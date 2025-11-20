@@ -95,7 +95,7 @@ fun ai.saniou.nmb.db.table.Thread.toThread() = Thread(
 )
 
 
-fun Thread.toTable() = ai.saniou.nmb.db.table.Thread(
+fun Thread.toTable(page: Long) = ai.saniou.nmb.db.table.Thread(
     id = id,
     fid = fid,
     replyCount = replyCount,
@@ -109,4 +109,5 @@ fun Thread.toTable() = ai.saniou.nmb.db.table.Thread(
     sage = sage,
     admin = admin,
     hide = hide,
+    page = page,
 )

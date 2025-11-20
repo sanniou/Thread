@@ -1,5 +1,7 @@
 package ai.saniou.nmb.workflow.forum
 
+import ai.saniou.nmb.data.entity.ThreadWithInformation
+import ai.saniou.nmb.data.repository.DataPolicy
 import ai.saniou.nmb.domain.ForumUseCase
 import ai.saniou.nmb.workflow.forum.ForumContract.Effect
 import ai.saniou.nmb.workflow.forum.ForumContract.Event
@@ -25,17 +27,29 @@ class ForumViewModel(
     private val fgroupId: Long
 ) : ScreenModel {
 
+    private data class LoadRequest(
+        val fid: Long,
+        val fgroup: Long,
+        val policy: DataPolicy = DataPolicy.API_FIRST,
+        val page: Int = 1
+    )
+
     private val _state = MutableStateFlow(State())
     val state = _state.asStateFlow()
 
     private val _effect = Channel<Effect>()
     val effect = _effect.receiveAsFlow()
 
-    private val loadParams = MutableStateFlow(forumId to fgroupId)
+    private val loadParams = MutableStateFlow(LoadRequest(fid = forumId, fgroup = fgroupId))
 
-    val threads: Flow<PagingData<ai.saniou.nmb.data.entity.Forum>> =
-        loadParams.flatMapLatest { (fid, fgroup) ->
-            forumUseCase(fid, fgroup)
+    val threads: Flow<PagingData<ThreadWithInformation>> =
+        loadParams.flatMapLatest { request ->
+            forumUseCase(
+                fid = request.fid,
+                fgroup = request.fgroup,
+                policy = request.policy,
+                initialPage = request.page
+            )
         }.cachedIn(screenModelScope)
 
     init {
@@ -52,11 +66,13 @@ class ForumViewModel(
             Event.Refresh -> {
                 // Refresh is handled by Paging library's refresh() method on the UI side
             }
-
             Event.ScrollToTop -> {
                 screenModelScope.launch {
                     _effect.send(Effect.ScrollToTop)
                 }
+            }
+            is Event.JumpToPage -> {
+                loadParams.update { it.copy(page = event.page) }
             }
         }
     }

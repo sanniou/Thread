@@ -1,6 +1,6 @@
 package ai.saniou.nmb.workflow.forum
 
-import ai.saniou.nmb.data.entity.Forum
+import ai.saniou.nmb.data.entity.ThreadWithInformation
 import androidx.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
@@ -19,7 +19,7 @@ interface ForumContract {
      */
     data class State(
         val forumName: String = "",
-        val threads: Flow<PagingData<Forum>> = emptyFlow()
+        val threads: Flow<PagingData<ThreadWithInformation>> = emptyFlow()
     )
 
     /**
@@ -35,6 +35,11 @@ interface ForumContract {
          * 滚动到顶部
          */
         object ScrollToTop : Event
+
+        /**
+         * 跳转到指定页码
+         */
+        data class JumpToPage(val page: Int) : Event
     }
 
     /**

@@ -71,7 +71,7 @@ class ThreadRemoteMediator(
                     }
 
                 db.transaction {
-                    db.threadQueries.upsetThread(threadDetail.toTable())
+                    db.threadQueries.upsetThread(threadDetail.toTable(page))
                     threadDetail.toTableReply(page)
                         .forEach(db.threadReplyQueries::upsertThreadReply)
 

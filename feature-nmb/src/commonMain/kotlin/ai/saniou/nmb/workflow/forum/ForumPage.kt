@@ -142,11 +142,11 @@ data class ForumPage(
                                     contentPadding = PaddingValues(8.dp),
                                     verticalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
-                                    items(threads.itemCount, threads.itemKey { it.id }) { index ->
+                                    items(threads.itemCount, threads.itemKey { it.thread.id }) { index ->
                                         threads[index]?.let { thread ->
                                             ThreadCard(
-                                                thread = thread,
-                                                onClick = { navigator.push(ThreadPage(thread.id)) },
+                                                thread = thread.thread,
+                                                onClick = { navigator.push(ThreadPage(thread.thread.id)) },
                                                 onImageClick = { imgPath, ext ->
                                                     val imageInfo = ImageInfo(imgPath, ext)
                                                     val uiState = ImagePreviewUiState(
