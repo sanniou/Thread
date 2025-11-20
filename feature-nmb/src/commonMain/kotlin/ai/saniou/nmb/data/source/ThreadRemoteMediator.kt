@@ -11,8 +11,10 @@ import app.cash.paging.ExperimentalPagingApi
 import app.cash.paging.LoadType
 import app.cash.paging.PagingState
 import app.cash.paging.RemoteMediator
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.withContext
+import app.cash.paging.RemoteMediatorInitializeAction
+import app.cash.paging.RemoteMediatorMediatorResult
+import app.cash.paging.RemoteMediatorMediatorResultError
+import app.cash.paging.RemoteMediatorMediatorResultSuccess
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
@@ -29,11 +31,15 @@ class ThreadRemoteMediator(
     private val threadReplyQueries = db.threadReplyQueries
     private val remoteKeyQueries = db.remoteKeyQueries
 
+    override suspend fun initialize(): RemoteMediatorInitializeAction {
+        return super.initialize()
+    }
+
     @OptIn(ExperimentalTime::class)
     override suspend fun load(
         loadType: LoadType,
         state: PagingState<Int, ai.saniou.nmb.db.table.ThreadReply>,
-    ): MediatorResult {
+    ): RemoteMediatorMediatorResult {
         val page: Int = when (loadType) {
             LoadType.REFRESH -> {
                 val remoteKey = getRemoteKeyClosestToCurrentPosition(state)
@@ -43,36 +49,43 @@ class ThreadRemoteMediator(
             LoadType.PREPEND -> {
                 val remoteKey = getRemoteKeyForFirstItem(state)
                 remoteKey?.prevKey?.toInt()
-                    ?: return MediatorResult.Success(endOfPaginationReached = true)
+                    ?: return RemoteMediatorMediatorResultSuccess(endOfPaginationReached = true)
             }
 
             LoadType.APPEND -> {
                 val remoteKey = getRemoteKeyForLastItem(state)
                 remoteKey?.nextKey?.toInt()
-                    ?: return MediatorResult.Success(endOfPaginationReached = true)
+                    ?: return RemoteMediatorMediatorResultSuccess(endOfPaginationReached = true)
             }
         }
 
-        if (loadType == LoadType.REFRESH && dataPolicy == DataPolicy.CACHE_FIRST) {
+        if (dataPolicy == DataPolicy.CACHE_FIRST) {
             val repliesInDb =
                 threadReplyQueries.countRepliesByThreadIdAndPage(threadId, page.toLong())
                     .executeAsOne()
 
             if (repliesInDb > 0) {
-                return MediatorResult.Success(endOfPaginationReached = false)
+                return RemoteMediatorMediatorResultSuccess(endOfPaginationReached = false)
             }
         }
 
         return when (val result = fetcher(page)) {
             is SaniouResponse.Success -> {
                 val threadDetail = result.data
-                val endOfPagination = threadDetail.replies.none { it.userHash != "Tips" }
+                // 非 Tips 回复数
+                var validRreplySize = threadDetail.replies.filter { it.userHash != "Tips" }.size
+                val endOfPagination =
+                    // 有效回复数小于等于数据库中的回复数
+                    threadDetail.replyCount <= threadReplyQueries.countValidThreadReplies(threadId)
+                        .executeAsOne() + validRreplySize
+                            // 或者没有非 Tips 回复
+                            || validRreplySize == 0
 
                 db.transaction {
-                    // 刷新时，只清理当前页
-                    if (loadType == LoadType.REFRESH) {
-                        threadReplyQueries.deleteRepliesByThreadIdAndPage(threadId, page.toLong())
-                    }
+//                    // 刷新时，只清理当前页
+//                    if (loadType == LoadType.REFRESH) {
+//                        threadReplyQueries.deleteRepliesByThreadIdAndPage(threadId, page.toLong())
+//                    }
 
                     // 更新主楼信息和回复
                     threadQueries.upsetThread(threadDetail.toTable(page.toLong()))
@@ -91,10 +104,10 @@ class ThreadRemoteMediator(
                         updateAt = Clock.System.now().toEpochMilliseconds(),
                     )
                 }
-                MediatorResult.Success(endOfPaginationReached = endOfPagination)
+                RemoteMediatorMediatorResultSuccess(endOfPaginationReached = endOfPagination)
             }
 
-            is SaniouResponse.Error -> MediatorResult.Error(result.ex)
+            is SaniouResponse.Error -> RemoteMediatorMediatorResultError(result.ex)
         }
     }
 

@@ -62,8 +62,8 @@ SELECT * FROM ThreadReply WHERE id = :id;
 getLastFiveReplies:
 SELECT * FROM ThreadReply WHERE threadId = :threadId ORDER BY id DESC LIMIT 5;
 
--- 统计 ThreadReply 数量
-countThreadReplies:
+-- 统计有效的 ThreadReply 数量
+countValidThreadReplies:
 SELECT count(*) FROM ThreadReply WHERE threadId = :threadId AND page >=0 AND userHash!='Tips';
 
 
