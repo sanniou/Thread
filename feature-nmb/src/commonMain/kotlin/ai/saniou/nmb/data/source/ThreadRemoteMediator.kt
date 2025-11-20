@@ -47,12 +47,12 @@ class ThreadRemoteMediator(
             LoadType.PREPEND -> {
                 val remoteKey = getRemoteKeyForFirstItem(state)
                 remoteKey?.prevKey?.toInt()
-                    ?: return MediatorResult.Success(endOfPaginationReached = remoteKey != null)
+                    ?: return MediatorResult.Success(endOfPaginationReached = true)
             }
             LoadType.APPEND -> {
                 val remoteKey = getRemoteKeyForLastItem(state)
                 remoteKey?.nextKey?.toInt()
-                    ?: return MediatorResult.Success(endOfPaginationReached = remoteKey != null)
+                    ?: return MediatorResult.Success(endOfPaginationReached = true)
             }
         }
 

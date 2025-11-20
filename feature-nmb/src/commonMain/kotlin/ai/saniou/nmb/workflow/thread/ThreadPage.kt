@@ -491,18 +491,18 @@ fun ThreadSuccessContent(
     // Auto-scroll to last read position
     var hasScrolledToLastRead by remember { mutableStateOf(false) }
 
-    LaunchedEffect(replies.itemSnapshotList) {
-        if (!hasScrolledToLastRead) {
-            val lastReadId = state.lastReadReplyId
-            if (lastReadId > 0L) {
-                val index = replies.itemSnapshotList.indexOfFirst { it?.id == lastReadId }
-                if (index != -1) {
-                    lazyListState.scrollToItem(index + 1)
-                    hasScrolledToLastRead = true
-                }
-            }
-        }
-    }
+//    LaunchedEffect(replies.itemSnapshotList) {
+//        if (!hasScrolledToLastRead) {
+//            val lastReadId = state.lastReadReplyId
+//            if (lastReadId > 0L) {
+//                val index = replies.itemSnapshotList.indexOfFirst { it?.id == lastReadId }
+//                if (index != -1) {
+//                    lazyListState.scrollToItem(index + 1)
+//                    hasScrolledToLastRead = true
+//                }
+//            }
+//        }
+//    }
 
     // Update last read position
     LaunchedEffect(lazyListState) {
