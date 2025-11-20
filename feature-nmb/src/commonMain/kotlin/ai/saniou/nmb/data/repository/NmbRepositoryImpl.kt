@@ -79,7 +79,7 @@ class NmbRepositoryImpl(
                 db = database,
                 dataPolicy = policy,
                 initialPage = initialPage,
-                fetcher = { page -> nmbXdApi.thread(threadId.toLong(), page.toLong()) }
+                fetcher = { page -> nmbXdApi.thread(threadId, page.toLong()) }
             ),
             pagingSourceFactory = {
                 if (poUserHash != null) {

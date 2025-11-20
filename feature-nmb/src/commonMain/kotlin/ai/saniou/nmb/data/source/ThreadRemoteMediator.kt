@@ -11,13 +11,9 @@ import androidx.paging.ExperimentalPagingApi
 import androidx.paging.LoadType
 import androidx.paging.PagingState
 import androidx.paging.RemoteMediator
-import app.cash.sqldelight.coroutines.asFlow
-import app.cash.sqldelight.coroutines.mapToOneOrNull
 import kotlinx.coroutines.currentCoroutineContext
-import kotlin.coroutines.coroutineContext
-import kotlin.time.Clock
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
+import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalPagingApi::class)
@@ -49,6 +45,7 @@ class ThreadRemoteMediator(
                 remoteKey?.prevKey?.toInt()
                     ?: return MediatorResult.Success(endOfPaginationReached = true)
             }
+
             LoadType.APPEND -> {
                 val remoteKey = getRemoteKeyForLastItem(state)
                 remoteKey?.nextKey?.toInt()
@@ -69,7 +66,7 @@ class ThreadRemoteMediator(
         return when (val result = fetcher(page)) {
             is SaniouResponse.Success -> {
                 val threadDetail = result.data
-                val endOfPagination = threadDetail.replies.isEmpty()
+                val endOfPagination = threadDetail.replies.none { it.userHash != "Tips" }
 
                 db.transaction {
                     // 刷新时，只清理当前页
@@ -101,7 +98,7 @@ class ThreadRemoteMediator(
         }
     }
 
-    private fun getRemoteKeyForLastItem(state: PagingState<Int, ai.saniou.nmb.db.table.ThreadReply>): ai.saniou.nmb.db.table.RemoteKeys? {
+    private suspend fun getRemoteKeyForLastItem(state: PagingState<Int, ai.saniou.nmb.db.table.ThreadReply>): ai.saniou.nmb.db.table.RemoteKeys? {
         return state.pages.lastOrNull { it.data.isNotEmpty() }?.data?.lastOrNull()
             ?.let { reply ->
                 remoteKeyQueries.getRemoteKeyById(
@@ -111,7 +108,7 @@ class ThreadRemoteMediator(
             }
     }
 
-    private fun getRemoteKeyForFirstItem(state: PagingState<Int, ai.saniou.nmb.db.table.ThreadReply>): ai.saniou.nmb.db.table.RemoteKeys? {
+    private suspend fun getRemoteKeyForFirstItem(state: PagingState<Int, ai.saniou.nmb.db.table.ThreadReply>): ai.saniou.nmb.db.table.RemoteKeys? {
         return state.pages.firstOrNull { it.data.isNotEmpty() }?.data?.firstOrNull()
             ?.let { reply ->
                 remoteKeyQueries.getRemoteKeyById(

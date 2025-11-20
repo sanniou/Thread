@@ -13,11 +13,6 @@ import androidx.paging.ExperimentalPagingApi
 import androidx.paging.LoadType
 import androidx.paging.PagingState
 import androidx.paging.RemoteMediator
-import app.cash.sqldelight.coroutines.asFlow
-import app.cash.sqldelight.coroutines.mapToOneOrNull
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.withContext
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
@@ -60,11 +55,8 @@ class ForumRemoteMediator(
 
         // CACHE_FIRST 策略：在刷新时检查缓存
         if (loadType == LoadType.REFRESH && dataPolicy == DataPolicy.CACHE_FIRST) {
-            val threadsInDb = withContext(currentCoroutineContext()) {
-                threadQueries.countThreadsByFidAndPage(sourceId, page).asFlow()
-                    .mapToOneOrNull(context = coroutineContext).first()
-            }
-            if (threadsInDb != null && threadsInDb > 0) {
+            val threadsInDb = threadQueries.countThreadsByFidAndPage(sourceId, page).executeAsOne()
+            if (threadsInDb > 0) {
                 return MediatorResult.Success(endOfPaginationReached = false)
             }
         }
@@ -108,35 +100,27 @@ class ForumRemoteMediator(
         }
     }
 
-    private suspend fun getRemoteKeyForLastItem(state: PagingState<Int, GetThreadsInForum>): RemoteKeys? {
+    private fun getRemoteKeyForLastItem(state: PagingState<Int, GetThreadsInForum>): RemoteKeys? {
         return state.pages.lastOrNull { it.data.isNotEmpty() }?.data?.lastOrNull()
             ?.let { thread ->
-                withContext(currentCoroutineContext()) {
-                    remoteKeyQueries.getRemoteKeyById(RemoteKeyType.FORUM, thread.fid.toString())
-                        .asFlow()
-                        .mapToOneOrNull(context = coroutineContext).first()
-                }
+                remoteKeyQueries.getRemoteKeyById(RemoteKeyType.FORUM, thread.fid.toString())
+                    .executeAsOneOrNull()
             }
     }
 
-    private suspend fun getRemoteKeyForFirstItem(state: PagingState<Int, GetThreadsInForum>): RemoteKeys? {
+    private fun getRemoteKeyForFirstItem(state: PagingState<Int, GetThreadsInForum>): RemoteKeys? {
         return state.pages.firstOrNull { it.data.isNotEmpty() }?.data?.firstOrNull()
             ?.let { thread ->
-                withContext(currentCoroutineContext()) {
-                    remoteKeyQueries.getRemoteKeyById(RemoteKeyType.FORUM, thread.fid.toString())
-                        .asFlow()
-                        .mapToOneOrNull(context = coroutineContext).first()
-                }
+                remoteKeyQueries.getRemoteKeyById(RemoteKeyType.FORUM, thread.fid.toString())
+                    .executeAsOneOrNull()
             }
     }
 
-    private suspend fun getRemoteKeyClosestToCurrentPosition(state: PagingState<Int, GetThreadsInForum>): RemoteKeys? {
+    private fun getRemoteKeyClosestToCurrentPosition(state: PagingState<Int, GetThreadsInForum>): RemoteKeys? {
         return state.anchorPosition?.let { position ->
             state.closestItemToPosition(position)?.fid?.let { fid ->
-                withContext(currentCoroutineContext()) {
-                    remoteKeyQueries.getRemoteKeyById(RemoteKeyType.FORUM, fid.toString()).asFlow()
-                        .mapToOneOrNull(context = coroutineContext).first()
-                }
+                remoteKeyQueries.getRemoteKeyById(RemoteKeyType.FORUM, fid.toString())
+                    .executeAsOneOrNull()
             }
         }
     }
