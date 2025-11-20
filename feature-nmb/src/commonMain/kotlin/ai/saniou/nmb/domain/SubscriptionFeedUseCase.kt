@@ -42,11 +42,10 @@ class SubscriptionFeedUseCase(
                     },
                     transacter = db.subscriptionQueries,
                     context = Dispatchers.IO,
-                    limitOffsetQueryProvider = { limit, offset ->
+                    pageQueryProvider = { page ->
                         db.subscriptionQueries.selectSubscriptionThread(
                             subscriptionKey = subscriptionKey,
-                            limit = limit,
-                            offset = offset
+                            page = page.toLong()
                         )
                     }
                 )
