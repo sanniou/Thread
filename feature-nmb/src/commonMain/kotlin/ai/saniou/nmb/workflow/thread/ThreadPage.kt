@@ -149,9 +149,11 @@ data class ThreadPage(
                     is Effect.ShowSnackbar -> {
                         snackbarHostState.showSnackbar(effect.message)
                     }
+
                     is Effect.CopyToClipboard -> {
                         clipboardManager.setText(AnnotatedString(effect.text))
                     }
+
                     is Effect.NavigateToImagePreview -> {
                         navigator.push(
                             ImagePreviewPage(
@@ -315,7 +317,7 @@ private fun ThreadContentRouter(
     onRefresh: () -> Unit,
     onRefClick: (Long) -> Unit,
     onImageClick: (String, String) -> Unit,
-    onUpdateLastReadId: (Long) -> Unit
+    onUpdateLastReadId: (Long) -> Unit,
 ) {
     Box(modifier = modifier) {
         when {
@@ -536,7 +538,7 @@ private fun ThreadList(
     onReplyClicked: (Long) -> Unit,
     onRefClick: (Long) -> Unit,
     onImageClick: (String, String) -> Unit,
-    onRefresh: () -> Unit
+    onRefresh: () -> Unit,
 ) {
     val replies = state.replies.collectAsLazyPagingItems()
     LazyColumn(
@@ -545,6 +547,18 @@ private fun ThreadList(
         contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        // PREPEND 加载状态
+        if (replies.loadState.prepend is LoadState.Loading) {
+            item {
+                LoadingIndicator()
+            }
+        }
+        if (replies.loadState.prepend is LoadState.Error) {
+            item {
+                LoadingFailedIndicator()
+            }
+        }
+
         // 主帖
         item {
             state.thread?.let {
@@ -717,7 +731,7 @@ fun ThreadReply(
 @Composable
 private fun PostHeader(
     author: @Composable () -> Unit,
-    id: Long
+    id: Long,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
