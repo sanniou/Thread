@@ -1,5 +1,6 @@
 package ai.saniou.nmb.data.entity
 
+import ai.saniou.nmb.db.table.ThreadReplyQueries
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonNames
@@ -77,7 +78,7 @@ fun ai.saniou.nmb.db.table.ThreadReply.toThreadReply() = ThreadReply(
     name = name,
 )
 
-fun ai.saniou.nmb.db.table.Thread.toThread() = Thread(
+fun ai.saniou.nmb.db.table.Thread.toThread(query: ThreadReplyQueries? = null) = Thread(
     id = id,
     fid = fid,
     replyCount = replyCount,
@@ -91,7 +92,9 @@ fun ai.saniou.nmb.db.table.Thread.toThread() = Thread(
     sage = sage,
     admin = admin,
     hide = hide,
-    replies = emptyList()
+    replies = query?.getLastFiveReplies(id)?.executeAsList()?.map {
+        it.toThreadReply()
+    } ?: emptyList()
 )
 
 

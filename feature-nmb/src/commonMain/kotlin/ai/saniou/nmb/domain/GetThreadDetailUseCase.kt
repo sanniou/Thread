@@ -16,12 +16,12 @@ import kotlinx.coroutines.flow.onStart
 
 data class ThreadDetail(
     val thread: Thread,
-    val lastReadReplyId: Long
+    val lastReadReplyId: Long,
 )
 
 class GetThreadDetailUseCase(
     private val db: Database,
-    private val api: NmbXdApi
+    private val api: NmbXdApi,
 ) {
     /**
      * 从数据库中获取一个帖子的信息流。
@@ -51,6 +51,7 @@ class GetThreadDetailUseCase(
                             sage = it.sage,
                             admin = it.admin,
                             hide = it.hide,
+                            //用于 Thread 所以不在获取最新回复
                             replies = emptyList()
                         ),
                         lastReadReplyId = it.last_read_reply_id ?: 0
@@ -59,14 +60,16 @@ class GetThreadDetailUseCase(
             }
             .onStart {
                 // 如果需要强制刷新，或者数据库中没有数据，则从网络获取
-                val needsFetch = forceRefresh || db.threadQueries.getThread(id).executeAsOneOrNull() == null
+                val needsFetch =
+                    forceRefresh || db.threadQueries.getThread(id).executeAsOneOrNull() == null
                 if (needsFetch) {
                     val result = api.thread(id, 1)
                     if (result is SaniouResponse.Success) {
                         val threadDetail = result.data
                         db.transaction {
                             db.threadQueries.upsetThread(threadDetail.toTable(1))
-                            threadDetail.toTableReply(1).forEach(db.threadReplyQueries::upsertThreadReply)
+                            threadDetail.toTableReply(1)
+                                .forEach(db.threadReplyQueries::upsertThreadReply)
                         }
                     }
                 }

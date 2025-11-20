@@ -16,9 +16,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import ai.saniou.coreui.widgets.RichText
 import ai.saniou.coreui.theme.Dimens
+import ai.saniou.nmb.data.entity.ThreadReply
 
 @Composable
-fun RecentReplies(replies: List<Reply>) {
+fun RecentReplies(replies: List<ThreadReply>) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -33,8 +34,9 @@ fun RecentReplies(replies: List<Reply>) {
     }
 }
 
+
 @Composable
-fun ReplyItem(reply: Reply) {
+fun ReplyItem(reply: ThreadReply) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(Dimens.padding_small)

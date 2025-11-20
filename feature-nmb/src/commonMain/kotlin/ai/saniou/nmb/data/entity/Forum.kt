@@ -1,10 +1,10 @@
 package ai.saniou.nmb.data.entity
 
-import ai.saniou.nmb.db.table.ThreadInformation
 import ai.saniou.nmb.db.table.ThreadReply
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonNames
+import ai.saniou.nmb.data.entity.ThreadReply as ThreadReplyEntity
 
 /**
  * 请求错误
@@ -33,7 +33,7 @@ data class Forum(
     @JsonNames("Hide")
     override val hide: Long,// ？
     @JsonNames("Replies")
-    override val replies: List<Reply>,
+    override val replies: List<ThreadReplyEntity>,
     @JsonNames("RemainReplies")
     override val remainReplies: Long? = null,// 网页版除去显示的最近几条回复后剩余的回复数量,“回应有……篇被省略。要阅读所有回应请按下回应链接。”
 ) : IBaseThread, IBaseThreadReply

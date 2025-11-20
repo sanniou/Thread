@@ -47,7 +47,7 @@ class NmbRepositoryImpl(
             policy = policy,
             initialPage = initialPage,
             fetcher = { page -> nmbXdApi.timeline(fid.toLong(), page.toLong()) }
-        ).flow.map { pagingData -> pagingData.map { it.toThreadWithInformation() } }
+        ).flow.map { pagingData -> pagingData.map { it.toThreadWithInformation(database.threadReplyQueries) } }
     }
 
     override fun getShowfPager(
@@ -60,7 +60,7 @@ class NmbRepositoryImpl(
             policy = policy,
             initialPage = initialPage,
             fetcher = { page -> nmbXdApi.showf(fid.toLong(), page.toLong()) }
-        ).flow.map { pagingData -> pagingData.map { it.toThreadWithInformation() } }
+        ).flow.map { pagingData -> pagingData.map { it.toThreadWithInformation(database.threadReplyQueries) } }
     }
 
     @OptIn(ExperimentalPagingApi::class)
@@ -137,7 +137,7 @@ class NmbRepositoryImpl(
                 )
             }
         ).flow.map { pagingData ->
-            pagingData.map { it.toThreadWithInformation() }
+            pagingData.map { it.toThreadWithInformation(database.threadReplyQueries) }
         }
     }
 

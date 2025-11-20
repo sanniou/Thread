@@ -160,6 +160,6 @@ interface IThreadBody {
 }
 
 interface IBaseThreadReply {
-    val replies: List<Reply>
+    val replies: List<ThreadReply>
     val remainReplies: Long?
 }
