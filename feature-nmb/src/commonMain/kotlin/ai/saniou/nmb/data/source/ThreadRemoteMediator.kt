@@ -25,6 +25,7 @@ class ThreadRemoteMediator(
     private val threadId: Long,
     private val db: Database,
     private val dataPolicy: DataPolicy,
+    private val initialPage: Int,
     private val fetcher: suspend (page: Int) -> SaniouResponse<Thread>
 ) : RemoteMediator<Int, ai.saniou.nmb.db.table.ThreadReply>() {
 
@@ -40,7 +41,7 @@ class ThreadRemoteMediator(
         val page: Int = when (loadType) {
             LoadType.REFRESH -> {
                 val remoteKey = getRemoteKeyClosestToCurrentPosition(state)
-                remoteKey?.nextKey?.minus(1)?.toInt() ?: 1
+                remoteKey?.nextKey?.minus(1)?.toInt() ?: initialPage
             }
             LoadType.PREPEND -> return MediatorResult.Success(endOfPaginationReached = true) // 不向前翻页
             LoadType.APPEND -> {

@@ -70,13 +70,15 @@ class NmbRepositoryImpl(
         policy: DataPolicy,
         initialPage: Int,
     ): Flow<PagingData<ThreadReply>> {
+        val pageSize = 19
         return Pager(
-            config = PagingConfig(pageSize = 19), // 每页19个回复
+            config = PagingConfig(pageSize = pageSize), // 每页19个回复
             initialKey = initialPage,
             remoteMediator = ThreadRemoteMediator(
                 threadId = threadId,
                 db = database,
                 dataPolicy = policy,
+                initialPage = initialPage,
                 fetcher = { page -> nmbXdApi.thread(threadId.toLong(), page.toLong()) }
             ),
             pagingSourceFactory = {
@@ -91,12 +93,11 @@ class NmbRepositoryImpl(
                                 poUserHash
                             )
                         },
-                        queryProvider = { limit, offset ->
+                        pageQueryProvider = { page ->
                             database.threadReplyQueries.getRepliesByThreadIdAndUserHash(
                                 threadId = threadId,
                                 userHash = poUserHash,
-                                limit = limit,
-                                offset = offset
+                                page = page.toLong()
                             )
                         }
                     )
@@ -110,11 +111,10 @@ class NmbRepositoryImpl(
                                 threadId
                             )
                         },
-                        queryProvider = { limit, offset ->
+                        pageQueryProvider = { page ->
                             database.threadReplyQueries.getRepliesByThreadId(
                                 threadId = threadId,
-                                limit = limit,
-                                offset = offset
+                                page = page.toLong()
                             )
                         }
                     )
@@ -130,10 +130,10 @@ class NmbRepositoryImpl(
             config = PagingConfig(pageSize = 20),
             pagingSourceFactory = {
                 SqlDelightPagingSource(
-                    transacter = database.threadReplyQueries,
+                    transacter = database.threadQueries,
                     context = Dispatchers.IO,
                     countQueryProvider = database.threadQueries::countHistoryThreads,
-                    queryProvider = database.threadQueries::getHistoryThreads
+                    limitOffsetQueryProvider = database.threadQueries::getHistoryThreads
                 )
             }
         ).flow.map { pagingData ->
@@ -223,13 +223,15 @@ class NmbRepositoryImpl(
         initialPage: Int,
         fetcher: suspend (page: Int) -> SaniouResponse<List<Forum>>,
     ): Pager<Int, GetThreadsInForum> {
+        val pageSize = 20
         return Pager(
-            config = PagingConfig(pageSize = 20),
+            config = PagingConfig(pageSize = pageSize),
             initialKey = initialPage,
             remoteMediator = ForumRemoteMediator(
                 sourceId = fid,
                 db = database,
                 dataPolicy = policy,
+                initialPage = initialPage,
                 fetcher = fetcher
             ),
             pagingSourceFactory = {
@@ -237,11 +239,10 @@ class NmbRepositoryImpl(
                     transacter = database.threadQueries,
                     context = Dispatchers.IO,
                     countQueryProvider = { database.threadQueries.countThreadsByFid(fid) },
-                    queryProvider = { limit, offset ->
+                    pageQueryProvider = { page ->
                         database.threadQueries.getThreadsInForum(
                             fid = fid,
-                            limit = limit,
-                            offset = offset
+                            page = page.toLong()
                         )
                     }
                 )

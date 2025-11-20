@@ -10,25 +10,39 @@ import kotlin.coroutines.CoroutineContext
 /**
  * 一个通用的 PagingSource 实现，用于将 SQLDelight 的分页查询与 AndroidX Paging 3 集成。
  *
- * 这个 PagingSource 支持：
- * - 基于 offset/limit 的分页。
+ * 这个 PagingSource 支持两种分页模式：
+ * 1.  **基于页码 (Page-based)**: 直接查询数据库中带 `page` 字段的表。
+ * 2.  **基于偏移量 (Limit/Offset-based)**: 用于没有 `page` 字段的查询，通过页码和页面大小计算偏移量。
+ *
+ * 它还支持：
  * - 在指定的 CoroutineContext (如 Dispatchers.IO) 中执行数据库查询。
  * - 通过监听一个 count 查询，在底层数据发生变化时自动失效，从而触发数据刷新。
  *
- * @param Value 要分页的数据类型 (例如：数据库实体类 Thread)。
- * @param transacter SQLDelight 数据库的 Transacter，用于在事务中执行查询。
- * @param context 执行数据库查询的 CoroutineContext，通常是 Dispatchers.IO。
- * @param countQueryProvider 一个函数，返回一个用于获取总数或监听数据变化的查询。
- *                           当此查询的结果集变化时，PagingSource 会自动失效。
- *                           通常这是一个 `COUNT(*)` 查询。
- * @param queryProvider 一个函数，接收 limit 和 offset，返回获取一页数据的 SQLDelight 查询。
+ * @param Value 要分页的数据类型。
+ * @param transacter SQLDelight 数据库的 Transacter。
+ * @param context 执行查询的 CoroutineContext。
+ * @param countQueryProvider 返回总数查询的函数，用于数据变化监听。
+ * @param limitOffsetQueryProvider (可选) 提供基于 limit/offset 的查询。
+ * @param pageQueryProvider (可选) 提供基于 page 的查询。
+ *
+ * @throws IllegalArgumentException 如果没有提供任何 queryProvider，或者同时提供了两者。
  */
 class SqlDelightPagingSource<Value : Any>(
     private val transacter: Transacter,
     private val context: CoroutineContext,
     private val countQueryProvider: () -> Query<Long>,
-    private val queryProvider: (limit: Long, offset: Long) -> Query<Value>,
+    private val limitOffsetQueryProvider: ((limit: Long, offset: Long) -> Query<Value>)? = null,
+    private val pageQueryProvider: ((page: Int) -> Query<Value>)? = null,
 ) : PagingSource<Int, Value>() {
+
+    init {
+        require(limitOffsetQueryProvider != null || pageQueryProvider != null) {
+            "Either limitOffsetQueryProvider or pageQueryProvider must be provided."
+        }
+        require(limitOffsetQueryProvider == null || pageQueryProvider == null) {
+            "Cannot provide both limitOffsetQueryProvider and pageQueryProvider."
+        }
+    }
 
     private val listener = Query.Listener {
         invalidate()
@@ -46,26 +60,39 @@ class SqlDelightPagingSource<Value : Any>(
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Value> {
         return try {
-            // 在指定的 CoroutineContext (如 Dispatchers.IO) 中执行数据库操作
             withContext(context) {
-                val offset = params.key ?: 0
-                val loadSize = params.loadSize
+                val pageNumber = params.key ?: 1
 
-                // 在事务中执行查询，确保数据一致性
-                val data = transacter.transactionWithResult {
-                    queryProvider(loadSize.toLong(), offset.toLong()).executeAsList()
+                val data = if (limitOffsetQueryProvider != null) {
+                    // Limit/Offset 模式
+                    val loadSize = params.loadSize
+                    val offset = ((pageNumber - 1) * loadSize).toLong()
+                    transacter.transactionWithResult {
+                        limitOffsetQueryProvider.invoke(loadSize.toLong(), offset).executeAsList()
+                    }
+                } else {
+                    // Page-based 模式
+                    // 注意：此模式忽略 params.loadSize，因为数据库中的“页”大小是固定的。
+                    transacter.transactionWithResult {
+                        pageQueryProvider!!.invoke(pageNumber).executeAsList()
+                    }
+                }
+
+                val prevKey = if (pageNumber == 1) null else pageNumber - 1
+                val nextKey = if (data.isEmpty()) {
+                    // 如果返回数据为空，则认为是最后一页
+                    null
+                } else {
+                    pageNumber + 1
                 }
 
                 LoadResult.Page(
                     data = data,
-                    // 如果 offset 是 0，表示第一页，没有上一页
-                    prevKey = if (offset == 0) null else (offset - loadSize).coerceAtLeast(0),
-                    // 如果返回的数据量小于请求量，说明是最后一页
-                    nextKey = if (data.size < loadSize) null else offset + data.size
+                    prevKey = prevKey,
+                    nextKey = nextKey
                 )
             }
         } catch (e: Exception) {
-            // 捕获异常并返回错误状态
             LoadResult.Error(e)
         }
     }
@@ -75,7 +102,7 @@ class SqlDelightPagingSource<Value : Any>(
         // 我们的策略是找到最近访问的位置 (anchorPosition)，然后从该位置所在的页开始重新加载。
         return state.anchorPosition?.let { anchorPosition ->
             state.closestPageToPosition(anchorPosition)?.let { page ->
-                page.prevKey?.plus(state.config.pageSize) ?: page.nextKey?.minus(state.config.pageSize)
+                page.prevKey?.plus(1) ?: page.nextKey?.minus(1)
             }
         }
     }

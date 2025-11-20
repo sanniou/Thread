@@ -26,6 +26,7 @@ class ForumRemoteMediator(
     private val sourceId: Long, // 通用源 ID，例如 fid
     private val db: Database,
     private val dataPolicy: DataPolicy,
+    private val initialPage: Int,
     private val fetcher: suspend (page: Int) -> SaniouResponse<List<Forum>>,
 ) : RemoteMediator<Int, GetThreadsInForum>() {
 
@@ -41,7 +42,7 @@ class ForumRemoteMediator(
             LoadType.REFRESH -> {
                 // 刷新或跳页逻辑
                 val remoteKey = getRemoteKeyClosestToCurrentPosition(state)
-                remoteKey?.nextKey?.minus(1) ?: 1
+                remoteKey?.nextKey?.minus(1) ?: initialPage.toLong()
             }
 
             LoadType.PREPEND -> {
