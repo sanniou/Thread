@@ -1,7 +1,11 @@
 package ai.saniou.nmb.data.repository
 
 import ai.saniou.nmb.data.entity.Reply
+import ai.saniou.nmb.data.entity.ThreadReply
+import ai.saniou.nmb.data.entity.ThreadWithInformation
 import ai.saniou.nmb.db.table.Cookie
+import androidx.paging.PagingData
+import kotlinx.coroutines.flow.Flow
 
 /**
  * NMB 仓库接口
@@ -31,4 +35,23 @@ interface NmbRepository {
     suspend fun deleteCookie(cookie: String)
     suspend fun updateCookiesSort(cookies: List<Cookie>)
     suspend fun getFirstCookie(): Cookie?
+
+    fun getTimelinePager(
+        fid: Long,
+        policy: DataPolicy,
+        initialPage: Int = 1,
+    ): Flow<PagingData<ThreadWithInformation>>
+
+    fun getShowfPager(
+        fid: Long,
+        policy: DataPolicy,
+        initialPage: Int = 1,
+    ): Flow<PagingData<ThreadWithInformation>>
+
+    fun getThreadRepliesPager(
+        threadId: Long,
+        poUserHash: String?, // nullable, 为 null 时加载所有回复
+        policy: DataPolicy,
+        initialPage: Int = 1,
+    ): Flow<PagingData<ThreadReply>>
 }

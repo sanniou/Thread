@@ -22,7 +22,7 @@ class SubscriptionFeedUseCase(
 ) {
     @OptIn(ExperimentalPagingApi::class)
     fun feed(
-        subscriptionKey: String
+        subscriptionKey: String,
     ): Flow<PagingData<Feed>> {
         return Pager(
             config = PagingConfig(
@@ -42,11 +42,10 @@ class SubscriptionFeedUseCase(
                     },
                     transacter = db.subscriptionQueries,
                     context = Dispatchers.IO,
-                    queryProvider = { limit, offset ->
+                    pageQueryProvider = { page ->
                         db.subscriptionQueries.selectSubscriptionThread(
                             subscriptionKey = subscriptionKey,
-                            limit = limit,
-                            offset = offset
+                            page = page.toLong()
                         )
                     }
                 )

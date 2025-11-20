@@ -5,95 +5,128 @@ import ai.saniou.nmb.data.entity.RemoteKeyType
 import ai.saniou.nmb.data.entity.Thread
 import ai.saniou.nmb.data.entity.toTable
 import ai.saniou.nmb.data.entity.toTableReply
-import ai.saniou.nmb.data.repository.ForumRepository
+import ai.saniou.nmb.data.repository.DataPolicy
 import ai.saniou.nmb.db.Database
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.LoadType
 import androidx.paging.PagingState
 import androidx.paging.RemoteMediator
+import app.cash.sqldelight.coroutines.asFlow
+import app.cash.sqldelight.coroutines.mapToOneOrNull
+import kotlinx.coroutines.currentCoroutineContext
+import kotlin.coroutines.coroutineContext
 import kotlin.time.Clock
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalPagingApi::class)
 class ThreadRemoteMediator(
     private val threadId: Long,
-    private val forumRepository: ForumRepository,
     private val db: Database,
-    private val initialPage: Int? = null,
+    private val dataPolicy: DataPolicy,
+    private val initialPage: Int,
+    private val fetcher: suspend (page: Int) -> SaniouResponse<Thread>,
 ) : RemoteMediator<Int, ai.saniou.nmb.db.table.ThreadReply>() {
 
+    private val threadQueries = db.threadQueries
+    private val threadReplyQueries = db.threadReplyQueries
+    private val remoteKeyQueries = db.remoteKeyQueries
 
     @OptIn(ExperimentalTime::class)
     override suspend fun load(
         loadType: LoadType,
         state: PagingState<Int, ai.saniou.nmb.db.table.ThreadReply>,
     ): MediatorResult {
-        val page = when (loadType) {
+        val page: Int = when (loadType) {
             LoadType.REFRESH -> {
-                if (initialPage != null) {
-                    val isPageExist =
-                        db.threadReplyQueries.isPageExist(threadId, initialPage.toLong())
-                            .executeAsOne()
-                    if (isPageExist) {
-                        return MediatorResult.Success(endOfPaginationReached = false)
-                    }
-                    initialPage.toLong()
-                } else {
-                    val remoteKey = db.remoteKeyQueries.getRemoteKeyById(
-                        type = RemoteKeyType.THREAD,
-                        id = threadId.toString()
-                    ).executeAsOneOrNull()
-                    remoteKey?.currKey ?: 1L
-                }
+                val remoteKey = getRemoteKeyClosestToCurrentPosition(state)
+                remoteKey?.nextKey?.minus(1)?.toInt() ?: initialPage
             }
 
-            LoadType.PREPEND -> return MediatorResult.Success(true) // 不向前翻
-
+            LoadType.PREPEND -> {
+                val remoteKey = getRemoteKeyForFirstItem(state)
+                remoteKey?.prevKey?.toInt()
+                    ?: return MediatorResult.Success(endOfPaginationReached = true)
+            }
             LoadType.APPEND -> {
-                val remoteKey = db.remoteKeyQueries.getRemoteKeyById(
-                    type = RemoteKeyType.THREAD,
-                    id = threadId.toString()
-                ).executeAsOneOrNull()
-                remoteKey?.nextKey ?: return MediatorResult.Success(endOfPaginationReached = true)
+                val remoteKey = getRemoteKeyForLastItem(state)
+                remoteKey?.nextKey?.toInt()
+                    ?: return MediatorResult.Success(endOfPaginationReached = true)
             }
         }
 
-        return when (val result = threadDetail(page = page)) {
+        if (loadType == LoadType.REFRESH && dataPolicy == DataPolicy.CACHE_FIRST) {
+            val repliesInDb =
+                threadReplyQueries.countRepliesByThreadIdAndPage(threadId, page.toLong())
+                    .executeAsOne()
+
+            if (repliesInDb > 0) {
+                return MediatorResult.Success(endOfPaginationReached = false)
+            }
+        }
+
+        return when (val result = fetcher(page)) {
             is SaniouResponse.Success -> {
                 val threadDetail = result.data
-                val endOfPagination =
-                    if (threadDetail.replyCount == db.threadReplyQueries.countThreadReplies(threadId)
-                            .executeAsOne()
-                    ) {
-                        true
-                    } else {
-                        threadDetail.replies.count { it.id != 9999999L } == 0
-                    }
+                val endOfPagination = threadDetail.replies.isEmpty()
 
                 db.transaction {
-                    db.threadQueries.upsetThread(threadDetail.toTable())
-                    threadDetail.toTableReply(page)
-                        .forEach(db.threadReplyQueries::upsertThreadReply)
+                    // 刷新时，只清理当前页
+                    if (loadType == LoadType.REFRESH) {
+                        threadReplyQueries.deleteRepliesByThreadIdAndPage(threadId, page.toLong())
+                    }
 
-                    db.remoteKeyQueries.insertKey(
+                    // 更新主楼信息和回复
+                    threadQueries.upsetThread(threadDetail.toTable(page.toLong()))
+                    threadDetail.toTableReply(page.toLong())
+                        .forEach(threadReplyQueries::upsertThreadReply)
+
+                    val prevKey = if (page == 1) null else page - 1
+                    val nextKey = if (endOfPagination) null else page + 1
+
+                    remoteKeyQueries.insertKey(
                         type = RemoteKeyType.THREAD,
                         id = threadId.toString(),
-                        prevKey = if (page == 1L) null else page - 1,
-                        currKey = page,
-                        nextKey = if (endOfPagination) null else page + 1,
+                        prevKey = prevKey?.toLong(),
+                        currKey = page.toLong(),
+                        nextKey = nextKey?.toLong(),
                         updateAt = Clock.System.now().toEpochMilliseconds(),
                     )
                 }
-
-                return MediatorResult.Success(endOfPagination)
+                MediatorResult.Success(endOfPaginationReached = endOfPagination)
             }
 
             is SaniouResponse.Error -> MediatorResult.Error(result.ex)
         }
     }
 
-    private suspend fun threadDetail(
-        page: Long,
-    ): SaniouResponse<Thread> =
-        forumRepository.thread(threadId, page)
+    private fun getRemoteKeyForLastItem(state: PagingState<Int, ai.saniou.nmb.db.table.ThreadReply>): ai.saniou.nmb.db.table.RemoteKeys? {
+        return state.pages.lastOrNull { it.data.isNotEmpty() }?.data?.lastOrNull()
+            ?.let { reply ->
+                remoteKeyQueries.getRemoteKeyById(
+                    RemoteKeyType.THREAD,
+                    reply.threadId.toString()
+                ).executeAsOneOrNull()
+            }
+    }
+
+    private fun getRemoteKeyForFirstItem(state: PagingState<Int, ai.saniou.nmb.db.table.ThreadReply>): ai.saniou.nmb.db.table.RemoteKeys? {
+        return state.pages.firstOrNull { it.data.isNotEmpty() }?.data?.firstOrNull()
+            ?.let { reply ->
+                remoteKeyQueries.getRemoteKeyById(
+                    RemoteKeyType.THREAD,
+                    reply.threadId.toString()
+                ).executeAsOneOrNull()
+            }
+    }
+
+    private fun getRemoteKeyClosestToCurrentPosition(state: PagingState<Int, ai.saniou.nmb.db.table.ThreadReply>): ai.saniou.nmb.db.table.RemoteKeys? {
+        return state.anchorPosition?.let { position ->
+            state.closestItemToPosition(position)?.threadId?.let { tid ->
+                remoteKeyQueries.getRemoteKeyById(RemoteKeyType.THREAD, tid.toString())
+                    .executeAsOneOrNull()
+            }
+        }
+    }
 }

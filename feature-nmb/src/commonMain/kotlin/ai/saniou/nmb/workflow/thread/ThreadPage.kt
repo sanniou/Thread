@@ -61,8 +61,6 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -107,6 +105,7 @@ import cafe.adriel.voyager.kodein.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.launch
+import androidx.compose.material3.Card
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -150,9 +149,11 @@ data class ThreadPage(
                     is Effect.ShowSnackbar -> {
                         snackbarHostState.showSnackbar(effect.message)
                     }
+
                     is Effect.CopyToClipboard -> {
                         clipboardManager.setText(AnnotatedString(effect.text))
                     }
+
                     is Effect.NavigateToImagePreview -> {
                         navigator.push(
                             ImagePreviewPage(
@@ -216,7 +217,7 @@ data class ThreadPage(
                                 onDismissRequest = { showMenu = false }
                             ) {
                                 DropdownMenuItem(
-                                    text = { Text(if (state.isPoOnlyMode) "查看全部" else "仅看PO") },
+                                    text = { Text("""if (state.isPoOnlyMode) "查看全部" else "仅看PO"""") },
                                     onClick = {
                                         viewModel.onEvent(Event.TogglePoOnlyMode)
                                         showMenu = false
@@ -281,7 +282,7 @@ data class ThreadPage(
         // 跳页对话框
         if (showJumpDialog) {
             PageJumpDialog(
-                currentPage = state.currentPage,
+                currentPage = 1,
                 totalPages = state.totalPages,
                 onDismissRequest = { showJumpDialog = false },
                 onJumpToPage = { page -> viewModel.onEvent(Event.JumpToPage(page)) }
@@ -316,7 +317,7 @@ private fun ThreadContentRouter(
     onRefresh: () -> Unit,
     onRefClick: (Long) -> Unit,
     onImageClick: (String, String) -> Unit,
-    onUpdateLastReadId: (Long) -> Unit
+    onUpdateLastReadId: (Long) -> Unit,
 ) {
     Box(modifier = modifier) {
         when {
@@ -490,18 +491,18 @@ fun ThreadSuccessContent(
     // Auto-scroll to last read position
     var hasScrolledToLastRead by remember { mutableStateOf(false) }
 
-    LaunchedEffect(replies.itemSnapshotList) {
-        if (!hasScrolledToLastRead) {
-            val lastReadId = state.lastReadReplyId
-            if (lastReadId > 0L) {
-                val index = replies.itemSnapshotList.indexOfFirst { it?.id == lastReadId }
-                if (index != -1) {
-                    lazyListState.scrollToItem(index + 1)
-                    hasScrolledToLastRead = true
-                }
-            }
-        }
-    }
+//    LaunchedEffect(replies.itemSnapshotList) {
+//        if (!hasScrolledToLastRead) {
+//            val lastReadId = state.lastReadReplyId
+//            if (lastReadId > 0L) {
+//                val index = replies.itemSnapshotList.indexOfFirst { it?.id == lastReadId }
+//                if (index != -1) {
+//                    lazyListState.scrollToItem(index + 1)
+//                    hasScrolledToLastRead = true
+//                }
+//            }
+//        }
+//    }
 
     // Update last read position
     LaunchedEffect(lazyListState) {
@@ -537,7 +538,7 @@ private fun ThreadList(
     onReplyClicked: (Long) -> Unit,
     onRefClick: (Long) -> Unit,
     onImageClick: (String, String) -> Unit,
-    onRefresh: () -> Unit
+    onRefresh: () -> Unit,
 ) {
     val replies = state.replies.collectAsLazyPagingItems()
     LazyColumn(
@@ -546,6 +547,18 @@ private fun ThreadList(
         contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        // PREPEND 加载状态
+        if (replies.loadState.prepend is LoadState.Loading) {
+            item {
+                LoadingIndicator()
+            }
+        }
+        if (replies.loadState.prepend is LoadState.Error) {
+            item {
+                LoadingFailedIndicator()
+            }
+        }
+
         // 主帖
         item {
             state.thread?.let {
@@ -561,7 +574,13 @@ private fun ThreadList(
         // 回复列表
         items(replies.itemCount) { replyIndex ->
             replies[replyIndex]?.let { reply ->
-                ThreadReply(reply, onReplyClicked, onRefClick, onImageClick)
+                ThreadReply(
+                    reply = reply,
+                    poUserHash = state.thread?.userHash ?: "",
+                    onReplyClicked = onReplyClicked,
+                    refClick = onRefClick,
+                    onImageClick = onImageClick
+                )
             } ?: ShimmerContainer { SkeletonReplyItem(it) }
         }
 
@@ -637,14 +656,17 @@ fun ThreadMainPost(
         ) {
             // 头部信息
             PostHeader(
-                author = { ThreadAuthor(thread, isPo = true) },
-                info = {
-                    if (forumName.isNotBlank()) {
-                        Text(
-                            text = forumName,
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.primary
-                        )
+                author = {
+                    Column {
+                        ThreadAuthor(thread, isPo = true)
+                        if (forumName.isNotBlank()) {
+                            Text(
+                                text = forumName,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(top = 4.dp)
+                            )
+                        }
                     }
                 },
                 id = thread.id
@@ -654,14 +676,12 @@ fun ThreadMainPost(
             if (thread.title.isNotBlank() && thread.title != "无标题") {
                 Text(
                     text = thread.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(vertical = 8.dp)
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(vertical = 12.dp)
                 )
+            } else {
+                Spacer(modifier = Modifier.height(8.dp))
             }
-
-            Spacer(modifier = Modifier.height(8.dp))
-            HorizontalDivider()
-            Spacer(modifier = Modifier.height(12.dp))
 
             // 正文
             ThreadBody(thread, onReferenceClick = refClick, onImageClick = onImageClick)
@@ -682,11 +702,15 @@ fun ThreadMainPost(
 @Composable
 fun ThreadReply(
     reply: ThreadReply,
+    poUserHash: String,
     onReplyClicked: (Long) -> Unit,
     refClick: (Long) -> Unit,
     onImageClick: (String, String) -> Unit,
 ) {
-    ElevatedCard(
+    val isPo = remember(reply.userHash) {
+        reply.userHash == poUserHash
+    }
+    Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onReplyClicked(reply.id) },
@@ -695,10 +719,10 @@ fun ThreadReply(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
         ) {
             PostHeader(
-                author = { ThreadAuthor(reply) },
+                author = { ThreadAuthor(reply, isPo = isPo) },
                 id = reply.id
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             ThreadBody(reply, onReferenceClick = refClick, onImageClick = onImageClick)
         }
     }
@@ -707,16 +731,14 @@ fun ThreadReply(
 @Composable
 private fun PostHeader(
     author: @Composable () -> Unit,
-    info: @Composable () -> Unit = {},
-    id: Long
+    id: Long,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.Top
     ) {
-        Column(modifier = Modifier.weight(1f)) {
+        Box(modifier = Modifier.weight(1f)) {
             author()
-            info()
         }
         Text(
             text = "No.$id",

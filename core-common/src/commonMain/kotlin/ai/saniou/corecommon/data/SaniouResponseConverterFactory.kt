@@ -1,5 +1,6 @@
 package ai.saniou.corecommon.data;
 
+import androidx.compose.ui.text.decapitalize
 import de.jensklingenberg.ktorfit.Ktorfit
 import de.jensklingenberg.ktorfit.converter.Converter
 import de.jensklingenberg.ktorfit.converter.KtorfitResult
@@ -29,6 +30,16 @@ class SaniouResponseConverterFactory : Converter.Factory {
                                     )
                                 )
                             } catch (ex: Throwable) {
+                                // eg: {"success":false,"error":"必须登入领取饼干后才可以访问"}
+                                try {
+                                    val message = result.response.bodyAsChannel().toByteArray()
+                                        .decodeUnicodeEscapes()
+                                    return SaniouResponse.error(
+                                        RuntimeException(message.split(":").last().trim())
+                                    )
+                                } catch (ex: Throwable) {
+                                    // do nothing
+                                }
                                 SaniouResponse.error(ex)
                             }
                         }

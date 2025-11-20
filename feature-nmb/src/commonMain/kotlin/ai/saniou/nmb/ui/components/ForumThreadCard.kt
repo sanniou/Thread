@@ -110,6 +110,7 @@ fun ThreadCard(
             // 内容区域
             ThreadBody(
                 body = thread,
+                maxLines = 6,
                 onImageClick = { img, ext -> onImageClick?.invoke(img, ext) }
             )
 
@@ -184,12 +185,13 @@ private fun ThreadCardFooter(thread: IBaseThread) {
 @Composable
 fun ThreadBody(
     body: IThreadBody,
+    maxLines: Int = Int.MAX_VALUE,
     onReferenceClick: ((Long) -> Unit)? = null,
     onImageClick: (String, String) -> Unit,
 ) {
     RichText(
         text = body.content,
-        maxLines = 3,
+        maxLines = maxLines,
         overflow = TextOverflow.Ellipsis,
         style = MaterialTheme.typography.bodyMedium,
         onReferenceClick = { onReferenceClick?.invoke(it.toLong()) },

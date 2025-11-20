@@ -21,6 +21,21 @@ private const val TAG_URL = "URL"
 private const val TAG_REFERENCE = "REFERENCE"
 
 /**
+ * 空白行处理策略
+ */
+enum class BlankLinePolicy {
+    /** 不处理，保留所有空白行 */
+    KEEP,
+
+    /** 将连续的空白行合并为一行 */
+    COLLAPSE,
+
+    /** 移除所有空白行 */
+    REMOVE
+}
+
+
+/**
  * 支持简单HTML标签的文本组件
  *
  * 通过一个健壮的、基于栈的解析器，支持以下特性：
@@ -30,6 +45,7 @@ private const val TAG_REFERENCE = "REFERENCE"
  * - 链接: `<a href="https://example.com">link</a>`
  * - 换行: `<br>`
  * - 自定义引用匹配: 通过 `referencePattern` 实现对特定模式（如 `>>No.12345`）的点击支持
+ * - 空白行处理: 通过 `blankLinePolicy` 控制空白行的显示
  */
 @Composable
 fun RichText(
@@ -41,12 +57,13 @@ fun RichText(
     onLinkClick: ((String) -> Unit)? = null,
     overflow: TextOverflow = TextOverflow.Clip,
     maxLines: Int = Int.MAX_VALUE,
+    blankLinePolicy: BlankLinePolicy = BlankLinePolicy.KEEP,
 ) {
     val uriHandler = LocalUriHandler.current
     val linkColor = MaterialTheme.colorScheme.primary
 
-    val annotatedString = remember(text, referencePattern, style, linkColor) {
-        val styledText = parseHtml(text, style, linkColor)
+    val annotatedString = remember(text, referencePattern, style, linkColor, blankLinePolicy) {
+        val styledText = parseHtml(text, style, linkColor, blankLinePolicy)
         applyClickableAnnotations(styledText, referencePattern)
     }
 
@@ -74,9 +91,22 @@ fun RichText(
 /**
  * 第一步: 解析HTML标签并应用基础样式
  */
-private fun parseHtml(html: String, baseStyle: TextStyle, linkColor: Color): AnnotatedString {
+private fun parseHtml(
+    html: String,
+    baseStyle: TextStyle,
+    linkColor: Color,
+    blankLinePolicy: BlankLinePolicy
+): AnnotatedString {
     // 1. 预处理：解码HTML实体并将<br>替换为换行符
-    val cleanHtml = decodeHtmlEntities(html).replace(Regex("<br\\s*/?>", RegexOption.IGNORE_CASE), "\n")
+    var cleanHtml = decodeHtmlEntities(html).replace(Regex("<br\\s*/?>", RegexOption.IGNORE_CASE), "\n")
+
+    // 1.5. 根据策略处理空白行
+    cleanHtml = when (blankLinePolicy) {
+        BlankLinePolicy.KEEP -> cleanHtml
+        BlankLinePolicy.COLLAPSE -> cleanHtml.replace(Regex("(\\n\\s*){2,}"), "\n")
+        BlankLinePolicy.REMOVE -> cleanHtml.lines().filter { it.isNotBlank() }.joinToString("\n")
+    }
+
 
     // 2. 使用正则表达式将HTML分词为标签和文本
     val tokenizer = Regex("(<[^>]+>)|([^<]+)")

@@ -58,6 +58,5 @@ selectSubscriptionThread:
 SELECT Thread.*
 FROM Subscription
 JOIN Thread ON Subscription.threadId = Thread.id
-WHERE Subscription.subscriptionKey = :subscriptionKey
-ORDER BY Subscription.subscriptionTime DESC
-LIMIT :limit OFFSET :offset;
+WHERE Subscription.subscriptionKey = :subscriptionKey AND Subscription.page = :page
+ORDER BY Subscription.subscriptionTime DESC;

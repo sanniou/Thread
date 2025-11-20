@@ -1,11 +1,10 @@
 package ai.saniou.nmb.data.entity
 
-import ai.saniou.nmb.db.table.GetThreadsInForum
-import ai.saniou.nmb.db.table.ThreadInformation
 import ai.saniou.nmb.db.table.ThreadReply
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonNames
+import ai.saniou.nmb.data.entity.ThreadReply as ThreadReplyEntity
 
 /**
  * 请求错误
@@ -34,7 +33,7 @@ data class Forum(
     @JsonNames("Hide")
     override val hide: Long,// ？
     @JsonNames("Replies")
-    override val replies: List<Reply>,
+    override val replies: List<ThreadReplyEntity>,
     @JsonNames("RemainReplies")
     override val remainReplies: Long? = null,// 网页版除去显示的最近几条回复后剩余的回复数量,“回应有……篇被省略。要阅读所有回应请按下回应链接。”
 ) : IBaseThread, IBaseThreadReply
@@ -61,42 +60,7 @@ data class Reply(
 ) : IBaseAuthor
 
 
-fun GetThreadsInForum.toForumThreadWithReply(reply: List<ThreadReply>) =
-    Forum(
-        id = this.id,
-        fid = this.fid,
-        replyCount = this.replyCount,
-        img = this.img,
-        ext = this.ext,
-        now = this.now,
-        userHash = this.userHash,
-        name = this.name,
-        title = this.title,
-        content = this.content,
-        sage = this.sage,
-        admin = this.admin,
-        hide = this.hide,
-        remainReplies = this.remainReplies,
-        replies = reply.map {
-            Reply(
-                id = it.id,
-                fid = this.fid,
-                replyCount = this.replyCount,
-                img = it.img,
-                ext = it.ext,
-                now = it.now,
-                userHash = it.userHash,
-                name = it.name,
-                title = it.title,
-                content = it.content,
-                sage = this.sage,
-                admin = it.admin,
-                hide = this.hide,
-            )
-        },
-    )
-
-fun Forum.toTable() = ai.saniou.nmb.db.table.Thread(
+fun Forum.toTable(page: Long) = ai.saniou.nmb.db.table.Thread(
     id = this.id,
     fid = this.fid,
     replyCount = this.replyCount,
@@ -110,6 +74,7 @@ fun Forum.toTable() = ai.saniou.nmb.db.table.Thread(
     sage = this.sage,
     admin = this.admin,
     hide = this.hide,
+    page = page,
 )
 
 fun Forum.toTableReply() = this.replies.map { reply ->

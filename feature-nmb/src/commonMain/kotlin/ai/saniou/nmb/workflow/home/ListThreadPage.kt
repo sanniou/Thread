@@ -47,9 +47,9 @@ fun ListThreadPage(
             items(feeds.itemCount) { index ->
                 val feed = feeds[index] ?: return@items
                 ThreadCard(
-                    thread = feed.thread,
-                    onClick = { onThreadClicked(feed.thread.id) },
-                    onImageClick = { img, ext -> onImageClick(feed.thread.id, img, ext) }
+                    thread = feed,
+                    onClick = { onThreadClicked(feed.id) },
+                    onImageClick = { img, ext -> onImageClick(feed.id, img, ext) }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
             }
