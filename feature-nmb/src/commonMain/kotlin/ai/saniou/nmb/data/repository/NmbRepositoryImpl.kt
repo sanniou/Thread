@@ -10,6 +10,7 @@ import ai.saniou.nmb.data.entity.ThreadWithInformation
 import ai.saniou.nmb.data.entity.toThreadReply
 import ai.saniou.nmb.data.entity.toThreadWithInformation
 import ai.saniou.nmb.data.source.ForumRemoteMediator
+import ai.saniou.nmb.data.source.PageNumQueryPagingSource
 import ai.saniou.nmb.data.source.SqlDelightPagingSource
 import ai.saniou.nmb.data.source.ThreadRemoteMediator
 import ai.saniou.nmb.db.Database
@@ -84,16 +85,15 @@ class NmbRepositoryImpl(
             pagingSourceFactory = {
                 if (poUserHash != null) {
                     // 只看PO
-                    SqlDelightPagingSource(
+                    PageNumQueryPagingSource(
                         transacter = database.threadReplyQueries,
                         context = Dispatchers.IO,
-                        countQueryProvider = {
+                        countQuery =
                             database.threadReplyQueries.countRepliesByThreadIdAndUserHash(
                                 threadId,
                                 poUserHash
-                            )
-                        },
-                        pageQueryProvider = { page ->
+                            ),
+                        queryProvider = { limit, page ->
                             database.threadReplyQueries.getRepliesByThreadIdAndUserHash(
                                 threadId = threadId,
                                 userHash = poUserHash,
@@ -103,15 +103,14 @@ class NmbRepositoryImpl(
                     )
                 } else {
                     // 查看全部
-                    SqlDelightPagingSource(
+                    PageNumQueryPagingSource(
                         transacter = database.threadReplyQueries,
                         context = Dispatchers.IO,
-                        countQueryProvider = {
+                        countQuery =
                             database.threadReplyQueries.countRepliesByThreadId(
                                 threadId
-                            )
-                        },
-                        pageQueryProvider = { page ->
+                            ),
+                        queryProvider = { limit, page ->
                             database.threadReplyQueries.getRepliesByThreadId(
                                 threadId = threadId,
                                 page = page.toLong()
@@ -235,16 +234,16 @@ class NmbRepositoryImpl(
                 fetcher = fetcher
             ),
             pagingSourceFactory = {
-                SqlDelightPagingSource(
+                PageNumQueryPagingSource(
                     transacter = database.threadQueries,
                     context = Dispatchers.IO,
-                    countQueryProvider = { database.threadQueries.countThreadsByFid(fid) },
-                    pageQueryProvider = { page ->
+                    countQuery = database.threadQueries.countThreadsByFid(fid),
+                    queryProvider = { limit, page ->
                         database.threadQueries.getThreadsInForum(
                             fid = fid,
                             page = page.toLong()
                         )
-                    }
+                    },
                 )
             }
         )
