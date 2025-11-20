@@ -87,3 +87,24 @@ SELECT * FROM ThreadReply WHERE threadId = :threadId AND img != '' AND ext != ''
 
 getMaxPage:
 SELECT MAX(page) FROM ThreadReply WHERE threadId = :threadId;
+
+-- RemoteMediator 使用的查询
+countRepliesByThreadIdAndPage:
+SELECT count(1) FROM ThreadReply WHERE threadId = :threadId AND page = :page;
+
+deleteRepliesByThreadIdAndPage:
+DELETE FROM ThreadReply WHERE threadId = :threadId AND page = :page;
+
+-- PagingSource (所有回复)
+countRepliesByThreadId:
+SELECT count(1) FROM ThreadReply WHERE threadId = :threadId;
+
+getRepliesByThreadId:
+SELECT * FROM ThreadReply WHERE threadId = :threadId ORDER BY id ASC LIMIT :limit OFFSET :offset;
+
+-- PagingSource (只看PO)
+countRepliesByThreadIdAndUserHash:
+SELECT count(1) FROM ThreadReply WHERE threadId = :threadId AND userHash = :userHash;
+
+getRepliesByThreadIdAndUserHash:
+SELECT * FROM ThreadReply WHERE threadId = :threadId AND userHash = :userHash ORDER BY id ASC LIMIT :limit OFFSET :offset;

@@ -1,9 +1,9 @@
 package ai.saniou.nmb.data.repository
 
 import ai.saniou.nmb.data.entity.Reply
+import ai.saniou.nmb.data.entity.ThreadReply
 import ai.saniou.nmb.data.entity.ThreadWithInformation
 import ai.saniou.nmb.db.table.Cookie
-import ai.saniou.nmb.db.table.GetThreadsInForum
 import androidx.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 
@@ -44,4 +44,11 @@ interface NmbRepository {
         policy: DataPolicy,
         initialPage: Int = 1,
     ): Flow<PagingData<ThreadWithInformation>>
+
+    fun getThreadRepliesPager(
+        threadId: Long,
+        poUserHash: String?, // nullable, 为 null 时加载所有回复
+        policy: DataPolicy,
+        initialPage: Int = 1,
+    ): Flow<PagingData<ThreadReply>>
 }

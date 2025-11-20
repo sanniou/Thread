@@ -215,7 +215,7 @@ data class ThreadPage(
                                 onDismissRequest = { showMenu = false }
                             ) {
                                 DropdownMenuItem(
-                                    text = { Text(if (state.isPoOnlyMode) "查看全部" else "仅看PO") },
+                                    text = { Text("""if (state.isPoOnlyMode) "查看全部" else "仅看PO"""") },
                                     onClick = {
                                         viewModel.onEvent(Event.TogglePoOnlyMode)
                                         showMenu = false
@@ -280,7 +280,7 @@ data class ThreadPage(
         // 跳页对话框
         if (showJumpDialog) {
             PageJumpDialog(
-                currentPage = state.currentPage,
+                currentPage = 1,
                 totalPages = state.totalPages,
                 onDismissRequest = { showJumpDialog = false },
                 onJumpToPage = { page -> viewModel.onEvent(Event.JumpToPage(page)) }

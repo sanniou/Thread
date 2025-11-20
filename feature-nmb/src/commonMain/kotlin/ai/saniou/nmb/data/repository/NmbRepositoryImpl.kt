@@ -4,10 +4,14 @@ import ai.saniou.corecommon.data.SaniouResponse
 import ai.saniou.nmb.data.api.NmbXdApi
 import ai.saniou.nmb.data.entity.Forum
 import ai.saniou.nmb.data.entity.Reply
+import ai.saniou.nmb.data.entity.Thread
+import ai.saniou.nmb.data.entity.ThreadReply
 import ai.saniou.nmb.data.entity.ThreadWithInformation
+import ai.saniou.nmb.data.entity.toThreadReply
 import ai.saniou.nmb.data.entity.toThreadWithInformation
 import ai.saniou.nmb.data.source.ForumRemoteMediator
 import ai.saniou.nmb.data.source.SqlDelightPagingSource
+import ai.saniou.nmb.data.source.ThreadRemoteMediator
 import ai.saniou.nmb.db.Database
 import ai.saniou.nmb.db.table.Cookie
 import ai.saniou.nmb.db.table.GetThreadsInForum
@@ -57,6 +61,68 @@ class NmbRepositoryImpl(
             initialPage = initialPage,
             fetcher = { page -> nmbXdApi.showf(fid.toLong(), page.toLong()) }
         ).flow.map { pagingData -> pagingData.map { it.toThreadWithInformation() } }
+    }
+
+    @OptIn(ExperimentalPagingApi::class)
+    override fun getThreadRepliesPager(
+        threadId: Long,
+        poUserHash: String?,
+        policy: DataPolicy,
+        initialPage: Int,
+    ): Flow<PagingData<ThreadReply>> {
+        return Pager(
+            config = PagingConfig(pageSize = 19), // 每页19个回复
+            initialKey = initialPage,
+            remoteMediator = ThreadRemoteMediator(
+                threadId = threadId,
+                db = database,
+                dataPolicy = policy,
+                fetcher = { page -> nmbXdApi.thread(threadId.toLong(), page.toLong()) }
+            ),
+            pagingSourceFactory = {
+                if (poUserHash != null) {
+                    // 只看PO
+                    SqlDelightPagingSource(
+                        transacter = database.threadReplyQueries,
+                        context = Dispatchers.IO,
+                        countQueryProvider = {
+                            database.threadReplyQueries.countRepliesByThreadIdAndUserHash(
+                                threadId,
+                                poUserHash
+                            )
+                        },
+                        queryProvider = { limit, offset ->
+                            database.threadReplyQueries.getRepliesByThreadIdAndUserHash(
+                                threadId = threadId,
+                                userHash = poUserHash,
+                                limit = limit,
+                                offset = offset
+                            )
+                        }
+                    )
+                } else {
+                    // 查看全部
+                    SqlDelightPagingSource(
+                        transacter = database.threadReplyQueries,
+                        context = Dispatchers.IO,
+                        countQueryProvider = {
+                            database.threadReplyQueries.countRepliesByThreadId(
+                                threadId
+                            )
+                        },
+                        queryProvider = { limit, offset ->
+                            database.threadReplyQueries.getRepliesByThreadId(
+                                threadId = threadId,
+                                limit = limit,
+                                offset = offset
+                            )
+                        }
+                    )
+                }
+            }
+        ).flow.map { pagingData ->
+            pagingData.map { it.toThreadReply() }
+        }
     }
 
     override fun getHistoryThreads(): Flow<PagingData<ThreadWithInformation>> {
@@ -159,6 +225,7 @@ class NmbRepositoryImpl(
     ): Pager<Int, GetThreadsInForum> {
         return Pager(
             config = PagingConfig(pageSize = 20),
+            initialKey = initialPage,
             remoteMediator = ForumRemoteMediator(
                 sourceId = fid,
                 db = database,
