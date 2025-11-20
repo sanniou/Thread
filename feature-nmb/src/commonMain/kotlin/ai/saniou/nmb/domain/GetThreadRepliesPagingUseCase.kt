@@ -4,7 +4,7 @@ import ai.saniou.nmb.data.entity.ThreadReply
 import ai.saniou.nmb.data.repository.DataPolicy
 import ai.saniou.nmb.data.repository.NmbRepository
 import ai.saniou.nmb.db.Database
-import androidx.paging.PagingData
+import app.cash.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 
 class GetThreadRepliesPagingUseCase(

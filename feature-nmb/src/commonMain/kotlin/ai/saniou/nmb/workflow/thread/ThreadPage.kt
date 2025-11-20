@@ -97,8 +97,8 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.paging.LoadState
-import androidx.paging.compose.collectAsLazyPagingItems
+import app.cash.paging.LoadState
+import app.cash.paging.compose.collectAsLazyPagingItems
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.kodein.rememberScreenModel
@@ -109,6 +109,8 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import app.cash.paging.LoadStateError
+import app.cash.paging.LoadStateLoading
 import org.kodein.di.direct
 import org.kodein.di.instance
 
@@ -548,12 +550,12 @@ private fun ThreadList(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // PREPEND 加载状态
-        if (replies.loadState.prepend is LoadState.Loading) {
+        if (replies.loadState.prepend is LoadStateLoading) {
             item {
                 LoadingIndicator()
             }
         }
-        if (replies.loadState.prepend is LoadState.Error) {
+        if (replies.loadState.prepend is LoadStateError) {
             item {
                 LoadingFailedIndicator()
             }
@@ -587,13 +589,13 @@ private fun ThreadList(
         // Paging 加载状态
         item {
             when {
-                replies.loadState.refresh is LoadState.Loading && replies.itemCount == 0 -> ThreadShimmer()
-                replies.loadState.refresh is LoadState.Error -> {
+                replies.loadState.refresh is LoadStateLoading && replies.itemCount == 0 -> ThreadShimmer()
+                replies.loadState.refresh is LoadStateError -> {
                     // 错误状态已在顶层处理
                 }
 
-                replies.loadState.append is LoadState.Error -> LoadingFailedIndicator()
-                replies.loadState.append is LoadState.Loading -> LoadingIndicator()
+                replies.loadState.append is LoadStateError -> LoadingFailedIndicator()
+                replies.loadState.append is LoadStateLoading -> LoadingIndicator()
                 replies.loadState.append.endOfPaginationReached && replies.itemCount == 0 -> {
                     EmptyReplyContent(onRefresh)
                 }

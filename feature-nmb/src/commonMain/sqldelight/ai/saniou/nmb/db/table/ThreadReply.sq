@@ -102,9 +102,15 @@ SELECT count(1) FROM ThreadReply WHERE threadId = :threadId;
 getRepliesByThreadId:
 SELECT * FROM ThreadReply WHERE threadId = :threadId AND page = :page ORDER BY id ASC;
 
+getRepliesByThreadIdOffset:
+SELECT * FROM ThreadReply WHERE threadId = :threadId ORDER BY id ASC LIMIT :limit OFFSET :offset;
+
 -- PagingSource (只看PO)
 countRepliesByThreadIdAndUserHash:
 SELECT count(1) FROM ThreadReply WHERE threadId = :threadId AND userHash = :userHash;
 
 getRepliesByThreadIdAndUserHash:
 SELECT * FROM ThreadReply WHERE threadId = :threadId AND userHash = :userHash AND page = :page ORDER BY id ASC;
+
+getRepliesByThreadIdAndUserHashOffset:
+SELECT * FROM ThreadReply WHERE threadId = :threadId AND userHash = :userHash ORDER BY id ASC LIMIT :limit OFFSET :offset;

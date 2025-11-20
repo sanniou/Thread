@@ -2,7 +2,7 @@ package ai.saniou.nmb.domain
 
 import ai.saniou.nmb.data.entity.ThreadWithInformation
 import ai.saniou.nmb.data.repository.HistoryRepository
-import androidx.paging.PagingData
+import app.cash.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 
 class HistoryUseCase(

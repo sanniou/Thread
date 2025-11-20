@@ -8,11 +8,12 @@ import ai.saniou.nmb.data.entity.toTableReply
 import ai.saniou.nmb.data.repository.DataPolicy
 import ai.saniou.nmb.db.Database
 import ai.saniou.nmb.db.table.GetThreadsInForum
+import ai.saniou.nmb.db.table.GetThreadsInForumOffset
 import ai.saniou.nmb.db.table.RemoteKeys
-import androidx.paging.ExperimentalPagingApi
-import androidx.paging.LoadType
-import androidx.paging.PagingState
-import androidx.paging.RemoteMediator
+import app.cash.paging.ExperimentalPagingApi
+import app.cash.paging.LoadType
+import app.cash.paging.PagingState
+import app.cash.paging.RemoteMediator
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
@@ -23,7 +24,7 @@ class ForumRemoteMediator(
     private val dataPolicy: DataPolicy,
     private val initialPage: Int,
     private val fetcher: suspend (page: Int) -> SaniouResponse<List<Forum>>,
-) : RemoteMediator<Int, GetThreadsInForum>() {
+) : RemoteMediator<Int, GetThreadsInForumOffset>() {
 
     private val threadQueries = db.threadQueries
     private val remoteKeyQueries = db.remoteKeyQueries
@@ -31,7 +32,7 @@ class ForumRemoteMediator(
     @OptIn(ExperimentalTime::class)
     override suspend fun load(
         loadType: LoadType,
-        state: PagingState<Int, GetThreadsInForum>,
+        state: PagingState<Int, GetThreadsInForumOffset>,
     ): MediatorResult {
         val page: Long = when (loadType) {
             LoadType.REFRESH -> {
@@ -100,7 +101,7 @@ class ForumRemoteMediator(
         }
     }
 
-    private fun getRemoteKeyForLastItem(state: PagingState<Int, GetThreadsInForum>): RemoteKeys? {
+    private fun getRemoteKeyForLastItem(state: PagingState<Int, GetThreadsInForumOffset>): RemoteKeys? {
         return state.pages.lastOrNull { it.data.isNotEmpty() }?.data?.lastOrNull()
             ?.let { thread ->
                 remoteKeyQueries.getRemoteKeyById(RemoteKeyType.FORUM, thread.fid.toString())
@@ -108,7 +109,7 @@ class ForumRemoteMediator(
             }
     }
 
-    private fun getRemoteKeyForFirstItem(state: PagingState<Int, GetThreadsInForum>): RemoteKeys? {
+    private fun getRemoteKeyForFirstItem(state: PagingState<Int, GetThreadsInForumOffset>): RemoteKeys? {
         return state.pages.firstOrNull { it.data.isNotEmpty() }?.data?.firstOrNull()
             ?.let { thread ->
                 remoteKeyQueries.getRemoteKeyById(RemoteKeyType.FORUM, thread.fid.toString())
@@ -116,7 +117,7 @@ class ForumRemoteMediator(
             }
     }
 
-    private fun getRemoteKeyClosestToCurrentPosition(state: PagingState<Int, GetThreadsInForum>): RemoteKeys? {
+    private fun getRemoteKeyClosestToCurrentPosition(state: PagingState<Int, GetThreadsInForumOffset>): RemoteKeys? {
         return state.anchorPosition?.let { position ->
             state.closestItemToPosition(position)?.fid?.let { fid ->
                 remoteKeyQueries.getRemoteKeyById(RemoteKeyType.FORUM, fid.toString())

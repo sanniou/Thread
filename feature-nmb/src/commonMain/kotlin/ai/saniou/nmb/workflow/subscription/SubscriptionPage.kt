@@ -50,8 +50,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.paging.LoadState
-import androidx.paging.compose.collectAsLazyPagingItems
+import app.cash.paging.LoadState
+import app.cash.paging.LoadStateError
+import app.cash.paging.LoadStateLoading
+import app.cash.paging.compose.collectAsLazyPagingItems
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.kodein.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -175,8 +177,8 @@ private fun SubscriptionContent(
 
             item {
                 when {
-                    feeds.loadState.append is LoadState.Error -> LoadingFailedIndicator()
-                    feeds.loadState.append is LoadState.Loading -> LoadingIndicator()
+                    feeds.loadState.append is LoadStateError -> LoadingFailedIndicator()
+                    feeds.loadState.append is LoadStateLoading -> LoadingIndicator()
                     feeds.loadState.append.endOfPaginationReached && feeds.itemCount == 0 -> EmptyContent()
                     feeds.loadState.append.endOfPaginationReached -> LoadEndIndicator()
                 }

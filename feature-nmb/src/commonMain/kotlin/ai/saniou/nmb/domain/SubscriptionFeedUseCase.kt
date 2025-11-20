@@ -6,11 +6,11 @@ import ai.saniou.nmb.data.repository.ForumRepository
 import ai.saniou.nmb.data.source.SqlDelightPagingSource
 import ai.saniou.nmb.data.source.SubscriptionRemoteMediator
 import ai.saniou.nmb.db.Database
-import androidx.paging.ExperimentalPagingApi
-import androidx.paging.Pager
-import androidx.paging.PagingConfig
-import androidx.paging.PagingData
-import androidx.paging.map
+import app.cash.paging.ExperimentalPagingApi
+import app.cash.paging.Pager
+import app.cash.paging.PagingConfig
+import app.cash.paging.PagingData
+import app.cash.paging.map
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -26,11 +26,7 @@ class SubscriptionFeedUseCase(
     ): Flow<PagingData<Feed>> {
         return Pager(
             config = PagingConfig(
-                pageSize = 20,
-                prefetchDistance = 5,
-                enablePlaceholders = false,
-                initialLoadSize = 20 * 2,
-                maxSize = 20 * 5,
+                pageSize = 20
             ),
             remoteMediator = SubscriptionRemoteMediator(subscriptionKey, forumRepository, db),
             pagingSourceFactory = {

@@ -24,9 +24,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.paging.LoadState
-import androidx.paging.PagingData
-import androidx.paging.compose.collectAsLazyPagingItems
+import app.cash.paging.LoadState
+import app.cash.paging.LoadStateError
+import app.cash.paging.LoadStateLoading
+import app.cash.paging.PagingData
+import app.cash.paging.compose.collectAsLazyPagingItems
 import kotlinx.coroutines.flow.Flow
 
 @Composable
@@ -56,8 +58,8 @@ fun ListThreadPage(
 
             item {
                 when {
-                    feeds.loadState.append is LoadState.Error -> LoadingFailedIndicator()
-                    feeds.loadState.append is LoadState.Loading -> LoadingIndicator()
+                    feeds.loadState.append is LoadStateError -> LoadingFailedIndicator()
+                    feeds.loadState.append is LoadStateLoading -> LoadingIndicator()
                     feeds.loadState.append.endOfPaginationReached && feeds.itemCount == 0 -> EmptyContent()
                     feeds.loadState.append.endOfPaginationReached -> LoadEndIndicator()
                 }

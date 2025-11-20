@@ -69,10 +69,10 @@ kotlin {
             implementation("org.jetbrains.compose.material3.adaptive:adaptive-layout:1.1.0")
             implementation("org.jetbrains.compose.material3.adaptive:adaptive-navigation:1.1.0")
 
-            implementation(libs.paging.common)
-            implementation(libs.paging.compose)
+//            implementation(libs.paging.common)
+//            implementation(libs.paging.compose)
 //            implementation(libs.cash.paging)
-//            implementation(libs.cash.paging.common)
+            implementation(libs.cash.paging.common)
             // https://saket.github.io/telephoto/zoomable-peek-overlay/
             // not multi platform
             // implementation("me.saket.telephoto:zoomable-image-coil3:0.15.1")
@@ -82,7 +82,7 @@ kotlin {
 //            implementation(libs.room.runtime)
 //            implementation(libs.sqlite.bundled)
             implementation(libs.sqldelight.runtime)
-//            implementation(libs.sqldelight.paging3)
+            implementation(libs.sqldelight.paging3)
             implementation(libs.sqldelight.coroutines)
             implementation(libs.reorderable)
         }

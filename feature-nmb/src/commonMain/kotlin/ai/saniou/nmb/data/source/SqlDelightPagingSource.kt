@@ -1,7 +1,7 @@
 package ai.saniou.nmb.data.source
 
-import androidx.paging.PagingSource
-import androidx.paging.PagingState
+import app.cash.paging.PagingSource
+import app.cash.paging.PagingState
 import app.cash.sqldelight.Query
 import app.cash.sqldelight.SuspendingTransacter
 import app.cash.sqldelight.Transacter

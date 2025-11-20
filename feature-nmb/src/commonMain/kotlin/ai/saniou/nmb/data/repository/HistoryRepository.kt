@@ -1,7 +1,7 @@
 package ai.saniou.nmb.data.repository
 
 import ai.saniou.nmb.data.entity.ThreadWithInformation
-import androidx.paging.PagingData
+import app.cash.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 
 interface HistoryRepository {

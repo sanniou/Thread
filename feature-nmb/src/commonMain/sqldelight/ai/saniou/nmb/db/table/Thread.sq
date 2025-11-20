@@ -102,6 +102,9 @@ SELECT count(*) FROM Thread WHERE fid = :fid;
 getThreadsInForum:
 SELECT * FROM Thread LEFT JOIN ThreadInformation ON Thread.id = ThreadInformation.id WHERE fid = :fid AND page = :page ORDER BY lastKey DESC;
 
+getThreadsInForumOffset:
+SELECT * FROM Thread LEFT JOIN ThreadInformation ON Thread.id = ThreadInformation.id WHERE fid = :fid ORDER BY lastKey DESC LIMIT :limit OFFSET :offset;
+
 updateThreadLastAccessTime:
 UPDATE ThreadInformation SET last_access_time = :last_access_time WHERE id = :id;
 

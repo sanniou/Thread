@@ -3,7 +3,7 @@ package ai.saniou.nmb.workflow.thread
 import ai.saniou.nmb.data.entity.Thread
 import ai.saniou.nmb.data.entity.ThreadReply
 import ai.saniou.nmb.workflow.image.ImagePreviewUiState
-import androidx.paging.PagingData
+import app.cash.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 

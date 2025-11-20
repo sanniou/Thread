@@ -4,7 +4,7 @@ import ai.saniou.nmb.data.entity.Reply
 import ai.saniou.nmb.data.entity.ThreadReply
 import ai.saniou.nmb.data.entity.ThreadWithInformation
 import ai.saniou.nmb.db.table.Cookie
-import androidx.paging.PagingData
+import app.cash.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 
 /**

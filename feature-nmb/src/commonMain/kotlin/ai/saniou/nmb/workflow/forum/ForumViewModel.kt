@@ -6,8 +6,8 @@ import ai.saniou.nmb.domain.ForumUseCase
 import ai.saniou.nmb.workflow.forum.ForumContract.Effect
 import ai.saniou.nmb.workflow.forum.ForumContract.Event
 import ai.saniou.nmb.workflow.forum.ForumContract.State
-import androidx.paging.PagingData
-import androidx.paging.cachedIn
+import app.cash.paging.PagingData
+import app.cash.paging.cachedIn
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi

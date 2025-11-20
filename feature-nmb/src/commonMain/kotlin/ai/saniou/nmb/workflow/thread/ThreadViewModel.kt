@@ -10,8 +10,8 @@ import ai.saniou.nmb.workflow.image.ImageInfo
 import ai.saniou.nmb.workflow.thread.ThreadContract.Effect
 import ai.saniou.nmb.workflow.thread.ThreadContract.Event
 import ai.saniou.nmb.workflow.thread.ThreadContract.State
-import androidx.paging.PagingData
-import androidx.paging.cachedIn
+import app.cash.paging.PagingData
+import app.cash.paging.cachedIn
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOneOrNull

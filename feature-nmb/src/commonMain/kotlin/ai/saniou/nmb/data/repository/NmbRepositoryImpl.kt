@@ -4,25 +4,24 @@ import ai.saniou.corecommon.data.SaniouResponse
 import ai.saniou.nmb.data.api.NmbXdApi
 import ai.saniou.nmb.data.entity.Forum
 import ai.saniou.nmb.data.entity.Reply
-import ai.saniou.nmb.data.entity.Thread
 import ai.saniou.nmb.data.entity.ThreadReply
 import ai.saniou.nmb.data.entity.ThreadWithInformation
 import ai.saniou.nmb.data.entity.toThreadReply
 import ai.saniou.nmb.data.entity.toThreadWithInformation
 import ai.saniou.nmb.data.source.ForumRemoteMediator
-import ai.saniou.nmb.data.source.PageNumQueryPagingSource
 import ai.saniou.nmb.data.source.SqlDelightPagingSource
 import ai.saniou.nmb.data.source.ThreadRemoteMediator
 import ai.saniou.nmb.db.Database
 import ai.saniou.nmb.db.table.Cookie
-import ai.saniou.nmb.db.table.GetThreadsInForum
-import androidx.paging.ExperimentalPagingApi
-import androidx.paging.Pager
-import androidx.paging.PagingConfig
-import androidx.paging.PagingData
-import androidx.paging.map
+import ai.saniou.nmb.db.table.GetThreadsInForumOffset
+import app.cash.paging.ExperimentalPagingApi
+import app.cash.paging.Pager
+import app.cash.paging.PagingConfig
+import app.cash.paging.PagingData
+import app.cash.paging.map
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
+import app.cash.sqldelight.paging3.QueryPagingSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -85,7 +84,7 @@ class NmbRepositoryImpl(
             pagingSourceFactory = {
                 if (poUserHash != null) {
                     // 只看PO
-                    PageNumQueryPagingSource(
+                    QueryPagingSource(
                         transacter = database.threadReplyQueries,
                         context = Dispatchers.IO,
                         countQuery =
@@ -93,28 +92,26 @@ class NmbRepositoryImpl(
                                 threadId,
                                 poUserHash
                             ),
-                        queryProvider = { limit, page ->
-                            database.threadReplyQueries.getRepliesByThreadIdAndUserHash(
+                        queryProvider = { limit, offset ->
+                            database.threadReplyQueries.getRepliesByThreadIdAndUserHashOffset(
                                 threadId = threadId,
                                 userHash = poUserHash,
-                                page = page.toLong()
+                                limit = limit,
+                                offset = offset,
                             )
                         }
                     )
                 } else {
                     // 查看全部
-                    PageNumQueryPagingSource(
+                    QueryPagingSource(
                         transacter = database.threadReplyQueries,
                         context = Dispatchers.IO,
                         countQuery =
                             database.threadReplyQueries.countRepliesByThreadId(
                                 threadId
                             ),
-                        queryProvider = { limit, page ->
-                            database.threadReplyQueries.getRepliesByThreadId(
-                                threadId = threadId,
-                                page = page.toLong()
-                            )
+                        queryProvider = { limit, offset ->
+                            database.threadReplyQueries.getRepliesByThreadIdOffset(threadId, limit, offset)
                         }
                     )
                 }
@@ -221,7 +218,7 @@ class NmbRepositoryImpl(
         policy: DataPolicy,
         initialPage: Int,
         fetcher: suspend (page: Int) -> SaniouResponse<List<Forum>>,
-    ): Pager<Int, GetThreadsInForum> {
+    ): Pager<Int, GetThreadsInForumOffset> {
         val pageSize = 20
         return Pager(
             config = PagingConfig(pageSize = pageSize),
@@ -234,15 +231,12 @@ class NmbRepositoryImpl(
                 fetcher = fetcher
             ),
             pagingSourceFactory = {
-                PageNumQueryPagingSource(
+                QueryPagingSource(
                     transacter = database.threadQueries,
                     context = Dispatchers.IO,
                     countQuery = database.threadQueries.countThreadsByFid(fid),
-                    queryProvider = { limit, page ->
-                        database.threadQueries.getThreadsInForum(
-                            fid = fid,
-                            page = page.toLong()
-                        )
+                    queryProvider = { limit, offset ->
+                        database.threadQueries.getThreadsInForumOffset(fid, limit, offset)
                     },
                 )
             }

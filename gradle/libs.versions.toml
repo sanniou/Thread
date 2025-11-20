@@ -116,8 +116,8 @@ sketch-extensions-compose = { group = "io.github.panpf.sketch4", name = 'sketch-
 sketch-ktor = { group = "io.github.panpf.sketch4", name = 'sketch-http-ktor3', version.ref = "sketch" }
 sketch-svg = { group = "io.github.panpf.sketch4", name = 'sketch-svg', version.ref = "sketch" }
 #cash paging
-#cash-paging = { group = "androidx.paging", name = "paging-common", version.ref = "cashPaging" }
-#cash-paging-common = { group = "androidx.paging", name = "paging-compose-common", version.ref = "cashPaging" }
+cash-paging = { group = "app.cash.paging", name = "paging-common", version.ref = "cashPaging" }
+cash-paging-common = { group = "app.cash.paging", name = "paging-compose-common", version.ref = "cashPaging" }
 
 # zoom
 zoom = { group = "io.github.panpf.zoomimage", name = "zoomimage-compose", version.ref = "zoomimage" }

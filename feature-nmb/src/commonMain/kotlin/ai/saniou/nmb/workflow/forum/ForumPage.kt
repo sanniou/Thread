@@ -43,12 +43,14 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.paging.LoadState
-import androidx.paging.compose.collectAsLazyPagingItems
-import androidx.paging.compose.itemKey
+import app.cash.paging.LoadState
+import app.cash.paging.LoadStateError
+import app.cash.paging.LoadStateLoading
+import app.cash.paging.LoadStateNotLoading
+import app.cash.paging.compose.collectAsLazyPagingItems
+import app.cash.paging.compose.itemKey
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
-import cafe.adriel.voyager.kodein.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import org.kodein.di.DI
@@ -121,8 +123,8 @@ data class ForumPage(
             ) {
                 Box(modifier = Modifier.fillMaxSize()) {
                     when (threads.loadState.refresh) {
-                        is LoadState.Loading -> ThreadListSkeleton()
-                        is LoadState.Error -> {
+                        is LoadStateError -> ThreadListSkeleton()
+                        is LoadStateError -> {
                             Button(
                                 onClick = { threads.retry() },
                                 modifier = Modifier.align(Alignment.Center)
@@ -167,9 +169,9 @@ data class ForumPage(
                                     }
 
                                     when (threads.loadState.append) {
-                                        is LoadState.Loading -> item { LoadingIndicator() }
-                                        is LoadState.Error -> item { LoadingFailedIndicator() }
-                                        is LoadState.NotLoading -> item { LoadEndIndicator() }
+                                        is LoadStateLoading -> item { LoadingIndicator() }
+                                        is LoadStateError -> item { LoadingFailedIndicator() }
+                                        is LoadStateNotLoading -> item { LoadEndIndicator() }
                                     }
                                 }
                             }

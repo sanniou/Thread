@@ -7,10 +7,10 @@ import ai.saniou.nmb.data.entity.toTable
 import ai.saniou.nmb.data.entity.toTableReply
 import ai.saniou.nmb.data.repository.DataPolicy
 import ai.saniou.nmb.db.Database
-import androidx.paging.ExperimentalPagingApi
-import androidx.paging.LoadType
-import androidx.paging.PagingState
-import androidx.paging.RemoteMediator
+import app.cash.paging.ExperimentalPagingApi
+import app.cash.paging.LoadType
+import app.cash.paging.PagingState
+import app.cash.paging.RemoteMediator
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.withContext
 import kotlin.time.Clock
