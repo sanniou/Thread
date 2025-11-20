@@ -73,7 +73,7 @@ class NmbRepositoryImpl(
         val pageSize = 19
         return Pager(
             config = PagingConfig(pageSize = pageSize), // 每页19个回复
-            initialKey = initialPage,
+            initialKey = ((initialPage - 1) * pageSize),
             remoteMediator = ThreadRemoteMediator(
                 threadId = threadId,
                 db = database,
@@ -106,10 +106,7 @@ class NmbRepositoryImpl(
                     QueryPagingSource(
                         transacter = database.threadReplyQueries,
                         context = Dispatchers.IO,
-                        countQuery =
-                            database.threadReplyQueries.countRepliesByThreadId(
-                                threadId
-                            ),
+                        countQuery = database.threadReplyQueries.countRepliesByThreadId(threadId),
                         queryProvider = { limit, offset ->
                             database.threadReplyQueries.getRepliesByThreadIdOffset(threadId, limit, offset)
                         }

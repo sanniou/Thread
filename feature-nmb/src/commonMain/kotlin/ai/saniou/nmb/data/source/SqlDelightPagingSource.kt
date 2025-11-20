@@ -113,7 +113,7 @@ class SqlDelightPagingSource<Value : Any>(
 }
 
 
-internal abstract class QueryPagingSource<Key : Any, RowType : Any> :
+internal abstract class QueryPagingSource2<Key : Any, RowType : Any> :
     PagingSource<Key, RowType>(),
     Query.Listener {
 
@@ -133,13 +133,13 @@ internal abstract class QueryPagingSource<Key : Any, RowType : Any> :
 }
 
 
-internal class OffsetQueryPagingSource<RowType : Any>(
+internal class OffsetQueryPagingSource2<RowType : Any>(
     private val queryProvider: (limit: Int, offset: Int) -> Query<RowType>,
     private val countQuery: Query<Int>,
     private val transacter: TransacterBase,
     private val context: CoroutineContext,
     private val initialOffset: Int,
-) : QueryPagingSource<Int, RowType>() {
+) : QueryPagingSource2<Int, RowType>() {
 
     override val jumpingSupported get() = true
 
@@ -198,13 +198,13 @@ internal class OffsetQueryPagingSource<RowType : Any>(
  * @param context The [CoroutineContext] to run the queries on.
  * @param initialPage The initial page number to load (defaults to 1).
  */
-internal class PageNumQueryPagingSource<RowType : Any>(
+internal class PageNumQueryPagingSource2<RowType : Any>(
     private val queryProvider: (limit: Int, page: Int) -> Query<RowType>,
     private val countQuery: Query<Long>,
     private val transacter: TransacterBase,
     private val context: CoroutineContext,
     private val initialPage: Int = 1,
-) : QueryPagingSource<Int, RowType>() {
+) : QueryPagingSource2<Int, RowType>() {
 
     override val jumpingSupported get() = true
 
