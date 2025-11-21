@@ -13,6 +13,7 @@ import ai.saniou.nmb.workflow.image.ImagePreviewUiState
 import ai.saniou.nmb.workflow.subscription.SubscriptionContract.Event
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -29,8 +30,9 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -39,6 +41,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -67,6 +70,7 @@ data class SubscriptionPage(
     val onThreadClicked: (Long) -> Unit
 ) : Screen {
 
+    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
@@ -91,15 +95,18 @@ data class SubscriptionPage(
         Surface(color = MaterialTheme.colorScheme.background) {
             Scaffold(
                 snackbarHost = { SnackbarHost(snackbarHostState) },
-                floatingActionButton = {
-                    FloatingActionButton(
-                        onClick = { viewModel.onEvent(Event.OnShowSubscriptionIdDialog) }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = "设置订阅ID"
-                        )
-                    }
+                topBar = {
+                    TopAppBar(
+                        title = { Text("订阅列表") },
+                        actions = {
+                            IconButton(onClick = { viewModel.onEvent(Event.OnShowSubscriptionIdDialog) }) {
+                                Icon(
+                                    imageVector = Icons.Default.Settings,
+                                    contentDescription = "设置订阅ID"
+                                )
+                            }
+                        }
+                    )
                 }
             ) { innerPadding ->
                 when {
@@ -162,7 +169,8 @@ private fun SubscriptionContent(
         modifier = modifier
     ) {
         LazyColumn(
-            contentPadding = PaddingValues(8.dp)
+            contentPadding = PaddingValues(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(feeds.itemCount) { index ->
                 val feed = feeds[index] ?: return@items
@@ -172,7 +180,6 @@ private fun SubscriptionContent(
                     onImageClick = { img, ext -> onImageClick(feed.id, img, ext) },
 //                    onUnsubscribe = { onEvent(Event.OnUnsubscribe(feed.id)) }
                 )
-                Spacer(modifier = Modifier.height(8.dp))
             }
 
             item {
@@ -293,11 +300,12 @@ private fun SubscriptionIdDialog(
         },
         dismissButton = {
             Row {
-                TextButton(onClick = onDismiss) {
-                    Text("取消")
-                }
                 TextButton(onClick = onGenerateRandom) {
                     Text("随机生成")
+                }
+                Spacer(modifier = Modifier.weight(1f))
+                TextButton(onClick = onDismiss) {
+                    Text("取消")
                 }
             }
         }
