@@ -120,7 +120,7 @@ private fun parseHtml(
     // 1.5. 根据策略处理空白行
     cleanHtml = when (blankLinePolicy) {
         BlankLinePolicy.KEEP -> cleanHtml
-        BlankLinePolicy.COLLAPSE -> cleanHtml.replace(Regex("(\\n\\s*){2,}"), "\n")
+        BlankLinePolicy.COLLAPSE -> cleanHtml.replace(Regex("(\\n\\s*){2,}"), "\n\n")
         BlankLinePolicy.REMOVE -> cleanHtml.lines().filter { it.isNotBlank() }.joinToString("\n")
     }
 
