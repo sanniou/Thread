@@ -12,11 +12,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
@@ -25,6 +27,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import app.cash.paging.LoadStateError
@@ -44,41 +47,59 @@ fun ListThreadPage(
 
     PullToRefreshWrapper(
         onRefreshTrigger = { threads.refresh() },
-        modifier = modifier
+        modifier = modifier.fillMaxSize()
     ) {
-
-        if (threads.loadState.refresh is LoadStateLoading) {
-            when {
-                threads.loadState.refresh is LoadStateLoading -> ThreadListSkeleton()
-                threads.loadState.refresh is LoadStateError -> {
-                    Button(
-                        onClick = { threads.retry() },
-                        modifier = Modifier.align(Alignment.Center)
-                    ) {
-                        Text("加载失败，点击重试")
-                    }
-                }
-            }
-        } else {
-            LazyColumn(
-                contentPadding = PaddingValues(horizontal = Dimens.padding_medium),
-                verticalArrangement = Arrangement.spacedBy(Dimens.padding_small)
-            ) {
-                items(threads.itemCount) { index ->
-                    val feed = threads[index] ?: return@items
-                    ForumThreadCard(
-                        thread = feed,
-                        onClick = { onThreadClicked(feed.id) },
-                        onImageClick = { img, ext -> onImageClick(feed.id, img, ext) }
+        when (threads.loadState.refresh) {
+            is LoadStateLoading -> ThreadListSkeleton()
+            is LoadStateError -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    StateContent(
+                        imageVector = Icons.Outlined.Star,
+                        message = "加载失败",
+                        action = {
+                            Button(onClick = { threads.retry() }) {
+                                Text("点击重试")
+                            }
+                        }
                     )
                 }
+            }
 
-                item {
-                    when {
-                        threads.loadState.append is LoadStateError -> LoadingFailedIndicator()
-                        threads.loadState.append is LoadStateLoading -> LoadingIndicator()
-                        threads.loadState.append.endOfPaginationReached && threads.itemCount == 0 -> EmptyContent()
-                        threads.loadState.append.endOfPaginationReached -> LoadEndIndicator()
+            else -> {
+                if (threads.itemCount == 0) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        StateContent(
+                            imageVector = Icons.Outlined.Star,
+                            message = "这里什么都没有\n试着换个板块看看吧"
+                        )
+                    }
+                    return@PullToRefreshWrapper
+                }
+                LazyColumn(
+                    contentPadding = PaddingValues(horizontal = Dimens.padding_medium),
+                    verticalArrangement = Arrangement.spacedBy(Dimens.padding_small)
+                ) {
+                    items(threads.itemCount) { index ->
+                        val feed = threads[index] ?: return@items
+                        ForumThreadCard(
+                            thread = feed,
+                            onClick = { onThreadClicked(feed.id) },
+                            onImageClick = { img, ext -> onImageClick(feed.id, img, ext) }
+                        )
+                    }
+
+                    item {
+                        when (threads.loadState.append) {
+                            is LoadStateError -> LoadingFailedIndicator()
+                            is LoadStateLoading -> LoadingIndicator()
+                            else -> LoadEndIndicator()
+                        }
                     }
                 }
             }
@@ -87,29 +108,31 @@ fun ListThreadPage(
 }
 
 @Composable
-private fun EmptyContent(modifier: Modifier = Modifier) {
-    Box(
+private fun StateContent(
+    modifier: Modifier = Modifier,
+    imageVector: ImageVector,
+    message: String,
+    action: (@Composable () -> Unit)? = null
+) {
+    Column(
         modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 64.dp),
-        contentAlignment = Alignment.Center
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(Dimens.padding_large)
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(Dimens.padding_large)
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.Star,
-                contentDescription = null,
-                modifier = Modifier.size(64.dp),
-                tint = MaterialTheme.colorScheme.secondary
-            )
-            Text(
-                text = "这里什么都没有\n试着换个板块看看吧",
-                style = MaterialTheme.typography.bodyLarge,
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
+        Icon(
+            imageVector = imageVector,
+            contentDescription = null,
+            modifier = Modifier.size(64.dp),
+            tint = MaterialTheme.colorScheme.secondary
+        )
+        Text(
+            text = message,
+            style = MaterialTheme.typography.bodyLarge,
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        action?.invoke()
     }
 }

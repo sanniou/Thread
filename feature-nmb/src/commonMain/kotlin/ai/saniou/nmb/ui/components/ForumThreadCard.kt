@@ -58,7 +58,8 @@ fun ForumThreadCard(
             verticalArrangement = Arrangement.spacedBy(Dimens.padding_small)
         ) {
             // 统一的头部
-            Column {
+            Column(verticalArrangement = Arrangement.spacedBy(Dimens.padding_small)) {
+                ThreadAuthor(thread)
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(Dimens.padding_small)
@@ -94,11 +95,7 @@ fun ForumThreadCard(
                         )
                     }
                 }
-                Spacer(modifier = Modifier.height(Dimens.padding_extra_small))
-                ThreadAuthor(thread)
             }
-
-            HorizontalDivider()
 
             // 内容区域
             ThreadBody(
@@ -175,7 +172,8 @@ fun ThreadBody(
                 // A simple regex for URLs, including those without http(s) prefix
                 regex = "(?:https?://|www\\.)[\\w\\-./?#&=%]+".toRegex(RegexOption.IGNORE_CASE),
                 onClick = { url ->
-                    val fullUrl = if (url.startsWith("www.", ignoreCase = true)) "http://$url" else url
+                    val fullUrl =
+                        if (url.startsWith("www.", ignoreCase = true)) "http://$url" else url
                     uriHandler.openUri(fullUrl)
                 }
             )
