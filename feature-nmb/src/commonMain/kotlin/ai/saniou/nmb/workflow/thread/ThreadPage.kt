@@ -540,6 +540,7 @@ fun ThreadSuccessContent(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun ThreadList(
     state: State,
@@ -586,13 +587,18 @@ private fun ThreadList(
         }
 
         // 工具栏
-        item {
+        stickyHeader {
             state.thread?.let {
-                ThreadToolbar(
-                    replyCount = it.replyCount.toString(),
-                    isPoOnly = state.isPoOnlyMode,
-                    onTogglePoOnly = onTogglePoOnly
-                )
+                Surface(
+                    modifier = Modifier.fillParentMaxWidth(),
+                    color = MaterialTheme.colorScheme.surface
+                ) {
+                    ThreadToolbar(
+                        replyCount = it.replyCount.toString(),
+                        isPoOnly = state.isPoOnlyMode,
+                        onTogglePoOnly = onTogglePoOnly
+                    )
+                }
             }
         }
 
@@ -696,49 +702,28 @@ private fun ThreadToolbar(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun ThreadMainPost(
-    thread: Thread,
-    refClick: (Long) -> Unit,
-    onImageClick: (String, String) -> Unit,
+private fun PostWrapper(
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
     onCopy: () -> Unit,
     onBookmark: () -> Unit,
+    isElevated: Boolean = false,
+    content: @Composable () -> Unit
 ) {
     var showMenu by remember { mutableStateOf(false) }
     Box {
-        ElevatedCard(
-            modifier = Modifier
-                .fillMaxWidth()
-                .combinedClickable(
-                    onClick = { /* Main post is not clickable */ },
-                    onLongClick = { showMenu = true }
-                ),
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-            ) {
-                // 头部信息
-                PostHeader(
-                    author = {
-                        ThreadAuthor(thread, isPo = true)
-                    },
-                    id = thread.id
-                )
-
-                // 标题
-                if (thread.title.isNotBlank() && thread.title != "无标题") {
-                    Text(
-                        text = thread.title,
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.padding(vertical = 12.dp)
-                    )
-                } else {
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
-
-                // 正文
-                ThreadBody(thread, onReferenceClick = refClick, onImageClick = onImageClick)
-            }
+        val cardModifier = modifier
+            .fillMaxWidth()
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = { showMenu = true }
+            )
+        if (isElevated) {
+            ElevatedCard(modifier = cardModifier) { content() }
+        } else {
+            Card(modifier = cardModifier) { content() }
         }
+
         DropdownMenu(
             expanded = showMenu,
             onDismissRequest = { showMenu = false }
@@ -761,7 +746,46 @@ fun ThreadMainPost(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun ThreadMainPost(
+    thread: Thread,
+    refClick: (Long) -> Unit,
+    onImageClick: (String, String) -> Unit,
+    onCopy: () -> Unit,
+    onBookmark: () -> Unit,
+) {
+    PostWrapper(
+        onClick = { /* 主楼不可点击 */ },
+        onCopy = onCopy,
+        onBookmark = onBookmark,
+        isElevated = true
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+        ) {
+            // 头部信息
+            PostHeader(
+                author = { ThreadAuthor(thread, isPo = true) },
+                id = thread.id
+            )
+
+            // 标题
+            if (thread.title.isNotBlank() && thread.title != "无标题") {
+                Text(
+                    text = thread.title,
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(vertical = 12.dp)
+                )
+            } else {
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            // 正文
+            ThreadBody(thread, onReferenceClick = refClick, onImageClick = onImageClick)
+        }
+    }
+}
+
 @Composable
 fun ThreadReply(
     reply: ThreadReply,
@@ -775,46 +799,21 @@ fun ThreadReply(
     val isPo = remember(reply.userHash) {
         reply.userHash == poUserHash
     }
-    var showMenu by remember { mutableStateOf(false) }
 
-    Box {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .combinedClickable(
-                    onClick = { onReplyClicked(reply.id) },
-                    onLongClick = { showMenu = true }
-                ),
+    PostWrapper(
+        onClick = { onReplyClicked(reply.id) },
+        onCopy = onCopy,
+        onBookmark = onBookmark
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
         ) {
-            Column(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-            ) {
-                PostHeader(
-                    author = { ThreadAuthor(reply, isPo = isPo) },
-                    id = reply.id
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-                ThreadBody(reply, onReferenceClick = refClick, onImageClick = onImageClick)
-            }
-        }
-        DropdownMenu(
-            expanded = showMenu,
-            onDismissRequest = { showMenu = false }
-        ) {
-            DropdownMenuItem(
-                text = { Text("复制") },
-                onClick = {
-                    onCopy()
-                    showMenu = false
-                }
+            PostHeader(
+                author = { ThreadAuthor(reply, isPo = isPo) },
+                id = reply.id
             )
-            DropdownMenuItem(
-                text = { Text("收藏") },
-                onClick = {
-                    onBookmark()
-                    showMenu = false
-                }
-            )
+            Spacer(modifier = Modifier.height(12.dp))
+            ThreadBody(reply, onReferenceClick = refClick, onImageClick = onImageClick)
         }
     }
 }
