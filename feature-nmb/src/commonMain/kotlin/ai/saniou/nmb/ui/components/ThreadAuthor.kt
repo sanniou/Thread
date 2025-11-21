@@ -19,16 +19,16 @@ fun ThreadAuthor(author: IBaseAuthor, isPo: Boolean = false) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Dimens.padding_small)
     ) {
+        PoTag(isPo)
         Text(
-            text = author.name,
+            text = author.userHash,
             style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.Medium,
             color = if (isPo) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
         )
-        PoTag(isPo)
-        if (author.userHash.isNotBlank()) {
+        if (author.name.isNotBlank() && author.name != "无名氏") {
             Text(
-                text = author.userHash,
+                text = author.name,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
