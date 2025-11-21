@@ -43,7 +43,6 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import app.cash.paging.LoadState
 import app.cash.paging.LoadStateError
 import app.cash.paging.LoadStateLoading
 import app.cash.paging.LoadStateNotLoading
@@ -123,7 +122,7 @@ data class ForumPage(
             ) {
                 Box(modifier = Modifier.fillMaxSize()) {
                     when (threads.loadState.refresh) {
-                        is LoadStateError -> ThreadListSkeleton()
+                        is LoadStateLoading -> ThreadListSkeleton()
                         is LoadStateError -> {
                             Button(
                                 onClick = { threads.retry() },
