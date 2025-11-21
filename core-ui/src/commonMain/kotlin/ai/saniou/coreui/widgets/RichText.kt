@@ -18,7 +18,19 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 
 private const val TAG_URL = "URL"
-private const val TAG_REFERENCE = "REFERENCE"
+
+/**
+ * 定义一个可点击的文本模式
+ *
+ * @param tag 此模式在 AnnotatedString 中的唯一标识符
+ * @param regex 用于查找匹配项的正则表达式。通常，捕获组1 (`groupValues[1]`) 的内容会被用作回调参数，如果不存在则使用整个匹配项。
+ * @param onClick 点击匹配项时触发的回调，参数为匹配到的文本
+ */
+data class ClickablePattern(
+    val tag: String,
+    val regex: Regex,
+    val onClick: (String) -> Unit,
+)
 
 /**
  * 空白行处理策略
@@ -52,19 +64,17 @@ fun RichText(
     text: String,
     modifier: Modifier = Modifier,
     style: TextStyle = MaterialTheme.typography.bodyMedium,
-    onReferenceClick: ((String) -> Unit)? = null,
-    referencePattern: Regex? = null,
+    clickablePatterns: List<ClickablePattern> = emptyList(),
     onLinkClick: ((String) -> Unit)? = null,
     overflow: TextOverflow = TextOverflow.Clip,
     maxLines: Int = Int.MAX_VALUE,
     blankLinePolicy: BlankLinePolicy = BlankLinePolicy.KEEP,
 ) {
-    val uriHandler = LocalUriHandler.current
     val linkColor = MaterialTheme.colorScheme.primary
 
-    val annotatedString = remember(text, referencePattern, style, linkColor, blankLinePolicy) {
+    val annotatedString = remember(text, clickablePatterns, style, linkColor, blankLinePolicy) {
         val styledText = parseHtml(text, style, linkColor, blankLinePolicy)
-        applyClickableAnnotations(styledText, referencePattern)
+        applyClickableAnnotations(styledText, clickablePatterns, linkColor)
     }
 
     ClickableText(
@@ -74,16 +84,22 @@ fun RichText(
         maxLines = maxLines,
         overflow = overflow,
         onClick = { offset ->
-            annotatedString.getStringAnnotations(TAG_REFERENCE, offset, offset)
-                .firstOrNull()?.let { annotation ->
-                    onReferenceClick?.invoke(annotation.item)
-                }
-
+            // 优先处理 HTML 的 a 标签，因为它范围最精确
             annotatedString.getStringAnnotations(TAG_URL, offset, offset)
                 .firstOrNull()?.let { annotation ->
                     val url = annotation.item
-                    onLinkClick?.invoke(url) ?: uriHandler.openUri(url)
+                    onLinkClick?.invoke(url)
+                    return@ClickableText
                 }
+
+            // 然后处理自定义的正则匹配
+            clickablePatterns.forEach { pattern ->
+                annotatedString.getStringAnnotations(pattern.tag, offset, offset)
+                    .firstOrNull()?.let { annotation ->
+                        pattern.onClick(annotation.item)
+                        return@ClickableText // 命中一个后即返回，避免多重响应
+                    }
+            }
         }
     )
 }
@@ -95,10 +111,11 @@ private fun parseHtml(
     html: String,
     baseStyle: TextStyle,
     linkColor: Color,
-    blankLinePolicy: BlankLinePolicy
+    blankLinePolicy: BlankLinePolicy,
 ): AnnotatedString {
     // 1. 预处理：解码HTML实体并将<br>替换为换行符
-    var cleanHtml = decodeHtmlEntities(html).replace(Regex("<br\\s*/?>", RegexOption.IGNORE_CASE), "\n")
+    var cleanHtml =
+        decodeHtmlEntities(html).replace(Regex("<br\\s*/?>", RegexOption.IGNORE_CASE), "\n")
 
     // 1.5. 根据策略处理空白行
     cleanHtml = when (blankLinePolicy) {
@@ -128,6 +145,7 @@ private fun parseHtml(
                         // 如果是链接，也需要弹出注解
                         if (tag.name == "a") pop()
                     }
+
                     !tag.isSelfClosing -> {
                         // 开始标签, 推入新样式
                         styleStack.add(tag.toSpanStyle(styleStack.last(), linkColor))
@@ -152,28 +170,46 @@ private fun parseHtml(
  */
 private fun applyClickableAnnotations(
     styledText: AnnotatedString,
-    referencePattern: Regex?
+    clickablePatterns: List<ClickablePattern>,
+    linkColor: Color,
 ): AnnotatedString {
     return buildAnnotatedString {
         append(styledText)
 
-        // 应用自定义引用模式的注解
-        referencePattern?.let { regex ->
-            regex.findAll(styledText.text).forEach { matchResult ->
-                val refId = matchResult.groupValues.getOrNull(1) ?: return@forEach
+        // 获取所有已存在的注解范围，避免重叠处理
+        val existingRanges = styledText.getStringAnnotations(0, styledText.length)
+            .map { it.start..it.end }
+
+        clickablePatterns.forEach { pattern ->
+            pattern.regex.findAll(styledText.text).forEach { matchResult ->
                 val range = matchResult.range
-                addStringAnnotation(TAG_REFERENCE, refId, range.first, range.last + 1)
-                addStyle(
-                    style = SpanStyle(
-                        color = Color.Unspecified, // 保持原有颜色
-                        textDecoration = TextDecoration.Underline
-                    ),
-                    start = range.first,
-                    end = range.last + 1
-                )
+
+                // 检查当前匹配范围是否与任何已存在的注解范围重叠
+                val isOverlapping = existingRanges.any { it.overlaps(range) }
+
+                if (!isOverlapping) {
+                    // 优先使用捕获组1的内容作为点击参数，否则使用整个匹配项
+                    val clickableText = matchResult.groupValues.getOrNull(1) ?: matchResult.value
+                    addStringAnnotation(pattern.tag, clickableText, range.first, range.last + 1)
+                    addStyle(
+                        style = SpanStyle(
+                            color = linkColor,
+                            textDecoration = TextDecoration.Underline
+                        ),
+                        start = range.first,
+                        end = range.last + 1
+                    )
+                }
             }
         }
     }
+}
+
+/**
+ * 检查两个范围是否存在重叠
+ */
+private fun IntRange.overlaps(other: IntRange): Boolean {
+    return first <= other.last && last >= other.first
 }
 
 private data class HtmlTag(
@@ -181,7 +217,7 @@ private data class HtmlTag(
     val name: String,
     val attributes: Map<String, String>,
     val isClosing: Boolean,
-    val isSelfClosing: Boolean
+    val isSelfClosing: Boolean,
 )
 
 private fun parseTag(tagString: String): HtmlTag {
@@ -212,6 +248,7 @@ private fun HtmlTag.toSpanStyle(currentStyle: SpanStyle, linkColor: Color): Span
                 newStyle = newStyle.copy(color = color)
             }
         }
+
         "a" -> {
             if (attributes.containsKey("href")) {
                 newStyle = newStyle.copy(
