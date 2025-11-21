@@ -40,6 +40,7 @@ import org.jetbrains.compose.resources.stringResource
 import thread.feature_nmb.generated.resources.Res
 import thread.feature_nmb.generated.resources.empty_title
 import ai.saniou.coreui.theme.Dimens
+import ai.saniou.coreui.widgets.BlankLinePolicy
 import androidx.compose.material3.Surface
 
 /**
@@ -195,7 +196,8 @@ fun ThreadBody(
         overflow = TextOverflow.Ellipsis,
         style = MaterialTheme.typography.bodyMedium,
         onReferenceClick = { onReferenceClick?.invoke(it.toLong()) },
-        referencePattern = ">>No\\.(\\d+)".toRegex()
+        referencePattern = ">>No\\.(\\d+)".toRegex(),
+        blankLinePolicy = BlankLinePolicy.COLLAPSE
     )
 
     if (body.img.isNotEmpty() && body.ext.isNotEmpty()) {
