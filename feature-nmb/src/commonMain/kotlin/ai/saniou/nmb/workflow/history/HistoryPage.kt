@@ -1,6 +1,5 @@
 package ai.saniou.nmb.workflow.history
 
-import ai.saniou.nmb.di.nmbdi
 import ai.saniou.nmb.workflow.home.ListThreadPage
 import ai.saniou.nmb.workflow.image.ImageInfo
 import ai.saniou.nmb.workflow.image.ImagePreviewPage
@@ -20,7 +19,7 @@ class HistoryPage : Screen {
         val navigator = LocalNavigator.currentOrThrow
 
         ListThreadPage(
-            threads = viewModel.historyThreads,
+            threadFlow = viewModel.historyThreads,
             onThreadClicked = { navigator.push(ThreadPage(it)) },
             onImageClick = { _, imgPath, ext ->
                 val imageInfo = ImageInfo(imgPath, ext)

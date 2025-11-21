@@ -1,28 +1,17 @@
 package ai.saniou.nmb.workflow.forum
 
-import ai.saniou.coreui.widgets.PullToRefreshWrapper
 import ai.saniou.nmb.di.nmbdi
-import ai.saniou.nmb.ui.components.LoadEndIndicator
-import ai.saniou.nmb.ui.components.LoadingFailedIndicator
-import ai.saniou.nmb.ui.components.LoadingIndicator
-import ai.saniou.nmb.ui.components.ThreadCard
-import ai.saniou.nmb.ui.components.ThreadListSkeleton
+import ai.saniou.nmb.workflow.home.ListThreadPage
 import ai.saniou.nmb.workflow.image.ImageInfo
 import ai.saniou.nmb.workflow.image.ImagePreviewPage
 import ai.saniou.nmb.workflow.image.ImagePreviewUiState
 import ai.saniou.nmb.workflow.thread.ThreadPage
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
@@ -37,17 +26,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import app.cash.paging.LoadStateError
-import app.cash.paging.LoadStateLoading
-import app.cash.paging.LoadStateNotLoading
-import app.cash.paging.compose.collectAsLazyPagingItems
-import app.cash.paging.compose.itemKey
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -70,7 +52,6 @@ data class ForumPage(
             di.direct.instance(arg = forumId to fgroupId)
         }
         val state by viewModel.state.collectAsStateWithLifecycle()
-        val threads = viewModel.threads.collectAsLazyPagingItems()
         val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
         val lazyListState = rememberLazyListState()
         val expandedFab by remember { derivedStateOf { lazyListState.firstVisibleItemIndex == 0 } }
@@ -116,68 +97,26 @@ data class ForumPage(
                 )
             }
         ) { innerPadding ->
-            PullToRefreshWrapper(
-                onRefreshTrigger = { threads.refresh() },
+            ListThreadPage(
+                threadFlow = viewModel.threads,
+                onThreadClicked = { threadId -> navigator.push(ThreadPage(threadId)) },
+                onImageClick = { _, imgPath, ext ->
+                    val imageInfo = ImageInfo(imgPath, ext)
+                    val uiState = ImagePreviewUiState(
+                        images = listOf(imageInfo),
+                        initialIndex = 0,
+                        endReached = true
+                    )
+                    navigator.push(
+                        ImagePreviewPage(
+                            uiState = uiState,
+                            di = di,
+                            onLoadMore = {}
+                        )
+                    )
+                },
                 modifier = Modifier.padding(innerPadding)
-            ) {
-                Box(modifier = Modifier.fillMaxSize()) {
-                    when (threads.loadState.refresh) {
-                        is LoadStateLoading -> ThreadListSkeleton()
-                        is LoadStateError -> {
-                            Button(
-                                onClick = { threads.retry() },
-                                modifier = Modifier.align(Alignment.Center)
-                            ) {
-                                Text("加载失败，点击重试")
-                            }
-                        }
-
-                        else -> {
-                            if (threads.itemCount == 0) {
-                                Box(modifier = Modifier.fillMaxSize()) {
-                                    Text("什么都没有", modifier = Modifier.align(Alignment.Center))
-                                }
-                            } else {
-                                LazyColumn(
-                                    state = lazyListState,
-                                    contentPadding = PaddingValues(8.dp),
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    items(threads.itemCount, threads.itemKey { it.id }) { index ->
-                                        threads[index]?.let { thread ->
-                                            ThreadCard(
-                                                thread = thread,
-                                                onClick = { navigator.push(ThreadPage(thread.id)) },
-                                                onImageClick = { imgPath, ext ->
-                                                    val imageInfo = ImageInfo(imgPath, ext)
-                                                    val uiState = ImagePreviewUiState(
-                                                        images = listOf(imageInfo),
-                                                        initialIndex = 0,
-                                                        endReached = true
-                                                    )
-                                                    navigator.push(
-                                                        ImagePreviewPage(
-                                                            uiState = uiState,
-                                                            di = di,
-                                                            onLoadMore = {}
-                                                        )
-                                                    )
-                                                }
-                                            )
-                                        }
-                                    }
-
-                                    when (threads.loadState.append) {
-                                        is LoadStateLoading -> item { LoadingIndicator() }
-                                        is LoadStateError -> item { LoadingFailedIndicator() }
-                                        is LoadStateNotLoading -> item { LoadEndIndicator() }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            )
         }
     }
 }

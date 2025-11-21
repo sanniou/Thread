@@ -2,10 +2,10 @@ package ai.saniou.nmb.workflow.subscription
 
 import ai.saniou.coreui.widgets.PullToRefreshWrapper
 import ai.saniou.nmb.di.nmbdi
+import ai.saniou.nmb.ui.components.ForumThreadCard
 import ai.saniou.nmb.ui.components.LoadEndIndicator
 import ai.saniou.nmb.ui.components.LoadingFailedIndicator
 import ai.saniou.nmb.ui.components.LoadingIndicator
-import ai.saniou.nmb.ui.components.SubscriptionCard
 import ai.saniou.nmb.ui.components.ThreadListSkeleton
 import ai.saniou.nmb.workflow.image.ImageInfo
 import ai.saniou.nmb.workflow.image.ImagePreviewPage
@@ -174,8 +174,8 @@ private fun SubscriptionContent(
         ) {
             items(feeds.itemCount) { index ->
                 val feed = feeds[index] ?: return@items
-                SubscriptionCard(
-                    feed = feed,
+                ForumThreadCard(
+                    thread = feed,
                     onClick = { onThreadClicked(feed.id) },
                     onImageClick = { img, ext -> onImageClick(feed.id, img, ext) },
 //                    onUnsubscribe = { onEvent(Event.OnUnsubscribe(feed.id)) }

@@ -4,7 +4,6 @@ import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.BlankLinePolicy
 import ai.saniou.coreui.widgets.ClickablePattern
 import ai.saniou.coreui.widgets.RichText
-import ai.saniou.nmb.data.entity.Feed
 import ai.saniou.nmb.data.entity.IBaseThread
 import ai.saniou.nmb.data.entity.IBaseThreadReply
 import ai.saniou.nmb.data.entity.IThreadBody
@@ -41,26 +40,10 @@ import thread.feature_nmb.generated.resources.Res
 import thread.feature_nmb.generated.resources.empty_title
 
 /**
- * 订阅卡片，对 ThreadCard 的封装
- */
-@Composable
-fun SubscriptionCard(
-    feed: Feed,
-    onClick: () -> Unit,
-    onImageClick: ((String, String) -> Unit)? = null,
-) {
-    ThreadCard(
-        thread = feed,
-        onClick = onClick,
-        onImageClick = onImageClick
-    )
-}
-
-/**
  * 串内容卡片，遵循 MD3 设计风格
  */
 @Composable
-fun ThreadCard(
+fun ForumThreadCard(
     thread: IBaseThread,
     onClick: () -> Unit,
     onImageClick: ((String, String) -> Unit)? = null,
@@ -81,7 +64,19 @@ fun ThreadCard(
                     horizontalArrangement = Arrangement.spacedBy(Dimens.padding_small)
                 ) {
                     if (thread.admin > 0) {
-                        AdminIcon()
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.primaryContainer
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Star,
+                                contentDescription = "管理员",
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier
+                                    .size(Dimens.icon_size_medium)
+                                    .padding(Dimens.padding_extra_small)
+                            )
+                        }
                     }
                     Text(
                         text = thread.title.ifBlank { stringResource(Res.string.empty_title) },
@@ -119,24 +114,6 @@ fun ThreadCard(
 }
 
 @Composable
-private fun AdminIcon() {
-    Surface(
-        shape = CircleShape,
-        color = MaterialTheme.colorScheme.primaryContainer
-    ) {
-        Icon(
-            imageVector = Icons.Default.Star,
-            contentDescription = "管理员",
-            tint = MaterialTheme.colorScheme.onPrimaryContainer,
-            modifier = Modifier
-                .size(Dimens.icon_size_medium)
-                .padding(Dimens.padding_extra_small)
-        )
-    }
-}
-
-
-@Composable
 private fun ThreadCardFooter(thread: IBaseThread) {
     val threadReply = thread as? IBaseThreadReply
 
@@ -163,14 +140,12 @@ private fun ThreadCardFooter(thread: IBaseThread) {
 
         Spacer(modifier = Modifier.weight(1f))
 
-        threadReply?.run {
-            if ((remainReplies ?: 0) > 0) {
-                Text(
-                    text = "省略${remainReplies}条",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+        if ((threadReply?.remainReplies ?: 0) > 0) {
+            Text(
+                text = "省略${threadReply?.remainReplies}条",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 
