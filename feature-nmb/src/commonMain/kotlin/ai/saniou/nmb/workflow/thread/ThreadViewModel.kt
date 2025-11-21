@@ -77,6 +77,12 @@ class ThreadViewModel(
         observeThreadDetails()
         updateLastAccessTime()
         _state.update { it.copy(replies = replies) }
+
+        screenModelScope.launch {
+            loadRequest.collect { request ->
+                _state.update { it.copy(isPoOnlyMode = request.isPoOnly) }
+            }
+        }
     }
 
     fun onEvent(event: Event) {

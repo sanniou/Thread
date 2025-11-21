@@ -109,6 +109,8 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.launch
 import androidx.compose.material3.Card
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.FilledIconToggleButton
+import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import app.cash.paging.LoadStateError
@@ -181,20 +183,10 @@ data class ThreadPage(
                     },
                     title = {
                         if (state.thread != null) {
-                            Column {
-                                Text(
-                                    text = "No.${state.thread?.id}",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                if (state.forumName.isNotBlank()) {
-                                    Text(
-                                        text = state.forumName,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
-                                }
-                            }
+                            Text(
+                                text = state.forumName,
+                                style = MaterialTheme.typography.titleLarge,
+                            )
                         }
                     },
                     navigationIcon = {
@@ -220,13 +212,6 @@ data class ThreadPage(
                                 expanded = showMenu,
                                 onDismissRequest = { showMenu = false }
                             ) {
-                                DropdownMenuItem(
-                                    text = { Text("""if (state.isPoOnlyMode) "查看全部" else "仅看PO"""") },
-                                    onClick = {
-                                        viewModel.onEvent(Event.TogglePoOnlyMode)
-                                        showMenu = false
-                                    }
-                                )
                                 DropdownMenuItem(
                                     text = { Text("跳页") },
                                     onClick = {
@@ -267,6 +252,7 @@ data class ThreadPage(
                 state = state,
                 lazyListState = lazyListState,
                 onRefresh = { viewModel.onEvent(Event.Refresh) },
+                onTogglePoOnly = { viewModel.onEvent(Event.TogglePoOnlyMode) },
                 onRefClick = { refId ->
                     currentReferenceId = refId
                     referenceViewModel.onEvent(
@@ -322,6 +308,7 @@ private fun ThreadContentRouter(
     state: State,
     lazyListState: LazyListState,
     onRefresh: () -> Unit,
+    onTogglePoOnly: () -> Unit,
     onRefClick: (Long) -> Unit,
     onImageClick: (String, String) -> Unit,
     onUpdateLastReadId: (Long) -> Unit,
@@ -342,6 +329,7 @@ private fun ThreadContentRouter(
                 lazyListState = lazyListState,
                 onRefresh = { /* Handled by PullToRefresh */ },
                 onReplyClicked = { /* TODO */ },
+                onTogglePoOnly = onTogglePoOnly,
                 onRefClick = onRefClick,
                 onImageClick = onImageClick,
                 onUpdateLastReadId = onUpdateLastReadId,
@@ -495,6 +483,7 @@ fun ThreadSuccessContent(
     lazyListState: LazyListState,
     onRefresh: () -> Unit,
     onReplyClicked: (Long) -> Unit,
+    onTogglePoOnly: () -> Unit,
     onRefClick: (Long) -> Unit,
     onImageClick: (String, String) -> Unit,
     onUpdateLastReadId: (Long) -> Unit,
@@ -540,6 +529,7 @@ fun ThreadSuccessContent(
             state = state,
             lazyListState = lazyListState,
             onReplyClicked = onReplyClicked,
+            onTogglePoOnly = onTogglePoOnly,
             onRefClick = onRefClick,
             onImageClick = onImageClick,
             onRefresh = onRefresh,
@@ -555,6 +545,7 @@ private fun ThreadList(
     state: State,
     lazyListState: LazyListState,
     onReplyClicked: (Long) -> Unit,
+    onTogglePoOnly: () -> Unit,
     onRefClick: (Long) -> Unit,
     onImageClick: (String, String) -> Unit,
     onRefresh: () -> Unit,
@@ -586,11 +577,21 @@ private fun ThreadList(
             state.thread?.let {
                 ThreadMainPost(
                     thread = it,
-                    forumName = state.forumName,
                     refClick = onRefClick,
                     onImageClick = onImageClick,
                     onCopy = { onCopy(it.content) },
                     onBookmark = { onBookmarkThread(it) }
+                )
+            }
+        }
+
+        // 工具栏
+        item {
+            state.thread?.let {
+                ThreadToolbar(
+                    replyCount = it.replyCount.toString(),
+                    isPoOnly = state.isPoOnlyMode,
+                    onTogglePoOnly = onTogglePoOnly
                 )
             }
         }
@@ -667,11 +668,36 @@ private fun EmptyReplyContent(onRefresh: () -> Unit) {
     }
 }
 
+@Composable
+private fun ThreadToolbar(
+    replyCount: String,
+    isPoOnly: Boolean,
+    onTogglePoOnly: () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = "回复: $replyCount",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        FilledIconToggleButton(
+            checked = isPoOnly,
+            onCheckedChange = { onTogglePoOnly() }
+        ) {
+            Icon(Icons.Default.Person, contentDescription = "只看PO")
+        }
+    }
+}
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ThreadMainPost(
     thread: Thread,
-    forumName: String = "",
     refClick: (Long) -> Unit,
     onImageClick: (String, String) -> Unit,
     onCopy: () -> Unit,
@@ -693,17 +719,7 @@ fun ThreadMainPost(
                 // 头部信息
                 PostHeader(
                     author = {
-                        Column {
-                            ThreadAuthor(thread, isPo = true)
-                            if (forumName.isNotBlank()) {
-                                Text(
-                                    text = forumName,
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.padding(top = 4.dp)
-                                )
-                            }
-                        }
+                        ThreadAuthor(thread, isPo = true)
                     },
                     id = thread.id
                 )
@@ -721,16 +737,6 @@ fun ThreadMainPost(
 
                 // 正文
                 ThreadBody(thread, onReferenceClick = refClick, onImageClick = onImageClick)
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // 回复数
-                Text(
-                    text = "回复: ${thread.replyCount}",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.align(Alignment.End)
-                )
             }
         }
         DropdownMenu(

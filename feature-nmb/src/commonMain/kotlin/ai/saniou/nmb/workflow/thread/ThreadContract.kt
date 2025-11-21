@@ -34,7 +34,8 @@ interface ThreadContract {
         val isSubscribed: Boolean = false,
         val forumName: String = "",
         val lastReadReplyId: Long = 0,
-        val imagePreviewState: ImagePreviewUiState = ImagePreviewUiState()
+        val imagePreviewState: ImagePreviewUiState = ImagePreviewUiState(),
+        val isPoOnlyMode: Boolean = false
     )
 
     /**
