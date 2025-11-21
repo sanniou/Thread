@@ -1,13 +1,15 @@
 package ai.saniou.coreui.widgets
 
-import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.LinkInteractionListener
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -71,36 +73,20 @@ fun RichText(
     blankLinePolicy: BlankLinePolicy = BlankLinePolicy.KEEP,
 ) {
     val linkColor = MaterialTheme.colorScheme.primary
+    val uriHandler = LocalUriHandler.current
+    val linkClickHandler = onLinkClick ?: { url -> uriHandler.openUri(url) }
 
     val annotatedString = remember(text, clickablePatterns, style, linkColor, blankLinePolicy) {
-        val styledText = parseHtml(text, style, linkColor, blankLinePolicy)
+        val styledText = parseHtml(text, style, linkColor, blankLinePolicy, linkClickHandler)
         applyClickableAnnotations(styledText, clickablePatterns, linkColor)
     }
 
-    ClickableText(
+    Text(
         text = annotatedString,
         modifier = modifier,
         style = style,
         maxLines = maxLines,
         overflow = overflow,
-        onClick = { offset ->
-            // 优先处理 HTML 的 a 标签，因为它范围最精确
-            annotatedString.getStringAnnotations(TAG_URL, offset, offset)
-                .firstOrNull()?.let { annotation ->
-                    val url = annotation.item
-                    onLinkClick?.invoke(url)
-                    return@ClickableText
-                }
-
-            // 然后处理自定义的正则匹配
-            clickablePatterns.forEach { pattern ->
-                annotatedString.getStringAnnotations(pattern.tag, offset, offset)
-                    .firstOrNull()?.let { annotation ->
-                        pattern.onClick(annotation.item)
-                        return@ClickableText // 命中一个后即返回，避免多重响应
-                    }
-            }
-        }
     )
 }
 
@@ -112,6 +98,7 @@ private fun parseHtml(
     baseStyle: TextStyle,
     linkColor: Color,
     blankLinePolicy: BlankLinePolicy,
+    onLinkClick: (String) -> Unit,
 ): AnnotatedString {
     // 1. 预处理：解码HTML实体并将<br>替换为换行符
     var cleanHtml =
@@ -151,7 +138,12 @@ private fun parseHtml(
                         styleStack.add(tag.toSpanStyle(styleStack.last(), linkColor))
                         // 如果是链接，推入注解
                         tag.attributes["href"]?.let { href ->
-                            pushStringAnnotation(TAG_URL, href)
+                            pushLink(
+                                LinkAnnotation.Clickable(
+                                    TAG_URL,
+                                    linkInteractionListener = LinkInteractionListener { onLinkClick(href) }
+                                )
+                            )
                         }
                     }
                 }
@@ -177,7 +169,7 @@ private fun applyClickableAnnotations(
         append(styledText)
 
         // 获取所有已存在的注解范围，避免重叠处理
-        val existingRanges = styledText.getStringAnnotations(0, styledText.length)
+        val existingRanges = styledText.getLinkAnnotations(0, styledText.length)
             .map { it.start..it.end }
 
         clickablePatterns.forEach { pattern ->
@@ -190,7 +182,17 @@ private fun applyClickableAnnotations(
                 if (!isOverlapping) {
                     // 优先使用捕获组1的内容作为点击参数，否则使用整个匹配项
                     val clickableText = matchResult.groupValues.getOrNull(1) ?: matchResult.value
-                    addStringAnnotation(pattern.tag, clickableText, range.first, range.last + 1)
+                    addLink(
+                        clickable = LinkAnnotation.Clickable(
+                            tag = pattern.tag,
+                            linkInteractionListener = LinkInteractionListener {
+                                pattern.onClick(
+                                    clickableText
+                                )
+                            }),
+                        start = range.first,
+                        end = range.last + 1
+                    )
                     addStyle(
                         style = SpanStyle(
                             color = linkColor,
