@@ -8,6 +8,7 @@ import ai.saniou.nmb.data.api._NmbXdApiImpl
 import ai.saniou.nmb.data.database.DriverFactory
 import ai.saniou.nmb.data.database.createDatabase
 import ai.saniou.nmb.data.manager.CdnManager
+import ai.saniou.nmb.data.repository.BookmarkRepository
 import ai.saniou.nmb.data.repository.ForumRepository
 import ai.saniou.nmb.data.repository.HistoryRepository
 import ai.saniou.nmb.data.repository.NmbRepository
@@ -16,14 +17,18 @@ import ai.saniou.nmb.data.storage.CategoryStorage
 import ai.saniou.nmb.data.storage.CommonStorage
 import ai.saniou.nmb.data.storage.GreetImageStorage
 import ai.saniou.nmb.data.storage.SubscriptionStorage
+import ai.saniou.nmb.domain.AddBookmarkUseCase
 import ai.saniou.nmb.domain.ForumCategoryUseCase
 import ai.saniou.nmb.domain.ForumUseCase
+import ai.saniou.nmb.domain.GetBookmarksUseCase
 import ai.saniou.nmb.domain.GetReferenceUseCase
 import ai.saniou.nmb.domain.GetThreadDetailUseCase
 import ai.saniou.nmb.domain.GetThreadRepliesPagingUseCase
 import ai.saniou.nmb.domain.HistoryUseCase
+import ai.saniou.nmb.domain.IsBookmarkedUseCase
 import ai.saniou.nmb.domain.NoticeUseCase
 import ai.saniou.nmb.domain.PostUseCase
+import ai.saniou.nmb.domain.RemoveBookmarkUseCase
 import ai.saniou.nmb.domain.SubscriptionFeedUseCase
 import ai.saniou.nmb.domain.ToggleSubscriptionUseCase
 import ai.saniou.nmb.domain.UserUseCase
@@ -63,6 +68,7 @@ val nmbdi = DI {
     // NMB 仓库
     bindSingleton<NmbRepository> { NmbRepositoryImpl(instance(), instance()) }
     bindSingleton<HistoryRepository> { NmbRepositoryImpl(instance(), instance()) }
+    bindSingleton<BookmarkRepository> { BookmarkRepository(instance()) }
 
     // CDN管理器
     bindSingleton<CdnManager> { CdnManager(instance()) }
@@ -123,6 +129,7 @@ val nmbdi = DI {
              instance(),
              instance(),
              instance(),
+             instance(),
         )
     }
     bindProvider { ToggleSubscriptionUseCase(instance(), instance()) }
@@ -146,7 +153,11 @@ val nmbdi = DI {
     bindProvider { HistoryViewModel(instance()) }
 
     // 收藏相关
-    bindProvider { BookmarkViewModel(instance()) }
+    bindProvider { GetBookmarksUseCase(instance()) }
+    bindProvider { AddBookmarkUseCase(instance()) }
+    bindProvider { RemoveBookmarkUseCase(instance()) }
+    bindProvider { IsBookmarkedUseCase(instance()) }
+    bindProvider { BookmarkViewModel(instance(), instance()) }
 
     bindSingleton {
         createDatabase(DriverFactory())
@@ -160,5 +171,3 @@ val nmbdi = DI {
         CommonStorage(scope = CoroutineScope(Dispatchers.Default))
     }
 }
-
-

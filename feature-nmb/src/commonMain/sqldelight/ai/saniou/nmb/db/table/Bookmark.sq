@@ -1,17 +1,19 @@
 CREATE TABLE bookmark (
-    id TEXT NOT NULL PRIMARY KEY,
-    threadReplayId TEXT NOT NULL,
+    id INTEGER NOT NULL PRIMARY KEY,
+    postId TEXT NOT NULL UNIQUE,
     content TEXT NOT NULL,
     tag TEXT,
     createdAt INTEGER NOT NULL
 );
 
 selectAll:
-SELECT * FROM bookmark;
-
-delete:
-DELETE FROM bookmark WHERE id = ?;
+SELECT * FROM bookmark ORDER BY createdAt DESC;
 
 insert:
-INSERT  OR REPLACE INTO bookmark (id, threadReplayId, content, tag, createdAt)
-VALUES (?, ?, ?, ?, ?);
+INSERT OR IGNORE INTO bookmark(postId, content, tag, createdAt) VALUES (?, ?, ?, ?);
+
+delete:
+DELETE FROM bookmark WHERE postId = ?;
+
+getById:
+SELECT * FROM bookmark WHERE postId = ?;

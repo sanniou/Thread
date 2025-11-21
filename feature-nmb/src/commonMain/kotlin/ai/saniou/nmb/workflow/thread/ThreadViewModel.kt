@@ -4,6 +4,7 @@ import ai.saniou.nmb.data.entity.Thread
 import ai.saniou.nmb.data.entity.ThreadReply
 import ai.saniou.nmb.data.repository.NmbRepository
 import ai.saniou.nmb.db.Database
+import ai.saniou.nmb.domain.AddBookmarkUseCase
 import ai.saniou.nmb.domain.GetThreadDetailUseCase
 import ai.saniou.nmb.domain.GetThreadRepliesPagingUseCase
 import ai.saniou.nmb.domain.ToggleSubscriptionUseCase
@@ -43,13 +44,14 @@ class ThreadViewModel(
     private val getThreadRepliesPagingUseCase: GetThreadRepliesPagingUseCase,
     private val nmbRepository: NmbRepository,
     private val toggleSubscriptionUseCase: ToggleSubscriptionUseCase,
+    private val addBookmarkUseCase: AddBookmarkUseCase,
     private val db: Database,
 ) : ScreenModel {
 
     private data class LoadRequest(
         val threadId: Long,
         val isPoOnly: Boolean = false,
-        val page: Int = 1,
+        val page: Int = 1
     )
 
     private val _state = MutableStateFlow(State())
@@ -125,16 +127,14 @@ class ThreadViewModel(
                 }
                 .collectLatest { detail ->
                     val thread = detail.thread
-                    val totalPages =
-                        (thread.replyCount / 19) + if (thread.replyCount % 19 > 0) 1 else 0
+                    val totalPages = (thread.replyCount / 19) + if (thread.replyCount % 19 > 0) 1 else 0
                     _state.update {
                         it.copy(
                             isLoading = false,
                             thread = thread,
                             lastReadReplyId = detail.lastReadReplyId,
                             totalPages = totalPages.toInt().coerceAtLeast(1),
-                            forumName = db.forumQueries.getForum(thread.fid)
-                                .executeAsOneOrNull()?.name ?: ""
+                            forumName = db.forumQueries.getForum(thread.fid).executeAsOneOrNull()?.name ?: ""
                         )
                     }
                 }
@@ -170,30 +170,16 @@ class ThreadViewModel(
         }
     }
 
-    @OptIn(ExperimentalTime::class)
     private fun bookmarkThread(thread: Thread) {
         screenModelScope.launch {
-            db.bookmarkQueries.insert(
-                id = thread.id.toString(),
-                threadReplayId = thread.id.toString(),
-                content = thread.content,
-                tag = null,
-                createdAt = Clock.System.now().epochSeconds
-            )
+            addBookmarkUseCase(thread.id.toString(), thread.content)
             _effect.send(Effect.ShowSnackbar("主楼已收藏"))
         }
     }
 
-    @OptIn(ExperimentalTime::class)
     private fun bookmarkReply(reply: ThreadReply) {
         screenModelScope.launch {
-            db.bookmarkQueries.insert(
-                id = reply.id.toString(),
-                threadReplayId = reply.id.toString(),
-                content = reply.content,
-                tag = null,
-                createdAt = Clock.System.now().epochSeconds
-            )
+            addBookmarkUseCase(reply.id.toString(), reply.content)
             _effect.send(Effect.ShowSnackbar("回复已收藏"))
         }
     }
@@ -219,8 +205,7 @@ class ThreadViewModel(
                 }
                 images
             }.collectLatest { images ->
-                val initialIndex =
-                    images.indexOfFirst { it.imgPath == initialImgPath }.coerceAtLeast(0)
+                val initialIndex = images.indexOfFirst { it.imgPath == initialImgPath }.coerceAtLeast(0)
                 _state.update {
                     it.copy(
                         imagePreviewState = it.imagePreviewState.copy(

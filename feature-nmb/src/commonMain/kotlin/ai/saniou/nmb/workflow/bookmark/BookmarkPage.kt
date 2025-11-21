@@ -89,7 +89,7 @@ object BookmarkPage : Screen {
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clickable {
-                                            navigator.push(ThreadPage(bookmark.threadReplayId.toLong()))
+                                            navigator.push(ThreadPage(bookmark.postId.toLong()))
                                         }
                                 ) {
                                     Column(modifier = Modifier.padding(16.dp)) {
