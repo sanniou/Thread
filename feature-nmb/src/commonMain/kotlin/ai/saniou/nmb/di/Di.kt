@@ -28,6 +28,7 @@ import ai.saniou.nmb.domain.SubscriptionFeedUseCase
 import ai.saniou.nmb.domain.ToggleSubscriptionUseCase
 import ai.saniou.nmb.domain.UserUseCase
 import ai.saniou.nmb.initializer.AppInitializer
+import ai.saniou.nmb.workflow.bookmark.BookmarkViewModel
 import ai.saniou.nmb.workflow.forum.ForumViewModel
 import ai.saniou.nmb.workflow.history.HistoryViewModel
 import ai.saniou.nmb.workflow.home.ForumCategoryViewModel
@@ -143,6 +144,9 @@ val nmbdi = DI {
     // 历史相关
     bindProvider { HistoryUseCase(instance()) }
     bindProvider { HistoryViewModel(instance()) }
+
+    // 收藏相关
+    bindProvider { BookmarkViewModel(instance()) }
 
     bindSingleton {
         createDatabase(DriverFactory())

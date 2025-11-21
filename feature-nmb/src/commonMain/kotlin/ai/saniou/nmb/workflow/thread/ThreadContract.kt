@@ -83,6 +83,24 @@ interface ThreadContract {
          * 加载更多图片
          */
         object LoadMoreImages : Event
+
+        /**
+         * 复制内容到剪贴板
+         * @param content 要复制的内容
+         */
+        data class CopyContent(val content: String) : Event
+
+        /**
+         * 收藏主楼
+         * @param thread 帖子
+         */
+        data class BookmarkThread(val thread: Thread) : Event
+
+        /**
+         * 收藏回复
+         * @param reply 回复
+         */
+        data class BookmarkReply(val reply: ThreadReply) : Event
     }
 
     /**

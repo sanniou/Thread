@@ -5,6 +5,7 @@ import ai.saniou.coreui.widgets.DrawerMenuRow
 import ai.saniou.nmb.data.entity.ForumCategory
 import ai.saniou.nmb.di.nmbdi
 import ai.saniou.nmb.ui.components.DrawerHeader
+import ai.saniou.nmb.workflow.bookmark.BookmarkPage
 import ai.saniou.nmb.workflow.forum.ForumPage
 import ai.saniou.nmb.workflow.home.ForumCategoryContract.Event
 import ai.saniou.nmb.workflow.subscription.SubscriptionPage
@@ -101,6 +102,10 @@ data class ForumCategoryPage(
                                         navigator.push(SubscriptionPage { threadId ->
                                             navigator.push(ThreadPage(threadId))
                                         })
+                                        scope.launch { drawerState.close() }
+                                    },
+                                    DrawerMenuItem(Icons.Default.Star, "收藏夹") {
+                                        navigator.push(BookmarkPage)
                                         scope.launch { drawerState.close() }
                                     },
                                     DrawerMenuItem(Icons.Default.Home, "访问历史") { /* TODO */ },

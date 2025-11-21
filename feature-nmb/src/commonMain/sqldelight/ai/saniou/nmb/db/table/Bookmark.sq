@@ -1,0 +1,17 @@
+CREATE TABLE bookmark (
+    id TEXT NOT NULL PRIMARY KEY,
+    threadReplayId TEXT NOT NULL,
+    content TEXT NOT NULL,
+    tag TEXT,
+    createdAt INTEGER NOT NULL
+);
+
+selectAll:
+SELECT * FROM bookmark;
+
+delete:
+DELETE FROM bookmark WHERE id = ?;
+
+insert:
+INSERT  OR REPLACE INTO bookmark (id, threadReplayId, content, tag, createdAt)
+VALUES (?, ?, ?, ?, ?);

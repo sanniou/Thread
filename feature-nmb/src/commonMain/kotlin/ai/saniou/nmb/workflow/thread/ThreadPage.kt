@@ -30,6 +30,8 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -277,7 +279,10 @@ data class ThreadPage(
                 onImageClick = { imgPath, _ ->
                     viewModel.onEvent(Event.ShowImagePreview(imgPath))
                 },
-                onUpdateLastReadId = { id -> viewModel.onEvent(Event.UpdateLastReadReplyId(id)) }
+                onUpdateLastReadId = { id -> viewModel.onEvent(Event.UpdateLastReadReplyId(id)) },
+                onCopy = { viewModel.onEvent(Event.CopyContent(it)) },
+                onBookmarkThread = { viewModel.onEvent(Event.BookmarkThread(it)) },
+                onBookmarkReply = { viewModel.onEvent(Event.BookmarkReply(it)) }
             )
         }
 
@@ -320,6 +325,9 @@ private fun ThreadContentRouter(
     onRefClick: (Long) -> Unit,
     onImageClick: (String, String) -> Unit,
     onUpdateLastReadId: (Long) -> Unit,
+    onCopy: (String) -> Unit,
+    onBookmarkThread: (Thread) -> Unit,
+    onBookmarkReply: (ThreadReply) -> Unit,
 ) {
     Box(modifier = modifier) {
         when {
@@ -336,7 +344,10 @@ private fun ThreadContentRouter(
                 onReplyClicked = { /* TODO */ },
                 onRefClick = onRefClick,
                 onImageClick = onImageClick,
-                onUpdateLastReadId = onUpdateLastReadId
+                onUpdateLastReadId = onUpdateLastReadId,
+                onCopy = onCopy,
+                onBookmarkThread = onBookmarkThread,
+                onBookmarkReply = onBookmarkReply
             )
         }
     }
@@ -487,6 +498,9 @@ fun ThreadSuccessContent(
     onRefClick: (Long) -> Unit,
     onImageClick: (String, String) -> Unit,
     onUpdateLastReadId: (Long) -> Unit,
+    onCopy: (String) -> Unit,
+    onBookmarkThread: (Thread) -> Unit,
+    onBookmarkReply: (ThreadReply) -> Unit,
 ) {
     val replies = state.replies.collectAsLazyPagingItems()
 
@@ -528,7 +542,10 @@ fun ThreadSuccessContent(
             onReplyClicked = onReplyClicked,
             onRefClick = onRefClick,
             onImageClick = onImageClick,
-            onRefresh = onRefresh
+            onRefresh = onRefresh,
+            onCopy = onCopy,
+            onBookmarkThread = onBookmarkThread,
+            onBookmarkReply = onBookmarkReply
         )
     }
 }
@@ -541,6 +558,9 @@ private fun ThreadList(
     onRefClick: (Long) -> Unit,
     onImageClick: (String, String) -> Unit,
     onRefresh: () -> Unit,
+    onCopy: (String) -> Unit,
+    onBookmarkThread: (Thread) -> Unit,
+    onBookmarkReply: (ThreadReply) -> Unit,
 ) {
     val replies = state.replies.collectAsLazyPagingItems()
     LazyColumn(
@@ -568,7 +588,9 @@ private fun ThreadList(
                     thread = it,
                     forumName = state.forumName,
                     refClick = onRefClick,
-                    onImageClick = onImageClick
+                    onImageClick = onImageClick,
+                    onCopy = { onCopy(it.content) },
+                    onBookmark = { onBookmarkThread(it) }
                 )
             }
         }
@@ -581,7 +603,9 @@ private fun ThreadList(
                     poUserHash = state.thread?.userHash ?: "",
                     onReplyClicked = onReplyClicked,
                     refClick = onRefClick,
-                    onImageClick = onImageClick
+                    onImageClick = onImageClick,
+                    onCopy = { onCopy(reply.content) },
+                    onBookmark = { onBookmarkReply(reply) }
                 )
             } ?: ShimmerContainer { SkeletonReplyItem(it) }
         }
@@ -643,64 +667,95 @@ private fun EmptyReplyContent(onRefresh: () -> Unit) {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ThreadMainPost(
     thread: Thread,
     forumName: String = "",
     refClick: (Long) -> Unit,
     onImageClick: (String, String) -> Unit,
+    onCopy: () -> Unit,
+    onBookmark: () -> Unit,
 ) {
-    ElevatedCard(
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
+    var showMenu by remember { mutableStateOf(false) }
+    Box {
+        ElevatedCard(
+            modifier = Modifier
+                .fillMaxWidth()
+                .combinedClickable(
+                    onClick = { /* Main post is not clickable */ },
+                    onLongClick = { showMenu = true }
+                ),
         ) {
-            // 头部信息
-            PostHeader(
-                author = {
-                    Column {
-                        ThreadAuthor(thread, isPo = true)
-                        if (forumName.isNotBlank()) {
-                            Text(
-                                text = forumName,
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.padding(top = 4.dp)
-                            )
+            Column(
+                modifier = Modifier.padding(16.dp),
+            ) {
+                // 头部信息
+                PostHeader(
+                    author = {
+                        Column {
+                            ThreadAuthor(thread, isPo = true)
+                            if (forumName.isNotBlank()) {
+                                Text(
+                                    text = forumName,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.padding(top = 4.dp)
+                                )
+                            }
                         }
-                    }
-                },
-                id = thread.id
-            )
-
-            // 标题
-            if (thread.title.isNotBlank() && thread.title != "无标题") {
-                Text(
-                    text = thread.title,
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(vertical = 12.dp)
+                    },
+                    id = thread.id
                 )
-            } else {
-                Spacer(modifier = Modifier.height(8.dp))
+
+                // 标题
+                if (thread.title.isNotBlank() && thread.title != "无标题") {
+                    Text(
+                        text = thread.title,
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.padding(vertical = 12.dp)
+                    )
+                } else {
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+
+                // 正文
+                ThreadBody(thread, onReferenceClick = refClick, onImageClick = onImageClick)
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // 回复数
+                Text(
+                    text = "回复: ${thread.replyCount}",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.align(Alignment.End)
+                )
             }
-
-            // 正文
-            ThreadBody(thread, onReferenceClick = refClick, onImageClick = onImageClick)
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // 回复数
-            Text(
-                text = "回复: ${thread.replyCount}",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.align(Alignment.End)
+        }
+        DropdownMenu(
+            expanded = showMenu,
+            onDismissRequest = { showMenu = false }
+        ) {
+            DropdownMenuItem(
+                text = { Text("复制") },
+                onClick = {
+                    onCopy()
+                    showMenu = false
+                }
+            )
+            DropdownMenuItem(
+                text = { Text("收藏") },
+                onClick = {
+                    onBookmark()
+                    showMenu = false
+                }
             )
         }
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ThreadReply(
     reply: ThreadReply,
@@ -708,24 +763,52 @@ fun ThreadReply(
     onReplyClicked: (Long) -> Unit,
     refClick: (Long) -> Unit,
     onImageClick: (String, String) -> Unit,
+    onCopy: () -> Unit,
+    onBookmark: () -> Unit,
 ) {
     val isPo = remember(reply.userHash) {
         reply.userHash == poUserHash
     }
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onReplyClicked(reply.id) },
-    ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+    var showMenu by remember { mutableStateOf(false) }
+
+    Box {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .combinedClickable(
+                    onClick = { onReplyClicked(reply.id) },
+                    onLongClick = { showMenu = true }
+                ),
         ) {
-            PostHeader(
-                author = { ThreadAuthor(reply, isPo = isPo) },
-                id = reply.id
+            Column(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            ) {
+                PostHeader(
+                    author = { ThreadAuthor(reply, isPo = isPo) },
+                    id = reply.id
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                ThreadBody(reply, onReferenceClick = refClick, onImageClick = onImageClick)
+            }
+        }
+        DropdownMenu(
+            expanded = showMenu,
+            onDismissRequest = { showMenu = false }
+        ) {
+            DropdownMenuItem(
+                text = { Text("复制") },
+                onClick = {
+                    onCopy()
+                    showMenu = false
+                }
             )
-            Spacer(modifier = Modifier.height(12.dp))
-            ThreadBody(reply, onReferenceClick = refClick, onImageClick = onImageClick)
+            DropdownMenuItem(
+                text = { Text("收藏") },
+                onClick = {
+                    onBookmark()
+                    showMenu = false
+                }
+            )
         }
     }
 }

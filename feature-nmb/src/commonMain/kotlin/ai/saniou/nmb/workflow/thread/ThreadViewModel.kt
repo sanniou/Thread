@@ -1,5 +1,6 @@
 package ai.saniou.nmb.workflow.thread
 
+import ai.saniou.nmb.data.entity.Thread
 import ai.saniou.nmb.data.entity.ThreadReply
 import ai.saniou.nmb.data.repository.NmbRepository
 import ai.saniou.nmb.db.Database
@@ -48,7 +49,7 @@ class ThreadViewModel(
     private data class LoadRequest(
         val threadId: Long,
         val isPoOnly: Boolean = false,
-        val page: Int = 1
+        val page: Int = 1,
     )
 
     private val _state = MutableStateFlow(State())
@@ -86,6 +87,9 @@ class ThreadViewModel(
             is Event.UpdateLastReadReplyId -> updateLastReadReplyId(event.id)
             is Event.ShowImagePreview -> showImagePreview(event.imgPath)
             Event.LoadMoreImages -> {} // TODO: To be implemented
+            is Event.CopyContent -> copyContent(event.content)
+            is Event.BookmarkThread -> bookmarkThread(event.thread)
+            is Event.BookmarkReply -> bookmarkReply(event.reply)
         }
     }
 
@@ -121,14 +125,16 @@ class ThreadViewModel(
                 }
                 .collectLatest { detail ->
                     val thread = detail.thread
-                    val totalPages = (thread.replyCount / 19) + if (thread.replyCount % 19 > 0) 1 else 0
+                    val totalPages =
+                        (thread.replyCount / 19) + if (thread.replyCount % 19 > 0) 1 else 0
                     _state.update {
                         it.copy(
                             isLoading = false,
                             thread = thread,
                             lastReadReplyId = detail.lastReadReplyId,
                             totalPages = totalPages.toInt().coerceAtLeast(1),
-                            forumName = db.forumQueries.getForum(thread.fid).executeAsOneOrNull()?.name ?: ""
+                            forumName = db.forumQueries.getForum(thread.fid)
+                                .executeAsOneOrNull()?.name ?: ""
                         )
                     }
                 }
@@ -157,6 +163,41 @@ class ThreadViewModel(
         }
     }
 
+    private fun copyContent(content: String) {
+        screenModelScope.launch {
+            _effect.send(Effect.CopyToClipboard(content))
+            _effect.send(Effect.ShowSnackbar("内容已复制到剪贴板"))
+        }
+    }
+
+    @OptIn(ExperimentalTime::class)
+    private fun bookmarkThread(thread: Thread) {
+        screenModelScope.launch {
+            db.bookmarkQueries.insert(
+                id = thread.id.toString(),
+                threadReplayId = thread.id.toString(),
+                content = thread.content,
+                tag = null,
+                createdAt = Clock.System.now().epochSeconds
+            )
+            _effect.send(Effect.ShowSnackbar("主楼已收藏"))
+        }
+    }
+
+    @OptIn(ExperimentalTime::class)
+    private fun bookmarkReply(reply: ThreadReply) {
+        screenModelScope.launch {
+            db.bookmarkQueries.insert(
+                id = reply.id.toString(),
+                threadReplayId = reply.id.toString(),
+                content = reply.content,
+                tag = null,
+                createdAt = Clock.System.now().epochSeconds
+            )
+            _effect.send(Effect.ShowSnackbar("回复已收藏"))
+        }
+    }
+
     private fun showImagePreview(initialImgPath: String) {
         imageObserverJob?.cancel()
         imageObserverJob = screenModelScope.launch {
@@ -178,7 +219,8 @@ class ThreadViewModel(
                 }
                 images
             }.collectLatest { images ->
-                val initialIndex = images.indexOfFirst { it.imgPath == initialImgPath }.coerceAtLeast(0)
+                val initialIndex =
+                    images.indexOfFirst { it.imgPath == initialImgPath }.coerceAtLeast(0)
                 _state.update {
                     it.copy(
                         imagePreviewState = it.imagePreviewState.copy(
