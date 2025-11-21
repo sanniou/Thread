@@ -39,6 +39,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -135,6 +137,12 @@ fun CookieItem(
     }
 }
 
+@Serializable
+private data class CookieJson(
+    val cookie: String,
+    val name: String? = null
+)
+
 @Composable
 fun AddCookieDialog(
     onDismiss: () -> Unit,
@@ -157,7 +165,20 @@ fun AddCookieDialog(
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
                     value = value,
-                    onValueChange = { value = it },
+                    onValueChange = { newValue ->
+                        val trimmed = newValue.trim()
+                        if (trimmed.startsWith("{")) {
+                            try {
+                                val cookieJson = Json.decodeFromString<CookieJson>(trimmed)
+                                value = cookieJson.cookie
+                                name = cookieJson.name ?: ""
+                            } catch (e: Exception) {
+                                value = newValue
+                            }
+                        } else {
+                            value = newValue
+                        }
+                    },
                     label = { Text("值") },
                     modifier = Modifier.fillMaxWidth()
                 )
