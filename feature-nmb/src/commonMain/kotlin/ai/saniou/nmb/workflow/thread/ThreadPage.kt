@@ -106,6 +106,7 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.kodein.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import androidx.compose.material3.Card
 import androidx.compose.material3.ElevatedCard
@@ -115,6 +116,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import app.cash.paging.LoadStateError
 import app.cash.paging.LoadStateLoading
+import kotlinx.coroutines.FlowPreview
 import org.kodein.di.direct
 import org.kodein.di.instance
 
@@ -477,6 +479,7 @@ private fun ThreadShimmer() {
 // region Success State UI Components
 // =================================================================================
 
+@OptIn(FlowPreview::class)
 @Composable
 fun ThreadSuccessContent(
     state: State,
@@ -496,26 +499,27 @@ fun ThreadSuccessContent(
     // Auto-scroll to last read position
     var hasScrolledToLastRead by remember { mutableStateOf(false) }
 
-//    LaunchedEffect(replies.itemSnapshotList) {
-//        if (!hasScrolledToLastRead) {
-//            val lastReadId = state.lastReadReplyId
-//            if (lastReadId > 0L) {
-//                val index = replies.itemSnapshotList.indexOfFirst { it?.id == lastReadId }
-//                if (index != -1) {
-//                    lazyListState.scrollToItem(index + 1)
-//                    hasScrolledToLastRead = true
-//                }
-//            }
-//        }
-//    }
+    LaunchedEffect(replies.itemCount, state.lastReadReplyId) {
+        if (!hasScrolledToLastRead && state.lastReadReplyId > 0L) {
+            val lastReadItemIndex =
+                replies.itemSnapshotList.indexOfFirst { it?.id == state.lastReadReplyId }
+
+            if (lastReadItemIndex != -1) {
+                // 主题帖占用了第一个位置，所以回复的索引需要+1
+                lazyListState.scrollToItem(lastReadItemIndex + 1)
+                hasScrolledToLastRead = true
+            }
+        }
+    }
 
     // Update last read position
-    LaunchedEffect(lazyListState) {
+    LaunchedEffect(lazyListState, replies.itemCount) {
         snapshotFlow { lazyListState.firstVisibleItemIndex }
+            .debounce(500L) // 防抖，避免滚动时频繁更新
             .collect { index ->
-                if (index > 0) {
+                if (replies.itemCount > 0 && index > 0) {
                     val replyIndex = index - 1
-                    if (replyIndex >= 0 && replyIndex < replies.itemCount) {
+                    if (replyIndex < replies.itemCount) {
                         replies[replyIndex]?.let { reply ->
                             onUpdateLastReadId(reply.id)
                         }
