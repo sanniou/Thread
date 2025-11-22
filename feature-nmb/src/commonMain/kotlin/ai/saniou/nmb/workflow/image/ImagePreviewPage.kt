@@ -2,12 +2,16 @@ package ai.saniou.nmb.workflow.image
 
 import ai.saniou.nmb.data.manager.CdnManager
 import ai.saniou.nmb.di.nmbdi
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.VectorConverter
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
@@ -25,6 +29,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -40,6 +45,7 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import ai.saniou.coreui.widgets.ZoomAsyncImage
+import kotlinx.coroutines.launch
 import org.kodein.di.DI
 import org.kodein.di.instance
 import kotlin.coroutines.cancellation.CancellationException
@@ -133,7 +139,7 @@ data class ImagePreviewPage(
             }
 
             // End indicator
-            if (uiState.endReached && pagerState.currentPage == uiState.images.size - 1) {
+            if (uiState.endReached && uiState.images.size > 1 && pagerState.currentPage == uiState.images.size - 1) {
                 Box(modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 80.dp)) {
                     Text("没有更多图片了", color = Color.White)
                 }
@@ -162,43 +168,78 @@ fun ImageItem(imageUrl: String) {
     // 缩放状态
     var scale by remember { mutableStateOf(1f) }
     var rotation by remember { mutableStateOf(0f) }
-    var offset by remember { mutableStateOf(Offset.Zero) }
+    val offsetAnimatable = remember { Animatable(Offset.Zero, Offset.VectorConverter) }
+    val scope = rememberCoroutineScope()
 
-    // 创建可变换状态
-    val transformableState =
-        rememberTransformableState { zoomChange, offsetChange, rotationChange ->
-            scale = (scale * zoomChange).coerceIn(0.5f, 5f)
-            rotation += rotationChange
-            offset += offsetChange
-        }
-
-    Box(
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
             .clipToBounds()
-            .transformable(state = transformableState)
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onDoubleTap = {
-                        scale = if (scale > 1f) 1f else 2f
-                        offset = Offset.Zero
-                        rotation = 0f
-                    }
-                )
-            }
     ) {
-        ZoomAsyncImage(
-            uri = imageUrl,
-            contentDescription = "预览图片",
+        val boxWidth = constraints.maxWidth.toFloat()
+        val boxHeight = constraints.maxHeight.toFloat()
+
+        // 创建可变换状态
+        val transformableState =
+            rememberTransformableState { zoomChange, offsetChange, rotationChange ->
+                scale = (scale * zoomChange).coerceIn(1f, 5f)
+                rotation += rotationChange
+                scope.launch {
+                    offsetAnimatable.snapTo(offsetAnimatable.value + offsetChange)
+                }
+            }
+
+        LaunchedEffect(transformableState.isTransformInProgress, scale) {
+            if (!transformableState.isTransformInProgress) {
+                val maxX = ((boxWidth * scale - boxWidth) / 2f).coerceAtLeast(0f)
+                val maxY = ((boxHeight * scale - boxHeight) / 2f).coerceAtLeast(0f)
+
+                val currentOffset = offsetAnimatable.value
+                val targetOffset = Offset(
+                    x = currentOffset.x.coerceIn(-maxX, maxX),
+                    y = currentOffset.y.coerceIn(-maxY, maxY)
+                )
+                if (currentOffset != targetOffset) {
+                    scope.launch {
+                        offsetAnimatable.animateTo(targetOffset, animationSpec = spring())
+                    }
+                }
+            }
+        }
+
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .graphicsLayer(
-                    scaleX = scale,
-                    scaleY = scale,
-                    rotationZ = rotation,
-                    translationX = offset.x,
-                    translationY = offset.y
-                )
-        )
+                .transformable(state = transformableState)
+                .pointerInput(Unit) {
+                    detectTapGestures(
+                        onDoubleTap = {
+                            scope.launch {
+                                if (scale > 1f) {
+                                    scale = 1f
+                                    offsetAnimatable.animateTo(Offset.Zero, animationSpec = spring())
+                                } else {
+                                    scale = 2f
+                                }
+                                rotation = 0f
+                            }
+                        }
+                    )
+                }
+        ) {
+            ZoomAsyncImage(
+                uri = imageUrl,
+                contentDescription = "预览图片",
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer(
+                        scaleX = scale,
+                        scaleY = scale,
+                        rotationZ = rotation,
+                        translationX = offsetAnimatable.value.x,
+                        translationY = offsetAnimatable.value.y
+                    )
+            )
+        }
     }
 }
