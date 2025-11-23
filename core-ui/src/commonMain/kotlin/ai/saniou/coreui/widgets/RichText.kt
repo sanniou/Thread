@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Color.Companion
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.LinkAnnotation
@@ -71,6 +72,7 @@ fun RichText(
     overflow: TextOverflow = TextOverflow.Clip,
     maxLines: Int = Int.MAX_VALUE,
     blankLinePolicy: BlankLinePolicy = BlankLinePolicy.KEEP,
+    color: Color = Color.Unspecified,
 ) {
     val linkColor = MaterialTheme.colorScheme.primary
     val uriHandler = LocalUriHandler.current
@@ -87,6 +89,7 @@ fun RichText(
         style = style,
         maxLines = maxLines,
         overflow = overflow,
+        color = color
     )
 }
 

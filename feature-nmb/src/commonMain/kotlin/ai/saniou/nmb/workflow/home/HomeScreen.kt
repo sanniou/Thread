@@ -1,5 +1,6 @@
 package ai.saniou.nmb.workflow.home
 
+import ai.saniou.coreui.widgets.RichText
 import ai.saniou.nmb.db.table.Notice
 import ai.saniou.nmb.di.nmbdi
 import ai.saniou.nmb.workflow.history.HistoryPage
@@ -106,7 +107,7 @@ data class HomeScreen(val di: DI = nmbdi) : Screen {
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Text(
+                RichText(
                     text = notice.content,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface
