@@ -4,6 +4,8 @@ import ai.saniou.nmb.domain.ForumUseCase
 import ai.saniou.nmb.domain.PostUseCase
 import ai.saniou.nmb.workflow.post.PostContract.Effect
 import ai.saniou.nmb.workflow.post.PostContract.Event
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import ai.saniou.nmb.workflow.post.PostContract.State
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
@@ -35,8 +37,29 @@ class PostViewModel(
     fun onEvent(event: Event) {
         when (event) {
             is Event.UpdateContent -> _state.update {
-                it.copy(postBody = it.postBody.copy(content = event.content))
+                it.copy(
+                    content = event.content,
+                    postBody = it.postBody.copy(content = event.content.text)
+                )
             }
+
+            is Event.InsertContent -> {
+                val currentState = _state.value
+                val currentContent = currentState.content
+                val selection = currentContent.selection
+                val newText = currentContent.text.replaceRange(selection.min, selection.max, event.text)
+                val newSelection = selection.min + event.text.length
+                _state.update {
+                    it.copy(
+                        content = TextFieldValue(
+                            text = newText,
+                            selection = TextRange(newSelection)
+                        ),
+                        postBody = it.postBody.copy(content = newText)
+                    )
+                }
+            }
+
             is Event.UpdateName -> _state.update {
                 it.copy(postBody = it.postBody.copy(name = event.name))
             }
