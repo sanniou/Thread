@@ -136,7 +136,9 @@ val nmbdi = DI {
 
     // 发帖和回复相关
     bindProvider { PostUseCase(instance()) }
-    bindProvider { PostViewModel(instance()) }
+    bindFactory<Triple<Int?, Int?, String?>, PostViewModel> { params ->
+        PostViewModel(instance(), instance(), params.first, params.second, params.third)
+    }
 
     // 用户认证相关
     bindProvider { UserUseCase(instance()) }

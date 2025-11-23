@@ -19,8 +19,15 @@ import de.jensklingenberg.ktorfit.http.Body
 import de.jensklingenberg.ktorfit.http.Field
 import de.jensklingenberg.ktorfit.http.FormUrlEncoded
 import de.jensklingenberg.ktorfit.http.GET
+import de.jensklingenberg.ktorfit.http.Multipart
+import de.jensklingenberg.ktorfit.http.Part
 import de.jensklingenberg.ktorfit.http.POST
 import de.jensklingenberg.ktorfit.http.Query
+import io.ktor.http.Headers
+import io.ktor.http.HttpHeaders
+import io.ktor.http.content.PartData
+import io.ktor.utils.io.ByteReadChannel
+import io.ktor.utils.io.InternalAPI
 
 interface NmbXdApi {
     /**
@@ -121,19 +128,23 @@ interface NmbXdApi {
      *
      * 返回值为 HTML 格式的页面，可以直接复制到浏览器中打开。
      */
-    @POST("https://www.nmbxd.com/home/forum/doPostThread.html")
-//    @FormUrlEncoded
+    @POST("https://www.nmbxd1.com/home/forum/doPostThread.html")
+    @Multipart
     suspend fun postThread(
-        @Body body: PostThreadRequest
+        @Part("fid") fid: Int,
+        @Part("content") content: String,
+        @Part("") parts: List<PartData>
     ): String
 
     /**
      * 回复串
      */
-    @POST("https://www.nmbxd.com/home/forum/doReplyThread.html")
-//    @FormUrlEncoded
+    @POST("https://www.nmbxd1.com/home/forum/doReplyThread.html")
+    @Multipart
     suspend fun postReply(
-        @Body body: PostReplyRequest
+        @Part("resto") resto: Int,
+        @Part("content") content: String,
+        @Part("") parts: List<PartData>
     ): String
 
     /**
@@ -248,4 +259,60 @@ interface NmbXdApi {
         @Field("email") email: String,
         @Field("verify") verify: String
     ): String
+}
+
+
+@OptIn(InternalAPI::class)
+fun buildPartList(map: Map<String, Any?>): List<PartData> {
+    val list = mutableListOf<PartData>()
+
+    map.forEach { (key, value) ->
+        when (value) {
+            null -> Unit
+            is String -> {
+                list += PartData.FormItem(
+                    value = value,
+                    dispose = {},
+                    partHeaders = Headers.build {
+                        append(
+                            HttpHeaders.ContentDisposition,
+                            "form-data; name=\"$key\""
+                        )
+                    }
+                )
+            }
+
+//            is File -> {
+//                list += PartData.FileItem(
+//                    { value.inputStream() },
+//                    dispose = {},
+//                    partHeaders = Headers.build {
+//                        append(
+//                            HttpHeaders.ContentDisposition,
+//                            "form-data; name=\"$key\"; filename=\"${value.name}\""
+//                        )
+//                        append(HttpHeaders.ContentType, "application/octet-stream")
+//                    }
+//                )
+//            }
+
+            is ByteArray -> {
+                list += PartData.BinaryItem(
+                    { ByteReadChannel(value).readBuffer },
+                    dispose = {},
+                    partHeaders = Headers.build {
+                        append(
+                            HttpHeaders.ContentDisposition,
+                            "form-data; name=\"$key\"; filename=\"$key.bin\""
+                        )
+                        append(HttpHeaders.ContentType, "application/octet-stream")
+                    }
+                )
+            }
+
+            else -> error("不支持的类型：${value::class}")
+        }
+    }
+
+    return list
 }

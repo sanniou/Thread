@@ -244,7 +244,7 @@ data class ThreadPage(
                     FloatingActionButton(
                         onClick = {
                             state.thread?.let {
-                                navigator.push(PostPage(it.fid, it.id))
+                                navigator.push(PostPage(resto = it.id.toInt()))
                             }
                         }
                     ) {

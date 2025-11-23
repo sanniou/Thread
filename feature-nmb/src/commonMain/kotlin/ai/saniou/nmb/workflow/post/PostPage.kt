@@ -1,200 +1,135 @@
 package ai.saniou.nmb.workflow.post
 
-import ai.saniou.coreui.state.LoadingWrapper
 import ai.saniou.nmb.di.nmbdi
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
-import cafe.adriel.voyager.kodein.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import org.kodein.di.DI
+import org.kodein.di.direct
+import org.kodein.di.instance
 
-@OptIn(ExperimentalMaterial3Api::class)
 data class PostPage(
-    val forumId: Long,
-    val threadId: Long? = null,
-    val di: DI = nmbdi,
+    val fid: Int? = null,
+    val resto: Int? = null,
+    val forumName: String? = null
 ) : Screen {
-
+    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
+        val viewModel: PostViewModel = rememberScreenModel(tag = "${fid}_${resto}") {
+            nmbdi.direct.instance(arg = Triple(fid, resto, forumName))
+        }
+        val state by viewModel.state.collectAsStateWithLifecycle()
+        val snackbarHostState = remember { SnackbarHostState() }
 
-        val isReply = threadId != null
-        val title = if (isReply) "回复" else "发帖"
-
-        val postViewModel: PostViewModel = rememberScreenModel()
-
-        val uiState by postViewModel.uiState.collectAsStateWithLifecycle()
+        LaunchedEffect(Unit) {
+            viewModel.effect.collect { effect ->
+                when (effect) {
+                    is PostContract.Effect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message)
+                    PostContract.Effect.NavigateBack -> navigator.pop()
+                }
+            }
+        }
 
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text(title) },
+                    title = { Text(if (resto != null) "回复" else "发帖: ${state.forumName}") },
                     navigationIcon = {
                         IconButton(onClick = { navigator.pop() }) {
                             Icon(Icons.Default.ArrowBack, contentDescription = "返回")
                         }
-                    },
-                    actions = {
-                        IconButton(onClick = {
-                            if (isReply && threadId != null) {
-                                postViewModel.submitReply()
-                            } else if (forumId != null) {
-                                postViewModel.submitThread()
-                            }
-                        }) {
-                            Icon(Icons.Default.Check, contentDescription = "提交")
-                        }
                     }
                 )
-            }
-        ) { paddingValues ->
-            uiState.LoadingWrapper<PostUiState>(
-                content = { state ->
-                    PostContent(
-                        state = state,
-                        isReply = isReply,
-                        modifier = Modifier.padding(paddingValues)
-                    )
-                },
-                onRetryClick = {
-                    // 重试逻辑
-                }
-            )
-        }
-    }
-
-    @Composable
-    fun PostContent(
-        state: PostUiState,
-        isReply: Boolean,
-        modifier: Modifier = Modifier,
-    ) {
-        Column(
-            modifier = modifier.padding(16.dp)
-        ) {
-            // 标题输入框（发帖时显示）
-            if (!isReply) {
-                OutlinedTextField(
-                    value = state.title,
-                    onValueChange = { state.onTitleChanged(it) },
-                    label = { Text("标题") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-
-            // 内容输入框
-            OutlinedTextField(
-                value = state.content,
-                onValueChange = { state.onContentChanged(it) },
-                label = { Text("内容") },
+            },
+            snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+        ) { innerPadding ->
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp),
-                maxLines = 10
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // 图片上传区域
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(120.dp)
-                    .border(1.dp, Color.Gray, RoundedCornerShape(4.dp))
-                    .background(Color.LightGray.copy(alpha = 0.3f), RoundedCornerShape(4.dp))
-                    .clickable { state.onSelectImage() }
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                if (state.hasImage) {
-                    // 显示已选择的图片
-                    Box(
+                if (resto == null) { // Only show for new posts
+                    OutlinedTextField(
+                        value = state.postBody.name ?: "",
+                        onValueChange = { viewModel.onEvent(PostContract.Event.UpdateName(it)) },
+                        label = { Text("名称 (可选)") },
                         modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            text = "已选择图片",
-                            modifier = Modifier.align(Alignment.Center)
-                        )
-
-                        IconButton(
-                            onClick = { state.onClearImage() },
-                            modifier = Modifier.align(Alignment.TopEnd)
-                        ) {
-                            Icon(Icons.Default.Close, contentDescription = "移除图片")
-                        }
+                    )
+                    OutlinedTextField(
+                        value = state.postBody.title ?: "",
+                        onValueChange = { viewModel.onEvent(PostContract.Event.UpdateTitle(it)) },
+                        label = { Text("标题 (可选)") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+                OutlinedTextField(
+                    value = state.postBody.content ?: "",
+                    onValueChange = { viewModel.onEvent(PostContract.Event.UpdateContent(it)) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    label = { Text("内容") },
+                    isError = state.error != null
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedButton(onClick = { /* TODO: Implement image picker */ }) {
+                        Icon(Icons.Default.Info, contentDescription = "选择图片")
+                        Text("图片")
                     }
-                } else {
-                    // 显示添加图片按钮
-                    Column(
-                        modifier = Modifier.align(Alignment.Center),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Icon(
-                            Icons.Default.Add,
-                            contentDescription = "添加图片",
-                            modifier = Modifier.size(32.dp)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(
+                            checked = state.water,
+                            onCheckedChange = { viewModel.onEvent(PostContract.Event.ToggleWater(it)) }
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text("添加图片")
+                        Text("水印")
                     }
                 }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // 水印选项
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Checkbox(
-                    checked = state.addWatermark,
-                    onCheckedChange = { state.onWatermarkChanged(it) }
-                )
-                Text("添加水印")
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // 提交按钮
-            Button(
-                onClick = { state.onSubmit() },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(if (isReply) "回复" else "发帖")
+                Button(
+                    onClick = { viewModel.onEvent(PostContract.Event.Submit) },
+                    enabled = state.postBody.content?.isNotBlank() == true && !state.isLoading,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.Send, contentDescription = "发送")
+                    Text("发送")
+                }
             }
         }
     }

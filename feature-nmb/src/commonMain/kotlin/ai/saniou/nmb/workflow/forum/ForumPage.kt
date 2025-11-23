@@ -5,6 +5,7 @@ import ai.saniou.nmb.workflow.home.ListThreadPage
 import ai.saniou.nmb.workflow.image.ImageInfo
 import ai.saniou.nmb.workflow.image.ImagePreviewPage
 import ai.saniou.nmb.workflow.image.ImagePreviewUiState
+import ai.saniou.nmb.workflow.post.PostPage
 import ai.saniou.nmb.workflow.thread.ThreadPage
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.padding
@@ -90,7 +91,7 @@ data class ForumPage(
             },
             floatingActionButton = {
                 ExtendedFloatingActionButton(
-                    onClick = { /* TODO: Navigate to post screen */ },
+                    onClick = { navigator.push(PostPage(fid = forumId.toInt(), forumName = state.forumName)) },
                     expanded = expandedFab,
                     icon = { Icon(Icons.Default.Add, "发帖") },
                     text = { Text("发帖") }
