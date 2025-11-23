@@ -3,6 +3,7 @@ package ai.saniou.nmb.workflow.thread
 import ai.saniou.nmb.data.entity.Thread
 import ai.saniou.nmb.data.entity.ThreadReply
 import ai.saniou.nmb.data.repository.NmbRepository
+import ai.saniou.nmb.data.storage.SubscriptionStorage
 import ai.saniou.nmb.db.Database
 import ai.saniou.nmb.domain.AddBookmarkUseCase
 import ai.saniou.nmb.domain.GetThreadDetailUseCase
@@ -45,6 +46,7 @@ class ThreadViewModel(
     private val nmbRepository: NmbRepository,
     private val toggleSubscriptionUseCase: ToggleSubscriptionUseCase,
     private val addBookmarkUseCase: AddBookmarkUseCase,
+    private val subscriptionStorage: SubscriptionStorage,
     private val db: Database,
 ) : ScreenModel {
 
@@ -63,7 +65,6 @@ class ThreadViewModel(
     private val loadRequest = MutableStateFlow(LoadRequest(threadId = threadId))
 
     private var imageObserverJob: Job? = null
-
     val replies: Flow<PagingData<ThreadReply>> =
         loadRequest.flatMapLatest { request ->
             getThreadRepliesPagingUseCase(
@@ -79,6 +80,8 @@ class ThreadViewModel(
         _state.update { it.copy(replies = replies) }
 
         screenModelScope.launch {
+            subscriptionStorage.loadLastSubscriptionId()
+            observeSubscriptionStatus()
             loadRequest.collect { request ->
                 _state.update { it.copy(isPoOnlyMode = request.isPoOnly) }
             }
@@ -147,15 +150,31 @@ class ThreadViewModel(
         }
     }
 
+    private fun observeSubscriptionStatus() {
+        val subscriptionKey = subscriptionStorage.subscriptionId.value ?: throw IllegalStateException("未设置订阅ID")
+        screenModelScope.launch {
+            nmbRepository.observeIsSubscribed(subscriptionKey, threadId).collect { isSubscribed ->
+                _state.update { it.copy(isSubscribed = isSubscribed) }
+            }
+        }
+    }
+
     private fun toggleSubscription() {
+        if (state.value.isTogglingSubscription) return
+        val thread = state.value.thread ?: return
+
+        _state.update { it.copy(isTogglingSubscription = true) }
+
         val currentSubscribed = state.value.isSubscribed
         screenModelScope.launch {
-            toggleSubscriptionUseCase(threadId, currentSubscribed)
+            toggleSubscriptionUseCase(thread, currentSubscribed)
                 .onSuccess { resultMessage ->
-                    _state.update { it.copy(isSubscribed = !currentSubscribed) }
+                    // UI state will be updated by the database flow
+                    _state.update { it.copy(isTogglingSubscription = false) }
                     _effect.send(Effect.ShowSnackbar(resultMessage))
                 }
                 .onFailure { e ->
+                    _state.update { it.copy(isTogglingSubscription = false) }
                     _effect.send(Effect.ShowSnackbar("操作失败: ${e.message}"))
                 }
         }

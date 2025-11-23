@@ -11,6 +11,9 @@ import app.cash.paging.ExperimentalPagingApi
 import app.cash.paging.LoadType
 import app.cash.paging.PagingState
 import app.cash.paging.RemoteMediator
+import app.cash.paging.RemoteMediatorMediatorResult
+import app.cash.paging.RemoteMediatorMediatorResultError
+import app.cash.paging.RemoteMediatorMediatorResultSuccess
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
@@ -26,7 +29,7 @@ class SubscriptionRemoteMediator(
     override suspend fun load(
         loadType: LoadType,
         state: PagingState<Int, ai.saniou.nmb.db.table.Thread>,
-    ): MediatorResult {
+    ): RemoteMediatorMediatorResult {
         val page = when (loadType) {
             LoadType.REFRESH -> {
                 db.remoteKeyQueries.getRemoteKeyById(
@@ -34,28 +37,28 @@ class SubscriptionRemoteMediator(
                     id = subscriptionKey
                 ).executeAsOneOrNull()?.run {
                     // 本地有数据，就不请求网络
-                    return MediatorResult.Success(endOfPaginationReached = false)
+                    return RemoteMediatorMediatorResultSuccess(endOfPaginationReached = false)
                 }
                 1L
             }
 
-            LoadType.PREPEND -> return MediatorResult.Success(true) // 不向前翻
+            LoadType.PREPEND -> return RemoteMediatorMediatorResultSuccess(true) // 不向前翻
 
             LoadType.APPEND -> {
                 val showId = state.pages.lastOrNull()?.lastOrNull()?.id
-                    ?: return MediatorResult.Success(true)
+                    ?: return RemoteMediatorMediatorResultSuccess(true)
                 val showPage = db.subscriptionQueries.getSubscription(subscriptionKey, showId)
-                    .executeAsOneOrNull()?.page ?: return MediatorResult.Success(true)
+                    .executeAsOneOrNull()?.page ?: return RemoteMediatorMediatorResultSuccess(true)
 
                 val remoteKey = db.remoteKeyQueries.getRemoteKeyById(
                     type = RemoteKeyType.SUBSCRIBE,
                     id = subscriptionKey
-                ).executeAsOneOrNull() ?: return MediatorResult.Success(true)
+                ).executeAsOneOrNull() ?: return RemoteMediatorMediatorResultSuccess(true)
 
                 if (remoteKey.currKey > showPage) {
-                    return MediatorResult.Success(true)
+                    return RemoteMediatorMediatorResultSuccess(true)
                 }
-                remoteKey.nextKey ?: return MediatorResult.Success(true)
+                remoteKey.nextKey ?: return RemoteMediatorMediatorResultSuccess(true)
             }
         }
 
@@ -91,10 +94,10 @@ class SubscriptionRemoteMediator(
                     )
                 }
 
-                return MediatorResult.Success(endOfPagination)
+                return RemoteMediatorMediatorResultSuccess(endOfPagination)
             }
 
-            is SaniouResponse.Error -> MediatorResult.Error(result.ex)
+            is SaniouResponse.Error -> RemoteMediatorMediatorResultError(result.ex)
         }
     }
 

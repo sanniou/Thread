@@ -63,6 +63,7 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -117,6 +118,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import app.cash.paging.LoadStateError
 import app.cash.paging.LoadStateLoading
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.Job
 import org.kodein.di.direct
 import org.kodein.di.instance
 
@@ -151,11 +153,16 @@ data class ThreadPage(
         val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
         // 处理副作用
+        // 处理副作用
         LaunchedEffect(Unit) {
+            var snackbarJob: Job? = null
             viewModel.effect.collect { effect ->
                 when (effect) {
                     is Effect.ShowSnackbar -> {
-                        snackbarHostState.showSnackbar(effect.message)
+                        snackbarJob?.cancel()
+                        snackbarJob = coroutineScope.launch {
+                            snackbarHostState.showSnackbar(effect.message)
+                        }
                     }
 
                     is Effect.CopyToClipboard -> {
@@ -205,11 +212,18 @@ data class ThreadPage(
                             IconButton(onClick = { viewModel.onEvent(Event.Refresh) }) {
                                 Icon(Icons.Default.Refresh, contentDescription = "刷新")
                             }
-                            IconButton(onClick = { viewModel.onEvent(Event.ToggleSubscription) }) {
-                                Icon(
-                                    imageVector = if (state.isSubscribed) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                                    contentDescription = "收藏"
-                                )
+                            IconButton(
+                                onClick = { viewModel.onEvent(Event.ToggleSubscription) },
+                                enabled = !state.isTogglingSubscription
+                            ) {
+                                if (state.isTogglingSubscription) {
+                                    CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                                } else {
+                                    Icon(
+                                        imageVector = if (state.isSubscribed) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                                        contentDescription = "收藏"
+                                    )
+                                }
                             }
                             IconButton(onClick = { showMenu = !showMenu }) {
                                 Icon(Icons.Default.MoreVert, contentDescription = "更多选项")

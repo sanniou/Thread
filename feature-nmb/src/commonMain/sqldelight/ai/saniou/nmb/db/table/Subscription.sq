@@ -60,3 +60,9 @@ FROM Subscription
 JOIN Thread ON Subscription.threadId = Thread.id
 WHERE Subscription.subscriptionKey = :subscriptionKey AND Subscription.page = :page
 ORDER BY Subscription.subscriptionTime DESC;
+
+isSubscribed:
+SELECT EXISTS (
+    SELECT 1 FROM Subscription
+    WHERE subscriptionKey = :subscriptionKey AND threadId = :threadId
+);

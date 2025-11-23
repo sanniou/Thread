@@ -28,6 +28,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
+import ai.saniou.nmb.data.entity.Thread
+import app.cash.sqldelight.coroutines.mapToOne
 
 /**
  * NMB 仓库实现类
@@ -140,6 +142,26 @@ class NmbRepositoryImpl(
 
     override suspend fun updateThreadLastReadReplyId(threadId: Long, replyId: Long) {
         database.threadQueries.updateThreadLastReadReplyId(replyId, threadId)
+    }
+
+    override fun observeIsSubscribed(subscriptionKey: String, threadId: Long): Flow<Boolean> {
+        return database.subscriptionQueries.isSubscribed(subscriptionKey, threadId)
+            .asFlow()
+            .mapToOne(Dispatchers.IO)
+    }
+
+    @OptIn(ExperimentalTime::class)
+    override suspend fun addSubscription(subscriptionKey: String, thread: Thread) {
+        database.subscriptionQueries.insertSubscription(
+            subscriptionKey = subscriptionKey,
+            threadId = thread.id,
+            page = 1L,
+            subscriptionTime = Clock.System.now().epochSeconds
+        )
+    }
+
+    override suspend fun deleteSubscription(subscriptionKey: String, threadId: Long) {
+        database.subscriptionQueries.deleteSubscription(subscriptionKey, threadId)
     }
 
     override suspend fun getSortedCookies(): List<Cookie> {

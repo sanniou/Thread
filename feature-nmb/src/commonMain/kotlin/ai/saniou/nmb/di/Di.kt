@@ -124,15 +124,16 @@ val nmbdi = DI {
     bindFactory<Long, ThreadViewModel> { threadId ->
         ThreadViewModel(
             threadId = threadId,
-             instance(),
-             instance(),
-             instance(),
-             instance(),
-             instance(),
-             instance(),
+            instance(),
+            instance(),
+            instance(),
+            instance(),
+            instance(),
+            instance(),
+            instance()
         )
     }
-    bindProvider { ToggleSubscriptionUseCase(instance(), instance()) }
+    bindProvider { ToggleSubscriptionUseCase(instance(), instance(), instance()) }
 
     // 发帖和回复相关
     bindProvider { PostUseCase(instance()) }
