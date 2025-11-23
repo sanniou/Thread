@@ -178,16 +178,20 @@ data class ThreadPage(
             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
                 TopAppBar(
-                    modifier = Modifier.pointerInput(Unit) {
-                        detectTapGestures(onDoubleTap = {
-                            coroutineScope.launch { lazyListState.animateScrollToItem(0) }
-                        })
-                    },
                     title = {
                         if (state.thread != null) {
                             Text(
                                 text = state.forumName,
                                 style = MaterialTheme.typography.titleLarge,
+                                modifier = Modifier.clickable {
+                                    coroutineScope.launch {
+                                        if (lazyListState.firstVisibleItemIndex > 0) {
+                                            lazyListState.animateScrollToItem(0)
+                                        } else {
+                                            viewModel.onEvent(Event.Refresh)
+                                        }
+                                    }
+                                }
                             )
                         }
                     },
