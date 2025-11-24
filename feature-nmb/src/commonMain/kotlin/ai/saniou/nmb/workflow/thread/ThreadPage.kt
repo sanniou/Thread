@@ -194,10 +194,10 @@ data class ThreadPage(
                                     detectTapGestures(
                                         onTap = {
                                             coroutineScope.launch {
-                                                if (lazyListState.firstVisibleItemIndex > 0 && lazyListState.firstVisibleItemScrollOffset == 0) {
-                                                    lazyListState.animateScrollToItem(0)
-                                                } else {
+                                                if (lazyListState.firstVisibleItemIndex == 0 && lazyListState.firstVisibleItemScrollOffset == 0) {
                                                     viewModel.onEvent(Event.Refresh)
+                                                } else {
+                                                    lazyListState.animateScrollToItem(0)
                                                 }
                                             }
                                         }
