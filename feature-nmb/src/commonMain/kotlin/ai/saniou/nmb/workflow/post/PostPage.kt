@@ -170,8 +170,8 @@ private fun PostToolbar(viewModel: PostViewModel) {
     if (showDiceDialog) {
         DiceInputDialog(
             onDismiss = { showDiceDialog = false },
-            onConfirm = {
-                viewModel.onEvent(PostContract.Event.InsertContent("[$it]"))
+            onConfirm = { start, end ->
+                viewModel.onEvent(PostContract.Event.InsertContent("[$start-$end]"))
                 showDiceDialog = false
             }
         )
@@ -201,20 +201,34 @@ private fun PostToolbar(viewModel: PostViewModel) {
 }
 
 @Composable
-private fun DiceInputDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
-    var text by remember { mutableStateOf("") }
+private fun DiceInputDialog(onDismiss: () -> Unit, onConfirm: (String, String) -> Unit) {
+    var start by remember { mutableStateOf("1") }
+    var end by remember { mutableStateOf("100") }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("掷骰子") },
         text = {
-            OutlinedTextField(
-                value = text,
-                onValueChange = { text = it },
-                label = { Text("输入选项，用逗号分隔") }
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedTextField(
+                    value = start,
+                    onValueChange = { start = it },
+                    label = { Text("起点") },
+                    modifier = Modifier.weight(1f)
+                )
+                Text("-")
+                OutlinedTextField(
+                    value = end,
+                    onValueChange = { end = it },
+                    label = { Text("终点") },
+                    modifier = Modifier.weight(1f)
+                )
+            }
         },
         confirmButton = {
-            TextButton(onClick = { onConfirm(text) }) {
+            TextButton(onClick = { onConfirm(start, end) }) {
                 Text("确定")
             }
         },
