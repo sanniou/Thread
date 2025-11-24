@@ -17,6 +17,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material.icons.outlined.Star
@@ -33,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import app.cash.paging.LoadStateError
 import app.cash.paging.LoadStateLoading
 import app.cash.paging.PagingData
+import app.cash.paging.compose.LazyPagingItems
 import app.cash.paging.compose.collectAsLazyPagingItems
 import kotlinx.coroutines.flow.Flow
 
@@ -42,6 +45,7 @@ fun ListThreadPage(
     onThreadClicked: (Long) -> Unit,
     onImageClick: (Long, String, String) -> Unit,
     modifier: Modifier = Modifier,
+    state: LazyListState = rememberLazyListState(),
 ) {
     val threads = threadFlow.collectAsLazyPagingItems()
 
@@ -82,6 +86,7 @@ fun ListThreadPage(
                     return@PullToRefreshWrapper
                 }
                 LazyColumn(
+                    state = state,
                     contentPadding = PaddingValues(horizontal = Dimens.padding_medium),
                     verticalArrangement = Arrangement.spacedBy(Dimens.padding_small)
                 ) {
@@ -112,7 +117,7 @@ private fun StateContent(
     modifier: Modifier = Modifier,
     imageVector: ImageVector,
     message: String,
-    action: (@Composable () -> Unit)? = null
+    action: (@Composable () -> Unit)? = null,
 ) {
     Column(
         modifier = modifier

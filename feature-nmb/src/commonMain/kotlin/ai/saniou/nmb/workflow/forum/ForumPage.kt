@@ -27,14 +27,17 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.cash.paging.compose.collectAsLazyPagingItems
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import kotlinx.coroutines.launch
 import org.kodein.di.DI
 import org.kodein.di.direct
 import org.kodein.di.instance
@@ -53,8 +56,10 @@ data class ForumPage(
             di.direct.instance(arg = forumId to fgroupId)
         }
         val state by viewModel.state.collectAsStateWithLifecycle()
+        val threads = viewModel.threads.collectAsLazyPagingItems()
         val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
         val lazyListState = rememberLazyListState()
+        val coroutineScope = rememberCoroutineScope()
         val expandedFab by remember { derivedStateOf { lazyListState.firstVisibleItemIndex == 0 } }
 
         LaunchedEffect(Unit) {
@@ -74,8 +79,14 @@ data class ForumPage(
                             text = state.forumName,
                             modifier = Modifier.pointerInput(Unit) {
                                 detectTapGestures(
-                                    onDoubleTap = {
-                                        viewModel.onEvent(ForumContract.Event.ScrollToTop)
+                                    onTap = {
+                                        if (lazyListState.firstVisibleItemIndex == 0 && lazyListState.firstVisibleItemScrollOffset == 0) {
+                                            threads.refresh()
+                                        } else {
+                                            coroutineScope.launch {
+                                                lazyListState.animateScrollToItem(0)
+                                            }
+                                        }
                                     }
                                 )
                             }
@@ -91,7 +102,14 @@ data class ForumPage(
             },
             floatingActionButton = {
                 ExtendedFloatingActionButton(
-                    onClick = { navigator.push(PostPage(fid = forumId.toInt(), forumName = state.forumName)) },
+                    onClick = {
+                        navigator.push(
+                            PostPage(
+                                fid = forumId.toInt(),
+                                forumName = state.forumName
+                            )
+                        )
+                    },
                     expanded = expandedFab,
                     icon = { Icon(Icons.Default.Add, "发帖") },
                     text = { Text("发帖") }
@@ -99,6 +117,7 @@ data class ForumPage(
             }
         ) { innerPadding ->
             ListThreadPage(
+                state = lazyListState,
                 threadFlow = viewModel.threads,
                 onThreadClicked = { threadId -> navigator.push(ThreadPage(threadId)) },
                 onImageClick = { _, imgPath, ext ->
