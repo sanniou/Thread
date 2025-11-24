@@ -69,11 +69,6 @@ fun ZoomAsyncImage(
     val capturableState = rememberCapturableState()
     val zoomState = rememberSketchZoomState()
     val imageState = rememberAsyncImageState()
-
-    // 配置缩放行为
-    zoomState.zoomable.setThreeStepScale(true)
-    zoomState.zoomable.setReverseMouseWheelScale(true)
-
     Box(modifier = modifier.fillMaxSize()) {
         SketchZoomAsyncImage(
             request = ComposableImageRequest(uri) {

@@ -173,10 +173,6 @@ data class ImagePreviewPage(
 
 @Composable
 fun ImageItem(imageUrl: String, thumbnailUrl: String) {
-    // 缩放状态
-    var scale by remember { mutableStateOf(1f) }
-    var rotation by remember { mutableStateOf(0f) }
-    val offsetAnimatable = remember { Animatable(Offset.Zero, Offset.VectorConverter) }
     val scope = rememberCoroutineScope()
 
     BoxWithConstraints(
@@ -187,70 +183,17 @@ fun ImageItem(imageUrl: String, thumbnailUrl: String) {
         val boxWidth = constraints.maxWidth.toFloat()
         val boxHeight = constraints.maxHeight.toFloat()
 
-        // 创建可变换状态
-        val transformableState =
-            rememberTransformableState { zoomChange, offsetChange, rotationChange ->
-                scale = (scale * zoomChange).coerceIn(1f, 5f)
-                rotation += rotationChange
-                scope.launch {
-                    offsetAnimatable.snapTo(offsetAnimatable.value + offsetChange)
-                }
-            }
-
-        LaunchedEffect(transformableState.isTransformInProgress, scale) {
-            if (!transformableState.isTransformInProgress) {
-                val maxX = ((boxWidth * scale - boxWidth) / 2f).coerceAtLeast(0f)
-                val maxY = ((boxHeight * scale - boxHeight) / 2f).coerceAtLeast(0f)
-
-                val currentOffset = offsetAnimatable.value
-                val targetOffset = Offset(
-                    x = currentOffset.x.coerceIn(-maxX, maxX),
-                    y = currentOffset.y.coerceIn(-maxY, maxY)
-                )
-                if (currentOffset != targetOffset) {
-                    scope.launch {
-                        offsetAnimatable.animateTo(targetOffset, animationSpec = spring())
-                    }
-                }
-            }
-        }
 
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .transformable(state = transformableState)
-                .pointerInput(Unit) {
-                    detectTapGestures(
-                        onDoubleTap = {
-                            scope.launch {
-                                if (scale > 1f) {
-                                    scale = 1f
-                                    offsetAnimatable.animateTo(
-                                        Offset.Zero,
-                                        animationSpec = spring()
-                                    )
-                                } else {
-                                    scale = 2f
-                                }
-                                rotation = 0f
-                            }
-                        }
-                    )
-                }
         ) {
             ZoomAsyncImage(
                 uri = imageUrl,
                 thumbnailUrl = thumbnailUrl,
                 contentDescription = "预览图片",
                 modifier = Modifier
-                    .fillMaxSize()
-                    .graphicsLayer(
-                        scaleX = scale,
-                        scaleY = scale,
-                        rotationZ = rotation,
-                        translationX = offsetAnimatable.value.x,
-                        translationY = offsetAnimatable.value.y
-                    ),
+                    .fillMaxSize(),
             )
         }
     }
