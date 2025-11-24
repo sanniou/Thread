@@ -70,6 +70,14 @@ kotlin {
             implementation(libs.sketch.extensions.compose)
             implementation(libs.sketch.ktor)
             implementation(libs.sketch.svg)
+            // Core library
+//            implementation(libs.kmpalette.core)
+//
+//            // Optional extensions based on your image source
+//            implementation(libs.kmpalette.extensions.base64)
+//            implementation(libs.kmpalette.extensions.bytearray)
+//            implementation(libs.kmpalette.extensions.network)
+//            implementation(libs.kmpalette.extensions.file)
         }
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)

@@ -36,6 +36,7 @@ sketch = "4.3.1"
 zoomimage = "1.4.0"
 cashPaging = "3.3.0-alpha02-0.5.1"
 reorderable = "3.0.0"
+kmpalette = "3.1.0"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -124,6 +125,13 @@ zoom = { group = "io.github.panpf.zoomimage", name = "zoomimage-compose", versio
 zoom-sketch = { group = "io.github.panpf.zoomimage", name = "zoomimage-compose-sketch4", version.ref = "zoomimage" }
 zoom-resources = { group = "io.github.panpf.zoomimage", name = "zoomimage-compose-resources", version.ref = "zoomimage" }
 reorderable = { module = "sh.calvin.reorderable:reorderable", version.ref = "reorderable" }
+
+kmpalette-core = { module = "com.kmpalette:kmpalette-core", version.ref = "kmpalette" }
+# Optional source libraries
+kmpalette-extensions-base64 = { module = "com.kmpalette:extensions-base64", version.ref = "kmpalette" }
+kmpalette-extensions-bytearray = { module = "com.kmpalette:extensions-bytearray", version.ref = "kmpalette" }
+kmpalette-extensions-network = { module = "com.kmpalette:extensions-network", version.ref = "kmpalette" }
+kmpalette-extensions-file = { module = "com.kmpalette:extensions-file", version.ref = "kmpalette" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
