@@ -157,16 +157,6 @@ private fun PostToolbar(viewModel: PostViewModel) {
     var showEmoticonPicker by remember { mutableStateOf(false) }
     var showDiceInputs by remember { mutableStateOf(false) }
 
-    if (showEmoticonPicker) {
-        EmoticonPickerDialog(
-            onDismiss = { showEmoticonPicker = false },
-            onEmoticonSelected = {
-                viewModel.onEvent(PostContract.Event.InsertContent(it))
-                showEmoticonPicker = false
-            }
-        )
-    }
-
     Column {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -182,12 +172,19 @@ private fun PostToolbar(viewModel: PostViewModel) {
             }) {
                 Icon(Icons.Outlined.Info, contentDescription = "插入图片")
             }
-            IconButton(onClick = { showEmoticonPicker = true }) {
+            IconButton(onClick = { showEmoticonPicker = !showEmoticonPicker }) {
                 Icon(Icons.Outlined.Info, contentDescription = "表情")
             }
             IconButton(onClick = { showDiceInputs = !showDiceInputs }) {
                 Icon(Icons.Outlined.Info, contentDescription = "掷骰子")
             }
+        }
+
+        if (showEmoticonPicker) {
+            EmoticonPicker(onEmoticonSelected = {
+                viewModel.onEvent(PostContract.Event.InsertContent(it))
+                showEmoticonPicker = false
+            })
         }
 
         if (showDiceInputs) {
@@ -225,7 +222,7 @@ private fun PostToolbar(viewModel: PostViewModel) {
 }
 
 @Composable
-private fun EmoticonPickerDialog(onDismiss: () -> Unit, onEmoticonSelected: (String) -> Unit) {
+private fun EmoticonPicker(onEmoticonSelected: (String) -> Unit) {
     val emoticonGroups = remember {
         mapOf(
             "常用" to listOf(
@@ -265,41 +262,30 @@ private fun EmoticonPickerDialog(onDismiss: () -> Unit, onEmoticonSelected: (Str
     var selectedTabIndex by remember { mutableStateOf(0) }
     val titles = emoticonGroups.keys.toList()
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("选择表情") },
-        text = {
-            Column {
-                TabRow(selectedTabIndex = selectedTabIndex) {
-                    titles.forEachIndexed { index, title ->
-                        Tab(
-                            selected = selectedTabIndex == index,
-                            onClick = { selectedTabIndex = index },
-                            text = { Text(title) }
-                        )
-                    }
-                }
-                Box(modifier = Modifier.heightIn(max = 300.dp)) {
-                    LazyVerticalGrid(
-                        columns = GridCells.Adaptive(minSize = 50.dp),
-                        contentPadding = PaddingValues(8.dp)
-                    ) {
-                        items(emoticonGroups.values.toList()[selectedTabIndex]) { emoticon ->
-                            Text(
-                                text = emoticon,
-                                modifier = Modifier
-                                    .clickable { onEmoticonSelected(emoticon) }
-                                    .padding(8.dp)
-                            )
-                        }
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text("关闭")
+    Column {
+        TabRow(selectedTabIndex = selectedTabIndex) {
+            titles.forEachIndexed { index, title ->
+                Tab(
+                    selected = selectedTabIndex == index,
+                    onClick = { selectedTabIndex = index },
+                    text = { Text(title) }
+                )
             }
         }
-    )
+        Box(modifier = Modifier.heightIn(max = 300.dp)) {
+            LazyVerticalGrid(
+                columns = GridCells.Adaptive(minSize = 50.dp),
+                contentPadding = PaddingValues(8.dp)
+            ) {
+                items(emoticonGroups.values.toList()[selectedTabIndex]) { emoticon ->
+                    Text(
+                        text = emoticon,
+                        modifier = Modifier
+                            .clickable { onEmoticonSelected(emoticon) }
+                            .padding(8.dp)
+                    )
+                }
+            }
+        }
+    }
 }
