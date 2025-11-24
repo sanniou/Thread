@@ -155,7 +155,7 @@ data class PostPage(
 @Composable
 private fun PostToolbar(viewModel: PostViewModel) {
     var showEmoticonPicker by remember { mutableStateOf(false) }
-    var showDiceDialog by remember { mutableStateOf(false) }
+    var showDiceInputs by remember { mutableStateOf(false) }
 
     if (showEmoticonPicker) {
         EmoticonPickerDialog(
@@ -167,48 +167,36 @@ private fun PostToolbar(viewModel: PostViewModel) {
         )
     }
 
-    if (showDiceDialog) {
-        DiceInputDialog(
-            onDismiss = { showDiceDialog = false },
-            onConfirm = { start, end ->
-                viewModel.onEvent(PostContract.Event.InsertContent("[$start-$end]"))
-                showDiceDialog = false
+    Column {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            IconButton(onClick = {
+                viewModel.onEvent(PostContract.Event.InsertContent("[code][/code]"))
+            }) {
+                Icon(Icons.Outlined.Info, contentDescription = "插入代码")
             }
-        )
-    }
+            IconButton(onClick = {
+                viewModel.onEvent(PostContract.Event.InsertContent("[img][/img]"))
+            }) {
+                Icon(Icons.Outlined.Info, contentDescription = "插入图片")
+            }
+            IconButton(onClick = { showEmoticonPicker = true }) {
+                Icon(Icons.Outlined.Info, contentDescription = "表情")
+            }
+            IconButton(onClick = { showDiceInputs = !showDiceInputs }) {
+                Icon(Icons.Outlined.Info, contentDescription = "掷骰子")
+            }
+        }
 
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        IconButton(onClick = {
-            viewModel.onEvent(PostContract.Event.InsertContent("[code][/code]"))
-        }) {
-            Icon(Icons.Outlined.Info, contentDescription = "插入代码")
-        }
-        IconButton(onClick = {
-            viewModel.onEvent(PostContract.Event.InsertContent("[img][/img]"))
-        }) {
-            Icon(Icons.Outlined.Info, contentDescription = "插入图片")
-        }
-        IconButton(onClick = { showEmoticonPicker = true }) {
-            Icon(Icons.Outlined.Info, contentDescription = "表情")
-        }
-        IconButton(onClick = { showDiceDialog = true }) {
-            Icon(Icons.Outlined.Info, contentDescription = "掷骰子")
-        }
-    }
-}
-
-@Composable
-private fun DiceInputDialog(onDismiss: () -> Unit, onConfirm: (String, String) -> Unit) {
-    var start by remember { mutableStateOf("1") }
-    var end by remember { mutableStateOf("100") }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("掷骰子") },
-        text = {
+        if (showDiceInputs) {
+            var start by remember { mutableStateOf("1") }
+            var end by remember { mutableStateOf("100") }
             Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
@@ -225,19 +213,15 @@ private fun DiceInputDialog(onDismiss: () -> Unit, onConfirm: (String, String) -
                     label = { Text("终点") },
                     modifier = Modifier.weight(1f)
                 )
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = { onConfirm(start, end) }) {
-                Text("确定")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("取消")
+                Button(onClick = {
+                    viewModel.onEvent(PostContract.Event.InsertContent("[$start-$end]"))
+                    showDiceInputs = false
+                }) {
+                    Text("插入")
+                }
             }
         }
-    )
+    }
 }
 
 @Composable
