@@ -131,8 +131,10 @@ data class ImagePreviewPage(
                         val imageInfo = uiState.images[page]
                         val imageUrl =
                             cdnManager.buildImageUrl(imageInfo.imgPath, imageInfo.ext, false)
+                        val thumbnailUrl =
+                            cdnManager.buildImageUrl(imageInfo.imgPath, imageInfo.ext, true)
 
-                        ImageItem(imageUrl)
+                        ImageItem(imageUrl, thumbnailUrl)
                     }
                 }
             }
@@ -170,7 +172,7 @@ data class ImagePreviewPage(
 }
 
 @Composable
-fun ImageItem(imageUrl: String) {
+fun ImageItem(imageUrl: String, thumbnailUrl: String) {
     // 缩放状态
     var scale by remember { mutableStateOf(1f) }
     var rotation by remember { mutableStateOf(0f) }
@@ -238,6 +240,7 @@ fun ImageItem(imageUrl: String) {
         ) {
             ZoomAsyncImage(
                 uri = imageUrl,
+                thumbnailUrl = thumbnailUrl,
                 contentDescription = "预览图片",
                 modifier = Modifier
                     .fillMaxSize()
@@ -247,7 +250,7 @@ fun ImageItem(imageUrl: String) {
                         rotationZ = rotation,
                         translationX = offsetAnimatable.value.x,
                         translationY = offsetAnimatable.value.y
-                    )
+                    ),
             )
         }
     }
