@@ -66,7 +66,7 @@ class SubscriptionRemoteMediator(
                     }
 
                     feedDetail.forEach { feed ->
-                        db.threadQueries.upsetThread(feed.toTable(page))
+                        db.threadQueries.upsertThread(feed.toTable(page))
 
                         db.subscriptionQueries.insertSubscription(
                             subscriptionKey = subscriptionKey, threadId = feed.id,

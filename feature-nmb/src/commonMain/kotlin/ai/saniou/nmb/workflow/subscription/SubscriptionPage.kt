@@ -9,7 +9,7 @@ import ai.saniou.nmb.ui.components.LoadingIndicator
 import ai.saniou.nmb.ui.components.ThreadListSkeleton
 import ai.saniou.nmb.workflow.image.ImageInfo
 import ai.saniou.nmb.workflow.image.ImagePreviewPage
-import ai.saniou.nmb.workflow.image.ImagePreviewUiState
+import ai.saniou.nmb.workflow.image.ImagePreviewViewModelParams
 import ai.saniou.nmb.workflow.subscription.SubscriptionContract.Event
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -53,7 +53,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import app.cash.paging.LoadState
 import app.cash.paging.LoadStateError
 import app.cash.paging.LoadStateLoading
 import app.cash.paging.compose.collectAsLazyPagingItems
@@ -145,15 +144,11 @@ data class SubscriptionPage(
                         onThreadClicked = onThreadClicked,
                         onImageClick = { _, imgPath, ext ->
                             val imageInfo = ImageInfo(imgPath, ext)
-                            val uiState = ImagePreviewUiState(
-                                images = listOf(imageInfo),
-                                initialIndex = 0,
-                                endReached = true
-                            )
                             navigator.push(
                                 ImagePreviewPage(
-                                    uiState = uiState,
-                                    onLoadMore = {}
+                                    ImagePreviewViewModelParams(
+                                        initialImages = listOf(imageInfo),
+                                    ),
                                 )
                             )
                         },

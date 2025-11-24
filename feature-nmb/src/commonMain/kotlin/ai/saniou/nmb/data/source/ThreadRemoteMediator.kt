@@ -88,7 +88,7 @@ class ThreadRemoteMediator(
 //                    }
 
                     // 更新主楼信息和回复
-                    threadQueries.upsetThread(threadDetail.toTable(page.toLong()))
+                    threadQueries.upsertThread(threadDetail.toTable(page.toLong()))
                     threadDetail.toTableReply(page.toLong())
                         .forEach(threadReplyQueries::upsertThreadReply)
 

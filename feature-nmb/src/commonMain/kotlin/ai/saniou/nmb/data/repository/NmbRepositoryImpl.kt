@@ -29,6 +29,8 @@ import kotlinx.coroutines.flow.map
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 import ai.saniou.nmb.data.entity.Thread
+import ai.saniou.nmb.data.entity.toTable
+import ai.saniou.nmb.data.entity.toTableReply
 import app.cash.sqldelight.coroutines.mapToOne
 
 /**
@@ -265,5 +267,31 @@ class NmbRepositoryImpl(
                 )
             }
         )
+    }
+
+    override suspend fun getThreadRepliesByPage(
+        threadId: Long,
+        page: Int,
+    ): Result<List<ThreadReply>> {
+        return try {
+            when (val response = nmbXdApi.thread(threadId, page.toLong())) {
+                is SaniouResponse.Success -> {
+                    val thread = response.data
+                    // 更新数据库
+                    database.threadQueries.transaction {
+                        database.threadQueries.upsertThread(thread.toTable(page = page.toLong()))
+                        thread.toTableReply(page.toLong())
+                            .forEach(database.threadReplyQueries::upsertThreadReply)
+                    }
+                    Result.success(thread.replies)
+                }
+
+                is SaniouResponse.Error -> {
+                    Result.failure(response.ex)
+                }
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 }

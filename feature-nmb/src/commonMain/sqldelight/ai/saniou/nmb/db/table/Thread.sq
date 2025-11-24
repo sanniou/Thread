@@ -34,7 +34,7 @@ CREATE INDEX IF NOT EXISTS idx_thread_last_access_time ON ThreadInformation(last
 CREATE INDEX IF NOT EXISTS idx_thraed_fid ON Thread(fid);
 
 -- 插入 ThreadThread 数据
-upsetThread:
+upsertThread:
 INSERT OR REPLACE INTO Thread (
     id, fid, replyCount, img, ext, now, userHash, name, title, content, sage, admin, hide, page
 ) VALUES ?;

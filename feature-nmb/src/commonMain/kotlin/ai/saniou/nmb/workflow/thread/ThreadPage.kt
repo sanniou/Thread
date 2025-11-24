@@ -14,23 +14,18 @@ import ai.saniou.nmb.ui.components.ReferencePopup
 import ai.saniou.nmb.ui.components.SkeletonReplyItem
 import ai.saniou.nmb.ui.components.ThreadAuthor
 import ai.saniou.nmb.ui.components.ThreadBody
+import ai.saniou.nmb.workflow.image.ImageInfo
 import ai.saniou.nmb.workflow.image.ImagePreviewPage
+import ai.saniou.nmb.workflow.image.ImagePreviewViewModelParams
+import ai.saniou.nmb.workflow.image.ThreadImageProvider
 import ai.saniou.nmb.workflow.post.PostPage
 import ai.saniou.nmb.workflow.reference.ReferenceContract
 import ai.saniou.nmb.workflow.reference.ReferenceViewModel
 import ai.saniou.nmb.workflow.thread.ThreadContract.Effect
 import ai.saniou.nmb.workflow.thread.ThreadContract.Event
 import ai.saniou.nmb.workflow.thread.ThreadContract.State
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.updateTransition
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -50,35 +45,33 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledIconToggleButton
 import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -86,39 +79,29 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import app.cash.paging.LoadState
+import app.cash.paging.LoadStateError
+import app.cash.paging.LoadStateLoading
 import app.cash.paging.compose.collectAsLazyPagingItems
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.kodein.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.launch
-import androidx.compose.material3.Card
-import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.FilledIconToggleButton
-import androidx.compose.material3.IconToggleButton
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.ui.input.nestedscroll.nestedScroll
-import app.cash.paging.LoadStateError
-import app.cash.paging.LoadStateLoading
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.launch
 import org.kodein.di.direct
 import org.kodein.di.instance
 
@@ -170,12 +153,7 @@ data class ThreadPage(
                     }
 
                     is Effect.NavigateToImagePreview -> {
-                        navigator.push(
-                            ImagePreviewPage(
-                                uiState = state.imagePreviewState,
-                                onLoadMore = { viewModel.onEvent(Event.LoadMoreImages) }
-                            )
-                        )
+                        // This navigation is now handled with parameters, not from a shared state
                     }
                 }
             }
@@ -286,8 +264,19 @@ data class ThreadPage(
                     )
                     showReferencePopup = true
                 },
-                onImageClick = { imgPath, _ ->
-                    viewModel.onEvent(Event.ShowImagePreview(imgPath))
+                onImageClick = { initialIndex, images ->
+                    navigator.push(
+                        ImagePreviewPage(
+                            ImagePreviewViewModelParams(
+                                imageProvider = ThreadImageProvider(
+                                    threadId = threadId,
+                                    getThreadImagesUseCase = nmbdi.direct.instance()
+                                ),
+                                initialImages = images,
+                                initialIndex = initialIndex
+                            )
+                        )
+                    )
                 },
                 onUpdateLastReadId = { id -> viewModel.onEvent(Event.UpdateLastReadReplyId(id)) },
                 onCopy = { viewModel.onEvent(Event.CopyContent(it)) },
@@ -334,7 +323,7 @@ private fun ThreadContentRouter(
     onRefresh: () -> Unit,
     onTogglePoOnly: () -> Unit,
     onRefClick: (Long) -> Unit,
-    onImageClick: (String, String) -> Unit,
+    onImageClick: (Int, List<ImageInfo>) -> Unit,
     onUpdateLastReadId: (Long) -> Unit,
     onCopy: (String) -> Unit,
     onBookmarkThread: (Thread) -> Unit,
@@ -510,7 +499,7 @@ fun ThreadSuccessContent(
     onReplyClicked: (Long) -> Unit,
     onTogglePoOnly: () -> Unit,
     onRefClick: (Long) -> Unit,
-    onImageClick: (String, String) -> Unit,
+    onImageClick: (Int, List<ImageInfo>) -> Unit,
     onUpdateLastReadId: (Long) -> Unit,
     onCopy: (String) -> Unit,
     onBookmarkThread: (Thread) -> Unit,
@@ -574,7 +563,7 @@ private fun ThreadList(
     onReplyClicked: (Long) -> Unit,
     onTogglePoOnly: () -> Unit,
     onRefClick: (Long) -> Unit,
-    onImageClick: (String, String) -> Unit,
+    onImageClick: (Int, List<ImageInfo>) -> Unit,
     onRefresh: () -> Unit,
     onCopy: (String) -> Unit,
     onBookmarkThread: (Thread) -> Unit,
@@ -601,13 +590,26 @@ private fun ThreadList(
 
         // 主帖
         item {
-            state.thread?.let {
+            state.thread?.let { thread ->
                 ThreadMainPost(
-                    thread = it,
+                    thread = thread,
                     refClick = onRefClick,
-                    onImageClick = onImageClick,
-                    onCopy = { onCopy(it.content) },
-                    onBookmark = { onBookmarkThread(it) }
+                    onImageClick = { imgPath, ext ->
+                        val allImages = mutableListOf<ImageInfo>()
+                        if (thread.img.isNotBlank()) {
+                            allImages.add(ImageInfo(thread.img, thread.ext))
+                        }
+                        replies.itemSnapshotList.items.forEach { reply ->
+                            if (reply.img.isNotBlank()) {
+                                allImages.add(ImageInfo(reply.img, reply.ext))
+                            }
+                        }
+                        val initialIndex = allImages.indexOfFirst { it.imgPath == imgPath }
+                            .coerceAtLeast(0)
+                        onImageClick(initialIndex, allImages)
+                    },
+                    onCopy = { onCopy(thread.content) },
+                    onBookmark = { onBookmarkThread(thread) }
                 )
             }
         }
@@ -636,7 +638,22 @@ private fun ThreadList(
                     poUserHash = state.thread?.userHash ?: "",
                     onReplyClicked = onReplyClicked,
                     refClick = onRefClick,
-                    onImageClick = onImageClick,
+                    onImageClick = { imgPath, ext ->
+                        val allImages = mutableListOf<ImageInfo>()
+                        state.thread?.let {
+                            if (it.img.isNotBlank()) {
+                                allImages.add(ImageInfo(it.img, it.ext))
+                            }
+                        }
+                        replies.itemSnapshotList.items.forEach { r ->
+                            if (r.img.isNotBlank()) {
+                                allImages.add(ImageInfo(r.img, r.ext))
+                            }
+                        }
+                        val initialIndex = allImages.indexOfFirst { it.imgPath == imgPath }
+                            .coerceAtLeast(0)
+                        onImageClick(initialIndex, allImages)
+                    },
                     onCopy = { onCopy(reply.content) },
                     onBookmark = { onBookmarkReply(reply) }
                 )

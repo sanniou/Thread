@@ -2,7 +2,6 @@ package ai.saniou.nmb.workflow.thread
 
 import ai.saniou.nmb.data.entity.Thread
 import ai.saniou.nmb.data.entity.ThreadReply
-import ai.saniou.nmb.workflow.image.ImagePreviewUiState
 import app.cash.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
@@ -34,7 +33,6 @@ interface ThreadContract {
         val isSubscribed: Boolean = false,
         val forumName: String = "",
         val lastReadReplyId: Long = 0,
-        val imagePreviewState: ImagePreviewUiState = ImagePreviewUiState(),
         val isPoOnlyMode: Boolean = false,
         val isTogglingSubscription: Boolean = false
     )

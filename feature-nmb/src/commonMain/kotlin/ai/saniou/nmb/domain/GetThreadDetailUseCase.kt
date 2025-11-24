@@ -67,7 +67,7 @@ class GetThreadDetailUseCase(
                     if (result is SaniouResponse.Success) {
                         val threadDetail = result.data
                         db.transaction {
-                            db.threadQueries.upsetThread(threadDetail.toTable(1))
+                            db.threadQueries.upsertThread(threadDetail.toTable(1))
                             threadDetail.toTableReply(1)
                                 .forEach(db.threadReplyQueries::upsertThreadReply)
                         }

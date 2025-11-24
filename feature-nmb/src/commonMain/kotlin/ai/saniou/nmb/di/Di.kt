@@ -23,6 +23,7 @@ import ai.saniou.nmb.domain.ForumUseCase
 import ai.saniou.nmb.domain.GetBookmarksUseCase
 import ai.saniou.nmb.domain.GetReferenceUseCase
 import ai.saniou.nmb.domain.GetThreadDetailUseCase
+import ai.saniou.nmb.domain.GetThreadImagesUseCase
 import ai.saniou.nmb.domain.GetThreadRepliesPagingUseCase
 import ai.saniou.nmb.domain.HistoryUseCase
 import ai.saniou.nmb.domain.IsBookmarkedUseCase
@@ -39,6 +40,7 @@ import ai.saniou.nmb.workflow.history.HistoryViewModel
 import ai.saniou.nmb.workflow.home.ForumCategoryViewModel
 import ai.saniou.nmb.workflow.home.GreetImageViewModel
 import ai.saniou.nmb.workflow.home.HomeViewModel
+import ai.saniou.nmb.workflow.image.nmbImagePreviewModule
 import ai.saniou.nmb.workflow.post.PostViewModel
 import ai.saniou.nmb.workflow.reference.ReferenceViewModel
 import ai.saniou.nmb.workflow.subscription.SubscriptionViewModel
@@ -56,6 +58,7 @@ import org.kodein.di.instance
 
 val nmbdi = DI {
     import(coreCommon)
+    import(nmbImagePreviewModule)
 
     bindConstant<String>(tag = "nmbBaseUrl") { "https://api.nmb.best/api/" }
 
@@ -121,6 +124,7 @@ val nmbdi = DI {
     bindProvider { GetThreadDetailUseCase(instance(), instance()) }
     bindProvider { GetThreadRepliesPagingUseCase(instance(), instance()) }
     bindProvider { GetReferenceUseCase(instance(), instance()) }
+    bindProvider { GetThreadImagesUseCase(instance()) }
     bindFactory<Long, ThreadViewModel> { threadId ->
         ThreadViewModel(
             threadId = threadId,

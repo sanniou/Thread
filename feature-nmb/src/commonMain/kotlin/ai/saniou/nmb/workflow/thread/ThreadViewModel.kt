@@ -9,28 +9,22 @@ import ai.saniou.nmb.domain.AddBookmarkUseCase
 import ai.saniou.nmb.domain.GetThreadDetailUseCase
 import ai.saniou.nmb.domain.GetThreadRepliesPagingUseCase
 import ai.saniou.nmb.domain.ToggleSubscriptionUseCase
-import ai.saniou.nmb.workflow.image.ImageInfo
 import ai.saniou.nmb.workflow.thread.ThreadContract.Effect
 import ai.saniou.nmb.workflow.thread.ThreadContract.Event
 import ai.saniou.nmb.workflow.thread.ThreadContract.State
 import app.cash.paging.PagingData
 import app.cash.paging.cachedIn
 import app.cash.sqldelight.coroutines.asFlow
-import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOneOrNull
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.IO
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
@@ -64,7 +58,6 @@ class ThreadViewModel(
 
     private val loadRequest = MutableStateFlow(LoadRequest(threadId = threadId))
 
-    private var imageObserverJob: Job? = null
     val replies: Flow<PagingData<ThreadReply>> =
         loadRequest.flatMapLatest { request ->
             getThreadRepliesPagingUseCase(
@@ -96,8 +89,8 @@ class ThreadViewModel(
             Event.ToggleSubscription -> toggleSubscription()
             Event.CopyLink -> copyLink()
             is Event.UpdateLastReadReplyId -> updateLastReadReplyId(event.id)
-            is Event.ShowImagePreview -> showImagePreview(event.imgPath)
-            Event.LoadMoreImages -> {} // TODO: To be implemented
+            is Event.ShowImagePreview -> showImagePreview()
+            Event.LoadMoreImages -> {}
             is Event.CopyContent -> copyContent(event.content)
             is Event.BookmarkThread -> bookmarkThread(event.thread)
             is Event.BookmarkReply -> bookmarkReply(event.reply)
@@ -209,37 +202,9 @@ class ThreadViewModel(
         }
     }
 
-    private fun showImagePreview(initialImgPath: String) {
-        imageObserverJob?.cancel()
-        imageObserverJob = screenModelScope.launch {
+    private fun showImagePreview() {
+        screenModelScope.launch {
             _effect.send(Effect.NavigateToImagePreview)
-            val threadFlow = db.threadQueries.getThread(threadId)
-                .asFlow()
-                .mapToOneOrNull(Dispatchers.IO)
-            val repliesFlow = db.threadReplyQueries.getThreadImages(threadId)
-                .asFlow()
-                .mapToList(Dispatchers.IO)
-
-            combine(threadFlow, repliesFlow) { threadRow, replies ->
-                val images = mutableListOf<ImageInfo>()
-                if (threadRow != null && threadRow.img.isNotBlank()) {
-                    images.add(ImageInfo(threadRow.img, threadRow.ext))
-                }
-                replies.forEach { reply ->
-                    images.add(ImageInfo(reply.img, reply.ext))
-                }
-                images
-            }.collectLatest { images ->
-                val initialIndex = images.indexOfFirst { it.imgPath == initialImgPath }.coerceAtLeast(0)
-                _state.update {
-                    it.copy(
-                        imagePreviewState = it.imagePreviewState.copy(
-                            images = images,
-                            initialIndex = initialIndex
-                        )
-                    )
-                }
-            }
         }
     }
 }

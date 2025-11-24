@@ -41,12 +41,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
+import ai.saniou.coreui.widgets.ZoomAsyncImage
+import ai.saniou.nmb.workflow.image.ImagePreviewContract.Event
+import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.kodein.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import ai.saniou.coreui.widgets.ZoomAsyncImage
 import kotlinx.coroutines.launch
 import org.kodein.di.DI
+import org.kodein.di.direct
 import org.kodein.di.instance
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -55,20 +59,22 @@ import kotlin.coroutines.cancellation.CancellationException
  *
  * 支持图片缩放、查看上一张/下一张、保存图片等功能
  * 支持双击放大功能
- *
- * @param uiState 页面状态
- * @param onLoadMore 加载更多回调
  */
 data class ImagePreviewPage(
-    val uiState: ImagePreviewUiState,
+    val params: ImagePreviewViewModelParams,
     val di: DI = nmbdi,
-    val onLoadMore: () -> Unit,
 ) : Screen {
 
     @OptIn(ExperimentalComposeUiApi::class, ExperimentalFoundationApi::class)
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
+        val viewModel: ImagePreviewViewModel =
+            rememberScreenModel(tag = params.toString()) {
+                nmbdi.direct.instance(arg = params)
+            }
+        val uiState by viewModel.state.collectAsState()
+
         PredictiveBackHandler { progress ->
             try {
                 progress.collect { backEvent ->
@@ -81,7 +87,7 @@ data class ImagePreviewPage(
         }
 
         // 获取CDN管理器
-        val cdnManager by nmbdi.instance<CdnManager>()
+        val cdnManager by di.instance<CdnManager>()
 
         // Pager State
         val pagerState = rememberPagerState(
@@ -99,7 +105,7 @@ data class ImagePreviewPage(
         // Load next page when reaching the end
         LaunchedEffect(pagerState.currentPage) {
             if (pagerState.currentPage >= uiState.images.size - 1 && !uiState.endReached && !uiState.isLoading) {
-                onLoadMore()
+                viewModel.onEvent(Event.LoadMore)
             }
         }
 
@@ -217,7 +223,10 @@ fun ImageItem(imageUrl: String) {
                             scope.launch {
                                 if (scale > 1f) {
                                     scale = 1f
-                                    offsetAnimatable.animateTo(Offset.Zero, animationSpec = spring())
+                                    offsetAnimatable.animateTo(
+                                        Offset.Zero,
+                                        animationSpec = spring()
+                                    )
                                 } else {
                                     scale = 2f
                                 }

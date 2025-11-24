@@ -4,7 +4,7 @@ import ai.saniou.nmb.di.nmbdi
 import ai.saniou.nmb.workflow.home.ListThreadPage
 import ai.saniou.nmb.workflow.image.ImageInfo
 import ai.saniou.nmb.workflow.image.ImagePreviewPage
-import ai.saniou.nmb.workflow.image.ImagePreviewUiState
+import ai.saniou.nmb.workflow.image.ImagePreviewViewModelParams
 import ai.saniou.nmb.workflow.post.PostPage
 import ai.saniou.nmb.workflow.thread.ThreadPage
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -122,16 +122,11 @@ data class ForumPage(
                 onThreadClicked = { threadId -> navigator.push(ThreadPage(threadId)) },
                 onImageClick = { _, imgPath, ext ->
                     val imageInfo = ImageInfo(imgPath, ext)
-                    val uiState = ImagePreviewUiState(
-                        images = listOf(imageInfo),
-                        initialIndex = 0,
-                        endReached = true
-                    )
                     navigator.push(
                         ImagePreviewPage(
-                            uiState = uiState,
-                            di = di,
-                            onLoadMore = {}
+                            ImagePreviewViewModelParams(
+                                initialImages = listOf(imageInfo),
+                            )
                         )
                     )
                 },

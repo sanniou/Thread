@@ -7,7 +7,6 @@ import ai.saniou.nmb.data.entity.toTable
 import ai.saniou.nmb.data.entity.toTableReply
 import ai.saniou.nmb.data.repository.DataPolicy
 import ai.saniou.nmb.db.Database
-import ai.saniou.nmb.db.table.GetThreadsInForum
 import ai.saniou.nmb.db.table.GetThreadsInForumOffset
 import ai.saniou.nmb.db.table.RemoteKeys
 import app.cash.paging.ExperimentalPagingApi
@@ -77,7 +76,7 @@ class ForumRemoteMediator(
                     val nextKey = if (endOfPagination) null else page + 1
 
                     forums.forEach { forum ->
-                        threadQueries.upsetThread(forum.toTable(page.toLong()))
+                        threadQueries.upsertThread(forum.toTable(page.toLong()))
                         threadQueries.upsertThreadInformation(
                             id = forum.id,
                             remainReplies = forum.remainReplies,
