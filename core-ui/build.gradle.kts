@@ -56,6 +56,7 @@ kotlin {
             implementation(libs.navigation.compose)
             api(libs.navigation.compose)
             api(libs.material.icons)
+            api(libs.material.icons.extended)
             // zoom
             implementation(libs.zoom)
             implementation(libs.zoom.sketch)

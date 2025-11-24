@@ -1,6 +1,7 @@
 package ai.saniou.nmb.workflow.post
 
 import ai.saniou.nmb.di.nmbdi
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,22 +11,33 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.AddPhotoAlternate
+import androidx.compose.material.icons.filled.Code
+import androidx.compose.material.icons.filled.EmojiEmotions
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.outlined.Casino
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -45,6 +57,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.model.rememberScreenModel
@@ -53,6 +68,45 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import org.kodein.di.direct
 import org.kodein.di.instance
+
+
+private const val BBCODE_CODE = "[code][/code]"
+private const val BBCODE_IMG = "[img][/img]"
+
+private val EMOTICON_GROUPS = mapOf(
+    "常用" to listOf(
+        "(=ﾟωﾟ)=", "(´ﾟДﾟ`)", "(｀･ω･)", "( ´_ゝ｀)", "(;´Д`)",
+        "(=Д=)", "(●ε●)", "( ´∀`)", "( ´∀｀)", "(*´∀`)",
+        "(｡◕∀◕｡)", "(ゝ∀･)", "(ノﾟ∀ﾟ)ノ", "(σﾟдﾟ)σ", "Σ( ﾟдﾟ)",
+        "|д` )", "(`ε´ )", "(╬ﾟдﾟ)", "(|||ﾟдﾟ)", "( ﾟ∀ﾟ)",
+        "(*´д`)", "( `д´)", "(`ヮ´ )", "( ´ー`)", "( ´_っ`)",
+        "( ´ρ`)", "(･ω･)", "(ﾟДﾟ≡ﾟДﾟ)"
+    ),
+    "颜文字" to listOf(
+        "|∀ﾟ", "| ω・´)", "|-` )", "|д` )", "|ー` )", "|∀` )", "( ´д`)", "(( ´д`))",
+        "( ´∀`)", "( ´∀｀)", "(*´∀`)", "(*ﾟ∇ﾟ)", "(｡◕∀◕｡)", "( ´ρ`)", "(ゝ∀･)",
+        "( ´_ゝ｀)", "( ´_っ`)", "( ´σ`)", "( ´∀｀)σ", "( ´∀`)ノ", "( ´д`)ノ",
+        "( ´д)ノ", "( ´ρ`)ノ", "( ﾟдﾟ)ノ", "( ﾟдﾟ)σ", "( ﾟдﾟ)", "( ;ﾟдﾟ)",
+        "( ;´д`)", "( ;´ρ`)", "( ;´∀`)", "( `д´)", "( `д´)σ", "( `д´)ノ",
+        "( `д´)ﾉ", "(#`д´)ﾉ", "(#`д´)σ", "(#`д´)!!", "(#`д´)凸", "(╬`д´)σ",
+        "(╬`д´)", "(╬`д´)ノ", "(╬`д´)ﾉ", "(╬ﾟдﾟ)", "(╬ﾟдﾟ)σ", "(╬ﾟдﾟ)ノ",
+        "(╬ﾟдﾟ)ﾉ", "(|||ﾟдﾟ)", "( ﾟ∀ﾟ)", "( ﾟ∀ﾟ)σ", "( ﾟ∀ﾟ)ノ", "( ﾟ∀ﾟ)ﾉ",
+        "(σﾟ∀ﾟ)σ", "(σﾟдﾟ)σ", "(σ´д`)σ", "(σ´∀`)σ", "Σ( ﾟдﾟ)", "Σ( ﾟдﾟ;)",
+        "Σ( `д´)", "Σ( `д´;)", "(((( ;ﾟдﾟ)))", "(((　ﾟдﾟ)))", "( `ヮ´ )",
+        "(*ﾟーﾟ)", "(⌒∇⌒*)", "(*´ω`*)", "(´ω`)", "(´ω｀*)", "(n´ω`n)",
+        "(´∀｀*)", "(* ´∀`)", "(*´∀｀*)", "(* ´∀｀)", "(*ﾉ∀`*)", "(*ﾉωﾉ)",
+        "(*ﾉдﾉ)", "(*´д`*)", "(*´д`)", "(*´ρ`*)", "(´Д`*)", "(´Д`)",
+        "(´Д｀*)", "(;´Д`)", "(ι´Д`)", "(ヽ´Д`)", "(ノ´Д`)", "( #´Д`)",
+        "( ´Д`)y━･~~", "( ´д`)y━･~~", "( ´_ゝ`)y━･~~", "( ´ρ`)y━･~~", "（ ´,_ゝ`)",
+        "( ´,_ゝ`)", "（ ´∀`）", "( ´∀`)", "（ ´_ゝ`）", "( ´_ゝ`)", "（ ´ρ`）",
+        "( ´ρ`)", "（ `д´）", "( `д´)", "（`ヮ´ ）", "(`ヮ´ )", "(｀･ω･)",
+        "(´･ω･`)", "(･ω･)", "(=ﾟωﾟ)=", "(=ﾟωﾟ)ﾉ", "(=´∀`)", "(´∀`)",
+        "(´∀｀)", "(=´∀｀)人(´∀｀=)", "( ´∀｀)人(´∀｀ )", "( ´∀`)人(`Д´ )",
+        "(・∀・)", "(・∀・)ノ", "(・∀・)ﾉ", "（・∀・）", "（・∀・）", "（・∀・）ノ",
+        "（・∀・）ﾉ", "(ノ∀`)", "(ノ∀｀)σ", "(σ´∀`)σ", "(σ´∀`)", "(´ﾟДﾟ`)",
+        "(;ﾟДﾟ`)", "(´ﾟдﾟ`)", "(;ﾟдﾟ`)"
+    )
+)
 
 data class PostPage(
     val fid: Int? = null,
@@ -95,8 +149,10 @@ data class PostPage(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                    .padding(horizontal = 16.dp)
+                    .navigationBarsPadding()
+                    .imePadding(),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 if (resto == null) { // Only show for new posts
                     OutlinedTextField(
@@ -124,14 +180,28 @@ data class PostPage(
                 PostToolbar(viewModel)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    OutlinedButton(onClick = { /* TODO: Implement image picker */ }) {
-                        Icon(Icons.Default.Info, contentDescription = "选择图片")
-                        Text("图片")
+                    Card(
+                        onClick = { /* TODO: Implement image picker */ },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(Icons.Default.AddPhotoAlternate, contentDescription = null)
+                            Text("添加图片")
+                        }
                     }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(1f)
+                    ) {
                         Checkbox(
                             checked = state.water,
                             onCheckedChange = { viewModel.onEvent(PostContract.Event.ToggleWater(it)) }
@@ -142,9 +212,11 @@ data class PostPage(
                 Button(
                     onClick = { viewModel.onEvent(PostContract.Event.Submit) },
                     enabled = state.content.text.isNotBlank() && !state.isLoading,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
                 ) {
-                    Icon(Icons.Default.Send, contentDescription = "发送")
+                    Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "发送")
                     Text("发送")
                 }
             }
@@ -157,39 +229,48 @@ private fun PostToolbar(viewModel: PostViewModel) {
     var showEmoticonPicker by remember { mutableStateOf(false) }
     var showDiceInputs by remember { mutableStateOf(false) }
 
-    Column {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Surface(
+            shape = RoundedCornerShape(8.dp),
+            tonalElevation = 2.dp
         ) {
-            IconButton(onClick = {
-                viewModel.onEvent(PostContract.Event.InsertContent("[code][/code]"))
-            }) {
-                Icon(Icons.Outlined.Info, contentDescription = "插入代码")
-            }
-            IconButton(onClick = {
-                viewModel.onEvent(PostContract.Event.InsertContent("[img][/img]"))
-            }) {
-                Icon(Icons.Outlined.Info, contentDescription = "插入图片")
-            }
-            IconButton(onClick = { showEmoticonPicker = !showEmoticonPicker }) {
-                Icon(Icons.Outlined.Info, contentDescription = "表情")
-            }
-            IconButton(onClick = { showDiceInputs = !showDiceInputs }) {
-                Icon(Icons.Outlined.Info, contentDescription = "掷骰子")
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp),
+                horizontalArrangement = Arrangement.SpaceAround
+            ) {
+                IconButton(onClick = {
+                    viewModel.onEvent(PostContract.Event.InsertContent(BBCODE_CODE))
+                }) {
+                    Icon(Icons.Default.Code, contentDescription = "插入代码")
+                }
+                IconButton(onClick = {
+                    viewModel.onEvent(PostContract.Event.InsertContent(BBCODE_IMG))
+                }) {
+                    Icon(Icons.Default.Image, contentDescription = "插入图片")
+                }
+                IconButton(onClick = { showEmoticonPicker = !showEmoticonPicker }) {
+                    Icon(Icons.Default.EmojiEmotions, contentDescription = "表情")
+                }
+                IconButton(onClick = { showDiceInputs = !showDiceInputs }) {
+                    Icon(Icons.Outlined.Casino, contentDescription = "掷骰子")
+                }
             }
         }
 
-        if (showEmoticonPicker) {
+        AnimatedVisibility(visible = showEmoticonPicker) {
             EmoticonPicker(onEmoticonSelected = {
                 viewModel.onEvent(PostContract.Event.InsertContent(it))
                 showEmoticonPicker = false
             })
         }
 
-        if (showDiceInputs) {
+        AnimatedVisibility(visible = showDiceInputs) {
             var start by remember { mutableStateOf("1") }
             var end by remember { mutableStateOf("100") }
+            val isDiceInputValid = start.toIntOrNull() != null && end.toIntOrNull() != null
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -199,21 +280,26 @@ private fun PostToolbar(viewModel: PostViewModel) {
             ) {
                 OutlinedTextField(
                     value = start,
-                    onValueChange = { start = it },
+                    onValueChange = { value -> start = value.filter { it.isDigit() } },
                     label = { Text("起点") },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
                 Text("-")
                 OutlinedTextField(
                     value = end,
-                    onValueChange = { end = it },
+                    onValueChange = { value -> end = value.filter { it.isDigit() } },
                     label = { Text("终点") },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
-                Button(onClick = {
-                    viewModel.onEvent(PostContract.Event.InsertContent("[$start-$end]"))
-                    showDiceInputs = false
-                }) {
+                Button(
+                    onClick = {
+                        viewModel.onEvent(PostContract.Event.InsertContent("[$start-$end]"))
+                        showDiceInputs = false
+                    },
+                    enabled = isDiceInputValid
+                ) {
                     Text("插入")
                 }
             }
@@ -223,44 +309,8 @@ private fun PostToolbar(viewModel: PostViewModel) {
 
 @Composable
 private fun EmoticonPicker(onEmoticonSelected: (String) -> Unit) {
-    val emoticonGroups = remember {
-        mapOf(
-            "常用" to listOf(
-                "(=ﾟωﾟ)=", "(´ﾟДﾟ`)", "(｀･ω･)", "( ´_ゝ｀)", "(;´Д`)",
-                "(=Д=)", "(●ε●)", "( ´∀`)", "( ´∀｀)", "(*´∀`)",
-                "(｡◕∀◕｡)", "(ゝ∀･)", "(ノﾟ∀ﾟ)ノ", "(σﾟдﾟ)σ", "Σ( ﾟдﾟ)",
-                "|д` )", "(`ε´ )", "(╬ﾟдﾟ)", "(|||ﾟдﾟ)", "( ﾟ∀ﾟ)",
-                "(*´д`)", "( `д´)", "(`ヮ´ )", "( ´ー`)", "( ´_っ`)",
-                "( ´ρ`)", "(･ω･)", "(ﾟДﾟ≡ﾟДﾟ)"
-            ),
-            "颜文字" to listOf(
-                "|∀ﾟ", "| ω・´)", "|-` )", "|д` )", "|ー` )", "|∀` )", "( ´д`)", "(( ´д`))",
-                "( ´∀`)", "( ´∀｀)", "(*´∀`)", "(*ﾟ∇ﾟ)", "(｡◕∀◕｡)", "( ´ρ`)", "(ゝ∀･)",
-                "( ´_ゝ｀)", "( ´_っ`)", "( ´σ`)", "( ´∀｀)σ", "( ´∀`)ノ", "( ´д`)ノ",
-                "( ´д)ノ", "( ´ρ`)ノ", "( ﾟдﾟ)ノ", "( ﾟдﾟ)σ", "( ﾟдﾟ)", "( ;ﾟдﾟ)",
-                "( ;´д`)", "( ;´ρ`)", "( ;´∀`)", "( `д´)", "( `д´)σ", "( `д´)ノ",
-                "( `д´)ﾉ", "(#`д´)ﾉ", "(#`д´)σ", "(#`д´)!!", "(#`д´)凸", "(╬`д´)σ",
-                "(╬`д´)", "(╬`д´)ノ", "(╬`д´)ﾉ", "(╬ﾟдﾟ)", "(╬ﾟдﾟ)σ", "(╬ﾟдﾟ)ノ",
-                "(╬ﾟдﾟ)ﾉ", "(|||ﾟдﾟ)", "( ﾟ∀ﾟ)", "( ﾟ∀ﾟ)σ", "( ﾟ∀ﾟ)ノ", "( ﾟ∀ﾟ)ﾉ",
-                "(σﾟ∀ﾟ)σ", "(σﾟдﾟ)σ", "(σ´д`)σ", "(σ´∀`)σ", "Σ( ﾟдﾟ)", "Σ( ﾟдﾟ;)",
-                "Σ( `д´)", "Σ( `д´;)", "(((( ;ﾟдﾟ)))", "(((　ﾟдﾟ)))", "( `ヮ´ )",
-                "(*ﾟーﾟ)", "(⌒∇⌒*)", "(*´ω`*)", "(´ω`)", "(´ω｀*)", "(n´ω`n)",
-                "(´∀｀*)", "(* ´∀`)", "(*´∀｀*)", "(* ´∀｀)", "(*ﾉ∀`*)", "(*ﾉωﾉ)",
-                "(*ﾉдﾉ)", "(*´д`*)", "(*´д`)", "(*´ρ`*)", "(´Д`*)", "(´Д`)",
-                "(´Д｀*)", "(;´Д`)", "(ι´Д`)", "(ヽ´Д`)", "(ノ´Д`)", "( #´Д`)",
-                "( ´Д`)y━･~~", "( ´д`)y━･~~", "( ´_ゝ`)y━･~~", "( ´ρ`)y━･~~", "（ ´,_ゝ`)",
-                "( ´,_ゝ`)", "（ ´∀`）", "( ´∀`)", "（ ´_ゝ`）", "( ´_ゝ`)", "（ ´ρ`）",
-                "( ´ρ`)", "（ `д´）", "( `д´)", "（`ヮ´ ）", "(`ヮ´ )", "(｀･ω･)",
-                "(´･ω･`)", "(･ω･)", "(=ﾟωﾟ)=", "(=ﾟωﾟ)ﾉ", "(=´∀`)", "(´∀`)",
-                "(´∀｀)", "(=´∀｀)人(´∀｀=)", "( ´∀｀)人(´∀｀ )", "( ´∀`)人(`Д´ )",
-                "(・∀・)", "(・∀・)ノ", "(・∀・)ﾉ", "（・∀・）", "（・∀・）", "（・∀・）ノ",
-                "（・∀・）ﾉ", "(ノ∀`)", "(ノ∀｀)σ", "(σ´∀`)σ", "(σ´∀`)", "(´ﾟДﾟ`)",
-                "(;ﾟДﾟ`)", "(´ﾟдﾟ`)", "(;ﾟдﾟ`)"
-            )
-        )
-    }
     var selectedTabIndex by remember { mutableStateOf(0) }
-    val titles = emoticonGroups.keys.toList()
+    val titles = EMOTICON_GROUPS.keys.toList()
 
     Column {
         TabRow(selectedTabIndex = selectedTabIndex) {
@@ -277,13 +327,19 @@ private fun EmoticonPicker(onEmoticonSelected: (String) -> Unit) {
                 columns = GridCells.Adaptive(minSize = 50.dp),
                 contentPadding = PaddingValues(8.dp)
             ) {
-                items(emoticonGroups.values.toList()[selectedTabIndex]) { emoticon ->
-                    Text(
-                        text = emoticon,
+                items(EMOTICON_GROUPS.values.toList()[selectedTabIndex]) { emoticon ->
+                    Box(
+                        contentAlignment = Alignment.Center,
                         modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
                             .clickable { onEmoticonSelected(emoticon) }
-                            .padding(8.dp)
-                    )
+                            .padding(4.dp)
+                    ) {
+                        Text(
+                            text = emoticon,
+                            modifier = Modifier.padding(4.dp)
+                        )
+                    }
                 }
             }
         }

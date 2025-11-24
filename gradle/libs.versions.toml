@@ -75,6 +75,7 @@ paging-runtime = { module = "androidx.paging:paging-runtime", version.ref = "pag
 paging-common = { module = "androidx.paging:paging-common", version.ref = "pagingRuntime" }
 paging-compose = { module = "androidx.paging:paging-compose", version.ref = "pagingComposeCommon" }
 material-icons = { group = "org.jetbrains.compose.material", name = "material-icons-core", version.ref = "material" }
+material-icons-extended = { group = "org.jetbrains.compose.material", name = "material-icons-extended", version.ref = "material" }
 material3 = { group = "org.jetbrains.compose.material3", name = "material3", version.ref = "material3" }
 material3-desktop = { group = "org.jetbrains.compose.material3", name = "material3-desktop", version.ref = "material3" }
 material3-window-size = { group = "org.jetbrains.compose.material3", name = "material3-window-size-class", version.ref = "material3" }
