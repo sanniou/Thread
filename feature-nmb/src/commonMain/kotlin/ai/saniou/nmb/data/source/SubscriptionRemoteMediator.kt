@@ -22,25 +22,16 @@ class SubscriptionRemoteMediator(
     private val subscriptionKey: String,
     private val forumRepository: ForumRepository,
     private val db: Database,
-) : RemoteMediator<Int, ai.saniou.nmb.db.table.Thread>() {
+) : RemoteMediator<Int, ai.saniou.nmb.db.table.SelectSubscriptionThread>() {
 
 
     @OptIn(ExperimentalTime::class)
     override suspend fun load(
         loadType: LoadType,
-        state: PagingState<Int, ai.saniou.nmb.db.table.Thread>,
+        state: PagingState<Int, ai.saniou.nmb.db.table.SelectSubscriptionThread>,
     ): RemoteMediatorMediatorResult {
         val page = when (loadType) {
-            LoadType.REFRESH -> {
-                db.remoteKeyQueries.getRemoteKeyById(
-                    type = RemoteKeyType.SUBSCRIBE,
-                    id = subscriptionKey
-                ).executeAsOneOrNull()?.run {
-                    // 本地有数据，就不请求网络
-                    return RemoteMediatorMediatorResultSuccess(endOfPaginationReached = false)
-                }
-                1L
-            }
+            LoadType.REFRESH -> 1L
 
             LoadType.PREPEND -> return RemoteMediatorMediatorResultSuccess(true) // 不向前翻
 
@@ -71,8 +62,7 @@ class SubscriptionRemoteMediator(
 
                 db.transaction {
                     if (loadType == LoadType.REFRESH) {
-                        //db.forumQueries.clearForum(fid)
-                        //db.remoteKeyQueries.insertKey(forumId = fid, nextPage = null)
+                        db.subscriptionQueries.deleteCloudSubscriptions(subscriptionKey)
                     }
 
                     feedDetail.forEach { feed ->
@@ -82,6 +72,7 @@ class SubscriptionRemoteMediator(
                             subscriptionKey = subscriptionKey, threadId = feed.id,
                             page = page,
                             subscriptionTime =  feed.nowToEpochMilliseconds(),
+                            isLocal = 0
                         )
                     }
                     db.remoteKeyQueries.insertKey(

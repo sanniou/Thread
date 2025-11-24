@@ -11,7 +11,8 @@ interface SubscriptionContract {
         val feeds: Flow<PagingData<Feed>> = emptyFlow(),
         val isShowSubscriptionIdDialog: Boolean = false,
         val isLoading: Boolean = true,
-        val error: Throwable? = null
+        val error: Throwable? = null,
+        val isPushEnabled: Boolean = false
     )
 
     sealed interface Event {
@@ -20,9 +21,12 @@ interface SubscriptionContract {
         object OnShowSubscriptionIdDialog : Event
         object OnHideSubscriptionIdDialog : Event
         object OnGenerateRandomSubscriptionId : Event
+        object OnPull : Event
+        object OnPush : Event
     }
 
     sealed interface Effect {
         data class OnUnsubscribeResult(val isSuccess: Boolean, val message: String?) : Effect
+        data class OnPushResult(val isSuccess: Boolean, val message: String?) : Effect
     }
 }

@@ -1,5 +1,6 @@
 package ai.saniou.nmb.workflow.subscription
 
+import ai.saniou.nmb.data.repository.DataPolicy
 import ai.saniou.nmb.data.storage.SubscriptionStorage
 import ai.saniou.nmb.domain.SubscriptionFeedUseCase
 import ai.saniou.nmb.workflow.subscription.SubscriptionContract.Effect
@@ -46,20 +47,31 @@ class SubscriptionViewModel(
                 .filterNotNull()
                 .distinctUntilChanged()
                 .collect { id ->
-                    _state.update { it.copy(subscriptionId = id, isLoading = true) }
-                    try {
-                        val feeds = subscriptionFeedUseCase.feed(id)
-                        _state.update {
-                            it.copy(feeds = feeds, isLoading = false, error = null)
-                        }
-                    } catch (e: Exception) {
-                        _state.update {
-                            it.copy(isLoading = false, error = e)
-                        }
-                    }
+                    loadFeeds(id)
                 }
         }
     }
+
+    private suspend fun loadFeeds(id: String, policy: DataPolicy = DataPolicy.CACHE_FIRST) {
+        _state.update { it.copy(subscriptionId = id, isLoading = true) }
+        try {
+            val feeds = subscriptionFeedUseCase.feed(id, policy)
+            val hasLocal = subscriptionFeedUseCase.hasLocalSubscriptions(id)
+            _state.update {
+                it.copy(
+                    feeds = feeds,
+                    isLoading = false,
+                    error = null,
+                    isPushEnabled = hasLocal
+                )
+            }
+        } catch (e: Exception) {
+            _state.update {
+                it.copy(isLoading = false, error = e)
+            }
+        }
+    }
+
 
     fun onEvent(event: Event) {
         when (event) {
@@ -68,6 +80,28 @@ class SubscriptionViewModel(
             Event.OnGenerateRandomSubscriptionId -> generateRandomSubscriptionId()
             Event.OnShowSubscriptionIdDialog -> _state.update { it.copy(isShowSubscriptionIdDialog = true) }
             Event.OnHideSubscriptionIdDialog -> _state.update { it.copy(isShowSubscriptionIdDialog = false) }
+            Event.OnPull -> pull()
+            Event.OnPush -> push()
+        }
+    }
+
+    private fun pull() {
+        val id = state.value.subscriptionId ?: return
+        screenModelScope.launch {
+            loadFeeds(id, DataPolicy.API_FIRST)
+        }
+    }
+
+    private fun push() {
+        val id = state.value.subscriptionId ?: return
+        screenModelScope.launch {
+            try {
+                subscriptionFeedUseCase.pushLocalSubscriptions(id)
+                _effect.send(Effect.OnPushResult(true, "推送成功"))
+                loadFeeds(id, DataPolicy.API_FIRST)
+            } catch (e: Exception) {
+                _effect.send(Effect.OnPushResult(false, "推送失败: ${e.message}"))
+            }
         }
     }
 

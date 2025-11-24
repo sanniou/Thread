@@ -1,5 +1,6 @@
 package ai.saniou.nmb.data.entity
 
+import ai.saniou.nmb.db.table.SelectSubscriptionThread
 import ai.saniou.nmb.db.table.Thread
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
@@ -72,10 +73,11 @@ data class Feed(
     override val hide: Long = 0,
     val po: String? = null,// ？
     override val sage: Long = 0,
+    val isLocal: Boolean = false,
 ) : IBaseThread
 
 
-fun Thread.toFeed() = Feed(
+fun Thread.toFeed(isLocal: Boolean = false) = Feed(
     id = id,
     fid = fid,
     replyCount = replyCount,
@@ -95,7 +97,32 @@ fun Thread.toFeed() = Feed(
     fileId = "",
     email = "",
     status = "",
-    po = ""
+    po = "",
+    isLocal = isLocal
+)
+
+fun SelectSubscriptionThread.toFeed() = Feed(
+    id = id,
+    fid = fid,
+    replyCount = replyCount,
+    img = img,
+    ext = ext,
+    title = title,
+    content = content,
+    admin = admin,
+    hide = hide,
+    now = now,
+    userHash = userHash,
+    name = name,
+    sage = sage,
+    userId = "",
+    recentReplies = "[]",
+    category = "",
+    fileId = "",
+    email = "",
+    status = "",
+    po = "",
+    isLocal = isLocal == 1L
 )
 
 fun Feed.toTable(page: Long) = Thread(

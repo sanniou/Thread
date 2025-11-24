@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS Subscription (
     threadId INTEGER NOT NULL,
     page INTEGER NOT NULL,
     subscriptionTime INTEGER NOT NULL,
+    isLocal INTEGER NOT NULL DEFAULT 0, -- 0: cloud, 1: local
     PRIMARY KEY (subscriptionKey, threadId)
 );
 
@@ -16,8 +17,8 @@ CREATE INDEX IF NOT EXISTS idx_subscription_key ON Subscription(subscriptionKey)
 -- 插入 Subscription 数据
 insertSubscription:
 INSERT OR REPLACE INTO Subscription (
-    subscriptionKey, threadId,page, subscriptionTime
-) VALUES (?, ?, ?,?);
+    subscriptionKey, threadId,page, subscriptionTime, isLocal
+) VALUES (?, ?, ?,?, ?);
 
 -- 更新 Subscription 数据
 updateSubscription:
@@ -55,14 +56,26 @@ SELECT count(*) FROM Subscription WHERE threadId = :threadId;
 
 -- 联表查询 key Thread 数据
 selectSubscriptionThread:
-SELECT Thread.*
-FROM Subscription
-JOIN Thread ON Subscription.threadId = Thread.id
-WHERE Subscription.subscriptionKey = :subscriptionKey AND Subscription.page = :page
-ORDER BY Subscription.subscriptionTime DESC;
+SELECT T.*, S.isLocal
+FROM Subscription AS S
+JOIN Thread AS T ON S.threadId = T.id
+WHERE S.subscriptionKey = :subscriptionKey AND S.page = :page
+ORDER BY S.subscriptionTime DESC;
 
 isSubscribed:
 SELECT EXISTS (
     SELECT 1 FROM Subscription
     WHERE subscriptionKey = :subscriptionKey AND threadId = :threadId
 );
+
+countLocalSubscriptions:
+SELECT count(*) FROM Subscription WHERE subscriptionKey = :subscriptionKey AND isLocal = 1;
+
+getLocalSubscriptions:
+SELECT * FROM Subscription WHERE subscriptionKey = :subscriptionKey AND isLocal = 1;
+
+updateLocalFlag:
+UPDATE Subscription SET isLocal = 0 WHERE subscriptionKey = :subscriptionKey AND threadId = :threadId;
+
+deleteCloudSubscriptions:
+DELETE FROM Subscription WHERE subscriptionKey = :subscriptionKey AND isLocal = 0;

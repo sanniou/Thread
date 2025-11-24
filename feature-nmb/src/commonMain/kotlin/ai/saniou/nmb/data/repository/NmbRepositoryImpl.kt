@@ -110,7 +110,11 @@ class NmbRepositoryImpl(
                         context = Dispatchers.IO,
                         countQuery = database.threadReplyQueries.countRepliesByThreadId(threadId),
                         queryProvider = { limit, offset ->
-                            database.threadReplyQueries.getRepliesByThreadIdOffset(threadId, limit, offset)
+                            database.threadReplyQueries.getRepliesByThreadIdOffset(
+                                threadId,
+                                limit,
+                                offset
+                            )
                         }
                     )
                 }
@@ -156,7 +160,8 @@ class NmbRepositoryImpl(
             subscriptionKey = subscriptionKey,
             threadId = thread.id,
             page = 1L,
-            subscriptionTime = Clock.System.now().epochSeconds
+            subscriptionTime = Clock.System.now().epochSeconds,
+            isLocal = 1L
         )
     }
 

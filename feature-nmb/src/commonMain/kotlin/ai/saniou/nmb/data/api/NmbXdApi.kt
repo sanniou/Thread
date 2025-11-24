@@ -169,8 +169,8 @@ interface NmbXdApi {
     @POST("addFeed")
     @FormUrlEncoded
     suspend fun addFeed(
-        @Query uuid: String,//订阅 UUID
-        @Field tid: Long,// 串的 ID
+        @Query("uuid") uuid: String,//订阅 UUID
+        @Field("tid") tid: Long,// 串的 ID
     ): String
 
     /**
@@ -183,8 +183,8 @@ interface NmbXdApi {
     @POST("delFeed")
     @FormUrlEncoded
     suspend fun delFeed(
-        @Query uuid: String,//订阅 UUID
-        @Field tid: Long,// 串的 ID
+        @Query("uuid") uuid: String,//订阅 UUID
+        @Field("tid") tid: Long,// 串的 ID
     ): String
 
     /**

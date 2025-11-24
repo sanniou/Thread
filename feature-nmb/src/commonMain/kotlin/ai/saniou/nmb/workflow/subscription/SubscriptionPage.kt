@@ -11,9 +11,9 @@ import ai.saniou.nmb.workflow.image.ImageInfo
 import ai.saniou.nmb.workflow.image.ImagePreviewPage
 import ai.saniou.nmb.workflow.image.ImagePreviewUiState
 import ai.saniou.nmb.workflow.subscription.SubscriptionContract.Event
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -67,7 +67,7 @@ import org.kodein.di.DI
 data class SubscriptionPage(
     val di: DI = nmbdi,
     val onUpdateTitle: ((String) -> Unit)? = null,
-    val onThreadClicked: (Long) -> Unit
+    val onThreadClicked: (Long) -> Unit,
 ) : Screen {
 
     @OptIn(ExperimentalMaterial3Api::class)
@@ -88,6 +88,10 @@ data class SubscriptionPage(
                     is SubscriptionContract.Effect.OnUnsubscribeResult -> {
                         snackbarHostState.showSnackbar(effect.message ?: "未知错误")
                     }
+
+                    is SubscriptionContract.Effect.OnPushResult -> {
+                        snackbarHostState.showSnackbar(effect.message ?: "未知错误")
+                    }
                 }
             }
         }
@@ -99,6 +103,21 @@ data class SubscriptionPage(
                     TopAppBar(
                         title = { Text("订阅列表") },
                         actions = {
+                            IconButton(onClick = { viewModel.onEvent(Event.OnPull) }) {
+                                Icon(
+                                    imageVector = Icons.Default.Info,
+                                    contentDescription = "拉取云端订阅"
+                                )
+                            }
+                            IconButton(
+                                onClick = { viewModel.onEvent(Event.OnPush) },
+                                enabled = state.isPushEnabled
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Info,
+                                    contentDescription = "推送本地订阅"
+                                )
+                            }
                             IconButton(onClick = { viewModel.onEvent(Event.OnShowSubscriptionIdDialog) }) {
                                 Icon(
                                     imageVector = Icons.Default.Settings,
@@ -161,7 +180,7 @@ private fun SubscriptionContent(
     onEvent: (Event) -> Unit,
     onThreadClicked: (Long) -> Unit,
     onImageClick: (Long, String, String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val feeds = state.feeds.collectAsLazyPagingItems()
     PullToRefreshWrapper(
@@ -174,12 +193,21 @@ private fun SubscriptionContent(
         ) {
             items(feeds.itemCount) { index ->
                 val feed = feeds[index] ?: return@items
-                ForumThreadCard(
-                    thread = feed,
-                    onClick = { onThreadClicked(feed.id) },
-                    onImageClick = { img, ext -> onImageClick(feed.id, img, ext) },
+                Box {
+                    ForumThreadCard(
+                        thread = feed,
+                        onClick = { onThreadClicked(feed.id) },
+                        onImageClick = { img, ext -> onImageClick(feed.id, img, ext) },
 //                    onUnsubscribe = { onEvent(Event.OnUnsubscribe(feed.id)) }
-                )
+                    )
+                    if (feed.isLocal) {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = "本地订阅",
+                            modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)
+                        )
+                    }
+                }
             }
 
             item {
@@ -198,7 +226,7 @@ private fun SubscriptionContent(
 private fun ErrorContent(
     error: Throwable,
     onRetry: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Box(
         modifier = modifier.fillMaxSize(),
@@ -269,7 +297,7 @@ private fun SubscriptionIdDialog(
     currentId: String,
     onDismiss: () -> Unit,
     onConfirm: (String) -> Unit,
-    onGenerateRandom: () -> Unit
+    onGenerateRandom: () -> Unit,
 ) {
     var subscriptionId by remember { mutableStateOf(currentId) }
 

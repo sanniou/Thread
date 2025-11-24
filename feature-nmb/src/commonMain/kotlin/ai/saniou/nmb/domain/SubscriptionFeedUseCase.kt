@@ -2,6 +2,7 @@ package ai.saniou.nmb.domain
 
 import ai.saniou.nmb.data.entity.Feed
 import ai.saniou.nmb.data.entity.toFeed
+import ai.saniou.nmb.data.repository.DataPolicy
 import ai.saniou.nmb.data.repository.ForumRepository
 import ai.saniou.nmb.data.source.SqlDelightPagingSource
 import ai.saniou.nmb.data.source.SubscriptionRemoteMediator
@@ -14,6 +15,7 @@ import app.cash.paging.map
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 
 
 class SubscriptionFeedUseCase(
@@ -23,12 +25,17 @@ class SubscriptionFeedUseCase(
     @OptIn(ExperimentalPagingApi::class)
     fun feed(
         subscriptionKey: String,
+        policy: DataPolicy = DataPolicy.CACHE_FIRST
     ): Flow<PagingData<Feed>> {
         return Pager(
             config = PagingConfig(
                 pageSize = 20
             ),
-            remoteMediator = SubscriptionRemoteMediator(subscriptionKey, forumRepository, db),
+            remoteMediator = if (policy == DataPolicy.API_FIRST) {
+                SubscriptionRemoteMediator(subscriptionKey, forumRepository, db)
+            } else {
+                null
+            },
             pagingSourceFactory = {
                 SqlDelightPagingSource(
                     countQueryProvider = {
@@ -55,4 +62,16 @@ class SubscriptionFeedUseCase(
 
     suspend fun delFeed(id: String, threadId: Long) = forumRepository.delFeed(id, threadId)
 
+    suspend fun hasLocalSubscriptions(subscriptionKey: String): Boolean = withContext(Dispatchers.IO) {
+        db.subscriptionQueries.countLocalSubscriptions(subscriptionKey).executeAsOne() > 0
+    }
+
+    suspend fun pushLocalSubscriptions(subscriptionKey: String) = withContext(Dispatchers.IO) {
+        val localSubscriptions =
+            db.subscriptionQueries.getLocalSubscriptions(subscriptionKey).executeAsList()
+        localSubscriptions.forEach {
+            forumRepository.addFeed(subscriptionKey, it.threadId)
+            db.subscriptionQueries.updateLocalFlag(subscriptionKey, it.threadId)
+        }
+    }
 }
