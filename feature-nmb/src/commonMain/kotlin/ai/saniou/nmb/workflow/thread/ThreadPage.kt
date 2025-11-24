@@ -190,14 +190,18 @@ data class ThreadPage(
                             Text(
                                 text = state.forumName,
                                 style = MaterialTheme.typography.titleLarge,
-                                modifier = Modifier.clickable {
-                                    coroutineScope.launch {
-                                        if (lazyListState.firstVisibleItemIndex > 0) {
-                                            lazyListState.animateScrollToItem(0)
-                                        } else {
-                                            viewModel.onEvent(Event.Refresh)
+                                modifier = Modifier.pointerInput(Unit) {
+                                    detectTapGestures(
+                                        onTap = {
+                                            coroutineScope.launch {
+                                                if (lazyListState.firstVisibleItemIndex > 0 && lazyListState.firstVisibleItemScrollOffset == 0) {
+                                                    lazyListState.animateScrollToItem(0)
+                                                } else {
+                                                    viewModel.onEvent(Event.Refresh)
+                                                }
+                                            }
                                         }
-                                    }
+                                    )
                                 }
                             )
                         }
@@ -700,7 +704,7 @@ private fun EmptyReplyContent(onRefresh: () -> Unit) {
 private fun ThreadToolbar(
     replyCount: String,
     isPoOnly: Boolean,
-    onTogglePoOnly: () -> Unit
+    onTogglePoOnly: () -> Unit,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -730,7 +734,7 @@ private fun PostWrapper(
     onCopy: () -> Unit,
     onBookmark: () -> Unit,
     isElevated: Boolean = false,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     var showMenu by remember { mutableStateOf(false) }
     Box {
