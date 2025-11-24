@@ -1,5 +1,6 @@
 package ai.saniou.nmb.workflow.post
 
+import ai.saniou.coreui.theme.Dimens
 import ai.saniou.nmb.di.nmbdi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
@@ -8,46 +9,42 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.AddPhotoAlternate
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.EmojiEmotions
 import androidx.compose.material.icons.filled.Image
-import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.outlined.Casino
-import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Surface
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -58,7 +55,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -66,8 +62,11 @@ import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import org.jetbrains.compose.resources.stringResource
 import org.kodein.di.direct
 import org.kodein.di.instance
+import thread.feature_nmb.generated.resources.Res
+import thread.feature_nmb.generated.resources.*
 
 
 private const val BBCODE_CODE = "[code][/code]"
@@ -135,10 +134,18 @@ data class PostPage(
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text(if (resto != null) "回复" else "发帖: ${state.forumName}") },
+                    title = {
+                        Text(
+                            if (resto != null) stringResource(Res.string.post_page_reply)
+                            else stringResource(Res.string.post_page_new_post, state.forumName)
+                        )
+                    },
                     navigationIcon = {
                         IconButton(onClick = { navigator.pop() }) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = "返回")
+                            Icon(
+                                Icons.Default.ArrowBack,
+                                contentDescription = stringResource(Res.string.post_page_back)
+                            )
                         }
                     }
                 )
@@ -149,22 +156,22 @@ data class PostPage(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
-                    .padding(horizontal = 16.dp)
+                    .padding(horizontal = Dimens.padding_large)
                     .navigationBarsPadding()
                     .imePadding(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(Dimens.padding_medium)
             ) {
                 if (resto == null) { // Only show for new posts
                     OutlinedTextField(
                         value = state.postBody.name ?: "",
                         onValueChange = { viewModel.onEvent(PostContract.Event.UpdateName(it)) },
-                        label = { Text("名称 (可选)") },
+                        label = { Text(stringResource(Res.string.post_page_name_optional)) },
                         modifier = Modifier.fillMaxWidth()
                     )
                     OutlinedTextField(
                         value = state.postBody.title ?: "",
                         onValueChange = { viewModel.onEvent(PostContract.Event.UpdateTitle(it)) },
-                        label = { Text("标题 (可选)") },
+                        label = { Text(stringResource(Res.string.post_page_title_optional)) },
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -174,39 +181,50 @@ data class PostPage(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f),
-                    label = { Text("内容") },
-                    isError = state.error != null
+                    label = { Text(stringResource(Res.string.post_page_content)) },
+                    isError = state.error != null,
+                    supportingText = {
+                        if (state.error != null) {
+                            Text(state.error!!)
+                        }
+                    }
                 )
-                PostToolbar(viewModel)
+                PostToolbar(
+                    showEmoticonPicker = state.showEmoticonPicker,
+                    showDiceInputs = state.showDiceInputs,
+                    onEvent = viewModel::onEvent
+                )
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.padding_large),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Card(
+                    val isImageSelected = state.image != null // Simulate image selection
+
+                    OutlinedButton(
                         onClick = { /* TODO: Implement image picker */ },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 16.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Icon(Icons.Default.AddPhotoAlternate, contentDescription = null)
-                            Text("添加图片")
-                        }
+                        Icon(Icons.Default.AddPhotoAlternate, contentDescription = null)
+                        Spacer(modifier = Modifier.size(Dimens.padding_small))
+                        Text(stringResource(Res.string.post_page_add_image))
                     }
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Checkbox(
-                            checked = state.water,
-                            onCheckedChange = { viewModel.onEvent(PostContract.Event.ToggleWater(it)) }
-                        )
-                        Text("水印")
+
+                    if (isImageSelected) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Checkbox(
+                                checked = state.water,
+                                onCheckedChange = {
+                                    viewModel.onEvent(PostContract.Event.ToggleWater(it))
+                                }
+                            )
+                            Text(stringResource(Res.string.post_page_watermark))
+                        }
+                    } else {
+                        Spacer(modifier = Modifier.weight(1f))
                     }
                 }
                 Button(
@@ -214,10 +232,18 @@ data class PostPage(
                     enabled = state.content.text.isNotBlank() && !state.isLoading,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 8.dp)
+                        .padding(vertical = Dimens.padding_small)
                 ) {
-                    Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "发送")
-                    Text("发送")
+                    if (state.isLoading) {
+                        CircularProgressIndicator(modifier = Modifier.size(Dimens.icon_size_medium))
+                    } else {
+                        Icon(
+                            Icons.AutoMirrored.Filled.Send,
+                            contentDescription = stringResource(Res.string.post_page_send)
+                        )
+                        Spacer(modifier = Modifier.size(Dimens.padding_small))
+                        Text(stringResource(Res.string.post_page_send))
+                    }
                 }
             }
         }
@@ -225,44 +251,56 @@ data class PostPage(
 }
 
 @Composable
-private fun PostToolbar(viewModel: PostViewModel) {
-    var showEmoticonPicker by remember { mutableStateOf(false) }
-    var showDiceInputs by remember { mutableStateOf(false) }
-
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+private fun PostToolbar(
+    showEmoticonPicker: Boolean,
+    showDiceInputs: Boolean,
+    onEvent: (PostContract.Event) -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(Dimens.padding_small)) {
         Surface(
-            shape = RoundedCornerShape(8.dp),
+            shape = RoundedCornerShape(Dimens.corner_radius_medium),
             tonalElevation = 2.dp
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 4.dp),
+                    .padding(horizontal = Dimens.padding_extra_small),
                 horizontalArrangement = Arrangement.SpaceAround
             ) {
                 IconButton(onClick = {
-                    viewModel.onEvent(PostContract.Event.InsertContent(BBCODE_CODE))
+                    onEvent(PostContract.Event.InsertContent(BBCODE_CODE))
                 }) {
-                    Icon(Icons.Default.Code, contentDescription = "插入代码")
+                    Icon(
+                        Icons.Default.Code,
+                        contentDescription = stringResource(Res.string.post_page_insert_code)
+                    )
                 }
                 IconButton(onClick = {
-                    viewModel.onEvent(PostContract.Event.InsertContent(BBCODE_IMG))
+                    onEvent(PostContract.Event.InsertContent(BBCODE_IMG))
                 }) {
-                    Icon(Icons.Default.Image, contentDescription = "插入图片")
+                    Icon(
+                        Icons.Default.Image,
+                        contentDescription = stringResource(Res.string.post_page_insert_image)
+                    )
                 }
-                IconButton(onClick = { showEmoticonPicker = !showEmoticonPicker }) {
-                    Icon(Icons.Default.EmojiEmotions, contentDescription = "表情")
+                IconButton(onClick = { onEvent(PostContract.Event.ToggleEmoticonPicker) }) {
+                    Icon(
+                        Icons.Default.EmojiEmotions,
+                        contentDescription = stringResource(Res.string.post_page_emoticon)
+                    )
                 }
-                IconButton(onClick = { showDiceInputs = !showDiceInputs }) {
-                    Icon(Icons.Outlined.Casino, contentDescription = "掷骰子")
+                IconButton(onClick = { onEvent(PostContract.Event.ToggleDiceInputs) }) {
+                    Icon(
+                        Icons.Outlined.Casino,
+                        contentDescription = stringResource(Res.string.post_page_dice)
+                    )
                 }
             }
         }
 
         AnimatedVisibility(visible = showEmoticonPicker) {
             EmoticonPicker(onEmoticonSelected = {
-                viewModel.onEvent(PostContract.Event.InsertContent(it))
-                showEmoticonPicker = false
+                onEvent(PostContract.Event.InsertContent(it))
             })
         }
 
@@ -274,14 +312,14 @@ private fun PostToolbar(viewModel: PostViewModel) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 8.dp),
+                    .padding(top = Dimens.padding_small),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(Dimens.padding_small)
             ) {
                 OutlinedTextField(
                     value = start,
                     onValueChange = { value -> start = value.filter { it.isDigit() } },
-                    label = { Text("起点") },
+                    label = { Text(stringResource(Res.string.post_page_dice_start)) },
                     modifier = Modifier.weight(1f),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
@@ -289,18 +327,18 @@ private fun PostToolbar(viewModel: PostViewModel) {
                 OutlinedTextField(
                     value = end,
                     onValueChange = { value -> end = value.filter { it.isDigit() } },
-                    label = { Text("终点") },
+                    label = { Text(stringResource(Res.string.post_page_dice_end)) },
                     modifier = Modifier.weight(1f),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
                 Button(
                     onClick = {
-                        viewModel.onEvent(PostContract.Event.InsertContent("[$start-$end]"))
-                        showDiceInputs = false
+                        onEvent(PostContract.Event.InsertContent("[$start-$end]"))
+                        onEvent(PostContract.Event.ToggleDiceInputs)
                     },
                     enabled = isDiceInputValid
                 ) {
-                    Text("插入")
+                    Text(stringResource(Res.string.post_page_dice_insert))
                 }
             }
         }
@@ -325,19 +363,19 @@ private fun EmoticonPicker(onEmoticonSelected: (String) -> Unit) {
         Box(modifier = Modifier.heightIn(max = 300.dp)) {
             LazyVerticalGrid(
                 columns = GridCells.Adaptive(minSize = 50.dp),
-                contentPadding = PaddingValues(8.dp)
+                contentPadding = PaddingValues(Dimens.padding_small)
             ) {
                 items(EMOTICON_GROUPS.values.toList()[selectedTabIndex]) { emoticon ->
                     Box(
                         contentAlignment = Alignment.Center,
                         modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
+                            .clip(RoundedCornerShape(Dimens.corner_radius_medium))
                             .clickable { onEmoticonSelected(emoticon) }
-                            .padding(4.dp)
+                            .padding(Dimens.padding_extra_small)
                     ) {
                         Text(
                             text = emoticon,
-                            modifier = Modifier.padding(4.dp)
+                            modifier = Modifier.padding(Dimens.padding_extra_small)
                         )
                     }
                 }

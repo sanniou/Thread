@@ -68,6 +68,12 @@ class PostViewModel(
             }
             is Event.UpdateImage -> _state.update { it.copy(image = event.image) }
             is Event.ToggleWater -> _state.update { it.copy(water = event.water) }
+            Event.ToggleEmoticonPicker -> _state.update {
+               it.copy(showEmoticonPicker = !it.showEmoticonPicker)
+            }
+            Event.ToggleDiceInputs -> _state.update {
+               it.copy(showDiceInputs = !it.showDiceInputs)
+            }
             Event.Submit -> submit()
         }
     }

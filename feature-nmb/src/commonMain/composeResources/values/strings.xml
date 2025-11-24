@@ -41,4 +41,22 @@
     <string name="be_first_reply">成为第一个回复的人吧！</string>
     <string name="retry">重试</string>
     <string name="back">返回</string>
+
+    <string name="post_page_reply">回复</string>
+    <string name="post_page_new_post">发帖: %1$s</string>
+    <string name="post_page_back">返回</string>
+    <string name="post_page_name_optional">名称 (可选)</string>
+    <string name="post_page_title_optional">标题 (可选)</string>
+    <string name="post_page_content">内容</string>
+    <string name="post_page_add_image">添加图片</string>
+    <string name="post_page_watermark">水印</string>
+    <string name="post_page_send">发送</string>
+    <string name="post_page_insert_code">插入代码</string>
+    <string name="post_page_insert_image">插入图片</string>
+    <string name="post_page_emoticon">表情</string>
+    <string name="post_page_dice">掷骰子</string>
+    <string name="post_page_dice_start">起点</string>
+    <string name="post_page_dice_end">终点</string>
+    <string name="post_page_dice_insert">插入</string>
+
 </resources>

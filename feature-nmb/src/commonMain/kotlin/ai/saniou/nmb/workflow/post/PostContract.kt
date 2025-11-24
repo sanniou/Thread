@@ -13,7 +13,9 @@ interface PostContract {
         val postBody: PostThreadRequest = PostThreadRequest(),
         val content: TextFieldValue = TextFieldValue(),
         val image: PartData? = null,
-        val water: Boolean = false
+        val water: Boolean = false,
+        val showEmoticonPicker: Boolean = false,
+        val showDiceInputs: Boolean = false
     )
 
     sealed interface Event {
@@ -23,6 +25,8 @@ interface PostContract {
         data class InsertContent(val text: String) : Event
         data class UpdateImage(val image: PartData?) : Event
         data class ToggleWater(val water: Boolean) : Event
+        data object ToggleEmoticonPicker : Event
+        data object ToggleDiceInputs : Event
         data object Submit : Event
     }
 
