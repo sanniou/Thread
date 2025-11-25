@@ -78,7 +78,6 @@
 //import org.jetbrains.compose.resources.painterResource
 //import org.koin.compose.koinInject
 //
-//expect fun getTopMargin(context: PlatformContext): Int
 //
 //class PhotoPagerScreen(private val params: PhotoPagerParams) : BaseScreen() {
 //
@@ -341,3 +340,6 @@
 //        )
 //    }
 //}
+
+//expect fun getTopMargin(context: PlatformContext): Int
+

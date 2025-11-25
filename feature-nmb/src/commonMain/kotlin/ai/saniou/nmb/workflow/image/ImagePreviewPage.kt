@@ -6,8 +6,11 @@ import ai.saniou.coreui.widgets.palette.PhotoPalette
 import ai.saniou.nmb.data.manager.CdnManager
 import ai.saniou.nmb.di.nmbdi
 import ai.saniou.nmb.workflow.image.ImagePreviewContract.Event
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -22,6 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -35,6 +39,8 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -46,6 +52,7 @@ import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import kotlinx.coroutines.launch
 import org.kodein.di.DI
 import org.kodein.di.direct
 import org.kodein.di.instance
@@ -84,6 +91,7 @@ data class ImagePreviewPage(
 
         val colorScheme = MaterialTheme.colorScheme
         val photoPaletteState = remember { mutableStateOf(PhotoPalette(colorScheme)) }
+        var isHudVisible by remember { mutableStateOf(true) }
         val currentImageInfo =
             if (uiState.images.isNotEmpty() && pagerState.currentPage < uiState.images.size) {
                 uiState.images[pagerState.currentPage]
@@ -123,17 +131,23 @@ data class ImagePreviewPage(
                             uri = imageUrl,
                             thumbnailUrl = thumbUrl,
                             contentDescription = "预览图片",
-                            modifier = Modifier.fillMaxSize(),
+                            photoPalette = photoPaletteState.value,
+                            showTools = isHudVisible,
+                            modifier = Modifier.fillMaxSize().clickable(
+                                indication = null,
+                                interactionSource = remember { MutableInteractionSource() }
+                            ) { isHudVisible = !isHudVisible },
                         )
                     }
                 }
             }
-
-            ImagePreviewHud(
-                pagerState = pagerState,
-                uiState = uiState,
-                photoPalette = photoPaletteState.value
-            )
+            AnimatedVisibility(visible = isHudVisible) {
+                ImagePreviewHud(
+                    pagerState = pagerState,
+                    uiState = uiState,
+                    photoPalette = photoPaletteState.value
+                )
+            }
         }
     }
 }
@@ -146,6 +160,9 @@ private fun ImagePreviewHud(
     photoPalette: PhotoPalette
 ) {
     val navigator = LocalNavigator.currentOrThrow
+    val imageSaver = rememberImageSaver()
+    val coroutineScope = rememberCoroutineScope()
+    val cdnManager by nmbdi.instance<CdnManager>()
 
     Box(modifier = Modifier.fillMaxSize()) {
         // Top Toolbar
@@ -201,15 +218,22 @@ private fun ImagePreviewHud(
             Spacer(modifier = Modifier.weight(1f))
 
             IconButton(
-                onClick = { /* TODO: More actions */ },
+                onClick = {
+                    coroutineScope.launch {
+                        val imageInfo = uiState.images[pagerState.currentPage]
+                        val imageUrl =
+                            cdnManager.buildImageUrl(imageInfo.imgPath, imageInfo.ext, false)
+                        imageSaver.save(imageUrl)
+                    }
+                },
                 colors = IconButtonDefaults.iconButtonColors(
                     containerColor = photoPalette.containerColor,
                     contentColor = photoPalette.contentColor
                 ),
             ) {
                 Icon(
-                    Icons.Default.MoreVert,
-                    contentDescription = "更多",
+                    Icons.Default.Save,
+                    contentDescription = "保存",
                 )
             }
         }
