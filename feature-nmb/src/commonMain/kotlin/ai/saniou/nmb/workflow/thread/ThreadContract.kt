@@ -35,8 +35,7 @@ interface ThreadContract {
         val forumName: String = "",
         val lastReadReplyId: Long = 0,
         val isPoOnlyMode: Boolean = false,
-        val isTogglingSubscription: Boolean = false,
-        val allImages: List<ImageInfo> = emptyList()
+        val isTogglingSubscription: Boolean = false
     )
 
     /**

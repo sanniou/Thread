@@ -133,18 +133,6 @@ class ThreadViewModel(
                     val totalPages =
                         (thread.replyCount / 19) + if (thread.replyCount % 19 > 0) 1 else 0
 
-                    // 构建完整的图片列表
-                    val allImages = mutableListOf<ImageInfo>()
-                    if (thread.img.isNotBlank()) {
-                        allImages.add(ImageInfo(thread.img, thread.ext))
-                    }
-
-                    detail.thread.replies.forEach { reply ->
-                        if (reply.img.isNotBlank()) {
-                            allImages.add(ImageInfo(reply.img, reply.ext))
-                        }
-                    }
-
                     _state.update {
                         it.copy(
                             isLoading = false,
@@ -152,8 +140,7 @@ class ThreadViewModel(
                             lastReadReplyId = detail.lastReadReplyId,
                             totalPages = totalPages.toInt().coerceAtLeast(1),
                             forumName = db.forumQueries.getForum(thread.fid).executeAsOneOrNull()?.name
-                                ?: "",
-                            allImages = allImages
+                                ?: ""
                         )
                     }
                 }

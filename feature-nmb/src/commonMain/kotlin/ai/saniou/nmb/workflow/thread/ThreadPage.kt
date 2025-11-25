@@ -77,6 +77,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -390,97 +391,90 @@ private fun ThreadErrorContent(error: String, onRetry: () -> Unit) {
 private fun ThreadShimmer() {
     ShimmerContainer { brush ->
         Column(
-            modifier = Modifier.padding(8.dp)
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             // 主帖骨架屏
-            ElevatedCard(
-                modifier = Modifier.fillMaxWidth(),
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        MaterialTheme.colorScheme.surfaceVariant,
+                        RoundedCornerShape(12.dp)
+                    )
+                    .padding(16.dp),
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    // 标题和作者信息
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                // 标题和作者信息
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(24.dp)
+                            .clip(CircleShape)
+                            .background(brush)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Column {
                         Box(
                             modifier = Modifier
-                                .size(24.dp)
-                                .clip(CircleShape)
+                                .width(200.dp)
+                                .height(20.dp)
+                                .clip(RoundedCornerShape(4.dp))
                                 .background(brush)
                         )
-
-                        Spacer(modifier = Modifier.width(8.dp))
-
-                        Column {
-                            Box(
-                                modifier = Modifier
-                                    .width(200.dp)
-                                    .height(20.dp)
-                                    .clip(RoundedCornerShape(4.dp))
-                                    .background(brush)
-                            )
-
-                            Spacer(modifier = Modifier.height(4.dp))
-
-                            Box(
-                                modifier = Modifier
-                                    .width(150.dp)
-                                    .height(12.dp)
-                                    .clip(RoundedCornerShape(4.dp))
-                                    .background(brush)
-                            )
-                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Box(
+                            modifier = Modifier
+                                .width(150.dp)
+                                .height(12.dp)
+                                .clip(RoundedCornerShape(4.dp))
+                                .background(brush)
+                        )
                     }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // 内容
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(16.dp)
-                            .clip(RoundedCornerShape(4.dp))
-                            .background(brush)
-                    )
-
-                    VerticalSpacerSmall()
-
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth(0.8f)
-                            .height(16.dp)
-                            .clip(RoundedCornerShape(4.dp))
-                            .background(brush)
-                    )
-
-                    VerticalSpacerSmall()
-
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth(0.6f)
-                            .height(16.dp)
-                            .clip(RoundedCornerShape(4.dp))
-                            .background(brush)
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // 图片占位
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(200.dp)
-                            .clip(RoundedCornerShape(4.dp))
-                            .background(brush)
-                    )
                 }
-            }
 
-            Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // 内容
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(16.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(brush)
+                )
+                VerticalSpacerSmall()
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(0.8f)
+                        .height(16.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(brush)
+                )
+                VerticalSpacerSmall()
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(0.6f)
+                        .height(16.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(brush)
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // 图片占位
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(brush)
+                )
+            }
 
             // 回复骨架屏
             repeat(3) {
                 SkeletonReplyItem(brush)
-                VerticalSpacerSmall()
             }
         }
     }
@@ -508,6 +502,22 @@ fun ThreadSuccessContent(
     onBookmarkReply: (ThreadReply) -> Unit,
 ) {
     val replies = state.replies.collectAsLazyPagingItems()
+    val allImages by remember(state.thread, replies.itemSnapshotList) {
+        derivedStateOf {
+            val imageList = mutableListOf<ImageInfo>()
+            state.thread?.let {
+                if (it.img.isNotBlank()) {
+                    imageList.add(ImageInfo(it.img, it.ext))
+                }
+            }
+            replies.itemSnapshotList.items.forEach { reply ->
+                if (reply.img.isNotBlank()) {
+                    imageList.add(ImageInfo(reply.img, reply.ext))
+                }
+            }
+            imageList
+        }
+    }
 
     // Auto-scroll to last read position
     var hasScrolledToLastRead by remember { mutableStateOf(false) }
@@ -548,7 +558,12 @@ fun ThreadSuccessContent(
             onReplyClicked = onReplyClicked,
             onTogglePoOnly = onTogglePoOnly,
             onRefClick = onRefClick,
-            onImageClick = onImageClick,
+            onImageClick = { imgPath, _ ->
+                val initialIndex = allImages.indexOfFirst { it.imgPath == imgPath }
+                    .coerceAtLeast(0)
+                onImageClick(initialIndex, allImages)
+
+            },
             onRefresh = onRefresh,
             onCopy = onCopy,
             onBookmarkThread = onBookmarkThread,
@@ -565,7 +580,7 @@ private fun ThreadList(
     onReplyClicked: (Long) -> Unit,
     onTogglePoOnly: () -> Unit,
     onRefClick: (Long) -> Unit,
-    onImageClick: (Int, List<ImageInfo>) -> Unit,
+    onImageClick: (String, String) -> Unit,
     onRefresh: () -> Unit,
     onCopy: (String) -> Unit,
     onBookmarkThread: (Thread) -> Unit,
@@ -596,11 +611,7 @@ private fun ThreadList(
                 ThreadMainPost(
                     thread = thread,
                     refClick = onRefClick,
-                    onImageClick = { imgPath, _ ->
-                        val initialIndex = state.allImages.indexOfFirst { it.imgPath == imgPath }
-                            .coerceAtLeast(0)
-                        onImageClick(initialIndex, state.allImages)
-                    },
+                    onImageClick = onImageClick,
                     onCopy = { onCopy(thread.content) },
                     onBookmark = { onBookmarkThread(thread) }
                 )
@@ -637,11 +648,7 @@ private fun ThreadList(
                     poUserHash = state.thread?.userHash ?: "",
                     onReplyClicked = onReplyClicked,
                     refClick = onRefClick,
-                    onImageClick = { imgPath, _ ->
-                        val initialIndex = state.allImages.indexOfFirst { it.imgPath == imgPath }
-                            .coerceAtLeast(0)
-                        onImageClick(initialIndex, state.allImages)
-                    },
+                    onImageClick = onImageClick,
                     onCopy = { onCopy(reply.content) },
                     onBookmark = { onBookmarkReply(reply) }
                 )

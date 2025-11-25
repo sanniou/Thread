@@ -90,24 +90,16 @@ private fun SkeletonThreadItem(brush: Brush) {
  */
 @Composable
 fun SkeletonReplyItem(brush: Brush) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-        )
-    ) {
-        Column(modifier = Modifier.padding(Dimens.padding_medium)) {
-            // 回复者信息
-            SkeletonAuthor(brush)
+    Column(modifier = Modifier.padding(vertical = 8.dp)) {
+        // 回复者信息
+        SkeletonAuthor(brush)
 
-            Spacer(modifier = Modifier.height(Dimens.padding_small))
+        Spacer(modifier = Modifier.height(12.dp))
 
-            // 回复内容
-            SkeletonLine(modifier = Modifier.fillMaxWidth(), brush = brush)
-            Spacer(modifier = Modifier.height(Dimens.padding_extra_small))
-            SkeletonLine(modifier = Modifier.fillMaxWidth(0.5f), brush = brush)
-        }
+        // 回复内容
+        SkeletonLine(modifier = Modifier.fillMaxWidth(), brush = brush)
+        Spacer(modifier = Modifier.height(Dimens.padding_extra_small))
+        SkeletonLine(modifier = Modifier.fillMaxWidth(0.5f), brush = brush)
     }
 }
 
