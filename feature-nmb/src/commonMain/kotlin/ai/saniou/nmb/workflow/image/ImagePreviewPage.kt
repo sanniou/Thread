@@ -8,18 +8,20 @@ import ai.saniou.nmb.di.nmbdi
 import ai.saniou.nmb.workflow.image.ImagePreviewContract.Event
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -56,7 +58,6 @@ data class ImagePreviewPage(
     @OptIn(ExperimentalFoundationApi::class)
     @Composable
     override fun Content() {
-        val navigator = LocalNavigator.currentOrThrow
         val viewModel: ImagePreviewViewModel =
             rememberScreenModel(tag = params.toString()) {
                 di.direct.instance(arg = params)
@@ -84,7 +85,11 @@ data class ImagePreviewPage(
         val colorScheme = MaterialTheme.colorScheme
         val photoPaletteState = remember { mutableStateOf(PhotoPalette(colorScheme)) }
         val currentImageInfo =
-            if (uiState.images.isNotEmpty()) uiState.images[pagerState.currentPage] else null
+            if (uiState.images.isNotEmpty() && pagerState.currentPage < uiState.images.size) {
+                uiState.images[pagerState.currentPage]
+            } else {
+                null
+            }
         val thumbnailUrl = currentImageInfo?.let {
             cdnManager.buildImageUrl(it.imgPath, it.ext, true)
         }
@@ -124,71 +129,111 @@ data class ImagePreviewPage(
                 }
             }
 
-            if (uiState.isLoading) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(bottom = 80.dp)
-                ) {
-                    CircularProgressIndicator(color = Color.White)
-                }
-            }
-
-            if (uiState.endReached && uiState.images.size > 1 && pagerState.currentPage == uiState.images.size - 1) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(bottom = 80.dp)
-                ) {
-                    Text("没有更多图片了", color = Color.White)
-                }
-            }
-
-            val photoPalette by photoPaletteState
-            Row(
-                modifier = Modifier
-                    .padding(20.dp)
-                    .fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                IconButton(
-                    onClick = { navigator.pop() },
-                    colors = IconButtonDefaults.iconButtonColors(
-                        containerColor = photoPalette.containerColor,
-                        contentColor = photoPalette.contentColor
-                    ),
-                ) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "返回",
-                    )
-                }
-
-                Box(
-                    Modifier
-                        .height(40.dp)
-                        .background(
-                            color = photoPalette.containerColor,
-                            shape = RoundedCornerShape(50)
-                        )
-                        .padding(horizontal = 14.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    val numberText by remember {
-                        derivedStateOf {
-                            "${pagerState.currentPage + 1}/${uiState.images.size}"
-                        }
-                    }
-                    Text(
-                        text = numberText,
-                        textAlign = TextAlign.Center,
-                        color = photoPalette.contentColor,
-                        style = TextStyle(lineHeight = 12.sp),
-                    )
-                }
-            }
+            ImagePreviewHud(
+                pagerState = pagerState,
+                uiState = uiState,
+                photoPalette = photoPaletteState.value
+            )
         }
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun ImagePreviewHud(
+    pagerState: PagerState,
+    uiState: ImagePreviewContract.State,
+    photoPalette: PhotoPalette
+) {
+    val navigator = LocalNavigator.currentOrThrow
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        // Top Toolbar
+        Row(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .fillMaxWidth()
+                .padding(20.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            IconButton(
+                onClick = { navigator.pop() },
+                colors = IconButtonDefaults.iconButtonColors(
+                    containerColor = photoPalette.containerColor,
+                    contentColor = photoPalette.contentColor
+                ),
+            ) {
+                Icon(
+                    Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "返回",
+                )
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            Box(
+                Modifier
+                    .height(40.dp)
+                    .background(
+                        color = photoPalette.containerColor,
+                        shape = RoundedCornerShape(50)
+                    )
+                    .padding(horizontal = 14.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                val numberText by remember {
+                    derivedStateOf {
+                        if (uiState.images.isNotEmpty()) {
+                            "${pagerState.currentPage + 1}/${uiState.images.size}"
+                        } else {
+                            "0/0"
+                        }
+                    }
+                }
+                Text(
+                    text = numberText,
+                    textAlign = TextAlign.Center,
+                    color = photoPalette.contentColor,
+                    style = TextStyle(lineHeight = 12.sp),
+                )
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            IconButton(
+                onClick = { /* TODO: More actions */ },
+                colors = IconButtonDefaults.iconButtonColors(
+                    containerColor = photoPalette.containerColor,
+                    contentColor = photoPalette.contentColor
+                ),
+            ) {
+                Icon(
+                    Icons.Default.MoreVert,
+                    contentDescription = "更多",
+                )
+            }
+        }
+
+        // Loading indicator
+        if (uiState.isLoading) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 120.dp) // Adjusted padding to not overlap with ZoomImageTool
+            ) {
+                CircularProgressIndicator(color = Color.White)
+            }
+        }
+
+        // End of list message
+        if (uiState.endReached && uiState.images.size > 1 && pagerState.currentPage == uiState.images.size - 1) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 120.dp) // Adjusted padding
+            ) {
+                Text("没有更多图片了", color = Color.White)
+            }
+        }
+    }
+}

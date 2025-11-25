@@ -19,7 +19,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.RotateRight
+import androidx.compose.material.icons.filled.ZoomIn
+import androidx.compose.material.icons.filled.ZoomOut
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -103,6 +110,7 @@ fun ZoomAsyncImage(
         )
 
         ZoomImageTool(
+            uri = uri,
             zoomableState = zoomState.zoomable,
             onCaptureClick = {
                 // TODO: 实现截图保存逻辑，这部分是平台相关的
@@ -114,10 +122,13 @@ fun ZoomAsyncImage(
 
 @Composable
 private fun ZoomImageTool(
+    uri: String?,
     zoomableState: ZoomableState,
     onCaptureClick: () -> Unit,
 ) {
     val coroutineScope = rememberCoroutineScope()
+    var showInfoDialog by remember { mutableStateOf(false) }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -158,7 +169,7 @@ private fun ZoomImageTool(
                             ),
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Info,
+                                imageVector = Icons.Default.ZoomOut,
                                 contentDescription = "缩小",
                             )
                         }
@@ -176,7 +187,7 @@ private fun ZoomImageTool(
                             )
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Info,
+                                imageVector = Icons.Default.ZoomIn,
                                 contentDescription = "放大",
                             )
                         }
@@ -206,9 +217,30 @@ private fun ZoomImageTool(
             ButtonPad(
                 zoomableState = zoomableState,
                 onCaptureClick = onCaptureClick,
+                onInfoClick = { showInfoDialog = true },
                 onClickMore = { moreShow = !moreShow }
             )
         }
+    }
+
+    if (showInfoDialog) {
+        AlertDialog(
+            onDismissRequest = { showInfoDialog = false },
+            title = { Text("图片信息") },
+            text = {
+                val info = """
+                    URL: $uri
+                    尺寸: ${zoomableState.contentSize.width} x ${zoomableState.contentSize.height}
+                    原始尺寸: ${zoomableState.contentOriginSize.width} x ${zoomableState.contentOriginSize.height}
+                """.trimIndent()
+                Text(info)
+            },
+            confirmButton = {
+                TextButton(onClick = { showInfoDialog = false }) {
+                    Text("关闭")
+                }
+            }
+        )
     }
 }
 
@@ -216,6 +248,7 @@ private fun ZoomImageTool(
 private fun ButtonPad(
     zoomableState: ZoomableState,
     onCaptureClick: () -> Unit,
+    onInfoClick: () -> Unit,
     onClickMore: () -> Unit,
 ) {
     val coroutineScope = rememberCoroutineScope()
@@ -236,7 +269,7 @@ private fun ButtonPad(
             modifier = Modifier.size(40.dp)
         ) {
             Icon(
-                imageVector = Icons.Default.Info,
+                imageVector = Icons.Default.RotateRight,
                 contentDescription = "旋转",
                 tint = contentColor
             )
@@ -255,7 +288,7 @@ private fun ButtonPad(
                     zoomableState.getNextStepScale() > zoomableState.transform.scaleX
                 }
             }
-            val icon = if (zoomIn) Icons.Default.Info else Icons.Default.Info
+            val icon = if (zoomIn) Icons.Default.ZoomIn else Icons.Default.ZoomOut
             Icon(
                 imageVector = icon,
                 contentDescription = "缩放",
@@ -268,14 +301,14 @@ private fun ButtonPad(
             modifier = Modifier.size(40.dp)
         ) {
             Icon(
-                imageVector = Icons.Default.Info,
+                imageVector = Icons.Default.CameraAlt,
                 contentDescription = "截图",
                 tint = contentColor
             )
         }
 
         IconButton(
-            onClick = { /*TODO: 显示信息弹窗*/ },
+            onClick = onInfoClick,
             modifier = Modifier.size(40.dp)
         ) {
             Icon(
