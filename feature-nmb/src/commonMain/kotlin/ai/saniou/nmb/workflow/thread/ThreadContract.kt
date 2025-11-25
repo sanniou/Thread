@@ -2,6 +2,7 @@ package ai.saniou.nmb.workflow.thread
 
 import ai.saniou.nmb.data.entity.Thread
 import ai.saniou.nmb.data.entity.ThreadReply
+import ai.saniou.nmb.workflow.image.ImageInfo
 import app.cash.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
@@ -34,7 +35,8 @@ interface ThreadContract {
         val forumName: String = "",
         val lastReadReplyId: Long = 0,
         val isPoOnlyMode: Boolean = false,
-        val isTogglingSubscription: Boolean = false
+        val isTogglingSubscription: Boolean = false,
+        val allImages: List<ImageInfo> = emptyList()
     )
 
     /**

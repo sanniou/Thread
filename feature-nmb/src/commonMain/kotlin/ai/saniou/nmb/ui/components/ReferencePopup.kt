@@ -13,10 +13,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -48,86 +45,77 @@ fun ReferencePopup(
     onDismiss: () -> Unit
 ) {
     Dialog(onDismissRequest = onDismiss) {
-        Card(
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(Dimens.padding_medium),
-            elevation = CardDefaults.cardElevation(defaultElevation = Dimens.padding_small),
-            shape = RoundedCornerShape(Dimens.padding_small)
+                .clip(RoundedCornerShape(12.dp))
+                .background(MaterialTheme.colorScheme.surface)
+                .padding(16.dp)
         ) {
-            Column(
-                modifier = Modifier.padding(Dimens.padding_medium)
+            // 标题栏
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
             ) {
-                // 标题栏
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = "引用 No.$refId",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.weight(1f)
-                    )
+                Text(
+                    text = "引用 No.$refId",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f)
+                )
 
-                    IconButton(onClick = onDismiss) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "关闭"
+                IconButton(onClick = onDismiss) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "关闭"
+                    )
+                }
+            }
+
+            // 内容区域
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+            ) {
+                when {
+                    isLoading -> {
+                        // 加载中
+                        CircularProgressIndicator(
+                            modifier = Modifier.align(Alignment.Center),
+                            color = MaterialTheme.colorScheme.primary,
+                            strokeWidth = 2.dp
                         )
                     }
-                }
 
-                // 内容区域
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = Dimens.padding_small)
-                ) {
-                    when {
-                        isLoading -> {
-                            // 加载中
-                            CircularProgressIndicator(
-                                modifier = Modifier.align(Alignment.Center),
-                                color = MaterialTheme.colorScheme.primary,
-                                strokeWidth = 2.dp
+                    error != null -> {
+                        // 加载失败
+                        Text(
+                            text = "加载失败: $error",
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.align(Alignment.Center)
+                        )
+                    }
+
+                    reply != null -> {
+                        // 显示引用内容
+                        Column {
+                            ThreadAuthor(reply)
+                            Spacer(modifier = Modifier.padding(4.dp))
+                            ThreadBody(
+                                body = reply,
+                                onImageClick = { _, _ -> },
+                                onReferenceClick = null // 不允许在引用中再次引用
                             )
                         }
+                    }
 
-                        error != null -> {
-                            // 加载失败
-                            Text(
-                                text = "加载失败: $error",
-                                color = MaterialTheme.colorScheme.error,
-                                modifier = Modifier.align(Alignment.Center)
-                            )
-                        }
-
-                        reply != null -> {
-                            // 显示引用内容
-                            ElevatedCard {
-                                Column(
-                                    modifier = Modifier.padding(Dimens.padding_medium)
-                                ) {
-                                    ThreadAuthor(reply)
-                                    Spacer(modifier = Modifier.padding(Dimens.padding_small))
-                                    ThreadBody(
-                                        body = reply,
-                                        onImageClick = { _, _ -> },
-                                        onReferenceClick = null // 不允许在引用中再次引用
-                                    )
-                                }
-                            }
-                        }
-
-                        else -> {
-                            // 未找到引用
-                            Text(
-                                text = "未找到引用内容",
-                                color = MaterialTheme.colorScheme.error,
-                                modifier = Modifier.align(Alignment.Center)
-                            )
-                        }
+                    else -> {
+                        // 未找到引用
+                        Text(
+                            text = "未找到引用内容",
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.align(Alignment.Center)
+                        )
                     }
                 }
             }

@@ -9,13 +9,13 @@ import ai.saniou.nmb.domain.AddBookmarkUseCase
 import ai.saniou.nmb.domain.GetThreadDetailUseCase
 import ai.saniou.nmb.domain.GetThreadRepliesPagingUseCase
 import ai.saniou.nmb.domain.ToggleSubscriptionUseCase
+import ai.saniou.nmb.workflow.image.ImageInfo
 import ai.saniou.nmb.workflow.thread.ThreadContract.Effect
 import ai.saniou.nmb.workflow.thread.ThreadContract.Event
 import ai.saniou.nmb.workflow.thread.ThreadContract.State
 import app.cash.paging.PagingData
 import app.cash.paging.cachedIn
-import app.cash.sqldelight.coroutines.asFlow
-import app.cash.sqldelight.coroutines.mapToOneOrNull
+import app.cash.paging.map
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -129,14 +130,30 @@ class ThreadViewModel(
                 }
                 .collectLatest { detail ->
                     val thread = detail.thread
-                    val totalPages = (thread.replyCount / 19) + if (thread.replyCount % 19 > 0) 1 else 0
+                    val totalPages =
+                        (thread.replyCount / 19) + if (thread.replyCount % 19 > 0) 1 else 0
+
+                    // 构建完整的图片列表
+                    val allImages = mutableListOf<ImageInfo>()
+                    if (thread.img.isNotBlank()) {
+                        allImages.add(ImageInfo(thread.img, thread.ext))
+                    }
+
+                    detail.thread.replies.forEach { reply ->
+                        if (reply.img.isNotBlank()) {
+                            allImages.add(ImageInfo(reply.img, reply.ext))
+                        }
+                    }
+
                     _state.update {
                         it.copy(
                             isLoading = false,
                             thread = thread,
                             lastReadReplyId = detail.lastReadReplyId,
                             totalPages = totalPages.toInt().coerceAtLeast(1),
-                            forumName = db.forumQueries.getForum(thread.fid).executeAsOneOrNull()?.name ?: ""
+                            forumName = db.forumQueries.getForum(thread.fid).executeAsOneOrNull()?.name
+                                ?: "",
+                            allImages = allImages
                         )
                     }
                 }

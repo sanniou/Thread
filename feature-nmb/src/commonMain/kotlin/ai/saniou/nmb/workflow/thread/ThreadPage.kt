@@ -27,6 +27,7 @@ import ai.saniou.nmb.workflow.thread.ThreadContract.Event
 import ai.saniou.nmb.workflow.thread.ThreadContract.State
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -55,7 +56,6 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -63,6 +63,7 @@ import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconToggleButton
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -575,7 +576,7 @@ private fun ThreadList(
         state = lazyListState,
         modifier = Modifier.padding(horizontal = 16.dp),
         contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         // PREPEND 加载状态
         if (replies.loadState.prepend is LoadStateLoading) {
@@ -595,19 +596,10 @@ private fun ThreadList(
                 ThreadMainPost(
                     thread = thread,
                     refClick = onRefClick,
-                    onImageClick = { imgPath, ext ->
-                        val allImages = mutableListOf<ImageInfo>()
-                        if (thread.img.isNotBlank()) {
-                            allImages.add(ImageInfo(thread.img, thread.ext))
-                        }
-                        replies.itemSnapshotList.items.forEach { reply ->
-                            if (reply.img.isNotBlank()) {
-                                allImages.add(ImageInfo(reply.img, reply.ext))
-                            }
-                        }
-                        val initialIndex = allImages.indexOfFirst { it.imgPath == imgPath }
+                    onImageClick = { imgPath, _ ->
+                        val initialIndex = state.allImages.indexOfFirst { it.imgPath == imgPath }
                             .coerceAtLeast(0)
-                        onImageClick(initialIndex, allImages)
+                        onImageClick(initialIndex, state.allImages)
                     },
                     onCopy = { onCopy(thread.content) },
                     onBookmark = { onBookmarkThread(thread) }
@@ -634,26 +626,21 @@ private fun ThreadList(
         // 回复列表
         items(replies.itemCount) { replyIndex ->
             replies[replyIndex]?.let { reply ->
+                if (replyIndex > 0) {
+                    HorizontalDivider(
+                        modifier = Modifier.padding(vertical = 8.dp),
+                        thickness = 0.5.dp
+                    )
+                }
                 ThreadReply(
                     reply = reply,
                     poUserHash = state.thread?.userHash ?: "",
                     onReplyClicked = onReplyClicked,
                     refClick = onRefClick,
-                    onImageClick = { imgPath, ext ->
-                        val allImages = mutableListOf<ImageInfo>()
-                        state.thread?.let {
-                            if (it.img.isNotBlank()) {
-                                allImages.add(ImageInfo(it.img, it.ext))
-                            }
-                        }
-                        replies.itemSnapshotList.items.forEach { r ->
-                            if (r.img.isNotBlank()) {
-                                allImages.add(ImageInfo(r.img, r.ext))
-                            }
-                        }
-                        val initialIndex = allImages.indexOfFirst { it.imgPath == imgPath }
+                    onImageClick = { imgPath, _ ->
+                        val initialIndex = state.allImages.indexOfFirst { it.imgPath == imgPath }
                             .coerceAtLeast(0)
-                        onImageClick(initialIndex, allImages)
+                        onImageClick(initialIndex, state.allImages)
                     },
                     onCopy = { onCopy(reply.content) },
                     onBookmark = { onBookmarkReply(reply) }
@@ -744,29 +731,29 @@ private fun ThreadToolbar(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun PostWrapper(
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit,
+fun ThreadMainPost(
+    thread: Thread,
+    refClick: (Long) -> Unit,
+    onImageClick: (String, String) -> Unit,
     onCopy: () -> Unit,
     onBookmark: () -> Unit,
-    isElevated: Boolean = false,
-    content: @Composable () -> Unit,
 ) {
     var showMenu by remember { mutableStateOf(false) }
-    Box {
-        val cardModifier = modifier
-            .fillMaxWidth()
-            .combinedClickable(
-                onClick = onClick,
-                onLongClick = { showMenu = true }
+    Column(
+        modifier = Modifier
+            .background(
+                MaterialTheme.colorScheme.surfaceVariant,
+                RoundedCornerShape(12.dp)
             )
-        if (isElevated) {
-            ElevatedCard(modifier = cardModifier) { content() }
-        } else {
-            Card(modifier = cardModifier) { content() }
-        }
+            .padding(16.dp),
+    ) {
+        // 头部信息
+        PostHeader(
+            author = { ThreadAuthor(thread, isPo = true) },
+            id = thread.id,
+            onMoreClick = { showMenu = true }
+        )
 
         DropdownMenu(
             expanded = showMenu,
@@ -787,46 +774,20 @@ private fun PostWrapper(
                 }
             )
         }
-    }
-}
 
-@Composable
-fun ThreadMainPost(
-    thread: Thread,
-    refClick: (Long) -> Unit,
-    onImageClick: (String, String) -> Unit,
-    onCopy: () -> Unit,
-    onBookmark: () -> Unit,
-) {
-    PostWrapper(
-        onClick = { /* 主楼不可点击 */ },
-        onCopy = onCopy,
-        onBookmark = onBookmark,
-        isElevated = true
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-        ) {
-            // 头部信息
-            PostHeader(
-                author = { ThreadAuthor(thread, isPo = true) },
-                id = thread.id
+        // 标题
+        if (thread.title.isNotBlank() && thread.title != "无标题") {
+            Text(
+                text = thread.title,
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(vertical = 12.dp)
             )
-
-            // 标题
-            if (thread.title.isNotBlank() && thread.title != "无标题") {
-                Text(
-                    text = thread.title,
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(vertical = 12.dp)
-                )
-            } else {
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-
-            // 正文
-            ThreadBody(thread, onReferenceClick = refClick, onImageClick = onImageClick)
+        } else {
+            Spacer(modifier = Modifier.height(8.dp))
         }
+
+        // 正文
+        ThreadBody(thread, onReferenceClick = refClick, onImageClick = onImageClick)
     }
 }
 
@@ -843,22 +804,40 @@ fun ThreadReply(
     val isPo = remember(reply.userHash) {
         reply.userHash == poUserHash
     }
-
-    PostWrapper(
-        onClick = { onReplyClicked(reply.id) },
-        onCopy = onCopy,
-        onBookmark = onBookmark
+    var showMenu by remember { mutableStateOf(false) }
+    Column(
+        modifier = Modifier
+            .clickable { onReplyClicked(reply.id) }
+            .padding(vertical = 8.dp),
     ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+        PostHeader(
+            author = { ThreadAuthor(reply, isPo = isPo) },
+            id = reply.id,
+            onMoreClick = { showMenu = true }
+        )
+
+        DropdownMenu(
+            expanded = showMenu,
+            onDismissRequest = { showMenu = false }
         ) {
-            PostHeader(
-                author = { ThreadAuthor(reply, isPo = isPo) },
-                id = reply.id
+            DropdownMenuItem(
+                text = { Text("复制") },
+                onClick = {
+                    onCopy()
+                    showMenu = false
+                }
             )
-            Spacer(modifier = Modifier.height(12.dp))
-            ThreadBody(reply, onReferenceClick = refClick, onImageClick = onImageClick)
+            DropdownMenuItem(
+                text = { Text("收藏") },
+                onClick = {
+                    onBookmark()
+                    showMenu = false
+                }
+            )
         }
+
+        Spacer(modifier = Modifier.height(12.dp))
+        ThreadBody(reply, onReferenceClick = refClick, onImageClick = onImageClick)
     }
 }
 
@@ -866,6 +845,7 @@ fun ThreadReply(
 private fun PostHeader(
     author: @Composable () -> Unit,
     id: Long,
+    onMoreClick: () -> Unit,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -879,6 +859,12 @@ private fun PostHeader(
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+        IconButton(onClick = onMoreClick, modifier = Modifier.size(20.dp)) {
+            Icon(
+                Icons.Default.MoreVert,
+                contentDescription = "更多",
+            )
+        }
     }
 }
 
