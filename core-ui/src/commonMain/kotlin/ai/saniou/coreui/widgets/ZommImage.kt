@@ -1,5 +1,6 @@
 package ai.saniou.coreui.widgets
 
+import ai.saniou.coreui.widgets.palette.PhotoPalette
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
@@ -26,21 +27,32 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import com.github.panpf.sketch.AsyncImage
 import com.github.panpf.sketch.ability.progressIndicator
+import com.github.panpf.sketch.cache.CachePolicy
 import com.github.panpf.sketch.painter.rememberSectorProgressPainter
 import com.github.panpf.sketch.rememberAsyncImageState
 import com.github.panpf.sketch.request.ComposableImageRequest
+import com.github.panpf.sketch.request.ImageResult
+import com.github.panpf.sketch.request.disallowAnimatedImage
+import com.github.panpf.sketch.resize.Precision
 import com.github.panpf.sketch.state.ThumbnailMemoryCacheStateImage
+import com.github.panpf.sketch.transform.BlurTransformation
+import com.github.panpf.sketch.util.toSketchSize
+import com.github.panpf.sketch.util.windowContainerSize
 import com.github.panpf.zoomimage.SketchZoomAsyncImage
 import com.github.panpf.zoomimage.compose.zoom.ScrollBarSpec
 import com.github.panpf.zoomimage.compose.zoom.ZoomableState
@@ -74,6 +86,9 @@ fun ZoomAsyncImage(
             request = ComposableImageRequest(uri) {
                 placeholder(ThumbnailMemoryCacheStateImage(thumbnailUrl))
                 crossfade(fadeStart = false)
+                components {
+                    addDecodeInterceptor(PaletteDecodeInterceptor())
+                }
             },
             contentDescription = contentDescription,
             contentScale = contentScale,
@@ -281,4 +296,43 @@ private fun ButtonPad(
             )
         }
     }
+}
+
+
+@Composable
+fun PhotoPagerBackground(
+    imageUri: String,
+    photoPaletteState: MutableState<PhotoPalette>,
+) {
+    val colorScheme = MaterialTheme.colorScheme
+    val imageState = rememberAsyncImageState()
+    LaunchedEffect(Unit) {
+        snapshotFlow { imageState.result }.collect {
+            if (it is ImageResult.Success) {
+                photoPaletteState.value =
+                    PhotoPalette(it.simplePalette, colorScheme = colorScheme)
+            }
+        }
+    }
+    val windowsSize = windowContainerSize()
+    val imageSize = remember { (windowsSize / 4).toSketchSize() }
+    val request = ComposableImageRequest(imageUri) {
+        resize(size = imageSize, precision = Precision.SMALLER_SIZE)
+        addTransformations(BlurTransformation(radius = 20, maskColor = 0x63000000))
+        memoryCachePolicy(CachePolicy.DISABLED)
+        resultCachePolicy(CachePolicy.DISABLED)
+        disallowAnimatedImage()
+        crossfade(alwaysUse = true, durationMillis = 400)
+        resizeOnDraw()
+        components {
+            addDecodeInterceptor(PaletteDecodeInterceptor())
+        }
+    }
+    AsyncImage(
+        request = request,
+        state = imageState,
+        contentDescription = "Background",
+        contentScale = ContentScale.Crop,
+        modifier = Modifier.fillMaxSize()
+    )
 }
