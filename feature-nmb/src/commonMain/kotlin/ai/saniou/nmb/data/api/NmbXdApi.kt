@@ -109,6 +109,18 @@ interface NmbXdApi {
     ): SaniouResponse<Thread>
 
     /**
+     * 获取最新趋势 (Trend)
+     *
+     * 该接口实际上是获取特定的“趋势串” (ID: 50248044) 的最新回复。
+     * 客户端逻辑需自行处理分页（先获取第一页得知总页数，再获取最后一页的最后一条回复）。
+     */
+    @GET("thread")
+    suspend fun getTrendThread(
+        @Query("id") id: Long = 50248044,
+        @Query("page") page: Long
+    ): SaniouResponse<Thread>
+
+    /**
      * 查看引用
      *
      * 可以查看串和回复的内容，但是并没有办法获取回复所属的串号。
@@ -117,6 +129,17 @@ interface NmbXdApi {
     suspend fun ref(
         @Query("id") id: Long,//串 ID
     ): SaniouResponse<NmbReference>
+
+    /**
+     * 查看引用 (HTML)
+     *
+     * 作为 API 失败时的备选方案，或者需要获取原始 HTML 时使用。
+     * 对应 Dart 中的 fetchRefFromHtml
+     */
+    @GET("https://www.nmbxd1.com/Home/Forum/ref")
+    suspend fun refHtml(
+        @Query("id") id: Long
+    ): String
 
     /**
      * 发串
@@ -128,23 +151,29 @@ interface NmbXdApi {
      *
      * 返回值为 HTML 格式的页面，可以直接复制到浏览器中打开。
      */
-    @POST("https://www.nmbxd1.com/home/forum/doPostThread.html")
+    @POST("https://www.nmbxd.com/home/forum/doPostThread.html")
     @Multipart
     suspend fun postThread(
         @Part("fid") fid: Int,
         @Part("content") content: String,
-        @Part("") parts: List<PartData>
+        @Part("name") name: String? = null,
+        @Part("title") title: String? = null,
+        @Part("water") water: String? = null,
+        @Part("") parts: List<PartData> = emptyList()
     ): String
 
     /**
      * 回复串
      */
-    @POST("https://www.nmbxd1.com/home/forum/doReplyThread.html")
+    @POST("https://www.nmbxd.com/home/forum/doReplyThread.html")
     @Multipart
     suspend fun postReply(
         @Part("resto") resto: Int,
         @Part("content") content: String,
-        @Part("") parts: List<PartData>
+        @Part("name") name: String? = null,
+        @Part("title") title: String? = null,
+        @Part("water") water: String? = null,
+        @Part("") parts: List<PartData> = emptyList()
     ): String
 
     /**
@@ -167,10 +196,9 @@ interface NmbXdApi {
      * response:"订阅大成功→_→" / "该串不存在"
      */
     @POST("addFeed")
-    @FormUrlEncoded
     suspend fun addFeed(
         @Query("uuid") uuid: String,//订阅 UUID
-        @Field("tid") tid: Long,// 串的 ID
+        @Query("tid") tid: Long,// 串的 ID
     ): String
 
     /**
@@ -181,21 +209,17 @@ interface NmbXdApi {
      * response:"取消订阅成功!"
      */
     @POST("delFeed")
-    @FormUrlEncoded
     suspend fun delFeed(
         @Query("uuid") uuid: String,//订阅 UUID
-        @Field("tid") tid: Long,// 串的 ID
+        @Query("tid") tid: Long,// 串的 ID
     ): String
 
     /**
      * 获取最新发的串的链接
      * 只能在发串/回复后的大约 3 秒内从这个 API 查到数据，否则会返回 []。
      */
-    @GET("getLastPost")
-    suspend fun getLastPost(
-        @Query("id") id: Long,//串 ID
-        @Query("page") page: Long,//页数，默认为 1
-    ): SaniouResponse<LastPost>
+    @GET("https://www.nmbxd1.com/Api/getLastPost")
+    suspend fun getLastPost(): SaniouResponse<LastPost>
 
     /**
      * 查看匿名版公告
@@ -221,7 +245,7 @@ interface NmbXdApi {
     /**
      * 用户登录
      */
-    @POST("https://www.nmbxd.com/Member/User/Index/login.html")
+    @POST("httpsgetLatestTrend://www.nmbxd.com/Member/User/Index/login.html")
     suspend fun login(
         @Body request: LoginRequest
     ): LoginResponse
