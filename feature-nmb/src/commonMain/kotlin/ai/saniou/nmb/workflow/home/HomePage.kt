@@ -1,8 +1,6 @@
 package ai.saniou.nmb.workflow.home
 
-import ai.saniou.nmb.ui.components.HtmlTitleText
-import ai.saniou.nmb.workflow.post.PostPage
-import ai.saniou.nmb.workflow.thread.ThreadPage
+import ai.saniou.nmb.ui.components.AppBarTitle
 import ai.saniou.nmb.workflow.user.UserPage
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
@@ -16,7 +14,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
@@ -30,73 +27,7 @@ import org.jetbrains.compose.resources.stringResource
 import thread.feature_nmb.generated.resources.Res
 import thread.feature_nmb.generated.resources.back_button
 
-
 @OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun SaniouAppBar(
-    canNavigateBack: Boolean,
-    navigateUp: () -> Unit,
-    onUserIconClick: () -> Unit,
-    onMenuClick: () -> Unit,
-    showMenuIcon: Boolean = true,
-    isDrawerOpen: Boolean = false,
-    customTitle: String? = null,
-    modifier: Modifier = Modifier,
-    extraActions: @Composable (() -> Unit)? = null
-) {
-    TopAppBar(
-        title = {
-            if (customTitle != null && (customTitle.contains("<b>") || customTitle.contains("<br>") || customTitle.contains(
-                    "<small>"
-                ))
-            ) {
-                // 如果标题包含HTML标签，则使用HtmlTitleText组件
-                HtmlTitleText(text = customTitle)
-            } else {
-                // 否则使用普通Text
-                Text(customTitle ?: "")
-            }
-        },
-        colors = TopAppBarDefaults.mediumTopAppBarColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
-        ),
-        modifier = modifier,
-        navigationIcon = {
-            if (canNavigateBack) {
-                IconButton(onClick = navigateUp) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(Res.string.back_button)
-                    )
-                }
-            } else if (showMenuIcon) {
-                IconButton(onClick = onMenuClick) {
-                    // 根据抽屉状态显示不同图标
-                    Icon(
-                        imageVector = if (isDrawerOpen)
-                            Icons.AutoMirrored.Filled.ArrowBack
-                        else
-                            Icons.Default.Menu,
-                        contentDescription = if (isDrawerOpen) "关闭菜单" else "打开菜单"
-                    )
-                }
-            }
-        },
-        actions = {
-            // 显示额外的操作按钮（如果有）
-            extraActions?.invoke()
-
-            // 用户图标按钮
-            IconButton(onClick = onUserIconClick) {
-                Icon(
-                    imageVector = Icons.Default.AccountCircle,
-                    contentDescription = "用户中心"
-                )
-            }
-        }
-    )
-}
-
 @Composable
 fun HomePage() {
     val navController = LocalNavigator.currentOrThrow
@@ -110,20 +41,47 @@ fun HomePage() {
 
     Scaffold(
         topBar = {
-            SaniouAppBar(
-                canNavigateBack = navController.canPop,
-                navigateUp = { navController.pop() },
-                onUserIconClick = { navController.push(UserPage()) },
-                onMenuClick = {
-                    scope.launch {
-                        if (drawerState.isOpen) {
-                            drawerState.close()
-                        } else {
-                            drawerState.open()
+            TopAppBar(
+                title = { AppBarTitle(title = "") },
+                colors = TopAppBarDefaults.mediumTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                ),
+                navigationIcon = {
+                    if (navController.canPop) {
+                        IconButton(onClick = { navController.pop() }) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(Res.string.back_button)
+                            )
+                        }
+                    } else {
+                        IconButton(onClick = {
+                            scope.launch {
+                                if (drawerState.isOpen) {
+                                    drawerState.close()
+                                } else {
+                                    drawerState.open()
+                                }
+                            }
+                        }) {
+                            Icon(
+                                imageVector = if (isDrawerOpen)
+                                    Icons.AutoMirrored.Filled.ArrowBack
+                                else
+                                    Icons.Default.Menu,
+                                contentDescription = if (isDrawerOpen) "关闭菜单" else "打开菜单"
+                            )
                         }
                     }
                 },
-                isDrawerOpen = isDrawerOpen,
+                actions = {
+                    IconButton(onClick = { navController.push(UserPage()) }) {
+                        Icon(
+                            imageVector = Icons.Default.AccountCircle,
+                            contentDescription = "用户中心"
+                        )
+                    }
+                }
             )
         }
     ) { innerPadding ->

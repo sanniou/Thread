@@ -3,9 +3,9 @@ package ai.saniou.nmb.workflow.trend
 import ai.saniou.coreui.widgets.PullToRefreshWrapper
 import ai.saniou.coreui.widgets.VerticalSpacerSmall
 import ai.saniou.nmb.di.nmbdi
+import ai.saniou.nmb.ui.components.AppBarTitle
 import ai.saniou.nmb.ui.components.LoadingFailedIndicator
 import ai.saniou.nmb.ui.components.LoadingIndicator
-import ai.saniou.nmb.workflow.home.SaniouAppBar
 import ai.saniou.nmb.workflow.thread.ThreadPage
 import ai.saniou.nmb.workflow.trend.TrendContract.Effect
 import ai.saniou.nmb.workflow.trend.TrendContract.Event
@@ -27,6 +27,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Card
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -38,16 +39,25 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import cafe.adriel.voyager.core.screen.Screen
@@ -59,12 +69,15 @@ import org.kodein.di.DI
 
 data class TrendPage(val di: DI = nmbdi) : Screen {
 
+    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val viewModel: TrendViewModel = rememberScreenModel()
         val state by viewModel.state.collectAsState()
         val snackbarHostState = remember { SnackbarHostState() }
+        var showSourceDialog by remember { mutableStateOf(false) }
+        var sourceUrl by remember { mutableStateOf("") }
 
         LaunchedEffect(Unit) {
             viewModel.effect.collectLatest { effect ->
@@ -76,24 +89,79 @@ data class TrendPage(val di: DI = nmbdi) : Screen {
                         navigator.push(ThreadPage(effect.threadId))
                     }
                     is Effect.ShowInfoDialog -> {
-                        // TODO: Use actual platform-specific URL opener or dialog
-                        snackbarHostState.showSnackbar("源地址: ${effect.url}")
+                        sourceUrl = effect.url
+                        showSourceDialog = true
                     }
                 }
             }
         }
 
+        if (showSourceDialog) {
+            val sourceId = sourceUrl.substringAfterLast("/").toLongOrNull()
+            AlertDialog(
+                onDismissRequest = { showSourceDialog = false },
+                title = { Text("数据来源") },
+                text = {
+                    Column {
+                        Text("本页 Trend 数据统计自串：")
+                        VerticalSpacerSmall()
+                        if (sourceId != null) {
+                            Text(
+                                text = buildAnnotatedString {
+                                    withStyle(
+                                        style = SpanStyle(
+                                            color = MaterialTheme.colorScheme.primary,
+                                            textDecoration = TextDecoration.Underline,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    ) {
+                                        append("No.$sourceId")
+                                    }
+                                },
+                                modifier = Modifier.clickable {
+                                    showSourceDialog = false
+                                    navigator.push(ThreadPage(sourceId))
+                                }
+                            )
+                        } else {
+                            Text(sourceUrl)
+                        }
+                    }
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            if (sourceId != null) {
+                                navigator.push(ThreadPage(sourceId))
+                            }
+                            showSourceDialog = false
+                        }
+                    ) {
+                        Text("查看原串")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showSourceDialog = false }) {
+                        Text("关闭")
+                    }
+                }
+            )
+        }
+
         Scaffold(
             topBar = {
-                SaniouAppBar(
-                    canNavigateBack = false,
-                    navigateUp = { },
-                    onUserIconClick = { /* Handled by parent */ },
-                    onMenuClick = { /* Handled by parent */ },
-                    showMenuIcon = false, // Trend page is usually part of bottom nav, handled by parent scafffold
-                    customTitle = "趋势" + if (state.trendDate.isNotEmpty()) " - ${state.trendDate}" else "",
-                    extraActions = {
-                         IconButton(onClick = { viewModel.onEvent(Event.OnInfoClick) }) {
+                TopAppBar(
+                    title = {
+                        AppBarTitle(
+                            title = "趋势",
+                            subtitle = state.trendDate.takeIf { it.isNotEmpty() }
+                        )
+                    },
+                    colors = TopAppBarDefaults.mediumTopAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    ),
+                    actions = {
+                        IconButton(onClick = { viewModel.onEvent(Event.OnInfoClick) }) {
                             Icon(Icons.Default.Info, contentDescription = "源地址")
                         }
                     }
@@ -183,7 +251,7 @@ data class TrendPage(val di: DI = nmbdi) : Screen {
                             border = null,
                             modifier = Modifier.height(24.dp)
                         )
-                        
+
                         Text(
                             text = "No.${item.threadId}",
                             style = MaterialTheme.typography.labelMedium,
@@ -199,7 +267,7 @@ data class TrendPage(val di: DI = nmbdi) : Screen {
                             )
                         }
                     }
-                    
+
                     VerticalSpacerSmall()
 
                     Text(
@@ -210,9 +278,9 @@ data class TrendPage(val di: DI = nmbdi) : Screen {
                         overflow = TextOverflow.Ellipsis,
                         lineHeight = 1.5.em
                     )
-                    
+
                     VerticalSpacerSmall()
-                    
+
                     Text(
                         text = item.trendNum, // e.g., "Trend 34"
                         style = MaterialTheme.typography.labelSmall,
