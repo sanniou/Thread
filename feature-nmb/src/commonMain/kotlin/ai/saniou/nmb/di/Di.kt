@@ -44,6 +44,7 @@ import ai.saniou.nmb.workflow.image.nmbImagePreviewModule
 import ai.saniou.nmb.workflow.post.PostViewModel
 import ai.saniou.nmb.workflow.reference.ReferenceViewModel
 import ai.saniou.nmb.workflow.subscription.SubscriptionViewModel
+import ai.saniou.nmb.domain.TrendUseCase
 import ai.saniou.nmb.workflow.thread.ThreadViewModel
 import ai.saniou.nmb.workflow.trend.TrendViewModel
 import ai.saniou.nmb.workflow.user.UserViewModel
@@ -175,7 +176,8 @@ val nmbdi = DI {
 
     bindProvider { NoticeUseCase(instance(), instance(), instance()) }
     bindProvider { HomeViewModel(instance()) }
-    bindProvider { TrendViewModel(instance(), instance()) }
+    bindProvider { TrendUseCase(instance()) }
+    bindProvider { TrendViewModel(instance()) }
     bindSingleton {
         CommonStorage(scope = CoroutineScope(Dispatchers.Default))
     }

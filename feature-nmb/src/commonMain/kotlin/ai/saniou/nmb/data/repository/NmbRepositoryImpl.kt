@@ -298,11 +298,31 @@ class NmbRepositoryImpl(
     override suspend fun getTrendThread(page: Int): Result<Thread> {
         return try {
             when (val response = nmbXdApi.getTrendThread(page = page.toLong())) {
-                is SaniouResponse.Success -> Result.success(response.data)
+                is SaniouResponse.Success -> {
+                    val thread = response.data
+                    // 保存到数据库
+                    database.threadQueries.transaction {
+                        database.threadQueries.upsertThread(thread.toTable(page = page.toLong()))
+                        thread.toTableReply(page.toLong())
+                            .forEach(database.threadReplyQueries::upsertThreadReply)
+                    }
+                    Result.success(thread)
+                }
+
                 is SaniouResponse.Error -> Result.failure(response.ex)
             }
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    override suspend fun getLocalLatestReply(threadId: Long): ThreadReply? {
+        // 获取最后5条回复中的第一条（假设 getLastFiveReplies 是倒序的，即最新的在前）
+        // 如果不是倒序，可能需要调整。通常论坛的“最后几条”是用于列表展示，往往是倒序。
+        // 根据 Thread.kt 中的 toThread 实现，它取了 getLastFiveReplies，推测是用于展示 Thread 预览，应该是包含最新回复的。
+        return database.threadReplyQueries.getLastFiveReplies(threadId)
+            .executeAsList()
+            .maxByOrNull { it.id } // 确保取 ID 最大的，即最新的
+            ?.toThreadReply()
     }
 }

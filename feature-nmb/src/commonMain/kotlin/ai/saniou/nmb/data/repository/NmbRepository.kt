@@ -63,4 +63,6 @@ interface NmbRepository {
     suspend fun getThreadRepliesByPage(threadId: Long, page: Int): Result<List<ThreadReply>>
 
     suspend fun getTrendThread(page: Int): Result<Thread>
+
+    suspend fun getLocalLatestReply(threadId: Long): ThreadReply?
 }
