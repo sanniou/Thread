@@ -30,7 +30,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.cash.paging.compose.collectAsLazyPagingItems
 import cafe.adriel.voyager.core.model.rememberScreenModel
@@ -60,7 +65,25 @@ data class ForumPage(
         val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
         val lazyListState = rememberLazyListState()
         val coroutineScope = rememberCoroutineScope()
-        val expandedFab by remember { derivedStateOf { lazyListState.firstVisibleItemIndex == 0 } }
+        var expandedFab by remember { mutableStateOf(true) }
+        val fabNestedScrollConnection = remember {
+            object : NestedScrollConnection {
+                override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                    if (available.y < -5f) {
+                        expandedFab = false
+                    } else if (available.y > 5f) {
+                        expandedFab = true
+                    }
+                    return Offset.Zero
+                }
+            }
+        }
+
+        LaunchedEffect(lazyListState.firstVisibleItemIndex) {
+            if (lazyListState.firstVisibleItemIndex == 0) {
+                expandedFab = true
+            }
+        }
 
         LaunchedEffect(Unit) {
             viewModel.effect.collect { effect ->
@@ -71,7 +94,9 @@ data class ForumPage(
         }
 
         Scaffold(
-            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+            modifier = Modifier
+                .nestedScroll(scrollBehavior.nestedScrollConnection)
+                .nestedScroll(fabNestedScrollConnection),
             topBar = {
                 TopAppBar(
                     title = {
