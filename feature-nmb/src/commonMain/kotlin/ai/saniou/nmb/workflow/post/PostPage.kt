@@ -1,42 +1,56 @@
 package ai.saniou.nmb.workflow.post
 
 import ai.saniou.coreui.theme.Dimens
+import ai.saniou.nmb.data.entity.EmoticonData
 import ai.saniou.nmb.di.nmbdi
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.AddPhotoAlternate
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.EmojiEmotions
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.outlined.Casino
 import androidx.compose.material3.Button
-import androidx.compose.material3.Checkbox
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -45,6 +59,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -55,6 +72,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -72,41 +93,6 @@ import thread.feature_nmb.generated.resources.*
 private const val BBCODE_CODE = "[code][/code]"
 private const val BBCODE_IMG = "[img][/img]"
 
-private val EMOTICON_GROUPS = mapOf(
-    "常用" to listOf(
-        "(=ﾟωﾟ)=", "(´ﾟДﾟ`)", "(｀･ω･)", "( ´_ゝ｀)", "(;´Д`)",
-        "(=Д=)", "(●ε●)", "( ´∀`)", "( ´∀｀)", "(*´∀`)",
-        "(｡◕∀◕｡)", "(ゝ∀･)", "(ノﾟ∀ﾟ)ノ", "(σﾟдﾟ)σ", "Σ( ﾟдﾟ)",
-        "|д` )", "(`ε´ )", "(╬ﾟдﾟ)", "(|||ﾟдﾟ)", "( ﾟ∀ﾟ)",
-        "(*´д`)", "( `д´)", "(`ヮ´ )", "( ´ー`)", "( ´_っ`)",
-        "( ´ρ`)", "(･ω･)", "(ﾟДﾟ≡ﾟДﾟ)"
-    ),
-    "颜文字" to listOf(
-        "|∀ﾟ", "| ω・´)", "|-` )", "|д` )", "|ー` )", "|∀` )", "( ´д`)", "(( ´д`))",
-        "( ´∀`)", "( ´∀｀)", "(*´∀`)", "(*ﾟ∇ﾟ)", "(｡◕∀◕｡)", "( ´ρ`)", "(ゝ∀･)",
-        "( ´_ゝ｀)", "( ´_っ`)", "( ´σ`)", "( ´∀｀)σ", "( ´∀`)ノ", "( ´д`)ノ",
-        "( ´д)ノ", "( ´ρ`)ノ", "( ﾟдﾟ)ノ", "( ﾟдﾟ)σ", "( ﾟдﾟ)", "( ;ﾟдﾟ)",
-        "( ;´д`)", "( ;´ρ`)", "( ;´∀`)", "( `д´)", "( `д´)σ", "( `д´)ノ",
-        "( `д´)ﾉ", "(#`д´)ﾉ", "(#`д´)σ", "(#`д´)!!", "(#`д´)凸", "(╬`д´)σ",
-        "(╬`д´)", "(╬`д´)ノ", "(╬`д´)ﾉ", "(╬ﾟдﾟ)", "(╬ﾟдﾟ)σ", "(╬ﾟдﾟ)ノ",
-        "(╬ﾟдﾟ)ﾉ", "(|||ﾟдﾟ)", "( ﾟ∀ﾟ)", "( ﾟ∀ﾟ)σ", "( ﾟ∀ﾟ)ノ", "( ﾟ∀ﾟ)ﾉ",
-        "(σﾟ∀ﾟ)σ", "(σﾟдﾟ)σ", "(σ´д`)σ", "(σ´∀`)σ", "Σ( ﾟдﾟ)", "Σ( ﾟдﾟ;)",
-        "Σ( `д´)", "Σ( `д´;)", "(((( ;ﾟдﾟ)))", "(((　ﾟдﾟ)))", "( `ヮ´ )",
-        "(*ﾟーﾟ)", "(⌒∇⌒*)", "(*´ω`*)", "(´ω`)", "(´ω｀*)", "(n´ω`n)",
-        "(´∀｀*)", "(* ´∀`)", "(*´∀｀*)", "(* ´∀｀)", "(*ﾉ∀`*)", "(*ﾉωﾉ)",
-        "(*ﾉдﾉ)", "(*´д`*)", "(*´д`)", "(*´ρ`*)", "(´Д`*)", "(´Д`)",
-        "(´Д｀*)", "(;´Д`)", "(ι´Д`)", "(ヽ´Д`)", "(ノ´Д`)", "( #´Д`)",
-        "( ´Д`)y━･~~", "( ´д`)y━･~~", "( ´_ゝ`)y━･~~", "( ´ρ`)y━･~~", "（ ´,_ゝ`)",
-        "( ´,_ゝ`)", "（ ´∀`）", "( ´∀`)", "（ ´_ゝ`）", "( ´_ゝ`)", "（ ´ρ`）",
-        "( ´ρ`)", "（ `д´）", "( `д´)", "（`ヮ´ ）", "(`ヮ´ )", "(｀･ω･)",
-        "(´･ω･`)", "(･ω･)", "(=ﾟωﾟ)=", "(=ﾟωﾟ)ﾉ", "(=´∀`)", "(´∀`)",
-        "(´∀｀)", "(=´∀｀)人(´∀｀=)", "( ´∀｀)人(´∀｀ )", "( ´∀`)人(`Д´ )",
-        "(・∀・)", "(・∀・)ノ", "(・∀・)ﾉ", "（・∀・）", "（・∀・）", "（・∀・）ノ",
-        "（・∀・）ﾉ", "(ノ∀`)", "(ノ∀｀)σ", "(σ´∀`)σ", "(σ´∀`)", "(´ﾟДﾟ`)",
-        "(;ﾟДﾟ`)", "(´ﾟдﾟ`)", "(;ﾟдﾟ`)"
-    )
-)
-
 data class PostPage(
     val fid: Int? = null,
     val resto: Int? = null,
@@ -121,6 +107,7 @@ data class PostPage(
         }
         val state by viewModel.state.collectAsStateWithLifecycle()
         val snackbarHostState = remember { SnackbarHostState() }
+        val scrollState = rememberScrollState()
 
         LaunchedEffect(Unit) {
             viewModel.effect.collect { effect ->
@@ -133,171 +120,273 @@ data class PostPage(
 
         Scaffold(
             topBar = {
-                TopAppBar(
-                    title = {
-                        Text(
-                            if (resto != null) stringResource(Res.string.post_page_reply)
-                            else stringResource(Res.string.post_page_new_post, state.forumName)
-                        )
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = { navigator.pop() }) {
-                            Icon(
-                                Icons.Default.ArrowBack,
-                                contentDescription = stringResource(Res.string.post_page_back)
-                            )
-                        }
-                    }
+                PostTopBar(
+                    title = if (resto != null) stringResource(Res.string.post_page_reply)
+                    else stringResource(Res.string.post_page_new_post, state.forumName),
+                    isSending = state.isLoading,
+                    canSend = state.content.text.isNotBlank() && !state.isLoading,
+                    onBack = { navigator.pop() },
+                    onSend = { viewModel.onEvent(PostContract.Event.Submit) }
                 )
             },
-            snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+            bottomBar = {
+                BottomEditorToolbar(
+                    showEmoticonPicker = state.showEmoticonPicker,
+                    showDiceInputs = state.showDiceInputs,
+                    onEvent = viewModel::onEvent
+                )
+            },
+            snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+            contentWindowInsets = WindowInsets.ime // Handle IME padding in Scaffold
         ) { innerPadding ->
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
-                    .padding(horizontal = Dimens.padding_large)
-                    .navigationBarsPadding()
-                    .imePadding(),
-                verticalArrangement = Arrangement.spacedBy(Dimens.padding_medium)
+                    .verticalScroll(scrollState)
             ) {
-                if (resto == null) { // Only show for new posts
-                    OutlinedTextField(
-                        value = state.postBody.name ?: "",
-                        onValueChange = { viewModel.onEvent(PostContract.Event.UpdateName(it)) },
-                        label = { Text(stringResource(Res.string.post_page_name_optional)) },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    OutlinedTextField(
+                if (resto == null) { // New Thread
+                    BorderlessTextField(
                         value = state.postBody.title ?: "",
                         onValueChange = { viewModel.onEvent(PostContract.Event.UpdateTitle(it)) },
-                        label = { Text(stringResource(Res.string.post_page_title_optional)) },
-                        modifier = Modifier.fillMaxWidth()
+                        placeholder = stringResource(Res.string.post_page_title_optional),
+                        singleLine = true,
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                     )
+                    HorizontalDivider(modifier = Modifier.padding(horizontal = Dimens.padding_large))
+                    BorderlessTextField(
+                        value = state.postBody.name ?: "",
+                        onValueChange = { viewModel.onEvent(PostContract.Event.UpdateName(it)) },
+                        placeholder = stringResource(Res.string.post_page_name_optional),
+                        singleLine = true,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    HorizontalDivider(modifier = Modifier.padding(horizontal = Dimens.padding_large))
                 }
-                OutlinedTextField(
+
+                // Main Content
+                BorderlessTextField(
                     value = state.content,
                     onValueChange = { viewModel.onEvent(PostContract.Event.UpdateContent(it)) },
+                    placeholder = stringResource(Res.string.post_page_content),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .weight(1f),
-                    label = { Text(stringResource(Res.string.post_page_content)) },
-                    isError = state.error != null,
-                    supportingText = {
-                        if (state.error != null) {
-                            Text(state.error!!)
-                        }
-                    }
+                        .heightIn(min = 200.dp),
+                    style = MaterialTheme.typography.bodyLarge
                 )
-                PostToolbar(
-                    showEmoticonPicker = state.showEmoticonPicker,
-                    showDiceInputs = state.showDiceInputs,
-                    onEvent = viewModel::onEvent
-                )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(Dimens.padding_large),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    val isImageSelected = state.image != null // Simulate image selection
 
-                    OutlinedButton(
-                        onClick = { /* TODO: Implement image picker */ },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Icon(Icons.Default.AddPhotoAlternate, contentDescription = null)
-                        Spacer(modifier = Modifier.size(Dimens.padding_small))
-                        Text(stringResource(Res.string.post_page_add_image))
-                    }
+                // Image Preview Area
+                if (state.image != null) { // Replace with actual image checking logic
+                    ImagePreviewSection(
+                        hasImage = state.image != null,
+                        watermarkEnabled = state.water,
+                        onToggleWatermark = { viewModel.onEvent(PostContract.Event.ToggleWater(it)) },
+                        onRemoveImage = { /* TODO: Implement remove image */ }
+                    )
+                }
 
-                    if (isImageSelected) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Checkbox(
-                                checked = state.water,
-                                onCheckedChange = {
-                                    viewModel.onEvent(PostContract.Event.ToggleWater(it))
-                                }
-                            )
-                            Text(stringResource(Res.string.post_page_watermark))
-                        }
-                    } else {
-                        Spacer(modifier = Modifier.weight(1f))
-                    }
-                }
-                Button(
-                    onClick = { viewModel.onEvent(PostContract.Event.Submit) },
-                    enabled = state.content.text.isNotBlank() && !state.isLoading,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = Dimens.padding_small)
-                ) {
-                    if (state.isLoading) {
-                        CircularProgressIndicator(modifier = Modifier.size(Dimens.icon_size_medium))
-                    } else {
-                        Icon(
-                            Icons.AutoMirrored.Filled.Send,
-                            contentDescription = stringResource(Res.string.post_page_send)
-                        )
-                        Spacer(modifier = Modifier.size(Dimens.padding_small))
-                        Text(stringResource(Res.string.post_page_send))
-                    }
-                }
+                Spacer(modifier = Modifier.height(Dimens.padding_large))
             }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun PostToolbar(
+private fun PostTopBar(
+    title: String,
+    isSending: Boolean,
+    canSend: Boolean,
+    onBack: () -> Unit,
+    onSend: () -> Unit
+) {
+    TopAppBar(
+        title = {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+        },
+        navigationIcon = {
+            IconButton(onClick = onBack) {
+                Icon(Icons.Default.Close, contentDescription = stringResource(Res.string.post_page_back))
+            }
+        },
+        actions = {
+            Button(
+                onClick = onSend,
+                enabled = canSend,
+                shape = CircleShape,
+                contentPadding = PaddingValues(horizontal = Dimens.padding_large),
+                modifier = Modifier.padding(end = Dimens.padding_small)
+            ) {
+                if (isSending) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                } else {
+                    Text(stringResource(Res.string.post_page_send))
+                }
+            }
+        }
+    )
+}
+
+@Composable
+private fun BorderlessTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    modifier: Modifier = Modifier,
+    singleLine: Boolean = false,
+    style: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.bodyLarge
+) {
+    TextField(
+        value = value,
+        onValueChange = onValueChange,
+        placeholder = { Text(placeholder, style = style, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)) },
+        modifier = modifier.fillMaxWidth(),
+        textStyle = style,
+        colors = TextFieldDefaults.colors(
+            focusedContainerColor = Color.Transparent,
+            unfocusedContainerColor = Color.Transparent,
+            disabledContainerColor = Color.Transparent,
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+            disabledIndicatorColor = Color.Transparent
+        ),
+        singleLine = singleLine
+    )
+}
+
+@Composable
+private fun BorderlessTextField(
+    value: androidx.compose.ui.text.input.TextFieldValue,
+    onValueChange: (androidx.compose.ui.text.input.TextFieldValue) -> Unit,
+    placeholder: String,
+    modifier: Modifier = Modifier,
+    style: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.bodyLarge
+) {
+    TextField(
+        value = value,
+        onValueChange = onValueChange,
+        placeholder = { Text(placeholder, style = style, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)) },
+        modifier = modifier.fillMaxWidth(),
+        textStyle = style,
+        colors = TextFieldDefaults.colors(
+            focusedContainerColor = Color.Transparent,
+            unfocusedContainerColor = Color.Transparent,
+            disabledContainerColor = Color.Transparent,
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+            disabledIndicatorColor = Color.Transparent
+        )
+    )
+}
+
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun ImagePreviewSection(
+    hasImage: Boolean,
+    watermarkEnabled: Boolean,
+    onToggleWatermark: (Boolean) -> Unit,
+    onRemoveImage: () -> Unit
+) {
+    Column(modifier = Modifier.padding(horizontal = Dimens.padding_large)) {
+        Box(
+            modifier = Modifier
+                .size(100.dp)
+                .clip(RoundedCornerShape(Dimens.corner_radius_medium))
+                .background(MaterialTheme.colorScheme.surfaceVariant) // Placeholder
+        ) {
+            Icon(
+                Icons.Default.Image,
+                contentDescription = null,
+                modifier = Modifier.align(Alignment.Center),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            IconButton(
+                onClick = onRemoveImage,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .size(24.dp)
+                    .background(Color.Black.copy(alpha = 0.5f), CircleShape)
+            ) {
+                Icon(
+                    Icons.Default.Close,
+                    contentDescription = "Remove Image",
+                    tint = Color.White,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(Dimens.padding_small))
+        FilterChip(
+            selected = watermarkEnabled,
+            onClick = { onToggleWatermark(!watermarkEnabled) },
+            label = { Text(stringResource(Res.string.post_page_watermark)) },
+            leadingIcon = if (watermarkEnabled) {
+                { Icon(Icons.Default.Image, contentDescription = null, modifier = Modifier.size(16.dp)) }
+            } else null
+        )
+    }
+}
+
+@Composable
+private fun BottomEditorToolbar(
     showEmoticonPicker: Boolean,
     showDiceInputs: Boolean,
     onEvent: (PostContract.Event) -> Unit
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(Dimens.padding_small)) {
+    Column {
+        // Toolbar Actions
         Surface(
-            shape = RoundedCornerShape(Dimens.corner_radius_medium),
-            tonalElevation = 2.dp
+            tonalElevation = 2.dp,
+            shadowElevation = 4.dp
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = Dimens.padding_extra_small),
-                horizontalArrangement = Arrangement.SpaceAround
+                    .padding(Dimens.padding_small)
+                    .navigationBarsPadding(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = {
-                    onEvent(PostContract.Event.InsertContent(BBCODE_CODE))
-                }) {
-                    Icon(
-                        Icons.Default.Code,
-                        contentDescription = stringResource(Res.string.post_page_insert_code)
-                    )
+                // Left Group: Formatting/Insert
+                Row {
+                    IconButton(onClick = { /* TODO: Image Picker */ }) {
+                        Icon(Icons.Default.AddPhotoAlternate, contentDescription = stringResource(Res.string.post_page_add_image))
+                    }
+                    IconButton(onClick = { onEvent(PostContract.Event.ToggleEmoticonPicker) }) {
+                        Icon(
+                            Icons.Default.EmojiEmotions,
+                            contentDescription = stringResource(Res.string.post_page_emoticon),
+                            tint = if (showEmoticonPicker) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                    IconButton(onClick = { onEvent(PostContract.Event.ToggleDiceInputs) }) {
+                        Icon(
+                            Icons.Outlined.Casino,
+                            contentDescription = stringResource(Res.string.post_page_dice),
+                            tint = if (showDiceInputs) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                        )
+                    }
                 }
-                IconButton(onClick = {
-                    onEvent(PostContract.Event.InsertContent(BBCODE_IMG))
-                }) {
-                    Icon(
-                        Icons.Default.Image,
-                        contentDescription = stringResource(Res.string.post_page_insert_image)
-                    )
-                }
-                IconButton(onClick = { onEvent(PostContract.Event.ToggleEmoticonPicker) }) {
-                    Icon(
-                        Icons.Default.EmojiEmotions,
-                        contentDescription = stringResource(Res.string.post_page_emoticon)
-                    )
-                }
-                IconButton(onClick = { onEvent(PostContract.Event.ToggleDiceInputs) }) {
-                    Icon(
-                        Icons.Outlined.Casino,
-                        contentDescription = stringResource(Res.string.post_page_dice)
-                    )
+
+                // Right Group: Advanced
+                Row {
+                     IconButton(onClick = { onEvent(PostContract.Event.InsertContent(BBCODE_CODE)) }) {
+                        Icon(Icons.Default.Code, contentDescription = stringResource(Res.string.post_page_insert_code))
+                    }
                 }
             }
         }
 
+        // Expanded Panels (Emoticon / Dice)
         AnimatedVisibility(visible = showEmoticonPicker) {
             EmoticonPicker(onEmoticonSelected = {
                 onEvent(PostContract.Event.InsertContent(it))
@@ -305,41 +394,57 @@ private fun PostToolbar(
         }
 
         AnimatedVisibility(visible = showDiceInputs) {
-            var start by remember { mutableStateOf("1") }
-            var end by remember { mutableStateOf("100") }
-            val isDiceInputValid = start.toIntOrNull() != null && end.toIntOrNull() != null
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = Dimens.padding_small),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(Dimens.padding_small)
-            ) {
-                OutlinedTextField(
-                    value = start,
-                    onValueChange = { value -> start = value.filter { it.isDigit() } },
-                    label = { Text(stringResource(Res.string.post_page_dice_start)) },
-                    modifier = Modifier.weight(1f),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                )
-                Text("-")
-                OutlinedTextField(
-                    value = end,
-                    onValueChange = { value -> end = value.filter { it.isDigit() } },
-                    label = { Text(stringResource(Res.string.post_page_dice_end)) },
-                    modifier = Modifier.weight(1f),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                )
-                Button(
-                    onClick = {
-                        onEvent(PostContract.Event.InsertContent("[$start-$end]"))
-                        onEvent(PostContract.Event.ToggleDiceInputs)
-                    },
-                    enabled = isDiceInputValid
-                ) {
-                    Text(stringResource(Res.string.post_page_dice_insert))
+            DiceInputPanel(
+                onInsert = { start, end ->
+                     onEvent(PostContract.Event.InsertContent("[$start-$end]"))
+                     onEvent(PostContract.Event.ToggleDiceInputs)
                 }
+            )
+        }
+    }
+}
+
+@Composable
+private fun DiceInputPanel(onInsert: (String, String) -> Unit) {
+    var start by remember { mutableStateOf("1") }
+    var end by remember { mutableStateOf("100") }
+    val isDiceInputValid = start.toIntOrNull() != null && end.toIntOrNull() != null
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surface)
+            .padding(Dimens.padding_medium)
+            .navigationBarsPadding()
+    ) {
+        Text(stringResource(Res.string.post_page_dice), style = MaterialTheme.typography.titleSmall)
+        Spacer(modifier = Modifier.height(Dimens.padding_small))
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Dimens.padding_small)
+        ) {
+            OutlinedTextField(
+                value = start,
+                onValueChange = { value -> start = value.filter { it.isDigit() } },
+                label = { Text(stringResource(Res.string.post_page_dice_start)) },
+                modifier = Modifier.weight(1f),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                singleLine = true
+            )
+            Text("-")
+            OutlinedTextField(
+                value = end,
+                onValueChange = { value -> end = value.filter { it.isDigit() } },
+                label = { Text(stringResource(Res.string.post_page_dice_end)) },
+                modifier = Modifier.weight(1f),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                singleLine = true
+            )
+            Button(
+                onClick = { onInsert(start, end) },
+                enabled = isDiceInputValid
+            ) {
+                Text(stringResource(Res.string.post_page_dice_insert))
             }
         }
     }
@@ -348,9 +453,13 @@ private fun PostToolbar(
 @Composable
 private fun EmoticonPicker(onEmoticonSelected: (String) -> Unit) {
     var selectedTabIndex by remember { mutableStateOf(0) }
-    val titles = EMOTICON_GROUPS.keys.toList()
+    val titles = EmoticonData.GROUPS.keys.toList()
 
-    Column {
+    Column(
+        modifier = Modifier
+            .background(MaterialTheme.colorScheme.surface)
+            .navigationBarsPadding()
+    ) {
         TabRow(selectedTabIndex = selectedTabIndex) {
             titles.forEachIndexed { index, title ->
                 Tab(
@@ -360,22 +469,23 @@ private fun EmoticonPicker(onEmoticonSelected: (String) -> Unit) {
                 )
             }
         }
-        Box(modifier = Modifier.heightIn(max = 300.dp)) {
+        Box(modifier = Modifier.heightIn(max = 250.dp)) {
             LazyVerticalGrid(
-                columns = GridCells.Adaptive(minSize = 50.dp),
+                columns = GridCells.Adaptive(minSize = 60.dp),
                 contentPadding = PaddingValues(Dimens.padding_small)
             ) {
-                items(EMOTICON_GROUPS.values.toList()[selectedTabIndex]) { emoticon ->
+                items(EmoticonData.GROUPS.values.toList()[selectedTabIndex]) { emoticon ->
                     Box(
                         contentAlignment = Alignment.Center,
                         modifier = Modifier
                             .clip(RoundedCornerShape(Dimens.corner_radius_medium))
                             .clickable { onEmoticonSelected(emoticon) }
-                            .padding(Dimens.padding_extra_small)
+                            .padding(Dimens.padding_small)
                     ) {
                         Text(
                             text = emoticon,
-                            modifier = Modifier.padding(Dimens.padding_extra_small)
+                            style = MaterialTheme.typography.bodyMedium,
+                            maxLines = 1
                         )
                     }
                 }
