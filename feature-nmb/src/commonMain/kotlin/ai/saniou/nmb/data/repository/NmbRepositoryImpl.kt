@@ -294,4 +294,15 @@ class NmbRepositoryImpl(
             Result.failure(e)
         }
     }
+
+    override suspend fun getTrendThread(page: Int): Result<Thread> {
+        return try {
+            when (val response = nmbXdApi.getTrendThread(page = page.toLong())) {
+                is SaniouResponse.Success -> Result.success(response.data)
+                is SaniouResponse.Error -> Result.failure(response.ex)
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

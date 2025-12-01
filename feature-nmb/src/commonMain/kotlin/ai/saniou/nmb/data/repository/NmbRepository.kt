@@ -61,4 +61,6 @@ interface NmbRepository {
     ): Flow<PagingData<ThreadReply>>
 
     suspend fun getThreadRepliesByPage(threadId: Long, page: Int): Result<List<ThreadReply>>
+
+    suspend fun getTrendThread(page: Int): Result<Thread>
 }

@@ -6,6 +6,7 @@ import ai.saniou.nmb.di.nmbdi
 import ai.saniou.nmb.workflow.history.HistoryPage
 import ai.saniou.nmb.workflow.subscription.SubscriptionPage
 import ai.saniou.nmb.workflow.thread.ThreadPage
+import ai.saniou.nmb.workflow.trend.TrendPage
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -70,6 +71,7 @@ data class HomeScreen(val di: DI = nmbdi) : Screen {
 
                 when (currentDestination) {
                     AppDestinations.HOME -> HomePage()
+                    AppDestinations.TREND -> TrendPage().Content()
                     AppDestinations.FAVORITES -> SubscriptionPage(onThreadClicked = {
                         navigator.push(ThreadPage(it))
                     }).Content()

@@ -38,10 +38,17 @@ fun LoadEndIndicator(onClick: (() -> Unit)? = null) {
 }
 
 @Composable
-fun LoadingFailedIndicator() {
+fun LoadingFailedIndicator(modifier: Modifier = Modifier, onClick: (() -> Unit)? = null) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
+            .run {
+                if (onClick != null) {
+                    this.clickable(onClick = onClick)
+                } else {
+                    this
+                }
+            }
             .padding(Dimens.padding_medium),
         contentAlignment = Alignment.Center
     ) {

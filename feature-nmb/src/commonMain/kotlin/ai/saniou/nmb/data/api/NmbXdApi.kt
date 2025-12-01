@@ -156,9 +156,6 @@ interface NmbXdApi {
     suspend fun postThread(
         @Part("fid") fid: Int,
         @Part("content") content: String,
-        @Part("name") name: String? = null,
-        @Part("title") title: String? = null,
-        @Part("water") water: String? = null,
         @Part("") parts: List<PartData> = emptyList()
     ): String
 
@@ -170,9 +167,6 @@ interface NmbXdApi {
     suspend fun postReply(
         @Part("resto") resto: Int,
         @Part("content") content: String,
-        @Part("name") name: String? = null,
-        @Part("title") title: String? = null,
-        @Part("water") water: String? = null,
         @Part("") parts: List<PartData> = emptyList()
     ): String
 

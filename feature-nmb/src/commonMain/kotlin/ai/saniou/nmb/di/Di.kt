@@ -45,6 +45,7 @@ import ai.saniou.nmb.workflow.post.PostViewModel
 import ai.saniou.nmb.workflow.reference.ReferenceViewModel
 import ai.saniou.nmb.workflow.subscription.SubscriptionViewModel
 import ai.saniou.nmb.workflow.thread.ThreadViewModel
+import ai.saniou.nmb.workflow.trend.TrendViewModel
 import ai.saniou.nmb.workflow.user.UserViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -174,6 +175,7 @@ val nmbdi = DI {
 
     bindProvider { NoticeUseCase(instance(), instance(), instance()) }
     bindProvider { HomeViewModel(instance()) }
+    bindProvider { TrendViewModel(instance(), instance()) }
     bindSingleton {
         CommonStorage(scope = CoroutineScope(Dispatchers.Default))
     }
