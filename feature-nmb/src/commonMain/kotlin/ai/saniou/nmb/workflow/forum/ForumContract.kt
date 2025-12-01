@@ -1,5 +1,6 @@
 package ai.saniou.nmb.workflow.forum
 
+import ai.saniou.nmb.data.entity.ForumDetail
 import ai.saniou.nmb.data.entity.ThreadWithInformation
 import app.cash.paging.PagingData
 import kotlinx.coroutines.flow.Flow
@@ -19,7 +20,9 @@ interface ForumContract {
      */
     data class State(
         val forumName: String = "",
-        val threads: Flow<PagingData<ThreadWithInformation>> = emptyFlow()
+        val forumDetail: ForumDetail? = null,
+        val threads: Flow<PagingData<ThreadWithInformation>> = emptyFlow(),
+        val showInfoDialog: Boolean = false
     )
 
     /**
@@ -40,6 +43,11 @@ interface ForumContract {
          * 跳转到指定页码
          */
         data class JumpToPage(val page: Int) : Event
+
+        /**
+         * 切换板块信息弹窗的显示状态
+         */
+        data class ToggleInfoDialog(val show: Boolean) : Event
     }
 
     /**

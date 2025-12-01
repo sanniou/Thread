@@ -11,16 +11,24 @@ import ai.saniou.nmb.workflow.home.ForumCategoryContract.Event
 import ai.saniou.nmb.workflow.subscription.SubscriptionPage
 import ai.saniou.nmb.workflow.thread.ThreadPage
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -29,12 +37,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerState
@@ -56,6 +66,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
@@ -143,20 +154,38 @@ data class ForumCategoryPage(
                                             )
                                         }
 
-                                        if (state.expandedCategoryId == category.id) {
-                                            items(category.forums, key = { it.id +it.fGroup }) { forum ->
-                                                ForumItem(
-                                                    forum = forum,
-                                                    isSelected = state.currentForum?.id == forum.id,
-                                                    isFavorite = state.favoriteForumIds.contains(forum.id),
-                                                    onForumClick = {
-                                                        viewModel.onEvent(Event.SelectForum(forum))
-                                                        scope.launch { drawerState.close() }
-                                                    },
-                                                    onFavoriteToggle = {
-                                                        viewModel.onEvent(Event.ToggleFavorite(forum))
+                                        item(key = "content_${category.id}") {
+                                            AnimatedVisibility(
+                                                visible = state.expandedCategoryId == category.id,
+                                                enter = expandVertically() + fadeIn(),
+                                                exit = shrinkVertically() + fadeOut()
+                                            ) {
+                                                Column {
+                                                    category.forums.forEach { forum ->
+                                                        ForumItem(
+                                                            forum = forum,
+                                                            isSelected = state.currentForum?.id == forum.id,
+                                                            isFavorite = state.favoriteForumIds.contains(
+                                                                forum.id
+                                                            ),
+                                                            onForumClick = {
+                                                                viewModel.onEvent(
+                                                                    Event.SelectForum(
+                                                                        forum
+                                                                    )
+                                                                )
+                                                                scope.launch { drawerState.close() }
+                                                            },
+                                                            onFavoriteToggle = {
+                                                                viewModel.onEvent(
+                                                                    Event.ToggleFavorite(
+                                                                        forum
+                                                                    )
+                                                                )
+                                                            }
+                                                        )
                                                     }
-                                                )
+                                                }
                                             }
                                         }
                                     }
@@ -214,7 +243,7 @@ data class ForumCategoryPage(
         }
     }
 
-    @OptIn(ExperimentalFoundationApi::class)
+    @OptIn(ExperimentalFoundationApi::class, ExperimentalLayoutApi::class)
     @Composable
     private fun ForumItem(
         forum: ai.saniou.nmb.data.entity.ForumDetail,
@@ -245,16 +274,61 @@ data class ForumCategoryPage(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = if (forum.showName.isNullOrBlank()) forum.name else forum.showName,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = contentColor,
-                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = if (forum.showName.isNullOrBlank()) forum.name else forum.showName,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = contentColor,
+                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+                    )
+
+                    // 状态图标
+                    if (forum.autoDelete != null && forum.autoDelete > 0) {
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "限时",
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(12.dp)
+                        )
+                    }
+                }
+
+                // 版规摘要 & 元数据
+                if (!forum.msg.isBlank() || forum.threadCount != null) {
+                    Spacer(modifier = Modifier.height(2.dp))
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        if (forum.threadCount != null) {
+                            Text(
+                                text = "${forum.threadCount} 串",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.outline,
+                                fontSize = MaterialTheme.typography.labelSmall.fontSize
+                            )
+                        }
+
+                        // 简略显示 msg，去除 HTML 标签
+                        val cleanMsg = forum.msg.replace(Regex("<[^>]*>"), "").trim()
+                        if (cleanMsg.isNotBlank()) {
+                            Text(
+                                text = cleanMsg,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                fontSize = MaterialTheme.typography.labelSmall.fontSize,
+                                modifier = Modifier.weight(1f, fill = false) // 防止挤占
+                            )
+                        }
+                    }
+                }
             }
 
             IconButton(onClick = onFavoriteToggle) {
-                 Icon(
+                Icon(
                     imageVector = if (isFavorite) Icons.Default.Star else Icons.Outlined.StarBorder,
                     contentDescription = if (isFavorite) "取消收藏" else "收藏",
                     tint = if (isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,

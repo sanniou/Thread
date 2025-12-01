@@ -1,6 +1,8 @@
 package ai.saniou.nmb.domain
 
+import ai.saniou.nmb.data.entity.ForumDetail
 import ai.saniou.nmb.data.entity.ThreadWithInformation
+import ai.saniou.nmb.data.entity.toForumDetail
 import ai.saniou.nmb.data.repository.DataPolicy
 import ai.saniou.nmb.data.repository.NmbRepository
 import ai.saniou.nmb.db.Database
@@ -26,4 +28,7 @@ class ForumUseCase(
 
     fun getForumName(fid: Long): String =
         db.forumQueries.getForum(fid).executeAsOneOrNull()?.name ?: "未知版面"
+
+    fun getForumDetail(fid: Long): ForumDetail? =
+        db.forumQueries.getForum(fid).executeAsOneOrNull()?.toForumDetail()
 }

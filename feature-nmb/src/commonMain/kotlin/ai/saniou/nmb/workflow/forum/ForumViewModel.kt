@@ -56,7 +56,8 @@ class ForumViewModel(
         _state.update {
             it.copy(
                 threads = threads,
-                forumName = forumUseCase.getForumName(forumId)
+                forumName = forumUseCase.getForumName(forumId),
+                forumDetail = forumUseCase.getForumDetail(forumId)
             )
         }
     }
@@ -73,6 +74,9 @@ class ForumViewModel(
             }
             is Event.JumpToPage -> {
                 loadParams.update { it.copy(page = event.page) }
+            }
+            is Event.ToggleInfoDialog -> {
+                _state.update { it.copy(showInfoDialog = event.show) }
             }
         }
     }
