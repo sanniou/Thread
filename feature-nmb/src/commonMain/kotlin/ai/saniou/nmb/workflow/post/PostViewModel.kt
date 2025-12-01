@@ -74,6 +74,9 @@ class PostViewModel(
             Event.ToggleDiceInputs -> _state.update {
                it.copy(showDiceInputs = !it.showDiceInputs)
             }
+            Event.ToggleMoreOptions -> _state.update {
+                it.copy(showMoreOptions = !it.showMoreOptions)
+            }
             Event.Submit -> submit()
         }
     }

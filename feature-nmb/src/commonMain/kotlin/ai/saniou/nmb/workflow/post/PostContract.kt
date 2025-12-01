@@ -15,7 +15,8 @@ interface PostContract {
         val image: PartData? = null,
         val water: Boolean = false,
         val showEmoticonPicker: Boolean = false,
-        val showDiceInputs: Boolean = false
+        val showDiceInputs: Boolean = false,
+        val showMoreOptions: Boolean = false,
     )
 
     sealed interface Event {
@@ -27,6 +28,7 @@ interface PostContract {
         data class ToggleWater(val water: Boolean) : Event
         data object ToggleEmoticonPicker : Event
         data object ToggleDiceInputs : Event
+        data object ToggleMoreOptions : Event
         data object Submit : Event
     }
 
