@@ -244,9 +244,10 @@ private fun parseTag(tagString: String): HtmlTag {
 private fun HtmlTag.toSpanStyle(currentStyle: SpanStyle, linkColor: Color): SpanStyle {
     var newStyle = currentStyle
     when (name) {
-        "b" -> newStyle = newStyle.copy(fontWeight = FontWeight.Bold)
-        "i" -> newStyle = newStyle.copy(fontStyle = FontStyle.Italic)
+        "b", "strong" -> newStyle = newStyle.copy(fontWeight = FontWeight.Bold)
+        "i", "em" -> newStyle = newStyle.copy(fontStyle = FontStyle.Italic)
         "u" -> newStyle = newStyle.copy(textDecoration = TextDecoration.Underline)
+        "s", "strike", "del" -> newStyle = newStyle.copy(textDecoration = TextDecoration.LineThrough)
         "font" -> {
             val color = attributes["color"]?.let(::parseColorValue)
             if (color != null) {
@@ -274,6 +275,22 @@ private fun decodeHtmlEntities(text: String): String {
         .replace("&quot;", "\"")
         .replace("&#39;", "'")
         .replace("&nbsp;", " ")
+        // 常见符号
+        .replace("&bull;", "•")
+        .replace("&middot;", "·")
+        .replace("&copy;", "©")
+        .replace("&reg;", "®")
+        .replace("&trade;", "™")
+        // 标点符号
+        .replace("&ndash;", "–")
+        .replace("&mdash;", "—")
+        .replace("&lsquo;", "‘")
+        .replace("&rsquo;", "’")
+        .replace("&ldquo;", "“")
+        .replace("&rdquo;", "”")
+        // 字体标签和换行标签
+        .replace(Regex("</?font[^>]*>", RegexOption.IGNORE_CASE), "")
+        .replace(Regex("<br\\s*/?>", RegexOption.IGNORE_CASE), "\n")
 }
 
 private fun parseColorValue(color: String): Color? {

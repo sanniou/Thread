@@ -79,14 +79,8 @@ class TrendUseCase(
                 ""
             }
 
-            // Remove <br /> tags and font tags for cleaner preview text
-            contentPreview = contentPreview
-                .replace(Regex("</?font[^>]*>", RegexOption.IGNORE_CASE), "")
-                .replace(Regex("<br\\s*/?>", RegexOption.IGNORE_CASE), "\n")
-                .replace("&gt;", ">")
-                .replace("&lt;", "<")
-                .replace("&amp;", "&")
-                .trim()
+            // Keep HTML tags and entities for RichText rendering
+            contentPreview = contentPreview.trim()
 
             items.add(TrendItem(rank, trendNum, forum, isNew, threadId, contentPreview))
         }

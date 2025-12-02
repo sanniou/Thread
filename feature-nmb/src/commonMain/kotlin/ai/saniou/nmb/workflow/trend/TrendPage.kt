@@ -1,6 +1,8 @@
 package ai.saniou.nmb.workflow.trend
 
+import ai.saniou.coreui.widgets.BlankLinePolicy
 import ai.saniou.coreui.widgets.PullToRefreshWrapper
+import ai.saniou.coreui.widgets.RichText
 import ai.saniou.coreui.widgets.VerticalSpacerSmall
 import ai.saniou.nmb.di.nmbdi
 import ai.saniou.nmb.ui.components.AppBarTitle
@@ -85,9 +87,11 @@ data class TrendPage(val di: DI = nmbdi) : Screen {
                     is Effect.ShowSnackbar -> {
                         snackbarHostState.showSnackbar(effect.message)
                     }
+
                     is Effect.NavigateToThread -> {
                         navigator.push(ThreadPage(effect.threadId))
                     }
+
                     is Effect.ShowInfoDialog -> {
                         sourceUrl = effect.url
                         showSourceDialog = true
@@ -206,7 +210,7 @@ data class TrendPage(val di: DI = nmbdi) : Screen {
     @Composable
     fun TrendItemCard(
         item: TrendItem,
-        onClick: () -> Unit
+        onClick: () -> Unit,
     ) {
         Card(
             modifier = Modifier
@@ -259,7 +263,7 @@ data class TrendPage(val di: DI = nmbdi) : Screen {
                         )
 
                         if (item.isNew) {
-                             Text(
+                            Text(
                                 text = "NEW",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.error,
@@ -270,13 +274,13 @@ data class TrendPage(val di: DI = nmbdi) : Screen {
 
                     VerticalSpacerSmall()
 
-                    Text(
+                    RichText(
                         text = item.content,
+                        blankLinePolicy = BlankLinePolicy.REMOVE,
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 4,
                         overflow = TextOverflow.Ellipsis,
-                        lineHeight = 1.5.em
                     )
 
                     VerticalSpacerSmall()
