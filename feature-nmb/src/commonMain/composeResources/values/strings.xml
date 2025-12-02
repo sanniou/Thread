@@ -59,5 +59,12 @@
     <string name="post_page_dice_start">起点</string>
     <string name="post_page_dice_end">终点</string>
     <string name="post_page_dice_insert">插入</string>
+    <string name="post_page_send_confirm_title">确认发送</string>
+    <string name="post_page_send_confirm_message">您确定要发送这篇内容吗？</string>
+    <string name="post_page_send_confirm_yes">确认</string>
+    <string name="post_page_send_confirm_no">取消</string>
+    <string name="post_page_error_title">发送失败</string>
+    <string name="post_page_error_ok">确定</string>
+    <string name="post_page_success">发送成功</string>
 
 </resources>

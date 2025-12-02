@@ -77,13 +77,19 @@ class PostViewModel(
             Event.ToggleMoreOptions -> _state.update {
                 it.copy(showMoreOptions = !it.showMoreOptions)
             }
+            Event.ToggleConfirmDialog -> _state.update {
+                it.copy(showConfirmDialog = !it.showConfirmDialog)
+            }
+            Event.ClearError -> _state.update {
+                it.copy(error = null)
+            }
             Event.Submit -> submit()
         }
     }
 
     private fun submit() {
         screenModelScope.launch {
-            _state.update { it.copy(isLoading = true) }
+            _state.update { it.copy(isLoading = true, showConfirmDialog = false) }
             try {
                 val s = _state.value
                 val responseHtml = if (resto != null) {
@@ -111,15 +117,14 @@ class PostViewModel(
                 val error = extractError(responseHtml)
                 if (error != null) {
                     _state.update { it.copy(isLoading = false, error = error) }
-                    _effect.emit(Effect.ShowSnackbar("发布失败: $error"))
+                    // Error is now handled by State and Dialog, removing duplicate snackbar
                 } else {
                     _state.update { it.copy(isLoading = false, isSuccess = true) }
-                    _effect.emit(Effect.ShowSnackbar("发布成功"))
+                    kotlinx.coroutines.delay(1500) // Keep success state for a while
                     _effect.emit(Effect.NavigateBack)
                 }
             } catch (e: Exception) {
                 _state.update { it.copy(isLoading = false, error = e.message) }
-                _effect.emit(Effect.ShowSnackbar("发布失败: ${e.message}"))
             }
         }
     }

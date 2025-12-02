@@ -40,6 +40,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddPhotoAlternate
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.EmojiEmotions
@@ -56,6 +57,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -106,7 +108,7 @@ private const val BBCODE_IMG = "[img][/img]"
 data class PostPage(
     val fid: Int? = null,
     val resto: Int? = null,
-    val forumName: String? = null
+    val forumName: String? = null,
 ) : Screen {
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
@@ -134,15 +136,54 @@ data class PostPage(
             contentFocusRequester.requestFocus()
         }
 
+        if (state.showConfirmDialog) {
+            androidx.compose.material3.AlertDialog(
+                onDismissRequest = { viewModel.onEvent(PostContract.Event.ToggleConfirmDialog) },
+                title = { Text(text = stringResource(Res.string.post_page_send_confirm_title)) },
+                text = { Text(text = stringResource(Res.string.post_page_send_confirm_message)) },
+                confirmButton = {
+                    TextButton(
+                        onClick = { viewModel.onEvent(PostContract.Event.Submit) }
+                    ) {
+                        Text(stringResource(Res.string.post_page_send_confirm_yes))
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { viewModel.onEvent(PostContract.Event.ToggleConfirmDialog) }
+                    ) {
+                        Text(stringResource(Res.string.post_page_send_confirm_no))
+                    }
+                }
+            )
+        }
+
+        if (state.error != null) {
+            androidx.compose.material3.AlertDialog(
+                onDismissRequest = { viewModel.onEvent(PostContract.Event.ClearError) },
+                title = { Text(text = stringResource(Res.string.post_page_error_title)) },
+                text = { Text(text = state.error!!) },
+                confirmButton = {
+                    TextButton(
+                        onClick = { viewModel.onEvent(PostContract.Event.ClearError) }
+                    ) {
+                        Text(stringResource(Res.string.post_page_error_ok))
+                    }
+                },
+                icon = { Icon(Icons.Default.Close, contentDescription = null) }
+            )
+        }
+
         Scaffold(
             topBar = {
                 PostTopBar(
                     title = if (resto != null) stringResource(Res.string.post_page_reply)
                     else stringResource(Res.string.post_page_new_post, state.forumName),
                     isSending = state.isLoading,
-                    canSend = state.content.text.isNotBlank() && !state.isLoading,
+                    isSuccess = state.isSuccess,
+                    canSend = state.content.text.isNotBlank() && !state.isLoading && !state.isSuccess,
                     onBack = { navigator.pop() },
-                    onSend = { viewModel.onEvent(PostContract.Event.Submit) }
+                    onSend = { viewModel.onEvent(PostContract.Event.ToggleConfirmDialog) }
                 )
             },
             bottomBar = {
@@ -156,351 +197,446 @@ data class PostPage(
             snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
             contentWindowInsets = WindowInsets.ime // Handle IME padding in Scaffold
         ) { innerPadding ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .verticalScroll(scrollState)
-            ) {
-                // Extended Options Header
-                AnimatedVisibility(visible = state.showMoreOptions) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-                            .padding(Dimens.padding_medium)
-                    ) {
-                         if (resto == null) { // New Thread Options
+            Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(scrollState)
+                ) {
+                    // Extended Options Header
+                    AnimatedVisibility(visible = state.showMoreOptions) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                                .padding(Dimens.padding_medium)
+                        ) {
+                            if (resto == null) { // New Thread Options
+                                OutlinedTextField(
+                                    value = state.postBody.title ?: "",
+                                    onValueChange = {
+                                        viewModel.onEvent(
+                                            PostContract.Event.UpdateTitle(
+                                                it
+                                            )
+                                        )
+                                    },
+                                    label = { Text(stringResource(Res.string.post_page_title_optional)) },
+                                    singleLine = true,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+                                )
+                                Spacer(modifier = Modifier.height(Dimens.padding_small))
+                            }
                             OutlinedTextField(
-                                value = state.postBody.title ?: "",
-                                onValueChange = { viewModel.onEvent(PostContract.Event.UpdateTitle(it)) },
-                                label = { Text(stringResource(Res.string.post_page_title_optional)) },
+                                value = state.postBody.name ?: "",
+                                onValueChange = { viewModel.onEvent(PostContract.Event.UpdateName(it)) },
+                                label = { Text(stringResource(Res.string.post_page_name_optional)) },
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth(),
                                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
                             )
-                            Spacer(modifier = Modifier.height(Dimens.padding_small))
                         }
-                        OutlinedTextField(
-                            value = state.postBody.name ?: "",
-                            onValueChange = { viewModel.onEvent(PostContract.Event.UpdateName(it)) },
-                            label = { Text(stringResource(Res.string.post_page_name_optional)) },
-                            singleLine = true,
-                            modifier = Modifier.fillMaxWidth(),
-                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
-                        )
                     }
-                }
 
-                // Main Content
-                BorderlessTextField(
-                    value = state.content,
-                    onValueChange = { viewModel.onEvent(PostContract.Event.UpdateContent(it)) },
-                    placeholder = stringResource(Res.string.post_page_content),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 200.dp)
-                        .focusRequester(contentFocusRequester),
-                    style = MaterialTheme.typography.bodyLarge
-                )
-
-                // Image Preview Area
-                if (state.image != null) {
-                    ImagePreviewSection(
-                        hasImage = state.image != null,
-                        watermarkEnabled = state.water,
-                        onToggleWatermark = { viewModel.onEvent(PostContract.Event.ToggleWater(it)) },
-                        onRemoveImage = { /* TODO: Implement remove image */ }
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(Dimens.padding_large))
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun PostTopBar(
-    title: String,
-    isSending: Boolean,
-    canSend: Boolean,
-    onBack: () -> Unit,
-    onSend: () -> Unit
-) {
-    TopAppBar(
-        title = {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Medium
-            )
-        },
-        navigationIcon = {
-            IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(Res.string.post_page_back))
-            }
-        },
-        actions = {
-            if (isSending) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(24.dp).padding(end = 16.dp),
-                    strokeWidth = 2.dp,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            } else {
-                TextButton(
-                    onClick = onSend,
-                    enabled = canSend,
-                ) {
-                    Text(
-                        stringResource(Res.string.post_page_send),
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.titleSmall
-                    )
-                }
-            }
-        }
-    )
-}
-
-@Composable
-private fun BorderlessTextField(
-    value: androidx.compose.ui.text.input.TextFieldValue,
-    onValueChange: (androidx.compose.ui.text.input.TextFieldValue) -> Unit,
-    placeholder: String,
-    modifier: Modifier = Modifier,
-    style: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.bodyLarge
-) {
-    TextField(
-        value = value,
-        onValueChange = onValueChange,
-        placeholder = { Text(placeholder, style = style, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)) },
-        modifier = modifier.fillMaxWidth(),
-        textStyle = style,
-        colors = TextFieldDefaults.colors(
-            focusedContainerColor = Color.Transparent,
-            unfocusedContainerColor = Color.Transparent,
-            disabledContainerColor = Color.Transparent,
-            focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent,
-            disabledIndicatorColor = Color.Transparent
-        )
-    )
-}
-
-
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun ImagePreviewSection(
-    hasImage: Boolean,
-    watermarkEnabled: Boolean,
-    onToggleWatermark: (Boolean) -> Unit,
-    onRemoveImage: () -> Unit
-) {
-    Column(modifier = Modifier.padding(horizontal = Dimens.padding_large)) {
-        Box(
-            modifier = Modifier
-                .size(100.dp)
-                .clip(RoundedCornerShape(Dimens.corner_radius_medium))
-                .background(MaterialTheme.colorScheme.surfaceVariant) // Placeholder
-        ) {
-            Icon(
-                Icons.Default.Image,
-                contentDescription = null,
-                modifier = Modifier.align(Alignment.Center),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            IconButton(
-                onClick = onRemoveImage,
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .size(24.dp)
-                    .background(Color.Black.copy(alpha = 0.5f), CircleShape)
-            ) {
-                Icon(
-                    Icons.Default.Close,
-                    contentDescription = "Remove Image",
-                    tint = Color.White,
-                    modifier = Modifier.size(16.dp)
-                )
-            }
-        }
-        Spacer(modifier = Modifier.height(Dimens.padding_small))
-        FilterChip(
-            selected = watermarkEnabled,
-            onClick = { onToggleWatermark(!watermarkEnabled) },
-            label = { Text(stringResource(Res.string.post_page_watermark)) },
-            leadingIcon = if (watermarkEnabled) {
-                { Icon(Icons.Default.Image, contentDescription = null, modifier = Modifier.size(16.dp)) }
-            } else null
-        )
-    }
-}
-
-@Composable
-private fun BottomEditorToolbar(
-    showEmoticonPicker: Boolean,
-    showDiceInputs: Boolean,
-    showMoreOptions: Boolean,
-    onEvent: (PostContract.Event) -> Unit
-) {
-    val focusManager = LocalFocusManager.current
-
-    Column {
-        // Toolbar Actions
-        Surface(
-            tonalElevation = 2.dp,
-            shadowElevation = 4.dp
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = Dimens.padding_small, vertical = 4.dp)
-                    .navigationBarsPadding(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Left Group: Functional
-                Row {
-                     IconButton(onClick = { onEvent(PostContract.Event.ToggleMoreOptions) }) {
-                        Icon(
-                            if(showMoreOptions) Icons.Default.KeyboardArrowDown else Icons.Default.Add,
-                            contentDescription = "More Options",
-                             tint = if (showMoreOptions) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                    IconButton(onClick = { /* TODO: Image Picker */ }) {
-                        Icon(Icons.Default.AddPhotoAlternate, contentDescription = stringResource(Res.string.post_page_add_image))
-                    }
-                    IconButton(onClick = { onEvent(PostContract.Event.ToggleEmoticonPicker) }) {
-                        Icon(
-                            Icons.Default.EmojiEmotions,
-                            contentDescription = stringResource(Res.string.post_page_emoticon),
-                            tint = if (showEmoticonPicker) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                }
-
-                // Right Group: Keyboard Control
-                 IconButton(onClick = { focusManager.clearFocus() }) {
-                    Icon(Icons.Default.KeyboardHide, contentDescription = "Hide Keyboard")
-                }
-            }
-        }
-
-        // Expanded Panels (Emoticon / Dice / More)
-        // Note: Dice inputs are now folded into "More Options" logic or a separate dialog in a full implementation,
-        // but for now keeping compatible with ViewModel state, but accessed differently if needed.
-        // Or we can keep dice in the toolbar if it's high frequency. Let's put Dice back in toolbar for now but cleaner.
-
-        AnimatedVisibility(visible = showEmoticonPicker) {
-            EmoticonPicker(onEmoticonSelected = {
-                onEvent(PostContract.Event.InsertContent(it))
-            })
-        }
-
-        // We can reuse the expanded area for Dice if needed, or put it in the "More Options" area at the top.
-        // For this refactor, I'll place Dice in the bottom area if triggered.
-        // But wait, I removed the Dice button from the main toolbar to simplify.
-        // Let's add it back to the "More" section conceptually, or just keep it hidden for now as requested "simplify toolbar".
-        // Actually, let's keep it but only show if requested.
-
-        AnimatedVisibility(visible = showDiceInputs) {
-            DiceInputPanel(
-                onInsert = { start, end ->
-                     onEvent(PostContract.Event.InsertContent("[$start-$end]"))
-                     onEvent(PostContract.Event.ToggleDiceInputs)
-                }
-            )
-        }
-    }
-}
-
-@Composable
-private fun DiceInputPanel(onInsert: (String, String) -> Unit) {
-    var start by remember { mutableStateOf("1") }
-    var end by remember { mutableStateOf("100") }
-    val isDiceInputValid = start.toIntOrNull() != null && end.toIntOrNull() != null
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surface)
-            .padding(Dimens.padding_medium)
-            .navigationBarsPadding()
-    ) {
-        Text(stringResource(Res.string.post_page_dice), style = MaterialTheme.typography.titleSmall)
-        Spacer(modifier = Modifier.height(Dimens.padding_small))
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(Dimens.padding_small)
-        ) {
-            OutlinedTextField(
-                value = start,
-                onValueChange = { value -> start = value.filter { it.isDigit() } },
-                label = { Text(stringResource(Res.string.post_page_dice_start)) },
-                modifier = Modifier.weight(1f),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                singleLine = true
-            )
-            Text("-")
-            OutlinedTextField(
-                value = end,
-                onValueChange = { value -> end = value.filter { it.isDigit() } },
-                label = { Text(stringResource(Res.string.post_page_dice_end)) },
-                modifier = Modifier.weight(1f),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                singleLine = true
-            )
-            Button(
-                onClick = { onInsert(start, end) },
-                enabled = isDiceInputValid
-            ) {
-                Text(stringResource(Res.string.post_page_dice_insert))
-            }
-        }
-    }
-}
-
-@Composable
-private fun EmoticonPicker(onEmoticonSelected: (String) -> Unit) {
-    var selectedTabIndex by remember { mutableStateOf(0) }
-    val titles = EmoticonData.GROUPS.keys.toList()
-
-    Column(
-        modifier = Modifier
-            .background(MaterialTheme.colorScheme.surface)
-            .navigationBarsPadding()
-    ) {
-        TabRow(selectedTabIndex = selectedTabIndex) {
-            titles.forEachIndexed { index, title ->
-                Tab(
-                    selected = selectedTabIndex == index,
-                    onClick = { selectedTabIndex = index },
-                    text = { Text(title) }
-                )
-            }
-        }
-        Box(modifier = Modifier.heightIn(max = 250.dp)) {
-            LazyVerticalGrid(
-                columns = GridCells.Adaptive(minSize = 60.dp),
-                contentPadding = PaddingValues(Dimens.padding_small)
-            ) {
-                items(EmoticonData.GROUPS.values.toList()[selectedTabIndex]) { emoticon ->
-                    Box(
-                        contentAlignment = Alignment.Center,
+                    // Main Content
+                    BorderlessTextField(
+                        value = state.content,
+                        onValueChange = { viewModel.onEvent(PostContract.Event.UpdateContent(it)) },
+                        placeholder = stringResource(Res.string.post_page_content),
                         modifier = Modifier
-                            .clip(RoundedCornerShape(Dimens.corner_radius_medium))
-                            .clickable { onEmoticonSelected(emoticon) }
-                            .padding(Dimens.padding_small)
+                            .fillMaxWidth()
+                            .heightIn(min = 200.dp)
+                            .focusRequester(contentFocusRequester),
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+
+                    // Image Preview Area
+                    if (state.image != null) {
+                        ImagePreviewSection(
+                            hasImage = state.image != null,
+                            watermarkEnabled = state.water,
+                            onToggleWatermark = {
+                                viewModel.onEvent(
+                                    PostContract.Event.ToggleWater(
+                                        it
+                                    )
+                                )
+                            },
+                            onRemoveImage = { viewModel.onEvent(PostContract.Event.UpdateImage(null)) }
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(Dimens.padding_large))
+                }
+
+                // Success Overlay
+                AnimatedVisibility(
+                    visible = state.isSuccess,
+                    modifier = Modifier.align(Alignment.Center),
+                    enter = androidx.compose.animation.fadeIn() + androidx.compose.animation.scaleIn(),
+                    exit = androidx.compose.animation.fadeOut() + androidx.compose.animation.scaleOut()
+                ) {
+                    Surface(
+                        shape = RoundedCornerShape(Dimens.corner_radius_large),
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        shadowElevation = 6.dp
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(Dimens.padding_large),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CheckCircle,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(48.dp)
+                            )
+                            Spacer(modifier = Modifier.height(Dimens.padding_medium))
+                            Text(
+                                text = stringResource(Res.string.post_page_success),
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
+                    }
+                }
+
+                // Loading Overlay
+                if (state.isLoading) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f))
+                            .clickable(enabled = false) {}, // Block interaction
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
+            }
+        }
+    }
+
+    @OptIn(ExperimentalMaterial3Api::class)
+    @Composable
+    private fun PostTopBar(
+        title: String,
+        isSending: Boolean,
+        isSuccess: Boolean,
+        canSend: Boolean,
+        onBack: () -> Unit,
+        onSend: () -> Unit,
+    ) {
+        TopAppBar(
+            title = {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Medium
+                )
+            },
+            navigationIcon = {
+                IconButton(onClick = onBack) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = stringResource(Res.string.post_page_back)
+                    )
+                }
+            },
+            actions = {
+                // Loading is now handled by full screen overlay, so we just keep the button state or hide it
+                if (!isSending && !isSuccess) {
+                    TextButton(
+                        onClick = onSend,
+                        enabled = canSend,
                     ) {
                         Text(
-                            text = emoticon,
-                            style = MaterialTheme.typography.bodyMedium,
-                            maxLines = 1
+                            stringResource(Res.string.post_page_send),
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.titleSmall
                         )
+                    }
+                }
+            }
+        )
+    }
+
+    @Composable
+    private fun BorderlessTextField(
+        value: androidx.compose.ui.text.input.TextFieldValue,
+        onValueChange: (androidx.compose.ui.text.input.TextFieldValue) -> Unit,
+        placeholder: String,
+        modifier: Modifier = Modifier,
+        style: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.bodyLarge,
+    ) {
+        TextField(
+            value = value,
+            onValueChange = onValueChange,
+            placeholder = {
+                Text(
+                    placeholder,
+                    style = style,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                )
+            },
+            modifier = modifier.fillMaxWidth(),
+            textStyle = style,
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = Color.Transparent,
+                unfocusedContainerColor = Color.Transparent,
+                disabledContainerColor = Color.Transparent,
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                disabledIndicatorColor = Color.Transparent
+            )
+        )
+    }
+
+
+    @OptIn(ExperimentalLayoutApi::class)
+    @Composable
+    private fun ImagePreviewSection(
+        hasImage: Boolean,
+        watermarkEnabled: Boolean,
+        onToggleWatermark: (Boolean) -> Unit,
+        onRemoveImage: () -> Unit,
+    ) {
+        Column(modifier = Modifier.padding(horizontal = Dimens.padding_large)) {
+            Box(
+                modifier = Modifier
+                    .size(100.dp)
+                    .clip(RoundedCornerShape(Dimens.corner_radius_medium))
+                    .background(MaterialTheme.colorScheme.surfaceVariant) // Placeholder
+            ) {
+                Icon(
+                    Icons.Default.Image,
+                    contentDescription = null,
+                    modifier = Modifier.align(Alignment.Center),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                IconButton(
+                    onClick = onRemoveImage,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .size(24.dp)
+                        .background(Color.Black.copy(alpha = 0.5f), CircleShape)
+                ) {
+                    Icon(
+                        Icons.Default.Close,
+                        contentDescription = "Remove Image",
+                        tint = Color.White,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(Dimens.padding_small))
+            FilterChip(
+                selected = watermarkEnabled,
+                onClick = { onToggleWatermark(!watermarkEnabled) },
+                label = { Text(stringResource(Res.string.post_page_watermark)) },
+                leadingIcon = if (watermarkEnabled) {
+                    {
+                        Icon(
+                            Icons.Default.Image,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                } else null
+            )
+        }
+    }
+
+    @Composable
+    private fun BottomEditorToolbar(
+        showEmoticonPicker: Boolean,
+        showDiceInputs: Boolean,
+        showMoreOptions: Boolean,
+        onEvent: (PostContract.Event) -> Unit,
+    ) {
+        val focusManager = LocalFocusManager.current
+
+        Column {
+            // Toolbar Actions
+            Surface(
+                tonalElevation = 3.dp,
+                shadowElevation = 4.dp,
+                color = MaterialTheme.colorScheme.surface
+            ) {
+                Column {
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = Dimens.padding_small, vertical = 8.dp)
+                            .navigationBarsPadding(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Left Group: Functional
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            IconButton(
+                                onClick = { onEvent(PostContract.Event.ToggleMoreOptions) },
+                                colors = IconButtonDefaults.iconButtonColors(
+                                    contentColor = if (showMoreOptions) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            ) {
+                                Icon(
+                                    if (showMoreOptions) Icons.Default.KeyboardArrowDown else Icons.Default.Add,
+                                    contentDescription = "More Options"
+                                )
+                            }
+                            IconButton(
+                                onClick = { /* TODO: Image Picker */ },
+                                colors = IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.onSurfaceVariant)
+                            ) {
+                                Icon(
+                                    Icons.Default.AddPhotoAlternate,
+                                    contentDescription = stringResource(Res.string.post_page_add_image)
+                                )
+                            }
+                            IconButton(
+                                onClick = { onEvent(PostContract.Event.ToggleEmoticonPicker) },
+                                colors = IconButtonDefaults.iconButtonColors(
+                                    contentColor = if (showEmoticonPicker) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            ) {
+                                Icon(
+                                    Icons.Default.EmojiEmotions,
+                                    contentDescription = stringResource(Res.string.post_page_emoticon)
+                                )
+                            }
+                        }
+
+                        // Right Group: Keyboard Control
+                        IconButton(
+                            onClick = { focusManager.clearFocus() },
+                            colors = IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.onSurfaceVariant)
+                        ) {
+                            Icon(Icons.Default.KeyboardHide, contentDescription = "Hide Keyboard")
+                        }
+                    }
+                }
+            }
+
+            // Expanded Panels (Emoticon / Dice / More)
+            // Note: Dice inputs are now folded into "More Options" logic or a separate dialog in a full implementation,
+            // but for now keeping compatible with ViewModel state, but accessed differently if needed.
+            // Or we can keep dice in the toolbar if it's high frequency. Let's put Dice back in toolbar for now but cleaner.
+
+            AnimatedVisibility(visible = showEmoticonPicker) {
+                EmoticonPicker(onEmoticonSelected = {
+                    onEvent(PostContract.Event.InsertContent(it))
+                })
+            }
+
+            // We can reuse the expanded area for Dice if needed, or put it in the "More Options" area at the top.
+            // For this refactor, I'll place Dice in the bottom area if triggered.
+            // But wait, I removed the Dice button from the main toolbar to simplify.
+            // Let's add it back to the "More" section conceptually, or just keep it hidden for now as requested "simplify toolbar".
+            // Actually, let's keep it but only show if requested.
+
+            AnimatedVisibility(visible = showDiceInputs) {
+                DiceInputPanel(
+                    onInsert = { start, end ->
+                        onEvent(PostContract.Event.InsertContent("[$start-$end]"))
+                        onEvent(PostContract.Event.ToggleDiceInputs)
+                    }
+                )
+            }
+        }
+    }
+
+    @Composable
+    private fun DiceInputPanel(onInsert: (String, String) -> Unit) {
+        var start by remember { mutableStateOf("1") }
+        var end by remember { mutableStateOf("100") }
+        val isDiceInputValid = start.toIntOrNull() != null && end.toIntOrNull() != null
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surface)
+                .padding(Dimens.padding_medium)
+                .navigationBarsPadding()
+        ) {
+            Text(
+                stringResource(Res.string.post_page_dice),
+                style = MaterialTheme.typography.titleSmall
+            )
+            Spacer(modifier = Modifier.height(Dimens.padding_small))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Dimens.padding_small)
+            ) {
+                OutlinedTextField(
+                    value = start,
+                    onValueChange = { value -> start = value.filter { it.isDigit() } },
+                    label = { Text(stringResource(Res.string.post_page_dice_start)) },
+                    modifier = Modifier.weight(1f),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true
+                )
+                Text("-")
+                OutlinedTextField(
+                    value = end,
+                    onValueChange = { value -> end = value.filter { it.isDigit() } },
+                    label = { Text(stringResource(Res.string.post_page_dice_end)) },
+                    modifier = Modifier.weight(1f),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true
+                )
+                Button(
+                    onClick = { onInsert(start, end) },
+                    enabled = isDiceInputValid
+                ) {
+                    Text(stringResource(Res.string.post_page_dice_insert))
+                }
+            }
+        }
+    }
+
+    @Composable
+    private fun EmoticonPicker(onEmoticonSelected: (String) -> Unit) {
+        var selectedTabIndex by remember { mutableStateOf(0) }
+        val titles = EmoticonData.GROUPS.keys.toList()
+
+        Column(
+            modifier = Modifier
+                .background(MaterialTheme.colorScheme.surface)
+                .navigationBarsPadding()
+        ) {
+            TabRow(selectedTabIndex = selectedTabIndex) {
+                titles.forEachIndexed { index, title ->
+                    Tab(
+                        selected = selectedTabIndex == index,
+                        onClick = { selectedTabIndex = index },
+                        text = { Text(title) }
+                    )
+                }
+            }
+            Box(modifier = Modifier.heightIn(max = 250.dp)) {
+                LazyVerticalGrid(
+                    columns = GridCells.Adaptive(minSize = 60.dp),
+                    contentPadding = PaddingValues(Dimens.padding_small)
+                ) {
+                    items(EmoticonData.GROUPS.values.toList()[selectedTabIndex]) { emoticon ->
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(Dimens.corner_radius_medium))
+                                .clickable { onEmoticonSelected(emoticon) }
+                                .padding(Dimens.padding_small)
+                        ) {
+                            Text(
+                                text = emoticon,
+                                style = MaterialTheme.typography.bodyMedium,
+                                maxLines = 1
+                            )
+                        }
                     }
                 }
             }

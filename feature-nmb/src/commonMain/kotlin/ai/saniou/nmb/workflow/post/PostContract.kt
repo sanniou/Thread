@@ -17,6 +17,7 @@ interface PostContract {
         val showEmoticonPicker: Boolean = false,
         val showDiceInputs: Boolean = false,
         val showMoreOptions: Boolean = false,
+        val showConfirmDialog: Boolean = false,
     )
 
     sealed interface Event {
@@ -29,6 +30,8 @@ interface PostContract {
         data object ToggleEmoticonPicker : Event
         data object ToggleDiceInputs : Event
         data object ToggleMoreOptions : Event
+        data object ToggleConfirmDialog : Event
+        data object ClearError : Event
         data object Submit : Event
     }
 

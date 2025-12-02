@@ -8,7 +8,10 @@ object Dimens {
     val padding_extra_large = 24.dp
     val padding_small = 8.dp
     val padding_extra_small = 4.dp
+
     val corner_radius_medium = 8.dp
+    val corner_radius_large = 12.dp
+
     val icon_size_small = 16.dp
     val icon_size_medium = 20.dp
 
