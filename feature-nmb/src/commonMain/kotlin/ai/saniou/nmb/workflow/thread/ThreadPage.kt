@@ -316,6 +316,11 @@ data class ThreadPage(
                 onDismiss = {
                     showReferencePopup = false
                     referenceViewModel.onEvent(ReferenceContract.Event.Clear)
+                },
+                onJumpToThread = { threadId ->
+                    showReferencePopup = false
+                    referenceViewModel.onEvent(ReferenceContract.Event.Clear)
+                    navigator.push(ThreadPage(threadId = threadId))
                 }
             )
         }

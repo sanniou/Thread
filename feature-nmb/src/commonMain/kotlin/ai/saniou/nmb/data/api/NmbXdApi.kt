@@ -133,8 +133,45 @@ interface NmbXdApi {
     /**
      * 查看引用 (HTML)
      *
-     * 作为 API 失败时的备选方案，或者需要获取原始 HTML 时使用。
-     * 对应 Dart 中的 fetchRefFromHtml
+     * api 无法提供 thread 信息，html 中可以获取
+     * href 中包含了 thread id
+     * <a href="/t/67475759?r=67475759&scrollInto=true" class="h-threads-info-id">No.67475759</a>
+     * <a href="?r=52946898&page=1&scrollInto=true" class="h-threads-info-id">No.52946898</a>
+     *
+     *
+     * <div class="h-threads-item">
+     *     <div data-threads-id="52946898" class="h-threads-item-reply h-threads-item-ref">
+     *     <div class="h-threads-item-reply-main">
+     *          <div class="h-threads-info">
+     *         <span class="h-threads-info-title">无标题</span>
+     *         <span class="h-threads-info-email" color="red">无名氏</span>
+     *                 <span class="h-threads-info-createdat">2022-10-25(二)10:09:25</span>
+     *         <span class="h-threads-info-uid">ID:<font color="red">Admin</font></span>
+     *                 <span class="h-threads-info-report-btn">[<a href="/f/值班室?r=52946898">举报</a>]</span>
+     *                 <a href="?r=52946898&page=1&scrollInto=true" class="h-threads-info-id">No.52946898</a>        <span data-uk-dropdown="data-uk-dropdown" class="h-admin-tool uk-button-dropdown"><a href="#" class="uk-button uk-button-link uk-button-small">管理</a>
+     *                  <div class="uk-dropdown uk-dropdown-small">
+     *                     <ul class="uk-nav uk-nav-dropdown">
+     *                     <li class="uk-nav-header">管理 -&gt; No.52946898</li>
+     *                     <li><a href="/Home/Forum/sagePost/id/52946898.html">SAGE</a></li>
+     *                     <li><a href="http://hacfun.tv:1336/content/threads/6187238/set?key=lock&amp;value=true">锁定</a></li><li class="uk-nav-divider"></li>
+     *                     <li><a href="http://hacfun.tv:1336/content/threads/6187238/removeImages">删图</a></li>
+     *                     <li><a href="/Home/Forum/delPost/id/52946898.html">删串</a></li>
+     *                     <li class="uk-nav-divider"></li>
+     *                     <li><a href="http://hacfun.tv:1336/content/threads/6187238/update">编辑</a></li>
+     *                     <li><a href="http://hacfun.tv:1336/content/threads?parent=6187238">查询</a></li>
+     *                     <li><a href="/Admin/Member/queryUser/cookie/Admin.html">Cookie查询</a></li>
+     *                     <li><a href="/Home/Forum/banip/id/52946898.html" class="qlink">锁IP</a>
+     *                     <li><a href="/Home/Forum/banCookie/id/52946898.html" class="qlink">锁Cookie</a>
+     *                     </ul>
+     *                  </div></span>
+     *      </div>
+     *     <div class="h-threads-content">
+     *         占位    </div>
+     *             <div class="uk-clearfix"></div>
+     *     </div>
+     *     </div>
+     * </div>
+     *
      */
     @GET("https://www.nmbxd1.com/Home/Forum/ref")
     suspend fun refHtml(

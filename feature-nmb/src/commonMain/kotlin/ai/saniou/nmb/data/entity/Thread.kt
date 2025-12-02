@@ -42,6 +42,7 @@ data class ThreadReply(
     override val img: String,
     override val ext: String,
     override val name: String,
+    val threadId: Long = 0,
 ) : IBaseAuthor, IThreadBody
 
 fun ThreadReply.toTable(threadId: Long, page: Long = Long.MIN_VALUE) =
@@ -76,6 +77,7 @@ fun ai.saniou.nmb.db.table.ThreadReply.toThreadReply() = ThreadReply(
     img = img,
     ext = ext,
     name = name,
+    threadId = threadId,
 )
 
 fun ai.saniou.nmb.db.table.Thread.toThread(query: ThreadReplyQueries? = null) = Thread(

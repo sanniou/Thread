@@ -46,7 +46,8 @@ fun ReferencePopup(
     reply: ThreadReply?,
     isLoading: Boolean,
     error: String?,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onJumpToThread: (Long) -> Unit = {}
 ) {
     Dialog(onDismissRequest = onDismiss) {
         Column(
@@ -133,6 +134,15 @@ fun ReferencePopup(
                                 onImageClick = { _, _ -> },
                                 onReferenceClick = null
                             )
+                            if (reply.threadId > 0) {
+                                Spacer(modifier = Modifier.height(12.dp))
+                                androidx.compose.material3.Button(
+                                    onClick = { onJumpToThread(reply.threadId) },
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text("跳转到原串")
+                                }
+                            }
                         }
                     }
 
