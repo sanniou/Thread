@@ -808,7 +808,7 @@ fun ThreadMainPost(
 
         // 头部信息
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -839,7 +839,7 @@ fun ThreadMainPost(
 
         // 底部操作栏
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(24.dp, Alignment.End),
             verticalAlignment = Alignment.CenterVertically
         ) {
