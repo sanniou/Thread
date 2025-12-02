@@ -151,7 +151,7 @@ interface NmbXdApi {
      *
      * 返回值为 HTML 格式的页面，可以直接复制到浏览器中打开。
      */
-    @POST("https://www.nmbxd.com/home/forum/doPostThread.html")
+    @POST("https://www.nmbxd1.com/home/forum/doPostThread.html")
     @Multipart
     suspend fun postThread(
         @Part("fid") fid: Int,
@@ -162,7 +162,7 @@ interface NmbXdApi {
     /**
      * 回复串
      */
-    @POST("https://www.nmbxd.com/home/forum/doReplyThread.html")
+    @POST("https://www.nmbxd1.com/home/forum/doReplyThread.html")
     @Multipart
     suspend fun postReply(
         @Part("resto") resto: Int,
@@ -233,13 +233,13 @@ interface NmbXdApi {
     /**
      * 获取验证码图片
      */
-    @GET("https://www.nmbxd.com/Member/User/Index/verify.html")
+    @GET("https://www.nmbxd1.com/Member/User/Index/verify.html")
     suspend fun getVerifyImage(): String
 
     /**
      * 用户登录
      */
-    @POST("httpsgetLatestTrend://www.nmbxd.com/Member/User/Index/login.html")
+    @POST("https://www.nmbxd1.com/Member/User/Index/login.html")
     suspend fun login(
         @Body request: LoginRequest
     ): LoginResponse
@@ -247,19 +247,19 @@ interface NmbXdApi {
     /**
      * 获取用户饼干列表
      */
-    @GET("https://www.nmbxd.com/Member/User/Cookie/index.html")
+    @GET("https://www.nmbxd1.com/Member/User/Cookie/index.html")
     suspend fun getCookiesList(): CookieListResponse
 
     /**
      * 申请新饼干
      */
-    @POST("https://www.nmbxd.com/Member/User/Cookie/apply.html")
+    @POST("https://www.nmbxd1.com/Member/User/Cookie/apply.html")
     suspend fun applyNewCookie(): String
 
     /**
      * 注册账号
      */
-    @POST("https://www.nmbxd.com/Member/User/Index/sendRegister.html")
+    @POST("https://www.nmbxd1.com/Member/User/Index/sendRegister.html")
     @FormUrlEncoded
     suspend fun register(
         @Field("email") email: String,
@@ -271,7 +271,7 @@ interface NmbXdApi {
     /**
      * 重置密码
      */
-    @POST("https://www.nmbxd.com/Member/User/Index/sendForgotPassword.html")
+    @POST("https://www.nmbxd1.com/Member/User/Index/sendForgotPassword.html")
     @FormUrlEncoded
     suspend fun resetPassword(
         @Field("email") email: String,
