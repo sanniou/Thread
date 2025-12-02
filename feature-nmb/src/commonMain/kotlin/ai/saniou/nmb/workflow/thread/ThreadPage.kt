@@ -34,6 +34,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Reply
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -622,7 +623,10 @@ private fun ThreadList(
                     onCopy = { onCopy(thread.content) },
                     onBookmark = { onBookmarkThread(thread) }
                 )
-                HorizontalDivider(thickness = 8.dp, color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                HorizontalDivider(
+                    thickness = 8.dp,
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                )
             }
         }
 
@@ -758,7 +762,13 @@ private fun ThreadToolbar(
             onClick = onTogglePoOnly,
             label = { Text("只看PO") },
             leadingIcon = if (isPoOnly) {
-                { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                {
+                    Icon(
+                        Icons.Default.Check,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
             } else null,
             colors = FilterChipDefaults.filterChipColors(
                 containerColor = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.3f),
@@ -784,7 +794,7 @@ fun ThreadMainPost(
         modifier = Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surface)
-            .padding(16.dp, 16.dp, 16.dp, 24.dp),
+            .padding(top = 16.dp, bottom = 24.dp),
     ) {
         // 标题
         if (thread.title.isNotBlank() && thread.title != "无标题") {
@@ -797,11 +807,81 @@ fun ThreadMainPost(
         }
 
         // 头部信息
-        PostHeader(
-            author = { ThreadAuthor(thread, isPo = true) },
-            id = thread.id,
-            onMoreClick = { showMenu = true }
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            ThreadAuthor(thread, isPo = true)
+
+            Text(
+                text = "No.${thread.id}",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // 正文
+        Box(
+            modifier = Modifier.fillMaxWidth()
+                .combinedClickable(
+                    onClick = { /* No-op, allow inner clicks */ },
+                    onLongClick = { showMenu = true }
+                )
+                .padding(horizontal = 16.dp)
+        ) {
+            ThreadBody(thread, onReferenceClick = refClick, onImageClick = onImageClick)
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // 底部操作栏
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(24.dp, Alignment.End),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // 复制
+            androidx.compose.material3.IconButton(
+                onClick = { onCopy() },
+                modifier = Modifier.size(20.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.ContentCopy,
+                    contentDescription = "复制",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+
+            // 收藏
+            androidx.compose.material3.IconButton(
+                onClick = { onBookmark() },
+                modifier = Modifier.size(20.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.BookmarkBorder,
+                    contentDescription = "收藏",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+
+            // 更多 (保留给长按菜单的显式入口，如果用户不知道长按)
+            IconButton(
+                onClick = { showMenu = true },
+                modifier = Modifier.size(20.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.MoreVert,
+                    contentDescription = "更多",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
 
         DropdownMenu(
             expanded = showMenu,
@@ -824,11 +904,6 @@ fun ThreadMainPost(
                 }
             )
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // 正文
-        ThreadBody(thread, onReferenceClick = refClick, onImageClick = onImageClick)
     }
 }
 
@@ -847,24 +922,48 @@ fun ThreadReply(
     }
     var showMenu by remember { mutableStateOf(false) }
 
-    // 使用 Box 覆盖 ripple 效果
+    // Haptic feedback
+    val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onReplyClicked(reply.id) }
+            .combinedClickable(
+                onClick = { onReplyClicked(reply.id) },
+                onLongClick = {
+                    haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                    showMenu = true
+                }
+            )
             .padding(16.dp, 12.dp)
     ) {
         Column {
-            PostHeader(
-                author = { ThreadAuthor(reply, isPo = isPo) },
-                id = reply.id,
-                onMoreClick = { showMenu = true }
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                ThreadAuthor(reply, isPo = isPo)
+
+                Text(
+                    text = "No.${reply.id}",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
 
             DropdownMenu(
                 expanded = showMenu,
                 onDismissRequest = { showMenu = false }
             ) {
+                DropdownMenuItem(
+                    text = { Text("回复") },
+                    leadingIcon = { Icon(Icons.Filled.Reply, null) },
+                    onClick = {
+                        onReplyClicked(reply.id)
+                        showMenu = false
+                    }
+                )
                 DropdownMenuItem(
                     text = { Text("复制内容") },
                     leadingIcon = { Icon(Icons.Filled.ContentCopy, null) },
@@ -884,38 +983,7 @@ fun ThreadReply(
             }
 
             Spacer(modifier = Modifier.height(12.dp))
-
-            // Indent content slightly to align with avatar text visually if desired,
-            // but for mobile maximize width is usually better.
-            // We keep it full width here.
             ThreadBody(reply, onReferenceClick = refClick, onImageClick = onImageClick)
-        }
-    }
-}
-
-@Composable
-private fun PostHeader(
-    author: @Composable () -> Unit,
-    id: Long,
-    onMoreClick: () -> Unit,
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.Top
-    ) {
-        Box(modifier = Modifier.weight(1f)) {
-            author()
-        }
-        Text(
-            text = "No.$id",
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        IconButton(onClick = onMoreClick, modifier = Modifier.size(20.dp)) {
-            Icon(
-                Icons.Default.MoreVert,
-                contentDescription = "更多",
-            )
         }
     }
 }

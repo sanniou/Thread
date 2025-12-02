@@ -6,6 +6,7 @@ import ai.saniou.coreui.widgets.ClickablePattern
 import ai.saniou.coreui.widgets.RichText
 import ai.saniou.nmb.data.entity.IThreadBody
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.wrapContentWidth
@@ -46,27 +47,29 @@ fun ThreadBody(
         )
     }
 
-    RichText(
-        text = body.content,
-        maxLines = maxLines,
-        overflow = TextOverflow.Ellipsis,
-        style = MaterialTheme.typography.bodyMedium,
-        clickablePatterns = clickablePatterns,
-        blankLinePolicy = BlankLinePolicy.COLLAPSE
-    )
-
-    if (body.img.isNotEmpty() && body.ext.isNotEmpty()) {
-        Spacer(modifier = Modifier.height(Dimens.padding_small))
-        NmbImage(
-            imgPath = body.img,
-            ext = body.ext,
-            isThumb = true,
-            contentDescription = "帖子图片",
-            modifier = Modifier
-                .height(Dimens.image_height_medium)
-                .wrapContentWidth(Alignment.Start)
-                .clickable { onImageClick(body.img, body.ext) },
-            contentScale = ContentScale.FillHeight,
+    Column {
+        RichText(
+            text = body.content,
+            maxLines = maxLines,
+            overflow = TextOverflow.Ellipsis,
+            style = MaterialTheme.typography.bodyMedium,
+            clickablePatterns = clickablePatterns,
+            blankLinePolicy = BlankLinePolicy.COLLAPSE
         )
+
+        if (body.img.isNotEmpty() && body.ext.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(Dimens.padding_small))
+            NmbImage(
+                imgPath = body.img,
+                ext = body.ext,
+                isThumb = true,
+                contentDescription = "帖子图片",
+                modifier = Modifier
+                    .height(Dimens.image_height_medium)
+                    .wrapContentWidth(Alignment.Start)
+                    .clickable { onImageClick(body.img, body.ext) },
+                contentScale = ContentScale.FillHeight,
+            )
+        }
     }
 }
