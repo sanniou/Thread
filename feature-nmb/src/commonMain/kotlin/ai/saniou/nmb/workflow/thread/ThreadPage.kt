@@ -51,6 +51,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
@@ -65,6 +66,8 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.FilledIconToggleButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
@@ -629,14 +632,18 @@ private fun ThreadList(
                 Surface(
                     modifier = Modifier.fillParentMaxWidth(),
                     color = MaterialTheme.colorScheme.surface,
-                    tonalElevation = 2.dp,
-                    shadowElevation = 2.dp
                 ) {
-                    ThreadToolbar(
-                        replyCount = it.replyCount.toString(),
-                        isPoOnly = state.isPoOnlyMode,
-                        onTogglePoOnly = onTogglePoOnly
-                    )
+                    Column {
+                        ThreadToolbar(
+                            replyCount = it.replyCount.toString(),
+                            isPoOnly = state.isPoOnlyMode,
+                            onTogglePoOnly = onTogglePoOnly
+                        )
+                        HorizontalDivider(
+                            thickness = 1.dp,
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                        )
+                    }
                 }
             }
         }
@@ -718,6 +725,7 @@ private fun EmptyReplyContent(onRefresh: () -> Unit) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ThreadToolbar(
     replyCount: String,
@@ -727,36 +735,39 @@ private fun ThreadToolbar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = 16.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(
-            text = "回复 $replyCount",
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
-        )
-
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                text = if (isPoOnly) "只看PO" else "全部回复",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(end = 8.dp)
+                text = "全部回复",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
             )
-            FilledIconToggleButton(
-                checked = isPoOnly,
-                onCheckedChange = { onTogglePoOnly() },
-                modifier = Modifier.size(32.dp)
-            ) {
-                Icon(
-                    Icons.Default.Person,
-                    contentDescription = "只看PO",
-                    modifier = Modifier.size(16.dp)
-                )
-            }
+            Text(
+                text = " · $replyCount",
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
+
+        FilterChip(
+            selected = isPoOnly,
+            onClick = onTogglePoOnly,
+            label = { Text("只看PO") },
+            leadingIcon = if (isPoOnly) {
+                { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
+            } else null,
+            colors = FilterChipDefaults.filterChipColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.3f),
+                labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+            ),
+            border = null
+        )
     }
 }
 
