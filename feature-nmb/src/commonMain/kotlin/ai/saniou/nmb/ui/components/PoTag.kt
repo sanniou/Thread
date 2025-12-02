@@ -20,13 +20,14 @@ fun PoTag(isPo: Boolean) {
         val holidayEmoji = remember { getHolidayEmoji() }
         Surface(
             shape = RoundedCornerShape(4.dp),
-            color = MaterialTheme.colorScheme.primaryContainer
+            color = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary
         ) {
             Text(
                 text = holidayEmoji ?: "PO",
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
             )
         }
     }

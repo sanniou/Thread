@@ -13,32 +13,69 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.runtime.remember
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+
 @Composable
 fun ThreadAuthor(author: IBaseAuthor, isPo: Boolean = false) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Dimens.padding_small)
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        PoTag(isPo)
-        Text(
-            text = author.userHash,
-            style = MaterialTheme.typography.labelLarge,
-            fontWeight = FontWeight.Medium,
-            color = if (isPo) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        if (author.name.isNotBlank() && author.name != "无名氏") {
+        // 头像占位，根据 Hash 生成颜色
+        val avatarColor = remember(author.userHash) {
+            val hash = author.userHash.hashCode()
+            Color(hash).copy(alpha = 1f)
+        }
+
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(CircleShape)
+                .background(avatarColor)
+            ,
+            contentAlignment = Alignment.Center
+        ) {
             Text(
-                text = author.name,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                text = author.userHash.take(1).uppercase(),
+                style = MaterialTheme.typography.titleMedium,
+                color = Color.White
             )
         }
-        Text(
-            text = author.now,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
+
+        Column {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = author.userHash,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+
+                if (isPo) {
+                    PoTag(isPo = true)
+                }
+
+                if (author.name.isNotBlank() && author.name != "无名氏") {
+                    Text(
+                        text = author.name,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                }
+            }
+
+            Text(
+                text = author.now,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.outline
+            )
+        }
     }
 }

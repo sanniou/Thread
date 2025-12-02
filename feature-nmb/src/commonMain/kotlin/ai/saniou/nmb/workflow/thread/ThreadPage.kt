@@ -32,6 +32,8 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -48,6 +50,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Info
@@ -589,9 +593,9 @@ private fun ThreadList(
     val replies = state.replies.collectAsLazyPagingItems()
     LazyColumn(
         state = lazyListState,
-        modifier = Modifier.padding(horizontal = 16.dp),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        modifier = Modifier,
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 80.dp),
+        verticalArrangement = Arrangement.spacedBy(0.dp)
     ) {
         // PREPEND 加载状态
         if (replies.loadState.prepend is LoadStateLoading) {
@@ -615,6 +619,7 @@ private fun ThreadList(
                     onCopy = { onCopy(thread.content) },
                     onBookmark = { onBookmarkThread(thread) }
                 )
+                HorizontalDivider(thickness = 8.dp, color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
             }
         }
 
@@ -623,7 +628,9 @@ private fun ThreadList(
             state.thread?.let {
                 Surface(
                     modifier = Modifier.fillParentMaxWidth(),
-                    color = MaterialTheme.colorScheme.surface
+                    color = MaterialTheme.colorScheme.surface,
+                    tonalElevation = 2.dp,
+                    shadowElevation = 2.dp
                 ) {
                     ThreadToolbar(
                         replyCount = it.replyCount.toString(),
@@ -637,12 +644,6 @@ private fun ThreadList(
         // 回复列表
         items(replies.itemCount) { replyIndex ->
             replies[replyIndex]?.let { reply ->
-                if (replyIndex > 0) {
-                    HorizontalDivider(
-                        modifier = Modifier.padding(vertical = 8.dp),
-                        thickness = 0.5.dp
-                    )
-                }
                 ThreadReply(
                     reply = reply,
                     poUserHash = state.thread?.userHash ?: "",
@@ -651,6 +652,11 @@ private fun ThreadList(
                     onImageClick = onImageClick,
                     onCopy = { onCopy(reply.content) },
                     onBookmark = { onBookmarkReply(reply) }
+                )
+                HorizontalDivider(
+                    thickness = 0.5.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                    modifier = Modifier.padding(horizontal = 16.dp)
                 )
             } ?: ShimmerContainer { SkeletonReplyItem(it) }
         }
@@ -719,21 +725,37 @@ private fun ThreadToolbar(
     onTogglePoOnly: () -> Unit,
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
-            text = "回复: $replyCount",
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            text = "回复 $replyCount",
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary
         )
 
-        FilledIconToggleButton(
-            checked = isPoOnly,
-            onCheckedChange = { onTogglePoOnly() }
-        ) {
-            Icon(Icons.Default.Person, contentDescription = "只看PO")
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = if (isPoOnly) "只看PO" else "全部回复",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(end = 8.dp)
+            )
+            FilledIconToggleButton(
+                checked = isPoOnly,
+                onCheckedChange = { onTogglePoOnly() },
+                modifier = Modifier.size(32.dp)
+            ) {
+                Icon(
+                    Icons.Default.Person,
+                    contentDescription = "只看PO",
+                    modifier = Modifier.size(16.dp)
+                )
+            }
         }
     }
 }
@@ -749,12 +771,20 @@ fun ThreadMainPost(
     var showMenu by remember { mutableStateOf(false) }
     Column(
         modifier = Modifier
-            .background(
-                MaterialTheme.colorScheme.surfaceVariant,
-                RoundedCornerShape(12.dp)
-            )
-            .padding(16.dp),
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surface)
+            .padding(16.dp, 16.dp, 16.dp, 24.dp),
     ) {
+        // 标题
+        if (thread.title.isNotBlank() && thread.title != "无标题") {
+            Text(
+                text = thread.title,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
+        }
+
         // 头部信息
         PostHeader(
             author = { ThreadAuthor(thread, isPo = true) },
@@ -767,14 +797,16 @@ fun ThreadMainPost(
             onDismissRequest = { showMenu = false }
         ) {
             DropdownMenuItem(
-                text = { Text("复制") },
+                text = { Text("复制内容") },
+                leadingIcon = { Icon(Icons.Filled.ContentCopy, null) },
                 onClick = {
                     onCopy()
                     showMenu = false
                 }
             )
             DropdownMenuItem(
-                text = { Text("收藏") },
+                text = { Text("收藏串") },
+                leadingIcon = { Icon(Icons.Filled.BookmarkBorder, null) },
                 onClick = {
                     onBookmark()
                     showMenu = false
@@ -782,16 +814,7 @@ fun ThreadMainPost(
             )
         }
 
-        // 标题
-        if (thread.title.isNotBlank() && thread.title != "无标题") {
-            Text(
-                text = thread.title,
-                style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.padding(vertical = 12.dp)
-            )
-        } else {
-            Spacer(modifier = Modifier.height(8.dp))
-        }
+        Spacer(modifier = Modifier.height(16.dp))
 
         // 正文
         ThreadBody(thread, onReferenceClick = refClick, onImageClick = onImageClick)
@@ -812,39 +835,50 @@ fun ThreadReply(
         reply.userHash == poUserHash
     }
     var showMenu by remember { mutableStateOf(false) }
-    Column(
+
+    // 使用 Box 覆盖 ripple 效果
+    Box(
         modifier = Modifier
+            .fillMaxWidth()
             .clickable { onReplyClicked(reply.id) }
-            .padding(vertical = 8.dp),
+            .padding(16.dp, 12.dp)
     ) {
-        PostHeader(
-            author = { ThreadAuthor(reply, isPo = isPo) },
-            id = reply.id,
-            onMoreClick = { showMenu = true }
-        )
+        Column {
+            PostHeader(
+                author = { ThreadAuthor(reply, isPo = isPo) },
+                id = reply.id,
+                onMoreClick = { showMenu = true }
+            )
 
-        DropdownMenu(
-            expanded = showMenu,
-            onDismissRequest = { showMenu = false }
-        ) {
-            DropdownMenuItem(
-                text = { Text("复制") },
-                onClick = {
-                    onCopy()
-                    showMenu = false
-                }
-            )
-            DropdownMenuItem(
-                text = { Text("收藏") },
-                onClick = {
-                    onBookmark()
-                    showMenu = false
-                }
-            )
+            DropdownMenu(
+                expanded = showMenu,
+                onDismissRequest = { showMenu = false }
+            ) {
+                DropdownMenuItem(
+                    text = { Text("复制内容") },
+                    leadingIcon = { Icon(Icons.Filled.ContentCopy, null) },
+                    onClick = {
+                        onCopy()
+                        showMenu = false
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text("收藏回复") },
+                    leadingIcon = { Icon(Icons.Filled.BookmarkBorder, null) },
+                    onClick = {
+                        onBookmark()
+                        showMenu = false
+                    }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Indent content slightly to align with avatar text visually if desired,
+            // but for mobile maximize width is usually better.
+            // We keep it full width here.
+            ThreadBody(reply, onReferenceClick = refClick, onImageClick = onImageClick)
         }
-
-        Spacer(modifier = Modifier.height(12.dp))
-        ThreadBody(reply, onReferenceClick = refClick, onImageClick = onImageClick)
     }
 }
 
@@ -874,7 +908,3 @@ private fun PostHeader(
         }
     }
 }
-
-// endregion
-
-// endregion
