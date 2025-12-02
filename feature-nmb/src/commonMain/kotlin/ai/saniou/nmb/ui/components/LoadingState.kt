@@ -26,13 +26,13 @@ fun LoadEndIndicator(onClick: (() -> Unit)? = null) {
                     this
                 }
             }
-            .padding(Dimens.padding_medium),
+            .padding(24.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "已加载全部帖子",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            text = "— 已经到底啦 —",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.outline
         )
     }
 }
@@ -42,20 +42,14 @@ fun LoadingFailedIndicator(modifier: Modifier = Modifier, onClick: (() -> Unit)?
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .run {
-                if (onClick != null) {
-                    this.clickable(onClick = onClick)
-                } else {
-                    this
-                }
-            }
-            .padding(Dimens.padding_medium),
+            .clickable { onClick?.invoke() }
+            .padding(24.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "加载更多失败",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            text = "加载失败，点击重试",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.error
         )
     }
 }
@@ -65,12 +59,13 @@ fun LoadingIndicator() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(Dimens.padding_medium),
+            .padding(24.dp),
         contentAlignment = Alignment.Center
     ) {
         CircularProgressIndicator(
-            modifier = Modifier.size(Dimens.icon_size_medium),
-            strokeWidth = 2.dp
+            modifier = Modifier.size(24.dp),
+            strokeWidth = 2.dp,
+            color = MaterialTheme.colorScheme.outline
         )
     }
 }
