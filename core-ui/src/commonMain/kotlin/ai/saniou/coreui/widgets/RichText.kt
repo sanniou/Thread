@@ -3,6 +3,7 @@ package ai.saniou.coreui.widgets
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -21,6 +22,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 
 private const val TAG_URL = "URL"
+private const val TAG_SPOILER = "SPOILER"
+private const val TAG_SPOILER_HIDDEN = "SPOILER_HIDDEN"
 
 /**
  * 定义一个可点击的文本模式
@@ -59,6 +62,7 @@ enum class BlankLinePolicy {
  * - 样式: `<b>`, `<i>`, `<u>`
  * - 链接: `<a href="https://example.com">link</a>`
  * - 换行: `<br>`
+ * - 隐藏内容/黑条: `[h]content[/h]`，点击可切换显示/隐藏状态
  * - 自定义引用匹配: 通过 `referencePattern` 实现对特定模式（如 `>>No.12345`）的点击支持
  * - 空白行处理: 通过 `blankLinePolicy` 控制空白行的显示
  */
@@ -73,13 +77,40 @@ fun RichText(
     maxLines: Int = Int.MAX_VALUE,
     blankLinePolicy: BlankLinePolicy = BlankLinePolicy.KEEP,
     color: Color = Color.Unspecified,
+    spoilerBackgroundColor: Color = MaterialTheme.colorScheme.onSurface,
 ) {
     val linkColor = MaterialTheme.colorScheme.primary
     val uriHandler = LocalUriHandler.current
     val linkClickHandler = onLinkClick ?: { url -> uriHandler.openUri(url) }
 
-    val annotatedString = remember(text, clickablePatterns, style, linkColor, blankLinePolicy) {
-        val styledText = parseHtml(text, style, linkColor, blankLinePolicy, linkClickHandler)
+    val revealedSpoilers = remember { mutableStateListOf<Int>() }
+
+    // 预处理：将 [h] 转换为 <spoiler> 标签
+    val processedText = remember(text) {
+        text.replace(Regex("\\[h]", RegexOption.IGNORE_CASE), "<spoiler>")
+            .replace(Regex("\\[/h]", RegexOption.IGNORE_CASE), "</spoiler>")
+    }
+
+    val annotatedString = remember(
+        processedText,
+        clickablePatterns,
+        style,
+        linkColor,
+        blankLinePolicy,
+        revealedSpoilers.toList(),
+        spoilerBackgroundColor
+    ) {
+        val styledText = parseHtml(
+            html = processedText,
+            linkColor = linkColor,
+            blankLinePolicy = blankLinePolicy,
+            onLinkClick = linkClickHandler,
+            revealedSpoilers = revealedSpoilers.toSet(),
+            onSpoilerClick = { id ->
+                if (id in revealedSpoilers) revealedSpoilers.remove(id) else revealedSpoilers.add(id)
+            },
+            spoilerBackgroundColor = spoilerBackgroundColor
+        )
         applyClickableAnnotations(styledText, clickablePatterns, linkColor)
     }
 
@@ -98,10 +129,12 @@ fun RichText(
  */
 private fun parseHtml(
     html: String,
-    baseStyle: TextStyle,
     linkColor: Color,
     blankLinePolicy: BlankLinePolicy,
     onLinkClick: (String) -> Unit,
+    revealedSpoilers: Set<Int>,
+    onSpoilerClick: (Int) -> Unit,
+    spoilerBackgroundColor: Color,
 ): AnnotatedString {
     // 1. 预处理：解码HTML实体并将<br>替换为换行符
     var cleanHtml =
@@ -121,6 +154,10 @@ private fun parseHtml(
 
     // 3. 使用栈来处理嵌套样式
     val styleStack = mutableListOf(SpanStyle())
+    var spoilerCounter = 0
+    // 跟踪隐藏 Spoiler 的嵌套深度，用于在隐藏时禁用内部链接和颜色样式
+    var hiddenSpoilerDepth = 0
+    val spoilerStack = mutableListOf<Boolean>() // true if hidden
 
     return buildAnnotatedString {
         for (token in tokens) {
@@ -134,19 +171,66 @@ private fun parseHtml(
                         if (styleStack.size > 1) styleStack.removeLast()
                         // 如果是链接，也需要弹出注解
                         if (tag.name == "a") pop()
+                        if (tag.name == "spoiler") {
+                            pop() // pop spoiler link
+                            val wasHidden = spoilerStack.removeLastOrNull() ?: false
+                            if (wasHidden) hiddenSpoilerDepth--
+                        }
                     }
 
                     !tag.isSelfClosing -> {
-                        // 开始标签, 推入新样式
-                        styleStack.add(tag.toSpanStyle(styleStack.last(), linkColor))
-                        // 如果是链接，推入注解
-                        tag.attributes["href"]?.let { href ->
+                        if (tag.name == "spoiler") {
+                            val id = spoilerCounter++
+                            val isRevealed = id in revealedSpoilers
+                            val isHidden = !isRevealed
+
+                            if (isHidden) hiddenSpoilerDepth++
+                            spoilerStack.add(isHidden)
+
+                            val tagString = if (isHidden) TAG_SPOILER_HIDDEN else TAG_SPOILER
                             pushLink(
                                 LinkAnnotation.Clickable(
-                                    TAG_URL,
-                                    linkInteractionListener = LinkInteractionListener { onLinkClick(href) }
+                                    tagString,
+                                    linkInteractionListener = LinkInteractionListener { onSpoilerClick(id) }
                                 )
                             )
+
+                            val currentStyle = styleStack.last()
+                            val newStyle = if (isHidden) {
+                                currentStyle.copy(
+                                    background = spoilerBackgroundColor,
+                                    color = spoilerBackgroundColor
+                                )
+                            } else {
+                                currentStyle
+                            }
+                            styleStack.add(newStyle)
+                        } else {
+                            // 开始标签, 推入新样式
+                            styleStack.add(
+                                tag.toSpanStyle(
+                                    styleStack.last(),
+                                    linkColor,
+                                    ignoreColor = hiddenSpoilerDepth > 0
+                                )
+                            )
+                            // 如果是链接，且不在隐藏的spoiler中，推入注解
+                            if (tag.name == "a" && hiddenSpoilerDepth == 0) {
+                                tag.attributes["href"]?.let { href ->
+                                    pushLink(
+                                        LinkAnnotation.Clickable(
+                                            TAG_URL,
+                                            linkInteractionListener = LinkInteractionListener {
+                                                onLinkClick(
+                                                    href
+                                                )
+                                            }
+                                        )
+                                    )
+                                }
+                            } else if (tag.name == "a") {
+                                // 如果在隐藏区域，不推入Link
+                            }
                         }
                     }
                 }
@@ -171,27 +255,36 @@ private fun applyClickableAnnotations(
     return buildAnnotatedString {
         append(styledText)
 
-        // 获取所有已存在的注解范围，避免重叠处理
-        val existingRanges = styledText.getLinkAnnotations(0, styledText.length)
-            .map { it.start..it.end }
+        // 获取所有已存在的注解范围
+        val existingAnnotations = styledText.getLinkAnnotations(0, styledText.length)
+
+        // 找出所有隐藏的 spoiler 范围
+        val hiddenRanges = existingAnnotations
+            .filter { (it.item as? LinkAnnotation.Clickable)?.tag == TAG_SPOILER_HIDDEN }
+            .map { it.start until it.end }
+
+        // 找出所有已存在的 URL 范围（避免重叠）
+        val existingUrlRanges = existingAnnotations
+            .filter { (it.item as? LinkAnnotation.Clickable)?.tag == TAG_URL }
+            .map { it.start until it.end }
 
         clickablePatterns.forEach { pattern ->
             pattern.regex.findAll(styledText.text).forEach { matchResult ->
                 val range = matchResult.range
 
-                // 检查当前匹配范围是否与任何已存在的注解范围重叠
-                val isOverlapping = existingRanges.any { it.overlaps(range) }
+                // 检查：
+                // 1. 不在隐藏的 spoiler 中
+                // 2. 不与现有的 URL 重叠
+                val isHidden = hiddenRanges.any { it.overlaps(range) }
+                val isOverlapping = existingUrlRanges.any { it.overlaps(range) }
 
-                if (!isOverlapping) {
-                    // 优先使用捕获组1的内容作为点击参数，否则使用整个匹配项
+                if (!isHidden && !isOverlapping) {
                     val clickableText = matchResult.groupValues.getOrNull(1) ?: matchResult.value
                     addLink(
                         clickable = LinkAnnotation.Clickable(
                             tag = pattern.tag,
                             linkInteractionListener = LinkInteractionListener {
-                                pattern.onClick(
-                                    clickableText
-                                )
+                                pattern.onClick(clickableText)
                             }),
                         start = range.first,
                         end = range.last + 1
@@ -241,7 +334,11 @@ private fun parseTag(tagString: String): HtmlTag {
     return HtmlTag(tagString, name, attributes, isClosing, isSelfClosing)
 }
 
-private fun HtmlTag.toSpanStyle(currentStyle: SpanStyle, linkColor: Color): SpanStyle {
+private fun HtmlTag.toSpanStyle(
+    currentStyle: SpanStyle,
+    linkColor: Color,
+    ignoreColor: Boolean = false
+): SpanStyle {
     var newStyle = currentStyle
     when (name) {
         "b", "strong" -> newStyle = newStyle.copy(fontWeight = FontWeight.Bold)
@@ -249,14 +346,16 @@ private fun HtmlTag.toSpanStyle(currentStyle: SpanStyle, linkColor: Color): Span
         "u" -> newStyle = newStyle.copy(textDecoration = TextDecoration.Underline)
         "s", "strike", "del" -> newStyle = newStyle.copy(textDecoration = TextDecoration.LineThrough)
         "font" -> {
-            val color = attributes["color"]?.let(::parseColorValue)
-            if (color != null) {
-                newStyle = newStyle.copy(color = color)
+            if (!ignoreColor) {
+                val color = attributes["color"]?.let(::parseColorValue)
+                if (color != null) {
+                    newStyle = newStyle.copy(color = color)
+                }
             }
         }
 
         "a" -> {
-            if (attributes.containsKey("href")) {
+            if (attributes.containsKey("href") && !ignoreColor) {
                 newStyle = newStyle.copy(
                     color = linkColor,
                     textDecoration = TextDecoration.Underline
@@ -289,7 +388,6 @@ private fun decodeHtmlEntities(text: String): String {
         .replace("&ldquo;", "“")
         .replace("&rdquo;", "”")
         // 字体标签和换行标签
-        .replace(Regex("</?font[^>]*>", RegexOption.IGNORE_CASE), "")
         .replace(Regex("<br\\s*/?>", RegexOption.IGNORE_CASE), "\n")
 }
 
