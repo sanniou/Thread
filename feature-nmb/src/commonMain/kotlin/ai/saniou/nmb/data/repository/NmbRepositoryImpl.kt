@@ -325,4 +325,40 @@ class NmbRepositoryImpl(
             .maxByOrNull { it.id } // 确保取 ID 最大的，即最新的
             ?.toThreadReply()
     }
+
+    override fun searchThreadsPager(query: String): Flow<PagingData<ThreadWithInformation>> {
+        return Pager(
+            config = PagingConfig(pageSize = 20),
+            pagingSourceFactory = {
+                SqlDelightPagingSource(
+                    transacter = database.threadQueries,
+                    context = Dispatchers.IO,
+                    countQueryProvider = { database.threadQueries.countSearchThreads(query) },
+                    limitOffsetQueryProvider = { limit, offset ->
+                        database.threadQueries.searchThreads(query, limit, offset)
+                    }
+                )
+            }
+        ).flow.map { pagingData ->
+            pagingData.map { it.toThreadWithInformation(database.threadReplyQueries) }
+        }
+    }
+
+    override fun searchRepliesPager(query: String): Flow<PagingData<ThreadReply>> {
+        return Pager(
+            config = PagingConfig(pageSize = 20),
+            pagingSourceFactory = {
+                SqlDelightPagingSource(
+                    transacter = database.threadReplyQueries,
+                    context = Dispatchers.IO,
+                    countQueryProvider = { database.threadReplyQueries.countSearchReplies(query) },
+                    limitOffsetQueryProvider = { limit, offset ->
+                        database.threadReplyQueries.searchReplies(query, limit, offset)
+                    }
+                )
+            }
+        ).flow.map { pagingData ->
+            pagingData.map { it.toThreadReply() }
+        }
+    }
 }

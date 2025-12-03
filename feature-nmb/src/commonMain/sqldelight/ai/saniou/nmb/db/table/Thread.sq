@@ -138,3 +138,14 @@ LIMIT :limit OFFSET :offset;
 
 countHistoryThreads:
 SELECT count(1) FROM ThreadInformation WHERE last_access_time > 0;
+
+searchThreads:
+SELECT * FROM Thread
+LEFT JOIN ThreadInformation ON Thread.id = ThreadInformation.id
+WHERE (CAST(Thread.id AS TEXT) LIKE ('%' || :query || '%') OR title LIKE ('%' || :query || '%') OR content LIKE ('%' || :query || '%'))
+ORDER BY lastKey DESC
+LIMIT :limit OFFSET :offset;
+
+countSearchThreads:
+SELECT count(*) FROM Thread
+WHERE (CAST(id AS TEXT) LIKE ('%' || :query || '%') OR title LIKE ('%' || :query || '%') OR content LIKE ('%' || :query || '%'));

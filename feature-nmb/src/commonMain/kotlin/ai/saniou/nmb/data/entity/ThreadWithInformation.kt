@@ -3,6 +3,7 @@ package ai.saniou.nmb.data.entity
 import ai.saniou.nmb.db.table.GetHistoryThreads
 import ai.saniou.nmb.db.table.GetThreadsInForum
 import ai.saniou.nmb.db.table.GetThreadsInForumOffset
+import ai.saniou.nmb.db.table.SearchThreads
 import ai.saniou.nmb.db.table.ThreadReplyQueries
 import kotlinx.serialization.json.JsonNames
 
@@ -26,9 +27,9 @@ data class ThreadWithInformation(
     @JsonNames("Replies")
     override val replies: List<ThreadReply>,
     override val remainReplies: Long?,
-    val lastKey: Long,
-    val last_access_time: Long,
-    val last_read_reply_id: Long,
+    val lastKey: Long?,
+    val last_access_time: Long?,
+    val last_read_reply_id: Long?,
 ) : IBaseThread, IThreadBody, IBaseThreadReply
 
 fun GetThreadsInForum.toThreadWithInformation(query: ThreadReplyQueries? = null) =
@@ -53,6 +54,29 @@ fun GetThreadsInForum.toThreadWithInformation(query: ThreadReplyQueries? = null)
         lastKey = lastKey!!,
         last_access_time = last_access_time!!,
         last_read_reply_id = last_read_reply_id!!,
+    )
+fun SearchThreads.toThreadWithInformation(query: ThreadReplyQueries? = null) =
+    ThreadWithInformation(
+        id = id,
+        fid = fid,
+        replyCount = replyCount,
+        img = img,
+        ext = ext,
+        now = now,
+        userHash = userHash,
+        name = name,
+        title = title,
+        content = content,
+        sage = sage,
+        admin = admin,
+        hide = hide,
+        replies = query?.getLastFiveReplies(id)?.executeAsList()?.map {
+            it.toThreadReply()
+        } ?: emptyList(),
+        remainReplies = remainReplies,
+        lastKey = lastKey,
+        last_access_time = last_access_time,
+        last_read_reply_id = last_read_reply_id,
     )
 
 fun GetThreadsInForumOffset.toThreadWithInformation(query: ThreadReplyQueries? = null) =

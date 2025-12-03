@@ -114,3 +114,13 @@ SELECT * FROM ThreadReply WHERE threadId = :threadId AND userHash = :userHash AN
 
 getRepliesByThreadIdAndUserHashOffset:
 SELECT * FROM ThreadReply WHERE threadId = :threadId AND userHash = :userHash ORDER BY id ASC LIMIT :limit OFFSET :offset;
+
+searchReplies:
+SELECT * FROM ThreadReply
+WHERE (content LIKE ('%' || :query || '%') OR title LIKE ('%' || :query || '%'))
+ORDER BY now DESC
+LIMIT :limit OFFSET :offset;
+
+countSearchReplies:
+SELECT count(*) FROM ThreadReply
+WHERE (content LIKE ('%' || :query || '%') OR title LIKE ('%' || :query || '%'));

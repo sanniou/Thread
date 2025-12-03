@@ -44,6 +44,7 @@ import ai.saniou.nmb.workflow.home.HomeViewModel
 import ai.saniou.nmb.workflow.image.nmbImagePreviewModule
 import ai.saniou.nmb.workflow.post.PostViewModel
 import ai.saniou.nmb.workflow.reference.ReferenceViewModel
+import ai.saniou.nmb.workflow.search.SearchViewModel
 import ai.saniou.nmb.workflow.subscription.SubscriptionViewModel
 import ai.saniou.nmb.workflow.thread.ThreadViewModel
 import ai.saniou.nmb.workflow.trend.TrendViewModel
@@ -160,6 +161,9 @@ val nmbdi = DI {
     // 历史相关
     bindProvider { HistoryUseCase(instance()) }
     bindProvider { HistoryViewModel(instance()) }
+
+    // 搜索相关
+    bindProvider { SearchViewModel(instance()) }
 
     // 收藏相关
     bindProvider { GetBookmarksUseCase(instance()) }

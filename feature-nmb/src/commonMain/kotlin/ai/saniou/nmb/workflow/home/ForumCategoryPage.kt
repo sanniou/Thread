@@ -9,6 +9,7 @@ import ai.saniou.nmb.workflow.bookmark.BookmarkPage
 import ai.saniou.nmb.workflow.forum.ForumPage
 import ai.saniou.nmb.workflow.home.ForumCategoryContract.Event
 import ai.saniou.nmb.workflow.subscription.SubscriptionPage
+import ai.saniou.nmb.workflow.search.SearchPage
 import ai.saniou.nmb.workflow.thread.ThreadPage
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
@@ -122,7 +123,10 @@ data class ForumCategoryPage(
                                     },
                                     DrawerMenuItem(Icons.Default.Home, "历史") { /* TODO */ },
                                     DrawerMenuItem(Icons.Default.Send, "发言") { /* TODO */ },
-                                    DrawerMenuItem(Icons.Default.Search, "搜索") { /* TODO */ }
+                                    DrawerMenuItem(Icons.Default.Search, "搜索") {
+                                        navigator.push(SearchPage())
+                                        scope.launch { drawerState.close() }
+                                    }
                                 )
                             )
                             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))

@@ -65,4 +65,7 @@ interface NmbRepository {
     suspend fun getTrendThread(page: Int): Result<Thread>
 
     suspend fun getLocalLatestReply(threadId: Long): ThreadReply?
+
+    fun searchThreadsPager(query: String): Flow<PagingData<ThreadWithInformation>>
+    fun searchRepliesPager(query: String): Flow<PagingData<ThreadReply>>
 }
