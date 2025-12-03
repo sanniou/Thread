@@ -9,10 +9,8 @@ import ai.saniou.nmb.ui.components.ThreadListSkeleton
 import ai.saniou.nmb.workflow.image.ImageInfo
 import ai.saniou.nmb.workflow.image.ImagePreviewPage
 import ai.saniou.nmb.workflow.image.ImagePreviewViewModelParams
-import ai.saniou.nmb.workflow.image.ThreadImageProvider
 import ai.saniou.nmb.workflow.thread.ThreadPage
 import ai.saniou.nmb.workflow.thread.ThreadReply
-import ai.saniou.nmb.workflow.thread.ThreadViewModel
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -54,7 +52,6 @@ import app.cash.paging.LoadStateLoading
 import app.cash.paging.compose.collectAsLazyPagingItems
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
-import cafe.adriel.voyager.kodein.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.flow.collectLatest
@@ -92,7 +89,7 @@ data class UserDetailPage(
         }
 
         LaunchedEffect(pagerState.currentPage) {
-             viewModel.handleEvent(UserDetailContract.Event.SwitchTab(UserDetailContract.Tab.entries[pagerState.currentPage]))
+            viewModel.handleEvent(UserDetailContract.Event.SwitchTab(UserDetailContract.Tab.entries[pagerState.currentPage]))
         }
 
         Scaffold(
@@ -154,12 +151,7 @@ data class UserDetailPage(
                                                 navigator.push(
                                                     ImagePreviewPage(
                                                         ImagePreviewViewModelParams(
-                                                            initialIndex = 0,
                                                             initialImages = listOf(ImageInfo(img, ext)),
-                                                            imageProvider = ThreadImageProvider(
-                                                                thread.id,
-                                                                nmbdi.direct.instance()
-                                                            )
                                                         )
                                                     )
                                                 )
@@ -180,6 +172,7 @@ data class UserDetailPage(
                                             }
                                         }
                                     }
+
                                     else -> {}
                                 }
 
@@ -194,9 +187,9 @@ data class UserDetailPage(
                                 }
 
                                 if (threads.loadState.refresh !is LoadStateLoading && threads.itemCount == 0) {
-                                     item {
+                                    item {
                                         EmptyContent(message = "该用户还没有发布过串")
-                                     }
+                                    }
                                 }
                             }
                         }
@@ -211,29 +204,42 @@ data class UserDetailPage(
                                 items(replies.itemCount) { index ->
                                     val reply = replies[index]
                                     if (reply != null) {
-                                        ThreadReply(
-                                            reply = reply,
-                                            poUserHash = "",
-                                            onReplyClicked = { navigator.push(ThreadPage(threadId = reply.threadId)) },
-                                            refClick = { navigator.push(ThreadPage(threadId = reply.threadId)) }, // 简化处理，暂时跳转到主串
-                                            onImageClick = { img, ext ->
-                                                 navigator.push(
-                                                    ImagePreviewPage(
-                                                        ImagePreviewViewModelParams(
-                                                            initialIndex = 0,
-                                                            initialImages = listOf(ImageInfo(img, ext)),
-                                                            imageProvider = ThreadImageProvider(
-                                                                reply.threadId,
-                                                                nmbdi.direct.instance()
+                                        Column {
+                                            if (reply.title.isNotBlank() && reply.title != "无标题") {
+                                                Text(
+                                                    text = "回复串: ${reply.title}",
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    color = MaterialTheme.colorScheme.primary,
+                                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                                                )
+                                            } else {
+                                                Text(
+                                                    text = "回复串: No.${reply.threadId}",
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    color = MaterialTheme.colorScheme.primary,
+                                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                                                )
+                                            }
+
+                                            ThreadReply(
+                                                reply = reply,
+                                                poUserHash = "",
+                                                onReplyClicked = { navigator.push(ThreadPage(threadId = reply.threadId)) },
+                                                refClick = { navigator.push(ThreadPage(threadId = reply.threadId)) }, // 简化处理，暂时跳转到主串
+                                                onImageClick = { img, ext ->
+                                                    navigator.push(
+                                                        ImagePreviewPage(
+                                                            ImagePreviewViewModelParams(
+                                                                initialImages = listOf(ImageInfo(img, ext)),
                                                             )
                                                         )
                                                     )
-                                                )
-                                            },
-                                            onCopy = {},
-                                            onBookmark = {},
-                                            onUserClick = { userHash -> navigator.push(UserDetailPage(userHash)) },
-                                        )
+                                                },
+                                                onCopy = {},
+                                                onBookmark = {},
+                                                onUserClick = { userHash -> navigator.push(UserDetailPage(userHash)) },
+                                            )
+                                        }
                                         HorizontalDivider(
                                             thickness = 0.5.dp,
                                             color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
@@ -245,7 +251,7 @@ data class UserDetailPage(
                                 when (replies.loadState.refresh) {
                                     is LoadStateLoading -> item { LoadingIndicator() }
                                     is LoadStateError -> item {
-                                         Box(
+                                        Box(
                                             modifier = Modifier.fillMaxWidth().padding(32.dp),
                                             contentAlignment = Alignment.Center
                                         ) {
@@ -254,13 +260,14 @@ data class UserDetailPage(
                                             }
                                         }
                                     }
+
                                     else -> {}
                                 }
 
                                 when (replies.loadState.append) {
                                     is LoadStateLoading -> item { LoadingIndicator() }
                                     is LoadStateError -> item { LoadingFailedIndicator() }
-                                     else -> {
+                                    else -> {
                                         if (replies.loadState.append.endOfPaginationReached && replies.itemCount > 0) {
                                             item { LoadEndIndicator() }
                                         }
@@ -268,9 +275,9 @@ data class UserDetailPage(
                                 }
 
                                 if (replies.loadState.refresh !is LoadStateLoading && replies.itemCount == 0) {
-                                     item {
+                                    item {
                                         EmptyContent(message = "该用户还没有发布过回复")
-                                     }
+                                    }
                                 }
                             }
                         }

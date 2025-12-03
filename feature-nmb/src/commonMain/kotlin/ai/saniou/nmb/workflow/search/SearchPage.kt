@@ -2,9 +2,7 @@ package ai.saniou.nmb.workflow.search
 
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.BlankLinePolicy
-import ai.saniou.coreui.widgets.MBToolbar
 import ai.saniou.coreui.widgets.RichText
-import ai.saniou.nmb.data.entity.IBaseThreadReply
 import ai.saniou.nmb.data.entity.ThreadReply
 import ai.saniou.nmb.di.nmbdi
 import ai.saniou.nmb.ui.components.ForumThreadCard
@@ -12,6 +10,7 @@ import ai.saniou.nmb.ui.components.LoadEndIndicator
 import ai.saniou.nmb.ui.components.LoadingFailedIndicator
 import ai.saniou.nmb.ui.components.LoadingIndicator
 import ai.saniou.nmb.workflow.image.ImagePreviewPage
+import ai.saniou.nmb.workflow.image.ImagePreviewViewModelParams
 import ai.saniou.nmb.workflow.search.SearchContract.Event
 import ai.saniou.nmb.workflow.search.SearchContract.SearchType
 import ai.saniou.nmb.workflow.thread.ThreadPage
@@ -26,7 +25,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -35,9 +33,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -153,7 +149,12 @@ data class SearchPage(
                             viewModel = viewModel,
                             onThreadClick = { navigator.push(ThreadPage(it)) },
                             onImageClick = { threadId, img, ext ->
-//                                navigator.push(ImagePreviewPage(threadId, img, ext))
+                                val imageInfo = ai.saniou.nmb.workflow.image.ImageInfo(img, ext)
+                                ImagePreviewPage(
+                                    ImagePreviewViewModelParams(
+                                        initialImages = listOf(imageInfo),
+                                    ),
+                                )
                             },
                             onUserClick = { userHash -> navigator.push(UserDetailPage(userHash)) }
                         )
@@ -162,7 +163,12 @@ data class SearchPage(
                             viewModel = viewModel,
                             onThreadClick = { navigator.push(ThreadPage(it)) },
                             onImageClick = { threadId, img, ext ->
-//                                navigator.push(ImagePreviewPage(threadId, img, ext))
+                                val imageInfo = ai.saniou.nmb.workflow.image.ImageInfo(img, ext)
+                                ImagePreviewPage(
+                                    ImagePreviewViewModelParams(
+                                        initialImages = listOf(imageInfo),
+                                    ),
+                                )
                             }
                         )
                     }
@@ -203,7 +209,7 @@ data class SearchPage(
             }
 
             if (threads.loadState.refresh is LoadStateLoading) {
-                 item { LoadingIndicator() }
+                item { LoadingIndicator() }
             }
         }
     }
@@ -238,7 +244,7 @@ data class SearchPage(
             }
 
             if (replies.loadState.refresh is LoadStateLoading) {
-                 item { LoadingIndicator() }
+                item { LoadingIndicator() }
             }
         }
     }
@@ -283,7 +289,7 @@ fun SearchReplyCard(
             }
 
             if (reply.title.isNotBlank()) {
-                 Text(
+                Text(
                     text = reply.title,
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold
