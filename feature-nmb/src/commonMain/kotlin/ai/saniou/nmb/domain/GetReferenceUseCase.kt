@@ -1,6 +1,5 @@
 package ai.saniou.nmb.domain
 
-import ai.saniou.corecommon.data.SaniouResponse
 import ai.saniou.nmb.data.entity.ThreadReply
 import ai.saniou.nmb.data.entity.toTable
 import ai.saniou.nmb.data.entity.toThreadReply

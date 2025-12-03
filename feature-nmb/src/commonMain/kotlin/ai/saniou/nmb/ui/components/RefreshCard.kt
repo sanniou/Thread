@@ -1,5 +1,6 @@
 package ai.saniou.nmb.ui.components
 
+import ai.saniou.coreui.theme.Dimens
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,9 +13,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import app.cash.paging.compose.LazyPagingItems
-import ai.saniou.coreui.theme.Dimens
 
 @Composable
 fun RefreshCard(forumList: LazyPagingItems<*>) {

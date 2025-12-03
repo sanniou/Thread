@@ -1,6 +1,5 @@
 package ai.saniou.nmb.data.storage
 
-import io.github.irgaly.kottage.put
 import kotlinx.coroutines.CoroutineScope
 import kotlin.reflect.KType
 import kotlin.reflect.typeOf

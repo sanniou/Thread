@@ -1,7 +1,5 @@
 package ai.saniou.nmb.workflow.bookmark
 
-import ai.saniou.nmb.di.nmbdi
-import ai.saniou.nmb.workflow.bookmark.BookmarkContract.Event
 import ai.saniou.nmb.workflow.thread.ThreadPage
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -33,7 +31,6 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.kodein.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import org.kodein.di.instance
 
 object BookmarkPage : Screen {
 

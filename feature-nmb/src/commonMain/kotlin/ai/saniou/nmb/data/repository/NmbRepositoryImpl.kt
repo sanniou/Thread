@@ -4,8 +4,11 @@ import ai.saniou.corecommon.data.SaniouResponse
 import ai.saniou.nmb.data.api.NmbXdApi
 import ai.saniou.nmb.data.entity.Forum
 import ai.saniou.nmb.data.entity.Reply
+import ai.saniou.nmb.data.entity.Thread
 import ai.saniou.nmb.data.entity.ThreadReply
 import ai.saniou.nmb.data.entity.ThreadWithInformation
+import ai.saniou.nmb.data.entity.toTable
+import ai.saniou.nmb.data.entity.toTableReply
 import ai.saniou.nmb.data.entity.toThreadReply
 import ai.saniou.nmb.data.entity.toThreadWithInformation
 import ai.saniou.nmb.data.source.ForumRemoteMediator
@@ -21,6 +24,7 @@ import app.cash.paging.PagingData
 import app.cash.paging.map
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
+import app.cash.sqldelight.coroutines.mapToOne
 import app.cash.sqldelight.paging3.QueryPagingSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -28,10 +32,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
-import ai.saniou.nmb.data.entity.Thread
-import ai.saniou.nmb.data.entity.toTable
-import ai.saniou.nmb.data.entity.toTableReply
-import app.cash.sqldelight.coroutines.mapToOne
 
 /**
  * NMB 仓库实现类

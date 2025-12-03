@@ -33,6 +33,24 @@ CREATE INDEX IF NOT EXISTS idx_thread_last_access_time ON ThreadInformation(last
 -- 为 Thread 表的 fid 字段创建索引
 CREATE INDEX IF NOT EXISTS idx_thraed_fid ON Thread(fid);
 
+-- 插入 ThreadThread 数据, 但不影响 page
+upsertThreadNoPage:
+INSERT INTO Thread (
+    id, fid, replyCount, img, ext, now, userHash, name, title, content, sage, admin, hide, page
+) VALUES ?
+ON CONFLICT (id) DO UPDATE SET
+    replyCount = excluded.replyCount,
+    img = excluded.img,
+    ext = excluded.ext,
+    now = excluded.now,
+    userHash = excluded.userHash,
+    name = excluded.name,
+    title = excluded.title,
+    content = excluded.content,
+    sage = excluded.sage,
+    admin = excluded.admin,
+    hide = excluded.hide;
+
 -- 插入 ThreadThread 数据
 upsertThread:
 INSERT OR REPLACE INTO Thread (

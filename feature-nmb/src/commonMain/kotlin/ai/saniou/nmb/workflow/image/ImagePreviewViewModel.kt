@@ -14,7 +14,6 @@ import kotlinx.coroutines.launch
 import org.kodein.di.DI
 import org.kodein.di.bind
 import org.kodein.di.factory
-import org.kodein.di.instance
 
 /**
  * 图片预览数据类

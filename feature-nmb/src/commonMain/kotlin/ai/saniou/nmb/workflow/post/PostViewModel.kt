@@ -4,9 +4,9 @@ import ai.saniou.nmb.domain.ForumUseCase
 import ai.saniou.nmb.domain.PostUseCase
 import ai.saniou.nmb.workflow.post.PostContract.Effect
 import ai.saniou.nmb.workflow.post.PostContract.Event
+import ai.saniou.nmb.workflow.post.PostContract.State
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
-import ai.saniou.nmb.workflow.post.PostContract.State
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.flow.MutableSharedFlow

@@ -2,7 +2,6 @@ package ai.saniou.nmb.domain
 
 import ai.saniou.corecommon.data.SaniouResponse
 import ai.saniou.nmb.data.repository.ForumRepository
-import ai.saniou.nmb.data.storage.BasicStorage
 import ai.saniou.nmb.data.storage.CommonStorage
 import ai.saniou.nmb.db.Database
 import ai.saniou.nmb.db.table.Notice

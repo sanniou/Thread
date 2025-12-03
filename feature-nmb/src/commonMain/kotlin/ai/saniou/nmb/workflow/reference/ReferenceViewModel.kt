@@ -3,7 +3,6 @@ package ai.saniou.nmb.workflow.reference
 import ai.saniou.nmb.domain.GetReferenceUseCase
 import ai.saniou.nmb.workflow.reference.ReferenceContract.Event
 import ai.saniou.nmb.workflow.reference.ReferenceContract.State
-import androidx.lifecycle.ViewModel
 import cafe.adriel.voyager.core.model.ScreenModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

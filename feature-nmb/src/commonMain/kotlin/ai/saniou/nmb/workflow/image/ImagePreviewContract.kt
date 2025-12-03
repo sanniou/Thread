@@ -1,9 +1,5 @@
 package ai.saniou.nmb.workflow.image
 
-import ai.saniou.nmb.workflow.image.ImagePreviewContract.Effect
-import ai.saniou.nmb.workflow.image.ImagePreviewContract.Event
-import ai.saniou.nmb.workflow.image.ImagePreviewContract.State
-
 interface ImagePreviewContract {
     data class State(
         val images: List<ImageInfo> = emptyList(),

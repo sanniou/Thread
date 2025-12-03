@@ -11,8 +11,6 @@ import ai.saniou.nmb.data.entity.LoginRequest
 import ai.saniou.nmb.data.entity.LoginResponse
 import ai.saniou.nmb.data.entity.NmbNotice
 import ai.saniou.nmb.data.entity.NmbReference
-import ai.saniou.nmb.data.entity.PostReplyRequest
-import ai.saniou.nmb.data.entity.PostThreadRequest
 import ai.saniou.nmb.data.entity.Thread
 import ai.saniou.nmb.data.entity.TimeLine
 import de.jensklingenberg.ktorfit.http.Body
@@ -20,8 +18,8 @@ import de.jensklingenberg.ktorfit.http.Field
 import de.jensklingenberg.ktorfit.http.FormUrlEncoded
 import de.jensklingenberg.ktorfit.http.GET
 import de.jensklingenberg.ktorfit.http.Multipart
-import de.jensklingenberg.ktorfit.http.Part
 import de.jensklingenberg.ktorfit.http.POST
+import de.jensklingenberg.ktorfit.http.Part
 import de.jensklingenberg.ktorfit.http.Query
 import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders

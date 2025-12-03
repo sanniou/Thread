@@ -1,7 +1,6 @@
 package ai.saniou.nmb.workflow.image
 
 import ai.saniou.nmb.domain.GetThreadImagesUseCase
-import kotlinx.serialization.Serializable
 
 /**
  * A generic interface for providing images page by page.

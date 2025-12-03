@@ -5,7 +5,6 @@ import ai.saniou.coreui.widgets.ShimmerContainer
 import ai.saniou.coreui.widgets.VerticalSpacerSmall
 import ai.saniou.nmb.data.entity.Thread
 import ai.saniou.nmb.data.entity.ThreadReply
-import androidx.compose.material.icons.filled.EmojiEmotions
 import ai.saniou.nmb.di.nmbdi
 import ai.saniou.nmb.ui.components.LoadEndIndicator
 import ai.saniou.nmb.ui.components.LoadingFailedIndicator
@@ -27,14 +26,10 @@ import ai.saniou.nmb.workflow.thread.ThreadContract.Event
 import ai.saniou.nmb.workflow.thread.ThreadContract.State
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.material.icons.filled.BookmarkBorder
-import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material.icons.filled.Reply
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -58,18 +53,16 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Reply
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.FilledIconToggleButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -807,7 +800,7 @@ fun ThreadMainPost(
                 text = thread.title,
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 12.dp)
+                modifier = Modifier.padding(bottom = 12.dp, start = 16.dp, end = 16.dp)
             )
         }
 

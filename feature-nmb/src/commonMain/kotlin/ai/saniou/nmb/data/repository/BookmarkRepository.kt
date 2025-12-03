@@ -1,7 +1,7 @@
 package ai.saniou.nmb.data.repository
 
-import ai.saniou.nmb.db.table.Bookmark
 import ai.saniou.nmb.db.Database
+import ai.saniou.nmb.db.table.Bookmark
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import kotlinx.coroutines.Dispatchers

@@ -4,12 +4,12 @@ import ai.saniou.corecommon.data.SaniouResponse
 import ai.saniou.nmb.data.entity.FavoriteForumType
 import ai.saniou.nmb.data.entity.ForumCategory
 import ai.saniou.nmb.data.entity.ForumDetail
+import ai.saniou.nmb.data.entity.RemoteKeyType
 import ai.saniou.nmb.data.entity.toForumCategory
 import ai.saniou.nmb.data.entity.toForumDetail
 import ai.saniou.nmb.data.entity.toTable
 import ai.saniou.nmb.data.entity.toTimeLine
 import ai.saniou.nmb.data.repository.ForumRepository
-import ai.saniou.nmb.data.entity.RemoteKeyType
 import ai.saniou.nmb.db.Database
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
