@@ -19,6 +19,7 @@ import ai.saniou.nmb.workflow.image.ImagePreviewPage
 import ai.saniou.nmb.workflow.image.ImagePreviewViewModelParams
 import ai.saniou.nmb.workflow.image.ThreadImageProvider
 import ai.saniou.nmb.workflow.post.PostPage
+import ai.saniou.nmb.workflow.user.UserDetailPage
 import ai.saniou.nmb.workflow.reference.ReferenceContract
 import ai.saniou.nmb.workflow.reference.ReferenceViewModel
 import ai.saniou.nmb.workflow.thread.ThreadContract.Effect
@@ -285,7 +286,8 @@ data class ThreadPage(
                 onUpdateLastReadId = { id -> viewModel.onEvent(Event.UpdateLastReadReplyId(id)) },
                 onCopy = { viewModel.onEvent(Event.CopyContent(it)) },
                 onBookmarkThread = { viewModel.onEvent(Event.BookmarkThread(it)) },
-                onBookmarkReply = { viewModel.onEvent(Event.BookmarkReply(it)) }
+                onBookmarkReply = { viewModel.onEvent(Event.BookmarkReply(it)) },
+                onUserClick = { userHash -> navigator.push(UserDetailPage(userHash)) }
             )
         }
 
@@ -337,6 +339,7 @@ private fun ThreadContentRouter(
     onCopy: (String) -> Unit,
     onBookmarkThread: (Thread) -> Unit,
     onBookmarkReply: (ThreadReply) -> Unit,
+    onUserClick: (String) -> Unit,
 ) {
     Box(modifier = modifier) {
         when {
@@ -357,7 +360,8 @@ private fun ThreadContentRouter(
                 onUpdateLastReadId = onUpdateLastReadId,
                 onCopy = onCopy,
                 onBookmarkThread = onBookmarkThread,
-                onBookmarkReply = onBookmarkReply
+                onBookmarkReply = onBookmarkReply,
+                onUserClick = onUserClick
             )
         }
     }
@@ -506,6 +510,7 @@ fun ThreadSuccessContent(
     onCopy: (String) -> Unit,
     onBookmarkThread: (Thread) -> Unit,
     onBookmarkReply: (ThreadReply) -> Unit,
+    onUserClick: (String) -> Unit,
 ) {
     val replies = state.replies.collectAsLazyPagingItems()
     val allImages by remember(state.thread, replies.itemSnapshotList) {
@@ -573,7 +578,8 @@ fun ThreadSuccessContent(
             onRefresh = onRefresh,
             onCopy = onCopy,
             onBookmarkThread = onBookmarkThread,
-            onBookmarkReply = onBookmarkReply
+            onBookmarkReply = onBookmarkReply,
+            onUserClick = onUserClick
         )
     }
 }
@@ -591,6 +597,7 @@ private fun ThreadList(
     onCopy: (String) -> Unit,
     onBookmarkThread: (Thread) -> Unit,
     onBookmarkReply: (ThreadReply) -> Unit,
+    onUserClick: (String) -> Unit,
 ) {
     val replies = state.replies.collectAsLazyPagingItems()
     LazyColumn(
@@ -619,7 +626,8 @@ private fun ThreadList(
                     refClick = onRefClick,
                     onImageClick = onImageClick,
                     onCopy = { onCopy(thread.content) },
-                    onBookmark = { onBookmarkThread(thread) }
+                    onBookmark = { onBookmarkThread(thread) },
+                    onUserClick = onUserClick
                 )
                 HorizontalDivider(
                     thickness = 8.dp,
@@ -660,7 +668,8 @@ private fun ThreadList(
                     refClick = onRefClick,
                     onImageClick = onImageClick,
                     onCopy = { onCopy(reply.content) },
-                    onBookmark = { onBookmarkReply(reply) }
+                    onBookmark = { onBookmarkReply(reply) },
+                    onUserClick = onUserClick
                 )
                 HorizontalDivider(
                     thickness = 0.5.dp,
@@ -786,6 +795,7 @@ fun ThreadMainPost(
     onImageClick: (String, String) -> Unit,
     onCopy: () -> Unit,
     onBookmark: () -> Unit,
+    onUserClick: (String) -> Unit,
 ) {
     var showMenu by remember { mutableStateOf(false) }
     Column(
@@ -810,7 +820,7 @@ fun ThreadMainPost(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            ThreadAuthor(thread, isPo = true)
+            ThreadAuthor(thread, isPo = true, onClick = onUserClick)
 
             Text(
                 text = "No.${thread.id}",
@@ -914,6 +924,7 @@ fun ThreadReply(
     onImageClick: (String, String) -> Unit,
     onCopy: () -> Unit,
     onBookmark: () -> Unit,
+    onUserClick: (String) -> Unit,
 ) {
     val isPo = remember(reply.userHash) {
         reply.userHash == poUserHash
@@ -941,7 +952,7 @@ fun ThreadReply(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                ThreadAuthor(reply, isPo = isPo)
+                ThreadAuthor(reply, isPo = isPo, onClick = onUserClick)
 
                 Text(
                     text = "No.${reply.id}",

@@ -8,6 +8,7 @@ import ai.saniou.nmb.workflow.image.ImagePreviewPage
 import ai.saniou.nmb.workflow.image.ImagePreviewViewModelParams
 import ai.saniou.nmb.workflow.post.PostPage
 import ai.saniou.nmb.workflow.thread.ThreadPage
+import ai.saniou.nmb.workflow.user.UserDetailPage
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -186,6 +187,7 @@ data class ForumPage(
                         )
                     )
                 },
+                onUserClick = { userHash -> navigator.push(UserDetailPage(userHash)) },
                 modifier = Modifier.padding(innerPadding)
             )
         }

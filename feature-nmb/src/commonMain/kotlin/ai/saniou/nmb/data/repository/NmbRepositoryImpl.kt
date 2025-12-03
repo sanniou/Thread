@@ -361,4 +361,39 @@ class NmbRepositoryImpl(
             pagingData.map { it.toThreadReply() }
         }
     }
+    override fun getUserThreadsPager(userHash: String): Flow<PagingData<ThreadWithInformation>> {
+        return Pager(
+            config = PagingConfig(pageSize = 20),
+            pagingSourceFactory = {
+                SqlDelightPagingSource(
+                    transacter = database.threadQueries,
+                    context = Dispatchers.IO,
+                    countQueryProvider = { database.threadQueries.countThreadsByUserHash(userHash) },
+                    limitOffsetQueryProvider = { limit, offset ->
+                        database.threadQueries.getThreadsByUserHashOffset(userHash, limit, offset)
+                    }
+                )
+            }
+        ).flow.map { pagingData ->
+            pagingData.map { it.toThreadWithInformation(database.threadReplyQueries) }
+        }
+    }
+
+    override fun getUserRepliesPager(userHash: String): Flow<PagingData<ThreadReply>> {
+        return Pager(
+            config = PagingConfig(pageSize = 20),
+            pagingSourceFactory = {
+                SqlDelightPagingSource(
+                    transacter = database.threadReplyQueries,
+                    context = Dispatchers.IO,
+                    countQueryProvider = { database.threadReplyQueries.countRepliesByUserHash(userHash) },
+                    limitOffsetQueryProvider = { limit, offset ->
+                        database.threadReplyQueries.getRepliesByUserHashOffset(userHash, limit, offset)
+                    }
+                )
+            }
+        ).flow.map { pagingData ->
+            pagingData.map { it.toThreadReply() }
+        }
+    }
 }

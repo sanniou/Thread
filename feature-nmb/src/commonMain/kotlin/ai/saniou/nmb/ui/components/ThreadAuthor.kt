@@ -2,6 +2,7 @@ package ai.saniou.nmb.ui.components
 
 import ai.saniou.nmb.data.entity.IBaseAuthor
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,7 +21,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun ThreadAuthor(author: IBaseAuthor, isPo: Boolean = false) {
+fun ThreadAuthor(
+    author: IBaseAuthor,
+    isPo: Boolean = false,
+    onClick: ((String) -> Unit)? = null
+) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -36,7 +41,9 @@ fun ThreadAuthor(author: IBaseAuthor, isPo: Boolean = false) {
                 .size(36.dp)
                 .clip(CircleShape)
                 .background(avatarColor)
-            ,
+                .then(
+                    if (onClick != null) Modifier.clickable { onClick(author.userHash) } else Modifier
+                ),
             contentAlignment = Alignment.Center
         ) {
             Text(

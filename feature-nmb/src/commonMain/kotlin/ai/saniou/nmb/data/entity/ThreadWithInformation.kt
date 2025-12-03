@@ -4,6 +4,7 @@ import ai.saniou.nmb.db.table.GetHistoryThreads
 import ai.saniou.nmb.db.table.GetThreadsInForum
 import ai.saniou.nmb.db.table.GetThreadsInForumOffset
 import ai.saniou.nmb.db.table.SearchThreads
+import ai.saniou.nmb.db.table.Thread
 import ai.saniou.nmb.db.table.ThreadReplyQueries
 import kotlinx.serialization.json.JsonNames
 
@@ -55,6 +56,31 @@ fun GetThreadsInForum.toThreadWithInformation(query: ThreadReplyQueries? = null)
         last_access_time = last_access_time!!,
         last_read_reply_id = last_read_reply_id!!,
     )
+
+fun Thread.toThreadWithInformation(query: ThreadReplyQueries? = null) =
+    ThreadWithInformation(
+        id = id,
+        fid = fid,
+        replyCount = replyCount,
+        img = img,
+        ext = ext,
+        now = now,
+        userHash = userHash,
+        name = name,
+        title = title,
+        content = content,
+        sage = sage,
+        admin = admin,
+        hide = hide,
+        replies = query?.getLastFiveReplies(id)?.executeAsList()?.map {
+            it.toThreadReply()
+        } ?: emptyList(),
+        remainReplies = null,
+        lastKey = null,
+        last_access_time = null,
+        last_read_reply_id = null,
+    )
+
 fun SearchThreads.toThreadWithInformation(query: ThreadReplyQueries? = null) =
     ThreadWithInformation(
         id = id,

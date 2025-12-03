@@ -15,6 +15,7 @@ import ai.saniou.nmb.workflow.image.ImagePreviewPage
 import ai.saniou.nmb.workflow.search.SearchContract.Event
 import ai.saniou.nmb.workflow.search.SearchContract.SearchType
 import ai.saniou.nmb.workflow.thread.ThreadPage
+import ai.saniou.nmb.workflow.user.UserDetailPage
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -153,7 +154,8 @@ data class SearchPage(
                             onThreadClick = { navigator.push(ThreadPage(it)) },
                             onImageClick = { threadId, img, ext ->
 //                                navigator.push(ImagePreviewPage(threadId, img, ext))
-                            }
+                            },
+                            onUserClick = { userHash -> navigator.push(UserDetailPage(userHash)) }
                         )
                     } else {
                         ReplyResultList(
@@ -173,7 +175,8 @@ data class SearchPage(
     private fun ThreadResultList(
         viewModel: SearchViewModel,
         onThreadClick: (Long) -> Unit,
-        onImageClick: (Long, String, String) -> Unit
+        onImageClick: (Long, String, String) -> Unit,
+        onUserClick: (String) -> Unit
     ) {
         val threads = viewModel.state.collectAsStateWithLifecycle().value.threadPagingData.collectAsLazyPagingItems()
 
@@ -186,7 +189,8 @@ data class SearchPage(
                 ForumThreadCard(
                     thread = thread,
                     onClick = { onThreadClick(thread.id) },
-                    onImageClick = { img, ext -> onImageClick(thread.id, img, ext) }
+                    onImageClick = { img, ext -> onImageClick(thread.id, img, ext) },
+                    onUserClick = onUserClick
                 )
             }
 

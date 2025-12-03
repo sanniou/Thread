@@ -48,6 +48,7 @@ import ai.saniou.nmb.workflow.search.SearchViewModel
 import ai.saniou.nmb.workflow.subscription.SubscriptionViewModel
 import ai.saniou.nmb.workflow.thread.ThreadViewModel
 import ai.saniou.nmb.workflow.trend.TrendViewModel
+import ai.saniou.nmb.workflow.user.UserDetailViewModel
 import ai.saniou.nmb.workflow.user.UserViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -164,6 +165,12 @@ val nmbdi = DI {
 
     // 搜索相关
     bindProvider { SearchViewModel(instance()) }
+    bindFactory<String, UserDetailViewModel> { userHash ->
+        UserDetailViewModel(
+            userHash = userHash,
+            instance()
+        )
+    }
 
     // 收藏相关
     bindProvider { GetBookmarksUseCase(instance()) }

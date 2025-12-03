@@ -124,3 +124,9 @@ LIMIT :limit OFFSET :offset;
 countSearchReplies:
 SELECT count(*) FROM ThreadReply
 WHERE (content LIKE ('%' || :query || '%') OR title LIKE ('%' || :query || '%'));
+
+getRepliesByUserHashOffset:
+SELECT * FROM ThreadReply WHERE userHash = :userHash ORDER BY now DESC LIMIT :limit OFFSET :offset;
+
+countRepliesByUserHash:
+SELECT count(*) FROM ThreadReply WHERE userHash = :userHash;

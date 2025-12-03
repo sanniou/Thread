@@ -42,6 +42,7 @@ fun ListThreadPage(
     threadFlow: Flow<PagingData<ThreadWithInformation>>,
     onThreadClicked: (Long) -> Unit,
     onImageClick: (Long, String, String) -> Unit,
+    onUserClick: (String) -> Unit,
     modifier: Modifier = Modifier,
     state: LazyListState = rememberLazyListState(),
 ) {
@@ -93,7 +94,8 @@ fun ListThreadPage(
                         ForumThreadCard(
                             thread = feed,
                             onClick = { onThreadClicked(feed.id) },
-                            onImageClick = { img, ext -> onImageClick(feed.id, img, ext) }
+                            onImageClick = { img, ext -> onImageClick(feed.id, img, ext) },
+                            onUserClick = onUserClick
                         )
                     }
 

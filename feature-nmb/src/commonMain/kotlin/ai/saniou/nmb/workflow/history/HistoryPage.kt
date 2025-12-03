@@ -5,6 +5,7 @@ import ai.saniou.nmb.workflow.image.ImageInfo
 import ai.saniou.nmb.workflow.image.ImagePreviewPage
 import ai.saniou.nmb.workflow.image.ImagePreviewViewModelParams
 import ai.saniou.nmb.workflow.thread.ThreadPage
+import ai.saniou.nmb.workflow.user.UserDetailPage
 import androidx.compose.runtime.Composable
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -19,6 +20,7 @@ class HistoryPage : Screen {
         val navigator = LocalNavigator.currentOrThrow
 
         ListThreadPage(
+            onUserClick = { userHash -> navigator.push(UserDetailPage(userHash)) },
             threadFlow = viewModel.historyThreads,
             onThreadClicked = { navigator.push(ThreadPage(it)) },
             onImageClick = { _, imgPath, ext ->

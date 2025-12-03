@@ -149,3 +149,13 @@ LIMIT :limit OFFSET :offset;
 countSearchThreads:
 SELECT count(*) FROM Thread
 WHERE (CAST(id AS TEXT) LIKE ('%' || :query || '%') OR title LIKE ('%' || :query || '%') OR content LIKE ('%' || :query || '%'));
+
+getThreadsByUserHashOffset:
+SELECT Thread.* FROM Thread
+LEFT JOIN ThreadInformation ON Thread.id = ThreadInformation.id
+WHERE userHash = :userHash
+ORDER BY lastKey DESC
+LIMIT :limit OFFSET :offset;
+
+countThreadsByUserHash:
+SELECT count(*) FROM Thread WHERE userHash = :userHash;

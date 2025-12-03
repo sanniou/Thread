@@ -68,4 +68,7 @@ interface NmbRepository {
 
     fun searchThreadsPager(query: String): Flow<PagingData<ThreadWithInformation>>
     fun searchRepliesPager(query: String): Flow<PagingData<ThreadReply>>
+
+    fun getUserThreadsPager(userHash: String): Flow<PagingData<ThreadWithInformation>>
+    fun getUserRepliesPager(userHash: String): Flow<PagingData<ThreadReply>>
 }

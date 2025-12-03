@@ -38,6 +38,7 @@ fun ForumThreadCard(
     thread: IBaseThread,
     onClick: () -> Unit,
     onImageClick: ((String, String) -> Unit)? = null,
+    onUserClick: ((String) -> Unit)? = null,
 ) {
     ElevatedCard(
         modifier = Modifier
@@ -50,7 +51,7 @@ fun ForumThreadCard(
         ) {
             // 统一的头部
             Column(verticalArrangement = Arrangement.spacedBy(Dimens.padding_small)) {
-                ThreadAuthor(thread)
+                ThreadAuthor(thread, onClick = onUserClick)
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(Dimens.padding_small)
