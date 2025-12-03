@@ -77,7 +77,7 @@ fun RichText(
     maxLines: Int = Int.MAX_VALUE,
     blankLinePolicy: BlankLinePolicy = BlankLinePolicy.KEEP,
     color: Color = Color.Unspecified,
-    spoilerBackgroundColor: Color = MaterialTheme.colorScheme.onSurface,
+    spoilerBackgroundColor: Color = MaterialTheme.colorScheme.primary,
 ) {
     val linkColor = MaterialTheme.colorScheme.primary
     val uriHandler = LocalUriHandler.current
@@ -199,7 +199,7 @@ private fun parseHtml(
                             val newStyle = if (isHidden) {
                                 currentStyle.copy(
                                     background = spoilerBackgroundColor,
-                                    color = spoilerBackgroundColor
+                                    color = Color.Transparent
                                 )
                             } else {
                                 currentStyle
