@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -75,6 +76,12 @@ fun HomePage() {
                     }
                 },
                 actions = {
+                    IconButton(onClick = { navController.push(ForumListPage) }) {
+                        Icon(
+                            imageVector = Icons.Default.List,
+                            contentDescription = "论坛列表"
+                        )
+                    }
                     IconButton(onClick = { navController.push(UserPage()) }) {
                         Icon(
                             imageVector = Icons.Default.AccountCircle,
