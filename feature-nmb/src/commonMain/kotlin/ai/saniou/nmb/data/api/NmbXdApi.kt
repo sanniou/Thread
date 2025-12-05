@@ -1,6 +1,6 @@
 package ai.saniou.nmb.data.api;
 
-import ai.saniou.corecommon.data.SaniouResponse
+import ai.saniou.thread.network.SaniouResponse
 import ai.saniou.nmb.data.entity.CdnPath
 import ai.saniou.nmb.data.entity.CookieListResponse
 import ai.saniou.nmb.data.entity.Feed

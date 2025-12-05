@@ -1,6 +1,5 @@
-package ai.saniou.corecommon.data;
+package ai.saniou.thread.network
 
-import androidx.compose.ui.text.decapitalize
 import de.jensklingenberg.ktorfit.Ktorfit
 import de.jensklingenberg.ktorfit.converter.Converter
 import de.jensklingenberg.ktorfit.converter.KtorfitResult
@@ -9,7 +8,6 @@ import io.ktor.client.call.body
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsChannel
 import io.ktor.utils.io.toByteArray
-
 
 class SaniouResponseConverterFactory : Converter.Factory {
 

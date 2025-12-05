@@ -1,11 +1,11 @@
 package ai.saniou.thread.data.source.nmb
 
-import ai.saniou.corecommon.data.SaniouResponse
 import ai.saniou.thread.data.source.nmb.remote.NmbApi
 import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
 import ai.saniou.thread.domain.model.Forum
 import ai.saniou.thread.domain.model.Post
 import ai.saniou.thread.domain.repository.Source
+import ai.saniou.thread.network.SaniouResponse
 
 class NmbSource(private val nmbApi: NmbApi) : Source {
     override val id: String = "nmb"
@@ -16,6 +16,7 @@ class NmbSource(private val nmbApi: NmbApi) : Source {
                 val forums = response.data.flatMap { it.forums }.map { it.toDomain() }
                 Result.success(forums)
             }
+
             is SaniouResponse.Error -> Result.failure(response.ex)
         }
     }
@@ -26,6 +27,7 @@ class NmbSource(private val nmbApi: NmbApi) : Source {
                 val posts = response.data.map { it.toDomain() }
                 Result.success(posts)
             }
+
             is SaniouResponse.Error -> Result.failure(response.ex)
         }
     }

@@ -15,7 +15,6 @@ import de.jensklingenberg.ktorfit.Ktorfit
 import org.kodein.di.DI
 import org.kodein.di.bind
 import org.kodein.di.instance
-import org.kodein.di.set
 import org.kodein.di.singleton
 
 val dataModule = DI.Module("dataModule") {
@@ -32,7 +31,7 @@ val dataModule = DI.Module("dataModule") {
         FeedRepositoryImpl(sources)
     }
 
-    bind<Set<Source>>() with set<Source>()
+//    bind<Set<Source>>() with set<Source>()
 
     bind<SyncProvider>(tag = "webdav") with singleton { WebDavSyncProvider() }
     bind<SyncProvider>(tag = "local") with singleton { LocalSyncProvider() }
@@ -42,5 +41,5 @@ val dataModule = DI.Module("dataModule") {
         SyncRepositoryImpl(providers)
     }
 
-    bind<Set<SyncProvider>>() with set<SyncProvider>()
+//    bind<Set<SyncProvider>>() with set<SyncProvider>()
 }

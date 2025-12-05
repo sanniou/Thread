@@ -1,4 +1,4 @@
-package ai.saniou.corecommon.data
+package ai.saniou.thread.network
 
 import de.jensklingenberg.ktorfit.Ktorfit
 import de.jensklingenberg.ktorfit.ktorfit
@@ -18,7 +18,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
-internal fun SaniouKtorfit(baseUrl: String, cookieProvider: CookieProvider?): Ktorfit = ktorfit {
+fun SaniouKtorfit(baseUrl: String, cookieProvider: CookieProvider?): Ktorfit = ktorfit {
     baseUrl(baseUrl)
     httpClient(
         HttpClient(CIO) {
@@ -30,7 +30,6 @@ internal fun SaniouKtorfit(baseUrl: String, cookieProvider: CookieProvider?): Kt
                 gzip()
             }
 
-            useDefaultTransformers = false
             install(ContentNegotiation) {
                 json(Json {
                     prettyPrint = true

@@ -1,6 +1,6 @@
 package ai.saniou.nmb.data.repository
 
-import ai.saniou.corecommon.data.SaniouResponse
+import ai.saniou.thread.network.SaniouResponse
 import ai.saniou.nmb.data.api.NmbXdApi
 import ai.saniou.nmb.data.entity.Forum
 import ai.saniou.nmb.data.entity.Reply

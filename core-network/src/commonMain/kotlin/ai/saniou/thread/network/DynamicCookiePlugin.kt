@@ -1,4 +1,4 @@
-package ai.saniou.corecommon.data
+package ai.saniou.thread.network
 
 import io.ktor.client.plugins.api.createClientPlugin
 

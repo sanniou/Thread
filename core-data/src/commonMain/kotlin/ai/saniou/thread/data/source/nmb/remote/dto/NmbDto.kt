@@ -1,8 +1,10 @@
 package ai.saniou.thread.data.source.nmb.remote.dto
 
+import ai.saniou.thread.domain.model.Post
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonNames
+import kotlin.time.ExperimentalTime
 
 // region Base Interfaces
 interface IBaseAuthor {
@@ -52,6 +54,19 @@ data class Forum(
     @JsonNames("RemainReplies")
     val remainReplies: Long? = null,
 ) : IBaseThread, IBaseThreadReply
+
+@OptIn(ExperimentalTime::class)
+fun Forum.toDomain()=
+    Post(
+        id = TODO(),
+        title = TODO(),
+        content = TODO(),
+        author = TODO(),
+        createdAt = TODO(),
+        sourceName = TODO(),
+        sourceUrl = TODO(),
+        forumName = TODO()
+    );
 
 @Serializable
 @OptIn(ExperimentalSerializationApi::class)

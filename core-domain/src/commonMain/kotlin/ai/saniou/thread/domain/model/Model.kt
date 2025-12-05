@@ -1,6 +1,10 @@
+@file:OptIn(ExperimentalTime::class)
+
 package ai.saniou.thread.domain.model
 
-import kotlinx.datetime.Instant
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
+
 
 /**
  * 聚合的帖子模型
@@ -22,7 +26,7 @@ data class Post(
     val createdAt: Instant,
     val sourceName: String,
     val sourceUrl: String,
-    val forumName: String
+    val forumName: String,
 )
 
 /**
@@ -35,5 +39,6 @@ data class Post(
 data class Forum(
     val id: String,
     val name: String,
-    val sourceName: String
+    val sourceName: String,
+    val now: String,
 )

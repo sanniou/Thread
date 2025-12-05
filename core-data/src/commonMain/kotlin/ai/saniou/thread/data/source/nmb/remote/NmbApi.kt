@@ -1,6 +1,6 @@
 package ai.saniou.thread.data.source.nmb.remote
 
-import ai.saniou.corecommon.data.SaniouResponse
+import ai.saniou.thread.network.SaniouResponse
 import ai.saniou.thread.data.source.nmb.remote.dto.Forum
 import ai.saniou.thread.data.source.nmb.remote.dto.ForumCategory
 import ai.saniou.thread.data.source.nmb.remote.dto.Thread

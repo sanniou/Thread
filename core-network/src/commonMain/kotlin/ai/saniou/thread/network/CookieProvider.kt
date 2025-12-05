@@ -1,4 +1,4 @@
-package ai.saniou.corecommon.data
+package ai.saniou.thread.network
 
 /**
  * 提供动态 Cookie 的抽象接口

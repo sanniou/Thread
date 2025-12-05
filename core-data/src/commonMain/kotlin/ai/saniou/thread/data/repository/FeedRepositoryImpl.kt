@@ -6,6 +6,7 @@ import ai.saniou.thread.domain.repository.FeedRepository
 import ai.saniou.thread.domain.repository.Source
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlin.time.ExperimentalTime
 
 class FeedRepositoryImpl(
     private val sources: Set<Source>
@@ -23,6 +24,7 @@ class FeedRepositoryImpl(
         return source.getPosts(forumId, page)
     }
 
+    @OptIn(ExperimentalTime::class)
     override suspend fun getAggregatedFeed(page: Int): Result<List<Post>> = coroutineScope {
         // 简单聚合：并行获取所有来源的第一页数据，然后合并排序
         // 实际应用中需要更复杂的策略，例如根据用户配置、分页等

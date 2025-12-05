@@ -1,6 +1,6 @@
 package ai.saniou.nmb.data
 
-import ai.saniou.corecommon.data.CookieProvider
+import ai.saniou.thread.network.CookieProvider
 import ai.saniou.nmb.db.Database
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList

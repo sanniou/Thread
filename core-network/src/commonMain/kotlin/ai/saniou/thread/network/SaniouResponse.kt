@@ -1,4 +1,4 @@
-package ai.saniou.corecommon.data;
+package ai.saniou.thread.network;
 
 sealed class SaniouResponse<T> {
     data class Success<T>(val data: T) : SaniouResponse<T>()

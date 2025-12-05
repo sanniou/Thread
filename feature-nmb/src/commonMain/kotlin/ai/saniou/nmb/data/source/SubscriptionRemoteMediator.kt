@@ -1,6 +1,6 @@
 package ai.saniou.nmb.data.source
 
-import ai.saniou.corecommon.data.SaniouResponse
+import ai.saniou.thread.network.SaniouResponse
 import ai.saniou.nmb.data.entity.Feed
 import ai.saniou.nmb.data.entity.RemoteKeyType
 import ai.saniou.nmb.data.entity.nowToEpochMilliseconds

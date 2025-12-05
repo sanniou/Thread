@@ -1,6 +1,6 @@
 package ai.saniou.nmb.data.manager
 
-import ai.saniou.corecommon.data.SaniouResponse
+import ai.saniou.thread.network.SaniouResponse
 import ai.saniou.nmb.data.entity.CdnPath
 import ai.saniou.nmb.data.repository.ForumRepository
 import kotlinx.coroutines.flow.MutableStateFlow

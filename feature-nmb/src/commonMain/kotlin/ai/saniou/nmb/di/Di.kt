@@ -1,7 +1,6 @@
 package ai.saniou.nmb.di
 
-import ai.saniou.corecommon.data.CookieProvider
-import ai.saniou.corecommon.data.di.coreCommon
+import ai.saniou.thread.network.CookieProvider
 import ai.saniou.nmb.data.NmbCookieProvider
 import ai.saniou.nmb.data.api.NmbXdApi
 import ai.saniou.nmb.data.api._NmbXdApiImpl
@@ -50,16 +49,30 @@ import ai.saniou.nmb.workflow.thread.ThreadViewModel
 import ai.saniou.nmb.workflow.trend.TrendViewModel
 import ai.saniou.nmb.workflow.user.UserDetailViewModel
 import ai.saniou.nmb.workflow.user.UserViewModel
+import ai.saniou.thread.network.SaniouKtorfit
+import de.jensklingenberg.ktorfit.Ktorfit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import org.kodein.di.DI
 import org.kodein.di.bindConstant
 import org.kodein.di.bindFactory
+import org.kodein.di.bindMultiton
 import org.kodein.di.bindProvider
 import org.kodein.di.bindSingleton
 import org.kodein.di.instance
+import org.kodein.di.instanceOrNull
 
+val coreCommon by DI.Module {
 
+    bindMultiton<String, Ktorfit> { baseUrl ->
+        SaniouKtorfit(baseUrl, instanceOrNull())
+    }
+
+//    bindSingleton<Ktorfit> {
+//        ktorfit(this.instance<String>("baseUrl"))
+//    }
+
+}
 val nmbdi = DI {
     import(coreCommon)
     import(nmbImagePreviewModule)
