@@ -1,6 +1,6 @@
 package ai.saniou.nmb.workflow.subscription
 
-import ai.saniou.nmb.data.entity.Feed
+import ai.saniou.thread.data.source.nmb.remote.dto.Feed
 import app.cash.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow

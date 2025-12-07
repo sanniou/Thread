@@ -2,7 +2,7 @@ package ai.saniou.nmb.workflow.home
 
 import ai.saniou.coreui.widgets.DrawerMenuItem
 import ai.saniou.coreui.widgets.DrawerMenuRow
-import ai.saniou.nmb.data.entity.ForumCategory
+import ai.saniou.thread.data.source.nmb.remote.dto.ForumCategory
 import ai.saniou.nmb.di.nmbdi
 import ai.saniou.nmb.ui.components.DrawerHeader
 import ai.saniou.nmb.workflow.bookmark.BookmarkPage
@@ -11,6 +11,7 @@ import ai.saniou.nmb.workflow.home.ForumCategoryContract.Event
 import ai.saniou.nmb.workflow.subscription.SubscriptionPage
 import ai.saniou.nmb.workflow.search.SearchPage
 import ai.saniou.nmb.workflow.thread.ThreadPage
+import ai.saniou.thread.data.source.nmb.remote.dto.ForumDetail
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -247,7 +248,7 @@ data class ForumCategoryPage(
     @OptIn(ExperimentalFoundationApi::class, ExperimentalLayoutApi::class)
     @Composable
     private fun ForumItem(
-        forum: ai.saniou.nmb.data.entity.ForumDetail,
+        forum: ForumDetail,
         isSelected: Boolean,
         isFavorite: Boolean,
         onForumClick: () -> Unit,
@@ -277,14 +278,14 @@ data class ForumCategoryPage(
             Column(modifier = Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = if (forum.showName.isNullOrBlank()) forum.name else forum.showName,
+                        text = if (forum.showName.isNullOrBlank()) forum.name else forum.showName!!,
                         style = MaterialTheme.typography.bodyMedium,
                         color = contentColor,
                         fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
                     )
 
                     // 状态图标
-                    if (forum.autoDelete != null && forum.autoDelete > 0) {
+                    if (forum.autoDelete != null && forum.autoDelete!! > 0) {
                         Spacer(modifier = Modifier.width(4.dp))
                         Icon(
                             imageVector = Icons.Default.Delete,

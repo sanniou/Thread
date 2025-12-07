@@ -2,7 +2,7 @@ package ai.saniou.nmb.workflow.home
 
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.MBToolbar
-import ai.saniou.nmb.data.entity.ForumDetail
+import ai.saniou.thread.data.source.nmb.remote.dto.ForumDetail
 import ai.saniou.nmb.workflow.forum.ForumPage
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -13,14 +13,11 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme

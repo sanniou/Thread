@@ -17,7 +17,7 @@ junit = "4.13.2"
 kotlin = "2.2.21"
 kotlinx-coroutines = "1.10.2"
 kodeinDi = "7.29.0"
-ktorfit = "2.6.4"
+ktorfit = "2.6.5"
 kottage = "1.9.0"
 ktor = "3.3.2"
 navigationCompose = "2.8.0-alpha10"
@@ -118,8 +118,8 @@ sketch-extensions-compose = { group = "io.github.panpf.sketch4", name = 'sketch-
 sketch-ktor = { group = "io.github.panpf.sketch4", name = 'sketch-http-ktor3', version.ref = "sketch" }
 sketch-svg = { group = "io.github.panpf.sketch4", name = 'sketch-svg', version.ref = "sketch" }
 #cash paging
-cash-paging = { group = "app.cash.paging", name = "paging-common", version.ref = "cashPaging" }
-cash-paging-common = { group = "app.cash.paging", name = "paging-compose-common", version.ref = "cashPaging" }
+cash-paging-common = { group = "app.cash.paging", name = "paging-common", version.ref = "cashPaging" }
+cash-paging-compose-common = { group = "app.cash.paging", name = "paging-compose-common", version.ref = "cashPaging" }
 
 # zoom
 zoom = { group = "io.github.panpf.zoomimage", name = "zoomimage-compose", version.ref = "zoomimage" }

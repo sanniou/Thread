@@ -1,6 +1,6 @@
 package ai.saniou.nmb.workflow.forum
 
-import ai.saniou.nmb.data.entity.ThreadWithInformation
+import ai.saniou.thread.data.source.nmb.remote.dto.ThreadWithInformation
 import ai.saniou.nmb.data.repository.DataPolicy
 import ai.saniou.nmb.domain.ForumUseCase
 import ai.saniou.nmb.workflow.forum.ForumContract.Effect

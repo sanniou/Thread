@@ -3,7 +3,7 @@ package ai.saniou.nmb.ui.components
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.BlankLinePolicy
 import ai.saniou.coreui.widgets.RichText
-import ai.saniou.nmb.data.entity.ThreadReply
+import ai.saniou.thread.data.source.nmb.remote.dto.ThreadReply
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

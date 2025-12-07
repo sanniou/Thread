@@ -1,6 +1,6 @@
 package ai.saniou.nmb.ui.components
 
-import ai.saniou.nmb.data.entity.IBaseAuthor
+import ai.saniou.thread.data.source.nmb.remote.dto.IBaseAuthor
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement

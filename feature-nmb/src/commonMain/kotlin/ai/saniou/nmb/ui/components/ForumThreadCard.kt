@@ -1,8 +1,8 @@
 package ai.saniou.nmb.ui.components
 
 import ai.saniou.coreui.theme.Dimens
-import ai.saniou.nmb.data.entity.IBaseThread
-import ai.saniou.nmb.data.entity.IBaseThreadReply
+import ai.saniou.thread.data.source.nmb.remote.dto.IBaseThread
+import ai.saniou.thread.data.source.nmb.remote.dto.IBaseThreadReply
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

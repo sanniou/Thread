@@ -1,7 +1,7 @@
 package ai.saniou.nmb.domain
 
-import ai.saniou.nmb.data.api.NmbXdApi
-import ai.saniou.nmb.data.entity.Thread
+import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
+import ai.saniou.thread.data.source.nmb.remote.dto.Thread
 import ai.saniou.nmb.data.repository.NmbRepository
 import ai.saniou.nmb.data.storage.SubscriptionStorage
 

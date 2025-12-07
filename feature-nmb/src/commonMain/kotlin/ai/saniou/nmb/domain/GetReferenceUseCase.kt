@@ -1,8 +1,8 @@
 package ai.saniou.nmb.domain
 
-import ai.saniou.nmb.data.entity.ThreadReply
-import ai.saniou.nmb.data.entity.toTable
-import ai.saniou.nmb.data.entity.toThreadReply
+import ai.saniou.thread.data.source.nmb.remote.dto.ThreadReply
+import ai.saniou.thread.data.source.nmb.remote.dto.toTable
+import ai.saniou.thread.data.source.nmb.remote.dto.toThreadReply
 import ai.saniou.nmb.data.repository.ForumRepository
 import ai.saniou.nmb.db.Database
 

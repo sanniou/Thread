@@ -1,6 +1,6 @@
 package ai.saniou.nmb.workflow.post
 
-import ai.saniou.nmb.data.entity.PostThreadRequest
+import ai.saniou.thread.data.source.nmb.remote.dto.PostThreadRequest
 import androidx.compose.ui.text.input.TextFieldValue
 import io.ktor.http.content.PartData
 

@@ -10,7 +10,6 @@ plugins {
     alias(libs.plugins.composeHotReload)
     alias(libs.plugins.kotlinxSerialization)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.ktorfit)
     alias(libs.plugins.sqldelight)
 }
 
@@ -55,7 +54,6 @@ kotlin {
             implementation(project(":core-common"))
             implementation(project(":core-data"))
             implementation(project(":core-network"))
-            api(libs.ktorfit.lib)
             implementation(libs.ktor.serialization.kotlinx.json)
             implementation(libs.ktor.client.serialization)
             implementation(libs.ktor.client.content.negotiation)
@@ -81,7 +79,7 @@ kotlin {
 //            implementation(libs.paging.common)
 //            implementation(libs.paging.compose)
 //            implementation(libs.cash.paging)
-            implementation(libs.cash.paging.common)
+            implementation(libs.cash.paging.compose.common)
             // https://saket.github.io/telephoto/zoomable-peek-overlay/
             // not multi platform
             // implementation("me.saket.telephoto:zoomable-image-coil3:0.15.1")

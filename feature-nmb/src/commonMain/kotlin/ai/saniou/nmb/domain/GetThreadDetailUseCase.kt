@@ -1,10 +1,10 @@
 package ai.saniou.nmb.domain
 
 import ai.saniou.thread.network.SaniouResponse
-import ai.saniou.nmb.data.api.NmbXdApi
-import ai.saniou.nmb.data.entity.Thread
-import ai.saniou.nmb.data.entity.toTable
-import ai.saniou.nmb.data.entity.toTableReply
+import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
+import ai.saniou.thread.data.source.nmb.remote.dto.Thread
+import ai.saniou.thread.data.source.nmb.remote.dto.toTable
+import ai.saniou.thread.data.source.nmb.remote.dto.toTableReply
 import ai.saniou.nmb.db.Database
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToOneOrNull

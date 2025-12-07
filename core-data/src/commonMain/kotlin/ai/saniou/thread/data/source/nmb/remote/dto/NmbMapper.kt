@@ -23,7 +23,7 @@ fun Forum.toDomain(): Post {
 fun ForumDetail.toDomain(): Forum {
     return Forum(
         id = this.id.toString(),
-        name = this.showName.ifEmpty { this.name },
+        name = this.showName?.ifEmpty { this.name } ?: this.name,
         sourceName = "NMB",
         now = TODO()
     )

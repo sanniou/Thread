@@ -1,6 +1,6 @@
 package ai.saniou.nmb.ui.components
 
-import ai.saniou.nmb.data.entity.ThreadReply
+import ai.saniou.thread.data.source.nmb.remote.dto.ThreadReply
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box

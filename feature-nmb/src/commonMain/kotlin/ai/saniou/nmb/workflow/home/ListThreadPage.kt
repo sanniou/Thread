@@ -2,7 +2,7 @@ package ai.saniou.nmb.workflow.home
 
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.PullToRefreshWrapper
-import ai.saniou.nmb.data.entity.ThreadWithInformation
+import ai.saniou.thread.data.source.nmb.remote.dto.ThreadWithInformation
 import ai.saniou.nmb.ui.components.ForumThreadCard
 import ai.saniou.nmb.ui.components.LoadEndIndicator
 import ai.saniou.nmb.ui.components.LoadingFailedIndicator

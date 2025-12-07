@@ -3,8 +3,8 @@ package ai.saniou.nmb.workflow.thread
 import ai.saniou.coreui.widgets.PullToRefreshWrapper
 import ai.saniou.coreui.widgets.ShimmerContainer
 import ai.saniou.coreui.widgets.VerticalSpacerSmall
-import ai.saniou.nmb.data.entity.Thread
-import ai.saniou.nmb.data.entity.ThreadReply
+import ai.saniou.thread.data.source.nmb.remote.dto.Thread
+import ai.saniou.thread.data.source.nmb.remote.dto.ThreadReply
 import ai.saniou.nmb.di.nmbdi
 import ai.saniou.nmb.ui.components.LoadEndIndicator
 import ai.saniou.nmb.ui.components.LoadingFailedIndicator

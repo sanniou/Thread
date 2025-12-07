@@ -1,7 +1,7 @@
 package ai.saniou.nmb.workflow.thread
 
-import ai.saniou.nmb.data.entity.Thread
-import ai.saniou.nmb.data.entity.ThreadReply
+import ai.saniou.thread.data.source.nmb.remote.dto.Thread
+import ai.saniou.thread.data.source.nmb.remote.dto.ThreadReply
 import app.cash.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow

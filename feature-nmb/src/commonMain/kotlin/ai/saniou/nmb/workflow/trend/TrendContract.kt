@@ -1,6 +1,6 @@
 package ai.saniou.nmb.workflow.trend
 
-import ai.saniou.nmb.data.entity.Thread
+import ai.saniou.thread.data.source.nmb.remote.dto.Thread
 import kotlinx.serialization.Serializable
 
 /**

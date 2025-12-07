@@ -1,7 +1,7 @@
 package ai.saniou.nmb.domain
 
-import ai.saniou.nmb.data.entity.Feed
-import ai.saniou.nmb.data.entity.toFeed
+import ai.saniou.thread.data.source.nmb.remote.dto.Feed
+import ai.saniou.thread.data.source.nmb.remote.dto.toFeed
 import ai.saniou.nmb.data.repository.DataPolicy
 import ai.saniou.nmb.data.repository.ForumRepository
 import ai.saniou.nmb.data.source.SqlDelightPagingSource

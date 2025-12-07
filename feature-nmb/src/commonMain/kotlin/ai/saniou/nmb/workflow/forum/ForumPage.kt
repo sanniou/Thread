@@ -9,6 +9,7 @@ import ai.saniou.nmb.workflow.image.ImagePreviewViewModelParams
 import ai.saniou.nmb.workflow.post.PostPage
 import ai.saniou.nmb.workflow.thread.ThreadPage
 import ai.saniou.nmb.workflow.user.UserDetailPage
+import ai.saniou.thread.data.source.nmb.remote.dto.ForumDetail
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -194,7 +195,7 @@ data class ForumPage(
     }
     @Composable
     private fun ForumInfoDialog(
-        forumDetail: ai.saniou.nmb.data.entity.ForumDetail?,
+        forumDetail: ForumDetail?,
         onDismissRequest: () -> Unit,
     ) {
         AlertDialog(

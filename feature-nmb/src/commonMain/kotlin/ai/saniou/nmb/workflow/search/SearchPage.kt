@@ -3,7 +3,7 @@ package ai.saniou.nmb.workflow.search
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.BlankLinePolicy
 import ai.saniou.coreui.widgets.RichText
-import ai.saniou.nmb.data.entity.ThreadReply
+import ai.saniou.thread.data.source.nmb.remote.dto.ThreadReply
 import ai.saniou.nmb.di.nmbdi
 import ai.saniou.nmb.ui.components.ForumThreadCard
 import ai.saniou.nmb.ui.components.LoadEndIndicator

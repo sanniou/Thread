@@ -2,8 +2,6 @@ package ai.saniou.nmb.di
 
 import ai.saniou.thread.network.CookieProvider
 import ai.saniou.nmb.data.NmbCookieProvider
-import ai.saniou.nmb.data.api.NmbXdApi
-import ai.saniou.nmb.data.api._NmbXdApiImpl
 import ai.saniou.nmb.data.database.DriverFactory
 import ai.saniou.nmb.data.database.createDatabase
 import ai.saniou.nmb.data.manager.CdnManager
@@ -49,6 +47,8 @@ import ai.saniou.nmb.workflow.thread.ThreadViewModel
 import ai.saniou.nmb.workflow.trend.TrendViewModel
 import ai.saniou.nmb.workflow.user.UserDetailViewModel
 import ai.saniou.nmb.workflow.user.UserViewModel
+import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
+import ai.saniou.thread.data.source.nmb.remote._NmbXdApiImpl
 import ai.saniou.thread.network.SaniouKtorfit
 import de.jensklingenberg.ktorfit.Ktorfit
 import kotlinx.coroutines.CoroutineScope

@@ -1,7 +1,7 @@
 package ai.saniou.nmb.workflow.post
 
 import ai.saniou.coreui.theme.Dimens
-import ai.saniou.nmb.data.entity.EmoticonData
+import ai.saniou.thread.data.source.nmb.remote.dto.EmoticonData
 import ai.saniou.nmb.di.nmbdi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background

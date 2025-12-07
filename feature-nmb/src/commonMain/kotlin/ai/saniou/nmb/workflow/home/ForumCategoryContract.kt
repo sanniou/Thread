@@ -1,7 +1,7 @@
 package ai.saniou.nmb.workflow.home
 
-import ai.saniou.nmb.data.entity.ForumCategory
-import ai.saniou.nmb.data.entity.ForumDetail
+import ai.saniou.thread.data.source.nmb.remote.dto.ForumCategory
+import ai.saniou.thread.data.source.nmb.remote.dto.ForumDetail
 
 /**
  * 定义 ForumCategory 功能模块的 UI 状态和事件

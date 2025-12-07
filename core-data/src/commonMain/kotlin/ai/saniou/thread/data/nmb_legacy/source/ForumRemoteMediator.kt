@@ -1,0 +1,131 @@
+package ai.saniou.nmb.data.source
+
+import ai.saniou.nmb.data.repository.DataPolicy
+import ai.saniou.nmb.db.Database
+import ai.saniou.nmb.db.table.GetThreadsInForumOffset
+import ai.saniou.nmb.db.table.RemoteKeys
+import ai.saniou.thread.data.source.nmb.remote.dto.Forum
+import ai.saniou.thread.data.source.nmb.remote.dto.RemoteKeyType
+import ai.saniou.thread.data.source.nmb.remote.dto.toTable
+import ai.saniou.thread.data.source.nmb.remote.dto.toTableReply
+import ai.saniou.thread.network.SaniouResponse
+import app.cash.paging.ExperimentalPagingApi
+import app.cash.paging.LoadType
+import app.cash.paging.PagingState
+import app.cash.paging.RemoteMediator
+import app.cash.paging.RemoteMediatorMediatorResult
+import app.cash.paging.RemoteMediatorMediatorResultError
+import app.cash.paging.RemoteMediatorMediatorResultSuccess
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
+
+@OptIn(ExperimentalPagingApi::class)
+class ForumRemoteMediator(
+    private val sourceId: Long, // 通用源 ID，例如 fid
+    private val db: Database,
+    private val dataPolicy: DataPolicy,
+    private val initialPage: Int,
+    private val fetcher: suspend (page: Int) -> SaniouResponse<List<Forum>>,
+) : RemoteMediator<Int, GetThreadsInForumOffset>() {
+
+    private val threadQueries = db.threadQueries
+    private val remoteKeyQueries = db.remoteKeyQueries
+
+    @OptIn(ExperimentalTime::class)
+    override suspend fun load(
+        loadType: LoadType,
+        state: PagingState<Int, GetThreadsInForumOffset>
+    ): RemoteMediatorMediatorResult {
+        val page: Long = when (loadType) {
+            LoadType.REFRESH -> {
+                // 刷新或跳页逻辑
+                val remoteKey = getRemoteKeyClosestToCurrentPosition(state)
+                remoteKey?.nextKey?.minus(1) ?: initialPage.toLong()
+            }
+
+            LoadType.PREPEND -> {
+                val remoteKey = getRemoteKeyForFirstItem(state)
+                remoteKey?.prevKey
+                    ?: return RemoteMediatorMediatorResultSuccess(endOfPaginationReached = remoteKey != null) as RemoteMediatorMediatorResult
+            }
+
+            LoadType.APPEND -> {
+                val remoteKey = getRemoteKeyForLastItem(state)
+                remoteKey?.nextKey
+                    ?: return RemoteMediatorMediatorResultSuccess(endOfPaginationReached = remoteKey != null) as RemoteMediatorMediatorResult
+            }
+            else -> TODO("Unsupported load type: $loadType")
+        }
+
+        // CACHE_FIRST 策略：在刷新时检查缓存
+        if (loadType == LoadType.REFRESH && dataPolicy == DataPolicy.CACHE_FIRST) {
+            val threadsInDb = threadQueries.countThreadsByFidAndPage(sourceId, page).executeAsOne()
+            if (threadsInDb > 0) {
+                return RemoteMediatorMediatorResultSuccess(endOfPaginationReached = false) as RemoteMediatorMediatorResult
+            }
+        }
+
+        return when (val result = fetcher(page.toInt())) {
+            is SaniouResponse.Success -> {
+                val forums = result.data
+                val endOfPagination = forums.isEmpty()
+
+                db.transaction {
+                    if (loadType == LoadType.REFRESH) {
+                        // API_FIRST 策略：只清理当前页，而不是整个列表
+                        threadQueries.deleteThreadsByFidAndPage(sourceId, page.toLong())
+                    }
+
+                    val prevKey = if (page == 1L) null else page - 1
+                    val nextKey = if (endOfPagination) null else page + 1
+
+                    forums.forEach { forum ->
+                        threadQueries.upsertThread(forum.toTable(page.toLong()))
+                        threadQueries.upsertThreadInformation(
+                            id = forum.id,
+                            remainReplies = forum.remainReplies,
+                            lastKey = forum.replies.lastOrNull()?.id ?: forum.id
+                        )
+                        forum.toTableReply().forEach(db.threadReplyQueries::upsertThreadReply)
+                    }
+                    remoteKeyQueries.insertKey(
+                        type = RemoteKeyType.FORUM,
+                        id = sourceId.toString(),
+                        prevKey = prevKey?.toLong(),
+                        currKey = page.toLong(),
+                        nextKey = nextKey?.toLong(),
+                        updateAt = Clock.System.now().toEpochMilliseconds(),
+                    )
+                }
+                RemoteMediatorMediatorResultSuccess(endOfPaginationReached = endOfPagination) as RemoteMediatorMediatorResult
+            }
+
+            is SaniouResponse.Error -> RemoteMediatorMediatorResultError(result.ex) as RemoteMediatorMediatorResult
+        }
+    }
+
+    private fun getRemoteKeyForLastItem(state: PagingState<Int, GetThreadsInForumOffset>): RemoteKeys? {
+        return state.pages.lastOrNull { it.data.isNotEmpty() }?.data?.lastOrNull()
+            ?.let { thread ->
+                remoteKeyQueries.getRemoteKeyById(RemoteKeyType.FORUM, thread.fid.toString())
+                    .executeAsOneOrNull()
+            }
+    }
+
+    private fun getRemoteKeyForFirstItem(state: PagingState<Int, GetThreadsInForumOffset>): RemoteKeys? {
+        return state.pages.firstOrNull { it.data.isNotEmpty() }?.data?.firstOrNull()
+            ?.let { thread ->
+                remoteKeyQueries.getRemoteKeyById(RemoteKeyType.FORUM, thread.fid.toString())
+                    .executeAsOneOrNull()
+            }
+    }
+
+    private fun getRemoteKeyClosestToCurrentPosition(state: PagingState<Int, GetThreadsInForumOffset>): RemoteKeys? {
+        return state.anchorPosition?.let { position ->
+            state.closestItemToPosition(position)?.fid?.let { fid ->
+                remoteKeyQueries.getRemoteKeyById(RemoteKeyType.FORUM, fid.toString())
+                    .executeAsOneOrNull()
+            }
+        }
+    }
+}

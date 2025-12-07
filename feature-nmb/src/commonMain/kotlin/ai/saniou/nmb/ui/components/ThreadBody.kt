@@ -4,7 +4,7 @@ import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.BlankLinePolicy
 import ai.saniou.coreui.widgets.ClickablePattern
 import ai.saniou.coreui.widgets.RichText
-import ai.saniou.nmb.data.entity.IThreadBody
+import ai.saniou.thread.data.source.nmb.remote.dto.IThreadBody
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer

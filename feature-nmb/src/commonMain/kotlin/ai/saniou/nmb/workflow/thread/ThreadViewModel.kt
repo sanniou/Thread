@@ -1,7 +1,7 @@
 package ai.saniou.nmb.workflow.thread
 
-import ai.saniou.nmb.data.entity.Thread
-import ai.saniou.nmb.data.entity.ThreadReply
+import ai.saniou.thread.data.source.nmb.remote.dto.Thread
+import ai.saniou.thread.data.source.nmb.remote.dto.ThreadReply
 import ai.saniou.nmb.data.repository.NmbRepository
 import ai.saniou.nmb.data.storage.SubscriptionStorage
 import ai.saniou.nmb.db.Database

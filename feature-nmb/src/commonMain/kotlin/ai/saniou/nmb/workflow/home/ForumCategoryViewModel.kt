@@ -1,11 +1,12 @@
 package ai.saniou.nmb.workflow.home
 
-import ai.saniou.nmb.data.entity.ForumCategory
+import ai.saniou.thread.data.source.nmb.remote.dto.ForumCategory
 import ai.saniou.nmb.data.storage.CategoryStorage
 import ai.saniou.nmb.domain.ForumCategoryUseCase
 import ai.saniou.nmb.initializer.AppInitializer
 import ai.saniou.nmb.workflow.home.ForumCategoryContract.Event
 import ai.saniou.nmb.workflow.home.ForumCategoryContract.State
+import ai.saniou.thread.data.source.nmb.remote.dto.ForumDetail
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -94,14 +95,14 @@ class ForumCategoryViewModel(
         }
     }
 
-    private fun selectForum(forum: ai.saniou.nmb.data.entity.ForumDetail) {
+    private fun selectForum(forum: ForumDetail) {
         screenModelScope.launch {
             categoryStorage.saveLastOpenedForum(forum)
         }
         _state.update { it.copy(currentForum = forum) }
     }
 
-    private fun toggleFavorite(forum: ai.saniou.nmb.data.entity.ForumDetail) {
+    private fun toggleFavorite(forum: ForumDetail) {
         screenModelScope.launch {
             val isCurrentlyFavorite = state.value.favoriteForumIds.contains(forum.id)
             forumCategoryUseCase.changeFavoriteForum(forum)

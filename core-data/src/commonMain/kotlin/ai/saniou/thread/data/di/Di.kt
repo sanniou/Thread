@@ -4,7 +4,7 @@ import ai.saniou.thread.data.repository.FeedRepositoryImpl
 import ai.saniou.thread.data.repository.SyncRepositoryImpl
 import ai.saniou.thread.data.source.nga.NgaSource
 import ai.saniou.thread.data.source.nmb.NmbSource
-import ai.saniou.thread.data.source.nmb.remote.NmbApi
+import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
 import ai.saniou.thread.data.sync.local.LocalSyncProvider
 import ai.saniou.thread.data.sync.webdav.WebDavSyncProvider
 import ai.saniou.thread.domain.repository.FeedRepository
@@ -18,7 +18,7 @@ import org.kodein.di.instance
 import org.kodein.di.singleton
 
 val dataModule = DI.Module("dataModule") {
-    bind<NmbApi>() with singleton {
+    bind<NmbXdApi>() with singleton {
         val ktorfit: Ktorfit = instance(arg = "https://api.nmb.best/api/")
         ktorfit.create()
     }

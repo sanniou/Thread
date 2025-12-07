@@ -4,6 +4,9 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidLibrary)
     alias(libs.plugins.kotlinxSerialization)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.ktorfit)
+    alias(libs.plugins.sqldelight)
 }
 
 kotlin {
@@ -34,9 +37,22 @@ kotlin {
         commonMain.dependencies {
             implementation(project(":core-domain"))
             implementation(project(":core-network"))
+            api(libs.ktorfit.lib)
             api(libs.kodein.di)
             api(libs.kottage)
             api(libs.kotlinx.datetime)
+            implementation(libs.sqldelight.runtime)
+            implementation(libs.sqldelight.paging3)
+            implementation(libs.sqldelight.coroutines)
+        }
+        androidMain.dependencies {
+            implementation(libs.sqldelight.android.driver)
+        }
+        jvmMain.dependencies {
+            implementation(libs.sqldelight.sqlite.driver)
+        }
+        iosMain.dependencies {
+            implementation(libs.sqldelight.native.driver)
         }
     }
 }
@@ -50,5 +66,14 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+    }
+}
+
+sqldelight {
+    databases {
+        create("Database") {
+            dialect(libs.sqldelight.sqlite.dialect)
+            packageName.set("ai.saniou.nmb.db")
+        }
     }
 }
