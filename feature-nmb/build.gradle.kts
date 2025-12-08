@@ -10,7 +10,6 @@ plugins {
     alias(libs.plugins.composeHotReload)
     alias(libs.plugins.kotlinxSerialization)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.sqldelight)
 }
 
 kotlin {
@@ -47,7 +46,6 @@ kotlin {
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
-            implementation(libs.sqldelight.android.driver)
         }
         commonMain.dependencies {
             implementation(project(":core-ui"))
@@ -88,7 +86,6 @@ kotlin {
             // implementation("me.saket.telephoto:zoomable-peek-overlay:0.15.1")
 //            implementation(libs.room.runtime)
 //            implementation(libs.sqlite.bundled)
-            implementation(libs.sqldelight.runtime)
             implementation(libs.sqldelight.paging3)
             implementation(libs.sqldelight.coroutines)
             implementation(libs.reorderable)
@@ -99,11 +96,9 @@ kotlin {
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutinesSwing)
-            implementation(libs.sqldelight.sqlite.driver)
         }
 
         iosMain.dependencies {
-            implementation(libs.sqldelight.native.driver)
         }
     }
 }
@@ -155,14 +150,6 @@ tasks.withType<com.google.devtools.ksp.gradle.KspAATask>().configureEach {
     }
 }
 
-sqldelight {
-    databases {
-        create("Database") {
-            dialect(libs.sqldelight.sqlite.dialect)
-            packageName.set("ai.saniou.nmb.db")
-        }
-    }
-}
 
 composeCompiler {
     // for sketch
