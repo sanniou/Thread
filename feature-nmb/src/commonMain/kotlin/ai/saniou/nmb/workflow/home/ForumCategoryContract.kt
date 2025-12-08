@@ -1,30 +1,43 @@
 package ai.saniou.nmb.workflow.home
 
-import ai.saniou.thread.data.source.nmb.remote.dto.ForumCategory
-import ai.saniou.thread.data.source.nmb.remote.dto.ForumDetail
+import ai.saniou.thread.domain.model.Forum
 
 /**
  * 定义 ForumCategory 功能模块的 UI 状态和事件
  */
 interface ForumCategoryContract {
+
+    /**
+     * 用于UI显示的板块分组
+     *
+     * @param id 分组的唯一ID (来自 Forum.groupId)
+     * @param name 分组的名称 (来自 Forum.groupName)
+     * @param forums 该分组下的板块列表
+     */
+    data class ForumGroupUiState(
+        val id: String,
+        val name: String,
+        val forums: List<Forum>
+    )
+
     /**
      * UI 状态
      *
      * @property isLoading 是否正在加载板块列表
      * @property error 错误信息
-     * @property categories 板块分类列表
-     * @property expandedCategoryId 当前展开的分类 ID
+     * @property forumGroups 板块分组列表
+     * @property expandedGroupId 当前展开的分组 ID
      * @property currentForum 当前选中的板块
-     * @property favoriteForumIds 收藏的板块ID列表
+     * @property favoriteForumIds 收藏的板块ID集合
      * @property toastMessage 提示信息
      */
     data class State(
         val isLoading: Boolean = true,
         val error: String? = null,
-        val categories: List<ForumCategory> = emptyList(),
-        val expandedCategoryId: Long? = null,
-        val currentForum: ForumDetail? = null,
-        val favoriteForumIds: Set<Long> = emptySet(),
+        val forumGroups: List<ForumGroupUiState> = emptyList(),
+        val expandedGroupId: String? = null,
+        val currentForum: Forum? = null,
+        val favoriteForumIds: Set<String> = emptySet(),
         val toastMessage: String? = null
     )
 
@@ -39,21 +52,21 @@ interface ForumCategoryContract {
 
         /**
          * 切换分类的展开/折叠状态
-         * @param categoryId 分类 ID
+         * @param groupId 分组 ID
          */
-        data class ToggleCategory(val categoryId: Long) : Event
+        data class ToggleCategory(val groupId: String) : Event
 
         /**
          * 选中一个板块
-         * @param forum 板块详情
+         * @param forum 选中的板块
          */
-        data class SelectForum(val forum: ForumDetail) : Event
+        data class SelectForum(val forum: Forum) : Event
 
         /**
          * 切换一个板块的收藏状态
-         * @param forum 板块详情
+         * @param forum 要切换的板块
          */
-        data class ToggleFavorite(val forum: ForumDetail) : Event
+        data class ToggleFavorite(val forum: Forum) : Event
 
         /**
          * 提示信息已显示

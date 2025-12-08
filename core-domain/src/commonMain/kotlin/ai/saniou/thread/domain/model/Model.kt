@@ -45,4 +45,6 @@ data class Forum(
     val groupName: String,
     val sourceName: String,
     val tag: String? = null,
+    val threadCount: Long?,
+    val autoDelete: Long?,
 )

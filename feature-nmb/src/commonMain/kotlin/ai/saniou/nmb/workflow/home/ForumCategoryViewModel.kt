@@ -3,8 +3,8 @@ package ai.saniou.nmb.workflow.home
 import ai.saniou.nmb.data.storage.CategoryStorage
 import ai.saniou.nmb.initializer.AppInitializer
 import ai.saniou.nmb.workflow.home.ForumCategoryContract.Event
+import ai.saniou.nmb.workflow.home.ForumCategoryContract.ForumGroupUiState
 import ai.saniou.nmb.workflow.home.ForumCategoryContract.State
-import ai.saniou.thread.data.source.nmb.remote.dto.ForumCategory
 import ai.saniou.thread.data.source.nmb.remote.dto.ForumDetail
 import ai.saniou.thread.domain.model.Forum
 import ai.saniou.thread.domain.usecase.GetNmbForumPageUseCase
@@ -35,7 +35,7 @@ class ForumCategoryViewModel(
         when (event) {
             Event.LoadCategories -> loadCategories()
             is Event.SelectForum -> selectForum(event.forum)
-            is Event.ToggleCategory -> toggleCategory(event.categoryId)
+            is Event.ToggleCategory -> toggleCategory(event.groupId)
             is Event.ToggleFavorite -> toggleFavorite(event.forum)
             Event.ToastShown -> onToastShown()
         }
@@ -48,7 +48,8 @@ class ForumCategoryViewModel(
             // For now, we keep it to avoid breaking things.
             appInitializer.initialize()
 
-            val lastOpenedForum = categoryStorage.getLastOpenedForum()
+            // TODO: Replace with a UseCase
+            val lastOpenedForumId = categoryStorage.getLastOpenedForum()?.id?.toString()
 
             getNmbForumPageUseCase()
                 .catch { e ->
@@ -61,22 +62,36 @@ class ForumCategoryViewModel(
                 }
                 .collect { result ->
                     result.onSuccess { data ->
-                        val favoriteCategory = ForumCategory(
-                            id = -2L, // Special ID for favorites
-                            sort = -2L,
+                        val favoriteGroup = ForumGroupUiState(
+                            id = "-2", // Special ID for favorites
                             name = "收藏",
-                            status = "n",
-                            forums = data.favorites.map { it.toForumDetail() }
+                            forums = data.favorites
                         )
-                        val combined = listOf(favoriteCategory) + data.forums.toForumCategories()
-                        val favoriteIds = data.favorites.map { it.id.toLong() }.toSet()
+
+                        val forumGroups = data.forums
+                            .groupBy { it.groupName }
+                            .mapNotNull { (groupName, forums) ->
+                                if (groupName.isBlank()) return@mapNotNull null
+                                val firstForum = forums.first()
+                                ForumGroupUiState(
+                                    id = firstForum.groupId,
+                                    name = groupName,
+                                    forums = forums
+                                )
+                            }
+
+                        val combined = listOf(favoriteGroup) + forumGroups
+                        val favoriteIds = data.favorites.map { it.id }.toSet()
 
                         _state.update {
-                            val isInitialLoad = it.categories.isEmpty()
+                            val isInitialLoad = it.forumGroups.isEmpty()
+                            val allForums = data.forums + data.favorites
+                            val lastOpenedForum = if (isInitialLoad) allForums.find { f -> f.id == lastOpenedForumId } else null
+
                             it.copy(
                                 isLoading = false,
-                                categories = combined,
-                                expandedCategoryId = if (isInitialLoad) lastOpenedForum?.fGroup else it.expandedCategoryId,
+                                forumGroups = combined,
+                                expandedGroupId = if (isInitialLoad) lastOpenedForum?.groupId else it.expandedGroupId,
                                 currentForum = if (isInitialLoad) lastOpenedForum else it.currentForum,
                                 favoriteForumIds = favoriteIds
                             )
@@ -97,89 +112,37 @@ class ForumCategoryViewModel(
         _state.update { it.copy(toastMessage = null) }
     }
 
-    private fun toggleCategory(categoryId: Long) {
+    private fun toggleCategory(groupId: String) {
         _state.update {
             it.copy(
-                expandedCategoryId = if (it.expandedCategoryId == categoryId) null else categoryId
+                expandedGroupId = if (it.expandedGroupId == groupId) null else groupId
             )
         }
     }
 
-    private fun selectForum(forum: ForumDetail) {
+    private fun selectForum(forum: Forum) {
         screenModelScope.launch {
             // This is not ideal, the storage logic should be in a UseCase.
-            categoryStorage.saveLastOpenedForum(forum.toLegacyForumDetail())
+            // A temporary mapper is needed until storage is also refactored.
+            val legacyForum = ForumDetail(
+                id = forum.id.toLong(),
+                name = forum.name,
+                showName = forum.showName,
+                msg = forum.msg,
+                fGroup = forum.groupId.toLong()
+            )
+            categoryStorage.saveLastOpenedForum(legacyForum)
         }
         _state.update { it.copy(currentForum = forum) }
     }
 
-    private fun toggleFavorite(forumDetail: ForumDetail) {
+    private fun toggleFavorite(forum: Forum) {
         screenModelScope.launch {
-            val isCurrentlyFavorite = state.value.favoriteForumIds.contains(forumDetail.id)
-
-            val groupName = state.value.categories
-                .find { it.id == forumDetail.fGroup }?.name ?: ""
-
-            toggleFavoriteUseCase("nmb", forumDetail.toDomainForum(groupName))
+            val isCurrentlyFavorite = state.value.favoriteForumIds.contains(forum.id)
+            toggleFavoriteUseCase("nmb", forum)
             val message =
-                if (isCurrentlyFavorite) "已取消收藏 ${forumDetail.name}" else "已收藏 ${forumDetail.name}"
+                if (isCurrentlyFavorite) "已取消收藏 ${forum.name}" else "已收藏 ${forum.name}"
             _state.update { it.copy(toastMessage = message) }
         }
-    }
-
-    // Mapper functions to adapt new domain models to old UI models.
-    // These should be removed once the UI is updated to use the new models directly.
-    private fun Forum.toForumDetail(): ForumDetail {
-        return ForumDetail(
-            id = this.id.toLong(),
-            name = this.name,
-            showName = this.showName,
-            msg = this.msg,
-            fGroup = this.groupId.toLong(),
-            sort = 0,
-            threadCount = 0
-        )
-    }
-
-    private fun List<Forum>.toForumCategories(): List<ForumCategory> {
-        return this.groupBy { it.groupName }
-            .mapNotNull { (groupName, forums) ->
-                // groupName could be empty if a forum doesn't belong to any category, filter it out.
-                if (groupName.isBlank()) return@mapNotNull null
-
-                val firstForumInGroup = forums.first()
-                ForumCategory(
-                    id = firstForumInGroup.groupId.toLong(),
-                    sort = 0L,
-                    status = "n",
-                    name = groupName,
-                    forums = forums.map { it.toForumDetail() }
-                )
-            }
-    }
-
-    private fun ForumDetail.toDomainForum(groupName: String): Forum {
-        return Forum(
-            id = this.id.toString(),
-            name = this.name,
-            showName = this.showName,
-            msg = this.msg,
-            groupId = this.fGroup.toString(),
-            groupName = groupName,
-            sourceName = "nmb",
-            tag = if (this.fGroup == -1L) "isTimeLine" else null,
-        )
-    }
-
-    private fun ForumDetail.toLegacyForumDetail(): ForumDetail {
-        return ForumDetail(
-            id = this.id,
-            name = this.name,
-            showName = this.showName,
-            msg = this.msg,
-            fGroup = this.fGroup,
-            sort = 0, // Sort info is lost
-            threadCount = 0 // Count is lost
-        )
     }
 }

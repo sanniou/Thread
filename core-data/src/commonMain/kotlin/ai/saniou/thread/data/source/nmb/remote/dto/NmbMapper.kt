@@ -13,6 +13,8 @@ fun Forum.toDomain(): DomainForum = DomainForum(
     msg = msg,
     groupId = fGroup.toString(),
     groupName = "", // This will be populated by the Source
+    threadCount = threadCount,
+    autoDelete = autoDelete,
 )
 
 fun TimeLine.toDomain(): DomainForum = DomainForum(
@@ -24,5 +26,7 @@ fun TimeLine.toDomain(): DomainForum = DomainForum(
     msg = notice,
     groupId = "-1",
     groupName = "TimeLine",
+    threadCount = maxPage?.let { it * 20 }, // Approximate thread count
+    autoDelete = null,
 )
 

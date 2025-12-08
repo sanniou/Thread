@@ -2,16 +2,16 @@ package ai.saniou.nmb.workflow.home
 
 import ai.saniou.coreui.widgets.DrawerMenuItem
 import ai.saniou.coreui.widgets.DrawerMenuRow
-import ai.saniou.thread.data.source.nmb.remote.dto.ForumCategory
 import ai.saniou.nmb.di.nmbdi
 import ai.saniou.nmb.ui.components.DrawerHeader
 import ai.saniou.nmb.workflow.bookmark.BookmarkPage
 import ai.saniou.nmb.workflow.forum.ForumPage
 import ai.saniou.nmb.workflow.home.ForumCategoryContract.Event
-import ai.saniou.nmb.workflow.subscription.SubscriptionPage
+import ai.saniou.nmb.workflow.home.ForumCategoryContract.ForumGroupUiState
 import ai.saniou.nmb.workflow.search.SearchPage
+import ai.saniou.nmb.workflow.subscription.SubscriptionPage
 import ai.saniou.nmb.workflow.thread.ThreadPage
-import ai.saniou.thread.data.source.nmb.remote.dto.ForumDetail
+import ai.saniou.thread.domain.model.Forum
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -141,49 +141,37 @@ data class ForumCategoryPage(
                                 }
                             } else {
                                 LazyColumn(modifier = Modifier.weight(1f)) {
-                                    state.categories.forEach { category ->
-                                        item(key = category.id) {
+                                    state.forumGroups.forEach { group ->
+                                        item(key = group.id) {
                                             CategoryHeader(
-                                                category = category,
-                                                isExpanded = state.expandedCategoryId == category.id,
+                                                group = group,
+                                                isExpanded = state.expandedGroupId == group.id,
                                                 onToggle = {
                                                     viewModel.onEvent(
-                                                        Event.ToggleCategory(
-                                                            category.id
-                                                        )
+                                                        Event.ToggleCategory(group.id)
                                                     )
                                                 }
                                             )
                                         }
 
-                                        item(key = "content_${category.id}") {
+                                        item(key = "content_${group.id}") {
                                             AnimatedVisibility(
-                                                visible = state.expandedCategoryId == category.id,
+                                                visible = state.expandedGroupId == group.id,
                                                 enter = expandVertically() + fadeIn(),
                                                 exit = shrinkVertically() + fadeOut()
                                             ) {
                                                 Column {
-                                                    category.forums.forEach { forum ->
+                                                    group.forums.forEach { forum ->
                                                         ForumItem(
                                                             forum = forum,
                                                             isSelected = state.currentForum?.id == forum.id,
-                                                            isFavorite = state.favoriteForumIds.contains(
-                                                                forum.id
-                                                            ),
+                                                            isFavorite = state.favoriteForumIds.contains(forum.id),
                                                             onForumClick = {
-                                                                viewModel.onEvent(
-                                                                    Event.SelectForum(
-                                                                        forum
-                                                                    )
-                                                                )
+                                                                viewModel.onEvent(Event.SelectForum(forum))
                                                                 scope.launch { drawerState.close() }
                                                             },
                                                             onFavoriteToggle = {
-                                                                viewModel.onEvent(
-                                                                    Event.ToggleFavorite(
-                                                                        forum
-                                                                    )
-                                                                )
+                                                                viewModel.onEvent(Event.ToggleFavorite(forum))
                                                             }
                                                         )
                                                     }
@@ -203,7 +191,7 @@ data class ForumCategoryPage(
             }
         ) {
             state.currentForum?.let { forum ->
-                ForumPage(forumId = forum.id, fgroupId = forum.fGroup).Content()
+                ForumPage(forumId = forum.id.toLong(), fgroupId = forum.groupId.toLong()).Content()
             } ?: run {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(
@@ -218,7 +206,7 @@ data class ForumCategoryPage(
 
     @Composable
     private fun CategoryHeader(
-        category: ForumCategory,
+        group: ForumGroupUiState,
         isExpanded: Boolean,
         onToggle: () -> Unit,
     ) {
@@ -231,7 +219,7 @@ data class ForumCategoryPage(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = category.name,
+                text = group.name,
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Bold
@@ -248,7 +236,7 @@ data class ForumCategoryPage(
     @OptIn(ExperimentalFoundationApi::class, ExperimentalLayoutApi::class)
     @Composable
     private fun ForumItem(
-        forum: ForumDetail,
+        forum: Forum,
         isSelected: Boolean,
         isFavorite: Boolean,
         onForumClick: () -> Unit,
@@ -297,7 +285,7 @@ data class ForumCategoryPage(
                 }
 
                 // 版规摘要 & 元数据
-                if (!forum.msg.isBlank() || forum.threadCount != null) {
+                if (forum.msg.isNotBlank() || forum.threadCount != null) {
                     Spacer(modifier = Modifier.height(2.dp))
                     FlowRow(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),

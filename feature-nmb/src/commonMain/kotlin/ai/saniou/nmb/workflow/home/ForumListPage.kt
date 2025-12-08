@@ -4,6 +4,7 @@ import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.MBToolbar
 import ai.saniou.thread.data.source.nmb.remote.dto.ForumDetail
 import ai.saniou.nmb.workflow.forum.ForumPage
+import ai.saniou.thread.domain.model.Forum
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -64,12 +65,12 @@ object ForumListPage : Screen {
                         contentPadding = PaddingValues(horizontal = Dimens.padding_large),
                         horizontalArrangement = Arrangement.spacedBy(Dimens.padding_small)
                     ) {
-                        items(state.categories.flatMap { it.forums }.take(5)) { forum ->
+                        items(state.forumGroups.flatMap { it.forums }.take(5)) { forum ->
                             ForumChip(forum = forum) {
                                 navigator.push(
                                     ForumPage(
-                                        forumId = forum.id,
-                                        fgroupId = forum.fGroup
+                                        forumId = forum.id.toLong(),
+                                        fgroupId = forum.groupId.toLong()
                                     )
                                 )
                             }
@@ -81,7 +82,7 @@ object ForumListPage : Screen {
                 item {
                     Spacer(modifier = Modifier.height(Dimens.padding_large))
                     val favoriteForums =
-                        state.categories.find { it.name == "收藏" }?.forums ?: emptyList()
+                        state.forumGroups.find { it.name == "收藏" }?.forums ?: emptyList()
                     if (favoriteForums.isNotEmpty()) {
                         SectionTitle("收藏")
                         ForumGrid(
@@ -89,8 +90,8 @@ object ForumListPage : Screen {
                             onForumClick = {
                                 navigator.push(
                                     ForumPage(
-                                        forumId = it.id,
-                                        fgroupId = it.fGroup
+                                        forumId = it.id.toLong(),
+                                        fgroupId = it.groupId.toLong()
                                     )
                                 )
                             }
@@ -99,7 +100,7 @@ object ForumListPage : Screen {
                 }
 
                 // 所有板块
-                state.categories.filter { it.id > 0 }.forEach { category ->
+                state.forumGroups.filter { it.id.toLong() > 0 }.forEach { category ->
                     item(key = category.id) {
                         Spacer(modifier = Modifier.height(Dimens.padding_large))
                         SectionTitle(category.name)
@@ -108,8 +109,8 @@ object ForumListPage : Screen {
                             onForumClick = {
                                 navigator.push(
                                     ForumPage(
-                                        forumId = it.id,
-                                        fgroupId = it.fGroup
+                                        forumId = it.id.toLong(),
+                                        fgroupId = it.groupId.toLong()
                                     )
                                 )
                             }
@@ -134,7 +135,7 @@ object ForumListPage : Screen {
     }
 
     @Composable
-    private fun ForumChip(forum: ForumDetail, onClick: () -> Unit) {
+    private fun ForumChip(forum: Forum, onClick: () -> Unit) {
         Card(
             modifier = Modifier.clickable(onClick = onClick),
             shape = MaterialTheme.shapes.small,
@@ -156,7 +157,7 @@ object ForumListPage : Screen {
 
     @OptIn(ExperimentalLayoutApi::class)
     @Composable
-    private fun ForumGrid(forums: List<ForumDetail>, onForumClick: (ForumDetail) -> Unit) {
+    private fun ForumGrid(forums: List<Forum>, onForumClick: (Forum) -> Unit) {
         FlowRow(
             modifier = Modifier.padding(horizontal = Dimens.padding_large),
             horizontalArrangement = Arrangement.spacedBy(Dimens.padding_small),
@@ -169,7 +170,7 @@ object ForumListPage : Screen {
     }
 
     @Composable
-    private fun ForumGridItem(forum: ForumDetail, onClick: () -> Unit) {
+    private fun ForumGridItem(forum: Forum, onClick: () -> Unit) {
         Card(
             modifier = Modifier.clickable(onClick = onClick),
             shape = MaterialTheme.shapes.medium,
