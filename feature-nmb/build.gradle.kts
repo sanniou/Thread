@@ -51,6 +51,7 @@ kotlin {
             implementation(project(":core-ui"))
             implementation(project(":core-common"))
             implementation(project(":core-data"))
+            implementation(project(":core-domain"))
             implementation(project(":core-network"))
             implementation(libs.ktor.serialization.kotlinx.json)
             implementation(libs.ktor.client.serialization)

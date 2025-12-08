@@ -39,6 +39,9 @@ data class Post(
 data class Forum(
     val id: String,
     val name: String,
+    val showName: String?,
+    val msg: String,
+    val groupName: String,
     val sourceName: String,
-    val now: String,
+    val tag: String? = null,
 )

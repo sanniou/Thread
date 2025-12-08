@@ -25,6 +25,10 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(libs.kotlinx.datetime)
+            api(libs.kodein.di.compose)
+        }
+        jvmMain.dependencies {
+            implementation(libs.kotlinx.coroutinesSwing)
         }
     }
 }

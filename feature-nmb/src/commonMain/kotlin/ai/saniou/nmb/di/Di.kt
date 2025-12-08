@@ -47,8 +47,10 @@ import ai.saniou.nmb.workflow.thread.ThreadViewModel
 import ai.saniou.nmb.workflow.trend.TrendViewModel
 import ai.saniou.nmb.workflow.user.UserDetailViewModel
 import ai.saniou.nmb.workflow.user.UserViewModel
+import ai.saniou.thread.data.di.dataModule
 import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
 import ai.saniou.thread.data.source.nmb.remote._NmbXdApiImpl
+import ai.saniou.thread.domain.di.domainModule
 import ai.saniou.thread.network.SaniouKtorfit
 import de.jensklingenberg.ktorfit.Ktorfit
 import kotlinx.coroutines.CoroutineScope
@@ -75,13 +77,15 @@ val coreCommon by DI.Module {
 }
 val nmbdi = DI {
     import(coreCommon)
+    import(domainModule)
+    import(dataModule)
     import(nmbImagePreviewModule)
 
-    bindConstant<String>(tag = "nmbBaseUrl") { "https://api.nmb.best/api/" }
+
 
     bindSingleton<CookieProvider> { NmbCookieProvider(instance()) }
 
-    bindSingleton<NmbXdApi> { _NmbXdApiImpl(instance(arg = instance<String>("nmbBaseUrl"))) }
+
 
     bindSingleton<ForumRepository> { ForumRepository(instance()) }
 
@@ -122,12 +126,12 @@ val nmbdi = DI {
     bindProvider<GreetImageViewModel> { GreetImageViewModel(instance()) }
 
     // 论坛分类相关
-    bindProvider<ForumCategoryUseCase> { ForumCategoryUseCase(instance(), instance()) }
     bindProvider<ForumCategoryViewModel> {
         ForumCategoryViewModel(
-            instance(),
-            instance(),
-            instance()
+            getNmbForumPageUseCase = instance(),
+            toggleFavoriteUseCase = instance(),
+            appInitializer = instance(),
+            categoryStorage = instance()
         )
     }
 
