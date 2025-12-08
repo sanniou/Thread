@@ -113,12 +113,16 @@ class ForumCategoryViewModel(
         _state.update { it.copy(currentForum = forum) }
     }
 
-    private fun toggleFavorite(forum: ForumDetail) {
+    private fun toggleFavorite(forumDetail: ForumDetail) {
         screenModelScope.launch {
-            val isCurrentlyFavorite = state.value.favoriteForumIds.contains(forum.id)
-            toggleFavoriteUseCase("nmb", forum.toDomainForum())
+            val isCurrentlyFavorite = state.value.favoriteForumIds.contains(forumDetail.id)
+
+            val groupName = state.value.categories
+                .find { it.id == forumDetail.fGroup }?.name ?: ""
+
+            toggleFavoriteUseCase("nmb", forumDetail.toDomainForum(groupName))
             val message =
-                if (isCurrentlyFavorite) "已取消收藏 ${forum.name}" else "已收藏 ${forum.name}"
+                if (isCurrentlyFavorite) "已取消收藏 ${forumDetail.name}" else "已收藏 ${forumDetail.name}"
             _state.update { it.copy(toastMessage = message) }
         }
     }
@@ -131,15 +135,21 @@ class ForumCategoryViewModel(
             name = this.name,
             showName = this.showName,
             msg = this.msg,
-            fGroup = this.groupName.hashCode().toLong()
+            fGroup = this.groupId.toLong(),
+            sort = 0,
+            threadCount = 0
         )
     }
 
     private fun List<Forum>.toForumCategories(): List<ForumCategory> {
         return this.groupBy { it.groupName }
-            .map { (groupName, forums) ->
+            .mapNotNull { (groupName, forums) ->
+                // groupName could be empty if a forum doesn't belong to any category, filter it out.
+                if (groupName.isBlank()) return@mapNotNull null
+
+                val firstForumInGroup = forums.first()
                 ForumCategory(
-                    id = groupName.hashCode().toLong(),
+                    id = firstForumInGroup.groupId.toLong(),
                     sort = 0L,
                     status = "n",
                     name = groupName,
@@ -148,13 +158,14 @@ class ForumCategoryViewModel(
             }
     }
 
-    private fun ForumDetail.toDomainForum(): Forum {
+    private fun ForumDetail.toDomainForum(groupName: String): Forum {
         return Forum(
             id = this.id.toString(),
             name = this.name,
             showName = this.showName,
             msg = this.msg,
-            groupName = "", // Group info is lost in this mapping
+            groupId = this.fGroup.toString(),
+            groupName = groupName,
             sourceName = "nmb",
             tag = if (this.fGroup == -1L) "isTimeLine" else null,
         )

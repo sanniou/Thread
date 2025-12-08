@@ -11,7 +11,8 @@ fun Forum.toDomain(): DomainForum = DomainForum(
     tag = null,
     showName = showName,
     msg = msg,
-    groupName = fGroup.toString(),
+    groupId = fGroup.toString(),
+    groupName = "", // This will be populated by the Source
 )
 
 fun TimeLine.toDomain(): DomainForum = DomainForum(
@@ -21,6 +22,7 @@ fun TimeLine.toDomain(): DomainForum = DomainForum(
     tag = "timeline",
     showName = displayName,
     msg = notice,
+    groupId = "-1",
     groupName = "TimeLine",
 )
 

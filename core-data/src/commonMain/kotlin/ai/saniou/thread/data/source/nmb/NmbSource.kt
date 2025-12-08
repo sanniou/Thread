@@ -55,11 +55,19 @@ class NmbSource(
         }
 
         // 3. Query from database and return
-        val forums = db.forumQueries.getAllForum().asFlow().mapToList(Dispatchers.IO).first()
+        val forumsFromDb = db.forumQueries.getAllForum().asFlow().mapToList(Dispatchers.IO).first()
         val timelines = db.timeLineQueries.getAllTimeLines().asFlow().mapToList(Dispatchers.IO).first()
+        val categories = db.forumQueries.getAllForumCategory().asFlow().mapToList(Dispatchers.IO).first()
+            .associateBy { it.id }
+
+        val forums = forumsFromDb.map { forum ->
+            forum.toDomain().copy(
+                groupName = categories[forum.fGroup]?.name ?: "未知分类"
+            )
+        }
 
         val combined = buildList {
-            addAll(forums.map { it.toDomain() })
+            addAll(forums)
             addAll(timelines.map { it.toDomain() })
         }
         return Result.success(combined)

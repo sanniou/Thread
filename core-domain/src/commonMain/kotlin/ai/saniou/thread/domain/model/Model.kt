@@ -41,6 +41,7 @@ data class Forum(
     val name: String,
     val showName: String?,
     val msg: String,
+    val groupId: String,
     val groupName: String,
     val sourceName: String,
     val tag: String? = null,
