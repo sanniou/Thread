@@ -11,6 +11,7 @@ import ai.saniou.nmb.workflow.image.ImagePreviewPage
 import ai.saniou.nmb.workflow.image.ImagePreviewViewModelParams
 import ai.saniou.nmb.workflow.thread.ThreadPage
 import ai.saniou.nmb.workflow.thread.ThreadReply
+import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -222,7 +223,7 @@ data class UserDetailPage(
                                             }
 
                                             ThreadReply(
-                                                reply = reply,
+                                                reply = reply.toDomain(),
                                                 poUserHash = "",
                                                 onReplyClicked = { navigator.push(ThreadPage(threadId = reply.threadId)) },
                                                 refClick = { navigator.push(ThreadPage(threadId = reply.threadId)) }, // 简化处理，暂时跳转到主串

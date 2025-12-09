@@ -1,7 +1,8 @@
 package ai.saniou.nmb.workflow.forum
 
-import ai.saniou.thread.data.source.nmb.remote.dto.ForumDetail
-import ai.saniou.thread.data.source.nmb.remote.dto.ThreadWithInformation
+import ai.saniou.thread.domain.model.Forum
+import ai.saniou.thread.domain.model.ForumDetail
+import ai.saniou.thread.domain.model.Post
 import app.cash.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
@@ -20,8 +21,8 @@ interface ForumContract {
      */
     data class State(
         val forumName: String = "",
-        val forumDetail: ForumDetail? = null,
-        val threads: Flow<PagingData<ThreadWithInformation>> = emptyFlow(),
+        val forumDetail: Forum? = null,
+        val threads: Flow<PagingData<Post>> = emptyFlow(),
         val showInfoDialog: Boolean = false
     )
 

@@ -1,6 +1,6 @@
 package ai.saniou.nmb.ui.components
 
-import ai.saniou.thread.data.source.nmb.remote.dto.ThreadReply
+import ai.saniou.thread.domain.model.ThreadReply
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -119,10 +119,16 @@ fun ReferencePopup(
                                 .background(MaterialTheme.colorScheme.surface)
                                 .padding(16.dp)
                         ) {
-                            ThreadAuthor(reply)
+                            ThreadAuthor(
+                                userName = reply.userHash,
+                                showName = reply.name,
+                                threadTime = reply.now
+                            )
                             Spacer(modifier = Modifier.height(12.dp))
                             ThreadBody(
-                                body = reply,
+                                content = reply.content,
+                                img = reply.img,
+                                ext = reply.ext,
                                 onImageClick = { _, _ -> },
                                 onReferenceClick = null
                             )
@@ -139,7 +145,7 @@ fun ReferencePopup(
                     }
 
                     else -> {
-                         Text(
+                        Text(
                             text = "未找到该引用内容",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant

@@ -49,7 +49,7 @@ DELETE FROM ThreadReply WHERE threadId = ?;
 
 -- 查询指定 thread_id 的 ThreadReply 数据
 getThreadRepliesByPage:
-SELECT * FROM ThreadReply WHERE threadId = :threadId AND page = :page ORDER BY id ASC;
+SELECT * FROM ThreadReply WHERE threadId = :threadId AND (:poUserHash IS NULL OR userHash = :poUserHash) AND page = :page ORDER BY id ASC;
 
 getThreadReplies:
 SELECT * FROM ThreadReply WHERE threadId = :threadId ORDER BY id ASC LIMIT :limit OFFSET :offset;

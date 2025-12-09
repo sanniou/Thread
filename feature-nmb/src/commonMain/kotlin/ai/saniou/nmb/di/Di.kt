@@ -1,9 +1,5 @@
 package ai.saniou.nmb.di
 
-import ai.saniou.nmb.domain.ForumUseCase
-import ai.saniou.nmb.domain.GetThreadDetailUseCase
-import ai.saniou.nmb.domain.GetThreadImagesUseCase
-import ai.saniou.nmb.domain.GetThreadRepliesPagingUseCase
 import ai.saniou.nmb.initializer.AppInitializer
 import ai.saniou.nmb.workflow.bookmark.BookmarkViewModel
 import ai.saniou.nmb.workflow.forum.ForumViewModel
@@ -68,15 +64,11 @@ val nmbFeatureModule = DI.Module("nmbFeatureModule") {
     }
 
     // 论坛相关
-    bindProvider { ForumUseCase(instance(), instance()) }
     bindFactory<Pair<Long, Long>, ForumViewModel> { params ->
-        ForumViewModel(instance(), params.first, params.second)
+        ForumViewModel(instance(), instance(), instance(), params.first, params.second)
     }
 
     // 帖子相关
-    bindProvider { GetThreadDetailUseCase(instance(), instance()) }
-    bindProvider { GetThreadRepliesPagingUseCase(instance(), instance()) }
-    bindProvider { GetThreadImagesUseCase(instance()) }
     bindFactory<Long, ThreadViewModel> { threadId ->
         ThreadViewModel(
             threadId = threadId,
@@ -93,7 +85,7 @@ val nmbFeatureModule = DI.Module("nmbFeatureModule") {
 
     // 发帖和回复相关
     bindFactory<Triple<Int?, Int?, String?>, PostViewModel> { params ->
-        PostViewModel(instance(), instance(), params.first, params.second, params.third)
+        PostViewModel(instance(), params.first, params.second, params.third)
     }
 
     // 用户认证相关

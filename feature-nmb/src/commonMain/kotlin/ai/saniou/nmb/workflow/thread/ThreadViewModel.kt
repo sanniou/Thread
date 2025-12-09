@@ -2,15 +2,15 @@ package ai.saniou.nmb.workflow.thread
 
 import ai.saniou.nmb.data.storage.SubscriptionStorage
 import ai.saniou.nmb.db.Database
-import ai.saniou.nmb.domain.GetThreadDetailUseCase
-import ai.saniou.nmb.domain.GetThreadRepliesPagingUseCase
 import ai.saniou.nmb.workflow.thread.ThreadContract.Effect
 import ai.saniou.nmb.workflow.thread.ThreadContract.Event
 import ai.saniou.nmb.workflow.thread.ThreadContract.State
 import ai.saniou.thread.data.source.nmb.NmbSource
-import ai.saniou.thread.data.source.nmb.remote.dto.Thread
-import ai.saniou.thread.data.source.nmb.remote.dto.ThreadReply
+import ai.saniou.thread.domain.model.Post
+import ai.saniou.thread.domain.model.ThreadReply
 import ai.saniou.thread.domain.usecase.AddBookmarkUseCase
+import ai.saniou.thread.domain.usecase.GetThreadDetailUseCase
+import ai.saniou.thread.domain.usecase.GetThreadRepliesPagingUseCase
 import ai.saniou.thread.domain.usecase.ToggleSubscriptionUseCase
 import app.cash.paging.PagingData
 import app.cash.paging.cachedIn
@@ -126,7 +126,7 @@ class ThreadViewModel(
                     }
                 }
                 .collectLatest { detail ->
-                    val thread = detail.thread
+                    val thread = detail
                     val totalPages =
                         (thread.replyCount / 19) + if (thread.replyCount % 19 > 0) 1 else 0
 
@@ -161,8 +161,9 @@ class ThreadViewModel(
 
         val currentSubscribed = state.value.isSubscribed
         screenModelScope.launch {
-            val subscriptionKey = subscriptionStorage.subscriptionId.value ?: throw IllegalStateException("未设置订阅ID")
-            toggleSubscriptionUseCase(subscriptionKey,thread.id.toString(), currentSubscribed)
+            val subscriptionKey =
+                subscriptionStorage.subscriptionId.value ?: throw IllegalStateException("未设置订阅ID")
+            toggleSubscriptionUseCase(subscriptionKey, thread.id.toString(), currentSubscribed)
                 .onSuccess { resultMessage ->
                     // UI state will be updated by the database flow
                     _state.update { it.copy(isTogglingSubscription = false) }
@@ -190,9 +191,9 @@ class ThreadViewModel(
         }
     }
 
-    private fun bookmarkThread(thread: Thread) {
+    private fun bookmarkThread(thread: Post) {
         screenModelScope.launch {
-            addBookmarkUseCase(thread.id.toString(), thread.content)
+            addBookmarkUseCase(thread.id, thread.content)
             _effect.send(Effect.ShowSnackbar("主楼已收藏"))
         }
     }

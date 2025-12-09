@@ -3,34 +3,36 @@ package ai.saniou.thread.data.repository
 import ai.saniou.nmb.db.Database
 import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
 import ai.saniou.thread.data.source.nmb.remote.dto.ThreadReply
+import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
 import ai.saniou.thread.data.source.nmb.remote.dto.toTable
 import ai.saniou.thread.domain.repository.ReferenceRepository
-import kotlin.Result.Companion.success
-import ai.saniou.thread.domain.model.ThreadReply as DomainThreadReply
+import app.cash.sqldelight.coroutines.asFlow
+import app.cash.sqldelight.coroutines.mapToOneOrNull
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.onStart
 
 class ReferenceRepositoryImpl(
-    private val nmbXdApi: NmbXdApi,
+    private val api: NmbXdApi,
     private val db: Database,
 ) : ReferenceRepository {
-    override suspend fun getReference(id: Long): Result<DomainThreadReply> {
-        // 尝试从数据库获取
-        val localReply = db.threadReplyQueries.getThreadReplyById(id).executeAsOneOrNull()
-        if (localReply != null) {
-            return success(localReply.toDomain())
-        }
 
-        // 如果数据库没有，则从网络获取
-        return try {
-            val html = nmbXdApi.refHtml(id)
-            val reply = parseRefHtml(html, id)
-            // 存入数据库，注意 threadId 设为特殊值以作区分
-            val threadIdForDb = if (reply.threadId > 0) reply.threadId else Long.MIN_VALUE
-            db.threadReplyQueries.upsertThreadReply(reply.toTable(threadIdForDb))
-            success(reply.toDomain())
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
+    override fun getReference(id: Long): Flow<ai.saniou.thread.domain.model.ThreadReply> =
+        db.threadReplyQueries.getThreadReplyById(id)
+            .asFlow()
+            .mapToOneOrNull(Dispatchers.IO)
+            .mapNotNull { it?.toDomain() }
+            .onStart {
+                if (db.threadReplyQueries.getThreadReplyById(id).executeAsOneOrNull() == null) {
+                    val html = api.refHtml(id)
+                    val reply = parseRefHtml(html, id)
+                    val threadIdForDb = if (reply.threadId > 0) reply.threadId else Long.MIN_VALUE
+                    db.threadReplyQueries.upsertThreadReply(reply.toTable(threadIdForDb))
+                }
+            }
+            .flowOn(Dispatchers.IO)
 
     private fun parseRefHtml(html: String, refId: Long): ThreadReply {
         val idRegex = """href="([^"]*)"[^>]*class="h-threads-info-id">No\.(\d+)""".toRegex()
@@ -56,7 +58,6 @@ class ReferenceRepositoryImpl(
 
         val uidContent = uidRegex.find(html)?.groupValues?.get(1) ?: ""
         val isAdmin = uidContent.contains("color=\"red\"") || uidContent.contains("Admin")
-        // Remove HTML tags from userHash if present
         val userHash = if (isAdmin) "Admin" else uidContent.replace(Regex("<[^>]*>"), "")
 
         val now = timeRegex.find(html)?.groupValues?.get(1) ?: ""
@@ -94,30 +95,3 @@ class ReferenceRepositoryImpl(
         )
     }
 }
-
-fun ThreadReply.toDomain(): DomainThreadReply = DomainThreadReply(
-    id = this.id,
-    userHash = this.userHash,
-    admin = this.admin,
-    title = this.title,
-    now = this.now,
-    content = this.content,
-    img = this.img,
-    ext = this.ext,
-    name = this.name,
-    threadId = this.threadId,
-)
-
-
-fun ai.saniou.nmb.db.table.ThreadReply.toDomain(): DomainThreadReply = DomainThreadReply(
-    id = this.id,
-    userHash = this.userHash,
-    admin = this.admin,
-    title = this.title,
-    now = this.now,
-    content = this.content,
-    img = this.img,
-    ext = this.ext,
-    name = this.name,
-    threadId = this.threadId,
-)

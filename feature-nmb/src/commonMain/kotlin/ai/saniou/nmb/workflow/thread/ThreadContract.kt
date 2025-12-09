@@ -1,7 +1,7 @@
 package ai.saniou.nmb.workflow.thread
 
-import ai.saniou.thread.data.source.nmb.remote.dto.Thread
-import ai.saniou.thread.data.source.nmb.remote.dto.ThreadReply
+import ai.saniou.thread.domain.model.Post
+import ai.saniou.thread.domain.model.ThreadReply
 import app.cash.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
@@ -27,7 +27,7 @@ interface ThreadContract {
     data class State(
         val isLoading: Boolean = true,
         val error: String? = null,
-        val thread: Thread? = null,
+        val thread: Post? = null,
         val replies: Flow<PagingData<ThreadReply>> = emptyFlow(),
         val totalPages: Int = 1,
         val isSubscribed: Boolean = false,
@@ -94,7 +94,7 @@ interface ThreadContract {
          * 收藏主楼
          * @param thread 帖子
          */
-        data class BookmarkThread(val thread: Thread) : Event
+        data class BookmarkThread(val thread: Post) : Event
 
         /**
          * 收藏回复

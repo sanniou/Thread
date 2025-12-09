@@ -3,8 +3,6 @@ package ai.saniou.nmb.workflow.thread
 import ai.saniou.coreui.widgets.PullToRefreshWrapper
 import ai.saniou.coreui.widgets.ShimmerContainer
 import ai.saniou.coreui.widgets.VerticalSpacerSmall
-import ai.saniou.thread.data.source.nmb.remote.dto.Thread
-import ai.saniou.thread.data.source.nmb.remote.dto.ThreadReply
 import ai.saniou.nmb.di.nmbdi
 import ai.saniou.nmb.ui.components.LoadEndIndicator
 import ai.saniou.nmb.ui.components.LoadingFailedIndicator
@@ -25,6 +23,8 @@ import ai.saniou.nmb.workflow.reference.ReferenceViewModel
 import ai.saniou.nmb.workflow.thread.ThreadContract.Effect
 import ai.saniou.nmb.workflow.thread.ThreadContract.Event
 import ai.saniou.nmb.workflow.thread.ThreadContract.State
+import ai.saniou.thread.domain.model.Post
+import ai.saniou.thread.domain.model.ThreadReply
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -337,7 +337,7 @@ private fun ThreadContentRouter(
     onImageClick: (Int, List<ImageInfo>) -> Unit,
     onUpdateLastReadId: (Long) -> Unit,
     onCopy: (String) -> Unit,
-    onBookmarkThread: (Thread) -> Unit,
+    onBookmarkThread: (Post) -> Unit,
     onBookmarkReply: (ThreadReply) -> Unit,
     onUserClick: (String) -> Unit,
 ) {
@@ -508,7 +508,7 @@ fun ThreadSuccessContent(
     onImageClick: (Int, List<ImageInfo>) -> Unit,
     onUpdateLastReadId: (Long) -> Unit,
     onCopy: (String) -> Unit,
-    onBookmarkThread: (Thread) -> Unit,
+    onBookmarkThread: (Post) -> Unit,
     onBookmarkReply: (ThreadReply) -> Unit,
     onUserClick: (String) -> Unit,
 ) {
@@ -517,8 +517,8 @@ fun ThreadSuccessContent(
         derivedStateOf {
             val imageList = mutableListOf<ImageInfo>()
             state.thread?.let {
-                if (it.img.isNotBlank()) {
-                    imageList.add(ImageInfo(it.img, it.ext))
+                if (it.img.isNullOrBlank().not()) {
+                    imageList.add(ImageInfo(it.img!!, it.ext!!))
                 }
             }
             replies.itemSnapshotList.items.forEach { reply ->
@@ -595,7 +595,7 @@ private fun ThreadList(
     onImageClick: (String, String) -> Unit,
     onRefresh: () -> Unit,
     onCopy: (String) -> Unit,
-    onBookmarkThread: (Thread) -> Unit,
+    onBookmarkThread: (Post) -> Unit,
     onBookmarkReply: (ThreadReply) -> Unit,
     onUserClick: (String) -> Unit,
 ) {
@@ -790,7 +790,7 @@ private fun ThreadToolbar(
 
 @Composable
 fun ThreadMainPost(
-    thread: Thread,
+    thread: Post,
     refClick: (Long) -> Unit,
     onImageClick: (String, String) -> Unit,
     onCopy: () -> Unit,
@@ -820,7 +820,7 @@ fun ThreadMainPost(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            ThreadAuthor(thread, isPo = true, onClick = onUserClick)
+            ThreadAuthor(thread.userHash, thread.name, thread.now, isPo = true, onClick = onUserClick)
 
             Text(
                 text = "No.${thread.id}",
@@ -840,7 +840,7 @@ fun ThreadMainPost(
                 )
                 .padding(horizontal = 16.dp)
         ) {
-            ThreadBody(thread, onReferenceClick = refClick, onImageClick = onImageClick)
+            ThreadBody(thread.content, thread.img, thread.ext, onReferenceClick = refClick, onImageClick = onImageClick)
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -952,7 +952,7 @@ fun ThreadReply(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                ThreadAuthor(reply, isPo = isPo, onClick = onUserClick)
+                ThreadAuthor(reply.userHash, reply.name, reply.now, isPo = isPo, onClick = onUserClick)
 
                 Text(
                     text = "No.${reply.id}",
@@ -992,7 +992,7 @@ fun ThreadReply(
             }
 
             Spacer(modifier = Modifier.height(12.dp))
-            ThreadBody(reply, onReferenceClick = refClick, onImageClick = onImageClick)
+            ThreadBody(reply.content, reply.img, reply.ext, onReferenceClick = refClick, onImageClick = onImageClick)
         }
     }
 }

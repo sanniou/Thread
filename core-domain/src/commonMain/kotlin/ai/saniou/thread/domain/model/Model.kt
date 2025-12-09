@@ -23,4 +23,6 @@ data class Forum(
     val tag: String? = null,
     val threadCount: Long?,
     val autoDelete: Long?,
+    val interval: Long? = null, //发串的间隔时间，单位为秒
+    val safeMode: String? = null, //?
 )

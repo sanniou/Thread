@@ -1,6 +1,6 @@
 package ai.saniou.nmb.workflow.reference
 
-import ai.saniou.thread.data.source.nmb.remote.dto.ThreadReply
+import ai.saniou.thread.domain.model.ThreadReply
 
 interface ReferenceContract {
     data class State(

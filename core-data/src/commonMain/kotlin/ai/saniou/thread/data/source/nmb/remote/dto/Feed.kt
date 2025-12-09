@@ -187,6 +187,8 @@ fun IBaseThread.toDomain(): Post = Post(
     fid = fid,
     admin = admin,
     hide = hide,
+    // fixme  后续处理 lastReadReplyId 和 replies
+    lastReadReplyId = 0L,
     replies = null,
     remainReplies = null
 )

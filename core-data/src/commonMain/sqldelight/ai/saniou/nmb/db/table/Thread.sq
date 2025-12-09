@@ -120,6 +120,9 @@ SELECT count(*) FROM Thread WHERE fid = :fid;
 getThreadsInForum:
 SELECT * FROM Thread LEFT JOIN ThreadInformation ON Thread.id = ThreadInformation.id WHERE fid = :fid AND page = :page ORDER BY lastKey DESC;
 
+getThreadsByForum:
+SELECT * FROM Thread WHERE fid = :fid AND page = :page;
+
 getThreadsInForumOffset:
 SELECT * FROM Thread LEFT JOIN ThreadInformation ON Thread.id = ThreadInformation.id WHERE fid = :fid ORDER BY lastKey DESC LIMIT :limit OFFSET :offset;
 

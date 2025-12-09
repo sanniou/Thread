@@ -11,6 +11,7 @@ import ai.saniou.nmb.workflow.post.PostPage
 import ai.saniou.nmb.workflow.thread.ThreadPage
 import ai.saniou.nmb.workflow.user.UserDetailPage
 import ai.saniou.thread.data.source.nmb.remote.dto.ForumDetail
+import ai.saniou.thread.domain.model.Forum
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -175,7 +176,7 @@ data class ForumPage(
                 )
             }
         ) { innerPadding ->
-            ListThreadPageOld(
+            ListThreadPage(
                 state = lazyListState,
                 threadFlow = viewModel.threads,
                 onThreadClicked = { threadId -> navigator.push(ThreadPage(threadId)) },
@@ -197,7 +198,7 @@ data class ForumPage(
 
     @Composable
     private fun ForumInfoDialog(
-        forumDetail: ForumDetail?,
+        forumDetail: Forum?,
         onDismissRequest: () -> Unit,
     ) {
         AlertDialog(

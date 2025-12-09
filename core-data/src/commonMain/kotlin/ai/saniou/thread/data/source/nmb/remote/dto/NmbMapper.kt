@@ -1,7 +1,10 @@
 package ai.saniou.thread.data.source.nmb.remote.dto
 
 import ai.saniou.nmb.db.table.Forum
+import ai.saniou.nmb.db.table.GetThread
 import ai.saniou.nmb.db.table.SelectSubscriptionThread
+import ai.saniou.nmb.db.table.Thread
+import ai.saniou.nmb.db.table.ThreadReply
 import ai.saniou.nmb.db.table.TimeLine
 import ai.saniou.thread.domain.model.Post
 import kotlinx.datetime.LocalDateTime
@@ -62,9 +65,12 @@ fun SelectSubscriptionThread.toDomain(): Post = Post(
     fid = fid,
     admin = admin,
     hide = hide,
+    // fixme  后续处理 lastReadReplyId 和 replies
+    lastReadReplyId = 0,
     replies = null,
     remainReplies = null
 )
+
 @OptIn(ExperimentalTime::class)
 fun ThreadWithInformation.toDomain(): Post = Post(
     id = id.toString(),
@@ -89,6 +95,38 @@ fun ThreadWithInformation.toDomain(): Post = Post(
     fid = fid,
     admin = admin,
     hide = hide,
+    // fixme  后续处理 lastReadReplyId 和 replies
+    lastReadReplyId = 0,
+    replies = null,
+    remainReplies = null
+)
+
+@OptIn(ExperimentalTime::class)
+fun GetThread.toDomain(): Post = Post(
+    id = id.toString(),
+    sourceName = "nmb",
+    sourceUrl = "https://nmb.ai/thread/$id",
+    title = title,
+    content = content,
+    author = name,
+    userHash = userHash,
+    createdAt = now.toTime(),
+    forumName = fid.toString(),
+    replyCount = replyCount,
+    img = img,
+    ext = ext,
+    isSage = sage > 0,
+    isAdmin = admin > 0,
+    isHidden = hide > 0,
+    isLocal = true,
+    now = now,
+    name = name,
+    sage = sage,
+    fid = fid,
+    admin = admin,
+    hide = hide,
+    // fixme  后续处理 lastReadReplyId 和 replies
+    lastReadReplyId = 0,
     replies = null,
     remainReplies = null
 )
@@ -111,3 +149,62 @@ fun String.toTime(): Instant {
     // 4. 转为 epoch milliseconds（系统所在时区）
     return ldt.toInstant(TimeZone.currentSystemDefault())
 }
+
+@OptIn(ExperimentalTime::class)
+fun Thread.toDomain(): Post = Post(
+    id = id.toString(),
+    sourceName = "nmb",
+    sourceUrl = "https://nmb.ai/thread/$id",
+    title = title,
+    content = content,
+    author = name,
+    userHash = userHash,
+    createdAt = now.toTime(),
+    forumName = fid.toString(),
+    replyCount = replyCount,
+    img = img,
+    ext = ext,
+    isSage = sage > 0,
+    isAdmin = admin > 0,
+    isHidden = hide > 0,
+    isLocal = false,
+    now = now,
+    name = name,
+    sage = sage,
+    fid = fid,
+    admin = admin,
+    hide = hide,
+    // fixme  后续处理 lastReadReplyId 和 replies
+    lastReadReplyId = 0,
+    replies = null,
+    remainReplies = null
+)
+
+@OptIn(ExperimentalTime::class)
+fun ThreadReply.toDomain(): ai.saniou.thread.domain.model.ThreadReply = ai.saniou.thread.domain.model.ThreadReply(
+    id = id,
+    userHash = userHash,
+    admin = admin,
+    title = title,
+    now = now,
+    content = content,
+    img = img,
+    ext = ext,
+    name = name,
+    threadId = threadId
+)
+
+@OptIn(ExperimentalTime::class)
+fun ai.saniou.thread.data.source.nmb.remote.dto.ThreadReply.toDomain(): ai.saniou.thread.domain.model.ThreadReply =
+    ai.saniou.thread.domain.model.ThreadReply(
+        id = id,
+        userHash = userHash,
+        admin = admin,
+        title = title,
+        now = now,
+        content = content,
+        img = img,
+        ext = ext,
+        name = name,
+        threadId = threadId
+    )

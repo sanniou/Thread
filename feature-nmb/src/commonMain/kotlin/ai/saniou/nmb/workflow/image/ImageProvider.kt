@@ -1,13 +1,16 @@
 package ai.saniou.nmb.workflow.image
 
-import ai.saniou.nmb.domain.GetThreadImagesUseCase
+import ai.saniou.thread.domain.model.Image
+import ai.saniou.thread.domain.usecase.GetThreadImagesUseCase
+import kotlinx.coroutines.flow.Flow
+
 
 /**
  * A generic interface for providing images page by page.
  * This allows the ImagePreviewViewModel to be agnostic of the image source.
  */
 interface ImageProvider {
-    suspend fun load(page: Int): Result<List<ImageInfo>>
+    fun load(): Flow<List<Image>>
 }
 
 /**
@@ -17,7 +20,7 @@ class ThreadImageProvider(
     private val threadId: Long,
     private val getThreadImagesUseCase: GetThreadImagesUseCase
 ) : ImageProvider {
-    override suspend fun load(page: Int): Result<List<ImageInfo>> {
-        return getThreadImagesUseCase(threadId, page)
+    override fun load(): Flow<List<Image>> {
+        return getThreadImagesUseCase(threadId)
     }
 }

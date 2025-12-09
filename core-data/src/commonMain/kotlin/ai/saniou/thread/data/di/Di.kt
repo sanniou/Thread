@@ -11,8 +11,16 @@ import ai.saniou.nmb.data.storage.SubscriptionStorage
 import ai.saniou.thread.data.repository.BookmarkRepositoryImpl
 import ai.saniou.thread.data.repository.FavoriteRepositoryImpl
 import ai.saniou.thread.data.repository.FeedRepositoryImpl
+import ai.saniou.thread.data.repository.ForumRepositoryImpl
+import ai.saniou.thread.data.repository.HistoryRepositoryImpl
+import ai.saniou.thread.data.repository.NoticeRepositoryImpl
+import ai.saniou.thread.data.repository.PostRepositoryImpl
+import ai.saniou.thread.data.repository.ReferenceRepositoryImpl
 import ai.saniou.thread.data.repository.SubscriptionRepositoryImpl
 import ai.saniou.thread.data.repository.SyncRepositoryImpl
+import ai.saniou.thread.data.repository.ThreadRepositoryImpl
+import ai.saniou.thread.data.repository.TrendRepositoryImpl
+import ai.saniou.thread.data.repository.UserRepositoryImpl
 import ai.saniou.thread.data.source.nga.NgaSource
 import ai.saniou.thread.data.source.nmb.NmbSource
 import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
@@ -22,21 +30,17 @@ import ai.saniou.thread.data.sync.webdav.WebDavSyncProvider
 import ai.saniou.thread.domain.repository.BookmarkRepository
 import ai.saniou.thread.domain.repository.FavoriteRepository
 import ai.saniou.thread.domain.repository.FeedRepository
-import ai.saniou.thread.domain.repository.Source
-import ai.saniou.thread.data.repository.UserRepositoryImpl
-import ai.saniou.thread.domain.repository.SubscriptionRepository
-import ai.saniou.thread.domain.repository.SyncProvider
-import ai.saniou.thread.data.repository.NoticeRepositoryImpl
-import ai.saniou.thread.data.repository.HistoryRepositoryImpl
-import ai.saniou.thread.data.repository.PostRepositoryImpl
+import ai.saniou.thread.domain.repository.ForumRepository
 import ai.saniou.thread.domain.repository.HistoryRepository
-import ai.saniou.thread.data.repository.TrendRepositoryImpl
 import ai.saniou.thread.domain.repository.NoticeRepository
-import ai.saniou.thread.data.repository.ReferenceRepositoryImpl
 import ai.saniou.thread.domain.repository.PostRepository
 import ai.saniou.thread.domain.repository.ReferenceRepository
-import ai.saniou.thread.domain.repository.TrendRepository
+import ai.saniou.thread.domain.repository.Source
+import ai.saniou.thread.domain.repository.SubscriptionRepository
+import ai.saniou.thread.domain.repository.SyncProvider
 import ai.saniou.thread.domain.repository.SyncRepository
+import ai.saniou.thread.domain.repository.ThreadRepository
+import ai.saniou.thread.domain.repository.TrendRepository
 import ai.saniou.thread.domain.repository.UserRepository
 import ai.saniou.thread.network.CookieProvider
 import de.jensklingenberg.ktorfit.Ktorfit
@@ -79,6 +83,8 @@ val dataModule = DI.Module("dataModule") {
     bind<PostRepository>() with singleton { PostRepositoryImpl(instance()) }
     bind<TrendRepository>() with singleton { TrendRepositoryImpl(instance()) }
     bind<ReferenceRepository>() with singleton { ReferenceRepositoryImpl(instance(), instance()) }
+    bind<ThreadRepository>() with singleton { ThreadRepositoryImpl(instance(), instance()) }
+    bind<ForumRepository>() with singleton { ForumRepositoryImpl(instance(), instance()) }
 
     // sync providers
     bind<SyncProvider>(tag = "webdav") with singleton { WebDavSyncProvider() }

@@ -8,9 +8,13 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import org.kodein.di.DI
 import org.kodein.di.bind
 import org.kodein.di.factory
@@ -35,7 +39,6 @@ class ImagePreviewViewModel(
             images = initialImages,
             initialIndex = initialIndex,
             endReached = imageProvider == null
-
         )
     )
     val state = _state.asStateFlow()
@@ -43,57 +46,45 @@ class ImagePreviewViewModel(
     private val _effect = Channel<Effect>()
     val effect = _effect.receiveAsFlow()
 
-    private var currentPage = 1
-    private var isInitialLoad = true
-
     init {
-        // If the initial list is empty, start loading immediately.
         if (initialImages.isEmpty()) {
-            loadMoreImages()
-        } else {
-            // Determine the page of the initial image to continue loading from there.
-            // This logic assumes a fixed number of items per page and might need adjustment.
-            // For simplicity, we'll just start loading from page 2 if the initial list is not empty.
-            currentPage = 2
+            loadImages()
         }
     }
 
     fun onEvent(event: Event) {
         when (event) {
-            Event.LoadMore -> loadMoreImages()
+            Event.LoadMore -> loadImages() // Renamed from loadMoreImages
             is Event.SaveImage -> {
                 // TODO: 保存图片
             }
         }
     }
 
-    private fun loadMoreImages() {
+    private fun loadImages() {
         if (_state.value.isLoading || _state.value.endReached) return
-
         imageProvider ?: return
 
-        _state.update { it.copy(isLoading = true) }
-
-        screenModelScope.launch {
-            imageProvider.load(currentPage)
-                .onSuccess { newImages ->
-                    if (newImages.isEmpty()) {
-                        _state.update { it.copy(isLoading = false, endReached = true) }
-                    } else {
-                        _state.update {
-                            it.copy(
-                                isLoading = false,
-                                images = it.images + newImages,
-                            )
-                        }
-                        currentPage++
-                    }
-                    isInitialLoad = false
+        imageProvider.load()
+            .onStart {
+                _state.update { it.copy(isLoading = true) }
+            }
+            .map { images ->
+                images.map { ImageInfo(it.name, it.ext) }
+            }
+            .onEach { newImages ->
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        images = newImages,
+                        endReached = true // Since we load all images at once
+                    )
                 }
-                .onFailure { error ->
-                    _state.update { it.copy(isLoading = false, error = error.message) }
-                }
-        }
+            }
+            .catch { error ->
+                _state.update { it.copy(isLoading = false, error = error.message) }
+            }
+            .launchIn(screenModelScope)
     }
 }
 

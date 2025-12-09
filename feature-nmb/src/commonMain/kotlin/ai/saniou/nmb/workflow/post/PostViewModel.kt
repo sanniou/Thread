@@ -1,6 +1,5 @@
 package ai.saniou.nmb.workflow.post
 
-import ai.saniou.nmb.domain.ForumUseCase
 import ai.saniou.nmb.workflow.post.PostContract.Effect
 import ai.saniou.nmb.workflow.post.PostContract.Event
 import ai.saniou.nmb.workflow.post.PostContract.State
@@ -18,7 +17,6 @@ import kotlinx.coroutines.launch
 
 class PostViewModel(
     private val postUseCase: PostUseCase,
-    private val forumUseCase: ForumUseCase,
     private val fid: Int?,
     private val resto: Int?,
     private val forumName: String?
