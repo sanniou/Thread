@@ -1,9 +1,9 @@
 package ai.saniou.nmb.workflow.trend
 
-import ai.saniou.nmb.domain.TrendUseCase
 import ai.saniou.nmb.workflow.trend.TrendContract.Effect
 import ai.saniou.nmb.workflow.trend.TrendContract.Event
 import ai.saniou.nmb.workflow.trend.TrendContract.State
+import ai.saniou.thread.domain.usecase.GetTrendUseCase
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.channels.Channel
@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class TrendViewModel(
-    private val trendUseCase: TrendUseCase
+    private val getTrendUseCase: GetTrendUseCase
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(State())
@@ -47,13 +47,13 @@ class TrendViewModel(
         screenModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
 
-            trendUseCase.getTrendItems(forceRefresh)
+            getTrendUseCase(forceRefresh)
                 .onSuccess { (trendDate, items) ->
                     _state.update {
                         it.copy(
                             isLoading = false,
                             trendDate = trendDate,
-                            items = items
+                            items = items.map { it.toUI() }
                         )
                     }
                 }

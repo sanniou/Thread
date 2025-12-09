@@ -1,17 +1,9 @@
 package ai.saniou.nmb.di
 
 import ai.saniou.nmb.domain.ForumUseCase
-import ai.saniou.nmb.domain.GetReferenceUseCase
 import ai.saniou.nmb.domain.GetThreadDetailUseCase
 import ai.saniou.nmb.domain.GetThreadImagesUseCase
 import ai.saniou.nmb.domain.GetThreadRepliesPagingUseCase
-import ai.saniou.nmb.domain.HistoryUseCase
-import ai.saniou.nmb.domain.NoticeUseCase
-import ai.saniou.nmb.domain.PostUseCase
-import ai.saniou.nmb.domain.SubscriptionFeedUseCase
-import ai.saniou.nmb.domain.ToggleSubscriptionUseCase
-import ai.saniou.nmb.domain.TrendUseCase
-import ai.saniou.nmb.domain.UserUseCase
 import ai.saniou.nmb.initializer.AppInitializer
 import ai.saniou.nmb.workflow.bookmark.BookmarkViewModel
 import ai.saniou.nmb.workflow.forum.ForumViewModel
@@ -84,7 +76,6 @@ val nmbFeatureModule = DI.Module("nmbFeatureModule") {
     // 帖子相关
     bindProvider { GetThreadDetailUseCase(instance(), instance()) }
     bindProvider { GetThreadRepliesPagingUseCase(instance(), instance()) }
-    bindProvider { GetReferenceUseCase(instance(), instance()) }
     bindProvider { GetThreadImagesUseCase(instance()) }
     bindFactory<Long, ThreadViewModel> { threadId ->
         ThreadViewModel(
@@ -98,26 +89,23 @@ val nmbFeatureModule = DI.Module("nmbFeatureModule") {
             instance()
         )
     }
-    bindProvider { ToggleSubscriptionUseCase(instance(), instance(), instance()) }
+
 
     // 发帖和回复相关
-    bindProvider { PostUseCase(instance()) }
     bindFactory<Triple<Int?, Int?, String?>, PostViewModel> { params ->
         PostViewModel(instance(), instance(), params.first, params.second, params.third)
     }
 
     // 用户认证相关
-    bindProvider { UserUseCase(instance()) }
     bindProvider { UserViewModel(instance()) }
 
     // 引用 ViewModel
     bindProvider { ReferenceViewModel(instance()) }
 
     // 订阅相关
-    bindProvider { SubscriptionViewModel(instance(), instance()) }
+    bindProvider { SubscriptionViewModel(instance(), instance(), instance(), instance()) }
 
     // 历史相关
-    bindProvider { HistoryUseCase(instance()) }
     bindProvider { HistoryViewModel(instance()) }
 
     // 搜索相关
@@ -132,11 +120,8 @@ val nmbFeatureModule = DI.Module("nmbFeatureModule") {
     // 收藏相关
     bindProvider { BookmarkViewModel(instance(), instance()) }
 
-    bindProvider { SubscriptionFeedUseCase(instance(), instance()) }
 
-    bindProvider { NoticeUseCase(instance(), instance(), instance()) }
-    bindProvider { HomeViewModel(instance()) }
-    bindProvider { TrendUseCase(instance()) }
+    bindProvider { HomeViewModel(instance(), instance()) }
     bindProvider { TrendViewModel(instance()) }
 }
 

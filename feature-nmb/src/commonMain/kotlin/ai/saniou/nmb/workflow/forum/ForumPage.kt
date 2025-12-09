@@ -3,6 +3,7 @@ package ai.saniou.nmb.workflow.forum
 import ai.saniou.coreui.widgets.RichText
 import ai.saniou.nmb.di.nmbdi
 import ai.saniou.nmb.workflow.home.ListThreadPage
+import ai.saniou.nmb.workflow.home.ListThreadPageOld
 import ai.saniou.nmb.workflow.image.ImageInfo
 import ai.saniou.nmb.workflow.image.ImagePreviewPage
 import ai.saniou.nmb.workflow.image.ImagePreviewViewModelParams
@@ -174,7 +175,7 @@ data class ForumPage(
                 )
             }
         ) { innerPadding ->
-            ListThreadPage(
+            ListThreadPageOld(
                 state = lazyListState,
                 threadFlow = viewModel.threads,
                 onThreadClicked = { threadId -> navigator.push(ThreadPage(threadId)) },
@@ -193,6 +194,7 @@ data class ForumPage(
             )
         }
     }
+
     @Composable
     private fun ForumInfoDialog(
         forumDetail: ForumDetail?,

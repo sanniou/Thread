@@ -26,6 +26,14 @@ kotlin {
         commonMain.dependencies {
             api(libs.kotlinx.datetime)
             api(libs.kodein.di.compose)
+            implementation(libs.sqldelight.paging3)
+
+            implementation(libs.ktor.client.core)
+            implementation(libs.ktor.client.content.negotiation)
+            implementation(libs.ktor.serialization.kotlinx.json)
+            implementation(libs.ktor.client.logging)
+            implementation(libs.ktor.client.encoding)
+            implementation(libs.ktor.client.cio)
         }
         jvmMain.dependencies {
             implementation(libs.kotlinx.coroutinesSwing)

@@ -1,27 +1,37 @@
-package ai.saniou.nmb.domain
+package ai.saniou.thread.data.repository
 
-import ai.saniou.thread.network.SaniouResponse
 import ai.saniou.nmb.data.storage.CommonStorage
 import ai.saniou.nmb.db.Database
-import ai.saniou.nmb.db.table.Notice
+import ai.saniou.thread.data.mapper.toDomain
 import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
+import ai.saniou.thread.domain.model.Notice
+import ai.saniou.thread.domain.repository.NoticeRepository
+import ai.saniou.thread.network.SaniouResponse
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToOneOrNull
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
 import kotlin.time.ExperimentalTime
 
-class NoticeUseCase(
+@OptIn(ExperimentalTime::class)
+class NoticeRepositoryImpl(
     private val api: NmbXdApi,
     private val db: Database,
     private val storage: CommonStorage,
-) {
+) : NoticeRepository {
 
-    @OptIn(ExperimentalTime::class)
-    suspend operator fun invoke(): Flow<Notice?> {
+    override suspend fun getLatestNotice(): Flow<Notice?> {
+        return db.noticeQueries.getLatestNotice()
+            .asFlow()
+            .mapToOneOrNull(Dispatchers.IO)
+            .map { it?.toDomain() }
+    }
+
+    override suspend fun fetchAndCacheNotice() {
         val lastFetchTime = storage.getValue<Long>(KEY_LAST_FETCH_TIME) ?: 0
         if (Clock.System.now().epochSeconds - lastFetchTime > 1.days.inWholeSeconds) {
             val response = api.notice()
@@ -40,12 +50,9 @@ class NoticeUseCase(
                     throw response.ex
             }
         }
-        return db.noticeQueries.getLatestNotice()
-            .asFlow()
-            .mapToOneOrNull(Dispatchers.IO)
     }
 
-    fun markAsRead(id: String) {
+    override fun markAsRead(id: String) {
         db.noticeQueries.markAsRead(id)
     }
 

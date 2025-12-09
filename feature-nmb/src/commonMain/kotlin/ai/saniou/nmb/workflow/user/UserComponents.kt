@@ -1,6 +1,6 @@
 package ai.saniou.nmb.workflow.user
 
-import ai.saniou.nmb.db.table.Cookie
+import ai.saniou.thread.domain.model.Cookie
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -77,8 +77,8 @@ fun CookieListContent(
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            items(localCookies, key = { it.cookie }) { cookie ->
-                ReorderableItem(state, key = cookie.cookie) { isDragging ->
+            items(localCookies, key = { it.value }) { cookie ->
+                ReorderableItem(state, key = cookie.value) { isDragging ->
                     CookieItem(
                         cookie = cookie,
                         onDelete = { onDelete(cookie) },
@@ -119,7 +119,7 @@ fun CookieItem(
             }
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = cookie.cookie,
+                text = cookie.value,
                 style = MaterialTheme.typography.bodyMedium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,

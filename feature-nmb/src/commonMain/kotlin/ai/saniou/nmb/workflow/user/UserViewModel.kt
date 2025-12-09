@@ -1,10 +1,10 @@
 package ai.saniou.nmb.workflow.user
 
-import ai.saniou.nmb.db.table.Cookie
-import ai.saniou.nmb.domain.UserUseCase
+import ai.saniou.thread.domain.model.Cookie
 import ai.saniou.nmb.workflow.user.UserContract.Effect
 import ai.saniou.nmb.workflow.user.UserContract.Event
 import ai.saniou.nmb.workflow.user.UserContract.State
+import ai.saniou.thread.domain.usecase.UserUseCase
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.channels.Channel
@@ -42,7 +42,12 @@ class UserViewModel(private val userUseCase: UserUseCase) : ScreenModel {
                 val cookies = userUseCase.getCookiesList()
                 _state.update { it.copy(isLoading = false, cookies = cookies) }
             } catch (e: Exception) {
-                _state.update { it.copy(isLoading = false, error = "获取饼干列表失败: ${e.message}") }
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        error = "获取饼干列表失败: ${e.message}"
+                    )
+                }
             }
         }
     }
@@ -63,7 +68,7 @@ class UserViewModel(private val userUseCase: UserUseCase) : ScreenModel {
             try {
                 userUseCase.deleteCookie(cookie)
                 _state.update {
-                    it.copy(cookies = it.cookies.filterNot { c -> c.cookie == cookie.cookie })
+                    it.copy(cookies = it.cookies.filterNot { c -> c.value == cookie.value })
                 }
             } catch (e: Exception) {
                 _effect.send(Effect.ShowError("删除饼干失败: ${e.message}"))

@@ -11,6 +11,8 @@ import ai.saniou.nmb.workflow.image.ImageInfo
 import ai.saniou.nmb.workflow.image.ImagePreviewPage
 import ai.saniou.nmb.workflow.image.ImagePreviewViewModelParams
 import ai.saniou.nmb.workflow.subscription.SubscriptionContract.Event
+import ai.saniou.thread.data.source.nmb.remote.dto.IBaseThread
+import ai.saniou.thread.domain.model.Post
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -191,8 +193,8 @@ private fun SubscriptionContent(
                 Box {
                     ForumThreadCard(
                         thread = feed,
-                        onClick = { onThreadClicked(feed.id) },
-                        onImageClick = { img, ext -> onImageClick(feed.id, img, ext) },
+                        onClick = { onThreadClicked(feed.id.toLong()) },
+                        onImageClick = { img, ext -> onImageClick(feed.id.toLong(), img, ext) },
 //                    onUnsubscribe = { onEvent(Event.OnUnsubscribe(feed.id)) }
                     )
                     if (feed.isLocal) {

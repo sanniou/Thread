@@ -1,10 +1,10 @@
 package ai.saniou.nmb.workflow.post
 
 import ai.saniou.nmb.domain.ForumUseCase
-import ai.saniou.nmb.domain.PostUseCase
 import ai.saniou.nmb.workflow.post.PostContract.Effect
 import ai.saniou.nmb.workflow.post.PostContract.Event
 import ai.saniou.nmb.workflow.post.PostContract.State
+import ai.saniou.thread.domain.usecase.PostUseCase
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import cafe.adriel.voyager.core.model.ScreenModel

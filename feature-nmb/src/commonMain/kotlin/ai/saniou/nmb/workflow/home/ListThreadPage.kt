@@ -8,6 +8,8 @@ import ai.saniou.nmb.ui.components.LoadEndIndicator
 import ai.saniou.nmb.ui.components.LoadingFailedIndicator
 import ai.saniou.nmb.ui.components.LoadingIndicator
 import ai.saniou.nmb.ui.components.ThreadListSkeleton
+import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
+import ai.saniou.thread.domain.model.Post
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,11 +37,32 @@ import app.cash.paging.LoadStateError
 import app.cash.paging.LoadStateLoading
 import app.cash.paging.PagingData
 import app.cash.paging.compose.collectAsLazyPagingItems
+import app.cash.paging.map
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+
+@Composable
+fun ListThreadPageOld(
+    threadFlow: Flow<PagingData<ThreadWithInformation>>,
+    onThreadClicked: (Long) -> Unit,
+    onImageClick: (Long, String, String) -> Unit,
+    onUserClick: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    state: LazyListState = rememberLazyListState(),
+) {
+    ListThreadPage(
+        threadFlow = threadFlow.map { it.map { it.toDomain() } },
+        onThreadClicked = onThreadClicked,
+        onImageClick = onImageClick,
+        onUserClick = onUserClick,
+        modifier = modifier,
+        state = state,
+    )
+}
 
 @Composable
 fun ListThreadPage(
-    threadFlow: Flow<PagingData<ThreadWithInformation>>,
+    threadFlow: Flow<PagingData<Post>>,
     onThreadClicked: (Long) -> Unit,
     onImageClick: (Long, String, String) -> Unit,
     onUserClick: (String) -> Unit,
@@ -93,8 +116,8 @@ fun ListThreadPage(
                         val feed = threads[index] ?: return@items
                         ForumThreadCard(
                             thread = feed,
-                            onClick = { onThreadClicked(feed.id) },
-                            onImageClick = { img, ext -> onImageClick(feed.id, img, ext) },
+                            onClick = { onThreadClicked(feed.id.toLong()) },
+                            onImageClick = { img, ext -> onImageClick(feed.id.toLong(), img, ext) },
                             onUserClick = onUserClick
                         )
                     }

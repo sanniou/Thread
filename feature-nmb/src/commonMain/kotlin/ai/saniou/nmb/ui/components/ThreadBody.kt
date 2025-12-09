@@ -26,6 +26,25 @@ fun ThreadBody(
     onReferenceClick: ((Long) -> Unit)? = null,
     onImageClick: (String, String) -> Unit,
 ) {
+    ThreadBody(
+        content = body.content,
+        img = body.img,
+        ext = body.ext,
+        maxLines = maxLines,
+        onReferenceClick = onReferenceClick,
+        onImageClick = onImageClick,
+    )
+}
+
+@Composable
+fun ThreadBody(
+    content: String,
+    img: String?,
+    ext: String?,
+    maxLines: Int = Int.MAX_VALUE,
+    onReferenceClick: ((Long) -> Unit)? = null,
+    onImageClick: (String, String) -> Unit,
+) {
     val uriHandler = LocalUriHandler.current
     val clickablePatterns = remember(onReferenceClick) {
         listOf(
@@ -49,7 +68,7 @@ fun ThreadBody(
 
     Column {
         RichText(
-            text = body.content,
+            text = content,
             maxLines = maxLines,
             overflow = TextOverflow.Ellipsis,
             style = MaterialTheme.typography.bodyMedium,
@@ -57,17 +76,17 @@ fun ThreadBody(
             blankLinePolicy = BlankLinePolicy.COLLAPSE
         )
 
-        if (body.img.isNotEmpty() && body.ext.isNotEmpty()) {
+        if (!(img.isNullOrEmpty()) && !(ext.isNullOrEmpty())) {
             Spacer(modifier = Modifier.height(Dimens.padding_small))
             NmbImage(
-                imgPath = body.img,
-                ext = body.ext,
+                imgPath = img,
+                ext = ext,
                 isThumb = true,
                 contentDescription = "帖子图片",
                 modifier = Modifier
                     .height(Dimens.image_height_medium)
                     .wrapContentWidth(Alignment.Start)
-                    .clickable { onImageClick(body.img, body.ext) },
+                    .clickable { onImageClick(img, ext) },
                 contentScale = ContentScale.FillHeight,
             )
         }

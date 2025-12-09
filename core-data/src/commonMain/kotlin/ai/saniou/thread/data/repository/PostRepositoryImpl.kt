@@ -1,22 +1,22 @@
-package ai.saniou.nmb.domain
+package ai.saniou.thread.data.repository
 
 import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
+import ai.saniou.thread.domain.repository.PostRepository
 import io.ktor.client.request.forms.formData
 import io.ktor.http.content.PartData
 import io.ktor.utils.io.InternalAPI
 
-@OptIn(InternalAPI::class)
-
-class PostUseCase(
-    private val forumRepository: NmbXdApi
-) {
-    suspend fun post(
+class PostRepositoryImpl(
+    private val nmbXdApi: NmbXdApi
+) : PostRepository {
+    @OptIn(InternalAPI::class)
+    override suspend fun post(
         fid: Int,
         content: String,
-        name: String? = null,
-        title: String? = null,
-        water: Boolean = false,
-        image: PartData? = null
+        name: String?,
+        title: String?,
+        water: Boolean,
+        image: PartData?
     ): String {
         val optionalParts = formData {
             name?.let { append("name", it) }
@@ -24,16 +24,17 @@ class PostUseCase(
             if (water) append("water", "true")
             image?.let { append("image", it) }
         }
-        return forumRepository.postThread(fid, content, optionalParts)
+        return nmbXdApi.postThread(fid, content, optionalParts)
     }
 
-    suspend fun reply(
+    @OptIn(InternalAPI::class)
+    override suspend fun reply(
         resto: Int,
         content: String,
-        name: String? = null,
-        title: String? = null,
-        water: Boolean = false,
-        image: PartData? = null
+        name: String?,
+        title: String?,
+        water: Boolean,
+        image: PartData?
     ): String {
         val optionalParts = formData {
             name?.let { append("name", it) }
@@ -41,6 +42,6 @@ class PostUseCase(
             if (water) append("water", "true")
             image?.let { append("image", it) }
         }
-        return forumRepository.postReply(resto, content, optionalParts)
+        return nmbXdApi.postReply(resto, content, optionalParts)
     }
 }

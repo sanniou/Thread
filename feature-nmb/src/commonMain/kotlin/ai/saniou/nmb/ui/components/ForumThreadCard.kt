@@ -3,6 +3,9 @@ package ai.saniou.nmb.ui.components
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.thread.data.source.nmb.remote.dto.IBaseThread
 import ai.saniou.thread.data.source.nmb.remote.dto.IBaseThreadReply
+import ai.saniou.thread.data.source.nmb.remote.dto.ThreadReply
+import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
+import ai.saniou.thread.domain.model.Post
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -30,12 +33,28 @@ import org.jetbrains.compose.resources.stringResource
 import thread.feature_nmb.generated.resources.Res
 import thread.feature_nmb.generated.resources.empty_title
 
+
+@Composable
+fun ForumThreadCard(
+    thread: IBaseThread,
+    onClick: () -> Unit,
+    onImageClick: ((String, String) -> Unit)? = null,
+    onUserClick: ((String) -> Unit)? = null,
+) {
+    ForumThreadCard(
+        thread.toDomain(),
+        onClick,
+        onImageClick,
+        onUserClick
+    )
+}
+
 /**
  * 串内容卡片，遵循 MD3 设计风格
  */
 @Composable
 fun ForumThreadCard(
-    thread: IBaseThread,
+    thread: Post,
     onClick: () -> Unit,
     onImageClick: ((String, String) -> Unit)? = null,
     onUserClick: ((String) -> Unit)? = null,
@@ -51,12 +70,12 @@ fun ForumThreadCard(
         ) {
             // 统一的头部
             Column(verticalArrangement = Arrangement.spacedBy(Dimens.padding_small)) {
-                ThreadAuthor(thread, onClick = onUserClick)
+                ThreadAuthor(thread.userHash, thread.name, thread.now, onClick = onUserClick)
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(Dimens.padding_small)
                 ) {
-                    if (thread.admin > 0) {
+                    if (thread.isAdmin) {
                         Surface(
                             shape = CircleShape,
                             color = MaterialTheme.colorScheme.primaryContainer
@@ -79,7 +98,7 @@ fun ForumThreadCard(
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f)
                     )
-                    if (thread.sage > 0) {
+                    if (thread.isSage) {
                         Text(
                             text = "SAGE",
                             style = MaterialTheme.typography.labelMedium,
@@ -91,13 +110,28 @@ fun ForumThreadCard(
 
             // 内容区域
             ThreadBody(
-                body = thread,
+                thread.content,
+                thread.img,
+                thread.ext,
                 maxLines = 6,
                 onImageClick = { img, ext -> onImageClick?.invoke(img, ext) }
             )
 
             // 尾部
-            ThreadCardFooter(thread)
+            ThreadCardFooter(thread.replyCount, thread.replies?.map {
+                ThreadReply(
+                    id = it.id,
+                    userHash = it.userHash,
+                    admin = it.admin,
+                    title = it.title,
+                    now = it.now,
+                    content = it.content,
+                    img = it.img,
+                    ext = it.ext,
+                    name = it.name,
+                    threadId = it.threadId,
+                )
+            }, thread.remainReplies)
         }
     }
 }
@@ -105,6 +139,19 @@ fun ForumThreadCard(
 @Composable
 private fun ThreadCardFooter(thread: IBaseThread) {
     val threadReply = thread as? IBaseThreadReply
+    ThreadCardFooter(
+        replyCount = thread.replyCount,
+        replies = threadReply?.replies ?: emptyList(),
+        remainReplies = threadReply?.remainReplies,
+    )
+}
+
+@Composable
+private fun ThreadCardFooter(
+    replyCount: Long,
+    replies: List<ThreadReply>?,
+    remainReplies: Long?,
+) {
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -121,7 +168,7 @@ private fun ThreadCardFooter(thread: IBaseThread) {
                 modifier = Modifier.size(Dimens.icon_size_small)
             )
             Text(
-                text = thread.replyCount.toString(),
+                text = replyCount.toString(),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -129,18 +176,18 @@ private fun ThreadCardFooter(thread: IBaseThread) {
 
         Spacer(modifier = Modifier.weight(1f))
 
-        if ((threadReply?.remainReplies ?: 0) > 0) {
+        if ((remainReplies ?: 0) > 0) {
             Text(
-                text = "省略${threadReply?.remainReplies}条",
+                text = "省略${remainReplies}条",
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
 
-    if (!threadReply?.replies.isNullOrEmpty()) {
+    if (!replies.isNullOrEmpty()) {
         Spacer(modifier = Modifier.height(Dimens.padding_small))
-        RecentReplies(threadReply.replies)
+        RecentReplies(replies)
     }
 }
 

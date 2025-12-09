@@ -2,6 +2,7 @@ package ai.saniou.thread.data.source.nmb.remote.dto
 
 import ai.saniou.nmb.db.table.SelectSubscriptionThread
 import ai.saniou.nmb.db.table.Thread
+import ai.saniou.thread.domain.model.Post
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
@@ -162,6 +163,33 @@ fun Feed.nowToEpochMilliseconds(): Long {
     return ldt.toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds()
 }
 
+@OptIn(ExperimentalTime::class)
+fun IBaseThread.toDomain(): Post = Post(
+    id = id.toString(),
+    sourceName = "nmb",
+    sourceUrl = "https://nmb.ai/thread/$id",
+    title = title,
+    content = content,
+    author = name,
+    userHash = userHash,
+    createdAt = now.toTime(),
+    forumName = fid.toString(),
+    replyCount = replyCount,
+    img = img,
+    ext = ext,
+    isSage = sage > 0,
+    isAdmin = admin > 0,
+    isHidden = hide > 0,
+    isLocal = false,
+    now = now,
+    name = name,
+    sage = sage,
+    fid = fid,
+    admin = admin,
+    hide = hide,
+    replies = null,
+    remainReplies = null
+)
 
 interface IBaseThread : IBaseAuthor, IThreadBody {
 

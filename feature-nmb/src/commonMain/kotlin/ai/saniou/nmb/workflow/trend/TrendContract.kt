@@ -1,6 +1,7 @@
 package ai.saniou.nmb.workflow.trend
 
 import ai.saniou.thread.data.source.nmb.remote.dto.Thread
+import ai.saniou.thread.domain.model.Trend
 import kotlinx.serialization.Serializable
 
 /**
@@ -65,3 +66,12 @@ interface TrendContract {
         data class ShowInfoDialog(val url: String) : Effect
     }
 }
+
+fun Trend.toUI() = TrendContract.TrendItem(
+    rank = rank,
+    trendNum = trendNum,
+    forum = forum,
+    isNew = isNew,
+    threadId = threadId,
+    content = contentPreview
+)

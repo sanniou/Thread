@@ -1,6 +1,6 @@
 package ai.saniou.nmb.workflow.user
 
-import ai.saniou.nmb.db.table.Cookie
+import ai.saniou.thread.domain.model.Cookie
 
 /**
  * 定义用户中心页面的状态、事件和副作用
@@ -15,7 +15,7 @@ interface UserContract {
     data class State(
         val isLoading: Boolean = true,
         val cookies: List<Cookie> = emptyList(),
-        val error: String? = null
+        val error: String? = null,
     )
 
     /**

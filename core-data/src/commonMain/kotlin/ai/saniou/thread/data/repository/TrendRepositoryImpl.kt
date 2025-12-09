@@ -1,23 +1,24 @@
-package ai.saniou.nmb.domain
+package ai.saniou.thread.data.repository
 
-import ai.saniou.nmb.workflow.trend.TrendContract.TrendItem
 import ai.saniou.thread.data.source.nmb.NmbSource
+import ai.saniou.thread.domain.model.Trend
+import ai.saniou.thread.domain.repository.TrendRepository
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
-class TrendUseCase(
-    private val nmbRepository: NmbSource,
-) {
+@OptIn(ExperimentalTime::class)
+class TrendRepositoryImpl(
+    private val nmbSource: NmbSource,
+) : TrendRepository {
 
-    @OptIn(ExperimentalTime::class)
-    suspend fun getTrendItems(forceRefresh: Boolean): Result<Pair<String, List<TrendItem>>> {
+    override suspend fun getTrendItems(forceRefresh: Boolean): Result<Pair<String, List<Trend>>> {
         val trendThreadId = 50248044L
 
         // 1. Try to get from local cache if not force refreshing
         if (!forceRefresh) {
-            val localLatestReply = nmbRepository.getLocalLatestReply(trendThreadId)
+            val localLatestReply = nmbSource.getLocalLatestReply(trendThreadId)
             if (localLatestReply != null) {
                 val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
                 // Check if cached data is from today
@@ -30,12 +31,12 @@ class TrendUseCase(
 
         // 2. Fetch from network
         return try {
-            nmbRepository.getTrendThread(page = 1).mapCatching { firstPageThread ->
+            nmbSource.getTrendThread(page = 1).mapCatching { firstPageThread ->
                 val replyCount = firstPageThread.replyCount
                 val lastPage = (replyCount / 19) + if (replyCount % 19 > 0) 1 else 0
 
                 val lastPageThread =
-                    nmbRepository.getTrendThread(page = lastPage.toInt()).getOrThrow()
+                    nmbSource.getTrendThread(page = lastPage.toInt()).getOrThrow()
                 val latestReply = lastPageThread.replies.lastOrNull()
                     ?: throw IllegalStateException("无趋势数据")
 
@@ -47,8 +48,8 @@ class TrendUseCase(
         }
     }
 
-    private fun parseTrendContent(content: String): List<TrendItem> {
-        val items = mutableListOf<TrendItem>()
+    private fun parseTrendContent(content: String): List<Trend> {
+        val items = mutableListOf<Trend>()
         // Split content by separator line
         val segments = content.split("—————")
 
@@ -82,7 +83,7 @@ class TrendUseCase(
             // Keep HTML tags and entities for RichText rendering
             contentPreview = contentPreview.trim()
 
-            items.add(TrendItem(rank, trendNum, forum, isNew, threadId, contentPreview))
+            items.add(Trend(rank, trendNum, forum, isNew, threadId, contentPreview))
         }
 
         return items

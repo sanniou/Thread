@@ -24,15 +24,32 @@ import androidx.compose.ui.unit.dp
 fun ThreadAuthor(
     author: IBaseAuthor,
     isPo: Boolean = false,
-    onClick: ((String) -> Unit)? = null
+    onClick: ((String) -> Unit)? = null,
+) {
+    ThreadAuthor(
+        userName = author.userHash,
+        showName = author.name,
+        threadTime = author.now,
+        isPo = isPo,
+        onClick = onClick
+    )
+}
+
+@Composable
+fun ThreadAuthor(
+    userName: String,
+    showName: String,
+    threadTime: String,
+    isPo: Boolean = false,
+    onClick: ((String) -> Unit)? = null,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         // 头像占位，根据 Hash 生成颜色
-        val avatarColor = remember(author.userHash) {
-            val hash = author.userHash.hashCode()
+        val avatarColor = remember(userName) {
+            val hash = userName.hashCode()
             Color(hash).copy(alpha = 1f)
         }
 
@@ -42,21 +59,24 @@ fun ThreadAuthor(
                 .clip(CircleShape)
                 .background(avatarColor)
                 .then(
-                    if (onClick != null) Modifier.clickable { onClick(author.userHash) } else Modifier
+                    if (onClick != null) Modifier.clickable { onClick(userName) } else Modifier
                 ),
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = author.userHash.take(1).uppercase(),
+                text = userName.take(1).uppercase(),
                 style = MaterialTheme.typography.titleMedium,
                 color = Color.White
             )
         }
 
         Column {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 Text(
-                    text = author.userHash,
+                    text = userName,
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -66,9 +86,9 @@ fun ThreadAuthor(
                     PoTag(isPo = true)
                 }
 
-                if (author.name.isNotBlank() && author.name != "无名氏") {
+                if (showName.isNotBlank() && showName != "无名氏") {
                     Text(
-                        text = author.name,
+                        text = showName,
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.secondary
                     )
@@ -76,7 +96,7 @@ fun ThreadAuthor(
             }
 
             Text(
-                text = author.now,
+                text = threadTime,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.outline
             )

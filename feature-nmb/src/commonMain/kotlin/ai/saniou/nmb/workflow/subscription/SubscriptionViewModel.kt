@@ -1,11 +1,13 @@
 package ai.saniou.nmb.workflow.subscription
 
 import ai.saniou.nmb.data.storage.SubscriptionStorage
-import ai.saniou.nmb.domain.SubscriptionFeedUseCase
 import ai.saniou.nmb.workflow.subscription.SubscriptionContract.Effect
 import ai.saniou.nmb.workflow.subscription.SubscriptionContract.Event
 import ai.saniou.nmb.workflow.subscription.SubscriptionContract.State
 import ai.saniou.thread.data.source.nmb.DataPolicy
+import ai.saniou.thread.domain.usecase.GetSubscriptionFeedUseCase
+import ai.saniou.thread.domain.usecase.SyncLocalSubscriptionsUseCase
+import ai.saniou.thread.domain.usecase.ToggleSubscriptionUseCase
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.channels.Channel
@@ -18,7 +20,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class SubscriptionViewModel(
-    private val subscriptionFeedUseCase: SubscriptionFeedUseCase,
+    private val getSubscriptionFeedUseCase: GetSubscriptionFeedUseCase,
+    private val toggleSubscriptionUseCase: ToggleSubscriptionUseCase,
+    private val syncLocalSubscriptionsUseCase: SyncLocalSubscriptionsUseCase,
     private val subscriptionStorage: SubscriptionStorage
 ) : ScreenModel {
 
@@ -55,14 +59,12 @@ class SubscriptionViewModel(
     private suspend fun loadFeeds(id: String, policy: DataPolicy = DataPolicy.CACHE_FIRST) {
         _state.update { it.copy(subscriptionId = id, isLoading = true) }
         try {
-            val feeds = subscriptionFeedUseCase.feed(id, policy)
-            val hasLocal = subscriptionFeedUseCase.hasLocalSubscriptions(id)
+            val feeds = getSubscriptionFeedUseCase(id)
             _state.update {
                 it.copy(
                     feeds = feeds,
                     isLoading = false,
                     error = null,
-                    isPushEnabled = hasLocal
                 )
             }
         } catch (e: Exception) {
@@ -75,7 +77,7 @@ class SubscriptionViewModel(
 
     fun onEvent(event: Event) {
         when (event) {
-            is Event.OnUnsubscribe -> unsubscribe(event.threadId)
+            is Event.OnUnsubscribe -> unsubscribe(event.threadId.toString())
             is Event.OnSetSubscriptionId -> setSubscriptionId(event.id)
             Event.OnGenerateRandomSubscriptionId -> generateRandomSubscriptionId()
             Event.OnShowSubscriptionIdDialog -> _state.update { it.copy(isShowSubscriptionIdDialog = true) }
@@ -96,7 +98,7 @@ class SubscriptionViewModel(
         val id = state.value.subscriptionId ?: return
         screenModelScope.launch {
             try {
-                subscriptionFeedUseCase.pushLocalSubscriptions(id)
+                syncLocalSubscriptionsUseCase(id)
                 _effect.send(Effect.OnPushResult(true, "推送成功"))
                 loadFeeds(id, DataPolicy.API_FIRST)
             } catch (e: Exception) {
@@ -117,14 +119,14 @@ class SubscriptionViewModel(
         setSubscriptionId(randomId)
     }
 
-    private fun unsubscribe(threadId: Long) {
+    private fun unsubscribe(threadId: String) {
         val id = state.value.subscriptionId ?: return
         screenModelScope.launch {
-            try {
-                subscriptionFeedUseCase.delFeed(id, threadId)
-                _effect.send(Effect.OnUnsubscribeResult(true, "取消订阅成功"))
-            } catch (e: Exception) {
-                _effect.send(Effect.OnUnsubscribeResult(false, "取消订阅失败: ${e.message}"))
+            val result = toggleSubscriptionUseCase(id, threadId, true)
+            result.onSuccess {
+                _effect.send(Effect.OnUnsubscribeResult(true, it))
+            }.onFailure {
+                _effect.send(Effect.OnUnsubscribeResult(false, "取消订阅失败: ${it.message}"))
             }
         }
     }

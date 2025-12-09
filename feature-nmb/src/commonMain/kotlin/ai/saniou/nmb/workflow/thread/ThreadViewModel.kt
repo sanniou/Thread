@@ -4,7 +4,6 @@ import ai.saniou.nmb.data.storage.SubscriptionStorage
 import ai.saniou.nmb.db.Database
 import ai.saniou.nmb.domain.GetThreadDetailUseCase
 import ai.saniou.nmb.domain.GetThreadRepliesPagingUseCase
-import ai.saniou.nmb.domain.ToggleSubscriptionUseCase
 import ai.saniou.nmb.workflow.thread.ThreadContract.Effect
 import ai.saniou.nmb.workflow.thread.ThreadContract.Event
 import ai.saniou.nmb.workflow.thread.ThreadContract.State
@@ -12,6 +11,7 @@ import ai.saniou.thread.data.source.nmb.NmbSource
 import ai.saniou.thread.data.source.nmb.remote.dto.Thread
 import ai.saniou.thread.data.source.nmb.remote.dto.ThreadReply
 import ai.saniou.thread.domain.usecase.AddBookmarkUseCase
+import ai.saniou.thread.domain.usecase.ToggleSubscriptionUseCase
 import app.cash.paging.PagingData
 import app.cash.paging.cachedIn
 import cafe.adriel.voyager.core.model.ScreenModel
@@ -161,7 +161,8 @@ class ThreadViewModel(
 
         val currentSubscribed = state.value.isSubscribed
         screenModelScope.launch {
-            toggleSubscriptionUseCase(thread, currentSubscribed)
+            val subscriptionKey = subscriptionStorage.subscriptionId.value ?: throw IllegalStateException("未设置订阅ID")
+            toggleSubscriptionUseCase(subscriptionKey,thread.id.toString(), currentSubscribed)
                 .onSuccess { resultMessage ->
                     // UI state will be updated by the database flow
                     _state.update { it.copy(isTogglingSubscription = false) }

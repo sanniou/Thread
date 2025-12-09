@@ -11,6 +11,7 @@ import ai.saniou.nmb.data.storage.SubscriptionStorage
 import ai.saniou.thread.data.repository.BookmarkRepositoryImpl
 import ai.saniou.thread.data.repository.FavoriteRepositoryImpl
 import ai.saniou.thread.data.repository.FeedRepositoryImpl
+import ai.saniou.thread.data.repository.SubscriptionRepositoryImpl
 import ai.saniou.thread.data.repository.SyncRepositoryImpl
 import ai.saniou.thread.data.source.nga.NgaSource
 import ai.saniou.thread.data.source.nmb.NmbSource
@@ -22,8 +23,21 @@ import ai.saniou.thread.domain.repository.BookmarkRepository
 import ai.saniou.thread.domain.repository.FavoriteRepository
 import ai.saniou.thread.domain.repository.FeedRepository
 import ai.saniou.thread.domain.repository.Source
+import ai.saniou.thread.data.repository.UserRepositoryImpl
+import ai.saniou.thread.domain.repository.SubscriptionRepository
 import ai.saniou.thread.domain.repository.SyncProvider
+import ai.saniou.thread.data.repository.NoticeRepositoryImpl
+import ai.saniou.thread.data.repository.HistoryRepositoryImpl
+import ai.saniou.thread.data.repository.PostRepositoryImpl
+import ai.saniou.thread.domain.repository.HistoryRepository
+import ai.saniou.thread.data.repository.TrendRepositoryImpl
+import ai.saniou.thread.domain.repository.NoticeRepository
+import ai.saniou.thread.data.repository.ReferenceRepositoryImpl
+import ai.saniou.thread.domain.repository.PostRepository
+import ai.saniou.thread.domain.repository.ReferenceRepository
+import ai.saniou.thread.domain.repository.TrendRepository
 import ai.saniou.thread.domain.repository.SyncRepository
+import ai.saniou.thread.domain.repository.UserRepository
 import ai.saniou.thread.network.CookieProvider
 import de.jensklingenberg.ktorfit.Ktorfit
 import kotlinx.coroutines.CoroutineScope
@@ -58,6 +72,13 @@ val dataModule = DI.Module("dataModule") {
 
     bind<BookmarkRepository>() with singleton { BookmarkRepositoryImpl(instance()) }
     bind<FavoriteRepository>() with singleton { FavoriteRepositoryImpl(instance()) }
+    bind<SubscriptionRepository>() with singleton { SubscriptionRepositoryImpl(instance(), instance()) }
+    bind<UserRepository>() with singleton { UserRepositoryImpl(instance( )) }
+    bind<NoticeRepository>() with singleton { NoticeRepositoryImpl(instance(), instance(), instance()) }
+    bind<HistoryRepository>() with singleton { HistoryRepositoryImpl(instance()) }
+    bind<PostRepository>() with singleton { PostRepositoryImpl(instance()) }
+    bind<TrendRepository>() with singleton { TrendRepositoryImpl(instance()) }
+    bind<ReferenceRepository>() with singleton { ReferenceRepositoryImpl(instance(), instance()) }
 
     // sync providers
     bind<SyncProvider>(tag = "webdav") with singleton { WebDavSyncProvider() }

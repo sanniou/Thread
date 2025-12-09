@@ -1,12 +1,12 @@
 package ai.saniou.nmb.workflow.home
 
 import ai.saniou.coreui.widgets.RichText
-import ai.saniou.nmb.db.table.Notice
 import ai.saniou.nmb.di.nmbdi
 import ai.saniou.nmb.workflow.history.HistoryPage
 import ai.saniou.nmb.workflow.subscription.SubscriptionPage
 import ai.saniou.nmb.workflow.thread.ThreadPage
 import ai.saniou.nmb.workflow.trend.TrendPage
+import ai.saniou.thread.domain.model.Notice
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
