@@ -1,6 +1,6 @@
 package ai.saniou.nmb.workflow.user
 
-import ai.saniou.nmb.data.repository.NmbRepository
+import ai.saniou.thread.data.source.nmb.NmbSource
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.channels.Channel
@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 
 class UserDetailViewModel(
     private val userHash: String,
-    private val nmbRepository: NmbRepository
+    private val nmbRepository: NmbSource
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(

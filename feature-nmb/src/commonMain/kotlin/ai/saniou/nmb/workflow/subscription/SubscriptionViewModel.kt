@@ -1,11 +1,11 @@
 package ai.saniou.nmb.workflow.subscription
 
-import ai.saniou.nmb.data.repository.DataPolicy
 import ai.saniou.nmb.data.storage.SubscriptionStorage
 import ai.saniou.nmb.domain.SubscriptionFeedUseCase
 import ai.saniou.nmb.workflow.subscription.SubscriptionContract.Effect
 import ai.saniou.nmb.workflow.subscription.SubscriptionContract.Event
 import ai.saniou.nmb.workflow.subscription.SubscriptionContract.State
+import ai.saniou.thread.data.source.nmb.DataPolicy
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.channels.Channel

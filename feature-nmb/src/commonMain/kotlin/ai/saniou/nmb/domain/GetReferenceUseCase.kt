@@ -3,11 +3,12 @@ package ai.saniou.nmb.domain
 import ai.saniou.thread.data.source.nmb.remote.dto.ThreadReply
 import ai.saniou.thread.data.source.nmb.remote.dto.toTable
 import ai.saniou.thread.data.source.nmb.remote.dto.toThreadReply
-import ai.saniou.nmb.data.repository.ForumRepository
 import ai.saniou.nmb.db.Database
+import ai.saniou.thread.data.source.nmb.NmbSource
+import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
 
 class GetReferenceUseCase(
-    private val forumRepository: ForumRepository,
+    private val forumRepository: NmbXdApi,
     private val db: Database,
 ) {
     suspend operator fun invoke(id: Long): Result<ThreadReply> {

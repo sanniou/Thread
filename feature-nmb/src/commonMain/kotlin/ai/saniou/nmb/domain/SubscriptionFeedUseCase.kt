@@ -2,11 +2,12 @@ package ai.saniou.nmb.domain
 
 import ai.saniou.thread.data.source.nmb.remote.dto.Feed
 import ai.saniou.thread.data.source.nmb.remote.dto.toFeed
-import ai.saniou.nmb.data.repository.DataPolicy
-import ai.saniou.nmb.data.repository.ForumRepository
-import ai.saniou.nmb.data.source.SqlDelightPagingSource
-import ai.saniou.nmb.data.source.SubscriptionRemoteMediator
 import ai.saniou.nmb.db.Database
+import ai.saniou.thread.data.source.nmb.DataPolicy
+import ai.saniou.thread.data.source.nmb.NmbSource
+import ai.saniou.thread.data.source.nmb.SqlDelightPagingSource
+import ai.saniou.thread.data.source.nmb.SubscriptionRemoteMediator
+import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
 import app.cash.paging.ExperimentalPagingApi
 import app.cash.paging.Pager
 import app.cash.paging.PagingConfig
@@ -19,7 +20,7 @@ import kotlinx.coroutines.withContext
 
 
 class SubscriptionFeedUseCase(
-    private val forumRepository: ForumRepository,
+    private val forumRepository: NmbXdApi,
     private val db: Database,
 ) {
     @OptIn(ExperimentalPagingApi::class)

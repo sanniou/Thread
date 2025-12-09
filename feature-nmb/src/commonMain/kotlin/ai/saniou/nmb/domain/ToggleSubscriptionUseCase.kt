@@ -2,8 +2,8 @@ package ai.saniou.nmb.domain
 
 import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
 import ai.saniou.thread.data.source.nmb.remote.dto.Thread
-import ai.saniou.nmb.data.repository.NmbRepository
 import ai.saniou.nmb.data.storage.SubscriptionStorage
+import ai.saniou.thread.data.source.nmb.NmbSource
 
 /**
  * 封装切换帖子订阅状态的业务逻辑
@@ -15,7 +15,7 @@ import ai.saniou.nmb.data.storage.SubscriptionStorage
 class ToggleSubscriptionUseCase(
     private val nmbXdApi: NmbXdApi,
     private val subscriptionStorage: SubscriptionStorage,
-    private val nmbRepository: NmbRepository
+    private val nmbRepository: NmbSource,
 ) {
     /**
      * 执行切换订阅状态的操作

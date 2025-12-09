@@ -1,10 +1,10 @@
 package ai.saniou.nmb.domain
 
-import ai.saniou.nmb.data.repository.NmbRepository
 import ai.saniou.nmb.workflow.image.ImageInfo
+import ai.saniou.thread.data.source.nmb.NmbSource
 
 class GetThreadImagesUseCase(
-    private val nmbRepository: NmbRepository,
+    private val nmbRepository: NmbSource,
 ) {
     suspend operator fun invoke(threadId: Long, page: Int): Result<List<ImageInfo>> {
         return nmbRepository.getThreadRepliesByPage(threadId, page).map { replies ->

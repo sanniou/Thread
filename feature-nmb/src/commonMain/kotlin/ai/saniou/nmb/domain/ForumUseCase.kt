@@ -3,14 +3,14 @@ package ai.saniou.nmb.domain
 import ai.saniou.thread.data.source.nmb.remote.dto.ForumDetail
 import ai.saniou.thread.data.source.nmb.remote.dto.ThreadWithInformation
 import ai.saniou.thread.data.source.nmb.remote.dto.toForumDetail
-import ai.saniou.nmb.data.repository.DataPolicy
-import ai.saniou.nmb.data.repository.NmbRepository
 import ai.saniou.nmb.db.Database
+import ai.saniou.thread.data.source.nmb.DataPolicy
+import ai.saniou.thread.data.source.nmb.NmbSource
 import app.cash.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 
 class ForumUseCase(
-    private val nmbRepository: NmbRepository,
+    private val nmbRepository: NmbSource,
     private val db: Database,
 ) {
     operator fun invoke(

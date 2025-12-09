@@ -1,5 +1,6 @@
 package ai.saniou.thread.data.di
 
+import ai.saniou.thread.data.repository.BookmarkRepositoryImpl
 import ai.saniou.thread.data.repository.FavoriteRepositoryImpl
 import ai.saniou.thread.data.repository.FeedRepositoryImpl
 import ai.saniou.thread.data.repository.SyncRepositoryImpl
@@ -9,6 +10,7 @@ import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
 import ai.saniou.thread.data.source.nmb.remote.createNmbXdApi
 import ai.saniou.thread.data.sync.local.LocalSyncProvider
 import ai.saniou.thread.data.sync.webdav.WebDavSyncProvider
+import ai.saniou.thread.domain.repository.BookmarkRepository
 import ai.saniou.thread.domain.repository.FavoriteRepository
 import ai.saniou.thread.domain.repository.FeedRepository
 import ai.saniou.thread.domain.repository.Source
@@ -43,6 +45,7 @@ val dataModule = DI.Module("dataModule") {
         FeedRepositoryImpl(sources)
     }
 
+    bind<BookmarkRepository>() with singleton { BookmarkRepositoryImpl(instance()) }
     bind<FavoriteRepository>() with singleton { FavoriteRepositoryImpl(instance()) }
 
     // sync providers

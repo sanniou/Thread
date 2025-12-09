@@ -1,14 +1,14 @@
 package ai.saniou.nmb.domain
 
-import ai.saniou.nmb.data.repository.NmbRepository
 import ai.saniou.nmb.workflow.trend.TrendContract.TrendItem
+import ai.saniou.thread.data.source.nmb.NmbSource
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
 class TrendUseCase(
-    private val nmbRepository: NmbRepository,
+    private val nmbRepository: NmbSource,
 ) {
 
     @OptIn(ExperimentalTime::class)

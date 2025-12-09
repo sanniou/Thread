@@ -9,8 +9,9 @@ import ai.saniou.thread.data.source.nmb.remote.dto.toForumCategory
 import ai.saniou.thread.data.source.nmb.remote.dto.toForumDetail
 import ai.saniou.thread.data.source.nmb.remote.dto.toTable
 import ai.saniou.thread.data.source.nmb.remote.dto.toTimeLine
-import ai.saniou.nmb.data.repository.ForumRepository
 import ai.saniou.nmb.db.Database
+import ai.saniou.thread.data.source.nmb.NmbSource
+import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import kotlinx.coroutines.Dispatchers
@@ -25,7 +26,7 @@ import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
 class ForumCategoryUseCase(
-    private val forumRepository: ForumRepository,
+    private val forumRepository: NmbXdApi,
     private val db: Database
 ) {
     @OptIn(ExperimentalTime::class)

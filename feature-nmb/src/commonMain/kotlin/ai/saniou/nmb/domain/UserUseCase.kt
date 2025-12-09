@@ -1,10 +1,10 @@
 package ai.saniou.nmb.domain
 
-import ai.saniou.nmb.data.repository.NmbRepository
 import ai.saniou.nmb.db.table.Cookie
+import ai.saniou.thread.data.source.nmb.NmbSource
 
 class UserUseCase(
-    private val nmbRepository: NmbRepository
+    private val nmbRepository: NmbSource
 ) {
     suspend fun getCookiesList(): List<Cookie> {
         return nmbRepository.getSortedCookies()

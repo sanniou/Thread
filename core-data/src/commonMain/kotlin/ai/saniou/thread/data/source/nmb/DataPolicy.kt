@@ -1,4 +1,4 @@
-package ai.saniou.nmb.data.repository
+package ai.saniou.thread.data.source.nmb
 
 /**
  * 数据加载策略

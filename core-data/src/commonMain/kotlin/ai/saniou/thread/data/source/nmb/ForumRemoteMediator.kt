@@ -1,6 +1,5 @@
-package ai.saniou.nmb.data.source
+package ai.saniou.thread.data.source.nmb
 
-import ai.saniou.nmb.data.repository.DataPolicy
 import ai.saniou.nmb.db.Database
 import ai.saniou.nmb.db.table.GetThreadsInForumOffset
 import ai.saniou.nmb.db.table.RemoteKeys

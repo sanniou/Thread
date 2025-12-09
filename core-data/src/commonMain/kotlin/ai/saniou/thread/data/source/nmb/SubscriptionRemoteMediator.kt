@@ -1,12 +1,12 @@
-package ai.saniou.nmb.data.source
+package ai.saniou.thread.data.source.nmb
 
 import ai.saniou.thread.network.SaniouResponse
 import ai.saniou.thread.data.source.nmb.remote.dto.Feed
 import ai.saniou.thread.data.source.nmb.remote.dto.RemoteKeyType
 import ai.saniou.thread.data.source.nmb.remote.dto.nowToEpochMilliseconds
 import ai.saniou.thread.data.source.nmb.remote.dto.toTable
-import ai.saniou.nmb.data.repository.ForumRepository
 import ai.saniou.nmb.db.Database
+import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
 import app.cash.paging.ExperimentalPagingApi
 import app.cash.paging.LoadType
 import app.cash.paging.PagingState
@@ -20,7 +20,7 @@ import kotlin.time.ExperimentalTime
 @OptIn(ExperimentalPagingApi::class)
 class SubscriptionRemoteMediator(
     private val subscriptionKey: String,
-    private val forumRepository: ForumRepository,
+    private val forumRepository: NmbXdApi,
     private val db: Database,
 ) : RemoteMediator<Int, ai.saniou.nmb.db.table.SelectSubscriptionThread>() {
 

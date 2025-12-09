@@ -1,6 +1,7 @@
 package ai.saniou.nmb.workflow.bookmark
 
-import ai.saniou.nmb.db.table.Bookmark
+import ai.saniou.thread.domain.model.Bookmark
+
 
 interface BookmarkContract {
     data class State(

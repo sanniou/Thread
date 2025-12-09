@@ -1,10 +1,10 @@
 package ai.saniou.nmb.workflow.bookmark
 
-import ai.saniou.nmb.domain.GetBookmarksUseCase
-import ai.saniou.nmb.domain.RemoveBookmarkUseCase
 import ai.saniou.nmb.workflow.bookmark.BookmarkContract.Effect
 import ai.saniou.nmb.workflow.bookmark.BookmarkContract.Event
 import ai.saniou.nmb.workflow.bookmark.BookmarkContract.State
+import ai.saniou.thread.domain.usecase.GetBookmarksUseCase
+import ai.saniou.thread.domain.usecase.RemoveBookmarkUseCase
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.channels.Channel

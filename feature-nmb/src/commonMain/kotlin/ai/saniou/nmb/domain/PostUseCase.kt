@@ -1,6 +1,6 @@
 package ai.saniou.nmb.domain
 
-import ai.saniou.nmb.data.repository.ForumRepository
+import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
 import io.ktor.client.request.forms.formData
 import io.ktor.http.content.PartData
 import io.ktor.utils.io.InternalAPI
@@ -8,7 +8,7 @@ import io.ktor.utils.io.InternalAPI
 @OptIn(InternalAPI::class)
 
 class PostUseCase(
-    private val forumRepository: ForumRepository
+    private val forumRepository: NmbXdApi
 ) {
     suspend fun post(
         fid: Int,

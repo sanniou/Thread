@@ -5,28 +5,18 @@ import ai.saniou.nmb.data.NmbCookieProvider
 import ai.saniou.nmb.data.database.DriverFactory
 import ai.saniou.nmb.data.database.createDatabase
 import ai.saniou.nmb.data.manager.CdnManager
-import ai.saniou.nmb.data.repository.BookmarkRepository
-import ai.saniou.nmb.data.repository.ForumRepository
-import ai.saniou.nmb.data.repository.HistoryRepository
-import ai.saniou.nmb.data.repository.NmbRepository
-import ai.saniou.nmb.data.repository.NmbRepositoryImpl
 import ai.saniou.nmb.data.storage.CategoryStorage
 import ai.saniou.nmb.data.storage.CommonStorage
 import ai.saniou.nmb.data.storage.GreetImageStorage
 import ai.saniou.nmb.data.storage.SubscriptionStorage
-import ai.saniou.nmb.domain.AddBookmarkUseCase
-import ai.saniou.nmb.domain.ForumCategoryUseCase
 import ai.saniou.nmb.domain.ForumUseCase
-import ai.saniou.nmb.domain.GetBookmarksUseCase
 import ai.saniou.nmb.domain.GetReferenceUseCase
 import ai.saniou.nmb.domain.GetThreadDetailUseCase
 import ai.saniou.nmb.domain.GetThreadImagesUseCase
 import ai.saniou.nmb.domain.GetThreadRepliesPagingUseCase
 import ai.saniou.nmb.domain.HistoryUseCase
-import ai.saniou.nmb.domain.IsBookmarkedUseCase
 import ai.saniou.nmb.domain.NoticeUseCase
 import ai.saniou.nmb.domain.PostUseCase
-import ai.saniou.nmb.domain.RemoveBookmarkUseCase
 import ai.saniou.nmb.domain.SubscriptionFeedUseCase
 import ai.saniou.nmb.domain.ToggleSubscriptionUseCase
 import ai.saniou.nmb.domain.TrendUseCase
@@ -48,6 +38,7 @@ import ai.saniou.nmb.workflow.trend.TrendViewModel
 import ai.saniou.nmb.workflow.user.UserDetailViewModel
 import ai.saniou.nmb.workflow.user.UserViewModel
 import ai.saniou.thread.data.di.dataModule
+import ai.saniou.thread.data.source.nmb.NmbSource
 import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
 import ai.saniou.thread.data.source.nmb.remote._NmbXdApiImpl
 import ai.saniou.thread.domain.di.domainModule
@@ -75,24 +66,14 @@ val coreCommon by DI.Module {
 //    }
 
 }
-val nmbdi = DI {
-    import(coreCommon)
-    import(domainModule)
-    import(dataModule)
-    import(nmbImagePreviewModule)
 
-
+/**
+ * NMB 功能模块的 DI 定义，只负责 UI (ViewModel) 层的依赖注入。
+ * 所有业务逻辑和数据层的依赖都通过构造函数从外部传入。
+ */
+val nmbFeatureModule = DI.Module("nmbFeatureModule") {
 
     bindSingleton<CookieProvider> { NmbCookieProvider(instance()) }
-
-
-
-    bindSingleton<ForumRepository> { ForumRepository(instance()) }
-
-    // NMB 仓库
-    bindSingleton<NmbRepository> { NmbRepositoryImpl(instance(), instance()) }
-    bindSingleton<HistoryRepository> { NmbRepositoryImpl(instance(), instance()) }
-    bindSingleton<BookmarkRepository> { BookmarkRepository(instance()) }
 
     // CDN管理器
     bindSingleton<CdnManager> { CdnManager(instance()) }
@@ -190,10 +171,6 @@ val nmbdi = DI {
     }
 
     // 收藏相关
-    bindProvider { GetBookmarksUseCase(instance()) }
-    bindProvider { AddBookmarkUseCase(instance()) }
-    bindProvider { RemoveBookmarkUseCase(instance()) }
-    bindProvider { IsBookmarkedUseCase(instance()) }
     bindProvider { BookmarkViewModel(instance(), instance()) }
 
     bindSingleton {
@@ -209,4 +186,14 @@ val nmbdi = DI {
     bindSingleton {
         CommonStorage(scope = CoroutineScope(Dispatchers.Default))
     }
+}
+
+val nmbdi = DI {
+    import(coreCommon)
+    import(domainModule)
+    import(dataModule)
+    import(nmbImagePreviewModule)
+    import(nmbFeatureModule)
+    // 测试用，理论上不该直接使用 source
+    bindProvider { NmbSource(instance(), instance()) }
 }

@@ -1,10 +1,10 @@
 package ai.saniou.nmb.domain
 
 import ai.saniou.thread.network.SaniouResponse
-import ai.saniou.nmb.data.repository.ForumRepository
 import ai.saniou.nmb.data.storage.CommonStorage
 import ai.saniou.nmb.db.Database
 import ai.saniou.nmb.db.table.Notice
+import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToOneOrNull
 import kotlinx.coroutines.Dispatchers
@@ -15,7 +15,7 @@ import kotlin.time.Duration.Companion.days
 import kotlin.time.ExperimentalTime
 
 class NoticeUseCase(
-    private val api: ForumRepository,
+    private val api: NmbXdApi,
     private val db: Database,
     private val storage: CommonStorage,
 ) {

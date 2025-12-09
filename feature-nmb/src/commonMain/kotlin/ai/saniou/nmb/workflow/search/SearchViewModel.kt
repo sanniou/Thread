@@ -1,10 +1,9 @@
 package ai.saniou.nmb.workflow.search
 
-import ai.saniou.nmb.data.repository.NmbRepository
 import ai.saniou.nmb.workflow.search.SearchContract.Event
 import ai.saniou.nmb.workflow.search.SearchContract.SearchType
 import ai.saniou.nmb.workflow.search.SearchContract.State
-import androidx.lifecycle.viewModelScope
+import ai.saniou.thread.data.source.nmb.NmbSource
 import app.cash.paging.cachedIn
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
@@ -20,7 +19,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(FlowPreview::class)
 class SearchViewModel(
-    private val repository: NmbRepository,
+    private val repository: NmbSource,
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(State())

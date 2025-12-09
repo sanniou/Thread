@@ -1,11 +1,11 @@
 package ai.saniou.nmb.workflow.forum
 
 import ai.saniou.thread.data.source.nmb.remote.dto.ThreadWithInformation
-import ai.saniou.nmb.data.repository.DataPolicy
 import ai.saniou.nmb.domain.ForumUseCase
 import ai.saniou.nmb.workflow.forum.ForumContract.Effect
 import ai.saniou.nmb.workflow.forum.ForumContract.Event
 import ai.saniou.nmb.workflow.forum.ForumContract.State
+import ai.saniou.thread.data.source.nmb.DataPolicy
 import app.cash.paging.PagingData
 import app.cash.paging.cachedIn
 import cafe.adriel.voyager.core.model.ScreenModel

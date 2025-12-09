@@ -1,7 +1,7 @@
-package ai.saniou.nmb.domain
+package ai.saniou.thread.domain.usecase
 
-import ai.saniou.nmb.data.repository.BookmarkRepository
-import ai.saniou.nmb.db.table.Bookmark
+import ai.saniou.thread.domain.model.Bookmark
+import ai.saniou.thread.domain.repository.BookmarkRepository
 import kotlinx.coroutines.flow.Flow
 
 class GetBookmarksUseCase(private val bookmarkRepository: BookmarkRepository) {

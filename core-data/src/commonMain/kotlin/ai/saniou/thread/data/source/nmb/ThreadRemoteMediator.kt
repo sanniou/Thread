@@ -1,11 +1,10 @@
-package ai.saniou.nmb.data.source
+package ai.saniou.thread.data.source.nmb
 
 import ai.saniou.thread.network.SaniouResponse
 import ai.saniou.thread.data.source.nmb.remote.dto.RemoteKeyType
 import ai.saniou.thread.data.source.nmb.remote.dto.Thread
 import ai.saniou.thread.data.source.nmb.remote.dto.toTable
 import ai.saniou.thread.data.source.nmb.remote.dto.toTableReply
-import ai.saniou.nmb.data.repository.DataPolicy
 import ai.saniou.nmb.db.Database
 import app.cash.paging.ExperimentalPagingApi
 import app.cash.paging.LoadType
