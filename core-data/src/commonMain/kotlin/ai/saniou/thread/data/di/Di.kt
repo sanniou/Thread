@@ -1,5 +1,13 @@
 package ai.saniou.thread.data.di
 
+import ai.saniou.nmb.data.NmbCookieProvider
+import ai.saniou.nmb.data.database.DriverFactory
+import ai.saniou.nmb.data.database.createDatabase
+import ai.saniou.nmb.data.manager.CdnManager
+import ai.saniou.nmb.data.storage.CategoryStorage
+import ai.saniou.nmb.data.storage.CommonStorage
+import ai.saniou.nmb.data.storage.GreetImageStorage
+import ai.saniou.nmb.data.storage.SubscriptionStorage
 import ai.saniou.thread.data.repository.BookmarkRepositoryImpl
 import ai.saniou.thread.data.repository.FavoriteRepositoryImpl
 import ai.saniou.thread.data.repository.FeedRepositoryImpl
@@ -16,7 +24,10 @@ import ai.saniou.thread.domain.repository.FeedRepository
 import ai.saniou.thread.domain.repository.Source
 import ai.saniou.thread.domain.repository.SyncProvider
 import ai.saniou.thread.domain.repository.SyncRepository
+import ai.saniou.thread.network.CookieProvider
 import de.jensklingenberg.ktorfit.Ktorfit
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import org.kodein.di.DI
 import org.kodein.di.bind
 import org.kodein.di.bindConstant
@@ -59,5 +70,18 @@ val dataModule = DI.Module("dataModule") {
         val providers: Set<SyncProvider> = instance(tag = "allSyncProviders")
         SyncRepositoryImpl(providers)
     }
+
+    bindSingleton<CookieProvider> { NmbCookieProvider(instance()) }
+    // CDN管理器
+    bindSingleton<CdnManager> { CdnManager(instance()) }
+    // 数据存储相关
+    bindSingleton { CategoryStorage(scope = CoroutineScope(Dispatchers.Default)) }
+    // 欢迎图片存储
+    bindSingleton { GreetImageStorage(scope = CoroutineScope(Dispatchers.Default)) }
+    // 订阅存储
+    bindSingleton { SubscriptionStorage(scope = CoroutineScope(Dispatchers.Default)) }
+    bindSingleton { createDatabase(DriverFactory()) }
+    bindSingleton { CommonStorage(scope = CoroutineScope(Dispatchers.Default)) }
+
 
 }

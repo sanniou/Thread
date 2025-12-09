@@ -1,14 +1,5 @@
 package ai.saniou.nmb.di
 
-import ai.saniou.thread.network.CookieProvider
-import ai.saniou.nmb.data.NmbCookieProvider
-import ai.saniou.nmb.data.database.DriverFactory
-import ai.saniou.nmb.data.database.createDatabase
-import ai.saniou.nmb.data.manager.CdnManager
-import ai.saniou.nmb.data.storage.CategoryStorage
-import ai.saniou.nmb.data.storage.CommonStorage
-import ai.saniou.nmb.data.storage.GreetImageStorage
-import ai.saniou.nmb.data.storage.SubscriptionStorage
 import ai.saniou.nmb.domain.ForumUseCase
 import ai.saniou.nmb.domain.GetReferenceUseCase
 import ai.saniou.nmb.domain.GetThreadDetailUseCase
@@ -39,15 +30,10 @@ import ai.saniou.nmb.workflow.user.UserDetailViewModel
 import ai.saniou.nmb.workflow.user.UserViewModel
 import ai.saniou.thread.data.di.dataModule
 import ai.saniou.thread.data.source.nmb.NmbSource
-import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
-import ai.saniou.thread.data.source.nmb.remote._NmbXdApiImpl
 import ai.saniou.thread.domain.di.domainModule
 import ai.saniou.thread.network.SaniouKtorfit
 import de.jensklingenberg.ktorfit.Ktorfit
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import org.kodein.di.DI
-import org.kodein.di.bindConstant
 import org.kodein.di.bindFactory
 import org.kodein.di.bindMultiton
 import org.kodein.di.bindProvider
@@ -73,35 +59,8 @@ val coreCommon by DI.Module {
  */
 val nmbFeatureModule = DI.Module("nmbFeatureModule") {
 
-    bindSingleton<CookieProvider> { NmbCookieProvider(instance()) }
-
-    // CDN管理器
-    bindSingleton<CdnManager> { CdnManager(instance()) }
-
     // 应用初始化器
     bindSingleton<AppInitializer> { AppInitializer(instance()) }
-
-
-    // 数据存储相关
-    bindSingleton {
-        CategoryStorage(
-            scope = CoroutineScope(Dispatchers.Default)
-        )
-    }
-
-    // 欢迎图片存储
-    bindSingleton {
-        GreetImageStorage(
-            scope = CoroutineScope(Dispatchers.Default)
-        )
-    }
-
-    // 订阅存储
-    bindSingleton {
-        SubscriptionStorage(
-            scope = CoroutineScope(Dispatchers.Default)
-        )
-    }
 
     // 欢迎图片ViewModel
     bindProvider<GreetImageViewModel> { GreetImageViewModel(instance()) }
@@ -173,19 +132,12 @@ val nmbFeatureModule = DI.Module("nmbFeatureModule") {
     // 收藏相关
     bindProvider { BookmarkViewModel(instance(), instance()) }
 
-    bindSingleton {
-        createDatabase(DriverFactory())
-    }
-
     bindProvider { SubscriptionFeedUseCase(instance(), instance()) }
 
     bindProvider { NoticeUseCase(instance(), instance(), instance()) }
     bindProvider { HomeViewModel(instance()) }
     bindProvider { TrendUseCase(instance()) }
     bindProvider { TrendViewModel(instance()) }
-    bindSingleton {
-        CommonStorage(scope = CoroutineScope(Dispatchers.Default))
-    }
 }
 
 val nmbdi = DI {
