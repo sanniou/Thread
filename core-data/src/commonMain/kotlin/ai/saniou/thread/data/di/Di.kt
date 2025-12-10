@@ -1,5 +1,4 @@
 package ai.saniou.thread.data.di
-import ai.saniou.thread.data.source.nmb.NmbCookieProvider
 import ai.saniou.nmb.data.database.DriverFactory
 import ai.saniou.nmb.data.database.createDatabase
 import ai.saniou.thread.data.manager.CdnManager
@@ -18,6 +17,7 @@ import ai.saniou.thread.data.repository.ThreadRepositoryImpl
 import ai.saniou.thread.data.repository.TrendRepositoryImpl
 import ai.saniou.thread.data.repository.UserRepositoryImpl
 import ai.saniou.thread.data.source.nga.NgaSource
+import ai.saniou.thread.data.source.nmb.NmbCookieProvider
 import ai.saniou.thread.data.source.nmb.NmbSource
 import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
 import ai.saniou.thread.data.source.nmb.remote.createNmbXdApi

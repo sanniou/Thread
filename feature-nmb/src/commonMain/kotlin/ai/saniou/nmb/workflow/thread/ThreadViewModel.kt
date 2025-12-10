@@ -4,6 +4,7 @@ import ai.saniou.nmb.db.Database
 import ai.saniou.nmb.workflow.thread.ThreadContract.Effect
 import ai.saniou.nmb.workflow.thread.ThreadContract.Event
 import ai.saniou.nmb.workflow.thread.ThreadContract.State
+import ai.saniou.thread.domain.model.Bookmark
 import ai.saniou.thread.domain.model.Post
 import ai.saniou.thread.domain.model.ThreadReply
 import ai.saniou.thread.domain.usecase.bookmark.AddBookmarkUseCase
@@ -45,13 +46,13 @@ class ThreadViewModel(
     private val isSubscribedUseCase: IsSubscribedUseCase,
     private val getForumNameUseCase: GetForumNameUseCase,
     private val updateThreadLastAccessTimeUseCase: UpdateThreadLastAccessTimeUseCase,
-    private val updateThreadLastReadReplyIdUseCase: UpdateThreadLastReadReplyIdUseCase
+    private val updateThreadLastReadReplyIdUseCase: UpdateThreadLastReadReplyIdUseCase,
 ) : ScreenModel {
 
     private data class LoadRequest(
         val threadId: Long,
         val isPoOnly: Boolean = false,
-        val page: Int = 1
+        val page: Int = 1,
     )
 
     private val _state = MutableStateFlow(State())
@@ -202,14 +203,32 @@ class ThreadViewModel(
 
     private fun bookmarkThread(thread: Post) {
         screenModelScope.launch {
-            addBookmarkUseCase(thread.id, thread.content)
+            addBookmarkUseCase(
+                Bookmark.Quote(
+                    id = "nmb.Thread.${thread.id}",
+                    createdAt = Clock.System.now(),
+                    tags = listOf(),
+                    content = thread.content,
+                    sourceId = thread.id,
+                    sourceType = "nmb.Thread"
+                )
+            )
             _effect.send(Effect.ShowSnackbar("主楼已收藏"))
         }
     }
 
     private fun bookmarkReply(reply: ThreadReply) {
         screenModelScope.launch {
-            addBookmarkUseCase(reply.id.toString(), reply.content)
+            addBookmarkUseCase(
+                Bookmark.Quote(
+                    id = "nmb.ThreadReply.${reply.id}",
+                    createdAt = Clock.System.now(),
+                    tags = listOf(),
+                    content = reply.content,
+                    sourceId = reply.id.toString(),
+                    sourceType = "nmb.ThreadReply"
+                )
+            )
             _effect.send(Effect.ShowSnackbar("回复已收藏"))
         }
     }

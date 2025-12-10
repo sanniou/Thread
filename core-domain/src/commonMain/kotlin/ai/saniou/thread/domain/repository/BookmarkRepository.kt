@@ -16,22 +16,20 @@ interface BookmarkRepository {
 
     /**
      * 添加一个收藏。
-     * @param postId 帖子ID
-     * @param content 帖子内容摘要
-     * @param tag 标签 (可选)
+     * @param bookmark 要添加的收藏对象
      */
-    suspend fun addBookmark(postId: String, content: String, tag: String? = null)
+    suspend fun addBookmark(bookmark: Bookmark)
 
     /**
      * 移除一个收藏。
-     * @param postId 帖子ID
+     * @param id 收藏的ID
      */
-    suspend fun removeBookmark(postId: String)
+    suspend fun removeBookmark(id: String)
 
     /**
-     * 检查一个帖子是否已被收藏。
-     * @param postId 帖子ID
+     * 检查一个收藏是否存在。
+     * @param id 收藏的ID
      * @return 一个布尔值的 Flow，true 表示已收藏。
      */
-    fun isBookmarked(postId: String): Flow<Boolean>
+    fun isBookmarked(id: String): Flow<Boolean>
 }

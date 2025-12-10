@@ -1,16 +1,142 @@
 package ai.saniou.thread.data.mapper
 
-import ai.saniou.nmb.db.table.Bookmark as BookmarkEntity
 import ai.saniou.thread.domain.model.Bookmark
+import app.cash.sqldelight.db.QueryResult
+import app.cash.sqldelight.db.SqlCursor
+import app.cash.sqldelight.db.SqlDriver
 
-/**
- * 将数据库实体 BookmarkEntity 转换为领域模型 Bookmark。
- */
-fun BookmarkEntity.toDomain(): Bookmark {
-    return Bookmark(
-        postId = this.postId,
-        content = this.content,
-        tag = this.tag,
-        createdAt = this.createdAt
-    )
+fun Bookmark.toEntity(): ai.saniou.nmb.db.table.Bookmark {
+    return when (this) {
+        is Bookmark.Text -> ai.saniou.nmb.db.table.Bookmark(
+            id = id,
+            type = "TEXT",
+            createdAt = createdAt,
+            tags = tags.joinToString(","),
+            content = content,
+            url = null,
+            sourceId = null,
+            sourceType = null,
+            title = null,
+            description = null,
+            favicon = null,
+            width = null,
+            height = null,
+            mimeType = null,
+            duration = null
+        )
+        is Bookmark.Quote -> ai.saniou.nmb.db.table.Bookmark(
+            id = id,
+            type = "QUOTE",
+            createdAt = createdAt,
+            tags = tags.joinToString(","),
+            content = content,
+            url = null,
+            sourceId = sourceId,
+            sourceType = sourceType,
+            title = null,
+            description = null,
+            favicon = null,
+            width = null,
+            height = null,
+            mimeType = null,
+            duration = null
+        )
+        is Bookmark.Link -> ai.saniou.nmb.db.table.Bookmark(
+            id = id,
+            type = "LINK",
+            createdAt = createdAt,
+            tags = tags.joinToString(","),
+            content = null,
+            url = url,
+            sourceId = null,
+            sourceType = null,
+            title = title,
+            description = description,
+            favicon = favicon,
+            width = null,
+            height = null,
+            mimeType = null,
+            duration = null
+        )
+        is Bookmark.Image -> ai.saniou.nmb.db.table.Bookmark(
+            id = id,
+            type = "IMAGE",
+            createdAt = createdAt,
+            tags = tags.joinToString(","),
+            content = null,
+            url = url,
+            sourceId = null,
+            sourceType = null,
+            title = null,
+            description = null,
+            favicon = null,
+            width = width?.toLong(),
+            height = height?.toLong(),
+            mimeType = null,
+            duration = null
+        )
+        is Bookmark.Media -> ai.saniou.nmb.db.table.Bookmark(
+            id = id,
+            type = "MEDIA",
+            createdAt = createdAt,
+            tags = tags.joinToString(","),
+            content = null,
+            url = url,
+            sourceId = null,
+            sourceType = null,
+            title = null,
+            description = null,
+            favicon = null,
+            width = null,
+            height = null,
+            mimeType = mimeType,
+            duration = duration
+        )
+    }
+}
+
+fun ai.saniou.nmb.db.table.Bookmark.toDomain(): Bookmark {
+    val tags = tags?.split(",") ?: emptyList()
+    return when (type) {
+        "TEXT" -> Bookmark.Text(
+            id = id,
+            createdAt = createdAt,
+            tags = tags,
+            content = content!!
+        )
+        "QUOTE" -> Bookmark.Quote(
+            id = id,
+            createdAt = createdAt,
+            tags = tags,
+            content = content!!,
+            sourceId = sourceId!!,
+            sourceType = sourceType!!
+        )
+        "LINK" -> Bookmark.Link(
+            id = id,
+            createdAt = createdAt,
+            tags = tags,
+            url = url!!,
+            title = title,
+            description = description,
+            favicon = favicon
+        )
+        "IMAGE" -> Bookmark.Image(
+            id = id,
+            createdAt = createdAt,
+            tags = tags,
+            url = url!!,
+            width = width?.toInt(),
+            height = height?.toInt()
+        )
+        "MEDIA" -> Bookmark.Media(
+            id = id,
+            createdAt = createdAt,
+            tags = tags,
+            url = url!!,
+            mimeType = mimeType!!,
+            duration = duration
+        )
+        else -> throw IllegalArgumentException("Unknown bookmark type: $type")
+    }
 }

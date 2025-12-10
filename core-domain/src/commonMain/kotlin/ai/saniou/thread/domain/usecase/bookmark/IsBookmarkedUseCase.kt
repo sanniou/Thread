@@ -4,5 +4,5 @@ import ai.saniou.thread.domain.repository.BookmarkRepository
 import kotlinx.coroutines.flow.Flow
 
 class IsBookmarkedUseCase(private val bookmarkRepository: BookmarkRepository) {
-    operator fun invoke(postId: String): Flow<Boolean> = bookmarkRepository.isBookmarked(postId)
+    operator fun invoke(id: String): Flow<Boolean> = bookmarkRepository.isBookmarked(id)
 }

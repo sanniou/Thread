@@ -6,6 +6,9 @@ plugins {
 
 
 kotlin {
+    sourceSets.all {
+        languageSettings.optIn("kotlin.time.ExperimentalTime")
+    }
     jvm()
     listOf(
         iosArm64(),

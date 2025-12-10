@@ -1,19 +1,62 @@
-CREATE TABLE bookmark (
-    id INTEGER NOT NULL PRIMARY KEY,
-    postId TEXT NOT NULL UNIQUE,
-    content TEXT NOT NULL,
-    tag TEXT,
-    createdAt INTEGER NOT NULL
+import kotlin.time.Instant;
+
+CREATE TABLE Bookmark (
+    id TEXT NOT NULL PRIMARY KEY,
+    type TEXT NOT NULL, -- 'TEXT', 'QUOTE', 'LINK', 'IMAGE', 'MEDIA'
+    createdAt INTEGER AS Instant NOT NULL,
+    tags TEXT, -- Comma-separated list of tags
+
+    -- Fields for Text & Quote
+    content TEXT,
+
+    -- Fields for Link, Image, Media
+    url TEXT,
+
+    -- Fields for Quote
+    sourceId TEXT,
+    sourceType TEXT,
+
+    -- Fields for Link
+    title TEXT,
+    description TEXT,
+    favicon TEXT,
+
+    -- Fields for Image
+    width INTEGER,
+    height INTEGER,
+
+    -- Fields for Media
+    mimeType TEXT,
+    duration INTEGER
 );
 
 selectAll:
-SELECT * FROM bookmark ORDER BY createdAt DESC;
+SELECT * FROM Bookmark ORDER BY createdAt DESC;
 
 insert:
-INSERT OR IGNORE INTO bookmark(postId, content, tag, createdAt) VALUES (?, ?, ?, ?);
+INSERT OR REPLACE INTO Bookmark(
+    id,
+    type,
+    createdAt,
+    tags,
+    content,
+    url,
+    sourceId,
+    sourceType,
+    title,
+    description,
+    favicon,
+    width,
+    height,
+    mimeType,
+    duration
+) VALUES ?;
 
-delete:
-DELETE FROM bookmark WHERE postId = ?;
+deleteById:
+DELETE FROM Bookmark WHERE id = ?;
 
 getById:
-SELECT * FROM bookmark WHERE postId = ?;
+SELECT * FROM Bookmark WHERE id = ?;
+
+deleteAll:
+DELETE FROM Bookmark;

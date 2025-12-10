@@ -3,7 +3,6 @@
 package ai.saniou.thread.domain.model
 
 import kotlin.time.ExperimentalTime
-import kotlin.time.Instant
 
 /**
  * 板块模型

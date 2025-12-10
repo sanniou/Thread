@@ -3,6 +3,7 @@ package ai.saniou.nmb.workflow.bookmark
 import ai.saniou.nmb.workflow.bookmark.BookmarkContract.Effect
 import ai.saniou.nmb.workflow.bookmark.BookmarkContract.Event
 import ai.saniou.nmb.workflow.bookmark.BookmarkContract.State
+import ai.saniou.thread.domain.model.Bookmark
 import ai.saniou.thread.domain.usecase.bookmark.GetBookmarksUseCase
 import ai.saniou.thread.domain.usecase.bookmark.RemoveBookmarkUseCase
 import cafe.adriel.voyager.core.model.ScreenModel
@@ -34,7 +35,7 @@ class BookmarkViewModel(
     fun onEvent(event: Event) {
         when (event) {
             is Event.LoadBookmarks -> loadBookmarks()
-            is Event.DeleteBookmark -> deleteBookmark(event.id)
+            is Event.DeleteBookmark -> deleteBookmark(event.bookmark)
         }
     }
 
@@ -56,9 +57,9 @@ class BookmarkViewModel(
         }
     }
 
-    private fun deleteBookmark(id: String) {
+    private fun deleteBookmark(bookmark: Bookmark) {
         screenModelScope.launch {
-            removeBookmarkUseCase(id)
+            removeBookmarkUseCase(bookmark.id)
             _effect.send(Effect.ShowSnackbar("已取消收藏"))
         }
     }
