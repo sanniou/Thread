@@ -93,6 +93,7 @@ kotlin {
             implementation(libs.sqldelight.paging3)
             implementation(libs.sqldelight.coroutines)
             implementation(libs.reorderable)
+            implementation(libs.coil.compose)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

@@ -287,6 +287,7 @@ data class ThreadPage(
                 onCopy = { viewModel.onEvent(Event.CopyContent(it)) },
                 onBookmarkThread = { viewModel.onEvent(Event.BookmarkThread(it)) },
                 onBookmarkReply = { viewModel.onEvent(Event.BookmarkReply(it)) },
+                onBookmarkImage = { url, ext -> viewModel.onEvent(Event.BookmarkImage(url, ext)) },
                 onUserClick = { userHash -> navigator.push(UserDetailPage(userHash)) }
             )
         }
@@ -339,6 +340,7 @@ private fun ThreadContentRouter(
     onCopy: (String) -> Unit,
     onBookmarkThread: (Post) -> Unit,
     onBookmarkReply: (ThreadReply) -> Unit,
+    onBookmarkImage: (String, String) -> Unit,
     onUserClick: (String) -> Unit,
 ) {
     Box(modifier = modifier) {
@@ -361,6 +363,7 @@ private fun ThreadContentRouter(
                 onCopy = onCopy,
                 onBookmarkThread = onBookmarkThread,
                 onBookmarkReply = onBookmarkReply,
+                onBookmarkImage = onBookmarkImage,
                 onUserClick = onUserClick
             )
         }
@@ -510,6 +513,7 @@ fun ThreadSuccessContent(
     onCopy: (String) -> Unit,
     onBookmarkThread: (Post) -> Unit,
     onBookmarkReply: (ThreadReply) -> Unit,
+    onBookmarkImage: (String, String) -> Unit,
     onUserClick: (String) -> Unit,
 ) {
     val replies = state.replies.collectAsLazyPagingItems()
@@ -579,6 +583,7 @@ fun ThreadSuccessContent(
             onCopy = onCopy,
             onBookmarkThread = onBookmarkThread,
             onBookmarkReply = onBookmarkReply,
+            onBookmarkImage = onBookmarkImage,
             onUserClick = onUserClick
         )
     }
@@ -597,6 +602,7 @@ private fun ThreadList(
     onCopy: (String) -> Unit,
     onBookmarkThread: (Post) -> Unit,
     onBookmarkReply: (ThreadReply) -> Unit,
+    onBookmarkImage: (String, String) -> Unit,
     onUserClick: (String) -> Unit,
 ) {
     val replies = state.replies.collectAsLazyPagingItems()
@@ -627,6 +633,7 @@ private fun ThreadList(
                     onImageClick = onImageClick,
                     onCopy = { onCopy(thread.content) },
                     onBookmark = { onBookmarkThread(thread) },
+                    onBookmarkImage = onBookmarkImage,
                     onUserClick = onUserClick
                 )
                 HorizontalDivider(
@@ -669,6 +676,7 @@ private fun ThreadList(
                     onImageClick = onImageClick,
                     onCopy = { onCopy(reply.content) },
                     onBookmark = { onBookmarkReply(reply) },
+                    onBookmarkImage = onBookmarkImage,
                     onUserClick = onUserClick
                 )
                 HorizontalDivider(
@@ -795,6 +803,7 @@ fun ThreadMainPost(
     onImageClick: (String, String) -> Unit,
     onCopy: () -> Unit,
     onBookmark: () -> Unit,
+    onBookmarkImage: (String, String) -> Unit,
     onUserClick: (String) -> Unit,
 ) {
     var showMenu by remember { mutableStateOf(false) }
@@ -840,7 +849,14 @@ fun ThreadMainPost(
                 )
                 .padding(horizontal = 16.dp)
         ) {
-            ThreadBody(thread.content, thread.img, thread.ext, onReferenceClick = refClick, onImageClick = onImageClick)
+            ThreadBody(
+                content = thread.content,
+                img = thread.img,
+                ext = thread.ext,
+                onReferenceClick = refClick,
+                onImageClick = onImageClick,
+                onImageLongClick = onBookmarkImage
+            )
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -924,6 +940,7 @@ fun ThreadReply(
     onImageClick: (String, String) -> Unit,
     onCopy: () -> Unit,
     onBookmark: () -> Unit,
+    onBookmarkImage: (String, String) -> Unit,
     onUserClick: (String) -> Unit,
 ) {
     val isPo = remember(reply.userHash) {
@@ -992,7 +1009,14 @@ fun ThreadReply(
             }
 
             Spacer(modifier = Modifier.height(12.dp))
-            ThreadBody(reply.content, reply.img, reply.ext, onReferenceClick = refClick, onImageClick = onImageClick)
+            ThreadBody(
+                content = reply.content,
+                img = reply.img,
+                ext = reply.ext,
+                onReferenceClick = refClick,
+                onImageClick = onImageClick,
+                onImageLongClick = onBookmarkImage
+            )
         }
     }
 }

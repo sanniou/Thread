@@ -4,7 +4,6 @@ CREATE TABLE Bookmark (
     id TEXT NOT NULL PRIMARY KEY,
     type TEXT NOT NULL, -- 'TEXT', 'QUOTE', 'LINK', 'IMAGE', 'MEDIA'
     createdAt INTEGER AS Instant NOT NULL,
-    tags TEXT, -- Comma-separated list of tags
 
     -- Fields for Text & Quote
     content TEXT,
@@ -30,15 +29,94 @@ CREATE TABLE Bookmark (
     duration INTEGER
 );
 
+CREATE TABLE Tag (
+    id TEXT NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE BookmarkTag (
+    bookmarkId TEXT NOT NULL,
+    tagId TEXT NOT NULL,
+    PRIMARY KEY (bookmarkId, tagId),
+    FOREIGN KEY (bookmarkId) REFERENCES Bookmark(id) ON DELETE CASCADE,
+    FOREIGN KEY (tagId) REFERENCES Tag(id) ON DELETE CASCADE
+);
+
+-- Indexes for performance
+CREATE INDEX idx_bookmark_createdAt ON Bookmark(createdAt);
+CREATE INDEX idx_bookmark_type ON Bookmark(type);
+CREATE INDEX idx_tag_name ON Tag(name);
+CREATE INDEX idx_bookmarktag_tagid ON BookmarkTag(tagId);
+
+
 selectAll:
 SELECT * FROM Bookmark ORDER BY createdAt DESC;
+
+selectPaging:
+SELECT * FROM Bookmark ORDER BY createdAt DESC LIMIT :limit OFFSET :offset;
+
+count:
+SELECT count(*) FROM Bookmark;
+
+searchAll:
+SELECT * FROM Bookmark
+ORDER BY createdAt DESC
+LIMIT :limit OFFSET :offset;
+
+searchAllCount:
+SELECT count(*) FROM Bookmark;
+
+searchByQuery:
+SELECT * FROM Bookmark
+WHERE content LIKE '%' || :query || '%' OR title LIKE '%' || :query || '%'
+ORDER BY createdAt DESC
+LIMIT :limit OFFSET :offset;
+
+searchByQueryCount:
+SELECT count(*) FROM Bookmark
+WHERE content LIKE '%' || :query || '%' OR title LIKE '%' || :query || '%';
+
+searchByTags:
+SELECT B.*
+FROM Bookmark B
+LEFT JOIN BookmarkTag BT ON B.id = BT.bookmarkId
+LEFT JOIN Tag T ON BT.tagId = T.id
+WHERE T.name IN :tags
+GROUP BY B.id
+ORDER BY B.createdAt DESC
+LIMIT :limit OFFSET :offset;
+
+searchByTagsCount:
+SELECT count(DISTINCT B.id)
+FROM Bookmark B
+LEFT JOIN BookmarkTag BT ON B.id = BT.bookmarkId
+LEFT JOIN Tag T ON BT.tagId = T.id
+WHERE T.name IN :tags;
+
+searchByQueryAndTags:
+SELECT B.*
+FROM Bookmark B
+LEFT JOIN BookmarkTag BT ON B.id = BT.bookmarkId
+LEFT JOIN Tag T ON BT.tagId = T.id
+WHERE (B.content LIKE '%' || :query || '%' OR B.title LIKE '%' || :query || '%')
+  AND T.name IN :tags
+GROUP BY B.id
+ORDER BY B.createdAt DESC
+LIMIT :limit OFFSET :offset;
+
+searchByQueryAndTagsCount:
+SELECT count(DISTINCT B.id)
+FROM Bookmark B
+LEFT JOIN BookmarkTag BT ON B.id = BT.bookmarkId
+LEFT JOIN Tag T ON BT.tagId = T.id
+WHERE (B.content LIKE '%' || :query || '%' OR B.title LIKE '%' || :query || '%')
+  AND T.name IN :tags;
 
 insert:
 INSERT OR REPLACE INTO Bookmark(
     id,
     type,
     createdAt,
-    tags,
     content,
     url,
     sourceId,

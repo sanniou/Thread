@@ -2,6 +2,7 @@ package ai.saniou.thread.domain.di
 
 import ai.saniou.thread.domain.usecase.bookmark.AddBookmarkUseCase
 import ai.saniou.thread.domain.usecase.bookmark.GetBookmarksUseCase
+import ai.saniou.thread.domain.usecase.bookmark.GetTagsUseCase
 import ai.saniou.thread.domain.usecase.bookmark.IsBookmarkedUseCase
 import ai.saniou.thread.domain.usecase.bookmark.RemoveBookmarkUseCase
 import ai.saniou.thread.domain.usecase.forum.GetFavoriteForumsUseCase
@@ -69,6 +70,7 @@ val domainModule = DI.Module("domainModule") {
 
     // Bookmark
     bindProvider { GetBookmarksUseCase(instance()) }
+    bindProvider { GetTagsUseCase(instance()) }
     bindProvider { AddBookmarkUseCase(instance()) }
     bindProvider { RemoveBookmarkUseCase(instance()) }
     bindProvider { IsBookmarkedUseCase(instance()) }

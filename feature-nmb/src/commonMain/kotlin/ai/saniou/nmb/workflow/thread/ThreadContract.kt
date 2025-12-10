@@ -101,6 +101,13 @@ interface ThreadContract {
          * @param reply 回复
          */
         data class BookmarkReply(val reply: ThreadReply) : Event
+
+        /**
+         * 收藏图片
+         * @param url 图片地址
+         * @param ext 图片扩展名
+         */
+        data class BookmarkImage(val url: String, val ext: String) : Event
     }
 
     /**

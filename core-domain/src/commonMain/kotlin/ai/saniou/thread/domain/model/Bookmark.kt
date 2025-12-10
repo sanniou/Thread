@@ -1,16 +1,14 @@
 package ai.saniou.thread.domain.model
 
-import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
 /**
  * 收藏的领域模型
  */
-@OptIn(ExperimentalTime::class)
 sealed class Bookmark(
     open val id: String,
     open val createdAt: Instant,
-    open val tags: List<String>,
+    open val tags: List<Tag>,
 ) {
     /**
      * 纯文本收藏
@@ -18,7 +16,7 @@ sealed class Bookmark(
     data class Text(
         override val id: String,
         override val createdAt: Instant,
-        override val tags: List<String>,
+        override val tags: List<Tag>,
         val content: String,
     ) : Bookmark(id, createdAt, tags)
 
@@ -28,7 +26,7 @@ sealed class Bookmark(
     data class Quote(
         override val id: String,
         override val createdAt: Instant,
-        override val tags: List<String>,
+        override val tags: List<Tag>,
         val content: String,
         val sourceId: String,
         val sourceType: String, // e.g., "post", "article"
@@ -40,7 +38,7 @@ sealed class Bookmark(
     data class Link(
         override val id: String,
         override val createdAt: Instant,
-        override val tags: List<String>,
+        override val tags: List<Tag>,
         val url: String,
         val title: String?,
         val description: String?,
@@ -53,7 +51,7 @@ sealed class Bookmark(
     data class Image(
         override val id: String,
         override val createdAt: Instant,
-        override val tags: List<String>,
+        override val tags: List<Tag>,
         val url: String,
         val width: Int?,
         val height: Int?,
@@ -65,7 +63,7 @@ sealed class Bookmark(
     data class Media(
         override val id: String,
         override val createdAt: Instant,
-        override val tags: List<String>,
+        override val tags: List<Tag>,
         val url: String,
         val mimeType: String,
         val duration: Long?, // in seconds

@@ -1,16 +1,25 @@
 package ai.saniou.nmb.workflow.bookmark
 
 import ai.saniou.thread.domain.model.Bookmark
+import ai.saniou.thread.domain.model.Tag
+import app.cash.paging.PagingData
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 
 interface BookmarkContract {
     data class State(
-        val bookmarks: List<Bookmark> = emptyList(),
+        val bookmarks: Flow<PagingData<Bookmark>> = emptyFlow(),
+        val searchQuery: String = "",
+        val selectedTags: List<Tag> = emptyList(),
+        val allTags: List<Tag> = emptyList(),
         val isLoading: Boolean = true,
         val error: String? = null
     )
 
     sealed interface Event {
-        object LoadBookmarks : Event
+        data class OnSearchQueryChanged(val query: String) : Event
+        data class OnTagSelected(val tag: Tag) : Event
+        data class OnTagDeselected(val tag: Tag) : Event
         data class DeleteBookmark(val bookmark: Bookmark) : Event
     }
 

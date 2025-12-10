@@ -1,9 +1,7 @@
 package ai.saniou.thread.data.mapper
 
 import ai.saniou.thread.domain.model.Bookmark
-import app.cash.sqldelight.db.QueryResult
-import app.cash.sqldelight.db.SqlCursor
-import app.cash.sqldelight.db.SqlDriver
+import ai.saniou.thread.domain.model.Tag
 
 fun Bookmark.toEntity(): ai.saniou.nmb.db.table.Bookmark {
     return when (this) {
@@ -11,7 +9,6 @@ fun Bookmark.toEntity(): ai.saniou.nmb.db.table.Bookmark {
             id = id,
             type = "TEXT",
             createdAt = createdAt,
-            tags = tags.joinToString(","),
             content = content,
             url = null,
             sourceId = null,
@@ -28,7 +25,6 @@ fun Bookmark.toEntity(): ai.saniou.nmb.db.table.Bookmark {
             id = id,
             type = "QUOTE",
             createdAt = createdAt,
-            tags = tags.joinToString(","),
             content = content,
             url = null,
             sourceId = sourceId,
@@ -45,7 +41,6 @@ fun Bookmark.toEntity(): ai.saniou.nmb.db.table.Bookmark {
             id = id,
             type = "LINK",
             createdAt = createdAt,
-            tags = tags.joinToString(","),
             content = null,
             url = url,
             sourceId = null,
@@ -62,7 +57,6 @@ fun Bookmark.toEntity(): ai.saniou.nmb.db.table.Bookmark {
             id = id,
             type = "IMAGE",
             createdAt = createdAt,
-            tags = tags.joinToString(","),
             content = null,
             url = url,
             sourceId = null,
@@ -79,7 +73,6 @@ fun Bookmark.toEntity(): ai.saniou.nmb.db.table.Bookmark {
             id = id,
             type = "MEDIA",
             createdAt = createdAt,
-            tags = tags.joinToString(","),
             content = null,
             url = url,
             sourceId = null,
@@ -95,8 +88,7 @@ fun Bookmark.toEntity(): ai.saniou.nmb.db.table.Bookmark {
     }
 }
 
-fun ai.saniou.nmb.db.table.Bookmark.toDomain(): Bookmark {
-    val tags = tags?.split(",") ?: emptyList()
+fun ai.saniou.nmb.db.table.Bookmark.toDomain(tags: List<Tag>): Bookmark {
     return when (type) {
         "TEXT" -> Bookmark.Text(
             id = id,

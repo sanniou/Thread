@@ -14,6 +14,7 @@ import ai.saniou.thread.domain.usecase.subscription.IsSubscribedUseCase
 import ai.saniou.thread.domain.usecase.subscription.ToggleSubscriptionUseCase
 import ai.saniou.thread.domain.usecase.thread.GetThreadDetailUseCase
 import ai.saniou.thread.domain.usecase.thread.GetThreadRepliesPagingUseCase
+import ai.saniou.thread.data.manager.CdnManager
 import ai.saniou.thread.domain.usecase.thread.UpdateThreadLastAccessTimeUseCase
 import ai.saniou.thread.domain.usecase.thread.UpdateThreadLastReadReplyIdUseCase
 import app.cash.paging.PagingData
@@ -47,6 +48,7 @@ class ThreadViewModel(
     private val getForumNameUseCase: GetForumNameUseCase,
     private val updateThreadLastAccessTimeUseCase: UpdateThreadLastAccessTimeUseCase,
     private val updateThreadLastReadReplyIdUseCase: UpdateThreadLastReadReplyIdUseCase,
+    private val cdnManager: CdnManager,
 ) : ScreenModel {
 
     private data class LoadRequest(
@@ -98,6 +100,7 @@ class ThreadViewModel(
             is Event.CopyContent -> copyContent(event.content)
             is Event.BookmarkThread -> bookmarkThread(event.thread)
             is Event.BookmarkReply -> bookmarkReply(event.reply)
+            is Event.BookmarkImage -> bookmarkImage(event.url, event.ext)
         }
     }
 
@@ -230,6 +233,24 @@ class ThreadViewModel(
                 )
             )
             _effect.send(Effect.ShowSnackbar("回复已收藏"))
+        }
+    }
+
+    private fun bookmarkImage(url: String, ext: String) {
+        screenModelScope.launch {
+            val fullUrl = cdnManager.buildImageUrl(url, ext, isThumb = false)
+            val id = "nmb.Image.${fullUrl.hashCode()}"
+            addBookmarkUseCase(
+                Bookmark.Image(
+                    id = id,
+                    createdAt = Clock.System.now(),
+                    tags = listOf(),
+                    url = fullUrl,
+                    width = null,
+                    height = null
+                )
+            )
+            _effect.send(Effect.ShowSnackbar("图片已收藏"))
         }
     }
 

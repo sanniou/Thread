@@ -14,6 +14,7 @@ import ai.saniou.thread.data.repository.SettingsRepositoryImpl
 import ai.saniou.thread.data.repository.SubscriptionRepositoryImpl
 import ai.saniou.thread.data.repository.SyncRepositoryImpl
 import ai.saniou.thread.data.repository.ThreadRepositoryImpl
+import ai.saniou.thread.data.repository.TagRepositoryImpl
 import ai.saniou.thread.data.repository.TrendRepositoryImpl
 import ai.saniou.thread.data.repository.UserRepositoryImpl
 import ai.saniou.thread.data.source.nga.NgaSource
@@ -36,6 +37,7 @@ import ai.saniou.thread.domain.repository.Source
 import ai.saniou.thread.domain.repository.SubscriptionRepository
 import ai.saniou.thread.domain.repository.SyncProvider
 import ai.saniou.thread.domain.repository.SyncRepository
+import ai.saniou.thread.domain.repository.TagRepository
 import ai.saniou.thread.domain.repository.ThreadRepository
 import ai.saniou.thread.domain.repository.TrendRepository
 import ai.saniou.thread.domain.repository.UserRepository
@@ -71,6 +73,7 @@ val dataModule = DI.Module("dataModule") {
     }
 
     bind<BookmarkRepository>() with singleton { BookmarkRepositoryImpl(instance()) }
+    bind<TagRepository>() with singleton { TagRepositoryImpl(instance()) }
     bind<FavoriteRepository>() with singleton { FavoriteRepositoryImpl(instance()) }
     bind<SubscriptionRepository>() with singleton { SubscriptionRepositoryImpl(instance(), instance()) }
     bind<UserRepository>() with singleton { UserRepositoryImpl(instance()) }

@@ -239,6 +239,7 @@ data class UserDetailPage(
                                                 onCopy = {},
                                                 onBookmark = {},
                                                 onUserClick = { userHash -> navigator.push(UserDetailPage(userHash)) },
+                                                onBookmarkImage = { _, _ -> }
                                             )
                                         }
                                         HorizontalDivider(

@@ -80,6 +80,7 @@ val nmbFeatureModule = DI.Module("nmbFeatureModule") {
             instance(),
             instance(),
             instance(),
+            instance(),
             instance()
         )
     }
@@ -112,7 +113,7 @@ val nmbFeatureModule = DI.Module("nmbFeatureModule") {
     }
 
     // 收藏相关
-    bindProvider { BookmarkViewModel(instance(), instance()) }
+    bindProvider { BookmarkViewModel(instance(), instance(), instance()) }
 
 
     bindProvider { HomeViewModel(instance(), instance()) }

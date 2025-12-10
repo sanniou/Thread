@@ -1,6 +1,7 @@
 package ai.saniou.thread.domain.repository
 
 import ai.saniou.thread.domain.model.Bookmark
+import app.cash.paging.PagingSource
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -12,7 +13,7 @@ interface BookmarkRepository {
      * 获取所有收藏。
      * @return 一个包含所有收藏列表的 Flow。
      */
-    fun getBookmarks(): Flow<List<Bookmark>>
+    fun getBookmarks(query: String? = null, tags: List<String>? = null): PagingSource<Int, Bookmark>
 
     /**
      * 添加一个收藏。
