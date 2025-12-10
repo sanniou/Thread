@@ -1,4 +1,4 @@
-package ai.saniou.thread.domain.usecase
+package ai.saniou.thread.domain.usecase.misc
 
 import ai.saniou.thread.domain.model.Trend
 import ai.saniou.thread.domain.repository.TrendRepository

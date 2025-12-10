@@ -41,4 +41,29 @@ interface ThreadRepository {
      * @return 包含图片列表的 Flow
      */
     fun getThreadImages(threadId: Long): Flow<List<Image>>
+
+    /**
+     * 获取帖子的所有回复（非分页）
+     *
+     * @param threadId 帖子ID
+     * @param isPoOnly 是否只看PO主
+     * @return 包含帖子回复列表的 Flow
+     */
+    fun getThreadReplies(threadId: Long, isPoOnly: Boolean): Flow<List<ThreadReply>>
+
+    /**
+     * 更新帖子的最后访问时间
+     *
+     * @param threadId 帖子ID
+     * @param time 时间戳
+     */
+    suspend fun updateThreadLastAccessTime(threadId: Long, time: Long)
+
+    /**
+     * 更新帖子最后已读的回复ID
+     *
+     * @param threadId 帖子ID
+     * @param replyId 回复ID
+     */
+    suspend fun updateThreadLastReadReplyId(threadId: Long, replyId: Long)
 }

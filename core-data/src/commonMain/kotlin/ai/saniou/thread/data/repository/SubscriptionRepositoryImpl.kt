@@ -15,11 +15,10 @@ import app.cash.paging.map
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOne
+import app.cash.sqldelight.coroutines.mapToOneOrNull
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import kotlin.time.Clock
@@ -33,8 +32,18 @@ class SubscriptionRepositoryImpl(
     private val db: Database,
 ) : SubscriptionRepository {
 
-    private val _activeSubscriptionKey = MutableStateFlow<String?>(null)
-    override val activeSubscriptionKey = _activeSubscriptionKey.asStateFlow()
+    override suspend fun getActiveSubscriptionKey(): String? {
+        return withContext(Dispatchers.IO) {
+            db.keyValueQueries.getKeyValue("active_subscription_key").executeAsOneOrNull()?.value_
+        }
+    }
+
+    override fun observeActiveSubscriptionKey(): Flow<String?> {
+        return db.keyValueQueries.getKeyValue("active_subscription_key")
+            .asFlow()
+            .mapToOneOrNull(Dispatchers.IO)
+            .map { it?.value_ }
+    }
 
     @OptIn(ExperimentalPagingApi::class)
     override fun getSubscriptionFeed(subscriptionKey: String): Flow<PagingData<Post>> {
@@ -126,17 +135,9 @@ class SubscriptionRepositoryImpl(
             .map { list -> list.map { it.key } }
     }
 
-    override suspend fun loadActiveSubscriptionKey() {
-        withContext(Dispatchers.IO) {
-            val key = db.keyValueQueries.getKeyValue("active_subscription_key").executeAsOneOrNull()?.value_
-            _activeSubscriptionKey.value = key
-        }
-    }
-
     override suspend fun setActiveSubscriptionKey(key: String) {
         withContext(Dispatchers.IO) {
             db.keyValueQueries.insertKeyValue("active_subscription_key", key)
-            _activeSubscriptionKey.value = key
         }
     }
 

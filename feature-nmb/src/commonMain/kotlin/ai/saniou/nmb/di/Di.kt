@@ -55,10 +55,11 @@ val nmbFeatureModule = DI.Module("nmbFeatureModule") {
     // 论坛分类相关
     bindProvider<ForumCategoryViewModel> {
         ForumCategoryViewModel(
-            getNmbForumPageUseCase = instance(),
-            toggleFavoriteUseCase = instance(),
-            appInitializer = instance(),
-            forumRepository = instance()
+            instance(),
+            instance(),
+            instance(),
+            instance(),
+            instance()
         )
     }
 
@@ -77,6 +78,8 @@ val nmbFeatureModule = DI.Module("nmbFeatureModule") {
             instance(),
             instance(),
             instance(),
+            instance(),
+            instance(),
             instance()
         )
     }
@@ -84,17 +87,17 @@ val nmbFeatureModule = DI.Module("nmbFeatureModule") {
 
     // 发帖和回复相关
     bindFactory<Triple<Int?, Int?, String?>, PostViewModel> { params ->
-        PostViewModel(instance(), params.first, params.second, params.third)
+        PostViewModel(instance(), instance(), params.first, params.second, params.third)
     }
 
     // 用户认证相关
-    bindProvider { UserViewModel(instance()) }
+    bindProvider { UserViewModel(instance(), instance(), instance(), instance()) }
 
     // 引用 ViewModel
     bindProvider { ReferenceViewModel(instance()) }
 
     // 订阅相关
-    bindProvider { SubscriptionViewModel(instance(), instance(), instance(), instance()) }
+    bindProvider { SubscriptionViewModel(instance(), instance(), instance(), instance(), instance()) }
 
     // 历史相关
     bindProvider { HistoryViewModel(instance()) }

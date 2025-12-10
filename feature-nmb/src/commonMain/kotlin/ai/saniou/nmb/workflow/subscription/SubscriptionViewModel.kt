@@ -4,10 +4,11 @@ import ai.saniou.nmb.workflow.subscription.SubscriptionContract.Effect
 import ai.saniou.nmb.workflow.subscription.SubscriptionContract.Event
 import ai.saniou.nmb.workflow.subscription.SubscriptionContract.State
 import ai.saniou.thread.data.source.nmb.DataPolicy
-import ai.saniou.thread.domain.repository.SubscriptionRepository
-import ai.saniou.thread.domain.usecase.GetSubscriptionFeedUseCase
-import ai.saniou.thread.domain.usecase.SyncLocalSubscriptionsUseCase
-import ai.saniou.thread.domain.usecase.ToggleSubscriptionUseCase
+import ai.saniou.thread.domain.usecase.subscription.GetSubscriptionFeedUseCase
+import ai.saniou.thread.domain.usecase.subscription.ObserveActiveSubscriptionKeyUseCase
+import ai.saniou.thread.domain.usecase.subscription.SaveSubscriptionKeyUseCase
+import ai.saniou.thread.domain.usecase.subscription.SyncLocalSubscriptionsUseCase
+import ai.saniou.thread.domain.usecase.subscription.ToggleSubscriptionUseCase
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.channels.Channel
@@ -23,7 +24,8 @@ class SubscriptionViewModel(
     private val getSubscriptionFeedUseCase: GetSubscriptionFeedUseCase,
     private val toggleSubscriptionUseCase: ToggleSubscriptionUseCase,
     private val syncLocalSubscriptionsUseCase: SyncLocalSubscriptionsUseCase,
-    private val subscriptionRepository: SubscriptionRepository
+    private val observeActiveSubscriptionKeyUseCase: ObserveActiveSubscriptionKeyUseCase,
+    private val saveSubscriptionKeyUseCase: SaveSubscriptionKeyUseCase
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(State())
@@ -34,24 +36,20 @@ class SubscriptionViewModel(
 
     init {
         screenModelScope.launch {
-            subscriptionRepository.loadActiveSubscriptionKey()
-            if (subscriptionRepository.activeSubscriptionKey.value == null) {
-                _state.update {
-                    it.copy(
-                        isLoading = false,
-                        isShowSubscriptionIdDialog = true,
-                        error = IllegalStateException("请先设置订阅ID")
-                    )
-                }
-            }
-        }
-
-        screenModelScope.launch {
-            subscriptionRepository.activeSubscriptionKey
-                .filterNotNull()
+            observeActiveSubscriptionKeyUseCase()
                 .distinctUntilChanged()
-                .collect { id ->
-                    loadFeeds(id)
+                .collect { key ->
+                    if (key == null) {
+                        _state.update {
+                            it.copy(
+                                isLoading = false,
+                                isShowSubscriptionIdDialog = true,
+                                error = IllegalStateException("请先设置订阅ID")
+                            )
+                        }
+                    } else {
+                        loadFeeds(key)
+                    }
                 }
         }
     }
@@ -109,13 +107,15 @@ class SubscriptionViewModel(
 
     private fun setSubscriptionId(id: String) {
         screenModelScope.launch {
-            subscriptionRepository.addSubscriptionKey(id)
+            saveSubscriptionKeyUseCase(id)
             _state.update { it.copy(isShowSubscriptionIdDialog = false) }
+            loadFeeds(id)
         }
     }
 
     private fun generateRandomSubscriptionId() {
-        val randomId = subscriptionRepository.generateRandomSubscriptionId()
+        // This logic should ideally be in a UseCase as well
+        val randomId = (1..10).map { ('a'..'z').random() }.joinToString("")
         setSubscriptionId(randomId)
     }
 

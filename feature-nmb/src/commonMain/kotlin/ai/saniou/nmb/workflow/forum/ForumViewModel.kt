@@ -5,9 +5,9 @@ import ai.saniou.nmb.workflow.forum.ForumContract.Event
 import ai.saniou.nmb.workflow.forum.ForumContract.State
 import ai.saniou.thread.data.source.nmb.DataPolicy
 import ai.saniou.thread.domain.model.Post
-import ai.saniou.thread.domain.usecase.GetForumDetailUseCase
-import ai.saniou.thread.domain.usecase.GetForumNameUseCase
-import ai.saniou.thread.domain.usecase.GetForumThreadsPagingUseCase
+import ai.saniou.thread.domain.usecase.forum.GetForumDetailUseCase
+import ai.saniou.thread.domain.usecase.forum.GetForumNameUseCase
+import ai.saniou.thread.domain.usecase.forum.GetForumThreadsPagingUseCase
 import app.cash.paging.PagingData
 import app.cash.paging.cachedIn
 import cafe.adriel.voyager.core.model.ScreenModel
@@ -31,14 +31,14 @@ class ForumViewModel(
     getForumDetailUseCase: GetForumDetailUseCase,
     getForumNameUseCase: GetForumNameUseCase,
     private val forumId: Long,
-    private val fgroupId: Long
+    private val fgroupId: Long,
 ) : ScreenModel {
 
     private data class LoadRequest(
         val fid: Long,
         val fgroup: Long,
         val policy: DataPolicy = DataPolicy.NETWORK_ELSE_CACHE,
-        val page: Int = 1
+        val page: Int = 1,
     )
 
     private val _effect = Channel<Effect>()
@@ -62,7 +62,7 @@ class ForumViewModel(
         showInfoDialog
     ) { forumName, forumDetail, showDialog ->
         State(
-            forumName = forumName,
+            forumName = forumName ?: "",
             forumDetail = forumDetail,
             threads = threads,
             showInfoDialog = showDialog

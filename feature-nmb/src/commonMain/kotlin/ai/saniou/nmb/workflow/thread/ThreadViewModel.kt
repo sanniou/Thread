@@ -4,14 +4,17 @@ import ai.saniou.nmb.db.Database
 import ai.saniou.nmb.workflow.thread.ThreadContract.Effect
 import ai.saniou.nmb.workflow.thread.ThreadContract.Event
 import ai.saniou.nmb.workflow.thread.ThreadContract.State
-import ai.saniou.thread.data.source.nmb.NmbSource
 import ai.saniou.thread.domain.model.Post
 import ai.saniou.thread.domain.model.ThreadReply
-import ai.saniou.thread.domain.repository.SubscriptionRepository
-import ai.saniou.thread.domain.usecase.AddBookmarkUseCase
-import ai.saniou.thread.domain.usecase.GetThreadDetailUseCase
-import ai.saniou.thread.domain.usecase.GetThreadRepliesPagingUseCase
-import ai.saniou.thread.domain.usecase.ToggleSubscriptionUseCase
+import ai.saniou.thread.domain.usecase.bookmark.AddBookmarkUseCase
+import ai.saniou.thread.domain.usecase.forum.GetForumNameUseCase
+import ai.saniou.thread.domain.usecase.subscription.GetActiveSubscriptionKeyUseCase
+import ai.saniou.thread.domain.usecase.subscription.IsSubscribedUseCase
+import ai.saniou.thread.domain.usecase.subscription.ToggleSubscriptionUseCase
+import ai.saniou.thread.domain.usecase.thread.GetThreadDetailUseCase
+import ai.saniou.thread.domain.usecase.thread.GetThreadRepliesPagingUseCase
+import ai.saniou.thread.domain.usecase.thread.UpdateThreadLastAccessTimeUseCase
+import ai.saniou.thread.domain.usecase.thread.UpdateThreadLastReadReplyIdUseCase
 import app.cash.paging.PagingData
 import app.cash.paging.cachedIn
 import cafe.adriel.voyager.core.model.ScreenModel
@@ -24,6 +27,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -35,11 +39,13 @@ class ThreadViewModel(
     private val threadId: Long,
     private val getThreadDetailUseCase: GetThreadDetailUseCase,
     private val getThreadRepliesPagingUseCase: GetThreadRepliesPagingUseCase,
-    private val nmbRepository: NmbSource,
     private val toggleSubscriptionUseCase: ToggleSubscriptionUseCase,
     private val addBookmarkUseCase: AddBookmarkUseCase,
-    private val subscriptionRepository: SubscriptionRepository,
-    private val db: Database,
+    private val getActiveSubscriptionKeyUseCase: GetActiveSubscriptionKeyUseCase,
+    private val isSubscribedUseCase: IsSubscribedUseCase,
+    private val getForumNameUseCase: GetForumNameUseCase,
+    private val updateThreadLastAccessTimeUseCase: UpdateThreadLastAccessTimeUseCase,
+    private val updateThreadLastReadReplyIdUseCase: UpdateThreadLastReadReplyIdUseCase
 ) : ScreenModel {
 
     private data class LoadRequest(
@@ -105,13 +111,13 @@ class ThreadViewModel(
     @OptIn(ExperimentalTime::class)
     private fun updateLastAccessTime() {
         screenModelScope.launch {
-            nmbRepository.updateThreadLastAccessTime(threadId, Clock.System.now().epochSeconds)
+            updateThreadLastAccessTimeUseCase(threadId, Clock.System.now().epochSeconds)
         }
     }
 
     private fun updateLastReadReplyId(replyId: Long) {
         screenModelScope.launch {
-            nmbRepository.updateThreadLastReadReplyId(threadId, replyId)
+            updateThreadLastReadReplyIdUseCase(threadId, replyId)
         }
     }
 
@@ -119,12 +125,17 @@ class ThreadViewModel(
         screenModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
             getThreadDetailUseCase(threadId, forceRefresh)
+                .flatMapLatest { detail ->
+                    getForumNameUseCase(detail.fid).map { forumName ->
+                        detail to (forumName ?: "")
+                    }
+                }
                 .catch { e ->
                     _state.update {
                         it.copy(isLoading = false, error = "加载主楼失败: ${e.message}")
                     }
                 }
-                .collectLatest { detail ->
+                .collectLatest { (detail, forumName) ->
                     val thread = detail
                     val totalPages =
                         (thread.replyCount / 19) + if (thread.replyCount % 19 > 0) 1 else 0
@@ -135,8 +146,7 @@ class ThreadViewModel(
                             thread = thread,
                             lastReadReplyId = detail.lastReadReplyId,
                             totalPages = totalPages.toInt().coerceAtLeast(1),
-                            forumName = db.forumQueries.getForum(thread.fid).executeAsOneOrNull()?.name
-                                ?: ""
+                            forumName = forumName
                         )
                     }
                 }
@@ -144,9 +154,9 @@ class ThreadViewModel(
     }
 
     private fun observeSubscriptionStatus() {
-        val subscriptionKey = subscriptionRepository.activeSubscriptionKey.value ?: return
         screenModelScope.launch {
-            subscriptionRepository.isSubscribed(subscriptionKey, threadId.toString()).collect { isSubscribed ->
+            val subscriptionKey = getActiveSubscriptionKeyUseCase() ?: return@launch
+            isSubscribedUseCase(subscriptionKey, threadId.toString()).collect { isSubscribed ->
                 _state.update { it.copy(isSubscribed = isSubscribed) }
             }
         }
@@ -161,7 +171,7 @@ class ThreadViewModel(
         val currentSubscribed = state.value.isSubscribed
         screenModelScope.launch {
             val subscriptionKey =
-                subscriptionRepository.activeSubscriptionKey.value ?: throw IllegalStateException("未设置订阅ID")
+                getActiveSubscriptionKeyUseCase() ?: throw IllegalStateException("未设置订阅ID")
             toggleSubscriptionUseCase(subscriptionKey, thread.id.toString(), currentSubscribed)
                 .onSuccess { resultMessage ->
                     // UI state will be updated by the database flow

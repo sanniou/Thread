@@ -1,4 +1,4 @@
-package ai.saniou.thread.domain.usecase
+package ai.saniou.thread.domain.usecase.notice
 
 import ai.saniou.thread.domain.model.Notice
 import ai.saniou.thread.domain.repository.NoticeRepository

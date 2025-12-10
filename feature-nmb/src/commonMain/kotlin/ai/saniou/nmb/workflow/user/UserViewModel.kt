@@ -4,7 +4,10 @@ import ai.saniou.thread.domain.model.Cookie
 import ai.saniou.nmb.workflow.user.UserContract.Effect
 import ai.saniou.nmb.workflow.user.UserContract.Event
 import ai.saniou.nmb.workflow.user.UserContract.State
-import ai.saniou.thread.domain.usecase.UserUseCase
+import ai.saniou.thread.domain.usecase.user.AddCookieUseCase
+import ai.saniou.thread.domain.usecase.user.DeleteCookieUseCase
+import ai.saniou.thread.domain.usecase.user.GetUserProfileUseCase
+import ai.saniou.thread.domain.usecase.user.UpdateCookieSortUseCase
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.channels.Channel
@@ -14,7 +17,12 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class UserViewModel(private val userUseCase: UserUseCase) : ScreenModel {
+class UserViewModel(
+    private val getUserProfileUseCase: GetUserProfileUseCase,
+    private val addCookieUseCase: AddCookieUseCase,
+    private val deleteCookieUseCase: DeleteCookieUseCase,
+    private val updateCookieSortUseCase: UpdateCookieSortUseCase
+) : ScreenModel {
 
     private val _state = MutableStateFlow(State())
     val state = _state.asStateFlow()
@@ -39,7 +47,7 @@ class UserViewModel(private val userUseCase: UserUseCase) : ScreenModel {
         screenModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
             try {
-                val cookies = userUseCase.getCookiesList()
+                val cookies = getUserProfileUseCase()
                 _state.update { it.copy(isLoading = false, cookies = cookies) }
             } catch (e: Exception) {
                 _state.update {
@@ -55,7 +63,7 @@ class UserViewModel(private val userUseCase: UserUseCase) : ScreenModel {
     private fun addCookie(name: String, value: String) {
         screenModelScope.launch {
             try {
-                userUseCase.addCookie(name, value)
+                addCookieUseCase(name, value)
                 loadCookies() // 重新加载以获取包含新 cookie 的完整列表
             } catch (e: Exception) {
                 _effect.send(Effect.ShowError("添加饼干失败: ${e.message}"))
@@ -66,7 +74,7 @@ class UserViewModel(private val userUseCase: UserUseCase) : ScreenModel {
     private fun deleteCookie(cookie: Cookie) {
         screenModelScope.launch {
             try {
-                userUseCase.deleteCookie(cookie)
+                deleteCookieUseCase(cookie)
                 _state.update {
                     it.copy(cookies = it.cookies.filterNot { c -> c.value == cookie.value })
                 }
@@ -79,7 +87,7 @@ class UserViewModel(private val userUseCase: UserUseCase) : ScreenModel {
     private fun updateCookieOrder(newList: List<Cookie>) {
         _state.update { it.copy(cookies = newList) }
         screenModelScope.launch {
-            userUseCase.updateCookieSort(newList)
+            updateCookieSortUseCase(newList)
         }
     }
 }

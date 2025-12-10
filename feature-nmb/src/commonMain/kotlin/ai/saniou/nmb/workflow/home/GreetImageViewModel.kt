@@ -1,6 +1,6 @@
 package ai.saniou.nmb.workflow.home
 
-import ai.saniou.thread.domain.usecase.GetGreetImageUseCase
+import ai.saniou.thread.domain.usecase.misc.GetGreetImageUseCase
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.flow.MutableStateFlow

@@ -11,10 +11,14 @@ import kotlinx.coroutines.flow.StateFlow
 interface SubscriptionRepository {
 
     /**
-     * 当前激活的订阅Key。
-     * UI层应观察此Flow以获取当前操作的订阅目标。
+     * 获取当前激活的订阅Key。
      */
-    val activeSubscriptionKey: StateFlow<String?>
+    suspend fun getActiveSubscriptionKey(): String?
+
+    /**
+     * 观察当前激活的订阅Key。
+     */
+    fun observeActiveSubscriptionKey(): Flow<String?>
 
     /**
      * 获取指定订阅ID的帖子流。
@@ -69,11 +73,6 @@ interface SubscriptionRepository {
      * @param key 要添加的订阅Key。
      */
     suspend fun addSubscriptionKey(key: String)
-
-    /**
-     * 从持久化存储中加载并设置当前激活的订阅Key。
-     */
-    suspend fun loadActiveSubscriptionKey()
 
     /**
      * 设置并持久化当前激活的订阅Key。

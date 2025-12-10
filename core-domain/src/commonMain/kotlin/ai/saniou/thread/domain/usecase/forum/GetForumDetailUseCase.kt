@@ -1,4 +1,4 @@
-package ai.saniou.thread.domain.usecase
+package ai.saniou.thread.domain.usecase.forum
 
 import ai.saniou.thread.domain.model.Forum
 import ai.saniou.thread.domain.repository.ForumRepository

@@ -1,4 +1,4 @@
-package ai.saniou.thread.domain.usecase
+package ai.saniou.thread.domain.usecase.thread
 
 import ai.saniou.thread.domain.model.ThreadReply
 import ai.saniou.thread.domain.repository.ThreadRepository

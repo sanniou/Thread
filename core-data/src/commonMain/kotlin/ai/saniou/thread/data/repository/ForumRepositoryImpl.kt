@@ -11,7 +11,6 @@ import ai.saniou.thread.domain.repository.ForumRepository
 import app.cash.paging.PagingData
 import app.cash.paging.map
 import app.cash.sqldelight.coroutines.asFlow
-import app.cash.sqldelight.coroutines.mapToOne
 import app.cash.sqldelight.coroutines.mapToOneOrNull
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -39,11 +38,11 @@ class ForumRepositoryImpl(
         }
     }
 
-    override fun getForumName(fid: Long): Flow<String> =
+    override fun getForumName(fid: Long): Flow<String?> =
         db.forumQueries.getForum(fid)
             .asFlow()
-            .mapToOne(Dispatchers.IO)
-            .map { it.name }
+            .mapToOneOrNull(Dispatchers.IO)
+            .map { it?.name }
             .flowOn(Dispatchers.IO)
 
     override fun getForumDetail(fid: Long): Flow<Forum?> =

@@ -1,82 +1,104 @@
 package ai.saniou.thread.domain.di
 
-import ai.saniou.thread.domain.usecase.AddBookmarkUseCase
-import ai.saniou.thread.domain.usecase.GetBookmarksUseCase
-import ai.saniou.thread.domain.usecase.GetForumDetailUseCase
-import ai.saniou.thread.domain.usecase.GetForumNameUseCase
-import ai.saniou.thread.domain.usecase.GetForumsUseCase
-import ai.saniou.thread.domain.usecase.GetForumThreadsPagingUseCase
-import ai.saniou.thread.domain.usecase.GetGreetImageUseCase
-import ai.saniou.thread.domain.usecase.GetHistoryThreadsUseCase
-import ai.saniou.thread.domain.usecase.GetNmbForumPageUseCase
-import ai.saniou.thread.domain.usecase.GetNoticeUseCase
-import ai.saniou.thread.domain.usecase.GetPostsUseCase
-import ai.saniou.thread.domain.usecase.GetReferenceUseCase
-import ai.saniou.thread.domain.usecase.GetSubscriptionFeedUseCase
-import ai.saniou.thread.domain.usecase.GetThreadDetailUseCase
-import ai.saniou.thread.domain.usecase.GetThreadImagesUseCase
-import ai.saniou.thread.domain.usecase.GetThreadRepliesPagingUseCase
-import ai.saniou.thread.domain.usecase.GetTrendUseCase
-import ai.saniou.thread.domain.usecase.IsBookmarkedUseCase
-import ai.saniou.thread.domain.usecase.IsSubscribedUseCase
-import ai.saniou.thread.domain.usecase.MarkNoticeAsReadUseCase
-import ai.saniou.thread.domain.usecase.PostUseCase
-import ai.saniou.thread.domain.usecase.RemoveBookmarkUseCase
-import ai.saniou.thread.domain.usecase.SyncLocalSubscriptionsUseCase
-import ai.saniou.thread.domain.usecase.ToggleFavoriteUseCase
-import ai.saniou.thread.domain.usecase.ToggleSubscriptionUseCase
-import ai.saniou.thread.domain.usecase.UserUseCase
+import ai.saniou.thread.domain.usecase.bookmark.AddBookmarkUseCase
+import ai.saniou.thread.domain.usecase.bookmark.GetBookmarksUseCase
+import ai.saniou.thread.domain.usecase.bookmark.IsBookmarkedUseCase
+import ai.saniou.thread.domain.usecase.bookmark.RemoveBookmarkUseCase
+import ai.saniou.thread.domain.usecase.forum.GetFavoriteForumsUseCase
+import ai.saniou.thread.domain.usecase.forum.GetForumDetailUseCase
+import ai.saniou.thread.domain.usecase.forum.GetForumNameUseCase
+import ai.saniou.thread.domain.usecase.forum.GetForumsUseCase
+import ai.saniou.thread.domain.usecase.forum.GetForumThreadsPagingUseCase
+import ai.saniou.thread.domain.usecase.history.GetHistoryThreadsUseCase
+import ai.saniou.thread.domain.usecase.misc.GetGreetImageUseCase
+import ai.saniou.thread.domain.usecase.misc.GetTrendUseCase
+import ai.saniou.thread.domain.usecase.notice.GetNoticeUseCase
+import ai.saniou.thread.domain.usecase.notice.MarkNoticeAsReadUseCase
+import ai.saniou.thread.domain.usecase.post.CreateReplyUseCase
+import ai.saniou.thread.domain.usecase.post.CreateThreadUseCase
+import ai.saniou.thread.domain.usecase.post.GetReferenceUseCase
+import ai.saniou.thread.domain.usecase.post.ToggleFavoriteUseCase
+import ai.saniou.thread.domain.usecase.settings.GetSettingsUseCase
+import ai.saniou.thread.domain.usecase.settings.SaveSettingsUseCase
+import ai.saniou.thread.domain.usecase.subscription.GetSubscriptionFeedUseCase
+import ai.saniou.thread.domain.usecase.subscription.GetActiveSubscriptionKeyUseCase
+import ai.saniou.thread.domain.usecase.subscription.IsSubscribedUseCase
+import ai.saniou.thread.domain.usecase.subscription.ObserveActiveSubscriptionKeyUseCase
+import ai.saniou.thread.domain.usecase.subscription.SaveSubscriptionKeyUseCase
+import ai.saniou.thread.domain.usecase.subscription.SyncLocalSubscriptionsUseCase
+import ai.saniou.thread.domain.usecase.subscription.ToggleSubscriptionUseCase
+import ai.saniou.thread.domain.usecase.thread.GetThreadDetailUseCase
+import ai.saniou.thread.domain.usecase.thread.GetThreadImagesUseCase
+import ai.saniou.thread.domain.usecase.thread.GetThreadRepliesPagingUseCase
+import ai.saniou.thread.domain.usecase.thread.GetThreadRepliesUseCase
+import ai.saniou.thread.domain.usecase.thread.UpdateThreadLastAccessTimeUseCase
+import ai.saniou.thread.domain.usecase.thread.UpdateThreadLastReadReplyIdUseCase
+import ai.saniou.thread.domain.usecase.user.AddCookieUseCase
+import ai.saniou.thread.domain.usecase.user.DeleteCookieUseCase
+import ai.saniou.thread.domain.usecase.user.GetUserProfileUseCase
+import ai.saniou.thread.domain.usecase.user.UpdateCookieSortUseCase
 import org.kodein.di.DI
 import org.kodein.di.bindProvider
 import org.kodein.di.instance
 
 val domainModule = DI.Module("domainModule") {
-    bindProvider { GetForumsUseCase(instance()) }
-    bindProvider { GetPostsUseCase(instance()) }
-    bindProvider { GetNmbForumPageUseCase(instance(), instance()) }
-    bindProvider { ToggleFavoriteUseCase(instance()) }
 
-    // Forum UseCases
+    // Feed
+    bindProvider { GetSubscriptionFeedUseCase(instance()) }
+
+    // Forum
+    bindProvider { GetForumsUseCase(instance()) }
+    bindProvider { GetFavoriteForumsUseCase(instance()) }
     bindProvider { GetForumThreadsPagingUseCase(instance()) }
     bindProvider { GetForumNameUseCase(instance()) }
     bindProvider { GetForumDetailUseCase(instance()) }
 
-    // Bookmark UseCases
+    // Thread
+    bindProvider { GetThreadDetailUseCase(instance()) }
+    bindProvider { GetThreadRepliesUseCase(instance()) }
+    bindProvider { GetThreadRepliesPagingUseCase(instance()) }
+    bindProvider { GetThreadImagesUseCase(instance()) }
+    bindProvider { UpdateThreadLastAccessTimeUseCase(instance()) }
+    bindProvider { UpdateThreadLastReadReplyIdUseCase(instance()) }
+
+    // Post
+    bindProvider { CreateThreadUseCase(instance()) }
+    bindProvider { CreateReplyUseCase(instance()) }
+    bindProvider { GetReferenceUseCase(instance()) }
+    bindProvider { ToggleFavoriteUseCase(instance()) }
+
+    // Bookmark
     bindProvider { GetBookmarksUseCase(instance()) }
     bindProvider { AddBookmarkUseCase(instance()) }
     bindProvider { RemoveBookmarkUseCase(instance()) }
     bindProvider { IsBookmarkedUseCase(instance()) }
 
-    // Subscription UseCases
-    bindProvider { GetSubscriptionFeedUseCase(instance()) }
+    // Subscription
     bindProvider { ToggleSubscriptionUseCase(instance()) }
     bindProvider { IsSubscribedUseCase(instance()) }
     bindProvider { SyncLocalSubscriptionsUseCase(instance()) }
+    bindProvider { GetActiveSubscriptionKeyUseCase(instance()) }
+    bindProvider { SaveSubscriptionKeyUseCase(instance()) }
+    bindProvider { ObserveActiveSubscriptionKeyUseCase(instance()) }
 
-    // User UseCases
-    bindProvider { UserUseCase(instance()) }
+    // User
+    bindProvider { GetUserProfileUseCase(instance()) }
+    bindProvider { AddCookieUseCase(instance()) }
+    bindProvider { DeleteCookieUseCase(instance()) }
+    bindProvider { UpdateCookieSortUseCase(instance()) }
 
-    // Notice UseCases
+    // Notice
     bindProvider { GetNoticeUseCase(instance()) }
     bindProvider { MarkNoticeAsReadUseCase(instance()) }
 
-    // History UseCases
+    // History
     bindProvider { GetHistoryThreadsUseCase(instance()) }
 
-    // Post UseCases
-    bindProvider { PostUseCase(instance()) }
+    // Settings
+    bindProvider { GetSettingsUseCase(instance()) }
+    bindProvider { SaveSettingsUseCase(instance()) }
 
-    // Trend UseCases
+    // Misc
     bindProvider { GetTrendUseCase(instance()) }
-
-    // Reference UseCases
-    bindProvider { GetReferenceUseCase(instance()) }
-
-    // Thread UseCases
-    bindProvider { GetThreadDetailUseCase(instance()) }
-    bindProvider { GetThreadRepliesPagingUseCase(instance()) }
-    bindProvider { GetThreadImagesUseCase(instance()) }
-
-    // Other UseCases
     bindProvider { GetGreetImageUseCase(instance()) }
 }

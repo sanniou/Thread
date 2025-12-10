@@ -1,4 +1,4 @@
-package ai.saniou.thread.domain.usecase
+package ai.saniou.thread.domain.usecase.history
 
 import ai.saniou.thread.domain.model.Post
 import ai.saniou.thread.domain.repository.HistoryRepository

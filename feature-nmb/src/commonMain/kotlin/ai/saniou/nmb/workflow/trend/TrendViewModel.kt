@@ -3,7 +3,7 @@ package ai.saniou.nmb.workflow.trend
 import ai.saniou.nmb.workflow.trend.TrendContract.Effect
 import ai.saniou.nmb.workflow.trend.TrendContract.Event
 import ai.saniou.nmb.workflow.trend.TrendContract.State
-import ai.saniou.thread.domain.usecase.GetTrendUseCase
+import ai.saniou.thread.domain.usecase.misc.GetTrendUseCase
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.channels.Channel

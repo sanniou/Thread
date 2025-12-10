@@ -3,7 +3,8 @@ package ai.saniou.nmb.workflow.post
 import ai.saniou.nmb.workflow.post.PostContract.Effect
 import ai.saniou.nmb.workflow.post.PostContract.Event
 import ai.saniou.nmb.workflow.post.PostContract.State
-import ai.saniou.thread.domain.usecase.PostUseCase
+import ai.saniou.thread.domain.usecase.post.CreateReplyUseCase
+import ai.saniou.thread.domain.usecase.post.CreateThreadUseCase
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import cafe.adriel.voyager.core.model.ScreenModel
@@ -16,10 +17,11 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class PostViewModel(
-    private val postUseCase: PostUseCase,
+    private val createThreadUseCase: CreateThreadUseCase,
+    private val createReplyUseCase: CreateReplyUseCase,
     private val fid: Int?,
     private val resto: Int?,
-    private val forumName: String?
+    private val forumName: String?,
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(State())
@@ -45,7 +47,8 @@ class PostViewModel(
                 val currentState = _state.value
                 val currentContent = currentState.content
                 val selection = currentContent.selection
-                val newText = currentContent.text.replaceRange(selection.min, selection.max, event.text)
+                val newText =
+                    currentContent.text.replaceRange(selection.min, selection.max, event.text)
                 val newSelection = selection.min + event.text.length
                 _state.update {
                     it.copy(
@@ -61,26 +64,33 @@ class PostViewModel(
             is Event.UpdateName -> _state.update {
                 it.copy(postBody = it.postBody.copy(name = event.name))
             }
+
             is Event.UpdateTitle -> _state.update {
                 it.copy(postBody = it.postBody.copy(title = event.title))
             }
+
             is Event.UpdateImage -> _state.update { it.copy(image = event.image) }
             is Event.ToggleWater -> _state.update { it.copy(water = event.water) }
             Event.ToggleEmoticonPicker -> _state.update {
-               it.copy(showEmoticonPicker = !it.showEmoticonPicker)
+                it.copy(showEmoticonPicker = !it.showEmoticonPicker)
             }
+
             Event.ToggleDiceInputs -> _state.update {
-               it.copy(showDiceInputs = !it.showDiceInputs)
+                it.copy(showDiceInputs = !it.showDiceInputs)
             }
+
             Event.ToggleMoreOptions -> _state.update {
                 it.copy(showMoreOptions = !it.showMoreOptions)
             }
+
             Event.ToggleConfirmDialog -> _state.update {
                 it.copy(showConfirmDialog = !it.showConfirmDialog)
             }
+
             Event.ClearError -> _state.update {
                 it.copy(error = null)
             }
+
             Event.Submit -> submit()
         }
     }
@@ -91,7 +101,7 @@ class PostViewModel(
             try {
                 val s = _state.value
                 val responseHtml = if (resto != null) {
-                    postUseCase.reply(
+                    createReplyUseCase(
                         content = s.postBody.content!!,
                         resto = resto,
                         name = s.postBody.name,
@@ -100,7 +110,7 @@ class PostViewModel(
                         water = s.water
                     )
                 } else if (fid != null) {
-                    postUseCase.post(
+                    createThreadUseCase(
                         fid = fid,
                         content = s.postBody.content!!,
                         name = s.postBody.name,

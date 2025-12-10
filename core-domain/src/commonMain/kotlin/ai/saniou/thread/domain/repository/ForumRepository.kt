@@ -29,9 +29,9 @@ interface ForumRepository {
      * 获取板块名称
      *
      * @param fid 板块ID
-     * @return 包含板块名称的 Flow
+     * @return 包含板块名称的 Flow, 如果找不到则为 null
      */
-    fun getForumName(fid: Long): Flow<String>
+    fun getForumName(fid: Long): Flow<String?>
 
     /**
      * 获取板块详情

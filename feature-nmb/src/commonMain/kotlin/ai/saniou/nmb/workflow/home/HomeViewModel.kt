@@ -1,8 +1,8 @@
 package ai.saniou.nmb.workflow.home
 
 import ai.saniou.thread.domain.model.Notice
-import ai.saniou.thread.domain.usecase.GetNoticeUseCase
-import ai.saniou.thread.domain.usecase.MarkNoticeAsReadUseCase
+import ai.saniou.thread.domain.usecase.notice.GetNoticeUseCase
+import ai.saniou.thread.domain.usecase.notice.MarkNoticeAsReadUseCase
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.flow.MutableStateFlow

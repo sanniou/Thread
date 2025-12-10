@@ -2,7 +2,7 @@ package ai.saniou.nmb.workflow.reference
 
 import ai.saniou.nmb.workflow.reference.ReferenceContract.Event
 import ai.saniou.nmb.workflow.reference.ReferenceContract.State
-import ai.saniou.thread.domain.usecase.GetReferenceUseCase
+import ai.saniou.thread.domain.usecase.post.GetReferenceUseCase
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
