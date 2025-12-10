@@ -1,6 +1,6 @@
 package ai.saniou.nmb.initializer
 
-import ai.saniou.nmb.data.manager.CdnManager
+import ai.saniou.thread.data.manager.CdnManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

@@ -1,11 +1,13 @@
 package ai.saniou.thread.data.repository
 
-import ai.saniou.nmb.data.storage.CommonStorage
 import ai.saniou.nmb.db.Database
 import ai.saniou.thread.data.mapper.toDomain
 import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
 import ai.saniou.thread.domain.model.Notice
 import ai.saniou.thread.domain.repository.NoticeRepository
+import ai.saniou.thread.domain.repository.SettingsRepository
+import ai.saniou.thread.domain.repository.getValue
+import ai.saniou.thread.domain.repository.saveValue
 import ai.saniou.thread.network.SaniouResponse
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToOneOrNull
@@ -21,7 +23,7 @@ import kotlin.time.ExperimentalTime
 class NoticeRepositoryImpl(
     private val api: NmbXdApi,
     private val db: Database,
-    private val storage: CommonStorage,
+    private val settingsRepository: SettingsRepository,
 ) : NoticeRepository {
 
     override suspend fun getLatestNotice(): Flow<Notice?> {
@@ -32,7 +34,7 @@ class NoticeRepositoryImpl(
     }
 
     override suspend fun fetchAndCacheNotice() {
-        val lastFetchTime = storage.getValue<Long>(KEY_LAST_FETCH_TIME) ?: 0
+        val lastFetchTime = settingsRepository.getValue<Long>(KEY_LAST_FETCH_TIME) ?: 0
         if (Clock.System.now().epochSeconds - lastFetchTime > 1.days.inWholeSeconds) {
             val response = api.notice()
             when (response) {
@@ -43,7 +45,7 @@ class NoticeRepositoryImpl(
                         date = Clock.System.now().epochSeconds,
                         enable = if (response.data.enable) 1 else 0,
                     )
-                    storage.saveValue(KEY_LAST_FETCH_TIME, Clock.System.now().epochSeconds)
+                    settingsRepository.saveValue(KEY_LAST_FETCH_TIME, Clock.System.now().epochSeconds)
                 }
 
                 is SaniouResponse.Error ->

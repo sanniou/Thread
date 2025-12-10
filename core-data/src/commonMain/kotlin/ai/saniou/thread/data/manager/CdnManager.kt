@@ -1,6 +1,5 @@
-package ai.saniou.nmb.data.manager
+package ai.saniou.thread.data.manager
 
-import ai.saniou.thread.data.source.nmb.NmbSource
 import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
 import ai.saniou.thread.network.SaniouResponse
 import ai.saniou.thread.data.source.nmb.remote.dto.CdnPath
@@ -11,7 +10,7 @@ import kotlinx.coroutines.flow.asStateFlow
 /**
  * CDN管理器，负责获取和管理图片CDN地址
  */
-class CdnManager(private val forumRepository: NmbXdApi) {
+class CdnManager(private val nmbXdApi: NmbXdApi) {
 
     // 默认CDN地址
     private val defaultCdnUrl = "https://image.nmb.best"
@@ -39,7 +38,7 @@ class CdnManager(private val forumRepository: NmbXdApi) {
         }
 
         return try {
-            when (val response = forumRepository.getCdnPath()) {
+            when (val response = nmbXdApi.getCdnPath()) {
                 is SaniouResponse.Success -> {
                     val cdnPaths = response.data
                     if (cdnPaths.isNotEmpty()) {

@@ -37,7 +37,7 @@ class ForumViewModel(
     private data class LoadRequest(
         val fid: Long,
         val fgroup: Long,
-        val policy: DataPolicy = DataPolicy.API_FIRST,
+        val policy: DataPolicy = DataPolicy.NETWORK_ELSE_CACHE,
         val page: Int = 1
     )
 

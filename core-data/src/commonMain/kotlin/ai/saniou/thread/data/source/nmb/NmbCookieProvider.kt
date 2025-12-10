@@ -1,7 +1,7 @@
-package ai.saniou.nmb.data
+package ai.saniou.thread.data.source.nmb
 
-import ai.saniou.thread.network.CookieProvider
 import ai.saniou.nmb.db.Database
+import ai.saniou.thread.network.CookieProvider
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import kotlinx.coroutines.Dispatchers

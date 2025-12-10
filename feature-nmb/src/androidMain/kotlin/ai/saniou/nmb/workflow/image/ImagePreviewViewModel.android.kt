@@ -1,6 +1,6 @@
 package ai.saniou.nmb.workflow.image
 
-import ai.saniou.nmb.data.manager.CdnManager
+import ai.saniou.thread.data.manager.CdnManager
 import android.content.ContentValues
 import android.content.Context
 import android.os.Build

@@ -10,7 +10,7 @@ enum class DataPolicy {
      * 如果数据库中存在数据，则直接返回，不访问网络。
      * 适用于数据不经常变化的场景，如帖子回复。
      */
-    CACHE_FIRST,
+    CACHE_ELSE_NETWORK,
 
     /**
      * API 优先
@@ -18,5 +18,8 @@ enum class DataPolicy {
      * 强制从网络获取最新数据，并更新本地数据库。
      * 适用于数据流频繁变化的场景，如板块帖子列表。
      */
-    API_FIRST
+    NETWORK_ELSE_CACHE,
+    CACHE_ONLY,
+    NETWORK_ONLY,
+
 }

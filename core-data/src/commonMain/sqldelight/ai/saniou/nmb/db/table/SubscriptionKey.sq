@@ -1,0 +1,10 @@
+CREATE TABLE SubscriptionKey (
+    key TEXT NOT NULL PRIMARY KEY,
+    createdAt INTEGER NOT NULL
+);
+
+insertSubscriptionKey:
+INSERT OR REPLACE INTO SubscriptionKey(key, createdAt) VALUES (?, ?);
+
+getAllSubscriptionKeys:
+SELECT * FROM SubscriptionKey ORDER BY createdAt DESC;

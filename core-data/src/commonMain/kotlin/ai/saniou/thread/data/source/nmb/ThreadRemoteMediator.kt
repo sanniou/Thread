@@ -59,35 +59,30 @@ class ThreadRemoteMediator(
             else -> TODO("Not yet implemented")
         }
 
-        if (dataPolicy == DataPolicy.CACHE_FIRST) {
-            val repliesInDb =
-                threadReplyQueries.countRepliesByThreadIdAndPage(threadId, page.toLong())
-                    .executeAsOne()
-
-            if (repliesInDb > 0) {
-                return RemoteMediatorMediatorResultSuccess(endOfPaginationReached = false) as RemoteMediatorMediatorResult
+        when (dataPolicy) {
+            DataPolicy.CACHE_ELSE_NETWORK -> {
+                val repliesInDb =
+                    threadReplyQueries.countRepliesByThreadIdAndPage(threadId, page.toLong())
+                        .executeAsOne()
+                if (repliesInDb > 0) {
+                    return RemoteMediatorMediatorResultSuccess(endOfPaginationReached = false) as RemoteMediatorMediatorResult
+                }
+                // 缓存不存在，则继续执行网络请求
             }
+            DataPolicy.NETWORK_ELSE_CACHE -> {
+                // 直接执行网络请求
+            }
+            else -> return RemoteMediatorMediatorResultSuccess(endOfPaginationReached = true) as RemoteMediatorMediatorResult
         }
+
 
         return when (val result = fetcher(page)) {
             is SaniouResponse.Success -> {
                 val threadDetail = result.data
-                // 非 Tips 回复数
-                var validRreplySize = threadDetail.replies.filter { it.userHash != "Tips" }.size
-                val endOfPagination =
-                    // 有效回复数小于等于数据库中的回复数
-                    threadDetail.replyCount <= threadReplyQueries.countValidThreadReplies(threadId)
-                        .executeAsOne() + validRreplySize
-                            // 或者没有非 Tips 回复
-                            || validRreplySize == 0
+                val validReplySize = threadDetail.replies.count { it.userHash != "Tips" }
+                val endOfPagination = threadDetail.replyCount <= threadReplyQueries.countValidThreadReplies(threadId).executeAsOne() + validReplySize || validReplySize == 0
 
                 db.transaction {
-//                    // 刷新时，只清理当前页
-//                    if (loadType == LoadType.REFRESH) {
-//                        threadReplyQueries.deleteRepliesByThreadIdAndPage(threadId, page.toLong())
-//                    }
-
-                    // 更新主楼信息和回复
                     threadQueries.upsertThread(threadDetail.toTable(page.toLong()))
                     threadDetail.toTableReply(page.toLong())
                         .forEach(threadReplyQueries::upsertThreadReply)
@@ -106,8 +101,14 @@ class ThreadRemoteMediator(
                 }
                 RemoteMediatorMediatorResultSuccess(endOfPaginationReached = endOfPagination) as RemoteMediatorMediatorResult
             }
-
-            is SaniouResponse.Error -> RemoteMediatorMediatorResultError(result.ex) as RemoteMediatorMediatorResult
+            is SaniouResponse.Error -> {
+                if (dataPolicy == DataPolicy.NETWORK_ELSE_CACHE) {
+                    // 网络失败时，依赖本地缓存，返回成功
+                    RemoteMediatorMediatorResultSuccess(endOfPaginationReached = true) as RemoteMediatorMediatorResult
+                } else {
+                    RemoteMediatorMediatorResultError(result.ex) as RemoteMediatorMediatorResult
+                }
+            }
         }
     }
 

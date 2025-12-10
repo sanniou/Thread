@@ -1,12 +1,11 @@
 package ai.saniou.nmb.workflow.home
 
-import ai.saniou.nmb.data.storage.CategoryStorage
 import ai.saniou.nmb.initializer.AppInitializer
 import ai.saniou.nmb.workflow.home.ForumCategoryContract.Event
 import ai.saniou.nmb.workflow.home.ForumCategoryContract.ForumGroupUiState
 import ai.saniou.nmb.workflow.home.ForumCategoryContract.State
-import ai.saniou.thread.data.source.nmb.remote.dto.ForumDetail
 import ai.saniou.thread.domain.model.Forum
+import ai.saniou.thread.domain.repository.ForumRepository
 import ai.saniou.thread.domain.usecase.GetNmbForumPageUseCase
 import ai.saniou.thread.domain.usecase.ToggleFavoriteUseCase
 import cafe.adriel.voyager.core.model.ScreenModel
@@ -21,7 +20,7 @@ class ForumCategoryViewModel(
     private val getNmbForumPageUseCase: GetNmbForumPageUseCase,
     private val toggleFavoriteUseCase: ToggleFavoriteUseCase,
     private val appInitializer: AppInitializer,
-    private val categoryStorage: CategoryStorage, // TODO: This dependency should be removed later
+    private val forumRepository: ForumRepository,
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(State())
@@ -49,7 +48,7 @@ class ForumCategoryViewModel(
             appInitializer.initialize()
 
             // TODO: Replace with a UseCase
-            val lastOpenedForumId = categoryStorage.getLastOpenedForum()?.id?.toString()
+            val lastOpenedForumId = forumRepository.getLastOpenedForum()?.id
 
             getNmbForumPageUseCase()
                 .catch { e ->
@@ -86,7 +85,8 @@ class ForumCategoryViewModel(
                         _state.update {
                             val isInitialLoad = it.forumGroups.isEmpty()
                             val allForums = data.forums + data.favorites
-                            val lastOpenedForum = if (isInitialLoad) allForums.find { f -> f.id == lastOpenedForumId } else null
+                            val lastOpenedForum =
+                                if (isInitialLoad) allForums.find { f -> f.id == lastOpenedForumId } else null
 
                             it.copy(
                                 isLoading = false,
@@ -122,16 +122,7 @@ class ForumCategoryViewModel(
 
     private fun selectForum(forum: Forum) {
         screenModelScope.launch {
-            // This is not ideal, the storage logic should be in a UseCase.
-            // A temporary mapper is needed until storage is also refactored.
-            val legacyForum = ForumDetail(
-                id = forum.id.toLong(),
-                name = forum.name,
-                showName = forum.showName,
-                msg = forum.msg,
-                fGroup = forum.groupId.toLong()
-            )
-            categoryStorage.saveLastOpenedForum(legacyForum)
+            forumRepository.saveLastOpenedForum(forum)
         }
         _state.update { it.copy(currentForum = forum) }
     }

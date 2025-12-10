@@ -1,11 +1,9 @@
 package ai.saniou.thread.data.repository
 
 import ai.saniou.nmb.db.Database
-import ai.saniou.thread.data.source.nmb.DataPolicy
 import ai.saniou.thread.data.source.nmb.SqlDelightPagingSource
 import ai.saniou.thread.data.source.nmb.SubscriptionRemoteMediator
 import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
-import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
 import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
 import ai.saniou.thread.domain.model.Post
 import ai.saniou.thread.domain.repository.SubscriptionRepository
@@ -15,19 +13,28 @@ import app.cash.paging.PagingConfig
 import app.cash.paging.PagingData
 import app.cash.paging.map
 import app.cash.sqldelight.coroutines.asFlow
+import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOne
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
+@OptIn(ExperimentalUuidApi::class)
 class SubscriptionRepositoryImpl(
     private val nmbXdApi: NmbXdApi,
     private val db: Database,
 ) : SubscriptionRepository {
+
+    private val _activeSubscriptionKey = MutableStateFlow<String?>(null)
+    override val activeSubscriptionKey = _activeSubscriptionKey.asStateFlow()
 
     @OptIn(ExperimentalPagingApi::class)
     override fun getSubscriptionFeed(subscriptionKey: String): Flow<PagingData<Post>> {
@@ -102,5 +109,38 @@ class SubscriptionRepositoryImpl(
         return withContext(Dispatchers.IO) {
             db.subscriptionQueries.countLocalSubscriptions(subscriptionKey).executeAsOne() > 0
         }
+    }
+
+    @OptIn(ExperimentalTime::class)
+    override suspend fun addSubscriptionKey(key: String) {
+        withContext(Dispatchers.IO) {
+            db.subscriptionKeyQueries.insertSubscriptionKey(key, Clock.System.now().epochSeconds)
+            setActiveSubscriptionKey(key)
+        }
+    }
+
+    override fun getSubscriptionKeys(): Flow<List<String>> {
+        return db.subscriptionKeyQueries.getAllSubscriptionKeys()
+            .asFlow()
+            .mapToList(Dispatchers.IO)
+            .map { list -> list.map { it.key } }
+    }
+
+    override suspend fun loadActiveSubscriptionKey() {
+        withContext(Dispatchers.IO) {
+            val key = db.keyValueQueries.getKeyValue("active_subscription_key").executeAsOneOrNull()?.value_
+            _activeSubscriptionKey.value = key
+        }
+    }
+
+    override suspend fun setActiveSubscriptionKey(key: String) {
+        withContext(Dispatchers.IO) {
+            db.keyValueQueries.insertKeyValue("active_subscription_key", key)
+            _activeSubscriptionKey.value = key
+        }
+    }
+
+    override fun generateRandomSubscriptionId(): String {
+        return Uuid.random().toString()
     }
 }

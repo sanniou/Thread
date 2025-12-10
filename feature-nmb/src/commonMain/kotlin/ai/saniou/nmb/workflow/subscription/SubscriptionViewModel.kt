@@ -1,10 +1,10 @@
 package ai.saniou.nmb.workflow.subscription
 
-import ai.saniou.nmb.data.storage.SubscriptionStorage
 import ai.saniou.nmb.workflow.subscription.SubscriptionContract.Effect
 import ai.saniou.nmb.workflow.subscription.SubscriptionContract.Event
 import ai.saniou.nmb.workflow.subscription.SubscriptionContract.State
 import ai.saniou.thread.data.source.nmb.DataPolicy
+import ai.saniou.thread.domain.repository.SubscriptionRepository
 import ai.saniou.thread.domain.usecase.GetSubscriptionFeedUseCase
 import ai.saniou.thread.domain.usecase.SyncLocalSubscriptionsUseCase
 import ai.saniou.thread.domain.usecase.ToggleSubscriptionUseCase
@@ -23,7 +23,7 @@ class SubscriptionViewModel(
     private val getSubscriptionFeedUseCase: GetSubscriptionFeedUseCase,
     private val toggleSubscriptionUseCase: ToggleSubscriptionUseCase,
     private val syncLocalSubscriptionsUseCase: SyncLocalSubscriptionsUseCase,
-    private val subscriptionStorage: SubscriptionStorage
+    private val subscriptionRepository: SubscriptionRepository
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(State())
@@ -34,8 +34,8 @@ class SubscriptionViewModel(
 
     init {
         screenModelScope.launch {
-            subscriptionStorage.loadLastSubscriptionId()
-            if (subscriptionStorage.subscriptionId.value == null) {
+            subscriptionRepository.loadActiveSubscriptionKey()
+            if (subscriptionRepository.activeSubscriptionKey.value == null) {
                 _state.update {
                     it.copy(
                         isLoading = false,
@@ -47,7 +47,7 @@ class SubscriptionViewModel(
         }
 
         screenModelScope.launch {
-            subscriptionStorage.subscriptionId
+            subscriptionRepository.activeSubscriptionKey
                 .filterNotNull()
                 .distinctUntilChanged()
                 .collect { id ->
@@ -56,7 +56,7 @@ class SubscriptionViewModel(
         }
     }
 
-    private suspend fun loadFeeds(id: String, policy: DataPolicy = DataPolicy.CACHE_FIRST) {
+    private suspend fun loadFeeds(id: String, policy: DataPolicy = DataPolicy.CACHE_ELSE_NETWORK) {
         _state.update { it.copy(subscriptionId = id, isLoading = true) }
         try {
             val feeds = getSubscriptionFeedUseCase(id)
@@ -90,7 +90,7 @@ class SubscriptionViewModel(
     private fun pull() {
         val id = state.value.subscriptionId ?: return
         screenModelScope.launch {
-            loadFeeds(id, DataPolicy.API_FIRST)
+            loadFeeds(id, DataPolicy.NETWORK_ELSE_CACHE)
         }
     }
 
@@ -100,7 +100,7 @@ class SubscriptionViewModel(
             try {
                 syncLocalSubscriptionsUseCase(id)
                 _effect.send(Effect.OnPushResult(true, "推送成功"))
-                loadFeeds(id, DataPolicy.API_FIRST)
+                loadFeeds(id, DataPolicy.NETWORK_ELSE_CACHE)
             } catch (e: Exception) {
                 _effect.send(Effect.OnPushResult(false, "推送失败: ${e.message}"))
             }
@@ -109,13 +109,13 @@ class SubscriptionViewModel(
 
     private fun setSubscriptionId(id: String) {
         screenModelScope.launch {
-            subscriptionStorage.addSubscriptionId(id)
+            subscriptionRepository.addSubscriptionKey(id)
             _state.update { it.copy(isShowSubscriptionIdDialog = false) }
         }
     }
 
     private fun generateRandomSubscriptionId() {
-        val randomId = subscriptionStorage.generateRandomSubscriptionId()
+        val randomId = subscriptionRepository.generateRandomSubscriptionId()
         setSubscriptionId(randomId)
     }
 

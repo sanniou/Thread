@@ -1,16 +1,13 @@
 package ai.saniou.thread.data.repository
 
 import ai.saniou.nmb.db.Database
-import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
+import ai.saniou.thread.data.source.nmb.DataPolicy
+import ai.saniou.thread.data.source.nmb.NmbSource
 import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
-import ai.saniou.thread.data.source.nmb.remote.dto.toTable
 import ai.saniou.thread.domain.model.Image
 import ai.saniou.thread.domain.model.Post
 import ai.saniou.thread.domain.model.ThreadReply
 import ai.saniou.thread.domain.repository.ThreadRepository
-import ai.saniou.thread.network.SaniouResponse
-import app.cash.paging.Pager
-import app.cash.paging.PagingConfig
 import app.cash.paging.PagingData
 import app.cash.paging.map
 import app.cash.sqldelight.coroutines.asFlow
@@ -21,11 +18,10 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onStart
-import toTableThreadReply
 
 class ThreadRepositoryImpl(
     private val db: Database,
-    private val api: NmbXdApi,
+    private val nmbSource: NmbSource,
 ) : ThreadRepository {
 
     override fun getThreadDetail(id: Long, forceRefresh: Boolean): Flow<Post> =
@@ -37,15 +33,7 @@ class ThreadRepositoryImpl(
                 val needsFetch =
                     forceRefresh || db.threadQueries.getThread(id).executeAsOneOrNull() == null
                 if (needsFetch) {
-                    val result = api.thread(id, 1)
-                    if (result is SaniouResponse.Success) {
-                        val threadDetail = result.data
-                        db.transaction {
-                            db.threadQueries.upsertThread(threadDetail.toTable(1))
-                            threadDetail.toTableThreadReply(1)
-                                .forEach(db.threadReplyQueries::upsertThreadReply)
-                        }
-                    }
+                    nmbSource.getThreadRepliesByPage(id, 1)
                 }
             }
             .flowOn(Dispatchers.IO)
@@ -60,22 +48,12 @@ class ThreadRepositoryImpl(
         } else {
             null
         }
-        return Pager(
-            config = PagingConfig(
-                pageSize = 19,
-                enablePlaceholders = false,
-                initialLoadSize = 19
-            ),
-            initialKey = initialPage,
-            pagingSourceFactory = {
-                ThreadRepliesPagingSource(
-                    api = api,
-                    db = db,
-                    threadId = threadId,
-                    poUserHash = poUserHash
-                )
-            }
-        ).flow.map { pagingData ->
+        return nmbSource.getThreadRepliesPager(
+            threadId = threadId,
+            poUserHash = poUserHash,
+            policy = DataPolicy.CACHE_ELSE_NETWORK,
+            initialPage = initialPage
+        ).map { pagingData ->
             pagingData.map { it.toDomain() }
         }
     }

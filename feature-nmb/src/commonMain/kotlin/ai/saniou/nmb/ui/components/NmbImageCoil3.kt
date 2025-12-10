@@ -1,6 +1,6 @@
 //package ai.saniou.nmb.ui.components
 //
-//import ai.saniou.nmb.data.manager.CdnManager
+//import ai.saniou.thread.data.manager.CdnManager
 //import ai.saniou.nmb.di.nmbdi
 //import androidx.compose.foundation.background
 //import androidx.compose.foundation.border

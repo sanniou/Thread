@@ -1,4 +1,4 @@
-package ai.saniou.nmb.data.storage
+package ai.saniou.thread.data.storage
 
 import platform.Foundation.NSDocumentDirectory
 import platform.Foundation.NSSearchPathForDirectoriesInDomains

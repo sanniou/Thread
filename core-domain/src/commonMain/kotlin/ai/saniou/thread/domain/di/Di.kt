@@ -6,6 +6,7 @@ import ai.saniou.thread.domain.usecase.GetForumDetailUseCase
 import ai.saniou.thread.domain.usecase.GetForumNameUseCase
 import ai.saniou.thread.domain.usecase.GetForumsUseCase
 import ai.saniou.thread.domain.usecase.GetForumThreadsPagingUseCase
+import ai.saniou.thread.domain.usecase.GetGreetImageUseCase
 import ai.saniou.thread.domain.usecase.GetHistoryThreadsUseCase
 import ai.saniou.thread.domain.usecase.GetNmbForumPageUseCase
 import ai.saniou.thread.domain.usecase.GetNoticeUseCase
@@ -75,4 +76,7 @@ val domainModule = DI.Module("domainModule") {
     bindProvider { GetThreadDetailUseCase(instance()) }
     bindProvider { GetThreadRepliesPagingUseCase(instance()) }
     bindProvider { GetThreadImagesUseCase(instance()) }
+
+    // Other UseCases
+    bindProvider { GetGreetImageUseCase(instance()) }
 }

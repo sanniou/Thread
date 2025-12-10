@@ -1,6 +1,5 @@
 package ai.saniou.nmb.workflow.thread
 
-import ai.saniou.nmb.data.storage.SubscriptionStorage
 import ai.saniou.nmb.db.Database
 import ai.saniou.nmb.workflow.thread.ThreadContract.Effect
 import ai.saniou.nmb.workflow.thread.ThreadContract.Event
@@ -8,6 +7,7 @@ import ai.saniou.nmb.workflow.thread.ThreadContract.State
 import ai.saniou.thread.data.source.nmb.NmbSource
 import ai.saniou.thread.domain.model.Post
 import ai.saniou.thread.domain.model.ThreadReply
+import ai.saniou.thread.domain.repository.SubscriptionRepository
 import ai.saniou.thread.domain.usecase.AddBookmarkUseCase
 import ai.saniou.thread.domain.usecase.GetThreadDetailUseCase
 import ai.saniou.thread.domain.usecase.GetThreadRepliesPagingUseCase
@@ -38,7 +38,7 @@ class ThreadViewModel(
     private val nmbRepository: NmbSource,
     private val toggleSubscriptionUseCase: ToggleSubscriptionUseCase,
     private val addBookmarkUseCase: AddBookmarkUseCase,
-    private val subscriptionStorage: SubscriptionStorage,
+    private val subscriptionRepository: SubscriptionRepository,
     private val db: Database,
 ) : ScreenModel {
 
@@ -71,7 +71,6 @@ class ThreadViewModel(
         _state.update { it.copy(replies = replies) }
 
         screenModelScope.launch {
-            subscriptionStorage.loadLastSubscriptionId()
             observeSubscriptionStatus()
             loadRequest.collect { request ->
                 _state.update { it.copy(isPoOnlyMode = request.isPoOnly) }
@@ -145,9 +144,9 @@ class ThreadViewModel(
     }
 
     private fun observeSubscriptionStatus() {
-        val subscriptionKey = subscriptionStorage.subscriptionId.value ?: throw IllegalStateException("未设置订阅ID")
+        val subscriptionKey = subscriptionRepository.activeSubscriptionKey.value ?: return
         screenModelScope.launch {
-            nmbRepository.observeIsSubscribed(subscriptionKey, threadId).collect { isSubscribed ->
+            subscriptionRepository.isSubscribed(subscriptionKey, threadId.toString()).collect { isSubscribed ->
                 _state.update { it.copy(isSubscribed = isSubscribed) }
             }
         }
@@ -162,7 +161,7 @@ class ThreadViewModel(
         val currentSubscribed = state.value.isSubscribed
         screenModelScope.launch {
             val subscriptionKey =
-                subscriptionStorage.subscriptionId.value ?: throw IllegalStateException("未设置订阅ID")
+                subscriptionRepository.activeSubscriptionKey.value ?: throw IllegalStateException("未设置订阅ID")
             toggleSubscriptionUseCase(subscriptionKey, thread.id.toString(), currentSubscribed)
                 .onSuccess { resultMessage ->
                     // UI state will be updated by the database flow

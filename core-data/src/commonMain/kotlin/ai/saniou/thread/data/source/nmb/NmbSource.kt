@@ -74,10 +74,9 @@ class NmbSource(
         }
 
         // 3. Query from database and return
-        val forumsFromDb = db.forumQueries.getAllForum().asFlow().mapToList(Dispatchers.IO).first()
-        val timelines = db.timeLineQueries.getAllTimeLines().asFlow().mapToList(Dispatchers.IO).first()
-        val categories = db.forumQueries.getAllForumCategory().asFlow().mapToList(Dispatchers.IO).first()
-            .associateBy { it.id }
+        val forumsFromDb = db.forumQueries.getAllForum().executeAsList()
+        val timelines = db.timeLineQueries.getAllTimeLines().executeAsList()
+        val categories = db.forumQueries.getAllForumCategory().executeAsList().associateBy { it.id }
 
         val forums = forumsFromDb.map { forum ->
             forum.toDomain().copy(
@@ -274,22 +273,6 @@ class NmbSource(
         )
     }
 
-    suspend fun deleteCookie(cookie: String) {
-        db.cookieQueries.deleteCookie(cookie)
-    }
-
-    suspend fun updateCookiesSort(cookies: List<Cookie>) {
-        db.cookieQueries.transaction {
-            cookies.forEachIndexed { index, cookie ->
-                db.cookieQueries.updateCookieSort(index.toLong(), cookie.cookie)
-            }
-        }
-    }
-
-    suspend fun getFirstCookie(): Cookie? {
-        return db.cookieQueries.getSortedCookies().asFlow().mapToList(Dispatchers.Default).first()
-            .firstOrNull()
-    }
 
     /**
      * 获取引用的回复内容

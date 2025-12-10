@@ -40,4 +40,16 @@ interface ForumRepository {
      * @return 包含板块详情的 Flow
      */
     fun getForumDetail(fid: Long): Flow<Forum?>
+
+    /**
+     * 保存最后打开的板块
+     * @param forum 要保存的板块，如果为null则清除记录
+     */
+    suspend fun saveLastOpenedForum(forum: Forum?)
+
+    /**
+     * 获取最后打开的板块
+     * @return 最后打开的板块，如果不存在则为null
+     */
+    suspend fun getLastOpenedForum(): Forum?
 }

@@ -3,11 +3,18 @@ package ai.saniou.thread.domain.repository
 import ai.saniou.thread.domain.model.Post
 import app.cash.paging.PagingData
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 
 /**
  * 订阅仓库接口，定义了订阅功能的标准契约。
  */
 interface SubscriptionRepository {
+
+    /**
+     * 当前激活的订阅Key。
+     * UI层应观察此Flow以获取当前操作的订阅目标。
+     */
+    val activeSubscriptionKey: StateFlow<String?>
 
     /**
      * 获取指定订阅ID的帖子流。
@@ -50,4 +57,33 @@ interface SubscriptionRepository {
      * @return 如果存在本地订阅，则返回 true。
      */
     suspend fun hasLocalSubscriptions(subscriptionKey: String): Boolean
+
+    /**
+     * 获取所有订阅Key。
+     * @return 一个包含所有订阅Key的Flow。
+     */
+    fun getSubscriptionKeys(): Flow<List<String>>
+
+    /**
+     * 添加一个新的订阅Key，并将其设为当前激活。
+     * @param key 要添加的订阅Key。
+     */
+    suspend fun addSubscriptionKey(key: String)
+
+    /**
+     * 从持久化存储中加载并设置当前激活的订阅Key。
+     */
+    suspend fun loadActiveSubscriptionKey()
+
+    /**
+     * 设置并持久化当前激活的订阅Key。
+     * @param key 要设为激活的订阅Key。
+     */
+    suspend fun setActiveSubscriptionKey(key: String)
+
+    /**
+     * 生成一个随机的订阅ID。
+     * @return 随机生成的UUID字符串。
+     */
+    fun generateRandomSubscriptionId(): String
 }

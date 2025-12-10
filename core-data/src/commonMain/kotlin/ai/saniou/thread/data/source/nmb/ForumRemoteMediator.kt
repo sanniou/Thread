@@ -56,50 +56,87 @@ class ForumRemoteMediator(
             else -> TODO("Unsupported load type: $loadType")
         }
 
-        // CACHE_FIRST 策略：在刷新时检查缓存
-        if (loadType == LoadType.REFRESH && dataPolicy == DataPolicy.CACHE_FIRST) {
-            val threadsInDb = threadQueries.countThreadsByFidAndPage(sourceId, page).executeAsOne()
-            if (threadsInDb > 0) {
-                return RemoteMediatorMediatorResultSuccess(endOfPaginationReached = false) as RemoteMediatorMediatorResult
-            }
-        }
+        // 根据策略决定是否发起网络请求
+        when (dataPolicy) {
+            DataPolicy.NETWORK_ELSE_CACHE -> {
+                return when (val result = fetcher(page.toInt())) {
+                    is SaniouResponse.Success -> {
+                        val forums = result.data
+                        val endOfPagination = forums.isEmpty()
 
-        return when (val result = fetcher(page.toInt())) {
-            is SaniouResponse.Success -> {
-                val forums = result.data
-                val endOfPagination = forums.isEmpty()
+                        db.transaction {
+                            if (loadType == LoadType.REFRESH) {
+                                threadQueries.deleteThreadsByFidAndPage(sourceId, page.toLong())
+                            }
 
-                db.transaction {
-                    if (loadType == LoadType.REFRESH) {
-                        // API_FIRST 策略：只清理当前页，而不是整个列表
-                        threadQueries.deleteThreadsByFidAndPage(sourceId, page.toLong())
+                            val prevKey = if (page == 1L) null else page - 1
+                            val nextKey = if (endOfPagination) null else page + 1
+
+                            forums.forEach { forum ->
+                                threadQueries.upsertThread(forum.toTable(page.toLong()))
+                                threadQueries.upsertThreadInformation(
+                                    id = forum.id,
+                                    remainReplies = forum.remainReplies,
+                                    lastKey = forum.replies.lastOrNull()?.id ?: forum.id
+                                )
+                                forum.toTableReply().forEach(db.threadReplyQueries::upsertThreadReply)
+                            }
+                            remoteKeyQueries.insertKey(
+                                type = RemoteKeyType.FORUM,
+                                id = sourceId.toString(),
+                                prevKey = prevKey?.toLong(),
+                                currKey = page.toLong(),
+                                nextKey = nextKey?.toLong(),
+                                updateAt = Clock.System.now().toEpochMilliseconds(),
+                            )
+                        }
+                        RemoteMediatorMediatorResultSuccess(endOfPaginationReached = endOfPagination) as RemoteMediatorMediatorResult
                     }
-
-                    val prevKey = if (page == 1L) null else page - 1
-                    val nextKey = if (endOfPagination) null else page + 1
-
-                    forums.forEach { forum ->
-                        threadQueries.upsertThread(forum.toTable(page.toLong()))
-                        threadQueries.upsertThreadInformation(
-                            id = forum.id,
-                            remainReplies = forum.remainReplies,
-                            lastKey = forum.replies.lastOrNull()?.id ?: forum.id
-                        )
-                        forum.toTableReply().forEach(db.threadReplyQueries::upsertThreadReply)
+                    is SaniouResponse.Error -> {
+                        // 网络失败时，依赖本地缓存，所以返回成功让 PagingSource 加载
+                        RemoteMediatorMediatorResultSuccess(endOfPaginationReached = true) as RemoteMediatorMediatorResult
                     }
-                    remoteKeyQueries.insertKey(
-                        type = RemoteKeyType.FORUM,
-                        id = sourceId.toString(),
-                        prevKey = prevKey?.toLong(),
-                        currKey = page.toLong(),
-                        nextKey = nextKey?.toLong(),
-                        updateAt = Clock.System.now().toEpochMilliseconds(),
-                    )
                 }
-                RemoteMediatorMediatorResultSuccess(endOfPaginationReached = endOfPagination) as RemoteMediatorMediatorResult
             }
+            DataPolicy.CACHE_ELSE_NETWORK -> {
+                val threadsInDb = threadQueries.countThreadsByFidAndPage(sourceId, page).executeAsOne()
+                if (threadsInDb > 0) {
+                    return RemoteMediatorMediatorResultSuccess(endOfPaginationReached = false) as RemoteMediatorMediatorResult
+                }
+                // 缓存不存在，流程同上
+                return when (val result = fetcher(page.toInt())) {
+                    is SaniouResponse.Success -> {
+                        val forums = result.data
+                        val endOfPagination = forums.isEmpty()
 
-            is SaniouResponse.Error -> RemoteMediatorMediatorResultError(result.ex) as RemoteMediatorMediatorResult
+                        db.transaction {
+                            val prevKey = if (page == 1L) null else page - 1
+                            val nextKey = if (endOfPagination) null else page + 1
+
+                            forums.forEach { forum ->
+                                threadQueries.upsertThread(forum.toTable(page.toLong()))
+                                threadQueries.upsertThreadInformation(
+                                    id = forum.id,
+                                    remainReplies = forum.remainReplies,
+                                    lastKey = forum.replies.lastOrNull()?.id ?: forum.id
+                                )
+                                forum.toTableReply().forEach(db.threadReplyQueries::upsertThreadReply)
+                            }
+                            remoteKeyQueries.insertKey(
+                                type = RemoteKeyType.FORUM,
+                                id = sourceId.toString(),
+                                prevKey = prevKey?.toLong(),
+                                currKey = page.toLong(),
+                                nextKey = nextKey?.toLong(),
+                                updateAt = Clock.System.now().toEpochMilliseconds(),
+                            )
+                        }
+                        RemoteMediatorMediatorResultSuccess(endOfPaginationReached = endOfPagination) as RemoteMediatorMediatorResult
+                    }
+                    is SaniouResponse.Error -> RemoteMediatorMediatorResultError(result.ex) as RemoteMediatorMediatorResult
+                }
+            }
+            else -> return RemoteMediatorMediatorResultSuccess(endOfPaginationReached = true) as RemoteMediatorMediatorResult // CACHE_ONLY or NETWORK_ONLY
         }
     }
 

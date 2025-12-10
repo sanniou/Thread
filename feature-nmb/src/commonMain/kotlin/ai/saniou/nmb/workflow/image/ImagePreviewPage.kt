@@ -3,9 +3,9 @@ package ai.saniou.nmb.workflow.image
 import ai.saniou.coreui.widgets.PhotoPagerBackground
 import ai.saniou.coreui.widgets.ZoomAsyncImage
 import ai.saniou.coreui.widgets.palette.PhotoPalette
-import ai.saniou.nmb.data.manager.CdnManager
 import ai.saniou.nmb.di.nmbdi
 import ai.saniou.nmb.workflow.image.ImagePreviewContract.Event
+import ai.saniou.thread.data.manager.CdnManager
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background

@@ -1,6 +1,6 @@
 package ai.saniou.nmb.workflow.image
 
-import ai.saniou.nmb.data.manager.CdnManager
+import ai.saniou.thread.data.manager.CdnManager
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

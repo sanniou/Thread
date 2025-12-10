@@ -1,4 +1,4 @@
-package ai.saniou.nmb.data.storage
+package ai.saniou.thread.data.storage
 
 import android.content.Context
 import ai.saniou.nmb.NmbApplication

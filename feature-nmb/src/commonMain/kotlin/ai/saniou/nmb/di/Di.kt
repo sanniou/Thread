@@ -17,7 +17,6 @@ import ai.saniou.nmb.workflow.trend.TrendViewModel
 import ai.saniou.nmb.workflow.user.UserDetailViewModel
 import ai.saniou.nmb.workflow.user.UserViewModel
 import ai.saniou.thread.data.di.dataModule
-import ai.saniou.thread.data.source.nmb.NmbSource
 import ai.saniou.thread.domain.di.domainModule
 import ai.saniou.thread.network.SaniouKtorfit
 import de.jensklingenberg.ktorfit.Ktorfit
@@ -59,7 +58,7 @@ val nmbFeatureModule = DI.Module("nmbFeatureModule") {
             getNmbForumPageUseCase = instance(),
             toggleFavoriteUseCase = instance(),
             appInitializer = instance(),
-            categoryStorage = instance()
+            forumRepository = instance()
         )
     }
 
@@ -123,6 +122,4 @@ val nmbdi = DI {
     import(dataModule)
     import(nmbImagePreviewModule)
     import(nmbFeatureModule)
-    // 测试用，理论上不该直接使用 source
-    bindProvider { NmbSource(instance(), instance()) }
 }
