@@ -40,9 +40,16 @@ import ai.saniou.thread.domain.repository.SyncRepository
 import ai.saniou.thread.domain.repository.TagRepository
 import ai.saniou.thread.domain.repository.ThreadRepository
 import ai.saniou.thread.domain.repository.TrendRepository
+import ai.saniou.thread.data.parser.FeedParserFactory
+import ai.saniou.thread.data.parser.HtmlParser
+import ai.saniou.thread.data.parser.JsonParser
+import ai.saniou.thread.data.parser.RssParser
+import ai.saniou.thread.data.repository.ReaderRepositoryImpl
+import ai.saniou.thread.domain.repository.ReaderRepository
 import ai.saniou.thread.domain.repository.UserRepository
 import ai.saniou.thread.network.CookieProvider
 import de.jensklingenberg.ktorfit.Ktorfit
+import io.ktor.client.HttpClient
 import org.kodein.di.DI
 import org.kodein.di.bind
 import org.kodein.di.bindConstant
@@ -103,4 +110,14 @@ val dataModule = DI.Module("dataModule") {
     bindSingleton<CdnManager> { CdnManager(instance()) }
     // 数据库
     bindSingleton { createDatabase(DriverFactory()) }
+
+    // Reader Feature
+    bindSingleton { RssParser() }
+    bindSingleton { JsonParser() }
+    bindSingleton { HtmlParser() }
+    bindSingleton { FeedParserFactory(instance(), instance(), instance()) }
+    bindSingleton { HttpClient() } // Use a basic HttpClient
+    bind<ReaderRepository>() with singleton {
+        ReaderRepositoryImpl(instance(), instance(), instance())
+    }
 }

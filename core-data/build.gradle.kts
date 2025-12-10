@@ -47,6 +47,9 @@ kotlin {
             implementation(libs.sqldelight.runtime)
             implementation(libs.sqldelight.paging3)
             implementation(libs.sqldelight.coroutines)
+
+            implementation(libs.ksoup)
+            implementation(libs.xmlutil.serialization)
         }
         androidMain.dependencies {
             implementation(libs.sqldelight.android.driver)

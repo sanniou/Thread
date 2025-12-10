@@ -1,0 +1,36 @@
+CREATE TABLE ArticleEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    feedSourceId TEXT NOT NULL,
+    title TEXT NOT NULL,
+    content TEXT NOT NULL,
+    link TEXT NOT NULL,
+    author TEXT,
+    publishDate INTEGER NOT NULL,
+    isRead INTEGER NOT NULL DEFAULT 0,
+    isBookmarked INTEGER NOT NULL DEFAULT 0,
+    rawData TEXT,
+    FOREIGN KEY(feedSourceId) REFERENCES FeedSourceEntity(id) ON DELETE CASCADE
+);
+
+getArticlesPaging:
+SELECT * FROM ArticleEntity
+WHERE :feedSourceId IS NULL OR feedSourceId = :feedSourceId
+ORDER BY publishDate DESC
+LIMIT :limit OFFSET :offset;
+
+countArticles:
+SELECT count(*) FROM ArticleEntity
+WHERE :feedSourceId IS NULL OR feedSourceId = :feedSourceId;
+
+getArticleById:
+SELECT * FROM ArticleEntity WHERE id = ?;
+
+insertArticle:
+INSERT OR REPLACE INTO ArticleEntity(id, feedSourceId, title, content, link, author, publishDate, isRead, isBookmarked, rawData)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+markArticleAsRead:
+UPDATE ArticleEntity SET isRead = ? WHERE id = ?;
+
+markArticleAsBookmarked:
+UPDATE ArticleEntity SET isBookmarked = ? WHERE id = ?;

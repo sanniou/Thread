@@ -37,12 +37,27 @@ import ai.saniou.thread.domain.usecase.thread.UpdateThreadLastReadReplyIdUseCase
 import ai.saniou.thread.domain.usecase.user.AddCookieUseCase
 import ai.saniou.thread.domain.usecase.user.DeleteCookieUseCase
 import ai.saniou.thread.domain.usecase.user.GetUserProfileUseCase
+import ai.saniou.thread.domain.usecase.reader.AddFeedSourceUseCase
+import ai.saniou.thread.domain.usecase.reader.GetArticlesUseCase
+import ai.saniou.thread.domain.usecase.reader.DeleteFeedSourceUseCase
+import ai.saniou.thread.domain.usecase.reader.*
 import ai.saniou.thread.domain.usecase.user.UpdateCookieSortUseCase
 import org.kodein.di.DI
 import org.kodein.di.bindProvider
 import org.kodein.di.instance
 
 val domainModule = DI.Module("domainModule") {
+
+    // Reader
+    bindProvider { GetFeedSourcesUseCase(instance()) }
+    bindProvider { GetArticleUseCase(instance()) }
+    bindProvider { GetArticlesUseCase(instance()) }
+    bindProvider { AddFeedSourceUseCase(instance()) }
+    bindProvider { UpdateFeedSourceUseCase(instance()) }
+    bindProvider { DeleteFeedSourceUseCase(instance()) }
+    bindProvider { MarkArticleAsReadUseCase(instance()) }
+    bindProvider { RefreshFeedSourceUseCase(instance()) }
+    bindProvider { RefreshAllFeedsUseCase(instance()) }
 
     // Feed
     bindProvider { GetSubscriptionFeedUseCase(instance()) }

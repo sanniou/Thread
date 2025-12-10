@@ -1,6 +1,9 @@
 package ai.saniou.thread
 
-import ai.saniou.thread.feature.cellularautomaton.CellularAutomatonScreen
+import ai.saniou.reader.di.readerModule
+import ai.saniou.reader.workflow.reader.ReaderPage
+import ai.saniou.thread.data.di.dataModule
+import ai.saniou.thread.domain.di.domainModule
 import ai.saniou.thread.feature.cellularautomaton.CellularAutomatonScreen
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -10,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Games
+import androidx.compose.material.icons.filled.RssFeed
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -25,11 +29,21 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import org.kodein.di.DI
+import org.kodein.di.compose.withDI
 
 @Composable
 fun App() {
-    MaterialTheme {
-        Navigator(HomeScreen)
+    val di = DI {
+        import(domainModule)
+        import(dataModule)
+        import(readerModule)
+    }
+
+    withDI(di) {
+        MaterialTheme {
+            Navigator(HomeScreen)
+        }
     }
 }
 
@@ -69,6 +83,27 @@ object HomeScreen : Screen {
                         }
                     )
                 }
+                ElevatedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = { navigator.push(ReaderRoute) }
+                ) {
+                    ListItem(
+                        headlineContent = { Text("阅读器") },
+                        supportingContent = { Text("一个支持 RSS, JSON, HTML 的订阅阅读器。") },
+                        leadingContent = {
+                            Icon(
+                                Icons.Default.RssFeed,
+                                contentDescription = "Reader"
+                            )
+                        },
+                        trailingContent = {
+                            Icon(
+                                Icons.Default.ChevronRight,
+                                contentDescription = "Enter"
+                            )
+                        }
+                    )
+                }
             }
         }
     }
@@ -78,5 +113,12 @@ object CellularAutomatonRoute : Screen {
     @Composable
     override fun Content() {
         CellularAutomatonScreen()
+    }
+}
+
+object ReaderRoute : Screen {
+    @Composable
+    override fun Content() {
+        ReaderPage().Content()
     }
 }

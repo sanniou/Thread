@@ -37,6 +37,8 @@ zoomimage = "1.4.0"
 cashPaging = "3.3.0-alpha02-0.5.1"
 reorderable = "3.0.0"
 kmpalette = "3.1.0"
+ksoup = "0.2.0"
+xmlutil = "0.91.3"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -133,6 +135,9 @@ kmpalette-extensions-base64 = { module = "com.kmpalette:extensions-base64", vers
 kmpalette-extensions-bytearray = { module = "com.kmpalette:extensions-bytearray", version.ref = "kmpalette" }
 kmpalette-extensions-network = { module = "com.kmpalette:extensions-network", version.ref = "kmpalette" }
 kmpalette-extensions-file = { module = "com.kmpalette:extensions-file", version.ref = "kmpalette" }
+
+ksoup = { module = "com.fleeksoft.ksoup:ksoup", version.ref = "ksoup" }
+xmlutil-serialization = { module = "io.github.pdvrieze.xmlutil:serialization", version.ref = "xmlutil" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

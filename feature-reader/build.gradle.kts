@@ -1,17 +1,20 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
-import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
-import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.composeHotReload)
+    alias(libs.plugins.kotlinxSerialization)
+    alias(libs.plugins.ksp)
 }
 
 kotlin {
+    sourceSets.all {
+        languageSettings.optIn("kotlin.time.ExperimentalTime")
+    }
     androidTarget {
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_11)
@@ -23,7 +26,7 @@ kotlin {
         iosSimulatorArm64()
     ).forEach { iosTarget ->
         iosTarget.binaries.framework {
-            baseName = "ComposeApp"
+            baseName = "Reader"
             isStatic = true
         }
     }
@@ -35,12 +38,6 @@ kotlin {
         binaries.executable()
     }
 
-//    @OptIn(ExperimentalWasmDsl::class)
-//    wasmJs {
-//        browser()
-//        binaries.executable()
-//    }
-
     sourceSets {
         androidMain.dependencies {
             implementation(compose.preview)
@@ -48,10 +45,16 @@ kotlin {
         }
         commonMain.dependencies {
             implementation(project(":core-ui"))
+            implementation(project(":core-common"))
             implementation(project(":core-data"))
             implementation(project(":core-domain"))
-            implementation(project(":core-common"))
-            implementation(compose.runtime)
+            implementation(project(":core-network"))
+            implementation(libs.ktor.serialization.kotlinx.json)
+            implementation(libs.ktor.client.serialization)
+            implementation(libs.ktor.client.content.negotiation)
+            implementation(libs.ktor.client.logging)
+            implementation(libs.ktor.client.encoding)
+            implementation(libs.ktor.client.cio)
             implementation(compose.foundation)
             implementation(compose.material3)
             implementation(compose.ui)
@@ -59,10 +62,23 @@ kotlin {
             implementation(compose.components.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtimeCompose)
-            implementation(libs.navigation.compose)
             implementation(libs.voyager.navigator)
-//            implementation(project(":feature-nmb"))
-            implementation(project(":feature-reader"))
+            implementation(libs.material3)
+            implementation(libs.material3.window.size)
+            implementation(libs.material3.adaptive.navigation)
+            implementation("org.jetbrains.compose.ui:ui-backhandler:1.8.0")
+            implementation("org.jetbrains.compose.material3.adaptive:adaptive:1.1.0")
+            implementation("org.jetbrains.compose.material3.adaptive:adaptive-layout:1.1.0")
+            implementation("org.jetbrains.compose.material3.adaptive:adaptive-navigation:1.1.0")
+
+            implementation(libs.cash.paging.compose.common)
+            implementation(libs.sqldelight.paging3)
+            implementation(libs.sqldelight.coroutines)
+            implementation(libs.reorderable)
+            implementation(libs.coil.compose)
+        }
+        commonTest.dependencies {
+            implementation(libs.kotlin.test)
         }
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
@@ -72,15 +88,11 @@ kotlin {
 }
 
 android {
-    namespace = "ai.saniou.thread"
+    namespace = "ai.saniou.reader"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "ai.saniou.thread"
         minSdk = libs.versions.android.minSdk.get().toInt()
-        targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 1
-        versionName = "1.0"
     }
     packaging {
         resources {
@@ -102,14 +114,7 @@ dependencies {
     debugImplementation(compose.uiTooling)
 }
 
-compose.desktop {
-    application {
-        mainClass = "ai.saniou.thread.MainKt"
-
-        nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "ai.saniou.thread"
-            packageVersion = "1.0.0"
-        }
-    }
+composeCompiler {
+    // for sketch
+    stabilityConfigurationFile = rootProject.layout.projectDirectory.file("compose_compiler_config.conf")
 }
