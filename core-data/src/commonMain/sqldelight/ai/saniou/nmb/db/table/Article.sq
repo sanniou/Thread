@@ -38,3 +38,9 @@ UPDATE ArticleEntity SET isRead = ? WHERE id = ?;
 
 markArticleAsBookmarked:
 UPDATE ArticleEntity SET isBookmarked = ? WHERE id = ?;
+
+countTotalArticlesByFeedSource:
+SELECT count(*) FROM ArticleEntity WHERE feedSourceId = ?;
+
+countUnreadArticlesByFeedSource:
+SELECT count(*) FROM ArticleEntity WHERE feedSourceId = ? AND isRead = 0;

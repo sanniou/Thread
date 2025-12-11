@@ -12,6 +12,7 @@ import app.cash.paging.PagingData
 import app.cash.paging.map
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
+import app.cash.sqldelight.coroutines.mapToOne
 import app.cash.sqldelight.paging3.QueryPagingSource
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
@@ -19,6 +20,7 @@ import io.ktor.client.statement.bodyAsText
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
@@ -168,6 +170,22 @@ class ReaderRepositoryImpl(
     override suspend fun markArticleAsBookmarked(id: String, isBookmarked: Boolean) {
          withContext(Dispatchers.IO) {
             db.articleQueries.markArticleAsBookmarked(if (isBookmarked) 1L else 0L, id)
+        }
+    }
+
+    override fun getArticleCounts(feedSourceId: String): Flow<Pair<Int, Int>> {
+        val totalFlow = db.articleQueries.countTotalArticlesByFeedSource(feedSourceId)
+            .asFlow()
+            .mapToOne(Dispatchers.IO)
+            .map { it.toInt() }
+
+        val unreadFlow = db.articleQueries.countUnreadArticlesByFeedSource(feedSourceId)
+            .asFlow()
+            .mapToOne(Dispatchers.IO)
+            .map { it.toInt() }
+
+        return combine(totalFlow, unreadFlow) { total, unread ->
+            total to unread
         }
     }
 

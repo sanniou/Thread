@@ -47,6 +47,7 @@ import ai.saniou.thread.data.parser.RssParser
 import ai.saniou.thread.data.repository.ReaderRepositoryImpl
 import ai.saniou.thread.domain.repository.ReaderRepository
 import ai.saniou.thread.domain.repository.UserRepository
+import ai.saniou.thread.domain.usecase.reader.GetArticleCountsUseCase
 import ai.saniou.thread.network.CookieProvider
 import de.jensklingenberg.ktorfit.Ktorfit
 import io.ktor.client.HttpClient
@@ -120,4 +121,5 @@ val dataModule = DI.Module("dataModule") {
     bind<ReaderRepository>() with singleton {
         ReaderRepositoryImpl(instance(), instance(), instance())
     }
+    bind<GetArticleCountsUseCase>() with singleton { GetArticleCountsUseCase(instance()) }
 }

@@ -18,7 +18,8 @@ class ReaderViewModel(
     private val deleteFeedSourceUseCase: DeleteFeedSourceUseCase,
     private val markArticleAsReadUseCase: MarkArticleAsReadUseCase,
     private val refreshFeedSourceUseCase: RefreshFeedSourceUseCase,
-    private val refreshAllFeedsUseCase: RefreshAllFeedsUseCase
+    private val refreshAllFeedsUseCase: RefreshAllFeedsUseCase,
+    private val getArticleCountsUseCase: GetArticleCountsUseCase
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(ReaderContract.State())
@@ -29,6 +30,17 @@ class ReaderViewModel(
         screenModelScope.launch {
             getFeedSourcesUseCase().collect { sources ->
                 _state.update { it.copy(feedSources = sources) }
+                sources.forEach { source ->
+                    launch {
+                        getArticleCountsUseCase(source.id).collect { counts ->
+                            _state.update {
+                                val newCounts = it.articleCounts.toMutableMap()
+                                newCounts[source.id] = counts
+                                it.copy(articleCounts = newCounts)
+                            }
+                        }
+                    }
+                }
             }
         }
         val sourceIdFlow = state.map { it.selectedFeedSourceId }.distinctUntilChanged()

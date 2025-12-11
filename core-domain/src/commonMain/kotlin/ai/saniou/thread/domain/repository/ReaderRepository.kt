@@ -18,7 +18,8 @@ interface ReaderRepository {
     suspend fun getArticle(id: String): Article?
     suspend fun markArticleAsRead(id: String, isRead: Boolean)
     suspend fun markArticleAsBookmarked(id: String, isBookmarked: Boolean)
-    
+    fun getArticleCounts(feedSourceId: String): Flow<Pair<Int, Int>>
+
     // Sync/Refresh
     suspend fun refreshAllFeeds()
     suspend fun refreshFeed(feedSourceId: String)

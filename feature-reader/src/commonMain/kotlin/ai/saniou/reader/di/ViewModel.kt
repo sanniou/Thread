@@ -17,6 +17,7 @@ val readerViewModelModule = DI.Module("readerViewModelModule") {
             instance(),
             instance(),
             instance(),
+            instance(),
             instance()
         )
     }

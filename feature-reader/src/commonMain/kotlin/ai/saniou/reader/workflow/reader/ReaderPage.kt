@@ -105,8 +105,10 @@ class ReaderPage : Screen {
                         )
                     }
                     items(state.feedSources) { source ->
+                        val counts = state.articleCounts[source.id]
                         FeedSourceItem(
                             source = source,
+                            unreadCount = counts?.second ?: 0,
                             onClick = { viewModel.onEvent(ReaderContract.Event.OnSelectFeedSource(source.id)) },
                             onEdit = { editingSource = source },
                             onDelete = { viewModel.onEvent(ReaderContract.Event.OnDeleteSource(source.id)) },
@@ -171,6 +173,7 @@ class ReaderPage : Screen {
 @Composable
 fun FeedSourceItem(
     source: FeedSource,
+    unreadCount: Int,
     onClick: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
@@ -194,6 +197,9 @@ fun FeedSourceItem(
         ),
         trailingContent = {
             Row(verticalAlignment = Alignment.CenterVertically) {
+                if (unreadCount > 0) {
+                    Badge { Text(unreadCount.toString()) }
+                }
                 if (source.isRefreshing) {
                     CircularProgressIndicator(modifier = Modifier.size(24.dp))
                 }
@@ -283,7 +289,7 @@ fun ArticleItem(article: Article, sourceName: String, onClick: () -> Unit) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1
                 )
-                
+
                 Spacer(modifier = Modifier.weight(1f))
 
                 if (article.isBookmarked) {

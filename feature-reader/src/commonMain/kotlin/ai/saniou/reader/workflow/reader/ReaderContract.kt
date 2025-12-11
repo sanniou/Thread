@@ -1,18 +1,16 @@
 package ai.saniou.reader.workflow.reader
 
-import ai.saniou.thread.domain.model.Article
 import ai.saniou.thread.domain.model.FeedSource
-import kotlinx.coroutines.flow.Flow
 
 interface ReaderContract {
     data class State(
         val feedSources: List<FeedSource> = emptyList(),
         val selectedFeedSourceId: String? = null,
-        val isLoading: Boolean = false,
         val error: Throwable? = null,
         val isDialogShown: Boolean = false,
         val editingSource: FeedSource? = null,
-        val searchQuery: String = ""
+        val articleCounts: Map<String, Pair<Int, Int>> = emptyMap(),
+        val searchQuery: String = "",
     )
 
     sealed interface Event {
