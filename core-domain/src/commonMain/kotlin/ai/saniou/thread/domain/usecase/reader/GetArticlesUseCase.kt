@@ -6,5 +6,8 @@ import app.cash.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 
 class GetArticlesUseCase(private val repository: ReaderRepository) {
-    operator fun invoke(feedSourceId: String? = null): Flow<PagingData<Article>> = repository.getArticlesPaging(feedSourceId)
+    operator fun invoke(
+        feedSourceId: String? = null,
+        query: String = ""
+    ): Flow<PagingData<Article>> = repository.getArticlesPaging(feedSourceId, query)
 }

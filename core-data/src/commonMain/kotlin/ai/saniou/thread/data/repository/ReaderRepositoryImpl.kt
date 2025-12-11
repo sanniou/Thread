@@ -105,16 +105,16 @@ class ReaderRepositoryImpl(
         }
     }
 
-    override fun getArticlesPaging(feedSourceId: String?): Flow<PagingData<Article>> {
+    override fun getArticlesPaging(feedSourceId: String?, query: String): Flow<PagingData<Article>> {
         return Pager(
             config = PagingConfig(pageSize = 20),
             pagingSourceFactory = {
                 QueryPagingSource(
-                    countQuery = db.articleQueries.countArticles(feedSourceId),
+                    countQuery = db.articleQueries.countArticles(feedSourceId, query),
                     transacter = db.articleQueries,
                     context = Dispatchers.IO,
                     queryProvider = { limit, offset ->
-                        db.articleQueries.getArticlesPaging(feedSourceId, limit, offset)
+                        db.articleQueries.getArticlesPaging(feedSourceId, query, limit, offset)
                     }
                 )
             }

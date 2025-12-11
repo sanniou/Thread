@@ -3,12 +3,11 @@ package ai.saniou.reader.workflow.reader
 import ai.saniou.thread.domain.model.Article
 import ai.saniou.thread.domain.model.FeedSource
 import ai.saniou.thread.domain.usecase.reader.*
+import app.cash.paging.PagingData
+import app.cash.paging.cachedIn
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 class ReaderViewModel(
@@ -24,6 +23,7 @@ class ReaderViewModel(
 
     private val _state = MutableStateFlow(ReaderContract.State())
     val state: StateFlow<ReaderContract.State> = _state.asStateFlow()
+    val articles: Flow<PagingData<Article>>
 
     init {
         screenModelScope.launch {
@@ -31,7 +31,15 @@ class ReaderViewModel(
                 _state.update { it.copy(feedSources = sources) }
             }
         }
-        loadArticles(null)
+        val sourceIdFlow = state.map { it.selectedFeedSourceId }.distinctUntilChanged()
+        // 防抖处理，避免用户输入时频繁请求
+        val queryFlow = state.map { it.searchQuery }.distinctUntilChanged().debounce(300L)
+
+        articles = combine(sourceIdFlow, queryFlow) { sourceId, query ->
+            sourceId to query
+        }.flatMapLatest { (sourceId, query) ->
+            getArticlesUseCase(sourceId, query)
+        }.cachedIn(screenModelScope)
     }
 
     fun onEvent(event: ReaderContract.Event) {
@@ -45,17 +53,16 @@ class ReaderViewModel(
             is ReaderContract.Event.OnSaveSource -> saveSource(event.source)
             is ReaderContract.Event.OnDeleteSource -> deleteSource(event.id)
             is ReaderContract.Event.OnMarkArticleAsRead -> markArticleAsRead(event.id, event.isRead)
+            is ReaderContract.Event.OnSearchQueryChanged -> onSearchQueryChanged(event.query)
         }
+    }
+
+    private fun onSearchQueryChanged(query: String) {
+        _state.update { it.copy(searchQuery = query) }
     }
 
     private fun selectFeedSource(id: String?) {
         _state.update { it.copy(selectedFeedSourceId = id) }
-        loadArticles(id)
-    }
-
-    private fun loadArticles(feedSourceId: String?) {
-        val articles = getArticlesUseCase(feedSourceId)
-        _state.update { it.copy(articles = articles) }
     }
 
     private fun showDialog(source: FeedSource?) {

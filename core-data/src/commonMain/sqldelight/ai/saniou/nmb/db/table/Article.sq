@@ -16,13 +16,15 @@ CREATE TABLE ArticleEntity (
 
 getArticlesPaging:
 SELECT * FROM ArticleEntity
-WHERE :feedSourceId IS NULL OR feedSourceId = :feedSourceId
+WHERE (:feedSourceId IS NULL OR feedSourceId = :feedSourceId)
+  AND (:query = '' OR title LIKE '%' || :query || '%' OR content LIKE '%' || :query || '%')
 ORDER BY publishDate DESC
 LIMIT :limit OFFSET :offset;
 
 countArticles:
 SELECT count(*) FROM ArticleEntity
-WHERE :feedSourceId IS NULL OR feedSourceId = :feedSourceId;
+WHERE (:feedSourceId IS NULL OR feedSourceId = :feedSourceId)
+  AND (:query = '' OR title LIKE '%' || :query || '%' OR content LIKE '%' || :query || '%');
 
 getArticleById:
 SELECT * FROM ArticleEntity WHERE id = ?;

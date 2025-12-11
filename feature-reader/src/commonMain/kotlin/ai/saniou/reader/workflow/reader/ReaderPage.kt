@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -41,7 +42,7 @@ class ReaderPage : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val viewModel = rememberScreenModel<ReaderViewModel>()
         val state by viewModel.state.collectAsState()
-        val articles = state.articles.collectAsLazyPagingItems()
+        val articles = viewModel.articles.collectAsLazyPagingItems()
         var isAddSheetShown by remember { mutableStateOf(false) }
         var editingSource by remember { mutableStateOf<FeedSource?>(null) }
 
@@ -66,7 +67,16 @@ class ReaderPage : Screen {
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text("Reader") },
+                    title = {
+                        OutlinedTextField(
+                            value = state.searchQuery,
+                            onValueChange = { viewModel.onEvent(ReaderContract.Event.OnSearchQueryChanged(it)) },
+                            placeholder = { Text("Search articles...") },
+                            leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") },
+                            modifier = Modifier.fillMaxWidth().padding(end = 8.dp),
+                            singleLine = true
+                        )
+                    },
                     actions = {
                         IconButton(onClick = { viewModel.onEvent(ReaderContract.Event.OnRefreshAll) }) {
                             Icon(Icons.Default.Refresh, contentDescription = "Refresh All")
@@ -99,7 +109,8 @@ class ReaderPage : Screen {
                             source = source,
                             onClick = { viewModel.onEvent(ReaderContract.Event.OnSelectFeedSource(source.id)) },
                             onEdit = { editingSource = source },
-                            onDelete = { viewModel.onEvent(ReaderContract.Event.OnDeleteSource(source.id)) }
+                            onDelete = { viewModel.onEvent(ReaderContract.Event.OnDeleteSource(source.id)) },
+                            onRefresh = { viewModel.onEvent(ReaderContract.Event.OnRefreshFeedSource(source.id)) }
                         )
                     }
                 }
@@ -162,7 +173,8 @@ fun FeedSourceItem(
     source: FeedSource,
     onClick: () -> Unit,
     onEdit: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onRefresh: () -> Unit
 ) {
     var showMenu by remember { mutableStateOf(false) }
     val lastUpdate = remember(source.lastUpdate) {
@@ -200,6 +212,13 @@ fun FeedSourceItem(
             text = { Text("Edit") },
             onClick = {
                 onEdit()
+                showMenu = false
+            }
+        )
+        DropdownMenuItem(
+            text = { Text("Refresh") },
+            onClick = {
+                onRefresh()
                 showMenu = false
             }
         )
