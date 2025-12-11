@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
@@ -111,8 +112,10 @@ class ReaderPage : Screen {
                                     items(articles.itemCount) { index ->
                                         val article = articles[index]
                                         if (article != null) {
+                                            val sourceName = state.feedSources.find { it.id == article.feedSourceId }?.name ?: "Unknown Source"
                                             ArticleItem(
                                                 article = article,
+                                                sourceName = sourceName,
                                                 onClick = {
                                                     viewModel.onEvent(ReaderContract.Event.OnMarkArticleAsRead(article.id, true))
                                                     navigator.push(ArticleDetailPage(article.id))
@@ -196,9 +199,16 @@ fun FeedSourceItem(
 }
 
 @Composable
-fun ArticleItem(article: Article, onClick: () -> Unit) {
+fun ArticleItem(article: Article, sourceName: String, onClick: () -> Unit) {
     val titleColor = if (article.isRead) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f) else MaterialTheme.colorScheme.onSurface
     val fontWeight = if (article.isRead) FontWeight.Normal else FontWeight.Bold
+    val publishDate = remember(article.publishDate) {
+        article.publishDate
+            .toLocalDateTime(TimeZone.currentSystemDefault())
+            .toString()
+            .replace("T", " ")
+            .substringBeforeLast(":") // Format to HH:mm
+    }
 
     Card(
         modifier = Modifier
@@ -207,12 +217,58 @@ fun ArticleItem(article: Article, onClick: () -> Unit) {
             .clickable(onClick = onClick)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = sourceName,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    maxLines = 1
+                )
+
+                if (!article.author.isNullOrBlank()) {
+                    Text(
+                        text = "•",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = article.author!!,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1
+                    )
+                }
+
+                Text(
+                    text = publishDate,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1
+                )
+                
+                Spacer(modifier = Modifier.weight(1f))
+
+                if (article.isBookmarked) {
+                    Icon(
+                        imageVector = Icons.Default.Bookmark,
+                        contentDescription = "Bookmarked",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = article.title,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = fontWeight,
                 color = titleColor
             )
+            Spacer(modifier = Modifier.height(4.dp))
             RichText(
                 text = article.content,
                 style = MaterialTheme.typography.bodyMedium,

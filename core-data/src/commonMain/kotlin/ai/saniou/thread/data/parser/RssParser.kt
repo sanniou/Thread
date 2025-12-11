@@ -28,6 +28,7 @@ class RssParser : FeedParser {
                     title = title,
                     content = item.description ?: "",
                     link = link,
+                    author = item.creator,
                     publishDate = item.pubDate?.let { parseRssDate(it) } ?: Clock.System.now(),
                     isRead = false,
                     isBookmarked = false
