@@ -1,16 +1,19 @@
 package ai.saniou.reader.workflow.articledetail
 
+import ai.saniou.coreui.widgets.RichText
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Public
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.kodein.rememberScreenModel
@@ -25,6 +28,7 @@ data class ArticleDetailPage(val articleId: String) : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val viewModel: ArticleDetailViewModel = rememberScreenModel(arg = articleId)
         val state by viewModel.state.collectAsState()
+        val uriHandler = LocalUriHandler.current
 
         Scaffold(
             topBar = {
@@ -33,6 +37,13 @@ data class ArticleDetailPage(val articleId: String) : Screen {
                     navigationIcon = {
                         IconButton(onClick = { navigator.pop() }) {
                             Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        }
+                    },
+                    actions = {
+                        state.article?.link?.let { url ->
+                            IconButton(onClick = { uriHandler.openUri(url) }) {
+                                Icon(Icons.Default.Public, contentDescription = "Open in Browser")
+                            }
                         }
                     }
                 )
@@ -58,8 +69,10 @@ data class ArticleDetailPage(val articleId: String) : Screen {
                         Text(article.author ?: "", style = MaterialTheme.typography.labelMedium)
                         Text(article.publishDate.toString(), style = MaterialTheme.typography.labelSmall)
                         Divider(modifier = Modifier.padding(vertical = 16.dp))
-                        // TODO: Render HTML content safely
-                        Text(article.content)
+                        RichText(
+                            text = article.content,
+                            style = MaterialTheme.typography.bodyLarge
+                        )
                     }
                 }
             }

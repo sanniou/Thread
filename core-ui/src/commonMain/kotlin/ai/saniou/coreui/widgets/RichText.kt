@@ -136,9 +136,30 @@ private fun parseHtml(
     onSpoilerClick: (Int) -> Unit,
     spoilerBackgroundColor: Color,
 ): AnnotatedString {
-    // 1. 预处理：解码HTML实体并将<br>替换为换行符
-    var cleanHtml =
-        decodeHtmlEntities(html).replace(Regex("<br\\s*/?>", RegexOption.IGNORE_CASE), "\n")
+    // 1. 预处理
+    var cleanHtml = html
+        // 1.1 处理结构化标签 (在解码实体之前处理，以免实体解码产生干扰)
+        // 策略：对于块级元素，替换为换行符的同时，吞噬周围的空白字符（包括源码中的换行符），
+        // 从而由我们就地控制垂直间距，避免源码格式化导致的意外空行。
+        
+        // <br>: 换行
+        .replace(Regex("<br\\s*/?>[\\s\\r\\n]*", RegexOption.IGNORE_CASE), "\n")
+        // <p>, <div>: 简单换行
+        .replace(Regex("[\\s\\r\\n]*</?p[^>]*>[\\s\\r\\n]*", RegexOption.IGNORE_CASE), "\n")
+        .replace(Regex("[\\s\\r\\n]*</?div[^>]*>[\\s\\r\\n]*", RegexOption.IGNORE_CASE), "\n")
+        // <li>: 换行 + 点。只处理 <li> 标签本身的前导空白，确保每个 li 另起一行。
+        // </li>: 仅移除标签，不处理周围空白，以免误删紧随其后的下一行 li 的换行符。
+        .replace(Regex("[\\s\\r\\n]*<li[^>]*>[\\s\\r\\n]*", RegexOption.IGNORE_CASE), "\n• ")
+        .replace(Regex("</li[^>]*>", RegexOption.IGNORE_CASE), "")
+        // <ul>, <ol>: 列表容器换行
+        .replace(Regex("[\\s\\r\\n]*</?ul[^>]*>[\\s\\r\\n]*", RegexOption.IGNORE_CASE), "\n")
+        .replace(Regex("[\\s\\r\\n]*</?ol[^>]*>[\\s\\r\\n]*", RegexOption.IGNORE_CASE), "\n")
+        // <h1-6>: 标题前后双换行
+        .replace(Regex("[\\s\\r\\n]*<h[1-6][^>]*>[\\s\\r\\n]*", RegexOption.IGNORE_CASE), "\n\n")
+        .replace(Regex("[\\s\\r\\n]*</h[1-6][^>]*>[\\s\\r\\n]*", RegexOption.IGNORE_CASE), "\n")
+
+    // 1.2 解码HTML实体
+    cleanHtml = decodeHtmlEntities(cleanHtml)
 
     // 1.5. 根据策略处理空白行
     cleanHtml = when (blankLinePolicy) {
@@ -146,6 +167,9 @@ private fun parseHtml(
         BlankLinePolicy.COLLAPSE -> cleanHtml.replace(Regex("(\\n\\s*){2,}"), "\n\n")
         BlankLinePolicy.REMOVE -> cleanHtml.lines().filter { it.isNotBlank() }.joinToString("\n")
     }
+    
+    // Trim leading/trailing whitespace after tag processing
+    cleanHtml = cleanHtml.trim()
 
 
     // 2. 使用正则表达式将HTML分词为标签和文本
@@ -387,8 +411,6 @@ private fun decodeHtmlEntities(text: String): String {
         .replace("&rsquo;", "’")
         .replace("&ldquo;", "“")
         .replace("&rdquo;", "”")
-        // 字体标签和换行标签
-        .replace(Regex("<br\\s*/?>", RegexOption.IGNORE_CASE), "\n")
 }
 
 private fun parseColorValue(color: String): Color? {

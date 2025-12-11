@@ -1,5 +1,6 @@
 package ai.saniou.reader.workflow.reader
 
+import ai.saniou.coreui.widgets.RichText
 import ai.saniou.thread.domain.model.Article
 import ai.saniou.thread.domain.model.FeedSource
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -212,7 +213,7 @@ fun ArticleItem(article: Article, onClick: () -> Unit) {
                 fontWeight = fontWeight,
                 color = titleColor
             )
-            Text(
+            RichText(
                 text = article.content,
                 style = MaterialTheme.typography.bodyMedium,
                 maxLines = 3,
