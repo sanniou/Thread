@@ -48,15 +48,14 @@ class ThreadRemoteMediator(
             LoadType.PREPEND -> {
                 val remoteKey = getRemoteKeyForFirstItem(state)
                 remoteKey?.prevKey?.toInt()
-                    ?: return RemoteMediatorMediatorResultSuccess(endOfPaginationReached = true) as RemoteMediatorMediatorResult
+                    ?: return RemoteMediatorMediatorResultSuccess(endOfPaginationReached = true)
             }
 
             LoadType.APPEND -> {
                 val remoteKey = getRemoteKeyForLastItem(state)
                 remoteKey?.nextKey?.toInt()
-                    ?: return RemoteMediatorMediatorResultSuccess(endOfPaginationReached = true) as RemoteMediatorMediatorResult
+                    ?: return RemoteMediatorMediatorResultSuccess(endOfPaginationReached = true)
             }
-            else -> TODO("Not yet implemented")
         }
 
         when (dataPolicy) {
@@ -65,14 +64,16 @@ class ThreadRemoteMediator(
                     threadReplyQueries.countRepliesByThreadIdAndPage(threadId, page.toLong())
                         .executeAsOne()
                 if (repliesInDb > 0) {
-                    return RemoteMediatorMediatorResultSuccess(endOfPaginationReached = false) as RemoteMediatorMediatorResult
+                    return RemoteMediatorMediatorResultSuccess(endOfPaginationReached = false)
                 }
                 // 缓存不存在，则继续执行网络请求
             }
+
             DataPolicy.NETWORK_ELSE_CACHE -> {
                 // 直接执行网络请求
             }
-            else -> return RemoteMediatorMediatorResultSuccess(endOfPaginationReached = true) as RemoteMediatorMediatorResult
+
+            else -> return RemoteMediatorMediatorResultSuccess(endOfPaginationReached = true)
         }
 
 
@@ -80,7 +81,9 @@ class ThreadRemoteMediator(
             is SaniouResponse.Success -> {
                 val threadDetail = result.data
                 val validReplySize = threadDetail.replies.count { it.userHash != "Tips" }
-                val endOfPagination = threadDetail.replyCount <= threadReplyQueries.countValidThreadReplies(threadId).executeAsOne() + validReplySize || validReplySize == 0
+                val endOfPagination =
+                    threadDetail.replyCount <= threadReplyQueries.countValidThreadReplies(threadId)
+                        .executeAsOne() + validReplySize || validReplySize == 0
 
                 db.transaction {
                     threadQueries.upsertThread(threadDetail.toTable(page.toLong()))
@@ -99,14 +102,15 @@ class ThreadRemoteMediator(
                         updateAt = Clock.System.now().toEpochMilliseconds(),
                     )
                 }
-                RemoteMediatorMediatorResultSuccess(endOfPaginationReached = endOfPagination) as RemoteMediatorMediatorResult
+                RemoteMediatorMediatorResultSuccess(endOfPaginationReached = endOfPagination)
             }
+
             is SaniouResponse.Error -> {
                 if (dataPolicy == DataPolicy.NETWORK_ELSE_CACHE) {
                     // 网络失败时，依赖本地缓存，返回成功
-                    RemoteMediatorMediatorResultSuccess(endOfPaginationReached = true) as RemoteMediatorMediatorResult
+                    RemoteMediatorMediatorResultSuccess(endOfPaginationReached = true)
                 } else {
-                    RemoteMediatorMediatorResultError(result.ex) as RemoteMediatorMediatorResult
+                    RemoteMediatorMediatorResultError(result.ex)
                 }
             }
         }

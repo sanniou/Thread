@@ -3,7 +3,6 @@ package ai.saniou.thread.data.repository
 import ai.saniou.nmb.db.Database
 import ai.saniou.thread.data.source.nmb.remote.dto.FavoriteForumType
 import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
-import ai.saniou.thread.data.source.nmb.remote.dto.toForumDetail
 import ai.saniou.thread.domain.model.Forum
 import ai.saniou.thread.domain.repository.FavoriteRepository
 import app.cash.sqldelight.coroutines.asFlow

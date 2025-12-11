@@ -28,7 +28,6 @@ import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOne
 import app.cash.sqldelight.paging3.QueryPagingSource
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -40,7 +39,7 @@ import ai.saniou.thread.domain.model.Forum as DomainForum
 
 class NmbSource(
     private val nmbXdApi: NmbXdApi,
-    private val db: Database
+    private val db: Database,
 ) : Source {
     override val id: String = "nmb"
 
@@ -105,6 +104,7 @@ class NmbSource(
                     }
                 }
             }
+
             is SaniouResponse.Error -> return Result.failure(forumListResponse.ex)
         }
 
@@ -115,6 +115,7 @@ class NmbSource(
                     db.timeLineQueries.insertTimeLine(timeLine.toTable())
                 }
             }
+
             is SaniouResponse.Error -> return Result.failure(timelineListResponse.ex)
         }
         return Result.success(Unit)
@@ -147,7 +148,7 @@ class NmbSource(
             fid = fid,
             policy = policy,
             initialPage = initialPage,
-            fetcher = { page -> nmbXdApi.showf(fid.toLong(), page.toLong()) }
+            fetcher = { page -> nmbXdApi.showf(fid, page.toLong()) }
         ).flow.map { pagingData -> pagingData.map { it.toThreadWithInformation(db.threadReplyQueries) } }
     }
 
@@ -176,10 +177,10 @@ class NmbSource(
                         transacter = db.threadReplyQueries,
                         context = Dispatchers.Default,
                         countQuery =
-                        db.threadReplyQueries.countRepliesByThreadIdAndUserHash(
-                            threadId,
-                            poUserHash
-                        ),
+                            db.threadReplyQueries.countRepliesByThreadIdAndUserHash(
+                                threadId,
+                                poUserHash
+                            ),
                         queryProvider = { limit, offset ->
                             db.threadReplyQueries.getRepliesByThreadIdAndUserHashOffset(
                                 threadId = threadId,
@@ -429,6 +430,7 @@ class NmbSource(
             pagingData.map { it.toThreadReply() }
         }
     }
+
     fun getUserThreadsPager(userHash: String): Flow<PagingData<ThreadWithInformation>> {
         return Pager(
             config = PagingConfig(pageSize = 20),

@@ -1,12 +1,12 @@
 package ai.saniou.thread.data.source.nmb
 
-import ai.saniou.thread.network.SaniouResponse
+import ai.saniou.nmb.db.Database
+import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
 import ai.saniou.thread.data.source.nmb.remote.dto.Feed
 import ai.saniou.thread.data.source.nmb.remote.dto.RemoteKeyType
 import ai.saniou.thread.data.source.nmb.remote.dto.nowToEpochMilliseconds
 import ai.saniou.thread.data.source.nmb.remote.dto.toTable
-import ai.saniou.nmb.db.Database
-import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
+import ai.saniou.thread.network.SaniouResponse
 import app.cash.paging.ExperimentalPagingApi
 import app.cash.paging.LoadType
 import app.cash.paging.PagingState
@@ -33,25 +33,24 @@ class SubscriptionRemoteMediator(
         val page = when (loadType) {
             LoadType.REFRESH -> 1L
 
-            LoadType.PREPEND -> return RemoteMediatorMediatorResultSuccess(true)  as RemoteMediatorMediatorResult // 不向前翻
+            LoadType.PREPEND -> return RemoteMediatorMediatorResultSuccess(true)   // 不向前翻
 
             LoadType.APPEND -> {
                 val showId = state.pages.lastOrNull()?.data?.lastOrNull()?.id
-                    ?: return RemoteMediatorMediatorResultSuccess(true)  as RemoteMediatorMediatorResult
+                    ?: return RemoteMediatorMediatorResultSuccess(true)
                 val showPage = db.subscriptionQueries.getSubscription(subscriptionKey, showId)
-                    .executeAsOneOrNull()?.page ?: return RemoteMediatorMediatorResultSuccess(true)  as RemoteMediatorMediatorResult
+                    .executeAsOneOrNull()?.page ?: return RemoteMediatorMediatorResultSuccess(true)
 
                 val remoteKey = db.remoteKeyQueries.getRemoteKeyById(
                     type = RemoteKeyType.SUBSCRIBE,
                     id = subscriptionKey
-                ).executeAsOneOrNull() ?: return RemoteMediatorMediatorResultSuccess(true)  as RemoteMediatorMediatorResult
+                ).executeAsOneOrNull() ?: return RemoteMediatorMediatorResultSuccess(true)
 
                 if (remoteKey.currKey > showPage) {
-                    return RemoteMediatorMediatorResultSuccess(true) as RemoteMediatorMediatorResult
+                    return RemoteMediatorMediatorResultSuccess(true)
                 }
-                remoteKey.nextKey ?: return RemoteMediatorMediatorResultSuccess(true) as RemoteMediatorMediatorResult
+                remoteKey.nextKey ?: return RemoteMediatorMediatorResultSuccess(true)
             }
-            else -> TODO("Not yet implemented")
         }
 
 
@@ -86,10 +85,10 @@ class SubscriptionRemoteMediator(
                     )
                 }
 
-                return RemoteMediatorMediatorResultSuccess(endOfPagination) as RemoteMediatorMediatorResult
+                return RemoteMediatorMediatorResultSuccess(endOfPagination)
             }
 
-            is SaniouResponse.Error -> RemoteMediatorMediatorResultError(result.ex) as RemoteMediatorMediatorResult
+            is SaniouResponse.Error -> RemoteMediatorMediatorResultError(result.ex)
         }
     }
 
