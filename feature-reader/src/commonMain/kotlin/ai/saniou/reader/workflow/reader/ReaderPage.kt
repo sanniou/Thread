@@ -42,12 +42,24 @@ class ReaderPage : Screen {
         val viewModel = rememberScreenModel<ReaderViewModel>()
         val state by viewModel.state.collectAsState()
         val articles = state.articles.collectAsLazyPagingItems()
+        var isAddSheetShown by remember { mutableStateOf(false) }
+        var editingSource by remember { mutableStateOf<FeedSource?>(null) }
 
-        if (state.isDialogShown) {
-            FeedSourceDialog(
-                source = state.editingSource,
-                onDismiss = { viewModel.onEvent(ReaderContract.Event.OnDismissDialog) },
-                onConfirm = { source -> viewModel.onEvent(ReaderContract.Event.OnSaveSource(source)) }
+        val isSheetShown = isAddSheetShown || editingSource != null
+
+        if (isSheetShown) {
+            val addFeedSourceViewModel = remember(editingSource) { AddFeedSourceViewModel(sourceToEdit = editingSource) }
+            AddFeedSourceSheet(
+                viewModel = addFeedSourceViewModel,
+                onDismiss = {
+                    isAddSheetShown = false
+                    editingSource = null
+                },
+                onSave = { source ->
+                    viewModel.onEvent(ReaderContract.Event.OnSaveSource(source))
+                    isAddSheetShown = false
+                    editingSource = null
+                }
             )
         }
 
@@ -63,7 +75,10 @@ class ReaderPage : Screen {
                 )
             },
             floatingActionButton = {
-                FloatingActionButton(onClick = { viewModel.onEvent(ReaderContract.Event.OnShowAddDialog) }) {
+                FloatingActionButton(onClick = {
+                    editingSource = null // 确保是添加模式
+                    isAddSheetShown = true
+                }) {
                     Icon(Icons.Default.Add, contentDescription = "Add Feed")
                 }
             }
@@ -83,7 +98,7 @@ class ReaderPage : Screen {
                         FeedSourceItem(
                             source = source,
                             onClick = { viewModel.onEvent(ReaderContract.Event.OnSelectFeedSource(source.id)) },
-                            onEdit = { viewModel.onEvent(ReaderContract.Event.OnShowEditDialog(source)) },
+                            onEdit = { editingSource = source },
                             onDelete = { viewModel.onEvent(ReaderContract.Event.OnDeleteSource(source.id)) }
                         )
                     }
