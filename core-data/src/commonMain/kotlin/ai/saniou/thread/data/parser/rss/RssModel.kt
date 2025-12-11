@@ -36,6 +36,13 @@ data class Item(
     @XmlElement(true)
     val description: String?,
     @XmlElement(true)
+    @XmlSerialName(
+        value = "encoded",
+        namespace = "http://purl.org/rss/1.0/modules/content/",
+        prefix = "content"
+    )
+    val contentEncoded: String?,
+    @XmlElement(true)
     val pubDate: String?,
     @XmlElement(true)
     @XmlSerialName(

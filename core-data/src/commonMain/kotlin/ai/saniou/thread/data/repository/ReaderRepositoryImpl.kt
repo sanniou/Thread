@@ -124,13 +124,14 @@ class ReaderRepositoryImpl(
                     id = entity.id,
                     feedSourceId = entity.feedSourceId,
                     title = entity.title,
+                    description = entity.description,
                     content = entity.content,
                     link = entity.link,
                     author = entity.author,
                     publishDate = Instant.fromEpochMilliseconds(entity.publishDate),
                     isRead = entity.isRead == 1L,
                     isBookmarked = entity.isBookmarked == 1L,
-                    rawData = entity.rawData
+                    rawContent = entity.rawContent
                 )
             }
         }
@@ -143,13 +144,14 @@ class ReaderRepositoryImpl(
                     id = entity.id,
                     feedSourceId = entity.feedSourceId,
                     title = entity.title,
+                    description = entity.description,
                     content = entity.content,
                     link = entity.link,
                     author = entity.author,
                     publishDate = Instant.fromEpochMilliseconds(entity.publishDate),
                     isRead = entity.isRead == 1L,
                     isBookmarked = entity.isBookmarked == 1L,
-                    rawData = entity.rawData
+                    rawContent = entity.rawContent
                 )
             }
         }
@@ -197,13 +199,14 @@ class ReaderRepositoryImpl(
                             id = article.id,
                             feedSourceId = article.feedSourceId,
                             title = article.title,
+                            description = article.description,
                             content = article.content,
                             link = article.link,
                             author = article.author,
                             publishDate = article.publishDate.toEpochMilliseconds(),
                             isRead = isRead,
                             isBookmarked = isBookmarked,
-                            rawData = article.rawData
+                            rawContent = article.rawContent
                         )
                     }
                     db.feedSourceQueries.updateLastUpdate(Clock.System.now().toEpochMilliseconds(), feedSourceId)

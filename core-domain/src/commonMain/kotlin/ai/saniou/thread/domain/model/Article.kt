@@ -6,12 +6,13 @@ data class Article(
     val id: String,
     val feedSourceId: String,
     val title: String,
-    val content: String, // 或者是摘要
+    val description: String, // 摘要，纯文本，用于列表页
+    val content: String,     // 清理后的正文，用于原生渲染。可以等于 description。
     val link: String,
     val author: String? = null,
     val publishDate: Instant,
     val isRead: Boolean = false,
     val isBookmarked: Boolean = false,
-    // 原始数据，以便未来重新解析或展示
-    val rawData: String? = null
+    // 原始 HTML 内容，用于 WebView 渲染或重新解析
+    val rawContent: String? = null
 )

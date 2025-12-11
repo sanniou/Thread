@@ -22,11 +22,15 @@ class RssParser : FeedParser {
                 val link = item.link ?: return@mapNotNull null
                 val title = item.title ?: "No Title"
 
+                val rawHtml = item.contentEncoded?.takeIf { it.isNotBlank() } ?: item.description ?: ""
+
                 Article(
                     id = link,
                     feedSourceId = source.id,
                     title = title,
-                    content = item.description ?: "",
+                    description = HtmlParser.toPlainText(rawHtml).take(200),
+                    content = HtmlParser.clean(rawHtml),
+                    rawContent = rawHtml,
                     link = link,
                     author = item.creator,
                     publishDate = item.pubDate?.let { parseRssDate(it) } ?: Clock.System.now(),

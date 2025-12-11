@@ -7,6 +7,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Public
+import androidx.compose.material.icons.filled.Web
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -40,8 +41,13 @@ data class ArticleDetailPage(val articleId: String) : Screen {
                         }
                     },
                     actions = {
-                        state.article?.link?.let { url ->
-                            IconButton(onClick = { uriHandler.openUri(url) }) {
+                        state.article?.let { article ->
+                            if (!article.rawContent.isNullOrBlank()) {
+                                IconButton(onClick = { navigator.push(ArticleWebViewPage(article.id)) }) {
+                                    Icon(Icons.Default.Web, contentDescription = "View Original")
+                                }
+                            }
+                            IconButton(onClick = { uriHandler.openUri(article.link) }) {
                                 Icon(Icons.Default.Public, contentDescription = "Open in Browser")
                             }
                         }

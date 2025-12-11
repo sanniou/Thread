@@ -2,13 +2,14 @@ CREATE TABLE ArticleEntity (
     id TEXT NOT NULL PRIMARY KEY,
     feedSourceId TEXT NOT NULL,
     title TEXT NOT NULL,
+    description TEXT NOT NULL,
     content TEXT NOT NULL,
     link TEXT NOT NULL,
     author TEXT,
     publishDate INTEGER NOT NULL,
     isRead INTEGER NOT NULL DEFAULT 0,
     isBookmarked INTEGER NOT NULL DEFAULT 0,
-    rawData TEXT,
+    rawContent TEXT,
     FOREIGN KEY(feedSourceId) REFERENCES FeedSourceEntity(id) ON DELETE CASCADE
 );
 
@@ -26,8 +27,8 @@ getArticleById:
 SELECT * FROM ArticleEntity WHERE id = ?;
 
 insertArticle:
-INSERT OR REPLACE INTO ArticleEntity(id, feedSourceId, title, content, link, author, publishDate, isRead, isBookmarked, rawData)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+INSERT OR REPLACE INTO ArticleEntity(id, feedSourceId, title, description, content, link, author, publishDate, isRead, isBookmarked, rawContent)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 markArticleAsRead:
 UPDATE ArticleEntity SET isRead = ? WHERE id = ?;
