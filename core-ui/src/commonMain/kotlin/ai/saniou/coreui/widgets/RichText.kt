@@ -194,7 +194,13 @@ private fun parseHtml(
                         // 闭合标签, 弹出样式
                         if (styleStack.size > 1) styleStack.removeLast()
                         // 如果是链接，也需要弹出注解
-                        if (tag.name == "a") pop()
+                        if (tag.name == "a") {
+                            // 仅当链接不在隐藏的剧透内容中时，它的注解才会被推入。
+                            // 因此，只有在这种情况下才需要弹出。
+                            if (hiddenSpoilerDepth == 0) {
+                                pop()
+                            }
+                        }
                         if (tag.name == "spoiler") {
                             pop() // pop spoiler link
                             val wasHidden = spoilerStack.removeLastOrNull() ?: false
