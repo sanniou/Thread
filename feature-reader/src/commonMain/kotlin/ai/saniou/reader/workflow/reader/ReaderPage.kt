@@ -254,7 +254,10 @@ fun FeedSourceItem(
             .fillMaxWidth()
             .clip(MaterialTheme.shapes.medium)
             .background(backgroundColor)
-            .clickable(onClick = onClick)
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = { if (source.id != "all") showMenu = true }
+            )
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(16.dp)
