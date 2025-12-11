@@ -2,33 +2,59 @@ package ai.saniou.reader.workflow.reader
 
 import ai.saniou.thread.domain.model.FeedSource
 import ai.saniou.thread.domain.model.FeedType
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalUuidApi::class)
+private class FeedSourceDialogState(source: FeedSource?) {
+    var name by mutableStateOf(source?.name ?: "")
+    var url by mutableStateOf(source?.url ?: "")
+    var type by mutableStateOf(source?.type ?: FeedType.RSS)
+    var description by mutableStateOf(source?.description ?: "")
+    var iconUrl by mutableStateOf(source?.iconUrl ?: "")
+    val selectorConfig = mutableStateOf(source?.selectorConfig?.toMutableMap() ?: mutableMapOf())
+
+    @OptIn(ExperimentalUuidApi::class)
+    fun toFeedSource(existingId: String?): FeedSource {
+        return FeedSource(
+            id = existingId ?: Uuid.random().toString(),
+            name = name,
+            url = url,
+            type = type,
+            description = description.takeIf { it.isNotBlank() },
+            iconUrl = iconUrl.takeIf { it.isNotBlank() },
+            selectorConfig = selectorConfig.value.filterValues { it.isNotBlank() }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FeedSourceDialog(
     source: FeedSource? = null,
     onDismiss: () -> Unit,
     onConfirm: (FeedSource) -> Unit
 ) {
-    var name by remember { mutableStateOf(source?.name ?: "") }
-    var url by remember { mutableStateOf(source?.url ?: "") }
-    var type by remember { mutableStateOf(source?.type ?: FeedType.RSS) }
-    var description by remember { mutableStateOf(source?.description ?: "") }
-    var iconUrl by remember { mutableStateOf(source?.iconUrl ?: "") }
-
-    // HTML-specific selectors
-    var containerSelector by remember { mutableStateOf(source?.selectorConfig?.get("container") ?: "") }
-    var itemSelector by remember { mutableStateOf(source?.selectorConfig?.get("item") ?: "") }
-    var titleSelector by remember { mutableStateOf(source?.selectorConfig?.get("title") ?: "") }
-    var linkSelector by remember { mutableStateOf(source?.selectorConfig?.get("link") ?: "") }
-    var contentSelector by remember { mutableStateOf(source?.selectorConfig?.get("content") ?: "") }
+    val state = remember { FeedSourceDialogState(source) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -36,23 +62,23 @@ fun FeedSourceDialog(
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
+                    value = state.name,
+                    onValueChange = { state.name = it },
                     label = { Text("名称") }
                 )
                 OutlinedTextField(
-                    value = url,
-                    onValueChange = { url = it },
+                    value = state.url,
+                    onValueChange = { state.url = it },
                     label = { Text("URL") }
                 )
-                
+
                 var expanded by remember { mutableStateOf(false) }
                 ExposedDropdownMenuBox(
                     expanded = expanded,
                     onExpandedChange = { expanded = !expanded }
                 ) {
                     OutlinedTextField(
-                        value = type.name,
+                        value = state.type.name,
                         onValueChange = {},
                         readOnly = true,
                         label = { Text("类型") },
@@ -67,51 +93,18 @@ fun FeedSourceDialog(
                             DropdownMenuItem(
                                 text = { Text(feedType.name) },
                                 onClick = {
-                                    type = feedType
+                                    state.type = feedType
                                     expanded = false
                                 }
                             )
                         }
                     }
                 }
-
-                if (type == FeedType.HTML) {
-                    Text("HTML 选择器", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 8.dp))
-                    OutlinedTextField(value = containerSelector, onValueChange = { containerSelector = it }, label = { Text("容器 (Container)") })
-                    OutlinedTextField(value = itemSelector, onValueChange = { itemSelector = it }, label = { Text("条目 (Item)") })
-                    OutlinedTextField(value = titleSelector, onValueChange = { titleSelector = it }, label = { Text("标题 (Title)") })
-                    OutlinedTextField(value = linkSelector, onValueChange = { linkSelector = it }, label = { Text("链接 (Link)") })
-                    OutlinedTextField(value = contentSelector, onValueChange = { contentSelector = it }, label = { Text("内容 (Content)") })
-                }
+                SelectorConfigEditor(state.type, state.selectorConfig.value)
             }
         },
         confirmButton = {
-            Button(
-                onClick = {
-                    val selectorConfig = if (type == FeedType.HTML) {
-                        mapOf(
-                            "container" to containerSelector,
-                            "item" to itemSelector,
-                            "title" to titleSelector,
-                            "link" to linkSelector,
-                            "content" to contentSelector
-                        )
-                    } else {
-                        emptyMap()
-                    }
-
-                    val newSource = FeedSource(
-                        id = source?.id ?: Uuid.random().toString(),
-                        name = name,
-                        url = url,
-                        type = type,
-                        description = description.takeIf { it.isNotBlank() },
-                        iconUrl = iconUrl.takeIf { it.isNotBlank() },
-                        selectorConfig = selectorConfig
-                    )
-                    onConfirm(newSource)
-                }
-            ) {
+            Button(onClick = { onConfirm(state.toFeedSource(source?.id)) }) {
                 Text("保存")
             }
         },
@@ -121,4 +114,32 @@ fun FeedSourceDialog(
             }
         }
     )
+}
+
+@Composable
+private fun SelectorConfigEditor(type: FeedType, config: MutableMap<String, String>) {
+    val fields = when (type) {
+        FeedType.HTML -> listOf("container", "item", "title", "link", "content")
+        FeedType.JSON -> listOf("itemsPath", "idPath", "titlePath", "linkPath", "contentPath", "authorPath", "imagePath")
+        else -> emptyList()
+    }
+
+    if (fields.isNotEmpty()) {
+        Text(
+            text = "${type.name} 选择器",
+            style = MaterialTheme.typography.titleSmall,
+            modifier = Modifier.padding(top = 8.dp)
+        )
+        fields.forEach { field ->
+            var value by remember(type, field) { mutableStateOf(config[field] ?: "") }
+            OutlinedTextField(
+                value = value,
+                onValueChange = {
+                    value = it
+                    config[field] = it
+                },
+                label = { Text(field) }
+            )
+        }
+    }
 }

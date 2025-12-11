@@ -131,6 +131,7 @@ class ReaderRepositoryImpl(
                     publishDate = Instant.fromEpochMilliseconds(entity.publishDate),
                     isRead = entity.isRead == 1L,
                     isBookmarked = entity.isBookmarked == 1L,
+                    imageUrl = entity.imageUrl,
                     rawContent = entity.rawContent
                 )
             }
@@ -151,6 +152,7 @@ class ReaderRepositoryImpl(
                     publishDate = Instant.fromEpochMilliseconds(entity.publishDate),
                     isRead = entity.isRead == 1L,
                     isBookmarked = entity.isBookmarked == 1L,
+                    imageUrl = entity.imageUrl,
                     rawContent = entity.rawContent
                 )
             }
@@ -206,6 +208,7 @@ class ReaderRepositoryImpl(
                             publishDate = article.publishDate.toEpochMilliseconds(),
                             isRead = isRead,
                             isBookmarked = isBookmarked,
+                            imageUrl = article.imageUrl,
                             rawContent = article.rawContent
                         )
                     }

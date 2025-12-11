@@ -13,6 +13,7 @@ data class Article(
     val publishDate: Instant,
     val isRead: Boolean = false,
     val isBookmarked: Boolean = false,
+    val imageUrl: String? = null,
     // 原始 HTML 内容，用于 WebView 渲染或重新解析
     val rawContent: String? = null
 )
