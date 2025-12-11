@@ -44,13 +44,15 @@ class ReaderViewModel(
             }
         }
         val sourceIdFlow = state.map { it.selectedFeedSourceId }.distinctUntilChanged()
-        // 防抖处理，避免用户输入时频繁请求
         val queryFlow = state.map { it.searchQuery }.distinctUntilChanged().debounce(300L)
+        val filterFlow = state.map { it.articleFilter }.distinctUntilChanged()
 
-        articles = combine(sourceIdFlow, queryFlow) { sourceId, query ->
-            sourceId to query
-        }.flatMapLatest { (sourceId, query) ->
-            getArticlesUseCase(sourceId, query)
+        articles = combine(sourceIdFlow, queryFlow, filterFlow) { sourceId, query, filter ->
+            Triple(sourceId, query, filter)
+        }.flatMapLatest { (sourceId, query, filter) ->
+            val isRead = if (filter == ArticleFilter.UNREAD) false else null
+            val isBookmarked = if (filter == ArticleFilter.BOOKMARKED) true else null
+            getArticlesUseCase(sourceId, query, isRead, isBookmarked)
         }.cachedIn(screenModelScope)
     }
 
@@ -66,11 +68,16 @@ class ReaderViewModel(
             is ReaderContract.Event.OnDeleteSource -> deleteSource(event.id)
             is ReaderContract.Event.OnMarkArticleAsRead -> markArticleAsRead(event.id, event.isRead)
             is ReaderContract.Event.OnSearchQueryChanged -> onSearchQueryChanged(event.query)
+            is ReaderContract.Event.OnFilterChanged -> onFilterChanged(event.filter)
         }
     }
 
     private fun onSearchQueryChanged(query: String) {
         _state.update { it.copy(searchQuery = query) }
+    }
+
+    private fun onFilterChanged(filter: ArticleFilter) {
+        _state.update { it.copy(articleFilter = filter) }
     }
 
     private fun selectFeedSource(id: String?) {

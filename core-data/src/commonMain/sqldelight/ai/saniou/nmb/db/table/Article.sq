@@ -18,13 +18,17 @@ getArticlesPaging:
 SELECT * FROM ArticleEntity
 WHERE (:feedSourceId IS NULL OR feedSourceId = :feedSourceId)
   AND (:query = '' OR title LIKE '%' || :query || '%' OR content LIKE '%' || :query || '%')
+  AND (:isRead IS NULL OR isRead = :isRead)
+  AND (:isBookmarked IS NULL OR isBookmarked = :isBookmarked)
 ORDER BY publishDate DESC
 LIMIT :limit OFFSET :offset;
 
 countArticles:
 SELECT count(*) FROM ArticleEntity
 WHERE (:feedSourceId IS NULL OR feedSourceId = :feedSourceId)
-  AND (:query = '' OR title LIKE '%' || :query || '%' OR content LIKE '%' || :query || '%');
+  AND (:query = '' OR title LIKE '%' || :query || '%' OR content LIKE '%' || :query || '%')
+  AND (:isRead IS NULL OR isRead = :isRead)
+  AND (:isBookmarked IS NULL OR isBookmarked = :isBookmarked);
 
 getArticleById:
 SELECT * FROM ArticleEntity WHERE id = ?;

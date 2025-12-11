@@ -2,6 +2,10 @@ package ai.saniou.reader.workflow.reader
 
 import ai.saniou.thread.domain.model.FeedSource
 
+enum class ArticleFilter {
+    ALL, UNREAD, BOOKMARKED
+}
+
 interface ReaderContract {
     data class State(
         val feedSources: List<FeedSource> = emptyList(),
@@ -11,6 +15,7 @@ interface ReaderContract {
         val editingSource: FeedSource? = null,
         val articleCounts: Map<String, Pair<Int, Int>> = emptyMap(),
         val searchQuery: String = "",
+        val articleFilter: ArticleFilter = ArticleFilter.ALL,
     )
 
     sealed interface Event {
@@ -24,5 +29,6 @@ interface ReaderContract {
         object OnRefreshAll : Event
         data class OnMarkArticleAsRead(val id: String, val isRead: Boolean) : Event
         data class OnSearchQueryChanged(val query: String) : Event
+        data class OnFilterChanged(val filter: ArticleFilter) : Event
     }
 }

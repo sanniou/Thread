@@ -14,7 +14,12 @@ interface ReaderRepository {
     suspend fun deleteFeedSource(id: String)
 
     // Articles
-    fun getArticlesPaging(feedSourceId: String? = null, query: String = ""): Flow<PagingData<Article>>
+    fun getArticlesPaging(
+        feedSourceId: String? = null,
+        query: String = "",
+        isRead: Boolean? = null,
+        isBookmarked: Boolean? = null
+    ): Flow<PagingData<Article>>
     suspend fun getArticle(id: String): Article?
     suspend fun markArticleAsRead(id: String, isRead: Boolean)
     suspend fun markArticleAsBookmarked(id: String, isBookmarked: Boolean)

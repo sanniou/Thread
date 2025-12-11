@@ -107,16 +107,33 @@ class ReaderRepositoryImpl(
         }
     }
 
-    override fun getArticlesPaging(feedSourceId: String?, query: String): Flow<PagingData<Article>> {
+    override fun getArticlesPaging(
+        feedSourceId: String?,
+        query: String,
+        isRead: Boolean?,
+        isBookmarked: Boolean?
+    ): Flow<PagingData<Article>> {
         return Pager(
             config = PagingConfig(pageSize = 20),
             pagingSourceFactory = {
                 QueryPagingSource(
-                    countQuery = db.articleQueries.countArticles(feedSourceId, query),
+                    countQuery = db.articleQueries.countArticles(
+                        feedSourceId = feedSourceId,
+                        query = query,
+                        isRead = isRead?.let { if (it) 1L else 0L },
+                        isBookmarked = isBookmarked?.let { if (it) 1L else 0L }
+                    ),
                     transacter = db.articleQueries,
                     context = Dispatchers.IO,
                     queryProvider = { limit, offset ->
-                        db.articleQueries.getArticlesPaging(feedSourceId, query, limit, offset)
+                        db.articleQueries.getArticlesPaging(
+                            feedSourceId = feedSourceId,
+                            query = query,
+                            isRead = isRead?.let { if (it) 1L else 0L },
+                            isBookmarked = isBookmarked?.let { if (it) 1L else 0L },
+                            limit = limit,
+                            offset = offset
+                        )
                     }
                 )
             }
