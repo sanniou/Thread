@@ -35,7 +35,7 @@ plugins {
 include(":composeApp")
 include(":core-ui")
 include(":core-common")
-include(":feature-nmb")
+include(":feature-forum")
 include(":core-domain")
 include(":core-data")
 include(":core-network")
