@@ -1,4 +1,0 @@
-import ai.saniou.nmb.db.table.BookmarkTag;
-
-insert:
-INSERT OR IGNORE INTO BookmarkTag(bookmarkId, tagId) VALUES ?;

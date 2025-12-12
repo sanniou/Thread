@@ -1,9 +1,9 @@
-package ai.saniou.nmb.data.database
+package ai.saniou.thread.data.database
 
-import ai.saniou.nmb.db.Database
-import ai.saniou.nmb.db.table.Bookmark
-import ai.saniou.nmb.db.table.FavoriteForum
-import ai.saniou.nmb.db.table.RemoteKeys
+import ai.saniou.thread.db.Database
+import ai.saniou.thread.db.table.Bookmark
+import ai.saniou.thread.db.table.FavoriteForum
+import ai.saniou.thread.db.table.RemoteKeys
 import app.cash.sqldelight.ColumnAdapter
 import app.cash.sqldelight.EnumColumnAdapter
 import app.cash.sqldelight.db.SqlDriver

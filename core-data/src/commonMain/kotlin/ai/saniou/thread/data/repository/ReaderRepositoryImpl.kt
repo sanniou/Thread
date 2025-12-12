@@ -1,6 +1,6 @@
 package ai.saniou.thread.data.repository
 
-import ai.saniou.nmb.db.Database
+import ai.saniou.thread.db.Database
 import ai.saniou.thread.data.parser.FeedParserFactory
 import ai.saniou.thread.domain.model.reader.Article
 import ai.saniou.thread.domain.model.reader.FeedSource

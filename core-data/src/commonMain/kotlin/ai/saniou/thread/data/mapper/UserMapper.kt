@@ -1,6 +1,6 @@
 package ai.saniou.thread.data.mapper
 
-import ai.saniou.nmb.db.table.Cookie
+import ai.saniou.thread.db.table.Cookie
 import ai.saniou.thread.domain.model.forum.Cookie as DomainCookie
 
 fun Cookie.toDomain(): DomainCookie {

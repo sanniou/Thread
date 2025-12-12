@@ -1,6 +1,6 @@
 package ai.saniou.thread.data.source.nmb
 
-import ai.saniou.nmb.db.Database
+import ai.saniou.thread.db.Database
 import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
 import ai.saniou.thread.data.source.nmb.remote.dto.Feed
 import ai.saniou.thread.data.source.nmb.remote.dto.RemoteKeyType
@@ -22,13 +22,13 @@ class SubscriptionRemoteMediator(
     private val subscriptionKey: String,
     private val forumRepository: NmbXdApi,
     private val db: Database,
-) : RemoteMediator<Int, ai.saniou.nmb.db.table.SelectSubscriptionThread>() {
+) : RemoteMediator<Int, ai.saniou.thread.db.table.SelectSubscriptionThread>() {
 
 
     @OptIn(ExperimentalTime::class)
     override suspend fun load(
         loadType: LoadType,
-        state: PagingState<Int, ai.saniou.nmb.db.table.SelectSubscriptionThread>,
+        state: PagingState<Int, ai.saniou.thread.db.table.SelectSubscriptionThread>,
     ): RemoteMediatorMediatorResult {
         val page = when (loadType) {
             LoadType.REFRESH -> 1L

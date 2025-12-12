@@ -1,11 +1,11 @@
 package ai.saniou.thread.data.source.nmb.remote.dto
 
-import ai.saniou.nmb.db.table.Forum
-import ai.saniou.nmb.db.table.GetThread
-import ai.saniou.nmb.db.table.SelectSubscriptionThread
-import ai.saniou.nmb.db.table.Thread
-import ai.saniou.nmb.db.table.ThreadReply
-import ai.saniou.nmb.db.table.TimeLine
+import ai.saniou.thread.db.table.Forum
+import ai.saniou.thread.db.table.GetThread
+import ai.saniou.thread.db.table.SelectSubscriptionThread
+import ai.saniou.thread.db.table.Thread
+import ai.saniou.thread.db.table.ThreadReply
+import ai.saniou.thread.db.table.TimeLine
 import ai.saniou.thread.domain.model.forum.Post
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone

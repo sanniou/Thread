@@ -1,6 +1,6 @@
 package ai.saniou.thread.data.repository
 
-import ai.saniou.nmb.db.Database
+import ai.saniou.thread.db.Database
 import ai.saniou.thread.data.source.nmb.DataPolicy
 import ai.saniou.thread.data.source.nmb.NmbSource
 import ai.saniou.thread.data.source.nmb.remote.dto.toDomain

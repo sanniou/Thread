@@ -1,6 +1,6 @@
 package ai.saniou.thread.data.di
-import ai.saniou.nmb.data.database.DriverFactory
-import ai.saniou.nmb.data.database.createDatabase
+import ai.saniou.thread.data.database.DriverFactory
+import ai.saniou.thread.data.database.createDatabase
 import ai.saniou.thread.data.manager.CdnManager
 import ai.saniou.thread.data.repository.BookmarkRepositoryImpl
 import ai.saniou.thread.data.repository.FavoriteRepositoryImpl

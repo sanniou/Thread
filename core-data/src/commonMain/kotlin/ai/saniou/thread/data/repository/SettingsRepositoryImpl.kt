@@ -1,6 +1,6 @@
 package ai.saniou.thread.data.repository
 
-import ai.saniou.nmb.db.Database
+import ai.saniou.thread.db.Database
 import ai.saniou.thread.domain.repository.SettingsRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

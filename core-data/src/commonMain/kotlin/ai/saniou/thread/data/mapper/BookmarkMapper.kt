@@ -3,9 +3,9 @@ package ai.saniou.thread.data.mapper
 import ai.saniou.thread.domain.model.bookmark.Bookmark
 import ai.saniou.thread.domain.model.bookmark.Tag
 
-fun Bookmark.toEntity(): ai.saniou.nmb.db.table.Bookmark {
+fun Bookmark.toEntity(): ai.saniou.thread.db.table.Bookmark {
     return when (this) {
-        is Bookmark.Text -> ai.saniou.nmb.db.table.Bookmark(
+        is Bookmark.Text -> ai.saniou.thread.db.table.Bookmark(
             id = id,
             type = "TEXT",
             createdAt = createdAt,
@@ -21,7 +21,7 @@ fun Bookmark.toEntity(): ai.saniou.nmb.db.table.Bookmark {
             mimeType = null,
             duration = null
         )
-        is Bookmark.Quote -> ai.saniou.nmb.db.table.Bookmark(
+        is Bookmark.Quote -> ai.saniou.thread.db.table.Bookmark(
             id = id,
             type = "QUOTE",
             createdAt = createdAt,
@@ -37,7 +37,7 @@ fun Bookmark.toEntity(): ai.saniou.nmb.db.table.Bookmark {
             mimeType = null,
             duration = null
         )
-        is Bookmark.Link -> ai.saniou.nmb.db.table.Bookmark(
+        is Bookmark.Link -> ai.saniou.thread.db.table.Bookmark(
             id = id,
             type = "LINK",
             createdAt = createdAt,
@@ -53,7 +53,7 @@ fun Bookmark.toEntity(): ai.saniou.nmb.db.table.Bookmark {
             mimeType = null,
             duration = null
         )
-        is Bookmark.Image -> ai.saniou.nmb.db.table.Bookmark(
+        is Bookmark.Image -> ai.saniou.thread.db.table.Bookmark(
             id = id,
             type = "IMAGE",
             createdAt = createdAt,
@@ -69,7 +69,7 @@ fun Bookmark.toEntity(): ai.saniou.nmb.db.table.Bookmark {
             mimeType = null,
             duration = null
         )
-        is Bookmark.Media -> ai.saniou.nmb.db.table.Bookmark(
+        is Bookmark.Media -> ai.saniou.thread.db.table.Bookmark(
             id = id,
             type = "MEDIA",
             createdAt = createdAt,
@@ -88,7 +88,7 @@ fun Bookmark.toEntity(): ai.saniou.nmb.db.table.Bookmark {
     }
 }
 
-fun ai.saniou.nmb.db.table.Bookmark.toDomain(tags: List<Tag>): Bookmark {
+fun ai.saniou.thread.db.table.Bookmark.toDomain(tags: List<Tag>): Bookmark {
     return when (type) {
         "TEXT" -> Bookmark.Text(
             id = id,

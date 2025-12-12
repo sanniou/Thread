@@ -79,7 +79,7 @@ sqldelight {
     databases {
         create("Database") {
             dialect(libs.sqldelight.sqlite.dialect)
-            packageName.set("ai.saniou.nmb.db")
+            packageName.set("ai.saniou.thread.db")
         }
     }
 }

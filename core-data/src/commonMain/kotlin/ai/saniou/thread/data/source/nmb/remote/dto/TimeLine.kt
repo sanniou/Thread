@@ -16,7 +16,7 @@ data class TimeLine(
     val maxPage: Long,//时间线页数上限，查看时间线时如果页数超过上限则只会返回最后一页的数据
 )
 
-fun TimeLine.toTable() = ai.saniou.nmb.db.table.TimeLine(
+fun TimeLine.toTable() = ai.saniou.thread.db.table.TimeLine(
     id = id,
     name = name,
     displayName = displayName,
@@ -24,7 +24,7 @@ fun TimeLine.toTable() = ai.saniou.nmb.db.table.TimeLine(
     maxPage = maxPage
 )
 
-fun ai.saniou.nmb.db.table.TimeLine.toTimeLine() = TimeLine(
+fun ai.saniou.thread.db.table.TimeLine.toTimeLine() = TimeLine(
     id = id,
     name = name,
     displayName = displayName,

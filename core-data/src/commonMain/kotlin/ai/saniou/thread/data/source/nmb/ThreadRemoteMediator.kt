@@ -5,7 +5,7 @@ import ai.saniou.thread.data.source.nmb.remote.dto.RemoteKeyType
 import ai.saniou.thread.data.source.nmb.remote.dto.Thread
 import ai.saniou.thread.data.source.nmb.remote.dto.toTable
 import ai.saniou.thread.data.source.nmb.remote.dto.toTableReply
-import ai.saniou.nmb.db.Database
+import ai.saniou.thread.db.Database
 import app.cash.paging.ExperimentalPagingApi
 import app.cash.paging.LoadType
 import app.cash.paging.PagingState
@@ -24,7 +24,7 @@ class ThreadRemoteMediator(
     private val dataPolicy: DataPolicy,
     private val initialPage: Int,
     private val fetcher: suspend (page: Int) -> SaniouResponse<Thread>,
-) : RemoteMediator<Int, ai.saniou.nmb.db.table.ThreadReply>() {
+) : RemoteMediator<Int, ai.saniou.thread.db.table.ThreadReply>() {
 
     private val threadQueries = db.threadQueries
     private val threadReplyQueries = db.threadReplyQueries
@@ -37,7 +37,7 @@ class ThreadRemoteMediator(
     @OptIn(ExperimentalTime::class)
     override suspend fun load(
         loadType: LoadType,
-        state: PagingState<Int, ai.saniou.nmb.db.table.ThreadReply>,
+        state: PagingState<Int, ai.saniou.thread.db.table.ThreadReply>,
     ): RemoteMediatorMediatorResult {
         val page: Int = when (loadType) {
             LoadType.REFRESH -> {
@@ -116,7 +116,7 @@ class ThreadRemoteMediator(
         }
     }
 
-    private suspend fun getRemoteKeyForLastItem(state: PagingState<Int, ai.saniou.nmb.db.table.ThreadReply>): ai.saniou.nmb.db.table.RemoteKeys? {
+    private suspend fun getRemoteKeyForLastItem(state: PagingState<Int, ai.saniou.thread.db.table.ThreadReply>): ai.saniou.thread.db.table.RemoteKeys? {
         return state.pages.lastOrNull { it.data.isNotEmpty() }?.data?.lastOrNull()
             ?.let { reply ->
                 remoteKeyQueries.getRemoteKeyById(
@@ -126,7 +126,7 @@ class ThreadRemoteMediator(
             }
     }
 
-    private suspend fun getRemoteKeyForFirstItem(state: PagingState<Int, ai.saniou.nmb.db.table.ThreadReply>): ai.saniou.nmb.db.table.RemoteKeys? {
+    private suspend fun getRemoteKeyForFirstItem(state: PagingState<Int, ai.saniou.thread.db.table.ThreadReply>): ai.saniou.thread.db.table.RemoteKeys? {
         return state.pages.firstOrNull { it.data.isNotEmpty() }?.data?.firstOrNull()
             ?.let { reply ->
                 remoteKeyQueries.getRemoteKeyById(
@@ -136,7 +136,7 @@ class ThreadRemoteMediator(
             }
     }
 
-    private fun getRemoteKeyClosestToCurrentPosition(state: PagingState<Int, ai.saniou.nmb.db.table.ThreadReply>): ai.saniou.nmb.db.table.RemoteKeys? {
+    private fun getRemoteKeyClosestToCurrentPosition(state: PagingState<Int, ai.saniou.thread.db.table.ThreadReply>): ai.saniou.thread.db.table.RemoteKeys? {
         return state.anchorPosition?.let { position ->
             state.closestItemToPosition(position)?.threadId?.let { tid ->
                 remoteKeyQueries.getRemoteKeyById(RemoteKeyType.THREAD, tid.toString())

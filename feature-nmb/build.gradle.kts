@@ -109,7 +109,7 @@ kotlin {
 }
 
 android {
-    namespace = "ai.saniou.nmb"
+    namespace = "ai.saniou.forum"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
@@ -137,11 +137,11 @@ dependencies {
 
 compose.desktop {
     application {
-        mainClass = "ai.saniou.nmb.MainKt"
+        mainClass = "ai.saniou.forum.MainKt"
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "ai.saniou.nmb"
+            packageName = "ai.saniou.forum"
             packageVersion = "1.0.0"
         }
     }

@@ -1,11 +1,11 @@
 package ai.saniou.thread.data.source.nmb.remote.dto
 
-import ai.saniou.nmb.db.table.GetHistoryThreads
-import ai.saniou.nmb.db.table.GetThreadsInForum
-import ai.saniou.nmb.db.table.GetThreadsInForumOffset
-import ai.saniou.nmb.db.table.SearchThreads
-import ai.saniou.nmb.db.table.Thread
-import ai.saniou.nmb.db.table.ThreadReplyQueries
+import ai.saniou.thread.db.table.GetHistoryThreads
+import ai.saniou.thread.db.table.GetThreadsInForum
+import ai.saniou.thread.db.table.GetThreadsInForumOffset
+import ai.saniou.thread.db.table.SearchThreads
+import ai.saniou.thread.db.table.Thread
+import ai.saniou.thread.db.table.ThreadReplyQueries
 import kotlinx.serialization.json.JsonNames
 
 data class ThreadWithInformation(

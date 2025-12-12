@@ -1,7 +1,7 @@
 package ai.saniou.thread.data.repository
 
-import ai.saniou.nmb.db.Database
-import ai.saniou.nmb.db.table.BookmarkTag
+import ai.saniou.thread.db.Database
+import ai.saniou.thread.db.table.BookmarkTag
 import ai.saniou.thread.data.mapper.toDomain
 import ai.saniou.thread.data.mapper.toEntity
 import ai.saniou.thread.domain.model.bookmark.Bookmark
@@ -73,7 +73,7 @@ class BookmarkRepositoryImpl(
         duration: Long?
     ): Bookmark {
         val bookmarkTags = db.tagQueries.getTagsForBookmark(id).executeAsList().map { it.toDomain() }
-        return ai.saniou.nmb.db.table.Bookmark(
+        return ai.saniou.thread.db.table.Bookmark(
             id,
             type,
             createdAt,

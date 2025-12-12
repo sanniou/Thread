@@ -1,0 +1,4 @@
+import ai.saniou.thread.db.table.BookmarkTag;
+
+insert:
+INSERT OR IGNORE INTO BookmarkTag(bookmarkId, tagId) VALUES ?;
