@@ -24,8 +24,9 @@ val readerViewModelModule = DI.Module("readerViewModelModule") {
     bindFactory<String, ArticleDetailViewModel> { articleId: String ->
         ArticleDetailViewModel(
             articleId,
-            instance(),
-            instance()
+            instance(), // GetArticleUseCase
+            instance(), // GetFeedSourceUseCase
+            instance()  // ToggleArticleBookmarkUseCase
         )
     }
 }

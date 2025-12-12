@@ -129,7 +129,7 @@ private fun ArticleDetailTopAppBar(
         title = {
             // 在 MediumTopAppBar 中，当折叠时显示标题
             Text(
-                text = state.article?.feedSourceId ?: "文章详情", // 这里可以显示来源或者 "文章详情"
+                text = state.feedSourceName ?: "文章详情",
                 style = MaterialTheme.typography.titleMedium
             )
         },

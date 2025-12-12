@@ -1,6 +1,7 @@
 package ai.saniou.reader.workflow.articledetail
 
 import ai.saniou.thread.domain.usecase.reader.GetArticleUseCase
+import ai.saniou.thread.domain.usecase.reader.GetFeedSourceUseCase
 import ai.saniou.thread.domain.usecase.reader.ToggleArticleBookmarkUseCase
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
@@ -12,6 +13,7 @@ import kotlinx.coroutines.launch
 class ArticleDetailViewModel(
     private val articleId: String,
     private val getArticleUseCase: GetArticleUseCase,
+    private val getFeedSourceUseCase: GetFeedSourceUseCase,
     private val toggleArticleBookmarkUseCase: ToggleArticleBookmarkUseCase
 ) : ScreenModel {
 
@@ -36,7 +38,19 @@ class ArticleDetailViewModel(
             _state.update { it.copy(isLoading = true, error = null) }
             try {
                 val article = getArticleUseCase(articleId)
-                _state.update { it.copy(article = article, isLoading = false) }
+                
+                // Load FeedSource Name
+                val sourceName = article?.let { 
+                    getFeedSourceUseCase(it.feedSourceId)?.name 
+                }
+
+                _state.update { 
+                    it.copy(
+                        article = article, 
+                        feedSourceName = sourceName,
+                        isLoading = false
+                    ) 
+                }
             } catch (e: Exception) {
                 _state.update { it.copy(error = e, isLoading = false) }
             }
@@ -54,12 +68,10 @@ class ArticleDetailViewModel(
                 }
                 
                 toggleArticleBookmarkUseCase(currentArticle.id, !newStatus)
-                // If we needed to confirm with backend return, we would update again here.
-                // For now, assume optimistic update is enough or reload article.
             } catch (e: Exception) {
                 // Revert on error
                 _state.update { 
-                    it.copy(article = currentArticle, error = e) // Optional: show error toast logic
+                    it.copy(article = currentArticle, error = e) 
                 }
             }
         }

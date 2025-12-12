@@ -5,6 +5,7 @@ import ai.saniou.thread.domain.model.Article
 interface ArticleDetailContract {
     data class State(
         val article: Article? = null,
+        val feedSourceName: String? = null,
         val isLoading: Boolean = true,
         val error: Throwable? = null,
         val fontSizeScale: Float = 1.0f, // 1.0 is standard size

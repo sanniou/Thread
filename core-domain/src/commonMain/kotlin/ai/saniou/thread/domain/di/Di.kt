@@ -59,6 +59,7 @@ val domainModule = DI.Module("domainModule") {
     bindProvider { RefreshFeedSourceUseCase(instance()) }
     bindProvider { RefreshAllFeedsUseCase(instance()) }
     bindProvider { ToggleArticleBookmarkUseCase(instance()) }
+    bindProvider { GetFeedSourceUseCase(instance()) }
 
     // Feed
     bindProvider { GetSubscriptionFeedUseCase(instance()) }
