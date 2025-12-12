@@ -71,8 +71,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import cafe.adriel.voyager.navigator.Navigator
 import org.jetbrains.compose.resources.stringResource
-import thread.feature_nmb.generated.resources.Res
-import thread.feature_nmb.generated.resources.*
+import thread.feature_forum.generated.resources.Res
+import thread.feature_forum.generated.resources.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp

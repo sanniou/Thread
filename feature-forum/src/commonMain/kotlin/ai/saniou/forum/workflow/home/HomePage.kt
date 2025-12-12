@@ -25,8 +25,8 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
-import thread.feature_nmb.generated.resources.Res
-import thread.feature_nmb.generated.resources.back_button
+import thread.feature_forum.generated.resources.Res
+import thread.feature_forum.generated.resources.back_button
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

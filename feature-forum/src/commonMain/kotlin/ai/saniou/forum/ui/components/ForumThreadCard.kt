@@ -30,8 +30,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import org.jetbrains.compose.resources.stringResource
-import thread.feature_nmb.generated.resources.Res
-import thread.feature_nmb.generated.resources.empty_title
+import thread.feature_forum.generated.resources.Res
+import thread.feature_forum.generated.resources.empty_title
 
 
 @Composable

@@ -9,13 +9,13 @@ import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.ui.graphics.vector.ImageVector
 import org.jetbrains.compose.resources.StringResource
-import thread.feature_nmb.generated.resources.Res
-import thread.feature_nmb.generated.resources.favorites
-import thread.feature_nmb.generated.resources.history
-import thread.feature_nmb.generated.resources.home
-import thread.feature_nmb.generated.resources.profile
-import thread.feature_nmb.generated.resources.shopping
-import thread.feature_nmb.generated.resources.trend
+import thread.feature_forum.generated.resources.Res
+import thread.feature_forum.generated.resources.favorites
+import thread.feature_forum.generated.resources.history
+import thread.feature_forum.generated.resources.home
+import thread.feature_forum.generated.resources.profile
+import thread.feature_forum.generated.resources.shopping
+import thread.feature_forum.generated.resources.trend
 
 enum class AppDestinations(
     val label: StringResource,
