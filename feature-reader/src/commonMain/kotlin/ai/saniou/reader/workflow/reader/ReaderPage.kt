@@ -7,6 +7,8 @@ import ai.saniou.thread.domain.model.Article
 import ai.saniou.thread.domain.model.FeedSource
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -15,6 +17,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -33,6 +36,7 @@ import cafe.adriel.voyager.kodein.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import coil3.compose.AsyncImage
+import kotlinx.coroutines.launch
 
 class ReaderPage : Screen {
     @Composable
@@ -45,8 +49,8 @@ class ReaderPage : Screen {
         var editingSource by remember { mutableStateOf<FeedSource?>(null) }
         var isSearchActive by remember { mutableStateOf(false) }
 
+        // Dialog handling
         val isSheetShown = isAddSheetShown || editingSource != null
-
         if (isSheetShown) {
             val addFeedSourceViewModel = remember(editingSource) { AddFeedSourceViewModel(sourceToEdit = editingSource) }
             AddFeedSourceSheet(
@@ -63,84 +67,174 @@ class ReaderPage : Screen {
             )
         }
 
-        Scaffold(
-            topBar = {
-                ReaderTopAppBar(
-                    state = state,
-                    isSearchActive = isSearchActive,
-                    onSearchActiveChange = { isSearchActive = it },
-                    onSearchQueryChanged = { viewModel.onEvent(ReaderContract.Event.OnSearchQueryChanged(it)) },
-                    onRefreshAll = { viewModel.onEvent(ReaderContract.Event.OnRefreshAll) }
-                )
-            },
-            floatingActionButton = {
-                FloatingActionButton(onClick = {
-                    editingSource = null // 确保是添加模式
-                    isAddSheetShown = true
-                }) {
-                    Icon(Icons.Default.Add, contentDescription = "添加订阅源")
-                }
+        // Adaptive Layout Logic
+        BoxWithConstraints {
+            val isMobile = maxWidth < 600.dp
+            val drawerState = rememberDrawerState(DrawerValue.Closed)
+            val scope = rememberCoroutineScope()
+
+            val onMenuClick = {
+                scope.launch { drawerState.open() }
             }
-        ) { padding ->
-            Row(modifier = Modifier.padding(padding).fillMaxSize()) {
-                // Sidebar
+
+            val navigationContent = @Composable {
                 FeedSourceList(
                     sources = state.feedSources,
                     articleCounts = state.articleCounts,
                     selectedSourceId = state.selectedFeedSourceId,
-                    onSelect = { viewModel.onEvent(ReaderContract.Event.OnSelectFeedSource(it)) },
+                    onSelect = {
+                        viewModel.onEvent(ReaderContract.Event.OnSelectFeedSource(it))
+                        if (isMobile) scope.launch { drawerState.close() }
+                    },
                     onEdit = { editingSource = it },
                     onDelete = { viewModel.onEvent(ReaderContract.Event.OnDeleteSource(it)) },
-                    onRefresh = { viewModel.onEvent(ReaderContract.Event.OnRefreshFeedSource(it)) }
+                    onRefresh = { viewModel.onEvent(ReaderContract.Event.OnRefreshFeedSource(it)) },
+                    onAdd = {
+                        editingSource = null
+                        isAddSheetShown = true
+                        if (isMobile) scope.launch { drawerState.close() }
+                    }
                 )
+            }
 
-                // Article List
-                Column(modifier = Modifier.weight(1f).fillMaxSize()) {
-                    FilterChips(
-                        selectedFilter = state.articleFilter,
+            if (isMobile) {
+                ModalNavigationDrawer(
+                    drawerState = drawerState,
+                    drawerContent = {
+                        ModalDrawerSheet {
+                            navigationContent()
+                        }
+                    }
+                ) {
+                    ReaderScaffold(
+                        state = state,
+                        articles = articles,
+                        isSearchActive = isSearchActive,
+                        isMobile = true,
+                        onSearchActiveChange = { isSearchActive = it },
+                        onSearchQueryChanged = { viewModel.onEvent(ReaderContract.Event.OnSearchQueryChanged(it)) },
+                        onRefreshAll = { viewModel.onEvent(ReaderContract.Event.OnRefreshAll) },
+                        onMenuClick = { scope.launch { drawerState.open() } },
+                        onArticleClick = { article ->
+                            viewModel.onEvent(ReaderContract.Event.OnMarkArticleAsRead(article.id, true))
+                            navigator.push(ArticleDetailPage(article.id))
+                        },
                         onFilterChange = { viewModel.onEvent(ReaderContract.Event.OnFilterChanged(it)) }
                     )
-                    Box(modifier = Modifier.weight(1f).fillMaxSize()) {
-                        val refreshState = articles.loadState.refresh
-                        when {
-                            refreshState is LoadStateLoading -> {
-                                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                            }
-                            refreshState is LoadStateError -> {
-                                Text(
-                                    text = "错误: ${refreshState.error.message}",
-                                    modifier = Modifier.align(Alignment.Center)
-                                )
-                            }
-                            articles.itemCount == 0 -> {
-                                Text(
-                                    text = "没有文章。尝试添加一个订阅源或更改筛选条件。",
-                                    modifier = Modifier.align(Alignment.Center).padding(16.dp)
-                                )
-                            }
-                            else -> {
-                                LazyColumn(modifier = Modifier.fillMaxSize()) {
-                                    items(articles.itemCount) { index ->
-                                        val article = articles[index]
-                                        if (article != null) {
-                                            val sourceName = state.feedSources.find { it.id == article.feedSourceId }?.name ?: "未知来源"
-                                            ArticleItem(
-                                                article = article,
-                                                sourceName = sourceName,
-                                                onClick = {
-                                                    viewModel.onEvent(ReaderContract.Event.OnMarkArticleAsRead(article.id, true))
-                                                    navigator.push(ArticleDetailPage(article.id))
-                                                }
-                                            )
-                                        }
-                                    }
+                }
+            } else {
+                PermanentNavigationDrawer(
+                    drawerContent = {
+                        PermanentDrawerSheet(modifier = Modifier.width(280.dp)) {
+                            navigationContent()
+                        }
+                    }
+                ) {
+                    ReaderScaffold(
+                        state = state,
+                        articles = articles,
+                        isSearchActive = isSearchActive,
+                        isMobile = false,
+                        onSearchActiveChange = { isSearchActive = it },
+                        onSearchQueryChanged = { viewModel.onEvent(ReaderContract.Event.OnSearchQueryChanged(it)) },
+                        onRefreshAll = { viewModel.onEvent(ReaderContract.Event.OnRefreshAll) },
+                        onMenuClick = {}, // No menu button on desktop
+                        onArticleClick = { article ->
+                            viewModel.onEvent(ReaderContract.Event.OnMarkArticleAsRead(article.id, true))
+                            navigator.push(ArticleDetailPage(article.id))
+                        },
+                        onFilterChange = { viewModel.onEvent(ReaderContract.Event.OnFilterChanged(it)) }
+                    )
+                }
+            }
+        }
+    }
+}
 
-                                    if (articles.loadState.append is LoadStateLoading) {
-                                        item {
-                                            Box(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
-                                                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                                            }
-                                        }
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ReaderScaffold(
+    state: ReaderContract.State,
+    articles: app.cash.paging.compose.LazyPagingItems<Article>,
+    isSearchActive: Boolean,
+    isMobile: Boolean,
+    onSearchActiveChange: (Boolean) -> Unit,
+    onSearchQueryChanged: (String) -> Unit,
+    onRefreshAll: () -> Unit,
+    onMenuClick: () -> Unit,
+    onArticleClick: (Article) -> Unit,
+    onFilterChange: (ArticleFilter) -> Unit
+) {
+    Scaffold(
+        topBar = {
+            ReaderTopAppBar(
+                state = state,
+                isSearchActive = isSearchActive,
+                showMenuIcon = isMobile,
+                onSearchActiveChange = onSearchActiveChange,
+                onSearchQueryChanged = onSearchQueryChanged,
+                onRefreshAll = onRefreshAll,
+                onMenuClick = onMenuClick
+            )
+        }
+    ) { padding ->
+        Column(modifier = Modifier.padding(padding).fillMaxSize()) {
+            FilterChips(
+                selectedFilter = state.articleFilter,
+                onFilterChange = onFilterChange
+            )
+            Box(modifier = Modifier.weight(1f).fillMaxSize()) {
+                val refreshState = articles.loadState.refresh
+                when {
+                    refreshState is LoadStateLoading -> {
+                        CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                    }
+                    refreshState is LoadStateError -> {
+                        Column(
+                            modifier = Modifier.align(Alignment.Center),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Icon(
+                                Icons.Default.ErrorOutline,
+                                contentDescription = null,
+                                modifier = Modifier.size(48.dp),
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "加载失败: ${refreshState.error.message}",
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
+                    articles.itemCount == 0 -> {
+                        EmptyState(
+                            isSearchActive = state.searchQuery.isNotEmpty(),
+                            query = state.searchQuery
+                        )
+                    }
+                    else -> {
+                        LazyColumn(modifier = Modifier.fillMaxSize()) {
+                            items(articles.itemCount) { index ->
+                                val article = articles[index]
+                                if (article != null) {
+                                    val sourceName = state.feedSources.find { it.id == article.feedSourceId }?.name ?: "未知来源"
+                                    ArticleItem(
+                                        article = article,
+                                        sourceName = sourceName,
+                                        onClick = { onArticleClick(article) }
+                                    )
+                                    HorizontalDivider(
+                                        modifier = Modifier.padding(horizontal = 16.dp),
+                                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                                    )
+                                }
+                            }
+
+                            if (articles.loadState.append is LoadStateLoading) {
+                                item {
+                                    Box(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+                                        CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                                     }
                                 }
                             }
@@ -152,38 +246,97 @@ class ReaderPage : Screen {
     }
 }
 
+@Composable
+private fun EmptyState(isSearchActive: Boolean, query: String) {
+    Column(
+        modifier = Modifier.fillMaxSize().padding(16.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        val icon = if (isSearchActive) Icons.Default.SearchOff else Icons.Default.Inbox
+        val title = if (isSearchActive) "未找到相关文章" else "暂无文章"
+        val subtitle = if (isSearchActive) "尝试使用不同的关键词" else "尝试添加新的订阅源或稍后刷新"
+
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            modifier = Modifier.size(64.dp),
+            tint = MaterialTheme.colorScheme.surfaceVariant
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = subtitle,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+        )
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ReaderTopAppBar(
     state: ReaderContract.State,
     isSearchActive: Boolean,
+    showMenuIcon: Boolean,
     onSearchActiveChange: (Boolean) -> Unit,
     onSearchQueryChanged: (String) -> Unit,
-    onRefreshAll: () -> Unit
+    onRefreshAll: () -> Unit,
+    onMenuClick: () -> Unit
 ) {
-    TopAppBar(
-        title = {
-            AnimatedVisibility(visible = !isSearchActive) {
-                Text("阅读器")
-            }
-        },
-        actions = {
-            AnimatedVisibility(visible = isSearchActive) {
-                OutlinedTextField(
+    // 搜索状态下的 TopBar
+    if (isSearchActive) {
+        TopAppBar(
+            title = {
+                TextField(
                     value = state.searchQuery,
                     onValueChange = onSearchQueryChanged,
-                    placeholder = { Text("搜索文章...") },
-                    modifier = Modifier.weight(1f).padding(end = 8.dp),
+                    placeholder = { Text("搜索文章标题或内容...") },
+                    modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent
+                    ),
                     trailingIcon = {
-                        IconButton(onClick = { onSearchActiveChange(false) }) {
-                            Icon(Icons.Default.Close, contentDescription = "关闭搜索")
+                        if (state.searchQuery.isNotEmpty()) {
+                            IconButton(onClick = { onSearchQueryChanged("") }) {
+                                Icon(Icons.Default.Clear, contentDescription = "清空")
+                            }
                         }
                     }
                 )
-            }
-            if (!isSearchActive) {
+            },
+            navigationIcon = {
+                IconButton(onClick = {
+                    onSearchActiveChange(false)
+                    onSearchQueryChanged("") // 退出时清空搜索？或者保留？通常保留状态较好，但这里根据交互需求重置
+                }) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "退出搜索")
+                }
+            },
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainer
+            )
+        )
+    } else {
+        TopAppBar(
+            title = { Text("阅读器") },
+            navigationIcon = {
+                if (showMenuIcon) {
+                    IconButton(onClick = onMenuClick) {
+                        Icon(Icons.Default.Menu, contentDescription = "菜单")
+                    }
+                }
+            },
+            actions = {
                 IconButton(onClick = { onSearchActiveChange(true) }) {
                     Icon(Icons.Default.Search, contentDescription = "搜索")
                 }
@@ -191,8 +344,8 @@ private fun ReaderTopAppBar(
                     Icon(Icons.Default.Refresh, contentDescription = "全部刷新")
                 }
             }
-        }
-    )
+        )
+    }
 }
 
 @Composable
@@ -203,32 +356,58 @@ private fun FeedSourceList(
     onSelect: (String?) -> Unit,
     onEdit: (FeedSource) -> Unit,
     onDelete: (String) -> Unit,
-    onRefresh: (String) -> Unit
+    onRefresh: (String) -> Unit,
+    onAdd: () -> Unit
 ) {
-    LazyColumn(modifier = Modifier.width(250.dp).fillMaxHeight().background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))) {
-        item {
-            FeedSourceItem(
-                source = FeedSource(id = "all", name = "全部", url = "", type = ai.saniou.thread.domain.model.FeedType.RSS),
-                unreadCount = articleCounts.values.sumOf { it.second },
-                isSelected = selectedSourceId == null,
-                onClick = { onSelect(null) },
-                onEdit = {},
-                onDelete = {},
-                onRefresh = {}
-            )
+    Column(modifier = Modifier.fillMaxHeight().padding(vertical = 12.dp)) {
+        Text(
+            text = "订阅源",
+            style = MaterialTheme.typography.titleSmall,
+            modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
+            color = MaterialTheme.colorScheme.primary
+        )
+
+        LazyColumn(
+            modifier = Modifier.weight(1f),
+            contentPadding = PaddingValues(horizontal = 12.dp)
+        ) {
+            item {
+                NavigationDrawerItem(
+                    label = { Text("全部文章") },
+                    icon = { Icon(Icons.Default.AllInclusive, null) },
+                    selected = selectedSourceId == null,
+                    onClick = { onSelect(null) },
+                    badge = {
+                        val totalUnread = articleCounts.values.sumOf { it.second }
+                        if (totalUnread > 0) Badge { Text(totalUnread.toString()) }
+                    },
+                    modifier = Modifier.padding(vertical = 4.dp)
+                )
+            }
+
+            items(sources) { source ->
+                val counts = articleCounts[source.id]
+                FeedSourceItem(
+                    source = source,
+                    unreadCount = counts?.second ?: 0,
+                    isSelected = selectedSourceId == source.id,
+                    onClick = { onSelect(source.id) },
+                    onEdit = { onEdit(source) },
+                    onDelete = { onDelete(source.id) },
+                    onRefresh = { onRefresh(source.id) }
+                )
+            }
         }
-        items(sources) { source ->
-            val counts = articleCounts[source.id]
-            FeedSourceItem(
-                source = source,
-                unreadCount = counts?.second ?: 0,
-                isSelected = selectedSourceId == source.id,
-                onClick = { onSelect(source.id) },
-                onEdit = { onEdit(source) },
-                onDelete = { onDelete(source.id) },
-                onRefresh = { onRefresh(source.id) }
-            )
-        }
+        
+        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+        
+        NavigationDrawerItem(
+            label = { Text("添加订阅源") },
+            icon = { Icon(Icons.Default.Add, null) },
+            selected = false,
+            onClick = onAdd,
+            modifier = Modifier.padding(horizontal = 12.dp)
+        )
     }
 }
 
@@ -245,54 +424,75 @@ fun FeedSourceItem(
     onRefresh: () -> Unit
 ) {
     var showMenu by remember { mutableStateOf(false) }
-    val backgroundColor by animateColorAsState(
-        if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent
-    )
+
+    // 使用 NavigationDrawerItem 的样式自定义，或者直接使用 Box 包裹 NavigationDrawerItem
+    // 这里为了支持长按菜单，我们自定义布局但模仿 NavigationDrawerItem 的样式
+    
+    val containerColor = if (isSelected) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent
+    val contentColor = if (isSelected) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(MaterialTheme.shapes.medium)
-            .background(backgroundColor)
+            .padding(vertical = 4.dp)
+            .clip(MaterialTheme.shapes.large) // Drawer item shape
+            .background(containerColor)
             .combinedClickable(
                 onClick = onClick,
-                onLongClick = { if (source.id != "all") showMenu = true }
+                onLongClick = { showMenu = true }
             )
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = 12.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         AsyncImage(
             model = source.iconUrl,
-            contentDescription = "${source.name} icon",
-            modifier = Modifier.size(24.dp)
+            contentDescription = null,
+            modifier = Modifier.size(24.dp),
+            error = remember { 
+                 // Fallback icon if needed, or handle in coil config
+                 null
+            }
         )
+        
         Text(
             text = source.name,
-            style = MaterialTheme.typography.bodyLarge,
+            style = MaterialTheme.typography.labelLarge,
+            color = contentColor,
             modifier = Modifier.weight(1f),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
-        if (unreadCount > 0) {
+
+        if (source.isRefreshing) {
+            CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+        } else if (unreadCount > 0) {
             Badge { Text(unreadCount.toString()) }
         }
-        if (source.isRefreshing) {
-            CircularProgressIndicator(modifier = Modifier.size(20.dp))
-        }
-        if (source.id != "all") {
-            Box {
-                IconButton(onClick = { showMenu = true }, modifier = Modifier.size(24.dp)) {
-                    Icon(Icons.Default.MoreVert, contentDescription = "更多选项")
-                }
-                DropdownMenu(
-                    expanded = showMenu,
-                    onDismissRequest = { showMenu = false }
-                ) {
-                    DropdownMenuItem(text = { Text("编辑") }, onClick = { onEdit(); showMenu = false })
-                    DropdownMenuItem(text = { Text("刷新") }, onClick = { onRefresh(); showMenu = false })
-                    DropdownMenuItem(text = { Text("删除") }, onClick = { onDelete(); showMenu = false })
-                }
+
+        // Dropdown Menu
+        Box {
+             DropdownMenu(
+                expanded = showMenu,
+                onDismissRequest = { showMenu = false }
+            ) {
+                DropdownMenuItem(
+                    text = { Text("刷新") },
+                    onClick = { onRefresh(); showMenu = false },
+                    leadingIcon = { Icon(Icons.Default.Refresh, null) }
+                )
+                DropdownMenuItem(
+                    text = { Text("编辑") },
+                    onClick = { onEdit(); showMenu = false },
+                    leadingIcon = { Icon(Icons.Default.Edit, null) }
+                )
+                HorizontalDivider()
+                DropdownMenuItem(
+                    text = { Text("删除") },
+                    onClick = { onDelete(); showMenu = false },
+                    leadingIcon = { Icon(Icons.Default.Delete, null) },
+                    colors = MenuDefaults.itemColors(textColor = MaterialTheme.colorScheme.error)
+                )
             }
         }
     }
@@ -300,64 +500,74 @@ fun FeedSourceItem(
 
 @Composable
 fun ArticleItem(article: Article, sourceName: String, onClick: () -> Unit) {
-    val titleColor = if (article.isRead) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f) else MaterialTheme.colorScheme.onSurface
-    val fontWeight = if (article.isRead) FontWeight.Normal else FontWeight.Bold
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 12.dp)
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
+    // 优化：更清晰的已读/未读状态
+    val isRead = article.isRead
+    val titleColor = if (isRead) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f) else MaterialTheme.colorScheme.onSurface
+    val fontWeight = if (isRead) FontWeight.Normal else FontWeight.SemiBold
+    
+    ListItem(
+        modifier = Modifier.clickable(onClick = onClick),
+        headlineContent = {
             Text(
-                text = sourceName,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.primary,
-                maxLines = 1
-            )
-            if (!article.author.isNullOrBlank()) {
-                Text("·", style = MaterialTheme.typography.labelMedium)
-                Text(
-                    text = article.author!!,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f, fill = false)
-                )
-            }
-            Spacer(modifier = Modifier.weight(1f))
-            Text(
-                text = article.publishDate.toRelativeTimeString(),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1
-            )
-        }
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = article.title,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = fontWeight,
-            color = titleColor,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        if (article.content.isNotBlank()) {
-            RichText(
-                text = article.content,
-                style = MaterialTheme.typography.bodyMedium,
-                maxLines = 3,
-                color = titleColor.copy(alpha = 0.8f),
+                text = article.title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = fontWeight,
+                color = titleColor,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
+        },
+        supportingContent = {
+            Column {
+                Spacer(modifier = Modifier.height(4.dp))
+                if (article.content.isNotBlank()) {
+                    RichText(
+                        text = article.content,
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 2,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = sourceName,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    if (!article.author.isNullOrBlank()) {
+                        Text(" · ", style = MaterialTheme.typography.labelSmall)
+                        Text(
+                            text = article.author!!,
+                            style = MaterialTheme.typography.labelSmall,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f, fill = false)
+                        )
+                    }
+                    Spacer(modifier = Modifier.weight(1f))
+                    Text(
+                        text = article.publishDate.toRelativeTimeString(),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.outline
+                    )
+                }
+            }
+        },
+        leadingContent = {
+            // 可选：添加文章的缩略图或者已读指示器
+            // 这里我们用一个小圆点表示未读状态，更加精致
+            if (!isRead) {
+                Icon(
+                    Icons.Default.Circle, 
+                    contentDescription = "未读",
+                    modifier = Modifier.size(8.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
         }
-    }
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -381,7 +591,11 @@ fun FilterChips(
                         ArticleFilter.UNREAD -> Icons.Default.Inbox
                         ArticleFilter.BOOKMARKED -> Icons.Default.Bookmark
                     }
-                    Icon(icon, contentDescription = filter.name)
+                    if (selectedFilter == filter) {
+                        Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
+                    } else {
+                        Icon(icon, contentDescription = filter.name, modifier = Modifier.size(18.dp))
+                    }
                 }
             )
         }
