@@ -29,6 +29,7 @@ kotlin {
         commonMain.dependencies {
             api(libs.kotlinx.datetime)
             api(libs.kodein.di.compose)
+            api(libs.cash.paging.common)
             implementation(libs.sqldelight.paging3)
 
             implementation(libs.ktor.client.core)

@@ -1,0 +1,29 @@
+package ai.saniou.thread.domain.model.feed
+
+import ai.saniou.thread.domain.model.forum.Post
+import ai.saniou.thread.domain.model.reader.Article
+import kotlinx.datetime.Instant
+import kotlin.time.ExperimentalTime
+
+sealed interface TimelineItem {
+    val uniqueId: String
+    val displayTime: Instant
+}
+
+data class PostItem(
+    val post: Post
+) : TimelineItem {
+    override val uniqueId: String = "post_${post.sourceName}_${post.id}"
+
+    @OptIn(ExperimentalTime::class)
+    override val displayTime: Instant = Instant.fromEpochMilliseconds(post.createdAt.toEpochMilliseconds())
+}
+
+data class ArticleItem(
+    val article: Article,
+    val sourceName: String,
+    val sourceIconUrl: String?
+) : TimelineItem {
+    override val uniqueId: String = "article_${article.id}"
+    override val displayTime: Instant = article.publishDate
+}
