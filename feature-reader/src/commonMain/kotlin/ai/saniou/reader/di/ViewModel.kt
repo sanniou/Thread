@@ -22,6 +22,10 @@ val readerViewModelModule = DI.Module("readerViewModelModule") {
         )
     }
     bindFactory<String, ArticleDetailViewModel> { articleId: String ->
-        ArticleDetailViewModel(articleId, instance())
+        ArticleDetailViewModel(
+            articleId,
+            instance(),
+            instance()
+        )
     }
 }
