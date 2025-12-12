@@ -31,7 +31,7 @@ interface ForumCategoryContract {
      * @property favoriteForumIds 收藏的板块ID集合
      * @property toastMessage 提示信息
      */
-    data class State(
+    data class ForumCategoryUiState(
         val isLoading: Boolean = true,
         val error: String? = null,
         val forumGroups: List<ForumGroupUiState> = emptyList(),

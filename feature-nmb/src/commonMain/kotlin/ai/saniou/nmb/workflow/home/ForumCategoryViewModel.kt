@@ -3,7 +3,7 @@ package ai.saniou.nmb.workflow.home
 import ai.saniou.nmb.initializer.AppInitializer
 import ai.saniou.nmb.workflow.home.ForumCategoryContract.Event
 import ai.saniou.nmb.workflow.home.ForumCategoryContract.ForumGroupUiState
-import ai.saniou.nmb.workflow.home.ForumCategoryContract.State
+import ai.saniou.nmb.workflow.home.ForumCategoryContract.ForumCategoryUiState
 import ai.saniou.thread.domain.model.forum.Forum
 import ai.saniou.thread.domain.repository.ForumRepository
 import ai.saniou.thread.domain.usecase.post.ToggleFavoriteUseCase
@@ -27,7 +27,7 @@ class ForumCategoryViewModel(
     private val forumRepository: ForumRepository,
 ) : ScreenModel {
 
-    private val _state = MutableStateFlow(State())
+    private val _state = MutableStateFlow(ForumCategoryUiState())
     val state = _state.asStateFlow()
 
     init {

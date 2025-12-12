@@ -39,3 +39,7 @@
 - **拥抱迭代，追求卓越**: 团队拥有在草稿阶段大刀阔斧进行重构和 Redesign 的权限，以确保最终产品符合最高的质量标准。
 - 分析模块时，现有设计天然的被标记为低分，应该始终以践行最佳实践为目标
 - 遵循 KMP 的最新推荐架构。 MD3 设计风格。
+
+# 通用工具
+ai.saniou.coreui.theme.Dimens
+文本资源示例: /feature-nmb/src/commonMain/composeResources/values/strings.xm

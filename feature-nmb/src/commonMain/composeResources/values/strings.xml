@@ -26,6 +26,19 @@
     <string name="jump_to_top">回顶</string>
     <string name="jump_to_page">跳转至</string>
 
+    <!-- ForumCategoryPage -->
+    <string name="drawer_subscribe">订阅</string>
+    <string name="drawer_bookmark">收藏</string>
+    <string name="drawer_history">历史</string>
+    <string name="drawer_post">发言</string>
+    <string name="drawer_search">搜索</string>
+    <string name="drawer_select_forum_hint">请从左侧选择一个板块</string>
+    <string name="forum_limited_time">限时</string>
+    <string name="forum_favorite_add">收藏</string>
+    <string name="forum_favorite_remove">取消收藏</string>
+    <string name="category_expand">展开</string>
+    <string name="category_collapse">收起</string>
+
     <!-- ThreadPage -->
     <string name="thread_no_prefix">No.</string>
     <string name="refresh">刷新</string>

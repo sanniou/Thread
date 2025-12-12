@@ -1,6 +1,7 @@
 package ai.saniou.reader.workflow.reader
 
 import ai.saniou.corecommon.utils.toRelativeTimeString
+import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.RichText
 import ai.saniou.reader.workflow.articledetail.ArticleDetailPage
 import ai.saniou.thread.domain.model.reader.Article
@@ -52,7 +53,8 @@ class ReaderPage : Screen {
         // Dialog handling
         val isSheetShown = isAddSheetShown || editingSource != null
         if (isSheetShown) {
-            val addFeedSourceViewModel = remember(editingSource) { AddFeedSourceViewModel(sourceToEdit = editingSource) }
+            val addFeedSourceViewModel =
+                remember(editingSource) { AddFeedSourceViewModel(sourceToEdit = editingSource) }
             AddFeedSourceSheet(
                 viewModel = addFeedSourceViewModel,
                 onDismiss = {
@@ -69,7 +71,7 @@ class ReaderPage : Screen {
 
         // Adaptive Layout Logic
         BoxWithConstraints {
-            val isMobile = maxWidth < 600.dp
+            val isMobile = maxWidth < Dimens.MobileWidth
             val drawerState = rememberDrawerState(DrawerValue.Closed)
             val scope = rememberCoroutineScope()
 
@@ -189,6 +191,7 @@ private fun ReaderScaffold(
                     refreshState is LoadStateLoading -> {
                         CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                     }
+
                     refreshState is LoadStateError -> {
                         Column(
                             modifier = Modifier.align(Alignment.Center),
@@ -207,18 +210,21 @@ private fun ReaderScaffold(
                             )
                         }
                     }
+
                     articles.itemCount == 0 -> {
                         EmptyState(
                             isSearchActive = state.searchQuery.isNotEmpty(),
                             query = state.searchQuery
                         )
                     }
+
                     else -> {
                         LazyColumn(modifier = Modifier.fillMaxSize()) {
                             items(articles.itemCount) { index ->
                                 val article = articles[index]
                                 if (article != null) {
-                                    val sourceName = state.feedSources.find { it.id == article.feedSourceId }?.name ?: "未知来源"
+                                    val sourceName =
+                                        state.feedSources.find { it.id == article.feedSourceId }?.name ?: "未知来源"
                                     ArticleItem(
                                         article = article,
                                         sourceName = sourceName,
@@ -398,9 +404,9 @@ private fun FeedSourceList(
                 )
             }
         }
-        
+
         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-        
+
         NavigationDrawerItem(
             label = { Text("添加订阅源") },
             icon = { Icon(Icons.Default.Add, null) },
@@ -427,9 +433,10 @@ fun FeedSourceItem(
 
     // 使用 NavigationDrawerItem 的样式自定义，或者直接使用 Box 包裹 NavigationDrawerItem
     // 这里为了支持长按菜单，我们自定义布局但模仿 NavigationDrawerItem 的样式
-    
+
     val containerColor = if (isSelected) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent
-    val contentColor = if (isSelected) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+    val contentColor =
+        if (isSelected) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
 
     Row(
         modifier = Modifier
@@ -449,12 +456,12 @@ fun FeedSourceItem(
             model = source.iconUrl,
             contentDescription = null,
             modifier = Modifier.size(24.dp),
-            error = remember { 
-                 // Fallback icon if needed, or handle in coil config
-                 null
+            error = remember {
+                // Fallback icon if needed, or handle in coil config
+                null
             }
         )
-        
+
         Text(
             text = source.name,
             style = MaterialTheme.typography.labelLarge,
@@ -472,7 +479,7 @@ fun FeedSourceItem(
 
         // Dropdown Menu
         Box {
-             DropdownMenu(
+            DropdownMenu(
                 expanded = showMenu,
                 onDismissRequest = { showMenu = false }
             ) {
@@ -502,9 +509,10 @@ fun FeedSourceItem(
 fun ArticleItem(article: Article, sourceName: String, onClick: () -> Unit) {
     // 优化：更清晰的已读/未读状态
     val isRead = article.isRead
-    val titleColor = if (isRead) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f) else MaterialTheme.colorScheme.onSurface
+    val titleColor =
+        if (isRead) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f) else MaterialTheme.colorScheme.onSurface
     val fontWeight = if (isRead) FontWeight.Normal else FontWeight.SemiBold
-    
+
     ListItem(
         modifier = Modifier.clickable(onClick = onClick),
         headlineContent = {
@@ -560,7 +568,7 @@ fun ArticleItem(article: Article, sourceName: String, onClick: () -> Unit) {
             // 这里我们用一个小圆点表示未读状态，更加精致
             if (!isRead) {
                 Icon(
-                    Icons.Default.Circle, 
+                    Icons.Default.Circle,
                     contentDescription = "未读",
                     modifier = Modifier.size(8.dp),
                     tint = MaterialTheme.colorScheme.primary
