@@ -1,6 +1,6 @@
 package ai.saniou.nmb.workflow.image
 
-import ai.saniou.thread.domain.model.Image
+import ai.saniou.thread.domain.model.forum.Image
 import ai.saniou.thread.domain.usecase.thread.GetThreadImagesUseCase
 import kotlinx.coroutines.flow.Flow
 

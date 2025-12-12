@@ -9,7 +9,7 @@ import ai.saniou.nmb.ui.components.LoadingFailedIndicator
 import ai.saniou.nmb.ui.components.LoadingIndicator
 import ai.saniou.nmb.ui.components.ThreadListSkeleton
 import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
-import ai.saniou.thread.domain.model.Post
+import ai.saniou.thread.domain.model.forum.Post
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column

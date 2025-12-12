@@ -3,7 +3,7 @@ package ai.saniou.thread.data.repository
 import ai.saniou.nmb.db.Database
 import ai.saniou.thread.data.mapper.toDomain
 import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
-import ai.saniou.thread.domain.model.Notice
+import ai.saniou.thread.domain.model.forum.Notice
 import ai.saniou.thread.domain.repository.NoticeRepository
 import ai.saniou.thread.domain.repository.SettingsRepository
 import ai.saniou.thread.domain.repository.getValue

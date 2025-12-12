@@ -1,7 +1,7 @@
 package ai.saniou.nmb.workflow.bookmark
 
 import ai.saniou.nmb.workflow.thread.ThreadPage
-import ai.saniou.thread.domain.model.Bookmark
+import ai.saniou.thread.domain.model.bookmark.Bookmark
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn

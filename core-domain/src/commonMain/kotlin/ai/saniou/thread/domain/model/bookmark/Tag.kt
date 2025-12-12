@@ -1,4 +1,4 @@
-package ai.saniou.thread.domain.model
+package ai.saniou.thread.domain.model.bookmark
 
 /**
  * 标签的领域模型

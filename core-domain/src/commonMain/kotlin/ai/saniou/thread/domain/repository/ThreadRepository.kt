@@ -1,8 +1,8 @@
 package ai.saniou.thread.domain.repository
 
-import ai.saniou.thread.domain.model.Image
-import ai.saniou.thread.domain.model.Post
-import ai.saniou.thread.domain.model.ThreadReply
+import ai.saniou.thread.domain.model.forum.Image
+import ai.saniou.thread.domain.model.forum.Post
+import ai.saniou.thread.domain.model.forum.ThreadReply
 import app.cash.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 

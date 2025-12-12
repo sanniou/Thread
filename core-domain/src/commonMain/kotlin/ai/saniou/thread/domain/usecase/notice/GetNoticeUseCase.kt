@@ -1,6 +1,6 @@
 package ai.saniou.thread.domain.usecase.notice
 
-import ai.saniou.thread.domain.model.Notice
+import ai.saniou.thread.domain.model.forum.Notice
 import ai.saniou.thread.domain.repository.NoticeRepository
 import kotlinx.coroutines.flow.Flow
 

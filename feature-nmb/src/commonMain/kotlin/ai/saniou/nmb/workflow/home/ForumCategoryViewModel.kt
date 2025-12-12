@@ -4,7 +4,7 @@ import ai.saniou.nmb.initializer.AppInitializer
 import ai.saniou.nmb.workflow.home.ForumCategoryContract.Event
 import ai.saniou.nmb.workflow.home.ForumCategoryContract.ForumGroupUiState
 import ai.saniou.nmb.workflow.home.ForumCategoryContract.State
-import ai.saniou.thread.domain.model.Forum
+import ai.saniou.thread.domain.model.forum.Forum
 import ai.saniou.thread.domain.repository.ForumRepository
 import ai.saniou.thread.domain.usecase.post.ToggleFavoriteUseCase
 import ai.saniou.thread.domain.usecase.forum.GetFavoriteForumsUseCase

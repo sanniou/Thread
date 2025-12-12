@@ -6,7 +6,7 @@ import ai.saniou.nmb.workflow.history.HistoryPage
 import ai.saniou.nmb.workflow.subscription.SubscriptionPage
 import ai.saniou.nmb.workflow.thread.ThreadPage
 import ai.saniou.nmb.workflow.trend.TrendPage
-import ai.saniou.thread.domain.model.Notice
+import ai.saniou.thread.domain.model.forum.Notice
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row

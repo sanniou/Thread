@@ -3,7 +3,7 @@ package ai.saniou.nmb.workflow.bookmark
 import ai.saniou.nmb.workflow.bookmark.BookmarkContract.Effect
 import ai.saniou.nmb.workflow.bookmark.BookmarkContract.Event
 import ai.saniou.nmb.workflow.bookmark.BookmarkContract.State
-import ai.saniou.thread.domain.model.Bookmark
+import ai.saniou.thread.domain.model.bookmark.Bookmark
 import ai.saniou.thread.domain.usecase.bookmark.GetBookmarksUseCase
 import ai.saniou.thread.domain.usecase.bookmark.GetTagsUseCase
 import ai.saniou.thread.domain.usecase.bookmark.RemoveBookmarkUseCase

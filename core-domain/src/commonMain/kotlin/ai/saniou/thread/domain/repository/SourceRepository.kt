@@ -1,7 +1,7 @@
 package ai.saniou.thread.domain.repository
 
-import ai.saniou.thread.domain.model.Forum
-import ai.saniou.thread.domain.model.Post
+import ai.saniou.thread.domain.model.forum.Forum
+import ai.saniou.thread.domain.model.forum.Post
 
 /**
  * 信息源的标准接口，所有具体的信息源（如NMB, NGA）都需要实现它

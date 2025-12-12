@@ -1,6 +1,6 @@
 package ai.saniou.thread.domain.repository
 
-import ai.saniou.thread.domain.model.ThreadReply
+import ai.saniou.thread.domain.model.forum.ThreadReply
 import kotlinx.coroutines.flow.Flow
 
 /**

@@ -1,6 +1,6 @@
 package ai.saniou.thread.data.parser
 
-import ai.saniou.thread.domain.model.FeedType
+import ai.saniou.thread.domain.model.reader.FeedType
 
 class FeedParserFactory(
     private val rssParser: RssParser,

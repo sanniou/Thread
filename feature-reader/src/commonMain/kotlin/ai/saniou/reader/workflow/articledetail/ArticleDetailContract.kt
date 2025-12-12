@@ -1,6 +1,6 @@
 package ai.saniou.reader.workflow.articledetail
 
-import ai.saniou.thread.domain.model.Article
+import ai.saniou.thread.domain.model.reader.Article
 
 interface ArticleDetailContract {
     data class State(

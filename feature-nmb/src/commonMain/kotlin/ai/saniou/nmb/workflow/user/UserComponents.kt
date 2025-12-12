@@ -1,6 +1,6 @@
 package ai.saniou.nmb.workflow.user
 
-import ai.saniou.thread.domain.model.Cookie
+import ai.saniou.thread.domain.model.forum.Cookie
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement

@@ -1,6 +1,6 @@
 package ai.saniou.reader.workflow.reader
 
-import ai.saniou.thread.domain.model.FeedType
+import ai.saniou.thread.domain.model.reader.FeedType
 
 /**
  * 一个简单的 URL 分析器，根据 URL 的后缀或模式快速判断订阅源类型。

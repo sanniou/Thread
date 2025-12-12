@@ -1,6 +1,6 @@
 package ai.saniou.thread.data.mapper
 
-import ai.saniou.thread.domain.model.Tag
+import ai.saniou.thread.domain.model.bookmark.Tag
 
 fun ai.saniou.nmb.db.table.Tag.toDomain(): Tag {
     return Tag(

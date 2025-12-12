@@ -1,4 +1,4 @@
-package ai.saniou.thread.domain.model
+package ai.saniou.thread.domain.model.forum
 
 data class Cookie(
     val alias: String?,

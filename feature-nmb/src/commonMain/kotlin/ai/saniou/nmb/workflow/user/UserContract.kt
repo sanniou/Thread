@@ -1,6 +1,6 @@
 package ai.saniou.nmb.workflow.user
 
-import ai.saniou.thread.domain.model.Cookie
+import ai.saniou.thread.domain.model.forum.Cookie
 
 /**
  * 定义用户中心页面的状态、事件和副作用

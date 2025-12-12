@@ -1,7 +1,7 @@
 package ai.saniou.thread.data.parser
 
-import ai.saniou.thread.domain.model.Article
-import ai.saniou.thread.domain.model.FeedSource
+import ai.saniou.thread.domain.model.reader.Article
+import ai.saniou.thread.domain.model.reader.FeedSource
 import com.fleeksoft.ksoup.Ksoup
 import com.fleeksoft.ksoup.safety.Safelist
 import kotlin.time.Clock

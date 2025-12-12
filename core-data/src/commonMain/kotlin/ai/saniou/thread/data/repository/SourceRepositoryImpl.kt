@@ -1,7 +1,7 @@
 package ai.saniou.thread.data.repository
 
-import ai.saniou.thread.domain.model.Forum
-import ai.saniou.thread.domain.model.Post
+import ai.saniou.thread.domain.model.forum.Forum
+import ai.saniou.thread.domain.model.forum.Post
 import ai.saniou.thread.domain.repository.SourceRepository
 import ai.saniou.thread.domain.repository.Source
 import kotlinx.coroutines.async

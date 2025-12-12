@@ -12,7 +12,7 @@ import ai.saniou.nmb.workflow.image.ImagePreviewPage
 import ai.saniou.nmb.workflow.image.ImagePreviewViewModelParams
 import ai.saniou.nmb.workflow.subscription.SubscriptionContract.Event
 import ai.saniou.thread.data.source.nmb.remote.dto.IBaseThread
-import ai.saniou.thread.domain.model.Post
+import ai.saniou.thread.domain.model.forum.Post
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column

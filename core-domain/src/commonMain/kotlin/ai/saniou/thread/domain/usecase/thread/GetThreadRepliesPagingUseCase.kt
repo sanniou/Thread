@@ -1,6 +1,6 @@
 package ai.saniou.thread.domain.usecase.thread
 
-import ai.saniou.thread.domain.model.ThreadReply
+import ai.saniou.thread.domain.model.forum.ThreadReply
 import ai.saniou.thread.domain.repository.ThreadRepository
 import app.cash.paging.PagingData
 import kotlinx.coroutines.flow.Flow

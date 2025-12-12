@@ -1,6 +1,6 @@
 package ai.saniou.thread.domain.usecase.bookmark
 
-import ai.saniou.thread.domain.model.Bookmark
+import ai.saniou.thread.domain.model.bookmark.Bookmark
 import ai.saniou.thread.domain.repository.BookmarkRepository
 import app.cash.paging.Pager
 import app.cash.paging.PagingConfig

@@ -15,7 +15,7 @@ import ai.saniou.thread.data.source.nmb.remote.dto.toTable
 import ai.saniou.thread.data.source.nmb.remote.dto.toTableReply
 import ai.saniou.thread.data.source.nmb.remote.dto.toThreadReply
 import ai.saniou.thread.data.source.nmb.remote.dto.toThreadWithInformation
-import ai.saniou.thread.domain.model.Post
+import ai.saniou.thread.domain.model.forum.Post
 import ai.saniou.thread.domain.repository.Source
 import ai.saniou.thread.network.SaniouResponse
 import app.cash.paging.ExperimentalPagingApi
@@ -35,7 +35,7 @@ import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
-import ai.saniou.thread.domain.model.Forum as DomainForum
+import ai.saniou.thread.domain.model.forum.Forum as DomainForum
 
 class NmbSource(
     private val nmbXdApi: NmbXdApi,

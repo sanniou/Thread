@@ -1,6 +1,6 @@
 package ai.saniou.reader.workflow.reader
 
-import ai.saniou.thread.domain.model.FeedType
+import ai.saniou.thread.domain.model.reader.FeedType
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*

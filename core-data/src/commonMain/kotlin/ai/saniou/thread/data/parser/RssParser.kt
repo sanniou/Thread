@@ -1,8 +1,8 @@
 package ai.saniou.thread.data.parser
 
 import ai.saniou.thread.data.parser.rss.Rss
-import ai.saniou.thread.domain.model.Article
-import ai.saniou.thread.domain.model.FeedSource
+import ai.saniou.thread.domain.model.reader.Article
+import ai.saniou.thread.domain.model.reader.FeedSource
 import nl.adaptivity.xmlutil.serialization.XML
 import kotlin.time.Clock
 import kotlin.time.Instant

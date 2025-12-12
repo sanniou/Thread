@@ -1,4 +1,4 @@
-package ai.saniou.thread.domain.model
+package ai.saniou.thread.domain.model.reader
 
 enum class FeedType {
     RSS, JSON, HTML

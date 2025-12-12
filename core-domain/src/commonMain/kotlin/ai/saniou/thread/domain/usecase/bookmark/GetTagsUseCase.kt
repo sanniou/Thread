@@ -1,6 +1,6 @@
 package ai.saniou.thread.domain.usecase.bookmark
 
-import ai.saniou.thread.domain.model.Tag
+import ai.saniou.thread.domain.model.bookmark.Tag
 import ai.saniou.thread.domain.repository.TagRepository
 import kotlinx.coroutines.flow.Flow
 

@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalTime::class)
 
-package ai.saniou.thread.domain.model
+package ai.saniou.thread.domain.model.forum
 
 import kotlin.time.ExperimentalTime
 

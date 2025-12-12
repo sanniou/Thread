@@ -1,6 +1,6 @@
 package ai.saniou.thread.domain.repository
 
-import ai.saniou.thread.domain.model.Bookmark
+import ai.saniou.thread.domain.model.bookmark.Bookmark
 import app.cash.paging.PagingSource
 import kotlinx.coroutines.flow.Flow
 

@@ -11,7 +11,7 @@ import ai.saniou.nmb.workflow.home.ForumCategoryContract.ForumGroupUiState
 import ai.saniou.nmb.workflow.search.SearchPage
 import ai.saniou.nmb.workflow.subscription.SubscriptionPage
 import ai.saniou.nmb.workflow.thread.ThreadPage
-import ai.saniou.thread.domain.model.Forum
+import ai.saniou.thread.domain.model.forum.Forum
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn

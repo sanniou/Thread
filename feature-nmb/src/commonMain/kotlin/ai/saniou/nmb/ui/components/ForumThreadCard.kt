@@ -5,7 +5,7 @@ import ai.saniou.thread.data.source.nmb.remote.dto.IBaseThread
 import ai.saniou.thread.data.source.nmb.remote.dto.IBaseThreadReply
 import ai.saniou.thread.data.source.nmb.remote.dto.ThreadReply
 import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
-import ai.saniou.thread.domain.model.Post
+import ai.saniou.thread.domain.model.forum.Post
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

@@ -6,13 +6,13 @@ import ai.saniou.nmb.db.table.SelectSubscriptionThread
 import ai.saniou.nmb.db.table.Thread
 import ai.saniou.nmb.db.table.ThreadReply
 import ai.saniou.nmb.db.table.TimeLine
-import ai.saniou.thread.domain.model.Post
+import ai.saniou.thread.domain.model.forum.Post
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
-import ai.saniou.thread.domain.model.Forum as DomainForum
+import ai.saniou.thread.domain.model.forum.Forum as DomainForum
 
 fun Forum.toDomain(): DomainForum = DomainForum(
     id = id.toString(),
@@ -181,7 +181,7 @@ fun Thread.toDomain(): Post = Post(
 )
 
 @OptIn(ExperimentalTime::class)
-fun ThreadReply.toDomain(): ai.saniou.thread.domain.model.ThreadReply = ai.saniou.thread.domain.model.ThreadReply(
+fun ThreadReply.toDomain(): ai.saniou.thread.domain.model.forum.ThreadReply = ai.saniou.thread.domain.model.forum.ThreadReply(
     id = id,
     userHash = userHash,
     admin = admin,
@@ -195,8 +195,8 @@ fun ThreadReply.toDomain(): ai.saniou.thread.domain.model.ThreadReply = ai.sanio
 )
 
 @OptIn(ExperimentalTime::class)
-fun ai.saniou.thread.data.source.nmb.remote.dto.ThreadReply.toDomain(): ai.saniou.thread.domain.model.ThreadReply =
-    ai.saniou.thread.domain.model.ThreadReply(
+fun ai.saniou.thread.data.source.nmb.remote.dto.ThreadReply.toDomain(): ai.saniou.thread.domain.model.forum.ThreadReply =
+    ai.saniou.thread.domain.model.forum.ThreadReply(
         id = id,
         userHash = userHash,
         admin = admin,

@@ -2,7 +2,7 @@ package ai.saniou.thread.data.source.nmb.remote.dto
 
 import ai.saniou.nmb.db.table.SelectSubscriptionThread
 import ai.saniou.nmb.db.table.Thread
-import ai.saniou.thread.domain.model.Post
+import ai.saniou.thread.domain.model.forum.Post
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant

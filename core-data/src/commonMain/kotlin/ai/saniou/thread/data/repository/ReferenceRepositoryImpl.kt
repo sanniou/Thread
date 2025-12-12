@@ -19,7 +19,7 @@ class ReferenceRepositoryImpl(
     private val db: Database,
 ) : ReferenceRepository {
 
-    override fun getReference(id: Long): Flow<ai.saniou.thread.domain.model.ThreadReply> =
+    override fun getReference(id: Long): Flow<ai.saniou.thread.domain.model.forum.ThreadReply> =
         db.threadReplyQueries.getThreadReplyById(id)
             .asFlow()
             .mapToOneOrNull(Dispatchers.IO)

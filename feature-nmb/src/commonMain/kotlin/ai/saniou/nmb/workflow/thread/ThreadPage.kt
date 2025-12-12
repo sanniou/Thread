@@ -23,8 +23,8 @@ import ai.saniou.nmb.workflow.reference.ReferenceViewModel
 import ai.saniou.nmb.workflow.thread.ThreadContract.Effect
 import ai.saniou.nmb.workflow.thread.ThreadContract.Event
 import ai.saniou.nmb.workflow.thread.ThreadContract.State
-import ai.saniou.thread.domain.model.Post
-import ai.saniou.thread.domain.model.ThreadReply
+import ai.saniou.thread.domain.model.forum.Post
+import ai.saniou.thread.domain.model.forum.ThreadReply
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable

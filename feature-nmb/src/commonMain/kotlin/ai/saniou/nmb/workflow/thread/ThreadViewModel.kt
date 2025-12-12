@@ -4,9 +4,9 @@ import ai.saniou.nmb.db.Database
 import ai.saniou.nmb.workflow.thread.ThreadContract.Effect
 import ai.saniou.nmb.workflow.thread.ThreadContract.Event
 import ai.saniou.nmb.workflow.thread.ThreadContract.State
-import ai.saniou.thread.domain.model.Bookmark
-import ai.saniou.thread.domain.model.Post
-import ai.saniou.thread.domain.model.ThreadReply
+import ai.saniou.thread.domain.model.bookmark.Bookmark
+import ai.saniou.thread.domain.model.forum.Post
+import ai.saniou.thread.domain.model.forum.ThreadReply
 import ai.saniou.thread.domain.usecase.bookmark.AddBookmarkUseCase
 import ai.saniou.thread.domain.usecase.forum.GetForumNameUseCase
 import ai.saniou.thread.domain.usecase.subscription.GetActiveSubscriptionKeyUseCase

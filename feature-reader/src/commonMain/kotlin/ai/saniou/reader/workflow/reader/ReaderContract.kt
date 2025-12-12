@@ -1,6 +1,6 @@
 package ai.saniou.reader.workflow.reader
 
-import ai.saniou.thread.domain.model.FeedSource
+import ai.saniou.thread.domain.model.reader.FeedSource
 
 enum class ArticleFilter {
     ALL, UNREAD, BOOKMARKED

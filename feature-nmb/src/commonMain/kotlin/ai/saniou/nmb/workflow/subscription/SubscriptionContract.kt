@@ -1,6 +1,6 @@
 package ai.saniou.nmb.workflow.subscription
 
-import ai.saniou.thread.domain.model.Post
+import ai.saniou.thread.domain.model.forum.Post
 import app.cash.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow

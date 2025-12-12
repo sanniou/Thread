@@ -1,6 +1,6 @@
 package ai.saniou.nmb.workflow.home
 
-import ai.saniou.thread.domain.model.Forum
+import ai.saniou.thread.domain.model.forum.Forum
 
 /**
  * 定义 ForumCategory 功能模块的 UI 状态和事件

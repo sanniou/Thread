@@ -3,8 +3,8 @@ package ai.saniou.reader.workflow.reader
 import ai.saniou.corecommon.utils.toRelativeTimeString
 import ai.saniou.coreui.widgets.RichText
 import ai.saniou.reader.workflow.articledetail.ArticleDetailPage
-import ai.saniou.thread.domain.model.Article
-import ai.saniou.thread.domain.model.FeedSource
+import ai.saniou.thread.domain.model.reader.Article
+import ai.saniou.thread.domain.model.reader.FeedSource
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.fadeIn

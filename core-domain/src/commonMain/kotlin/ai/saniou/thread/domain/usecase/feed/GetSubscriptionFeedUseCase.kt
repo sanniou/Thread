@@ -1,6 +1,6 @@
 package ai.saniou.thread.domain.usecase.feed
 
-import ai.saniou.thread.domain.model.Post
+import ai.saniou.thread.domain.model.forum.Post
 import ai.saniou.thread.domain.repository.SourceRepository
 
 class GetAggregatedFeedUseCase(

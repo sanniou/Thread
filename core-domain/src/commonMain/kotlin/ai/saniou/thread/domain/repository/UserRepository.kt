@@ -1,6 +1,6 @@
 package ai.saniou.thread.domain.repository
 
-import ai.saniou.thread.domain.model.Cookie
+import ai.saniou.thread.domain.model.forum.Cookie
 
 interface UserRepository {
     suspend fun getCookiesList(): List<Cookie>

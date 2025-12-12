@@ -10,7 +10,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
-import ai.saniou.thread.domain.model.Cookie as DomainCookie
+import ai.saniou.thread.domain.model.forum.Cookie as DomainCookie
 
 @OptIn(ExperimentalTime::class)
 class UserRepositoryImpl(

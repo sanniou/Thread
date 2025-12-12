@@ -11,7 +11,7 @@ import ai.saniou.nmb.workflow.post.PostPage
 import ai.saniou.nmb.workflow.thread.ThreadPage
 import ai.saniou.nmb.workflow.user.UserDetailPage
 import ai.saniou.thread.data.source.nmb.remote.dto.ForumDetail
-import ai.saniou.thread.domain.model.Forum
+import ai.saniou.thread.domain.model.forum.Forum
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

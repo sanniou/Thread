@@ -5,7 +5,7 @@ import ai.saniou.thread.data.source.nmb.SqlDelightPagingSource
 import ai.saniou.thread.data.source.nmb.SubscriptionRemoteMediator
 import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
 import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
-import ai.saniou.thread.domain.model.Post
+import ai.saniou.thread.domain.model.forum.Post
 import ai.saniou.thread.domain.repository.SubscriptionRepository
 import app.cash.paging.ExperimentalPagingApi
 import app.cash.paging.Pager

@@ -1,6 +1,6 @@
 package ai.saniou.thread.domain.usecase.misc
 
-import ai.saniou.thread.domain.model.Trend
+import ai.saniou.thread.domain.model.forum.Trend
 import ai.saniou.thread.domain.repository.TrendRepository
 
 class GetTrendUseCase(

@@ -1,4 +1,4 @@
-package ai.saniou.thread.domain.model
+package ai.saniou.thread.domain.model.forum
 
 /**
  * 板块详情的领域模型

@@ -1,5 +1,6 @@
 package ai.saniou.reader.workflow.reader
 
+import ai.saniou.thread.domain.model.reader.FeedType
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -22,7 +23,7 @@ import androidx.compose.ui.unit.dp
 fun AddFeedSourceSheet(
     viewModel: AddFeedSourceViewModel,
     onDismiss: () -> Unit,
-    onSave: (ai.saniou.thread.domain.model.FeedSource) -> Unit
+    onSave: (ai.saniou.thread.domain.model.reader.FeedSource) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -158,8 +159,8 @@ private fun Step_AnalysisFailed(
 
 @Composable
 private fun Step_SelectSource(
-    sources: List<ai.saniou.thread.domain.model.FeedSource>,
-    onSourceSelected: (ai.saniou.thread.domain.model.FeedSource) -> Unit,
+    sources: List<ai.saniou.thread.domain.model.reader.FeedSource>,
+    onSourceSelected: (ai.saniou.thread.domain.model.reader.FeedSource) -> Unit,
     onBack: () -> Unit
 ) {
     Column(
@@ -202,8 +203,8 @@ private fun Step_SelectSource(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun Step_ConfirmSource(
-    source: ai.saniou.thread.domain.model.FeedSource,
-    onConfirm: (ai.saniou.thread.domain.model.FeedSource) -> Unit,
+    source: ai.saniou.thread.domain.model.reader.FeedSource,
+    onConfirm: (ai.saniou.thread.domain.model.reader.FeedSource) -> Unit,
     onBack: () -> Unit
 ) {
     var name by remember(source.name) { mutableStateOf(source.name) }
@@ -272,7 +273,7 @@ private fun Step_ConfirmSource(
                         expanded = isTypeMenuExpanded,
                         onDismissRequest = { isTypeMenuExpanded = false }
                     ) {
-                        ai.saniou.thread.domain.model.FeedType.entries.forEach { feedType ->
+                        FeedType.entries.forEach { feedType ->
                             DropdownMenuItem(
                                 text = { Text(feedType.name) },
                                 onClick = {
@@ -340,7 +341,7 @@ private fun Step_ConfirmSource(
         }
 
         // --- 高级配置 (可折叠, 仅在 HTML/JSON 时显示) ---
-        if (type == ai.saniou.thread.domain.model.FeedType.HTML || type == ai.saniou.thread.domain.model.FeedType.JSON) {
+        if (type == FeedType.HTML || type == FeedType.JSON) {
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),

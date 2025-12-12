@@ -2,7 +2,7 @@ package ai.saniou.reader.workflow.articledetail
 
 import ai.saniou.corecommon.utils.toRelativeTimeString
 import ai.saniou.coreui.widgets.RichText
-import ai.saniou.thread.domain.model.Article
+import ai.saniou.thread.domain.model.reader.Article
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState

@@ -1,6 +1,6 @@
 package ai.saniou.nmb.workflow.user
 
-import ai.saniou.thread.domain.model.Cookie
+import ai.saniou.thread.domain.model.forum.Cookie
 import ai.saniou.nmb.workflow.user.UserContract.Effect
 import ai.saniou.nmb.workflow.user.UserContract.Event
 import ai.saniou.nmb.workflow.user.UserContract.State

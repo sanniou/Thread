@@ -1,8 +1,8 @@
 package ai.saniou.nmb.workflow.forum
 
-import ai.saniou.thread.domain.model.Forum
-import ai.saniou.thread.domain.model.ForumDetail
-import ai.saniou.thread.domain.model.Post
+import ai.saniou.thread.domain.model.forum.Forum
+import ai.saniou.thread.domain.model.forum.ForumDetail
+import ai.saniou.thread.domain.model.forum.Post
 import app.cash.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow

@@ -4,7 +4,7 @@ import ai.saniou.nmb.db.Database
 import ai.saniou.nmb.db.table.BookmarkTag
 import ai.saniou.thread.data.mapper.toDomain
 import ai.saniou.thread.data.mapper.toEntity
-import ai.saniou.thread.domain.model.Bookmark
+import ai.saniou.thread.domain.model.bookmark.Bookmark
 import ai.saniou.thread.domain.repository.BookmarkRepository
 import app.cash.paging.PagingSource
 import app.cash.sqldelight.coroutines.asFlow

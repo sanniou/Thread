@@ -1,7 +1,7 @@
 package ai.saniou.nmb.workflow.trend
 
 import ai.saniou.thread.data.source.nmb.remote.dto.Thread
-import ai.saniou.thread.domain.model.Trend
+import ai.saniou.thread.domain.model.forum.Trend
 import kotlinx.serialization.Serializable
 
 /**

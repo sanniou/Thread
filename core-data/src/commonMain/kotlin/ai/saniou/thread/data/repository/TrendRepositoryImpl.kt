@@ -1,7 +1,7 @@
 package ai.saniou.thread.data.repository
 
 import ai.saniou.thread.data.source.nmb.NmbSource
-import ai.saniou.thread.domain.model.Trend
+import ai.saniou.thread.domain.model.forum.Trend
 import ai.saniou.thread.domain.repository.TrendRepository
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime

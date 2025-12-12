@@ -1,7 +1,7 @@
 package ai.saniou.reader.workflow.reader
 
-import ai.saniou.thread.domain.model.FeedSource
-import ai.saniou.thread.domain.model.FeedType
+import ai.saniou.thread.domain.model.reader.FeedSource
+import ai.saniou.thread.domain.model.reader.FeedType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

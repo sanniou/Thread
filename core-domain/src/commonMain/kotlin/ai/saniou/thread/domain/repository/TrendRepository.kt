@@ -1,6 +1,6 @@
 package ai.saniou.thread.domain.repository
 
-import ai.saniou.thread.domain.model.Trend
+import ai.saniou.thread.domain.model.forum.Trend
 
 interface TrendRepository {
     suspend fun getTrendItems(forceRefresh: Boolean): Result<Pair<String, List<Trend>>>

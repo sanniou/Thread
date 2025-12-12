@@ -1,7 +1,7 @@
 package ai.saniou.thread.data.source.nga
 
-import ai.saniou.thread.domain.model.Forum
-import ai.saniou.thread.domain.model.Post
+import ai.saniou.thread.domain.model.forum.Forum
+import ai.saniou.thread.domain.model.forum.Post
 import ai.saniou.thread.domain.repository.Source
 
 /**

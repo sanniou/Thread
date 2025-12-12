@@ -1,7 +1,7 @@
 package ai.saniou.nmb.workflow.bookmark
 
-import ai.saniou.thread.domain.model.Bookmark
-import ai.saniou.thread.domain.model.Tag
+import ai.saniou.thread.domain.model.bookmark.Bookmark
+import ai.saniou.thread.domain.model.bookmark.Tag
 import app.cash.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow

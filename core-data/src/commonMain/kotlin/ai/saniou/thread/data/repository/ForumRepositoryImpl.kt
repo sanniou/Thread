@@ -5,8 +5,8 @@ import ai.saniou.thread.data.source.nmb.DataPolicy
 import ai.saniou.thread.data.source.nmb.NmbSource
 import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
 import ai.saniou.thread.data.source.nmb.remote.dto.toTable
-import ai.saniou.thread.domain.model.Forum
-import ai.saniou.thread.domain.model.Post
+import ai.saniou.thread.domain.model.forum.Forum
+import ai.saniou.thread.domain.model.forum.Post
 import ai.saniou.thread.domain.repository.ForumRepository
 import app.cash.paging.PagingData
 import app.cash.paging.map

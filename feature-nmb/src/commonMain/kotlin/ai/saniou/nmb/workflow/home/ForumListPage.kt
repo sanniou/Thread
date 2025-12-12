@@ -4,7 +4,7 @@ import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.MBToolbar
 import ai.saniou.thread.data.source.nmb.remote.dto.ForumDetail
 import ai.saniou.nmb.workflow.forum.ForumPage
-import ai.saniou.thread.domain.model.Forum
+import ai.saniou.thread.domain.model.forum.Forum
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
