@@ -2,15 +2,15 @@ package ai.saniou.thread.data.repository
 
 import ai.saniou.thread.domain.model.Forum
 import ai.saniou.thread.domain.model.Post
-import ai.saniou.thread.domain.repository.FeedRepository
+import ai.saniou.thread.domain.repository.SourceRepository
 import ai.saniou.thread.domain.repository.Source
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlin.time.ExperimentalTime
 
-class FeedRepositoryImpl(
+class SourceRepositoryImpl(
     private val sources: Set<Source>
-) : FeedRepository {
+) : SourceRepository {
 
     private val sourceMap by lazy { sources.associateBy { it.id } }
 

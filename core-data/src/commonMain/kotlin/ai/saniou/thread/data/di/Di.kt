@@ -4,7 +4,7 @@ import ai.saniou.nmb.data.database.createDatabase
 import ai.saniou.thread.data.manager.CdnManager
 import ai.saniou.thread.data.repository.BookmarkRepositoryImpl
 import ai.saniou.thread.data.repository.FavoriteRepositoryImpl
-import ai.saniou.thread.data.repository.FeedRepositoryImpl
+import ai.saniou.thread.data.repository.SourceRepositoryImpl
 import ai.saniou.thread.data.repository.ForumRepositoryImpl
 import ai.saniou.thread.data.repository.HistoryRepositoryImpl
 import ai.saniou.thread.data.repository.NoticeRepositoryImpl
@@ -26,7 +26,7 @@ import ai.saniou.thread.data.sync.local.LocalSyncProvider
 import ai.saniou.thread.data.sync.webdav.WebDavSyncProvider
 import ai.saniou.thread.domain.repository.BookmarkRepository
 import ai.saniou.thread.domain.repository.FavoriteRepository
-import ai.saniou.thread.domain.repository.FeedRepository
+import ai.saniou.thread.domain.repository.SourceRepository
 import ai.saniou.thread.domain.repository.ForumRepository
 import ai.saniou.thread.domain.repository.HistoryRepository
 import ai.saniou.thread.domain.repository.NoticeRepository
@@ -75,9 +75,9 @@ val dataModule = DI.Module("dataModule") {
         HashSet<Source>().apply { add(instance(tag = "nmb")); add(instance(tag = "nga")) }
     }
 
-    bind<FeedRepository>() with singleton {
+    bind<SourceRepository>() with singleton {
         val sources: Set<Source> = instance(tag = "allSources")
-        FeedRepositoryImpl(sources)
+        SourceRepositoryImpl(sources)
     }
 
     bind<BookmarkRepository>() with singleton { BookmarkRepositoryImpl(instance()) }

@@ -28,7 +28,7 @@ interface Source {
 /**
  * 信息流仓库接口，定义了领域层需要的数据操作
  */
-interface FeedRepository {
+interface SourceRepository {
     /**
      * 从指定的信息源获取板块列表
      * @param sourceId 信息源ID
