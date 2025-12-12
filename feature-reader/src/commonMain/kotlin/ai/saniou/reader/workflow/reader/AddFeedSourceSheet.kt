@@ -210,8 +210,21 @@ private fun Step_ConfirmSource(
     var url by remember(source.url) { mutableStateOf(source.url) }
     var type by remember(source.type) { mutableStateOf(source.type) }
     var config by remember(source.selectorConfig) { mutableStateOf(source.selectorConfig) }
+    var autoRefresh by remember(source.autoRefresh) { mutableStateOf(source.autoRefresh) }
+    var refreshInterval by remember(source.refreshInterval) { mutableStateOf(source.refreshInterval) }
     var isTypeMenuExpanded by remember { mutableStateOf(false) }
+    var isIntervalMenuExpanded by remember { mutableStateOf(false) }
     var isAdvancedConfigExpanded by remember { mutableStateOf(false) }
+
+    val intervalOptions = listOf(
+        900000L to "15分钟",
+        1800000L to "30分钟",
+        3600000L to "1小时",
+        7200000L to "2小时",
+        21600000L to "6小时",
+        43200000L to "12小时",
+        86400000L to "24小时"
+    )
 
     LazyColumn(
         modifier = Modifier.padding(horizontal = 24.dp),
@@ -273,6 +286,59 @@ private fun Step_ConfirmSource(
             }
         }
 
+        // --- 刷新设置 ---
+        item {
+            Text(
+                "刷新设置",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(vertical = 8.dp),
+                color = MaterialTheme.colorScheme.primary
+            )
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("自动刷新")
+                    Switch(
+                        checked = autoRefresh,
+                        onCheckedChange = { autoRefresh = it }
+                    )
+                }
+
+                AnimatedVisibility(visible = autoRefresh) {
+                    ExposedDropdownMenuBox(
+                        expanded = isIntervalMenuExpanded,
+                        onExpandedChange = { isIntervalMenuExpanded = !isIntervalMenuExpanded }
+                    ) {
+                        OutlinedTextField(
+                            value = intervalOptions.find { it.first == refreshInterval }?.second ?: "${refreshInterval / 60000}分钟",
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("刷新间隔") },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isIntervalMenuExpanded) },
+                            modifier = Modifier.menuAnchor().fillMaxWidth()
+                        )
+                        ExposedDropdownMenu(
+                            expanded = isIntervalMenuExpanded,
+                            onDismissRequest = { isIntervalMenuExpanded = false }
+                        ) {
+                            intervalOptions.forEach { (value, label) ->
+                                DropdownMenuItem(
+                                    text = { Text(label) },
+                                    onClick = {
+                                        refreshInterval = value
+                                        isIntervalMenuExpanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         // --- 高级配置 (可折叠, 仅在 HTML/JSON 时显示) ---
         if (type == ai.saniou.thread.domain.model.FeedType.HTML || type == ai.saniou.thread.domain.model.FeedType.JSON) {
             item {
@@ -319,7 +385,14 @@ private fun Step_ConfirmSource(
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 Button(onClick = {
-                    onConfirm(source.copy(name = name, url = url, type = type, selectorConfig = config))
+                    onConfirm(source.copy(
+                        name = name,
+                        url = url,
+                        type = type,
+                        selectorConfig = config,
+                        autoRefresh = autoRefresh,
+                        refreshInterval = refreshInterval
+                    ))
                 }) {
                     Text("保存")
                 }

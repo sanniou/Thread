@@ -6,7 +6,9 @@ CREATE TABLE FeedSourceEntity (
     description TEXT,
     iconUrl TEXT,
     lastUpdate INTEGER NOT NULL DEFAULT 0,
-    selectorConfig TEXT
+    selectorConfig TEXT,
+    autoRefresh INTEGER NOT NULL DEFAULT 1,
+    refreshInterval INTEGER NOT NULL DEFAULT 3600000
 );
 
 getAllFeedSources:
@@ -16,8 +18,8 @@ getFeedSourceById:
 SELECT * FROM FeedSourceEntity WHERE id = ?;
 
 insertFeedSource:
-INSERT OR REPLACE INTO FeedSourceEntity(id, name, url, type, description, iconUrl, lastUpdate, selectorConfig)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+INSERT OR REPLACE INTO FeedSourceEntity(id, name, url, type, description, iconUrl, lastUpdate, selectorConfig, autoRefresh, refreshInterval)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 deleteFeedSource:
 DELETE FROM FeedSourceEntity WHERE id = ?;

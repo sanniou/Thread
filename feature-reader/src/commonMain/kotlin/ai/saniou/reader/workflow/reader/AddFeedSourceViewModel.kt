@@ -95,7 +95,9 @@ class AddFeedSourceViewModel(
             type = feedType,
             description = null,
             iconUrl = null,
-            selectorConfig = emptyMap()
+            selectorConfig = emptyMap(),
+            autoRefresh = true,
+            refreshInterval = 3600000 // Default 1 hour
         )
         _uiState.value = AddFeedSourceUiState.ConfirmSource(newSource)
     }

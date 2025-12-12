@@ -53,7 +53,9 @@ class ReaderRepositoryImpl(
                             } catch (e: Exception) {
                                 emptyMap()
                             }
-                        } ?: emptyMap()
+                        } ?: emptyMap(),
+                        autoRefresh = entity.autoRefresh == 1L,
+                        refreshInterval = entity.refreshInterval
                     )
                 }
             }
@@ -76,7 +78,9 @@ class ReaderRepositoryImpl(
                             } catch (e: Exception) {
                                 emptyMap()
                             }
-                        } ?: emptyMap()
+                        } ?: emptyMap(),
+                        autoRefresh = entity.autoRefresh == 1L,
+                        refreshInterval = entity.refreshInterval
                     )
             }
         }
@@ -92,7 +96,9 @@ class ReaderRepositoryImpl(
                 description = feedSource.description,
                 iconUrl = feedSource.iconUrl,
                 lastUpdate = feedSource.lastUpdate,
-                selectorConfig = Json.encodeToString(feedSource.selectorConfig)
+                selectorConfig = Json.encodeToString(feedSource.selectorConfig),
+                autoRefresh = if (feedSource.autoRefresh) 1L else 0L,
+                refreshInterval = feedSource.refreshInterval
             )
         }
     }
