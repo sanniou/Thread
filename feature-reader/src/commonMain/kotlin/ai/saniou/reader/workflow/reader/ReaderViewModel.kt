@@ -1,5 +1,6 @@
 package ai.saniou.reader.workflow.reader
 
+import ai.saniou.coreui.state.toAppError
 import ai.saniou.thread.domain.model.reader.Article
 import ai.saniou.thread.domain.model.reader.FeedSource
 import ai.saniou.thread.domain.usecase.reader.*
@@ -103,7 +104,7 @@ class ReaderViewModel(
                 dismissDialog()
                 refreshFeedSource(source.id)
             } catch (e: Exception) {
-                _state.update { it.copy(error = e) }
+                _state.update { it.copy(error = e.toAppError()) }
             }
         }
     }
@@ -113,7 +114,7 @@ class ReaderViewModel(
             try {
                 deleteFeedSourceUseCase(id)
             } catch (e: Exception) {
-                _state.update { it.copy(error = e) }
+                _state.update { it.copy(error = e.toAppError()) }
             }
         }
     }
@@ -123,7 +124,7 @@ class ReaderViewModel(
             try {
                 markArticleAsReadUseCase(id, isRead)
             } catch (e: Exception) {
-                _state.update { it.copy(error = e) }
+                _state.update { it.copy(error = e.toAppError()) }
             }
         }
     }
@@ -137,7 +138,7 @@ class ReaderViewModel(
             try {
                 refreshFeedSourceUseCase(id)
             } catch (e: Exception) {
-                _state.update { it.copy(error = e) }
+                _state.update { it.copy(error = e.toAppError()) }
             } finally {
                 _state.update { state ->
                     val updatedSources = state.feedSources.map { if (it.id == id) it.copy(isRefreshing = false) else it }
@@ -156,7 +157,7 @@ class ReaderViewModel(
             try {
                 refreshAllFeedsUseCase()
             } catch (e: Exception) {
-                _state.update { it.copy(error = e) }
+                _state.update { it.copy(error = e.toAppError()) }
             } finally {
                 _state.update { state ->
                     val updatedSources = state.feedSources.map { it.copy(isRefreshing = false) }

@@ -2,6 +2,8 @@ package ai.saniou.reader.workflow.reader
 
 import ai.saniou.corecommon.utils.toRelativeTimeString
 import ai.saniou.coreui.composition.LocalAppDrawer
+import ai.saniou.coreui.state.PagingStateLayout
+import ai.saniou.coreui.state.toAppError
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.AppDrawerItem
 import ai.saniou.coreui.widgets.RichText
@@ -187,64 +189,39 @@ private fun ReaderScaffold(
                 selectedFilter = state.articleFilter,
                 onFilterChange = onFilterChange
             )
-            Box(modifier = Modifier.weight(1f).fillMaxSize()) {
-                val refreshState = articles.loadState.refresh
-                when {
-                    refreshState is LoadStateLoading -> {
-                        CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                    }
-
-                    refreshState is LoadStateError -> {
-                        Column(
-                            modifier = Modifier.align(Alignment.Center),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Icon(
-                                Icons.Default.ErrorOutline,
-                                contentDescription = null,
-                                modifier = Modifier.size(48.dp),
-                                tint = MaterialTheme.colorScheme.error
+            PagingStateLayout(
+                items = articles,
+                modifier = Modifier.weight(1f).fillMaxSize(),
+                loading = { CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally)) },
+                empty = {
+                    EmptyState(
+                        isSearchActive = state.searchQuery.isNotEmpty(),
+                        query = state.searchQuery
+                    )
+                }
+            ) {
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    items(articles.itemCount) { index ->
+                        val article = articles[index]
+                        if (article != null) {
+                            val sourceName =
+                                state.feedSources.find { it.id == article.feedSourceId }?.name ?: "未知来源"
+                            ArticleItem(
+                                article = article,
+                                sourceName = sourceName,
+                                onClick = { onArticleClick(article) }
                             )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = "加载失败: ${refreshState.error.message}",
-                                color = MaterialTheme.colorScheme.error
+                            HorizontalDivider(
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
                             )
                         }
                     }
 
-                    articles.itemCount == 0 -> {
-                        EmptyState(
-                            isSearchActive = state.searchQuery.isNotEmpty(),
-                            query = state.searchQuery
-                        )
-                    }
-
-                    else -> {
-                        LazyColumn(modifier = Modifier.fillMaxSize()) {
-                            items(articles.itemCount) { index ->
-                                val article = articles[index]
-                                if (article != null) {
-                                    val sourceName =
-                                        state.feedSources.find { it.id == article.feedSourceId }?.name ?: "未知来源"
-                                    ArticleItem(
-                                        article = article,
-                                        sourceName = sourceName,
-                                        onClick = { onArticleClick(article) }
-                                    )
-                                    HorizontalDivider(
-                                        modifier = Modifier.padding(horizontal = 16.dp),
-                                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                                    )
-                                }
-                            }
-
-                            if (articles.loadState.append is LoadStateLoading) {
-                                item {
-                                    Box(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-                                        CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                                    }
-                                }
+                    if (articles.loadState.append is LoadStateLoading) {
+                        item {
+                            Box(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+                                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                             }
                         }
                     }

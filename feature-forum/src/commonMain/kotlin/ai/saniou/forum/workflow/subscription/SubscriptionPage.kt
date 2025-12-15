@@ -1,5 +1,8 @@
 package ai.saniou.forum.workflow.subscription
 
+import ai.saniou.coreui.state.AppError
+import ai.saniou.coreui.state.DefaultError
+import ai.saniou.coreui.state.PagingStateLayout
 import ai.saniou.coreui.widgets.PullToRefreshWrapper
 import ai.saniou.coreui.widgets.SaniouTopAppBar
 import ai.saniou.forum.di.nmbdi
@@ -184,35 +187,44 @@ private fun SubscriptionContent(
         onRefreshTrigger = { feeds.refresh() },
         modifier = modifier
     ) {
-        LazyColumn(
-            contentPadding = PaddingValues(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+        PagingStateLayout(
+            items = feeds,
+            loading = {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    LoadingIndicator()
+                }
+            },
+            empty = { EmptyContent() }
         ) {
-            items(feeds.itemCount) { index ->
-                val feed = feeds[index] ?: return@items
-                Box {
-                    ForumThreadCard(
-                        thread = feed,
-                        onClick = { onThreadClicked(feed.id.toLong()) },
-                        onImageClick = { img, ext -> onImageClick(feed.id.toLong(), img, ext) },
+            LazyColumn(
+                contentPadding = PaddingValues(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(feeds.itemCount) { index ->
+                    val feed = feeds[index] ?: return@items
+                    Box {
+                        ForumThreadCard(
+                            thread = feed,
+                            onClick = { onThreadClicked(feed.id.toLong()) },
+                            onImageClick = { img, ext -> onImageClick(feed.id.toLong(), img, ext) },
 //                    onUnsubscribe = { onEvent(Event.OnUnsubscribe(feed.id)) }
-                    )
-                    if (feed.isLocal) {
-                        Icon(
-                            imageVector = Icons.Default.Info,
-                            contentDescription = "本地订阅",
-                            modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)
                         )
+                        if (feed.isLocal) {
+                            Icon(
+                                imageVector = Icons.Default.Info,
+                                contentDescription = "本地订阅",
+                                modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)
+                            )
+                        }
                     }
                 }
-            }
 
-            item {
-                when {
-                    feeds.loadState.append is LoadStateError -> LoadingFailedIndicator()
-                    feeds.loadState.append is LoadStateLoading -> LoadingIndicator()
-                    feeds.loadState.append.endOfPaginationReached && feeds.itemCount == 0 -> EmptyContent()
-                    feeds.loadState.append.endOfPaginationReached -> LoadEndIndicator()
+                item {
+                    when {
+                        feeds.loadState.append is LoadStateError -> LoadingFailedIndicator()
+                        feeds.loadState.append is LoadStateLoading -> LoadingIndicator()
+                        feeds.loadState.append.endOfPaginationReached -> LoadEndIndicator()
+                    }
                 }
             }
         }
@@ -221,40 +233,12 @@ private fun SubscriptionContent(
 
 @Composable
 private fun ErrorContent(
-    error: Throwable,
+    error: AppError,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Info,
-                contentDescription = null,
-                modifier = Modifier.size(48.dp),
-                tint = MaterialTheme.colorScheme.error
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "加载失败",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.error
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = error.message ?: "未知错误",
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(onClick = onRetry) {
-                Text("设置订阅ID")
-            }
-        }
+    Box(modifier = modifier.fillMaxSize()) {
+        DefaultError(error = error, onRetryClick = onRetry)
     }
 }
 

@@ -1,6 +1,8 @@
 package ai.saniou.forum.workflow.thread
 
 import ai.saniou.coreui.widgets.PullToRefreshWrapper
+import ai.saniou.coreui.state.AppError
+import ai.saniou.coreui.state.DefaultError
 import ai.saniou.coreui.widgets.SaniouTopAppBar
 import ai.saniou.coreui.widgets.ShimmerContainer
 import ai.saniou.coreui.widgets.VerticalSpacerSmall
@@ -368,27 +370,8 @@ private fun ThreadContentRouter(
 }
 
 @Composable
-private fun ThreadErrorContent(error: String, onRetry: () -> Unit) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.padding(32.dp)
-        ) {
-            Text(
-                text = error,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.error,
-                textAlign = TextAlign.Center
-            )
-            Button(onClick = onRetry) {
-                Text("重试")
-            }
-        }
-    }
+private fun ThreadErrorContent(error: AppError, onRetry: () -> Unit) {
+    DefaultError(error = error, onRetryClick = onRetry)
 }
 
 // endregion

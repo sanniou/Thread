@@ -1,5 +1,6 @@
 package ai.saniou.forum.workflow.trend
 
+import ai.saniou.coreui.state.toAppError
 import ai.saniou.forum.workflow.trend.TrendContract.Effect
 import ai.saniou.forum.workflow.trend.TrendContract.Event
 import ai.saniou.forum.workflow.trend.TrendContract.State
@@ -58,7 +59,7 @@ class TrendViewModel(
                     }
                 }
                 .onFailure { e ->
-                    _state.update { it.copy(isLoading = false, error = e.message) }
+                    _state.update { it.copy(isLoading = false, error = e.toAppError { loadTrend(forceRefresh = true) }) }
                 }
         }
     }

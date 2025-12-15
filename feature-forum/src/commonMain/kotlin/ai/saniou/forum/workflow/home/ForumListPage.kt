@@ -1,8 +1,10 @@
 package ai.saniou.forum.workflow.home
 
+import ai.saniou.coreui.state.StateLayout
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.MBToolbar
 import ai.saniou.forum.workflow.forum.ForumPage
+import ai.saniou.forum.workflow.home.ForumCategoryContract.Event
 import ai.saniou.thread.domain.model.forum.Forum
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -52,68 +54,74 @@ object ForumListPage : Screen {
                 )
             }
         ) { padding ->
-            LazyColumn(
+            StateLayout(
                 modifier = Modifier.fillMaxSize().padding(padding),
-                contentPadding = PaddingValues(vertical = Dimens.padding_medium)
-            ) {
-                // 最近访问
-                item {
-                    SectionTitle("最近访问")
-                    // TODO: 实现最近访问逻辑
-                    LazyRow(
-                        contentPadding = PaddingValues(horizontal = Dimens.padding_large),
-                        horizontalArrangement = Arrangement.spacedBy(Dimens.padding_small)
-                    ) {
-                        items(state.forumGroups.flatMap { it.forums }.take(5)) { forum ->
-                            ForumChip(forum = forum) {
-                                navigator.push(
-                                    ForumPage(
-                                        forumId = forum.id.toLong(),
-                                        fgroupId = forum.groupId.toLong()
+                state = state.categoriesState,
+                onRetry = { viewModel.onEvent(Event.LoadCategories) },
+            ) { forumGroups ->
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(vertical = Dimens.padding_medium)
+                ) {
+                    // 最近访问
+                    item {
+                        SectionTitle("最近访问")
+                        // TODO: 实现最近访问逻辑
+                        LazyRow(
+                            contentPadding = PaddingValues(horizontal = Dimens.padding_large),
+                            horizontalArrangement = Arrangement.spacedBy(Dimens.padding_small)
+                        ) {
+                            items(forumGroups.flatMap { it.forums }.take(5)) { forum ->
+                                ForumChip(forum = forum) {
+                                    navigator.push(
+                                        ForumPage(
+                                            forumId = forum.id.toLong(),
+                                            fgroupId = forum.groupId.toLong()
+                                        )
                                     )
-                                )
+                                }
                             }
                         }
                     }
-                }
 
-                // 收藏
-                item {
-                    Spacer(modifier = Modifier.height(Dimens.padding_large))
-                    val favoriteForums =
-                        state.forumGroups.find { it.name == "收藏" }?.forums ?: emptyList()
-                    if (favoriteForums.isNotEmpty()) {
-                        SectionTitle("收藏")
-                        ForumGrid(
-                            forums = favoriteForums,
-                            onForumClick = {
-                                navigator.push(
-                                    ForumPage(
-                                        forumId = it.id.toLong(),
-                                        fgroupId = it.groupId.toLong()
-                                    )
-                                )
-                            }
-                        )
-                    }
-                }
-
-                // 所有板块
-                state.forumGroups.filter { it.id.toLong() > 0 }.forEach { category ->
-                    item(key = category.id) {
+                    // 收藏
+                    item {
                         Spacer(modifier = Modifier.height(Dimens.padding_large))
-                        SectionTitle(category.name)
-                        ForumGrid(
-                            forums = category.forums,
-                            onForumClick = {
-                                navigator.push(
-                                    ForumPage(
-                                        forumId = it.id.toLong(),
-                                        fgroupId = it.groupId.toLong()
+                        val favoriteForums =
+                            forumGroups.find { it.name == "收藏" }?.forums ?: emptyList()
+                        if (favoriteForums.isNotEmpty()) {
+                            SectionTitle("收藏")
+                            ForumGrid(
+                                forums = favoriteForums,
+                                onForumClick = {
+                                    navigator.push(
+                                        ForumPage(
+                                            forumId = it.id.toLong(),
+                                            fgroupId = it.groupId.toLong()
+                                        )
                                     )
-                                )
-                            }
-                        )
+                                }
+                            )
+                        }
+                    }
+
+                    // 所有板块
+                    forumGroups.filter { it.id.toLong() > 0 }.forEach { category ->
+                        item(key = category.id) {
+                            Spacer(modifier = Modifier.height(Dimens.padding_large))
+                            SectionTitle(category.name)
+                            ForumGrid(
+                                forums = category.forums,
+                                onForumClick = {
+                                    navigator.push(
+                                        ForumPage(
+                                            forumId = it.id.toLong(),
+                                            fgroupId = it.groupId.toLong()
+                                        )
+                                    )
+                                }
+                            )
+                        }
                     }
                 }
             }

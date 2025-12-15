@@ -1,9 +1,11 @@
 package ai.saniou.forum.workflow.home
 
+import ai.saniou.coreui.state.UiStateWrapper
+import ai.saniou.coreui.state.toAppError
 import ai.saniou.forum.initializer.AppInitializer
 import ai.saniou.forum.workflow.home.ForumCategoryContract.Event
-import ai.saniou.forum.workflow.home.ForumCategoryContract.ForumGroupUiState
 import ai.saniou.forum.workflow.home.ForumCategoryContract.ForumCategoryUiState
+import ai.saniou.forum.workflow.home.ForumCategoryContract.ForumGroupUiState
 import ai.saniou.thread.domain.model.forum.Forum
 import ai.saniou.thread.domain.repository.ForumRepository
 import ai.saniou.thread.domain.usecase.forum.GetFavoriteForumsUseCase
@@ -69,7 +71,7 @@ class ForumCategoryViewModel(
 
     private fun loadCategories() {
         screenModelScope.launch {
-            _state.update { it.copy(isLoading = true, error = null) }
+            _state.update { it.copy(categoriesState = UiStateWrapper.Loading) }
             // App initialization should be handled globally, not here.
             // For now, we keep it to avoid breaking things.
             appInitializer.initialize()
@@ -87,8 +89,7 @@ class ForumCategoryViewModel(
             }.catch { e ->
                 _state.update {
                     it.copy(
-                        isLoading = false,
-                        error = "加载板块列表失败: ${e.message}"
+                        categoriesState = UiStateWrapper.Error(e.toAppError { loadCategories() })
                     )
                 }
             }.collect { result ->
@@ -115,14 +116,13 @@ class ForumCategoryViewModel(
                     val favoriteIds = favorites.map { it.id }.toSet()
 
                     _state.update {
-                        val isInitialLoad = it.forumGroups.isEmpty()
+                        val isInitialLoad = it.categoriesState is UiStateWrapper.Loading || it.categoriesState is UiStateWrapper.Error
                         val allForums = forums + favorites
                         val lastOpenedForum =
                             if (isInitialLoad) allForums.find { f -> f.id == lastOpenedForumId } else null
 
                         it.copy(
-                            isLoading = false,
-                            forumGroups = combined,
+                            categoriesState = UiStateWrapper.Success(combined),
                             expandedGroupId = if (isInitialLoad) lastOpenedForum?.groupId else it.expandedGroupId,
                             currentForum = if (isInitialLoad) lastOpenedForum else it.currentForum,
                             favoriteForumIds = favoriteIds
@@ -131,8 +131,7 @@ class ForumCategoryViewModel(
                 }.onFailure { e ->
                     _state.update {
                         it.copy(
-                            isLoading = false,
-                            error = "加载板块列表失败: ${e.message}"
+                            categoriesState = UiStateWrapper.Error(e.toAppError { loadCategories() })
                         )
                     }
                 }

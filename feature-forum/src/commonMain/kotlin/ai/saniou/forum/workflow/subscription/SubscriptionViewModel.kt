@@ -1,5 +1,6 @@
 package ai.saniou.forum.workflow.subscription
 
+import ai.saniou.coreui.state.toAppError
 import ai.saniou.forum.workflow.subscription.SubscriptionContract.Effect
 import ai.saniou.forum.workflow.subscription.SubscriptionContract.Event
 import ai.saniou.forum.workflow.subscription.SubscriptionContract.State
@@ -43,7 +44,7 @@ class SubscriptionViewModel(
                             it.copy(
                                 isLoading = false,
                                 isShowSubscriptionIdDialog = true,
-                                error = IllegalStateException("请先设置订阅ID")
+                                error = IllegalStateException("请先设置订阅ID").toAppError()
                             )
                         }
                     } else {
@@ -66,7 +67,7 @@ class SubscriptionViewModel(
             }
         } catch (e: Exception) {
             _state.update {
-                it.copy(isLoading = false, error = e)
+                it.copy(isLoading = false, error = e.toAppError { screenModelScope.launch { loadFeeds(id, policy) } })
             }
         }
     }

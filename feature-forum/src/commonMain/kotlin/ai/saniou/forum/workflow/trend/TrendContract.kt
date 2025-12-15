@@ -1,5 +1,6 @@
 package ai.saniou.forum.workflow.trend
 
+import ai.saniou.coreui.state.AppError
 import ai.saniou.thread.data.source.nmb.remote.dto.Thread
 import ai.saniou.thread.domain.model.forum.Trend
 import kotlinx.serialization.Serializable
@@ -31,7 +32,7 @@ interface TrendContract {
      */
     data class State(
         val isLoading: Boolean = false,
-        val error: String? = null,
+        val error: AppError? = null,
         val trendDate: String = "",
         val items: List<TrendItem> = emptyList(),
         val rawThread: Thread? = null // 保留原始数据以备不时之需

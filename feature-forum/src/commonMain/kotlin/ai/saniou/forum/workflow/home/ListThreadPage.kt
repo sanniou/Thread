@@ -1,13 +1,14 @@
 package ai.saniou.forum.workflow.home
 
+import ai.saniou.coreui.state.PagingStateLayout
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.PullToRefreshWrapper
-import ai.saniou.thread.data.source.nmb.remote.dto.ThreadWithInformation
 import ai.saniou.forum.ui.components.ForumThreadCard
 import ai.saniou.forum.ui.components.LoadEndIndicator
 import ai.saniou.forum.ui.components.LoadingFailedIndicator
 import ai.saniou.forum.ui.components.LoadingIndicator
 import ai.saniou.forum.ui.components.ThreadListSkeleton
+import ai.saniou.thread.data.source.nmb.remote.dto.ThreadWithInformation
 import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
 import ai.saniou.thread.domain.model.forum.Post
 import androidx.compose.foundation.layout.Arrangement
@@ -23,7 +24,6 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Star
-import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -75,59 +75,41 @@ fun ListThreadPage(
         onRefreshTrigger = { threads.refresh() },
         modifier = modifier.fillMaxSize()
     ) {
-        when (threads.loadState.refresh) {
-            is LoadStateLoading -> ThreadListSkeleton()
-            is LoadStateError -> {
+        PagingStateLayout(
+            items = threads,
+            loading = { ThreadListSkeleton() },
+            empty = {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
                     StateContent(
                         imageVector = Icons.Outlined.Star,
-                        message = "加载失败",
-                        action = {
-                            Button(onClick = { threads.retry() }) {
-                                Text("点击重试")
-                            }
-                        }
+                        message = "这里什么都没有\n试着换个板块看看吧"
                     )
                 }
             }
-
-            else -> {
-                if (threads.itemCount == 0) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        StateContent(
-                            imageVector = Icons.Outlined.Star,
-                            message = "这里什么都没有\n试着换个板块看看吧"
-                        )
-                    }
-                    return@PullToRefreshWrapper
+        ) {
+            LazyColumn(
+                state = state,
+                contentPadding = PaddingValues(horizontal = Dimens.padding_medium),
+                verticalArrangement = Arrangement.spacedBy(Dimens.padding_small)
+            ) {
+                items(threads.itemCount) { index ->
+                    val feed = threads[index] ?: return@items
+                    ForumThreadCard(
+                        thread = feed,
+                        onClick = { onThreadClicked(feed.id.toLong()) },
+                        onImageClick = { img, ext -> onImageClick(feed.id.toLong(), img, ext) },
+                        onUserClick = onUserClick
+                    )
                 }
-                LazyColumn(
-                    state = state,
-                    contentPadding = PaddingValues(horizontal = Dimens.padding_medium),
-                    verticalArrangement = Arrangement.spacedBy(Dimens.padding_small)
-                ) {
-                    items(threads.itemCount) { index ->
-                        val feed = threads[index] ?: return@items
-                        ForumThreadCard(
-                            thread = feed,
-                            onClick = { onThreadClicked(feed.id.toLong()) },
-                            onImageClick = { img, ext -> onImageClick(feed.id.toLong(), img, ext) },
-                            onUserClick = onUserClick
-                        )
-                    }
 
-                    item {
-                        when (threads.loadState.append) {
-                            is LoadStateError -> LoadingFailedIndicator()
-                            is LoadStateLoading -> LoadingIndicator()
-                            else -> LoadEndIndicator()
-                        }
+                item {
+                    when (threads.loadState.append) {
+                        is LoadStateError -> LoadingFailedIndicator()
+                        is LoadStateLoading -> LoadingIndicator()
+                        else -> LoadEndIndicator()
                     }
                 }
             }

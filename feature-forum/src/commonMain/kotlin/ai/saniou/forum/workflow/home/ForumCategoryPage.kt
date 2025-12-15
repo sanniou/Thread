@@ -7,6 +7,7 @@ import ai.saniou.forum.di.nmbdi
 import ai.saniou.forum.workflow.bookmark.BookmarkPage
 import ai.saniou.forum.workflow.forum.ForumPage
 import ai.saniou.forum.workflow.history.HistoryPage
+import ai.saniou.coreui.state.StateLayout
 import ai.saniou.forum.workflow.home.ForumCategoryContract.Event
 import ai.saniou.forum.workflow.home.ForumCategoryContract.ForumGroupUiState
 import ai.saniou.forum.workflow.search.SearchPage
@@ -275,16 +276,13 @@ data class ForumCategoryPage(
 
                     HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
-                    if (state.isLoading) {
-                        Box(
-                            modifier = Modifier.fillMaxWidth().padding(16.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator()
-                        }
-                    } else {
-                        LazyColumn(modifier = Modifier.weight(1f)) {
-                            state.forumGroups.forEach { group ->
+                    StateLayout(
+                        state = state.categoriesState,
+                        onRetry = { viewModel.onEvent(Event.LoadCategories) },
+                        modifier = Modifier.weight(1f)
+                    ) { forumGroups ->
+                        LazyColumn(modifier = Modifier.fillMaxSize()) {
+                            forumGroups.forEach { group ->
                                 item(key = group.id) {
                                     CategoryHeader(
                                         group = group,

@@ -1,5 +1,6 @@
 package ai.saniou.reader.workflow.reader
 
+import ai.saniou.coreui.state.AppError
 import ai.saniou.thread.domain.model.reader.FeedSource
 
 enum class ArticleFilter {
@@ -10,7 +11,7 @@ interface ReaderContract {
     data class State(
         val feedSources: List<FeedSource> = emptyList(),
         val selectedFeedSourceId: String? = null,
-        val error: Throwable? = null,
+        val error: AppError? = null,
         val isDialogShown: Boolean = false,
         val editingSource: FeedSource? = null,
         val articleCounts: Map<String, Pair<Int, Int>> = emptyMap(),

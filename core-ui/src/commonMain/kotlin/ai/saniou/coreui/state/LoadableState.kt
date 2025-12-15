@@ -60,32 +60,6 @@ inline fun <reified ContentType> LoadableLayout(
 }
 
 @Composable
-inline fun <reified ContentType> LoadableLayout(
-    modifier: Modifier = Modifier,
-    loadableState: UiStateWrapper,
-    crossinline onRetryClick: () -> Unit,
-    noinline loading: (@Composable BoxScope.() -> Unit)? = null,
-    noinline error: (@Composable BoxScope.() -> Unit)? = null,
-    content: @Composable BoxScope.(ContentType) -> Unit,
-) {
-    Box(modifier) {
-        when (loadableState) {
-            is UiStateWrapper.Loading -> {
-                loading?.invoke(this) ?: DefaultLoading()
-            }
-
-            is UiStateWrapper.Error -> {
-                error?.invoke(this) ?: DefaultError(onRetryClick)
-            }
-
-            is ContentType -> {
-                content(loadableState)
-            }
-        }
-    }
-}
-
-@Composable
 fun DefaultLoading() {
     Box(
         modifier = Modifier
@@ -101,13 +75,22 @@ fun DefaultLoading() {
 fun risWhite() = Color.Unspecified
 
 @Composable
-inline fun DefaultError(crossinline onRetryClick: () -> Unit) {
+fun DefaultError(error: AppError? = null, onRetryClick: () -> Unit) {
     MBErrorPage(
-        type = MBErrorPageType.NETWORK,
+        type = error?.type ?: MBErrorPageType.NETWORK,
         onRetryClick = {
             onRetryClick()
         },
+        title = error?.message ?: ""
     )
+}
+
+/**
+ * 兼容旧代码的辅助函数
+ */
+@Composable
+inline fun DefaultError(crossinline onRetryClick: () -> Unit) {
+    DefaultError(null) { onRetryClick() }
 }
 
 inline fun <reified T> MutableStateFlow<LoadableState<T>>.valueOrNull(): T? {

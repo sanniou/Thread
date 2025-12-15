@@ -4,10 +4,10 @@ import ai.saniou.coreui.widgets.BlankLinePolicy
 import ai.saniou.coreui.widgets.PullToRefreshWrapper
 import ai.saniou.coreui.widgets.RichText
 import ai.saniou.coreui.widgets.SaniouAppBarTitle
+import ai.saniou.coreui.state.DefaultError
 import ai.saniou.coreui.widgets.SaniouTopAppBar
 import ai.saniou.coreui.widgets.VerticalSpacerSmall
 import ai.saniou.forum.di.nmbdi
-import ai.saniou.forum.ui.components.LoadingFailedIndicator
 import ai.saniou.forum.ui.components.LoadingIndicator
 import ai.saniou.forum.workflow.thread.ThreadPage
 import ai.saniou.forum.workflow.trend.TrendContract.Effect
@@ -182,9 +182,9 @@ data class TrendPage(val di: DI = nmbdi) : Screen {
                 if (state.isLoading) {
                     LoadingIndicator()
                 } else if (state.error != null) {
-                    LoadingFailedIndicator(
-                        modifier = Modifier.align(Alignment.Center),
-                        onClick = { viewModel.onEvent(Event.Refresh) }
+                    DefaultError(
+                        error = state.error,
+                        onRetryClick = { viewModel.onEvent(Event.Refresh) }
                     )
                 } else {
                     PullToRefreshWrapper(

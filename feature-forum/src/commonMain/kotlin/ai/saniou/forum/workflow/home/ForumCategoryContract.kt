@@ -1,5 +1,6 @@
 package ai.saniou.forum.workflow.home
 
+import ai.saniou.coreui.state.UiStateWrapper
 import ai.saniou.thread.domain.model.forum.Forum
 
 /**
@@ -23,18 +24,14 @@ interface ForumCategoryContract {
     /**
      * UI 状态
      *
-     * @property isLoading 是否正在加载板块列表
-     * @property error 错误信息
-     * @property forumGroups 板块分组列表
+     * @property categoriesState 板块列表状态 (Loading/Success/Error)
      * @property expandedGroupId 当前展开的分组 ID
      * @property currentForum 当前选中的板块
      * @property favoriteForumIds 收藏的板块ID集合
      * @property toastMessage 提示信息
      */
     data class ForumCategoryUiState(
-        val isLoading: Boolean = true,
-        val error: String? = null,
-        val forumGroups: List<ForumGroupUiState> = emptyList(),
+        val categoriesState: UiStateWrapper<List<ForumGroupUiState>> = UiStateWrapper.Loading,
         val expandedGroupId: String? = null,
         val currentForum: Forum? = null,
         val favoriteForumIds: Set<String> = emptySet(),

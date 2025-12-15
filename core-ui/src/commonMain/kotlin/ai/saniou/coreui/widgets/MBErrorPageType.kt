@@ -76,7 +76,7 @@ fun MBErrorPage(
                     )
                     Text(
                         modifier = Modifier.padding(top = 20.dp),
-                        text = stringResource(type.errorLabelResId()),
+                        text = title.ifBlank { stringResource(type.errorLabelResId()) },
                         style = subtitle1Bold,
                         color = md_theme_light_scrim
                     )

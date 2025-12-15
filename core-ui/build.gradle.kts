@@ -83,6 +83,7 @@ kotlin {
 //            implementation(libs.kmpalette.extensions.bytearray)
 //            implementation(libs.kmpalette.extensions.network)
 //            implementation(libs.kmpalette.extensions.file)
+            implementation(libs.cash.paging.compose.common)
         }
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)

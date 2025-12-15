@@ -1,11 +1,11 @@
 <resources>
-    <string name="app_name">My awesome app</string>
-    <string name="title">Some title</string>
-    <string name="core_ui_loading_wording">Some title</string>
-    <string name="core_ui_list_loading_wording">Some title</string>
-    <string name="core_ui_no_internet_retry">Some title</string>
-    <string name="core_ui_net_un_connect">Some title</string>
-    <string name="core_ui_server_error">Some title</string>
-    <string name="core_ui_net_un_connect_and_retry">Some title</string>
-    <string name="core_ui_server_busy">Some title</string>
+    <string name="app_name">Thread</string>
+    <string name="title">Thread</string>
+    <string name="core_ui_loading_wording">加载中...</string>
+    <string name="core_ui_list_loading_wording">正在加载列表...</string>
+    <string name="core_ui_no_internet_retry">重试</string>
+    <string name="core_ui_net_un_connect">网络连接失败</string>
+    <string name="core_ui_server_error">服务器出错</string>
+    <string name="core_ui_net_un_connect_and_retry">请检查您的网络设置后重试</string>
+    <string name="core_ui_server_busy">服务器繁忙，请稍后再试</string>
 </resources>

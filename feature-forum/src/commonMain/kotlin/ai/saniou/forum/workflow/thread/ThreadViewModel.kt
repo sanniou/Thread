@@ -1,5 +1,6 @@
 package ai.saniou.forum.workflow.thread
 
+import ai.saniou.coreui.state.toAppError
 import ai.saniou.forum.workflow.thread.ThreadContract.Effect
 import ai.saniou.forum.workflow.thread.ThreadContract.Event
 import ai.saniou.forum.workflow.thread.ThreadContract.State
@@ -135,7 +136,7 @@ class ThreadViewModel(
                 }
                 .catch { e ->
                     _state.update {
-                        it.copy(isLoading = false, error = "加载主楼失败: ${e.message}")
+                        it.copy(isLoading = false, error = e.toAppError { observeThreadDetails(forceRefresh = true) })
                     }
                 }
                 .collectLatest { (detail, forumName) ->

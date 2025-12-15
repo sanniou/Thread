@@ -1,5 +1,6 @@
 package ai.saniou.forum.workflow.subscription
 
+import ai.saniou.coreui.state.AppError
 import ai.saniou.thread.domain.model.forum.Post
 import app.cash.paging.PagingData
 import kotlinx.coroutines.flow.Flow
@@ -11,7 +12,7 @@ interface SubscriptionContract {
         val feeds: Flow<PagingData<Post>> = emptyFlow(),
         val isShowSubscriptionIdDialog: Boolean = false,
         val isLoading: Boolean = true,
-        val error: Throwable? = null,
+        val error: AppError? = null,
         val isPushEnabled: Boolean = false
     )
 

@@ -1,5 +1,6 @@
 package ai.saniou.forum.workflow.thread
 
+import ai.saniou.coreui.state.AppError
 import ai.saniou.thread.domain.model.forum.Post
 import ai.saniou.thread.domain.model.forum.ThreadReply
 import app.cash.paging.PagingData
@@ -26,7 +27,7 @@ interface ThreadContract {
      */
     data class State(
         val isLoading: Boolean = true,
-        val error: String? = null,
+        val error: AppError? = null,
         val thread: Post? = null,
         val replies: Flow<PagingData<ThreadReply>> = emptyFlow(),
         val totalPages: Int = 1,

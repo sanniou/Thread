@@ -41,7 +41,29 @@
     -   **规则**: 必须使用 `suspend` 函数。
     -   **原因**: 避免滥用 Flow 导致逻辑复杂化，利用 Coroutine 的结构化并发处理异步任务。
 
-### 2.3 UI 开发工作流
+### 2.3 错误处理与 UI 状态 (Error Handling & UI State)
+统一使用 **LCE** (Loading-Content-Error) 模式处理页面或组件状态。
+
+1.  **UiStateWrapper**:
+    -   所有包含加载过程的数据状态，必须使用 `UiStateWrapper<T>` 封装。
+    -   **Loading**: 对应 `UiStateWrapper.Loading`。
+    -   **Error**: 对应 `UiStateWrapper.Error`，必须包含 `AppError`。
+    -   **Success**: 对应 `UiStateWrapper.Success<T>`。
+
+2.  **Error Handling**:
+    -   禁止在 UI 层直接处理 `Throwable`。
+    -   必须在 ViewModel 中使用 `Throwable.toAppError(onRetry)` 扩展函数，将异常转换为标准化的 `AppError`。
+    -   `AppError` 自动识别网络错误、服务器错误等，并匹配对应的 UI 文案和图标。
+
+3.  **StateLayout**:
+    -   UI 必须使用 `StateLayout` Composable 来统一渲染 LCE 状态。
+    -   禁止手动编写 if-else 判断 `isLoading` / `isError`。
+
+4.  **PagingStateLayout**:
+    -   对于 Paging 3 列表，使用 `PagingStateLayout` 包裹 `LazyColumn` 等组件。
+    -   它自动处理 `loadState.refresh` 的 Loading、Error 和 Empty 状态，并与 `AppError` 集成。
+
+### 2.4 UI 开发工作流
 1.  **分析**: 在写代码前，先分析 UI 需求，提取可复用的组件放入 `core-ui`。
 2.  **契约**: 在 `feature` 模块中定义 `Contract` (State & Event)。
 3.  **实现**: ViewModel 仅通过 UseCase 交互，不直接触碰 Repository。
@@ -73,5 +95,5 @@
 ## 5. 最佳实践检查清单
 - [ ] **KISS**: 即使是复杂功能，API 设计也应保持简单。
 - [ ] **Compose**: 优先使用 Material 3 组件。
-- [ ] **Error Handling**: UseCase 应处理业务错误，Data 层处理 IO 错误。
+- [ ] **Error Handling**: ViewModel 使用 `UiStateWrapper` 和 `StateLayout` 处理加载和错误。
 - [ ] **Comments**: 复杂逻辑必须写中文注释解释 "Why"。
