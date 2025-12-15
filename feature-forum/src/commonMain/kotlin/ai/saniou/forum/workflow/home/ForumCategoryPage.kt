@@ -1,7 +1,6 @@
 package ai.saniou.forum.workflow.home
 
 import ai.saniou.coreui.composition.LocalAppDrawer
-import ai.saniou.coreui.widgets.AppDrawerItem
 import ai.saniou.coreui.widgets.DrawerHeader
 import ai.saniou.forum.di.nmbdi
 import ai.saniou.forum.workflow.bookmark.BookmarkPage
@@ -39,6 +38,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.DateRange
@@ -71,14 +72,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.Navigator
 import org.jetbrains.compose.resources.stringResource
 import thread.feature_forum.generated.resources.Res
 import thread.feature_forum.generated.resources.*
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.kodein.rememberScreenModel
@@ -243,59 +246,12 @@ data class ForumCategoryPage(
 
                     HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
-                    Column(modifier = Modifier.padding(vertical = 4.dp)) {
-                        AppDrawerItem(
-                            label = "主页", // TODO: string resource
-                            icon = Icons.Default.Home,
-                            selected = state.currentForum == null,
-                            onClick = {
-                                viewModel.onEvent(Event.SelectHome)
-                                onCloseDrawer()
-                            }
-                        )
-                        AppDrawerItem(
-                            label = stringResource(Res.string.drawer_subscribe),
-                            icon = Icons.Default.Favorite,
-                            onClick = {
-                                navigator.push(SubscriptionPage { threadId ->
-                                    navigator.push(ThreadPage(threadId))
-                                })
-                                onCloseDrawer()
-                            }
-                        )
-                        AppDrawerItem(
-                            label = stringResource(Res.string.drawer_bookmark),
-                            icon = Icons.Default.Star,
-                            onClick = {
-                                navigator.push(BookmarkPage)
-                                onCloseDrawer()
-                            }
-                        )
-                        AppDrawerItem(
-                            label = "综合趋势",
-                            icon = Icons.Default.Send,
-                            onClick = {
-                                navigator.push(TrendPage())
-                                onCloseDrawer()
-                            }
-                        )
-                        AppDrawerItem(
-                            label = stringResource(Res.string.drawer_history),
-                            icon = Icons.Default.DateRange, // Changed icon to distinguish from Home
-                            onClick = {
-                                navigator.push(HistoryPage())
-                                onCloseDrawer()
-                            }
-                        )
-                        AppDrawerItem(
-                            label = stringResource(Res.string.drawer_search),
-                            icon = Icons.Default.Search,
-                            onClick = {
-                                navigator.push(SearchPage())
-                                onCloseDrawer()
-                            }
-                        )
-                    }
+                    DrawerFunctionGrid(
+                        state = state,
+                        navigator = navigator,
+                        viewModel = viewModel,
+                        onCloseDrawer = onCloseDrawer
+                    )
 
                     HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
@@ -359,19 +315,20 @@ data class ForumCategoryPage(
         currentSourceId: String,
         onSourceSelected: (String) -> Unit
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 8.dp),
+        LazyRow(
+            modifier = Modifier.fillMaxWidth(),
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             val sources = listOf(
                 "nmb" to "A岛",
                 "discourse" to "Discourse",
-                // "nga" to "NGA" // Future support
+                "tieba" to "贴吧",
+                "v2ex" to "V2EX",
+                "nga" to "NGA"
             )
 
-            sources.forEach { (id, name) ->
+            items(sources) { (id, name) ->
                 val isSelected = currentSourceId == id
                 val backgroundColor = if (isSelected)
                     MaterialTheme.colorScheme.primaryContainer
@@ -385,10 +342,10 @@ data class ForumCategoryPage(
 
                 Box(
                     modifier = Modifier
-                        .weight(1f)
-                        .background(backgroundColor, MaterialTheme.shapes.medium)
+                        .clip(MaterialTheme.shapes.medium)
+                        .background(backgroundColor)
                         .clickable { onSourceSelected(id) }
-                        .padding(vertical = 8.dp),
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -399,6 +356,111 @@ data class ForumCategoryPage(
                     )
                 }
             }
+        }
+    }
+
+    @OptIn(ExperimentalLayoutApi::class)
+    @Composable
+    private fun DrawerFunctionGrid(
+        state: ForumCategoryContract.ForumCategoryUiState,
+        navigator: Navigator,
+        viewModel: ForumCategoryViewModel,
+        onCloseDrawer: () -> Unit
+    ) {
+        val items = listOf(
+            DrawerItemData("主页", Icons.Default.Home, state.currentForum == null) {
+                viewModel.onEvent(Event.SelectHome)
+                onCloseDrawer()
+            },
+            DrawerItemData(stringResource(Res.string.drawer_subscribe), Icons.Default.Favorite, false) {
+                navigator.push(SubscriptionPage { threadId -> navigator.push(ThreadPage(threadId)) })
+                onCloseDrawer()
+            },
+            DrawerItemData(stringResource(Res.string.drawer_bookmark), Icons.Default.Star, false) {
+                navigator.push(BookmarkPage)
+                onCloseDrawer()
+            },
+            DrawerItemData("综合趋势", Icons.Default.Send, false) {
+                navigator.push(TrendPage())
+                onCloseDrawer()
+            },
+            DrawerItemData(stringResource(Res.string.drawer_history), Icons.Default.DateRange, false) {
+                navigator.push(HistoryPage())
+                onCloseDrawer()
+            },
+            DrawerItemData(stringResource(Res.string.drawer_search), Icons.Default.Search, false) {
+                navigator.push(SearchPage())
+                onCloseDrawer()
+            }
+        )
+
+        FlowRow(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+            maxItemsInEachRow = 3,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items.forEach { item ->
+                DrawerGridItem(
+                    label = item.label,
+                    icon = item.icon,
+                    selected = item.selected,
+                    onClick = item.onClick,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+    }
+
+    private data class DrawerItemData(
+        val label: String,
+        val icon: ImageVector,
+        val selected: Boolean,
+        val onClick: () -> Unit
+    )
+
+    @Composable
+    private fun DrawerGridItem(
+        label: String,
+        icon: ImageVector,
+        selected: Boolean,
+        onClick: () -> Unit,
+        modifier: Modifier = Modifier
+    ) {
+        val backgroundColor = if (selected)
+            MaterialTheme.colorScheme.secondaryContainer
+        else
+            Color.Transparent
+
+        val contentColor = if (selected)
+            MaterialTheme.colorScheme.onSecondaryContainer
+        else
+            MaterialTheme.colorScheme.onSurfaceVariant
+
+        Column(
+            modifier = modifier
+                .clip(MaterialTheme.shapes.medium)
+                .background(backgroundColor)
+                .clickable(onClick = onClick)
+                .padding(vertical = 12.dp, horizontal = 4.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                tint = contentColor,
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                color = contentColor,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
+            )
         }
     }
 
