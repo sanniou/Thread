@@ -1,6 +1,7 @@
 package ai.saniou.forum.workflow.post
 
 import ai.saniou.coreui.theme.Dimens
+import ai.saniou.coreui.widgets.SaniouTopAppBar
 import ai.saniou.thread.data.source.nmb.remote.dto.EmoticonData
 import ai.saniou.forum.di.nmbdi
 import androidx.compose.animation.AnimatedVisibility
@@ -184,14 +185,27 @@ data class PostPage(
 
         Scaffold(
             topBar = {
-                PostTopBar(
-                    title = if (resto != null) stringResource(Res.string.post_page_reply)
-                    else stringResource(Res.string.post_page_new_post, state.forumName),
-                    isSending = state.isLoading,
-                    isSuccess = state.isSuccess,
-                    canSend = state.content.text.isNotBlank() && !state.isLoading && !state.isSuccess,
-                    onBack = { navigator.pop() },
-                    onSend = { viewModel.onEvent(PostContract.Event.ToggleConfirmDialog) }
+                val title = if (resto != null) stringResource(Res.string.post_page_reply)
+                else stringResource(Res.string.post_page_new_post, state.forumName)
+                val canSend = state.content.text.isNotBlank() && !state.isLoading && !state.isSuccess
+
+                SaniouTopAppBar(
+                    title = title,
+                    onNavigationClick = { navigator.pop() },
+                    actions = {
+                        if (!state.isLoading && !state.isSuccess) {
+                            TextButton(
+                                onClick = { viewModel.onEvent(PostContract.Event.ToggleConfirmDialog) },
+                                enabled = canSend,
+                            ) {
+                                Text(
+                                    stringResource(Res.string.post_page_send),
+                                    fontWeight = FontWeight.Bold,
+                                    style = MaterialTheme.typography.titleSmall
+                                )
+                            }
+                        }
+                    }
                 )
             },
             bottomBar = {
@@ -324,50 +338,6 @@ data class PostPage(
                 }
             }
         }
-    }
-
-    @OptIn(ExperimentalMaterial3Api::class)
-    @Composable
-    private fun PostTopBar(
-        title: String,
-        isSending: Boolean,
-        isSuccess: Boolean,
-        canSend: Boolean,
-        onBack: () -> Unit,
-        onSend: () -> Unit,
-    ) {
-        TopAppBar(
-            title = {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Medium
-                )
-            },
-            navigationIcon = {
-                IconButton(onClick = onBack) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(Res.string.post_page_back)
-                    )
-                }
-            },
-            actions = {
-                // Loading is now handled by full screen overlay, so we just keep the button state or hide it
-                if (!isSending && !isSuccess) {
-                    TextButton(
-                        onClick = onSend,
-                        enabled = canSend,
-                    ) {
-                        Text(
-                            stringResource(Res.string.post_page_send),
-                            fontWeight = FontWeight.Bold,
-                            style = MaterialTheme.typography.titleSmall
-                        )
-                    }
-                }
-            }
-        )
     }
 
     @Composable

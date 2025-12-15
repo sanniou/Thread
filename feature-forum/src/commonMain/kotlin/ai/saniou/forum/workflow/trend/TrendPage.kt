@@ -3,9 +3,10 @@ package ai.saniou.forum.workflow.trend
 import ai.saniou.coreui.widgets.BlankLinePolicy
 import ai.saniou.coreui.widgets.PullToRefreshWrapper
 import ai.saniou.coreui.widgets.RichText
+import ai.saniou.coreui.widgets.SaniouAppBarTitle
+import ai.saniou.coreui.widgets.SaniouTopAppBar
 import ai.saniou.coreui.widgets.VerticalSpacerSmall
 import ai.saniou.forum.di.nmbdi
-import ai.saniou.forum.ui.components.AppBarTitle
 import ai.saniou.forum.ui.components.LoadingFailedIndicator
 import ai.saniou.forum.ui.components.LoadingIndicator
 import ai.saniou.forum.workflow.thread.ThreadPage
@@ -153,14 +154,15 @@ data class TrendPage(val di: DI = nmbdi) : Screen {
 
         Scaffold(
             topBar = {
-                TopAppBar(
+                SaniouTopAppBar(
                     title = {
-                        AppBarTitle(
+                        SaniouAppBarTitle(
                             title = "趋势",
                             subtitle = state.trendDate.takeIf { it.isNotEmpty() }
                         )
                     },
-                    colors = TopAppBarDefaults.mediumTopAppBarColors(
+                    onNavigationClick = { navigator.pop() },
+                    colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = MaterialTheme.colorScheme.primaryContainer
                     ),
                     actions = {

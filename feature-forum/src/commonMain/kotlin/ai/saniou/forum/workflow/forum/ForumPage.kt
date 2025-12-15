@@ -1,6 +1,7 @@
 package ai.saniou.forum.workflow.forum
 
 import ai.saniou.coreui.widgets.RichText
+import ai.saniou.coreui.widgets.SaniouTopAppBar
 import ai.saniou.forum.di.nmbdi
 import ai.saniou.forum.workflow.home.ListThreadPage
 import ai.saniou.forum.workflow.image.ImageInfo
@@ -124,7 +125,7 @@ data class ForumPage(
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .nestedScroll(fabNestedScrollConnection),
             topBar = {
-                TopAppBar(
+                SaniouTopAppBar(
                     title = {
                         Text(
                             text = state.forumName,

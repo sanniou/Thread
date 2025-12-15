@@ -1,6 +1,7 @@
 package ai.saniou.forum.workflow.thread
 
 import ai.saniou.coreui.widgets.PullToRefreshWrapper
+import ai.saniou.coreui.widgets.SaniouTopAppBar
 import ai.saniou.coreui.widgets.ShimmerContainer
 import ai.saniou.coreui.widgets.VerticalSpacerSmall
 import ai.saniou.forum.di.nmbdi
@@ -167,7 +168,7 @@ data class ThreadPage(
         Scaffold(
             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
-                TopAppBar(
+                SaniouTopAppBar(
                     title = {
                         if (state.thread != null) {
                             Text(
@@ -189,11 +190,7 @@ data class ThreadPage(
                             )
                         }
                     },
-                    navigationIcon = {
-                        IconButton(onClick = { navigator.pop() }) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = "返回")
-                        }
-                    },
+                    onNavigationClick = { navigator.pop() },
                     actions = {
                         if (state.thread != null) {
                             IconButton(onClick = { viewModel.onEvent(Event.Refresh) }) {

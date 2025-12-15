@@ -1,7 +1,7 @@
 package ai.saniou.forum.workflow.home
 
 import ai.saniou.coreui.widgets.RichText
-import ai.saniou.forum.ui.components.AppBarTitle
+import ai.saniou.coreui.widgets.SaniouTopAppBar
 import ai.saniou.forum.workflow.user.UserPage
 import ai.saniou.thread.domain.model.forum.Notice
 import androidx.compose.foundation.layout.Arrangement
@@ -24,7 +24,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -47,9 +46,9 @@ fun ForumDashboard(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { AppBarTitle(title = "") },
-                colors = TopAppBarDefaults.mediumTopAppBarColors(
+            SaniouTopAppBar(
+                title = "",
+                colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer
                 ),
                 navigationIcon = {

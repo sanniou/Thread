@@ -1,5 +1,6 @@
 package ai.saniou.forum.workflow.user
 
+import ai.saniou.coreui.widgets.SaniouTopAppBar
 import ai.saniou.forum.di.nmbdi
 import ai.saniou.forum.workflow.user.UserContract.Event
 import androidx.compose.animation.AnimatedVisibility
@@ -80,13 +81,9 @@ data class UserPage(
             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
-                TopAppBar(
-                    title = { Text("用户中心") },
-                    navigationIcon = {
-                        IconButton(onClick = { navigator.pop() }) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = "返回")
-                        }
-                    },
+                SaniouTopAppBar(
+                    title = "用户中心",
+                    onNavigationClick = { navigator.pop() },
                     scrollBehavior = scrollBehavior
                 )
             },

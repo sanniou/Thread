@@ -1,5 +1,6 @@
 package ai.saniou.forum.workflow.user
 
+import ai.saniou.coreui.widgets.SaniouTopAppBar
 import ai.saniou.forum.di.nmbdi
 import ai.saniou.forum.ui.components.ForumThreadCard
 import ai.saniou.forum.ui.components.LoadEndIndicator
@@ -97,13 +98,9 @@ data class UserDetailPage(
             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
                 Column {
-                    TopAppBar(
-                        title = { Text(text = "用户: $userHash") },
-                        navigationIcon = {
-                            IconButton(onClick = { viewModel.handleEvent(UserDetailContract.Event.Back) }) {
-                                Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                            }
-                        },
+                    SaniouTopAppBar(
+                        title = "用户: $userHash",
+                        onNavigationClick = { viewModel.handleEvent(UserDetailContract.Event.Back) },
                         scrollBehavior = scrollBehavior
                     )
                     SecondaryTabRow(selectedTabIndex = state.currentTab.ordinal) {

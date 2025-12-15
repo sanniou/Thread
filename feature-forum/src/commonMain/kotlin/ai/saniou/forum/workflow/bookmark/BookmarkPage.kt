@@ -1,5 +1,7 @@
 package ai.saniou.forum.workflow.bookmark
 
+import ai.saniou.coreui.widgets.NetworkImage
+import ai.saniou.coreui.widgets.SaniouTopAppBar
 import ai.saniou.forum.workflow.thread.ThreadPage
 import ai.saniou.thread.domain.model.bookmark.Bookmark
 import androidx.compose.foundation.clickable
@@ -7,8 +9,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -25,7 +25,6 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.kodein.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import ai.saniou.coreui.widgets.NetworkImage
 import coil3.compose.AsyncImage
 
 object BookmarkPage : Screen {
@@ -40,13 +39,9 @@ object BookmarkPage : Screen {
 
         Scaffold(
             topBar = {
-                TopAppBar(
-                    title = { Text("收藏夹") },
-                    navigationIcon = {
-                        IconButton(onClick = { navigator.pop() }) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = "返回")
-                        }
-                    }
+                SaniouTopAppBar(
+                    title = "收藏夹",
+                    onNavigationClick = { navigator.pop() }
                 )
             }
         ) { innerPadding ->

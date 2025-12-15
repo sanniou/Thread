@@ -3,6 +3,7 @@ package ai.saniou.forum.workflow.search
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.BlankLinePolicy
 import ai.saniou.coreui.widgets.RichText
+import ai.saniou.coreui.widgets.SaniouSearchAppBar
 import ai.saniou.thread.data.source.nmb.remote.dto.ThreadReply
 import ai.saniou.forum.di.nmbdi
 import ai.saniou.forum.ui.components.ForumThreadCard
@@ -72,41 +73,13 @@ data class SearchPage(
         Scaffold(
             topBar = {
                 Column {
-                    // 自定义 TopBar，集成搜索框
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = Dimens.padding_small, start = 4.dp, end = 16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        IconButton(onClick = { navigator.pop() }) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
-                        }
-
-                        OutlinedTextField(
-                            value = state.query,
-                            onValueChange = { viewModel.onEvent(Event.QueryChanged(it)) },
-                            placeholder = { Text("搜索本地记录...") },
-                            modifier = Modifier.weight(1f),
-                            singleLine = true,
-                            leadingIcon = { Icon(Icons.Default.Search, null) },
-                            trailingIcon = if (state.query.isNotEmpty()) {
-                                {
-                                    IconButton(onClick = { viewModel.onEvent(Event.ClearQuery) }) {
-                                        Icon(Icons.Default.Clear, "清除")
-                                    }
-                                }
-                            } else null,
-                            shape = MaterialTheme.shapes.extraLarge,
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-                                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-                                disabledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-                                focusedBorderColor = Color.Transparent,
-                                unfocusedBorderColor = Color.Transparent,
-                            )
-                        )
-                    }
+                    SaniouSearchAppBar(
+                        query = state.query,
+                        onQueryChange = { viewModel.onEvent(Event.QueryChanged(it)) },
+                        onClearQuery = { viewModel.onEvent(Event.ClearQuery) },
+                        onBack = { navigator.pop() },
+                        placeholder = "搜索本地记录..."
+                    )
 
                     // 类型筛选 Chips
                     Row(

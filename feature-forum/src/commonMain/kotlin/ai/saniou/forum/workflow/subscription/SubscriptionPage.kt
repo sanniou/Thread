@@ -1,6 +1,7 @@
 package ai.saniou.forum.workflow.subscription
 
 import ai.saniou.coreui.widgets.PullToRefreshWrapper
+import ai.saniou.coreui.widgets.SaniouTopAppBar
 import ai.saniou.forum.di.nmbdi
 import ai.saniou.forum.ui.components.ForumThreadCard
 import ai.saniou.forum.ui.components.LoadEndIndicator
@@ -99,8 +100,9 @@ data class SubscriptionPage(
             Scaffold(
                 snackbarHost = { SnackbarHost(snackbarHostState) },
                 topBar = {
-                    TopAppBar(
-                        title = { Text("订阅列表") },
+                    SaniouTopAppBar(
+                        title = "订阅列表",
+                        onNavigationClick = { navigator.pop() },
                         actions = {
                             IconButton(onClick = { viewModel.onEvent(Event.OnPull) }) {
                                 Icon(

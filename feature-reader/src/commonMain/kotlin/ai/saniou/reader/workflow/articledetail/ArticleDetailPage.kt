@@ -2,6 +2,7 @@ package ai.saniou.reader.workflow.articledetail
 
 import ai.saniou.corecommon.utils.toRelativeTimeString
 import ai.saniou.coreui.widgets.RichText
+import ai.saniou.coreui.widgets.SaniouTopAppBar
 import ai.saniou.thread.domain.model.reader.Article
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.*
@@ -125,19 +126,9 @@ private fun ArticleDetailTopAppBar(
     onToggleMenu: (Boolean) -> Unit,
     onFontSizeChange: (Float) -> Unit
 ) {
-    MediumTopAppBar(
-        title = {
-            // 在 MediumTopAppBar 中，当折叠时显示标题
-            Text(
-                text = state.feedSourceName ?: "文章详情",
-                style = MaterialTheme.typography.titleMedium
-            )
-        },
-        navigationIcon = {
-            IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
-            }
-        },
+    SaniouTopAppBar(
+        title = state.feedSourceName ?: "文章详情",
+        onNavigationClick = onBack,
         actions = {
             state.article?.let { article ->
                 IconButton(onClick = onToggleBookmark) {
