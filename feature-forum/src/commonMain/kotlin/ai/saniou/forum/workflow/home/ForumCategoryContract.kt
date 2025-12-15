@@ -38,7 +38,8 @@ interface ForumCategoryContract {
         val expandedGroupId: String? = null,
         val currentForum: Forum? = null,
         val favoriteForumIds: Set<String> = emptySet(),
-        val toastMessage: String? = null
+        val toastMessage: String? = null,
+        val notice: ai.saniou.thread.domain.model.forum.Notice? = null
     )
 
     /**
@@ -63,6 +64,11 @@ interface ForumCategoryContract {
         data class SelectForum(val forum: Forum) : Event
 
         /**
+         * 选中主页 (Dashboard)
+         */
+        object SelectHome : Event
+
+        /**
          * 切换一个板块的收藏状态
          * @param forum 要切换的板块
          */
@@ -72,5 +78,10 @@ interface ForumCategoryContract {
          * 提示信息已显示
          */
         object ToastShown : Event
+
+        /**
+         * 标记公告为已读
+         */
+        object MarkNoticeRead : Event
     }
 }

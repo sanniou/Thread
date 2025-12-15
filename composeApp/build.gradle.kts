@@ -61,7 +61,7 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(libs.navigation.compose)
             implementation(libs.voyager.navigator)
-//            implementation(project(":feature-nmb"))
+            implementation(project(":feature-forum"))
             implementation(project(":feature-reader"))
         }
         jvmMain.dependencies {

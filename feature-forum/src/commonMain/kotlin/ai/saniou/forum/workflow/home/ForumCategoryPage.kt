@@ -1,16 +1,18 @@
 package ai.saniou.forum.workflow.home
 
-import ai.saniou.coreui.widgets.DrawerMenuItem
-import ai.saniou.coreui.widgets.DrawerMenuRow
+import ai.saniou.coreui.composition.LocalAppDrawer
+import ai.saniou.coreui.widgets.AppDrawerItem
+import ai.saniou.coreui.widgets.DrawerHeader
 import ai.saniou.forum.di.nmbdi
-import ai.saniou.forum.ui.components.DrawerHeader
 import ai.saniou.forum.workflow.bookmark.BookmarkPage
 import ai.saniou.forum.workflow.forum.ForumPage
+import ai.saniou.forum.workflow.history.HistoryPage
 import ai.saniou.forum.workflow.home.ForumCategoryContract.Event
 import ai.saniou.forum.workflow.home.ForumCategoryContract.ForumGroupUiState
 import ai.saniou.forum.workflow.search.SearchPage
 import ai.saniou.forum.workflow.subscription.SubscriptionPage
 import ai.saniou.forum.workflow.thread.ThreadPage
+import ai.saniou.forum.workflow.trend.TrendPage
 import ai.saniou.thread.domain.model.forum.Forum
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
@@ -132,6 +134,11 @@ data class ForumCategoryPage(
                 )
             }
 
+            val onMenuClick = {
+                scope.launch { actualDrawerState.open() }
+                Unit
+            }
+
             if (isMobile) {
                 ModalNavigationDrawer(
                     drawerState = actualDrawerState,
@@ -141,7 +148,7 @@ data class ForumCategoryPage(
                         }
                     }
                 ) {
-                    MainContent(state)
+                    MainContent(state, onMenuClick)
                 }
             } else {
                 PermanentNavigationDrawer(
@@ -151,24 +158,31 @@ data class ForumCategoryPage(
                         }
                     }
                 ) {
-                    MainContent(state)
+                    MainContent(state, onMenuClick)
                 }
             }
         }
     }
 
     @Composable
-    private fun MainContent(state: ForumCategoryContract.ForumCategoryUiState) {
+    private fun MainContent(
+        state: ForumCategoryContract.ForumCategoryUiState,
+        onMenuClick: () -> Unit
+    ) {
+        val viewModel: ForumCategoryViewModel = rememberScreenModel()
+
         state.currentForum?.let { forum ->
-            ForumPage(forumId = forum.id.toLong(), fgroupId = forum.groupId.toLong()).Content()
+            ForumPage(
+                forumId = forum.id.toLong(),
+                fgroupId = forum.groupId.toLong(),
+                onMenuClick = onMenuClick
+            ).Content()
         } ?: run {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(
-                    stringResource(Res.string.drawer_select_forum_hint),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+            ForumDashboard(
+                notice = state.notice,
+                onMenuClick = onMenuClick,
+                onDismissNotice = { viewModel.onEvent(Event.MarkNoticeRead) }
+            )
         }
     }
 
@@ -201,26 +215,64 @@ data class ForumCategoryPage(
                         .weight(1f)
                         .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.95f))
                 ) {
-                    DrawerMenuRow(
-                        menuItems = listOf(
-                            DrawerMenuItem(Icons.Default.Favorite, stringResource(Res.string.drawer_subscribe)) {
+                    val globalDrawer = LocalAppDrawer.current
+                    globalDrawer()
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+
+                    Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                        AppDrawerItem(
+                            label = "主页", // TODO: string resource
+                            icon = Icons.Default.Home,
+                            selected = state.currentForum == null,
+                            onClick = {
+                                viewModel.onEvent(Event.SelectHome)
+                                onCloseDrawer()
+                            }
+                        )
+                        AppDrawerItem(
+                            label = stringResource(Res.string.drawer_subscribe),
+                            icon = Icons.Default.Favorite,
+                            onClick = {
                                 navigator.push(SubscriptionPage { threadId ->
                                     navigator.push(ThreadPage(threadId))
                                 })
                                 onCloseDrawer()
-                            },
-                            DrawerMenuItem(Icons.Default.Star, stringResource(Res.string.drawer_bookmark)) {
+                            }
+                        )
+                        AppDrawerItem(
+                            label = stringResource(Res.string.drawer_bookmark),
+                            icon = Icons.Default.Star,
+                            onClick = {
                                 navigator.push(BookmarkPage)
                                 onCloseDrawer()
-                            },
-                            DrawerMenuItem(Icons.Default.Home, stringResource(Res.string.drawer_history)) { /* TODO */ },
-                            DrawerMenuItem(Icons.Default.Send, stringResource(Res.string.drawer_post)) { /* TODO */ },
-                            DrawerMenuItem(Icons.Default.Search, stringResource(Res.string.drawer_search)) {
+                            }
+                        )
+                        AppDrawerItem(
+                            label = "综合趋势",
+                            icon = Icons.Default.Send,
+                            onClick = {
+                                navigator.push(TrendPage())
+                                onCloseDrawer()
+                            }
+                        )
+                        AppDrawerItem(
+                            label = stringResource(Res.string.drawer_history),
+                            icon = Icons.Default.DateRange, // Changed icon to distinguish from Home
+                            onClick = {
+                                navigator.push(HistoryPage())
+                                onCloseDrawer()
+                            }
+                        )
+                        AppDrawerItem(
+                            label = stringResource(Res.string.drawer_search),
+                            icon = Icons.Default.Search,
+                            onClick = {
                                 navigator.push(SearchPage())
                                 onCloseDrawer()
                             }
                         )
-                    )
+                    }
+
                     HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
                     if (state.isLoading) {
@@ -320,31 +372,32 @@ data class ForumCategoryPage(
         onFavoriteToggle: () -> Unit,
     ) {
         val backgroundColor = if (isSelected)
-            MaterialTheme.colorScheme.primaryContainer
+            MaterialTheme.colorScheme.secondaryContainer
         else
             Color.Transparent
 
         val contentColor = if (isSelected)
-            MaterialTheme.colorScheme.onPrimaryContainer
+            MaterialTheme.colorScheme.onSecondaryContainer
         else
-            MaterialTheme.colorScheme.onSurface
+            MaterialTheme.colorScheme.onSurfaceVariant
 
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(backgroundColor)
+                .padding(vertical = 4.dp, horizontal = 12.dp)
+                .background(backgroundColor, MaterialTheme.shapes.large)
                 .combinedClickable(
                     onClick = onForumClick,
                     onLongClick = onFavoriteToggle
                 )
-                .padding(start = 16.dp, end = 8.dp, top = 12.dp, bottom = 12.dp),
+                .padding(horizontal = 12.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = if (forum.showName.isNullOrBlank()) forum.name else forum.showName!!,
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.labelLarge,
                         color = contentColor,
                         fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
                     )
@@ -383,7 +436,7 @@ data class ForumCategoryPage(
                             Text(
                                 text = cleanMsg,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                color = contentColor.copy(alpha = 0.8f),
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
                                 fontSize = MaterialTheme.typography.labelSmall.fontSize,
@@ -394,12 +447,15 @@ data class ForumCategoryPage(
                 }
             }
 
-            IconButton(onClick = onFavoriteToggle) {
+            IconButton(
+                onClick = onFavoriteToggle,
+                modifier = Modifier.size(24.dp)
+            ) {
                 Icon(
                     imageVector = if (isFavorite) Icons.Default.Star else Icons.Outlined.StarBorder,
                     contentDescription = if (isFavorite) stringResource(Res.string.forum_favorite_remove) else stringResource(Res.string.forum_favorite_add),
                     tint = if (isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(16.dp)
                 )
             }
         }

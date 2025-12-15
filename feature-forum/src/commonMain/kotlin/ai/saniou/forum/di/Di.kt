@@ -6,7 +6,6 @@ import ai.saniou.forum.workflow.forum.ForumViewModel
 import ai.saniou.forum.workflow.history.HistoryViewModel
 import ai.saniou.forum.workflow.home.ForumCategoryViewModel
 import ai.saniou.forum.workflow.home.GreetImageViewModel
-import ai.saniou.forum.workflow.home.HomeViewModel
 import ai.saniou.forum.workflow.image.nmbImagePreviewModule
 import ai.saniou.forum.workflow.post.PostViewModel
 import ai.saniou.forum.workflow.reference.ReferenceViewModel
@@ -55,6 +54,8 @@ val nmbFeatureModule = DI.Module("nmbFeatureModule") {
     // 论坛分类相关
     bindProvider<ForumCategoryViewModel> {
         ForumCategoryViewModel(
+            instance(),
+            instance(),
             instance(),
             instance(),
             instance(),
@@ -116,7 +117,6 @@ val nmbFeatureModule = DI.Module("nmbFeatureModule") {
     bindProvider { BookmarkViewModel(instance(), instance(), instance()) }
 
 
-    bindProvider { HomeViewModel(instance(), instance()) }
     bindProvider { TrendViewModel(instance()) }
 }
 

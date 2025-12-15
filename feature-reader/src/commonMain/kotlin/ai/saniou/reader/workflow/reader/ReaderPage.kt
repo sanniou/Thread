@@ -1,7 +1,9 @@
 package ai.saniou.reader.workflow.reader
 
 import ai.saniou.corecommon.utils.toRelativeTimeString
+import ai.saniou.coreui.composition.LocalAppDrawer
 import ai.saniou.coreui.theme.Dimens
+import ai.saniou.coreui.widgets.AppDrawerItem
 import ai.saniou.coreui.widgets.RichText
 import ai.saniou.reader.workflow.articledetail.ArticleDetailPage
 import ai.saniou.thread.domain.model.reader.Article
@@ -366,6 +368,10 @@ private fun FeedSourceList(
     onAdd: () -> Unit
 ) {
     Column(modifier = Modifier.fillMaxHeight().padding(vertical = 12.dp)) {
+        val globalDrawer = LocalAppDrawer.current
+        globalDrawer()
+        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
         Text(
             text = "订阅源",
             style = MaterialTheme.typography.titleSmall,
@@ -378,16 +384,12 @@ private fun FeedSourceList(
             contentPadding = PaddingValues(horizontal = 12.dp)
         ) {
             item {
-                NavigationDrawerItem(
-                    label = { Text("全部文章") },
-                    icon = { Icon(Icons.Default.AllInclusive, null) },
+                AppDrawerItem(
+                    label = "全部文章",
+                    icon = Icons.Default.AllInclusive,
                     selected = selectedSourceId == null,
                     onClick = { onSelect(null) },
-                    badge = {
-                        val totalUnread = articleCounts.values.sumOf { it.second }
-                        if (totalUnread > 0) Badge { Text(totalUnread.toString()) }
-                    },
-                    modifier = Modifier.padding(vertical = 4.dp)
+                    badgeText = articleCounts.values.sumOf { it.second }.takeIf { it > 0 }?.toString()
                 )
             }
 
@@ -407,18 +409,16 @@ private fun FeedSourceList(
 
         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
-        NavigationDrawerItem(
-            label = { Text("添加订阅源") },
-            icon = { Icon(Icons.Default.Add, null) },
+        AppDrawerItem(
+            label = "添加订阅源",
+            icon = Icons.Default.Add,
             selected = false,
-            onClick = onAdd,
-            modifier = Modifier.padding(horizontal = 12.dp)
+            onClick = onAdd
         )
     }
 }
 
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun FeedSourceItem(
     source: FeedSource,
@@ -431,78 +431,42 @@ fun FeedSourceItem(
 ) {
     var showMenu by remember { mutableStateOf(false) }
 
-    // 使用 NavigationDrawerItem 的样式自定义，或者直接使用 Box 包裹 NavigationDrawerItem
-    // 这里为了支持长按菜单，我们自定义布局但模仿 NavigationDrawerItem 的样式
-
-    val containerColor = if (isSelected) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent
-    val contentColor =
-        if (isSelected) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp)
-            .clip(MaterialTheme.shapes.large) // Drawer item shape
-            .background(containerColor)
-            .combinedClickable(
-                onClick = onClick,
-                onLongClick = { showMenu = true }
-            )
-            .padding(horizontal = 12.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        AsyncImage(
-            model = source.iconUrl,
-            contentDescription = null,
-            modifier = Modifier.size(24.dp),
-            error = remember {
-                // Fallback icon if needed, or handle in coil config
-                null
-            }
-        )
-
-        Text(
-            text = source.name,
-            style = MaterialTheme.typography.labelLarge,
-            color = contentColor,
-            modifier = Modifier.weight(1f),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-
-        if (source.isRefreshing) {
-            CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
-        } else if (unreadCount > 0) {
-            Badge { Text(unreadCount.toString()) }
-        }
-
-        // Dropdown Menu
-        Box {
-            DropdownMenu(
-                expanded = showMenu,
-                onDismissRequest = { showMenu = false }
-            ) {
-                DropdownMenuItem(
-                    text = { Text("刷新") },
-                    onClick = { onRefresh(); showMenu = false },
-                    leadingIcon = { Icon(Icons.Default.Refresh, null) }
-                )
-                DropdownMenuItem(
-                    text = { Text("编辑") },
-                    onClick = { onEdit(); showMenu = false },
-                    leadingIcon = { Icon(Icons.Default.Edit, null) }
-                )
-                HorizontalDivider()
-                DropdownMenuItem(
-                    text = { Text("删除") },
-                    onClick = { onDelete(); showMenu = false },
-                    leadingIcon = { Icon(Icons.Default.Delete, null) },
-                    colors = MenuDefaults.itemColors(textColor = MaterialTheme.colorScheme.error)
-                )
+    AppDrawerItem(
+        label = source.name,
+        iconUrl = source.iconUrl,
+        badgeText = if (unreadCount > 0) unreadCount.toString() else null,
+        isLoading = source.isRefreshing,
+        selected = isSelected,
+        onClick = onClick,
+        onLongClick = { showMenu = true },
+        trailingContent = {
+            // Dropdown Menu
+            Box {
+                DropdownMenu(
+                    expanded = showMenu,
+                    onDismissRequest = { showMenu = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("刷新") },
+                        onClick = { onRefresh(); showMenu = false },
+                        leadingIcon = { Icon(Icons.Default.Refresh, null) }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("编辑") },
+                        onClick = { onEdit(); showMenu = false },
+                        leadingIcon = { Icon(Icons.Default.Edit, null) }
+                    )
+                    HorizontalDivider()
+                    DropdownMenuItem(
+                        text = { Text("删除") },
+                        onClick = { onDelete(); showMenu = false },
+                        leadingIcon = { Icon(Icons.Default.Delete, null) },
+                        colors = MenuDefaults.itemColors(textColor = MaterialTheme.colorScheme.error)
+                    )
+                }
             }
         }
-    }
+    )
 }
 
 @Composable

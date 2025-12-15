@@ -6,9 +6,11 @@ import ai.saniou.forum.workflow.home.ForumCategoryContract.ForumGroupUiState
 import ai.saniou.forum.workflow.home.ForumCategoryContract.ForumCategoryUiState
 import ai.saniou.thread.domain.model.forum.Forum
 import ai.saniou.thread.domain.repository.ForumRepository
-import ai.saniou.thread.domain.usecase.post.ToggleFavoriteUseCase
 import ai.saniou.thread.domain.usecase.forum.GetFavoriteForumsUseCase
 import ai.saniou.thread.domain.usecase.forum.GetForumsUseCase
+import ai.saniou.thread.domain.usecase.notice.GetNoticeUseCase
+import ai.saniou.thread.domain.usecase.notice.MarkNoticeAsReadUseCase
+import ai.saniou.thread.domain.usecase.post.ToggleFavoriteUseCase
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,6 +27,8 @@ class ForumCategoryViewModel(
     private val toggleFavoriteUseCase: ToggleFavoriteUseCase,
     private val appInitializer: AppInitializer,
     private val forumRepository: ForumRepository,
+    private val getNoticeUseCase: GetNoticeUseCase,
+    private val markNoticeAsReadUseCase: MarkNoticeAsReadUseCase,
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(ForumCategoryUiState())
@@ -32,15 +36,34 @@ class ForumCategoryViewModel(
 
     init {
         onEvent(Event.LoadCategories)
+        fetchNotice()
     }
 
     fun onEvent(event: Event) {
         when (event) {
             Event.LoadCategories -> loadCategories()
             is Event.SelectForum -> selectForum(event.forum)
+            Event.SelectHome -> selectHome()
             is Event.ToggleCategory -> toggleCategory(event.groupId)
             is Event.ToggleFavorite -> toggleFavorite(event.forum)
             Event.ToastShown -> onToastShown()
+            Event.MarkNoticeRead -> markNoticeAsRead()
+        }
+    }
+
+    private fun fetchNotice() {
+        screenModelScope.launch {
+            getNoticeUseCase().collect { notice ->
+                _state.update { it.copy(notice = notice) }
+            }
+        }
+    }
+
+    private fun markNoticeAsRead() {
+        screenModelScope.launch {
+            state.value.notice?.id?.let {
+                markNoticeAsReadUseCase(it)
+            }
         }
     }
 
@@ -134,6 +157,10 @@ class ForumCategoryViewModel(
             forumRepository.saveLastOpenedForum(forum)
         }
         _state.update { it.copy(currentForum = forum) }
+    }
+
+    private fun selectHome() {
+        _state.update { it.copy(currentForum = null) }
     }
 
     private fun toggleFavorite(forum: Forum) {

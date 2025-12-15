@@ -22,8 +22,11 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import ai.saniou.forum.workflow.user.UserPage
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -66,6 +69,7 @@ data class ForumPage(
     val di: DI = nmbdi,
     val forumId: Long,
     val fgroupId: Long,
+    val onMenuClick: (() -> Unit)? = null,
 ) : Screen {
 
     @OptIn(ExperimentalMaterial3Api::class)
@@ -140,8 +144,14 @@ data class ForumPage(
                         )
                     },
                     navigationIcon = {
-                        IconButton(onClick = { navigator.pop() }) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = "返回")
+                        if (onMenuClick != null) {
+                            IconButton(onClick = onMenuClick) {
+                                Icon(Icons.Default.Menu, contentDescription = "菜单")
+                            }
+                        } else {
+                            IconButton(onClick = { navigator.pop() }) {
+                                Icon(Icons.Default.ArrowBack, contentDescription = "返回")
+                            }
                         }
                     },
                     actions = {
@@ -153,6 +163,11 @@ data class ForumPage(
                             )
                         }) {
                             Icon(Icons.Outlined.Info, contentDescription = "板块信息")
+                        }
+                        IconButton(onClick = {
+                            navigator.push(UserPage())
+                        }) {
+                            Icon(Icons.Default.AccountCircle, contentDescription = "用户中心")
                         }
                     },
                     scrollBehavior = scrollBehavior
