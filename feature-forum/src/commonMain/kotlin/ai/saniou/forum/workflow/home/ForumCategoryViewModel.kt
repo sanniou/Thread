@@ -50,7 +50,14 @@ class ForumCategoryViewModel(
             is Event.ToggleFavorite -> toggleFavorite(event.forum)
             Event.ToastShown -> onToastShown()
             Event.MarkNoticeRead -> markNoticeAsRead()
+            is Event.SelectSource -> selectSource(event.sourceId)
         }
+    }
+
+    private fun selectSource(sourceId: String) {
+        if (state.value.currentSourceId == sourceId) return
+        _state.update { it.copy(currentSourceId = sourceId) }
+        loadCategories()
     }
 
     private fun fetchNotice() {
@@ -78,9 +85,11 @@ class ForumCategoryViewModel(
 
             // TODO: Replace with a UseCase
             val lastOpenedForumId = forumRepository.getLastOpenedForum()?.id
+            val currentSourceId = state.value.currentSourceId
 
-            val forumsFlow = flow { emit(getForumsUseCase("nmb")) }
-            val favoritesFlow = getFavoriteForumsUseCase("nmb")
+            // Use Dispatchers.IO for database/network calls
+            val forumsFlow = flow { emit(getForumsUseCase(currentSourceId)) }
+            val favoritesFlow = getFavoriteForumsUseCase(currentSourceId)
 
             forumsFlow.combine(favoritesFlow) { forumsResult, favorites ->
                 forumsResult.map { forums ->

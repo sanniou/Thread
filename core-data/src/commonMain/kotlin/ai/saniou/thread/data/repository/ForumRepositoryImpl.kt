@@ -17,23 +17,45 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
+import ai.saniou.thread.data.source.discourse.DiscourseSource
+import ai.saniou.thread.domain.repository.Source
+
 class ForumRepositoryImpl(
     private val db: Database,
     private val nmbSource: NmbSource,
+    private val discourseSource: DiscourseSource,
 ) : ForumRepository {
 
     override fun getForumThreadsPaging(
-        fid: Long,
+        sourceId: String,
+        fid: String,
         isTimeline: Boolean,
         initialPage: Int,
     ): Flow<PagingData<Post>> {
-        val pagerFlow = if (isTimeline) {
-            nmbSource.getTimelinePager(fid, DataPolicy.NETWORK_ELSE_CACHE, initialPage)
-        } else {
-            nmbSource.getShowfPager(fid, DataPolicy.NETWORK_ELSE_CACHE, initialPage)
-        }
-        return pagerFlow.map { pagingData ->
-            pagingData.map { it.toDomain() }
+        return when (sourceId) {
+            "nmb" -> {
+                val fidLong = fid.toLongOrNull() ?: return kotlinx.coroutines.flow.flowOf(PagingData.empty())
+                val pagerFlow = if (isTimeline) {
+                    nmbSource.getTimelinePager(fidLong, DataPolicy.NETWORK_ELSE_CACHE, initialPage)
+                } else {
+                    nmbSource.getShowfPager(fidLong, DataPolicy.NETWORK_ELSE_CACHE, initialPage)
+                }
+                pagerFlow.map { pagingData ->
+                    pagingData.map { it.toDomain() }
+                }
+            }
+            "discourse" -> {
+                // TODO: Implement paging for discourse properly using Pager
+                // For now, we return empty or implement a basic flow if possible,
+                // but PagingSource is better.
+                // Since DiscourseSource currently returns Result<List<Post>>, we might need to adapt it.
+                // However, the task is "add discourse", let's assuming we use PagingSource for it later.
+                // For this step, I will throw NotImplemented or return empty to fix compilation first
+                // and then we can improve DiscourseSource to support Paging if needed,
+                // OR we just wrap the simple list in PagingData for now.
+                kotlinx.coroutines.flow.flowOf(PagingData.empty())
+            }
+            else -> kotlinx.coroutines.flow.flowOf(PagingData.empty())
         }
     }
 

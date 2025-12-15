@@ -66,7 +66,27 @@ val nmbFeatureModule = DI.Module("nmbFeatureModule") {
 
     // 论坛相关
     bindFactory<Pair<Long, Long>, ForumViewModel> { params ->
-        ForumViewModel(instance(), instance(), instance(), params.first, params.second)
+        // Compatibility for old factory
+        ForumViewModel(
+            instance(),
+            instance(),
+            instance(),
+            "nmb",
+            params.first.toString(),
+            params.second.toString()
+        )
+    }
+
+    // New factory supporting SourceId
+    bindFactory<Triple<String, String, String>, ForumViewModel> { params ->
+        ForumViewModel(
+            instance(),
+            instance(),
+            instance(),
+            sourceId = params.first,
+            forumId = params.second,
+            fgroupId = params.third
+        )
     }
 
     // 帖子相关

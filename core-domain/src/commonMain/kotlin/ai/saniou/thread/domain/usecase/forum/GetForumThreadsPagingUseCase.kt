@@ -9,11 +9,13 @@ class GetForumThreadsPagingUseCase(
     private val forumRepository: ForumRepository
 ) {
     operator fun invoke(
-        fid: Long,
+        sourceId: String,
+        fid: String,
         isTimeline: Boolean,
         initialPage: Int = 1
     ): Flow<PagingData<Post>> {
         return forumRepository.getForumThreadsPaging(
+            sourceId = sourceId,
             fid = fid,
             isTimeline = isTimeline,
             initialPage = initialPage

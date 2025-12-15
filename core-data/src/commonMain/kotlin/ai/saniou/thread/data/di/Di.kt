@@ -22,6 +22,9 @@ import ai.saniou.thread.data.source.nmb.NmbCookieProvider
 import ai.saniou.thread.data.source.nmb.NmbSource
 import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
 import ai.saniou.thread.data.source.nmb.remote.createNmbXdApi
+import ai.saniou.thread.data.source.discourse.DiscourseSource
+import ai.saniou.thread.data.source.discourse.remote.DiscourseApi
+import ai.saniou.thread.data.source.discourse.remote.createDiscourseApi
 import ai.saniou.thread.data.sync.local.LocalSyncProvider
 import ai.saniou.thread.data.sync.webdav.WebDavSyncProvider
 import ai.saniou.thread.domain.repository.BookmarkRepository
@@ -60,19 +63,33 @@ import org.kodein.di.singleton
 
 val dataModule = DI.Module("dataModule") {
     bindConstant<String>(tag = "nmbBaseUrl") { "https://api.nmb.best/api/" }
+    bindConstant<String>(tag = "discourseBaseUrl") { "https://meta.discourse.org/" }
+
     bindSingleton<NmbXdApi> {
         val ktorfit: Ktorfit = instance(arg = instance<String>("nmbBaseUrl"))
         ktorfit.createNmbXdApi()
     }
 
+    bindSingleton<DiscourseApi> {
+        val ktorfit: Ktorfit = instance(arg = instance<String>("discourseBaseUrl"))
+        ktorfit.createDiscourseApi()
+    }
+
     // source and repository
     bindSingleton<NmbSource> { NmbSource(instance(), instance()) }
+    bindSingleton<DiscourseSource> { DiscourseSource(instance()) }
+    
     bind<Source>(tag = "nmb") with singleton { instance<NmbSource>() }
     bind<Source>(tag = "nga") with singleton { NgaSource() }
+    bind<Source>(tag = "discourse") with singleton { instance<DiscourseSource>() }
 
     // "allInstance" only work in jvm current ,wait upgrade        val sources: Set<Source> = DI.allInstances()
     bind<Set<Source>>(tag = "allSources") with singleton {
-        HashSet<Source>().apply { add(instance(tag = "nmb")); add(instance(tag = "nga")) }
+        HashSet<Source>().apply {
+            add(instance(tag = "nmb"))
+            add(instance(tag = "nga"))
+            add(instance(tag = "discourse"))
+        }
     }
 
     bind<SourceRepository>() with singleton {
@@ -92,7 +109,13 @@ val dataModule = DI.Module("dataModule") {
     bind<TrendRepository>() with singleton { TrendRepositoryImpl(instance()) }
     bind<ReferenceRepository>() with singleton { ReferenceRepositoryImpl(instance(), instance()) }
     bind<ThreadRepository>() with singleton { ThreadRepositoryImpl(instance(), instance()) }
-    bind<ForumRepository>() with singleton { ForumRepositoryImpl(instance(), instance<NmbSource>()) }
+    bind<ForumRepository>() with singleton {
+        ForumRepositoryImpl(
+            instance(),
+            instance<NmbSource>(),
+            instance<DiscourseSource>()
+        )
+    }
 
     // sync providers
     bind<SyncProvider>(tag = "webdav") with singleton { WebDavSyncProvider() }

@@ -75,3 +75,11 @@
 3.  **运行**:
     -   Android: Run `composeApp`.
     -   Desktop: `./gradlew :composeApp:run`
+
+## 📚 参考资料 (References)
+
+-   [X 岛匿名版 API 文档](https://github.com/TransparentLC/xdcmd/wiki/%E8%87%AA%E5%B7%B1%E6%95%B4%E7%90%86%E7%9A%84-X-%E5%B2%9B%E5%8C%BF%E5%90%8D%E7%89%88-API-%E6%96%87%E6%A1%A3)
+-   [Material Design 3 - Adaptive Design](https://m3.material.io/foundations/adaptive-design)
+-   [Compose Multiplatform Adaptive Navigation](https://developer.android.com/develop/ui/compose/layouts/adaptive/build-adaptive-navigation)
+- https://github.com/lumina37/aiotieba 。 https://github.com/HuanCheng65/TiebaLite
+- discourse api :https://docs.discourse.org/

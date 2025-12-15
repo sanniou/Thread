@@ -20,7 +20,8 @@ interface ForumRepository {
      * @return 包含帖子分页数据的 Flow
      */
     fun getForumThreadsPaging(
-        fid: Long,
+        sourceId: String,
+        fid: String,
         isTimeline: Boolean,
         initialPage: Int = 1
     ): Flow<PagingData<Post>>

@@ -30,13 +30,30 @@ class ForumViewModel(
     getForumThreadsPagingUseCase: GetForumThreadsPagingUseCase,
     getForumDetailUseCase: GetForumDetailUseCase,
     getForumNameUseCase: GetForumNameUseCase,
-    private val forumId: Long,
-    private val fgroupId: Long,
+    private val sourceId: String,
+    private val forumId: String,
+    private val fgroupId: String,
 ) : ScreenModel {
 
+    // Compatibility for existing DI
+    constructor(
+        getForumThreadsPagingUseCase: GetForumThreadsPagingUseCase,
+        getForumDetailUseCase: GetForumDetailUseCase,
+        getForumNameUseCase: GetForumNameUseCase,
+        forumId: Long,
+        fgroupId: Long
+    ) : this(
+        getForumThreadsPagingUseCase,
+        getForumDetailUseCase,
+        getForumNameUseCase,
+        "nmb",
+        forumId.toString(),
+        fgroupId.toString()
+    )
+
     private data class LoadRequest(
-        val fid: Long,
-        val fgroup: Long,
+        val fid: String,
+        val fgroup: String,
         val policy: DataPolicy = DataPolicy.NETWORK_ELSE_CACHE,
         val page: Int = 1,
     )
@@ -50,15 +67,29 @@ class ForumViewModel(
     val threads: Flow<PagingData<Post>> =
         loadParams.flatMapLatest { request ->
             getForumThreadsPagingUseCase(
+                sourceId = sourceId,
                 fid = request.fid,
-                isTimeline = request.fgroup == -1L,
+                isTimeline = request.fgroup == "-1",
                 initialPage = request.page
             )
         }.cachedIn(screenModelScope)
 
     val state: StateFlow<State> = combine(
-        getForumNameUseCase(forumId),
-        getForumDetailUseCase(forumId),
+        // Only fetch name/detail if it's NMB or if we implement generic detail fetching
+        // For now, NMB uses Long IDs for DB lookup.
+        if (sourceId == "nmb") {
+            val fidLong = forumId.toLongOrNull() ?: 0L
+            getForumNameUseCase(fidLong)
+        } else {
+            // For Discourse, we might already have the name or need a new use case
+            kotlinx.coroutines.flow.flowOf(null)
+        },
+        if (sourceId == "nmb") {
+            val fidLong = forumId.toLongOrNull() ?: 0L
+            getForumDetailUseCase(fidLong)
+        } else {
+            kotlinx.coroutines.flow.flowOf(null)
+        },
         showInfoDialog
     ) { forumName, forumDetail, showDialog ->
         State(

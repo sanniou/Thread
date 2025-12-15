@@ -29,6 +29,7 @@ interface ForumCategoryContract {
      * @property currentForum 当前选中的板块
      * @property favoriteForumIds 收藏的板块ID集合
      * @property toastMessage 提示信息
+     * @property currentSourceId 当前选中的数据源
      */
     data class ForumCategoryUiState(
         val categoriesState: UiStateWrapper<List<ForumGroupUiState>> = UiStateWrapper.Loading,
@@ -36,7 +37,8 @@ interface ForumCategoryContract {
         val currentForum: Forum? = null,
         val favoriteForumIds: Set<String> = emptySet(),
         val toastMessage: String? = null,
-        val notice: ai.saniou.thread.domain.model.forum.Notice? = null
+        val notice: ai.saniou.thread.domain.model.forum.Notice? = null,
+        val currentSourceId: String = "nmb"
     )
 
     /**
@@ -80,5 +82,11 @@ interface ForumCategoryContract {
          * 标记公告为已读
          */
         object MarkNoticeRead : Event
+
+        /**
+         * 切换数据源
+         * @param sourceId 数据源 ID
+         */
+        data class SelectSource(val sourceId: String) : Event
     }
 }

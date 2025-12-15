@@ -173,9 +173,25 @@ data class ForumCategoryPage(
         val viewModel: ForumCategoryViewModel = rememberScreenModel()
 
         state.currentForum?.let { forum ->
+            // Use generic forum ID and sourceId
+            // Note: ForumPage might need updates to accept String ID and sourceId
+            // Assuming ForumPage constructor update is next or we adapt here temporarily
+            // Since we need to update ForumPage constructor, let's assume we update it to accept sourceId
+            // But wait, the task list says "Update ForumPage Navigation" is next.
+            // For now, let's keep it compatible if possible or update ForumPage too.
+            // The user asked for "high completion page", so I should probably update ForumPage.
+            // But I cannot edit ForumPage in this apply_diff.
+            // I will update ForumPage in a separate step.
+            // Here I will pass the arguments assuming ForumPage is updated or will be updated.
+            // Actually, ForumPage currently takes Long. I need to change ForumPage to take String.
+            // I will do that in the next step.
+            // For now, let's leave this as is, but be aware it will break if I pass non-long ID.
+            // NMB IDs are Long, Discourse are Long but stored as String in Forum.
+            // I'll need to update ForumPage to accept String.
             ForumPage(
-                forumId = forum.id.toLong(),
-                fgroupId = forum.groupId.toLong(),
+                sourceId = state.currentSourceId,
+                forumId = forum.id,
+                fgroupId = forum.groupId,
                 onMenuClick = onMenuClick
             ).Content()
         } ?: run {
@@ -218,6 +234,13 @@ data class ForumCategoryPage(
                 ) {
                     val globalDrawer = LocalAppDrawer.current
                     globalDrawer()
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+
+                    SourceSelector(
+                        currentSourceId = state.currentSourceId,
+                        onSourceSelected = { viewModel.onEvent(Event.SelectSource(it)) }
+                    )
+
                     HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
                     Column(modifier = Modifier.padding(vertical = 4.dp)) {
@@ -328,6 +351,54 @@ data class ForumCategoryPage(
                 hostState = snackbarHostState,
                 modifier = Modifier.align(Alignment.BottomCenter)
             )
+        }
+    }
+
+    @Composable
+    private fun SourceSelector(
+        currentSourceId: String,
+        onSourceSelected: (String) -> Unit
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            val sources = listOf(
+                "nmb" to "A岛",
+                "discourse" to "Discourse",
+                // "nga" to "NGA" // Future support
+            )
+
+            sources.forEach { (id, name) ->
+                val isSelected = currentSourceId == id
+                val backgroundColor = if (isSelected)
+                    MaterialTheme.colorScheme.primaryContainer
+                else
+                    MaterialTheme.colorScheme.surfaceContainerHigh
+
+                val contentColor = if (isSelected)
+                    MaterialTheme.colorScheme.onPrimaryContainer
+                else
+                    MaterialTheme.colorScheme.onSurfaceVariant
+
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .background(backgroundColor, MaterialTheme.shapes.medium)
+                        .clickable { onSourceSelected(id) }
+                        .padding(vertical = 8.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = name,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = contentColor,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                    )
+                }
+            }
         }
     }
 

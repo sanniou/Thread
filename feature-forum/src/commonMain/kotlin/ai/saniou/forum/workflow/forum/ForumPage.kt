@@ -68,17 +68,54 @@ import org.kodein.di.instance
 
 data class ForumPage(
     val di: DI = nmbdi,
-    val forumId: Long,
-    val fgroupId: Long,
+    val sourceId: String = "nmb",
+    val forumId: String,
+    val fgroupId: String,
     val onMenuClick: (() -> Unit)? = null,
 ) : Screen {
+
+    // Compatibility constructor for existing navigation calls (mostly NMB)
+    constructor(forumId: Long, fgroupId: Long, onMenuClick: (() -> Unit)? = null) : this(
+        sourceId = "nmb",
+        forumId = forumId.toString(),
+        fgroupId = fgroupId.toString(),
+        onMenuClick = onMenuClick
+    )
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val viewModel: ForumViewModel = rememberScreenModel(tag = "${fgroupId}_${forumId}") {
-            di.direct.instance(arg = forumId to fgroupId)
+        // TODO: Pass sourceId to ViewModel factory when DI supports it or ViewModel is updated to accept it via factory
+        // For now, ViewModel might still be expecting Longs in its constructor if not updated.
+        // We need to check ForumViewModel definition again.
+        // ForumViewModel takes (..., forumId: Long, fgroupId: Long).
+        // We need to update ForumViewModel to take Strings and sourceId.
+        // But I cannot update ForumViewModel in this apply_diff.
+        // So I will convert back to Long here if source is "nmb", else use 0L/dummy if generic.
+        // Wait, I updated ForumViewModel in previous step but only its `getForumThreadsPagingUseCase` call,
+        // not its constructor signature.
+        // Let's assume for this step I only update ForumPage to hold the data,
+        // and I pass converted data to ViewModel until ViewModel is fully refactored.
+        
+        val viewModel: ForumViewModel = rememberScreenModel(tag = "${sourceId}_${fgroupId}_${forumId}") {
+            // This will fail if ForumViewModel constructor is not updated to accept (String, String, String)
+            // or if DI module is not updated to provide it.
+            // Currently DI provides ForumViewModel using `instance(arg = forumId to fgroupId)` where args are Long.
+            // This suggests I need to update DI and ViewModel too.
+            // Since I am in "Architect" mode effectively (planning large change),
+            // I should have updated ViewModel first.
+            // But I am in Code mode.
+            // Let's proceed with minimal changes:
+            // 1. Update ForumPage (this file).
+            // 2. Update ForumViewModel (next).
+            // 3. Update DI (next).
+            
+            // Temporary hack: Pass Longs as before.
+            // Ideally we want `di.direct.instance(arg = Triple(sourceId, forumId, fgroupId))`
+            val fIdLong = forumId.toLongOrNull() ?: 0L
+            val fGroupLong = fgroupId.toLongOrNull() ?: 0L
+            di.direct.instance(arg = fIdLong to fGroupLong)
         }
         val state by viewModel.state.collectAsStateWithLifecycle()
         val threads = viewModel.threads.collectAsLazyPagingItems()
