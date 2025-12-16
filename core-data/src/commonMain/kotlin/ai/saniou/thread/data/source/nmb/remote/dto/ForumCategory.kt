@@ -1,6 +1,6 @@
 package ai.saniou.thread.data.source.nmb.remote.dto
 
-import ai.saniou.thread.db.table.Forum
+import ai.saniou.thread.db.table.forum.Forum
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonNames
@@ -42,7 +42,7 @@ data class ForumDetail(
     val status: String? = null, //原版 API 文档所述：始终为 n
 )
 
-fun ai.saniou.thread.db.table.ForumCategory.toForumCategory(forums: List<Forum>) =
+fun ai.saniou.thread.db.table.forum.ForumCategory.toForumCategory(forums: List<Forum>) =
     ForumCategory(
         id = id.toLong(),
         sort = sort,
@@ -67,7 +67,7 @@ fun Forum.toForumDetail() = ForumDetail(
     status = status,
 )
 
-fun ForumCategory.toTable() = ai.saniou.thread.db.table.ForumCategory(
+fun ForumCategory.toTable() = ai.saniou.thread.db.table.forum.ForumCategory(
     id = id.toString(),
     sourceId = "nmb",
     sort = sort,

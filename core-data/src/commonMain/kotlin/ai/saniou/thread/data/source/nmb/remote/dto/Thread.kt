@@ -1,6 +1,6 @@
 package ai.saniou.thread.data.source.nmb.remote.dto
 
-import ai.saniou.thread.db.table.ThreadReplyQueries
+import ai.saniou.thread.db.table.forum.ThreadReplyQueries
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonNames
@@ -46,7 +46,7 @@ data class ThreadReply(
 ) : IBaseAuthor, IThreadBody
 
 fun ThreadReply.toTable(threadId: Long, page: Long = Long.MIN_VALUE) =
-    ai.saniou.thread.db.table.ThreadReply(
+    ai.saniou.thread.db.table.forum.ThreadReply(
         id = this.id,
         userHash = this.userHash,
         admin = this.admin,
@@ -67,7 +67,7 @@ fun Thread.toTableReply(page: Long) = this.replies.mapIndexed { index, it ->
     )
 }
 
-fun ai.saniou.thread.db.table.ThreadReply.toThreadReply() = ThreadReply(
+fun ai.saniou.thread.db.table.forum.ThreadReply.toThreadReply() = ThreadReply(
     id = id,
     userHash = userHash,
     admin = admin,
@@ -80,7 +80,7 @@ fun ai.saniou.thread.db.table.ThreadReply.toThreadReply() = ThreadReply(
     threadId = threadId,
 )
 
-fun ai.saniou.thread.db.table.Thread.toThread(query: ThreadReplyQueries? = null) = Thread(
+fun ai.saniou.thread.db.table.forum.Thread.toThread(query: ThreadReplyQueries? = null) = Thread(
     id = id,
     fid = fid,
     replyCount = replyCount,
@@ -100,7 +100,7 @@ fun ai.saniou.thread.db.table.Thread.toThread(query: ThreadReplyQueries? = null)
 )
 
 
-fun Thread.toTable(page: Long) = ai.saniou.thread.db.table.Thread(
+fun Thread.toTable(page: Long) = ai.saniou.thread.db.table.forum.Thread(
     id = id,
     fid = fid,
     replyCount = replyCount,

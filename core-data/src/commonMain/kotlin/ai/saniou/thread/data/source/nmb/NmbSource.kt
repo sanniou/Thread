@@ -2,7 +2,7 @@ package ai.saniou.thread.data.source.nmb
 
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.db.table.Cookie
-import ai.saniou.thread.db.table.GetThreadsInForumOffset
+import ai.saniou.thread.db.table.forum.GetThreadsInForumOffset
 import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
 import ai.saniou.thread.data.source.nmb.remote.dto.Forum
 import ai.saniou.thread.data.source.nmb.remote.dto.RemoteKeyType

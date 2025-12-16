@@ -1,7 +1,7 @@
 package ai.saniou.thread.data.source.nmb.remote.dto
 
-import ai.saniou.thread.db.table.Thread
-import ai.saniou.thread.db.table.ThreadReply
+import ai.saniou.thread.db.table.forum.Thread
+import ai.saniou.thread.db.table.forum.ThreadReply
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonNames

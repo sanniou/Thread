@@ -2,8 +2,8 @@ package ai.saniou.thread.data.database
 
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.db.table.Bookmark
-import ai.saniou.thread.db.table.FavoriteForum
 import ai.saniou.thread.db.table.RemoteKeys
+import ai.saniou.thread.db.table.forum.FavoriteForum
 import app.cash.sqldelight.ColumnAdapter
 import app.cash.sqldelight.EnumColumnAdapter
 import app.cash.sqldelight.db.SqlDriver
