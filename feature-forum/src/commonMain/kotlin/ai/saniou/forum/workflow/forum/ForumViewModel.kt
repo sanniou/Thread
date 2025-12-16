@@ -35,22 +35,6 @@ class ForumViewModel(
     private val fgroupId: String,
 ) : ScreenModel {
 
-    // Compatibility for existing DI
-    constructor(
-        getForumThreadsPagingUseCase: GetForumThreadsPagingUseCase,
-        getForumDetailUseCase: GetForumDetailUseCase,
-        getForumNameUseCase: GetForumNameUseCase,
-        forumId: Long,
-        fgroupId: Long
-    ) : this(
-        getForumThreadsPagingUseCase,
-        getForumDetailUseCase,
-        getForumNameUseCase,
-        "nmb",
-        forumId.toString(),
-        fgroupId.toString()
-    )
-
     private data class LoadRequest(
         val fid: String,
         val fgroup: String,

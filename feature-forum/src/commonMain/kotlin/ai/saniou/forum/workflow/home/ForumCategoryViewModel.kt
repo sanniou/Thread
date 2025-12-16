@@ -11,6 +11,7 @@ import ai.saniou.thread.domain.repository.ForumRepository
 import ai.saniou.thread.domain.usecase.forum.GetFavoriteForumsUseCase
 import ai.saniou.thread.domain.usecase.forum.GetForumsUseCase
 import ai.saniou.thread.domain.repository.SettingsRepository
+import ai.saniou.thread.domain.repository.getValue
 import ai.saniou.thread.domain.repository.saveValue
 import ai.saniou.thread.domain.usecase.notice.GetNoticeUseCase
 import ai.saniou.thread.domain.usecase.notice.MarkNoticeAsReadUseCase
@@ -43,13 +44,23 @@ class ForumCategoryViewModel(
 
     init {
         loadSources()
-        onEvent(Event.LoadCategories)
         fetchNotice()
     }
 
     private fun loadSources() {
-        val sources = getAvailableSourcesUseCase()
-        _state.update { it.copy(availableSources = sources) }
+        screenModelScope.launch {
+            val sources = getAvailableSourcesUseCase()
+            val lastSourceId = settingsRepository.getValue("current_source_id") ?: sources.first().id
+            val initialSourceId = if (sources.any { it.id == lastSourceId }) lastSourceId else sources.firstOrNull()?.id ?: "nmb"
+
+            _state.update {
+                it.copy(
+                    availableSources = sources,
+                    currentSourceId = initialSourceId
+                )
+            }
+            onEvent(Event.LoadCategories)
+        }
     }
 
     fun onEvent(event: Event) {
@@ -191,7 +202,7 @@ class ForumCategoryViewModel(
     private fun toggleFavorite(forum: Forum) {
         screenModelScope.launch {
             val isCurrentlyFavorite = state.value.favoriteForumIds.contains(forum.id)
-            toggleFavoriteUseCase("nmb", forum)
+            toggleFavoriteUseCase(state.value.currentSourceId, forum)
             val message =
                 if (isCurrentlyFavorite) "已取消收藏 ${forum.name}" else "已收藏 ${forum.name}"
             _state.update { it.copy(toastMessage = message) }

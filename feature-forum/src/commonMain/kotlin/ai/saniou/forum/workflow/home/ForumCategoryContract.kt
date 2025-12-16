@@ -39,7 +39,7 @@ interface ForumCategoryContract {
         val favoriteForumIds: Set<String> = emptySet(),
         val toastMessage: String? = null,
         val notice: ai.saniou.thread.domain.model.forum.Notice? = null,
-        val currentSourceId: String = "nmb",
+        val currentSourceId: String = "",
         val availableSources: List<Source> = emptyList()
     )
 
