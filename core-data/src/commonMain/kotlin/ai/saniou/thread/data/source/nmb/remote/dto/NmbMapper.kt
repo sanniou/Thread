@@ -152,15 +152,15 @@ fun String.toTime(): Instant {
 
 @OptIn(ExperimentalTime::class)
 fun Thread.toDomain(): Post = Post(
-    id = id.toString(),
-    sourceName = "nmb",
+    id = id,
+    sourceName = sourceId,
     sourceUrl = "https://nmb.ai/thread/$id",
     title = title,
     content = content,
     author = name,
     userHash = userHash,
     createdAt = now.toTime(),
-    forumName = fid.toString(),
+    forumName = fid,
     replyCount = replyCount,
     img = img,
     ext = ext,
@@ -182,7 +182,7 @@ fun Thread.toDomain(): Post = Post(
 
 @OptIn(ExperimentalTime::class)
 fun ThreadReply.toDomain(): ai.saniou.thread.domain.model.forum.ThreadReply = ai.saniou.thread.domain.model.forum.ThreadReply(
-    id = id,
+    id = id.toLongOrNull() ?: 0L,
     userHash = userHash,
     admin = admin,
     title = title,
@@ -191,7 +191,7 @@ fun ThreadReply.toDomain(): ai.saniou.thread.domain.model.forum.ThreadReply = ai
     img = img,
     ext = ext,
     name = name,
-    threadId = threadId
+    threadId = threadId.toLongOrNull() ?: 0L
 )
 
 @OptIn(ExperimentalTime::class)

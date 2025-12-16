@@ -14,8 +14,11 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.Instant
 import ai.saniou.thread.domain.repository.Source
 
+import ai.saniou.thread.data.cache.SourceCache
+
 class DiscourseSource(
     private val api: DiscourseApi,
+    private val cache: SourceCache,
 ) : Source {
     override val id: String = "discourse"
     override val name: String = "Discourse"
@@ -48,6 +51,7 @@ class DiscourseSource(
         }
     }
 
+    @OptIn(ExperimentalPagingApi::class)
     override fun getThreadsPager(
         forumId: String,
         isTimeline: Boolean,
@@ -56,8 +60,19 @@ class DiscourseSource(
         return Pager(
             config = PagingConfig(pageSize = 30),
             initialKey = initialPage,
-            pagingSourceFactory = { DiscoursePagingSource(api, forumId) }
-        ).flow
+            remoteMediator = DiscourseRemoteMediator(
+                sourceId = id,
+                fid = forumId,
+                api = api,
+                cache = cache,
+                initialPage = initialPage
+            ),
+            pagingSourceFactory = {
+                cache.getForumThreadsPagingSource(id, forumId)
+            }
+        ).flow.map { pagingData ->
+            pagingData.map { it.toDomain() }
+        }
     }
 
     override suspend fun getThreadDetail(threadId: String, page: Int): Result<Post> {

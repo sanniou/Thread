@@ -20,7 +20,8 @@ import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalPagingApi::class)
 class ForumRemoteMediator(
-    private val sourceId: Long, // 通用源 ID，例如 fid
+    private val sourceId: String,
+    private val fid: String,
     private val db: Database,
     private val dataPolicy: DataPolicy,
     private val initialPage: Int,
@@ -65,25 +66,26 @@ class ForumRemoteMediator(
 
                         db.transaction {
                             if (loadType == LoadType.REFRESH) {
-                                threadQueries.deleteThreadsByFidAndPage(sourceId, page)
+                                threadQueries.deleteThreadsByFidAndPage(sourceId, fid, page)
                             }
 
                             val prevKey = if (page == 1L) null else page - 1
                             val nextKey = if (endOfPagination) null else page + 1
 
                             forums.forEach { forum ->
-                                threadQueries.upsertThread(forum.toTable(page.toLong()))
+                                threadQueries.upsertThread(forum.toTable(sourceId, page.toLong()))
                                 threadQueries.upsertThreadInformation(
-                                    id = forum.id,
+                                    id = forum.id.toString(),
+                                    sourceId = sourceId,
                                     remainReplies = forum.remainReplies,
                                     lastKey = forum.replies.lastOrNull()?.id ?: forum.id
                                 )
-                                forum.toTableReply()
+                                forum.toTableReply(sourceId)
                                     .forEach(db.threadReplyQueries::upsertThreadReply)
                             }
                             remoteKeyQueries.insertKey(
                                 type = RemoteKeyType.FORUM,
-                                id = sourceId.toString(),
+                                id = fid,
                                 prevKey = prevKey?.toLong(),
                                 currKey = page.toLong(),
                                 nextKey = nextKey?.toLong(),
@@ -102,7 +104,7 @@ class ForumRemoteMediator(
 
             DataPolicy.CACHE_ELSE_NETWORK -> {
                 val threadsInDb =
-                    threadQueries.countThreadsByFidAndPage(sourceId, page).executeAsOne()
+                    threadQueries.countThreadsByFidAndPage(sourceId, fid, page).executeAsOne()
                 if (threadsInDb > 0) {
                     return RemoteMediatorMediatorResultSuccess(endOfPaginationReached = false)
                 }
@@ -117,18 +119,19 @@ class ForumRemoteMediator(
                             val nextKey = if (endOfPagination) null else page + 1
 
                             forums.forEach { forum ->
-                                threadQueries.upsertThread(forum.toTable(page.toLong()))
+                                threadQueries.upsertThread(forum.toTable(sourceId, page.toLong()))
                                 threadQueries.upsertThreadInformation(
-                                    id = forum.id,
+                                    id = forum.id.toString(),
+                                    sourceId = sourceId,
                                     remainReplies = forum.remainReplies,
                                     lastKey = forum.replies.lastOrNull()?.id ?: forum.id
                                 )
-                                forum.toTableReply()
+                                forum.toTableReply(sourceId)
                                     .forEach(db.threadReplyQueries::upsertThreadReply)
                             }
                             remoteKeyQueries.insertKey(
                                 type = RemoteKeyType.FORUM,
-                                id = sourceId.toString(),
+                                id = fid,
                                 prevKey = prevKey?.toLong(),
                                 currKey = page.toLong(),
                                 nextKey = nextKey?.toLong(),

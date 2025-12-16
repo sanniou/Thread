@@ -19,7 +19,8 @@ import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalPagingApi::class)
 class ThreadRemoteMediator(
-    private val threadId: Long,
+    private val sourceId: String,
+    private val threadId: String,
     private val db: Database,
     private val dataPolicy: DataPolicy,
     private val initialPage: Int,
@@ -61,7 +62,7 @@ class ThreadRemoteMediator(
         when (dataPolicy) {
             DataPolicy.CACHE_ELSE_NETWORK -> {
                 val repliesInDb =
-                    threadReplyQueries.countRepliesByThreadIdAndPage(threadId, page.toLong())
+                    threadReplyQueries.countRepliesByThreadIdAndPage(sourceId, threadId, page.toLong())
                         .executeAsOne()
                 if (repliesInDb > 0) {
                     return RemoteMediatorMediatorResultSuccess(endOfPaginationReached = false)
@@ -82,12 +83,12 @@ class ThreadRemoteMediator(
                 val threadDetail = result.data
                 val validReplySize = threadDetail.replies.count { it.userHash != "Tips" }
                 val endOfPagination =
-                    threadDetail.replyCount <= threadReplyQueries.countValidThreadReplies(threadId)
+                    threadDetail.replyCount <= threadReplyQueries.countValidThreadReplies(sourceId, threadId)
                         .executeAsOne() + validReplySize || validReplySize == 0
 
                 db.transaction {
-                    threadQueries.upsertThread(threadDetail.toTable(page.toLong()))
-                    threadDetail.toTableReply(page.toLong())
+                    threadQueries.upsertThread(threadDetail.toTable(sourceId, page.toLong()))
+                    threadDetail.toTableReply(sourceId, page.toLong())
                         .forEach(threadReplyQueries::upsertThreadReply)
 
                     val prevKey = if (page == 1) null else page - 1
@@ -95,7 +96,7 @@ class ThreadRemoteMediator(
 
                     remoteKeyQueries.insertKey(
                         type = RemoteKeyType.THREAD,
-                        id = threadId.toString(),
+                        id = threadId,
                         prevKey = prevKey?.toLong(),
                         currKey = page.toLong(),
                         nextKey = nextKey?.toLong(),

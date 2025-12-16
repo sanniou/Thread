@@ -91,6 +91,12 @@
 - **字符串资源**: `feature-*/src/commonMain/composeResources/values/strings.xml`
 - **导航配置**: 查看 `composeApp` 中的 App.kt 或导航相关文件。
 - **依赖注入**: `core-data/src/commonMain/kotlin/ai/saniou/thread/data/di/Di.kt`
+- usecase:`core-domain/src/commonMain/kotlin/ai/saniou/thread/domain/usecase/[feature]`
+  - eg:ai.saniou.thread.domain.usecase.bookmark.AddBookmarkUseCase
+- database-common: `core-data/src/commonMain/sqldelight/ai/saniou/thread/db/table/`
+- database-forum: `core-data/src/commonMain/sqldelight/ai/saniou/thread/db/table/forum`
+- database-reader: `core-data/src/commonMain/sqldelight/ai/saniou/thread/db/table/reader`
+
 
 ## 5. 最佳实践检查清单
 - [ ] **KISS**: 即使是复杂功能，API 设计也应保持简单。

@@ -69,6 +69,5 @@ private fun DiscoursePost.toThreadReply(threadId: Long): ThreadReply {
         ext = "",
         name = name ?: username,
         threadId = threadId,
-
     )
 }

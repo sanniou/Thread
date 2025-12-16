@@ -22,6 +22,8 @@ import ai.saniou.thread.data.source.nmb.NmbCookieProvider
 import ai.saniou.thread.data.source.nmb.NmbSource
 import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
 import ai.saniou.thread.data.source.nmb.remote.createNmbXdApi
+import ai.saniou.thread.data.cache.SourceCache
+import ai.saniou.thread.data.cache.SqlDelightSourceCache
 import ai.saniou.thread.data.source.discourse.DiscourseSource
 import ai.saniou.thread.data.source.discourse.remote.DiscourseApi
 import ai.saniou.thread.data.source.discourse.remote.createDiscourseApi
@@ -75,9 +77,12 @@ val dataModule = DI.Module("dataModule") {
         ktorfit.createDiscourseApi()
     }
 
+    // cache
+    bindSingleton<SourceCache> { SqlDelightSourceCache(instance()) }
+
     // source and repository
     bindSingleton<NmbSource> { NmbSource(instance(), instance()) }
-    bindSingleton<DiscourseSource> { DiscourseSource(instance()) }
+    bindSingleton<DiscourseSource> { DiscourseSource(instance(), instance()) }
     
     bind<Source>(tag = "nmb") with singleton { instance<NmbSource>() }
     bind<Source>(tag = "nga") with singleton { NgaSource() }
@@ -108,7 +113,13 @@ val dataModule = DI.Module("dataModule") {
     bind<PostRepository>() with singleton { PostRepositoryImpl(instance()) }
     bind<TrendRepository>() with singleton { TrendRepositoryImpl(instance()) }
     bind<ReferenceRepository>() with singleton { ReferenceRepositoryImpl(instance(), instance()) }
-    bind<ThreadRepository>() with singleton { ThreadRepositoryImpl(instance(), instance(tag = "allSources")) }
+    bind<ThreadRepository>() with singleton {
+        ThreadRepositoryImpl(
+            instance(),
+            instance(tag = "allSources"),
+            instance()
+        )
+    }
     bind<ForumRepository>() with singleton {
         ForumRepositoryImpl(
             instance(),

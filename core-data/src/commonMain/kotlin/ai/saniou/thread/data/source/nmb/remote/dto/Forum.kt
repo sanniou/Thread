@@ -61,9 +61,10 @@ data class Reply(
 ) : IBaseAuthor
 
 
-fun Forum.toTable(page: Long) = Thread(
-    id = this.id,
-    fid = this.fid,
+fun Forum.toTable(sourceId: String, page: Long) = Thread(
+    id = this.id.toString(),
+    sourceId = sourceId,
+    fid = this.fid.toString(),
     replyCount = this.replyCount,
     img = this.img,
     ext = this.ext,
@@ -78,9 +79,10 @@ fun Forum.toTable(page: Long) = Thread(
     page = page,
 )
 
-fun Forum.toTableReply() = this.replies.map { reply ->
+fun Forum.toTableReply(sourceId: String) = this.replies.map { reply ->
     ThreadReply(
-        id = reply.id,
+        id = reply.id.toString(),
+        sourceId = sourceId,
         img = reply.img,
         ext = reply.ext,
         now = reply.now,
@@ -89,7 +91,7 @@ fun Forum.toTableReply() = this.replies.map { reply ->
         title = reply.title,
         content = reply.content,
         admin = reply.admin,
-        threadId = this.id,
+        threadId = this.id.toString(),
         page = Long.MIN_VALUE //unknown
     )
 }

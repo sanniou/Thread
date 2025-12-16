@@ -45,9 +45,10 @@ data class ThreadReply(
     val threadId: Long = 0,
 ) : IBaseAuthor, IThreadBody
 
-fun ThreadReply.toTable(threadId: Long, page: Long = Long.MIN_VALUE) =
+fun ThreadReply.toTable(sourceId: String, threadId: Long, page: Long = Long.MIN_VALUE) =
     ai.saniou.thread.db.table.forum.ThreadReply(
-        id = this.id,
+        id = this.id.toString(),
+        sourceId = sourceId,
         userHash = this.userHash,
         admin = this.admin,
         title = this.title,
@@ -56,19 +57,20 @@ fun ThreadReply.toTable(threadId: Long, page: Long = Long.MIN_VALUE) =
         img = this.img,
         ext = this.ext,
         name = this.name,
-        threadId = threadId,
+        threadId = threadId.toString(),
         page = page,
     )
 
-fun Thread.toTableReply(page: Long) = this.replies.mapIndexed { index, it ->
+fun Thread.toTableReply(sourceId: String, page: Long) = this.replies.mapIndexed { index, it ->
     it.toTable(
+        sourceId = sourceId,
         threadId = this.id,
         page = page,
     )
 }
 
 fun ai.saniou.thread.db.table.forum.ThreadReply.toThreadReply() = ThreadReply(
-    id = id,
+    id = id.toLongOrNull() ?: 0L,
     userHash = userHash,
     admin = admin,
     title = title,
@@ -77,12 +79,12 @@ fun ai.saniou.thread.db.table.forum.ThreadReply.toThreadReply() = ThreadReply(
     img = img,
     ext = ext,
     name = name,
-    threadId = threadId,
+    threadId = threadId.toLongOrNull() ?: 0L,
 )
 
 fun ai.saniou.thread.db.table.forum.Thread.toThread(query: ThreadReplyQueries? = null) = Thread(
-    id = id,
-    fid = fid,
+    id = id.toLongOrNull() ?: 0L,
+    fid = fid.toLongOrNull() ?: 0L,
     replyCount = replyCount,
     img = img,
     ext = ext,
@@ -94,15 +96,16 @@ fun ai.saniou.thread.db.table.forum.Thread.toThread(query: ThreadReplyQueries? =
     sage = sage,
     admin = admin,
     hide = hide,
-    replies = query?.getLastFiveReplies(id)?.executeAsList()?.map {
+    replies = query?.getLastFiveReplies(sourceId, id)?.executeAsList()?.map {
         it.toThreadReply()
     } ?: emptyList()
 )
 
 
-fun Thread.toTable(page: Long) = ai.saniou.thread.db.table.forum.Thread(
-    id = id,
-    fid = fid,
+fun Thread.toTable(sourceId: String, page: Long) = ai.saniou.thread.db.table.forum.Thread(
+    id = id.toString(),
+    sourceId = sourceId,
+    fid = fid.toString(),
     replyCount = replyCount,
     img = img,
     ext = ext,

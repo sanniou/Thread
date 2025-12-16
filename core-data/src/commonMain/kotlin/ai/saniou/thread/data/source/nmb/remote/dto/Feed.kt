@@ -126,9 +126,10 @@ fun SelectSubscriptionThread.toFeed() = Feed(
     isLocal = isLocal == 1L
 )
 
-fun Feed.toTable(page: Long) = Thread(
-    id = id,
-    fid = fid,
+fun Feed.toTable(sourceId: String, page: Long) = Thread(
+    id = id.toString(),
+    sourceId = sourceId,
+    fid = fid.toString(),
     replyCount = replyCount,
     img = img,
     ext = ext,

@@ -1,8 +1,9 @@
 
 -- 创建 ThreadReply 表
 CREATE TABLE IF NOT EXISTS ThreadReply (
-    id INTEGER PRIMARY KEY,
-    threadId INTEGER NOT NULL,
+    id TEXT NOT NULL,
+    sourceId TEXT NOT NULL,
+    threadId TEXT NOT NULL,
     page INTEGER NOT NULL,
     userHash TEXT NOT NULL,
     admin INTEGER NOT NULL,
@@ -12,16 +13,17 @@ CREATE TABLE IF NOT EXISTS ThreadReply (
     img TEXT NOT NULL,
     ext TEXT NOT NULL,
     name TEXT NOT NULL,
-    FOREIGN KEY (threadId) REFERENCES Thread(id) ON DELETE CASCADE
+    PRIMARY KEY (sourceId, id),
+    FOREIGN KEY (sourceId, threadId) REFERENCES Thread(sourceId, id) ON DELETE CASCADE
 );
 
 -- 为 ThreadReply 表的 thread_id 字段创建索引
-CREATE INDEX IF NOT EXISTS idx_thread_reply_thread_id ON ThreadReply(threadId);
+CREATE INDEX IF NOT EXISTS idx_thread_reply_thread_id ON ThreadReply(sourceId, threadId);
 
 -- 插入 ThreadReply 数据
 upsertThreadReply:
 INSERT OR REPLACE INTO ThreadReply (
-    id, threadId, page, userHash, admin, title, now, content, img, ext, name
+    id, sourceId, threadId, page, userHash, admin, title, now, content, img, ext, name
 ) VALUES ?;
 
 -- 更新 ThreadReply 数据
@@ -37,83 +39,83 @@ UPDATE ThreadReply SET
     img = ?,
     ext = ?,
     name = ?
-WHERE id = ?;
+WHERE sourceId = ? AND id = ?;
 
 -- 删除 ThreadReply 数据
 deleteThreadReply:
-DELETE FROM ThreadReply WHERE id = ?;
+DELETE FROM ThreadReply WHERE sourceId = ? AND id = ?;
 
 --  删除指定 thread_id 的 ThreadReply 数据
 deleteThreadRepliesByThreadId:
-DELETE FROM ThreadReply WHERE threadId = ?;
+DELETE FROM ThreadReply WHERE sourceId = ? AND threadId = ?;
 
 -- 查询指定 thread_id 的 ThreadReply 数据
 getThreadRepliesByPage:
-SELECT * FROM ThreadReply WHERE threadId = :threadId AND (:poUserHash IS NULL OR userHash = :poUserHash) AND page = :page ORDER BY id ASC;
+SELECT * FROM ThreadReply WHERE sourceId = :sourceId AND threadId = :threadId AND (:poUserHash IS NULL OR userHash = :poUserHash) AND page = :page ORDER BY id ASC;
 
 getThreadReplies:
-SELECT * FROM ThreadReply WHERE threadId = :threadId ORDER BY id ASC LIMIT :limit OFFSET :offset;
+SELECT * FROM ThreadReply WHERE sourceId = :sourceId AND threadId = :threadId ORDER BY id ASC LIMIT :limit OFFSET :offset;
 
 -- 获取指定 id 的 ThreadReply
 getThreadReplyById:
-SELECT * FROM ThreadReply WHERE id = :id;
+SELECT * FROM ThreadReply WHERE sourceId = :sourceId AND id = :id;
 
 -- 获取指定 thread_id 的最后五条回复
 getLastFiveReplies:
-SELECT * FROM ThreadReply WHERE threadId = :threadId ORDER BY id DESC LIMIT 5;
+SELECT * FROM ThreadReply WHERE sourceId = :sourceId AND threadId = :threadId ORDER BY id DESC LIMIT 5;
 
 -- 统计有效的 ThreadReply 数量
 countValidThreadReplies:
-SELECT count(*) FROM ThreadReply WHERE threadId = :threadId AND page >=0 AND userHash!='Tips';
+SELECT count(*) FROM ThreadReply WHERE sourceId = :sourceId AND threadId = :threadId AND page >=0 AND userHash!='Tips';
 
 
 getThreadRepliesByUserHash:
-SELECT * FROM ThreadReply WHERE threadId = :threadId AND userHash = :userHash ORDER BY id ASC LIMIT :limit OFFSET :offset;
+SELECT * FROM ThreadReply WHERE sourceId = :sourceId AND threadId = :threadId AND userHash = :userHash ORDER BY id ASC LIMIT :limit OFFSET :offset;
 
 countThreadRepliesByUserHash:
-SELECT count(*) FROM ThreadReply WHERE threadId = :threadId AND userHash = :userHash;
+SELECT count(*) FROM ThreadReply WHERE sourceId = :sourceId AND threadId = :threadId AND userHash = :userHash;
 
 isPageExist:
-SELECT EXISTS(SELECT 1 FROM ThreadReply WHERE threadId = :threadId AND page = :page);
+SELECT EXISTS(SELECT 1 FROM ThreadReply WHERE sourceId = :sourceId AND threadId = :threadId AND page = :page);
 
 deleteThreadRepliesByPage:
-DELETE FROM ThreadReply WHERE threadId = :threadId AND page = :page;
+DELETE FROM ThreadReply WHERE sourceId = :sourceId AND threadId = :threadId AND page = :page;
 
 countRepliesByPage:
-SELECT count(*) FROM ThreadReply WHERE threadId = :threadId AND page = :page;
+SELECT count(*) FROM ThreadReply WHERE sourceId = :sourceId AND threadId = :threadId AND page = :page;
 
 getThreadImages:
-SELECT * FROM ThreadReply WHERE threadId = :threadId AND img != '' AND ext != '' ORDER BY id ASC;
+SELECT * FROM ThreadReply WHERE sourceId = :sourceId AND threadId = :threadId AND img != '' AND ext != '' ORDER BY id ASC;
 
 getMaxPage:
-SELECT MAX(page) FROM ThreadReply WHERE threadId = :threadId;
+SELECT MAX(page) FROM ThreadReply WHERE sourceId = :sourceId AND threadId = :threadId;
 
 -- RemoteMediator 使用的查询
 countRepliesByThreadIdAndPage:
-SELECT count(1) FROM ThreadReply WHERE threadId = :threadId AND page = :page;
+SELECT count(1) FROM ThreadReply WHERE sourceId = :sourceId AND threadId = :threadId AND page = :page;
 
 deleteRepliesByThreadIdAndPage:
-DELETE FROM ThreadReply WHERE threadId = :threadId AND page = :page;
+DELETE FROM ThreadReply WHERE sourceId = :sourceId AND threadId = :threadId AND page = :page;
 
 -- PagingSource (所有回复)
 countRepliesByThreadId:
-SELECT count(1) FROM ThreadReply WHERE threadId = :threadId;
+SELECT count(1) FROM ThreadReply WHERE sourceId = :sourceId AND threadId = :threadId;
 
 getRepliesByThreadId:
-SELECT * FROM ThreadReply WHERE threadId = :threadId AND page = :page ORDER BY id ASC;
+SELECT * FROM ThreadReply WHERE sourceId = :sourceId AND threadId = :threadId AND page = :page ORDER BY id ASC;
 
 getRepliesByThreadIdOffset:
-SELECT * FROM ThreadReply WHERE threadId = :threadId ORDER BY id ASC LIMIT :limit OFFSET :offset;
+SELECT * FROM ThreadReply WHERE sourceId = :sourceId AND threadId = :threadId ORDER BY id ASC LIMIT :limit OFFSET :offset;
 
 -- PagingSource (只看PO)
 countRepliesByThreadIdAndUserHash:
-SELECT count(1) FROM ThreadReply WHERE threadId = :threadId AND userHash = :userHash;
+SELECT count(1) FROM ThreadReply WHERE sourceId = :sourceId AND threadId = :threadId AND userHash = :userHash;
 
 getRepliesByThreadIdAndUserHash:
-SELECT * FROM ThreadReply WHERE threadId = :threadId AND userHash = :userHash AND page = :page ORDER BY id ASC;
+SELECT * FROM ThreadReply WHERE sourceId = :sourceId AND threadId = :threadId AND userHash = :userHash AND page = :page ORDER BY id ASC;
 
 getRepliesByThreadIdAndUserHashOffset:
-SELECT * FROM ThreadReply WHERE threadId = :threadId AND userHash = :userHash ORDER BY id ASC LIMIT :limit OFFSET :offset;
+SELECT * FROM ThreadReply WHERE sourceId = :sourceId AND threadId = :threadId AND userHash = :userHash ORDER BY id ASC LIMIT :limit OFFSET :offset;
 
 searchReplies:
 SELECT * FROM ThreadReply

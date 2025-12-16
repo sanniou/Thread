@@ -263,7 +263,8 @@ class NmbSource(
             config = PagingConfig(pageSize = pageSize), // 每页19个回复
             initialKey = ((initialPage - 1) * pageSize),
             remoteMediator = ThreadRemoteMediator(
-                threadId = threadId,
+                sourceId = id,
+                threadId = threadId.toString(),
                 db = db,
                 dataPolicy = policy,
                 initialPage = initialPage,
@@ -277,12 +278,14 @@ class NmbSource(
                         context = Dispatchers.Default,
                         countQuery =
                             db.threadReplyQueries.countRepliesByThreadIdAndUserHash(
-                                threadId,
+                                id,
+                                threadId.toString(),
                                 poUserHash
                             ),
                         queryProvider = { limit, offset ->
                             db.threadReplyQueries.getRepliesByThreadIdAndUserHashOffset(
-                                threadId = threadId,
+                                sourceId = id,
+                                threadId = threadId.toString(),
                                 userHash = poUserHash,
                                 limit = limit,
                                 offset = offset,
@@ -294,12 +297,13 @@ class NmbSource(
                     QueryPagingSource(
                         transacter = db.threadReplyQueries,
                         context = Dispatchers.Default,
-                        countQuery = db.threadReplyQueries.countRepliesByThreadId(threadId),
+                        countQuery = db.threadReplyQueries.countRepliesByThreadId(id, threadId.toString()),
                         queryProvider = { limit, offset ->
                             db.threadReplyQueries.getRepliesByThreadIdOffset(
-                                threadId,
-                                limit,
-                                offset
+                                sourceId = id,
+                                threadId = threadId.toString(),
+                                limit = limit,
+                                offset = offset
                             )
                         }
                     )
@@ -327,15 +331,15 @@ class NmbSource(
     }
 
     suspend fun updateThreadLastAccessTime(threadId: Long, time: Long) {
-        db.threadQueries.updateThreadLastAccessTime(time, threadId)
+        db.threadQueries.updateThreadLastAccessTime(time, id, threadId.toString())
     }
 
     suspend fun updateThreadLastReadReplyId(threadId: Long, replyId: Long) {
-        db.threadQueries.updateThreadLastReadReplyId(replyId, threadId)
+        db.threadQueries.updateThreadLastReadReplyId(replyId, id, threadId.toString())
     }
 
     fun observeIsSubscribed(subscriptionKey: String, threadId: Long): Flow<Boolean> {
-        return db.subscriptionQueries.isSubscribed(subscriptionKey, threadId)
+        return db.subscriptionQueries.isSubscribed(subscriptionKey, id, threadId.toString())
             .asFlow()
             .mapToOne(Dispatchers.Default)
     }
@@ -344,7 +348,8 @@ class NmbSource(
     suspend fun addSubscription(subscriptionKey: String, thread: Thread) {
         db.subscriptionQueries.insertSubscription(
             subscriptionKey = subscriptionKey,
-            threadId = thread.id,
+            sourceId = id,
+            threadId = thread.id.toString(),
             page = 1L,
             subscriptionTime = Clock.System.now().epochSeconds,
             isLocal = 1L
@@ -352,7 +357,7 @@ class NmbSource(
     }
 
     suspend fun deleteSubscription(subscriptionKey: String, threadId: Long) {
-        db.subscriptionQueries.deleteSubscription(subscriptionKey, threadId)
+        db.subscriptionQueries.deleteSubscription(subscriptionKey, id, threadId.toString())
     }
 
     suspend fun getSortedCookies(): List<Cookie> {
@@ -418,7 +423,8 @@ class NmbSource(
             config = PagingConfig(pageSize = pageSize),
             initialKey = initialPage,
             remoteMediator = ForumRemoteMediator(
-                sourceId = fid,
+                sourceId = id,
+                fid = fid.toString(),
                 db = db,
                 dataPolicy = policy,
                 initialPage = initialPage,
@@ -428,9 +434,9 @@ class NmbSource(
                 QueryPagingSource(
                     transacter = db.threadQueries,
                     context = Dispatchers.Default,
-                    countQuery = db.threadQueries.countThreadsByFid(fid),
+                    countQuery = db.threadQueries.countThreadsByFid(id, fid.toString()),
                     queryProvider = { limit, offset ->
-                        db.threadQueries.getThreadsInForumOffset(fid, limit, offset)
+                        db.threadQueries.getThreadsInForumOffset(id, fid.toString(), limit, offset)
                     },
                 )
             }
@@ -447,8 +453,8 @@ class NmbSource(
                     val thread = response.data
                     // 更新数据库
                     db.threadQueries.transaction {
-                        db.threadQueries.upsertThread(thread.toTable(page = page.toLong()))
-                        thread.toTableReply(page.toLong())
+                        db.threadQueries.upsertThread(thread.toTable(id, page = page.toLong()))
+                        thread.toTableReply(id, page.toLong())
                             .forEach(db.threadReplyQueries::upsertThreadReply)
                     }
                     Result.success(thread.replies)
@@ -470,8 +476,8 @@ class NmbSource(
                     val thread = response.data
                     // 保存到数据库
                     db.threadQueries.transaction {
-                        db.threadQueries.upsertThread(thread.toTable(page = page.toLong()))
-                        thread.toTableReply(page.toLong())
+                        db.threadQueries.upsertThread(thread.toTable(id, page = page.toLong()))
+                        thread.toTableReply(id, page.toLong())
                             .forEach(db.threadReplyQueries::upsertThreadReply)
                     }
                     Result.success(thread)
@@ -488,9 +494,9 @@ class NmbSource(
         // 获取最后5条回复中的第一条（假设 getLastFiveReplies 是倒序的，即最新的在前）
         // 如果不是倒序，可能需要调整。通常论坛的“最后几条”是用于列表展示，往往是倒序。
         // 根据 Thread.kt 中的 toThread 实现，它取了 getLastFiveReplies，推测是用于展示 Thread 预览，应该是包含最新回复的。
-        return db.threadReplyQueries.getLastFiveReplies(threadId)
+        return db.threadReplyQueries.getLastFiveReplies(id, threadId.toString())
             .executeAsList()
-            .maxByOrNull { it.id } // 确保取 ID 最大的，即最新的
+            .maxByOrNull { it.id.toLong() } // 确保取 ID 最大的，即最新的
             ?.toThreadReply()
     }
 
