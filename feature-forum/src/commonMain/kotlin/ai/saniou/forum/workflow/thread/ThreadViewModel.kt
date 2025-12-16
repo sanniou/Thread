@@ -141,7 +141,7 @@ class ThreadViewModel(
             _state.update { it.copy(isLoading = true, error = null) }
             getThreadDetailUseCase(sourceId, threadId, forceRefresh)
                 .flatMapLatest { detail ->
-                    getForumNameUseCase(detail.fid).map { forumName ->
+                    getForumNameUseCase(sourceId, detail.fid.toString()).map { forumName ->
                         detail to (forumName ?: "")
                     }
                 }

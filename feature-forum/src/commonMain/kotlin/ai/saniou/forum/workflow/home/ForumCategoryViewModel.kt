@@ -98,7 +98,9 @@ class ForumCategoryViewModel(
             appInitializer.initialize()
 
             // TODO: Replace with a UseCase
-            val lastOpenedForumId = forumRepository.getLastOpenedForum()?.id
+            val lastOpenedForum = forumRepository.getLastOpenedForum()
+            // 如果最后打开的板块不是当前源的，则不选中
+            val lastOpenedForumId = if (lastOpenedForum?.sourceName == state.value.currentSourceId) lastOpenedForum.id else null
             val currentSourceId = state.value.currentSourceId
 
             // Use Dispatchers.IO for database/network calls
@@ -141,13 +143,14 @@ class ForumCategoryViewModel(
                     _state.update {
                         val isInitialLoad = it.categoriesState is UiStateWrapper.Loading || it.categoriesState is UiStateWrapper.Error
                         val allForums = forums + favorites
-                        val lastOpenedForum =
+                        // 找到最后打开的板块对象，确保它在当前列表中
+                        val lastOpenedForumObj =
                             if (isInitialLoad) allForums.find { f -> f.id == lastOpenedForumId } else null
 
                         it.copy(
                             categoriesState = UiStateWrapper.Success(combined),
-                            expandedGroupId = if (isInitialLoad) lastOpenedForum?.groupId else it.expandedGroupId,
-                            currentForum = if (isInitialLoad) lastOpenedForum else it.currentForum,
+                            expandedGroupId = if (isInitialLoad) lastOpenedForumObj?.groupId else it.expandedGroupId,
+                            currentForum = if (isInitialLoad) lastOpenedForumObj else it.currentForum,
                             favoriteForumIds = favoriteIds
                         )
                     }

@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 class GetForumDetailUseCase(
     private val forumRepository: ForumRepository
 ) {
-    operator fun invoke(fid: Long): Flow<Forum?> {
-        return forumRepository.getForumDetail(fid)
+    operator fun invoke(sourceId: String, fid: String): Flow<Forum?> {
+        return forumRepository.getForumDetail(sourceId, fid)
     }
 }

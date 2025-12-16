@@ -29,18 +29,20 @@ interface ForumRepository {
     /**
      * 获取板块名称
      *
+     * @param sourceId 来源ID
      * @param fid 板块ID
      * @return 包含板块名称的 Flow, 如果找不到则为 null
      */
-    fun getForumName(fid: Long): Flow<String?>
+    fun getForumName(sourceId: String, fid: String): Flow<String?>
 
     /**
      * 获取板块详情
      *
+     * @param sourceId 来源ID
      * @param fid 板块ID
      * @return 包含板块详情的 Flow
      */
-    fun getForumDetail(fid: Long): Flow<Forum?>
+    fun getForumDetail(sourceId: String, fid: String): Flow<Forum?>
 
     /**
      * 保存最后打开的板块

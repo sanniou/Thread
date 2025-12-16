@@ -115,6 +115,12 @@ class DiscourseSource(
             pagingSourceFactory = { DiscourseThreadPagingSource(api, threadId) }
         ).flow
     }
+
+    override fun getForum(forumId: String): Flow<Forum?> {
+        // TODO: Implement proper forum detail fetching or caching
+        // For now, return null as we don't persist forums locally yet
+        return kotlinx.coroutines.flow.flowOf(null)
+    }
 }
 
 private fun DiscourseCategory.toForum(): Forum {

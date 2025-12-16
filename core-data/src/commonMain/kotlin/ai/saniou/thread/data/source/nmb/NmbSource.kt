@@ -27,6 +27,7 @@ import app.cash.paging.map
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOne
+import app.cash.sqldelight.coroutines.mapToOneOrNull
 import app.cash.sqldelight.paging3.QueryPagingSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -215,6 +216,14 @@ class NmbSource(
         val tid =
             threadId.toLongOrNull() ?: return kotlinx.coroutines.flow.flowOf(PagingData.empty())
         return getThreadRepliesPager(tid, null, DataPolicy.NETWORK_ELSE_CACHE, initialPage)
+    }
+
+    override fun getForum(forumId: String): Flow<DomainForum?> {
+        val fid = forumId.toLongOrNull() ?: return kotlinx.coroutines.flow.flowOf(null)
+        return db.forumQueries.getForum(fid)
+            .asFlow()
+            .mapToOneOrNull(Dispatchers.Default)
+            .map { it?.toDomain() }
     }
 
     fun getTimelinePager(

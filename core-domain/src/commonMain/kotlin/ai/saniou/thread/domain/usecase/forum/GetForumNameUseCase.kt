@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.Flow
 class GetForumNameUseCase(
     private val forumRepository: ForumRepository
 ) {
-    operator fun invoke(fid: Long): Flow<String?> {
-        return forumRepository.getForumName(fid)
+    operator fun invoke(sourceId: String, fid: String): Flow<String?> {
+        return forumRepository.getForumName(sourceId, fid)
     }
 }

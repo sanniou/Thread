@@ -75,21 +75,8 @@ class ForumViewModel(
         }.cachedIn(screenModelScope)
 
     val state: StateFlow<State> = combine(
-        // Only fetch name/detail if it's NMB or if we implement generic detail fetching
-        // For now, NMB uses Long IDs for DB lookup.
-        if (sourceId == "nmb") {
-            val fidLong = forumId.toLongOrNull() ?: 0L
-            getForumNameUseCase(fidLong)
-        } else {
-            // For Discourse, we might already have the name or need a new use case
-            kotlinx.coroutines.flow.flowOf(null)
-        },
-        if (sourceId == "nmb") {
-            val fidLong = forumId.toLongOrNull() ?: 0L
-            getForumDetailUseCase(fidLong)
-        } else {
-            kotlinx.coroutines.flow.flowOf(null)
-        },
+        getForumNameUseCase(sourceId, forumId),
+        getForumDetailUseCase(sourceId, forumId),
         showInfoDialog
     ) { forumName, forumDetail, showDialog ->
         State(

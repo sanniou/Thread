@@ -45,4 +45,8 @@ class NgaSource : Source {
     ): Flow<PagingData<ThreadReply>> {
         return flowOf(PagingData.empty())
     }
+
+    override fun getForum(forumId: String): Flow<Forum?> {
+        TODO("Not yet implemented")
+    }
 }

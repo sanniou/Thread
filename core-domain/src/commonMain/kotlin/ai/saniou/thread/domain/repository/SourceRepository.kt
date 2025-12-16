@@ -47,6 +47,11 @@ interface Source {
         threadId: String,
         initialPage: Int,
     ): Flow<PagingData<ThreadReply>>
+
+    /**
+     * 获取板块详情
+     */
+    fun getForum(forumId: String): Flow<Forum?>
 }
 
 /**
