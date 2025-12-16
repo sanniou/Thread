@@ -14,11 +14,12 @@ class GetThreadDetailUseCase(
     private val threadRepository: ThreadRepository
 ) {
     /**
+     * @param sourceId 来源 ID
      * @param id 帖子 ID
      * @param forceRefresh 是否强制从网络刷新
      * @return 包含帖子详情的 Flow
      */
-    operator fun invoke(id: Long, forceRefresh: Boolean = false): Flow<Post> {
-        return threadRepository.getThreadDetail(id, forceRefresh)
+    operator fun invoke(sourceId: String = "nmb", id: String, forceRefresh: Boolean = false): Flow<Post> {
+        return threadRepository.getThreadDetail(sourceId, id, forceRefresh)
     }
 }

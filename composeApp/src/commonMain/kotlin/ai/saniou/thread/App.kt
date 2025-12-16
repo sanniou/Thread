@@ -1,6 +1,7 @@
 package ai.saniou.thread
 
 import ai.saniou.coreui.composition.LocalAppDrawer
+import ai.saniou.coreui.composition.LocalSourceId
 import ai.saniou.coreui.widgets.DrawerMenuItem
 import ai.saniou.coreui.widgets.DrawerMenuRow
 import ai.saniou.forum.di.coreCommon
@@ -11,6 +12,8 @@ import ai.saniou.reader.di.readerModule
 import ai.saniou.reader.workflow.reader.ReaderPage
 import ai.saniou.thread.data.di.dataModule
 import ai.saniou.thread.domain.di.domainModule
+import ai.saniou.thread.domain.repository.SettingsRepository
+import ai.saniou.thread.domain.repository.getValue
 import ai.saniou.thread.feature.cellularautomaton.CellularAutomatonScreen
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Forum
@@ -19,12 +22,14 @@ import androidx.compose.material.icons.filled.RssFeed
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.produceState
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import org.kodein.di.DI
 import org.kodein.di.compose.withDI
+import org.kodein.di.instance
 
 @Composable
 fun App() {
@@ -38,6 +43,12 @@ fun App() {
     }
 
     withDI(di) {
+        val settingsRepository: SettingsRepository by di.instance()
+        val currentSource = produceState("nmb") {
+            val saved: String? = settingsRepository.getValue("current_source_id")
+            value = saved ?: "nmb"
+        }
+
         MaterialTheme {
             Navigator(ForumRoute) { navigator ->
                 val appDrawer = @Composable {
@@ -60,7 +71,8 @@ fun App() {
                 }
 
                 CompositionLocalProvider(
-                    LocalAppDrawer provides appDrawer
+                    LocalAppDrawer provides appDrawer,
+                    LocalSourceId provides currentSource.value
                 ) {
                     navigator.lastItem.Content()
                 }

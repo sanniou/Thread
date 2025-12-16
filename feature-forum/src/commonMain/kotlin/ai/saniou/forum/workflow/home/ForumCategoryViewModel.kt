@@ -10,6 +10,8 @@ import ai.saniou.thread.domain.model.forum.Forum
 import ai.saniou.thread.domain.repository.ForumRepository
 import ai.saniou.thread.domain.usecase.forum.GetFavoriteForumsUseCase
 import ai.saniou.thread.domain.usecase.forum.GetForumsUseCase
+import ai.saniou.thread.domain.repository.SettingsRepository
+import ai.saniou.thread.domain.repository.saveValue
 import ai.saniou.thread.domain.usecase.notice.GetNoticeUseCase
 import ai.saniou.thread.domain.usecase.notice.MarkNoticeAsReadUseCase
 import ai.saniou.thread.domain.usecase.post.ToggleFavoriteUseCase
@@ -31,6 +33,7 @@ class ForumCategoryViewModel(
     private val forumRepository: ForumRepository,
     private val getNoticeUseCase: GetNoticeUseCase,
     private val markNoticeAsReadUseCase: MarkNoticeAsReadUseCase,
+    private val settingsRepository: SettingsRepository,
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(ForumCategoryUiState())
@@ -56,6 +59,9 @@ class ForumCategoryViewModel(
 
     private fun selectSource(sourceId: String) {
         if (state.value.currentSourceId == sourceId) return
+        screenModelScope.launch {
+            settingsRepository.saveValue("current_source_id", sourceId)
+        }
         _state.update { it.copy(currentSourceId = sourceId) }
         loadCategories()
     }

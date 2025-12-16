@@ -2,6 +2,9 @@ package ai.saniou.thread.domain.repository
 
 import ai.saniou.thread.domain.model.forum.Forum
 import ai.saniou.thread.domain.model.forum.Post
+import ai.saniou.thread.domain.model.forum.ThreadReply
+import app.cash.paging.PagingData
+import kotlinx.coroutines.flow.Flow
 
 /**
  * 信息源的标准接口，所有具体的信息源（如NMB, NGA）都需要实现它
@@ -23,6 +26,22 @@ interface Source {
      * @param page 页码
      */
     suspend fun getPosts(forumId: String, page: Int): Result<List<Post>>
+
+    /**
+     * 获取板块帖子分页数据
+     */
+    fun getThreadsPager(
+        forumId: String,
+        isTimeline: Boolean,
+        initialPage: Int = 1,
+    ): Flow<PagingData<Post>>
+
+    suspend fun getThreadDetail(threadId: String, page: Int): Result<Post>
+
+    fun getThreadRepliesPager(
+        threadId: String,
+        initialPage: Int,
+    ): Flow<PagingData<ThreadReply>>
 }
 
 /**

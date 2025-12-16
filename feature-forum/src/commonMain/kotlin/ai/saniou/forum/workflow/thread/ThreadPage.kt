@@ -3,6 +3,7 @@ package ai.saniou.forum.workflow.thread
 import ai.saniou.coreui.widgets.PullToRefreshWrapper
 import ai.saniou.coreui.state.AppError
 import ai.saniou.coreui.state.DefaultError
+import ai.saniou.coreui.composition.LocalSourceId
 import ai.saniou.coreui.widgets.SaniouTopAppBar
 import ai.saniou.coreui.widgets.ShimmerContainer
 import ai.saniou.coreui.widgets.VerticalSpacerSmall
@@ -114,8 +115,11 @@ import org.kodein.di.direct
 import org.kodein.di.instance
 
 data class ThreadPage(
-    val threadId: Long,
+    val threadId: String,
 ) : Screen {
+
+    // Secondary constructor for compatibility
+    constructor(threadId: Long) : this(threadId.toString())
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
@@ -125,9 +129,10 @@ data class ThreadPage(
         val lazyListState = rememberLazyListState()
         val coroutineScope = rememberCoroutineScope()
         val clipboardManager = LocalClipboardManager.current
+        val sourceId = LocalSourceId.current
 
-        val viewModel: ThreadViewModel = rememberScreenModel(tag = threadId.toString()) {
-            nmbdi.direct.instance(arg = threadId)
+        val viewModel: ThreadViewModel = rememberScreenModel(tag = "$sourceId:$threadId") {
+            nmbdi.direct.instance(arg = ThreadViewModelParams(sourceId, threadId))
         }
         val state by viewModel.state.collectAsState()
 
@@ -273,7 +278,7 @@ data class ThreadPage(
                         ImagePreviewPage(
                             ImagePreviewViewModelParams(
                                 imageProvider = ThreadImageProvider(
-                                    threadId = threadId,
+                                    threadId = threadId.toLong(),
                                     getThreadImagesUseCase = nmbdi.direct.instance()
                                 ),
                                 initialImages = images,

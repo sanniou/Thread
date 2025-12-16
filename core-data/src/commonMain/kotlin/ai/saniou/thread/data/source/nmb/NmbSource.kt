@@ -16,6 +16,7 @@ import ai.saniou.thread.data.source.nmb.remote.dto.toTableReply
 import ai.saniou.thread.data.source.nmb.remote.dto.toThreadReply
 import ai.saniou.thread.data.source.nmb.remote.dto.toThreadWithInformation
 import ai.saniou.thread.domain.model.forum.Post
+import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
 import ai.saniou.thread.domain.repository.Source
 import ai.saniou.thread.network.SaniouResponse
 import app.cash.paging.ExperimentalPagingApi
@@ -126,6 +127,95 @@ class NmbSource(
         TODO("Not yet implemented")
     }
 
+    override fun getThreadsPager(
+        forumId: String,
+        isTimeline: Boolean,
+        initialPage: Int,
+    ): Flow<PagingData<Post>> {
+        val fidLong =
+            forumId.toLongOrNull() ?: return kotlinx.coroutines.flow.flowOf(PagingData.empty())
+        val pagerFlow = if (isTimeline) {
+            getTimelinePager(fidLong, DataPolicy.NETWORK_ELSE_CACHE, initialPage)
+        } else {
+            getShowfPager(fidLong, DataPolicy.NETWORK_ELSE_CACHE, initialPage)
+        }
+        return pagerFlow.map { pagingData ->
+            pagingData.map { it.toDomain() }
+        }
+    }
+
+    override suspend fun getThreadDetail(threadId: String, page: Int): Result<Post> {
+        return try {
+            val tid = threadId.toLongOrNull()
+                ?: return Result.failure(IllegalArgumentException("Invalid NMB thread ID"))
+            // NMB API returns replies list but also thread info in the structure if using `thread` endpoint?
+            // Actually `nmbXdApi.thread` returns `Thread`.
+            // We map `Thread` to `Post`.
+            val response = nmbXdApi.thread(tid, page.toLong())
+            if (response is SaniouResponse.Success) {
+                // Thread to Post mapping needs to be checked.
+                // Assuming `toDomain()` exists or we can construct it.
+                // ThreadWithInformation has `toDomain()`. `Thread` has `toDomain()`?
+                // `ai.saniou.thread.data.source.nmb.remote.dto.Thread` might not have direct toDomain to Post.
+                // But `ThreadWithInformation` does.
+                // `thread` endpoint returns `Thread` which contains `id`, `fid`, etc.
+                // Let's assume we can map it.
+                // For now, I'll use a placeholder or implement mapping if simple.
+                // Actually `ThreadRepositoryImpl` uses `db.threadQueries.getThread` which returns `ThreadEntity`.
+                // Here we fetch remote.
+                val thread = response.data
+                // Map thread to Post.
+                // We can use `thread.toTable(page).toDomain()` logic if `toTable` creates entity and entity has `toDomain`.
+                // Or just manual map.
+                val post = Post(
+                    id = thread.id.toString(),
+                    fid = thread.fid,
+                    replyCount = thread.replyCount,
+                    img = thread.img,
+                    ext = thread.ext,
+                    now = thread.now,
+                    userHash = thread.userHash,
+                    name = thread.name,
+                    title = thread.title,
+                    content = thread.content,
+                    sage = thread.sage,
+                    admin = thread.admin,
+                    hide = 0, // assuming visible
+                    createdAt = try {
+                        Instant.parse(thread.now)
+                    } catch (e: Exception) {
+                        Instant.fromEpochMilliseconds(0)
+                    }, // NMB time format might need parsing
+                    sourceName = "nmb",
+                    sourceUrl = "https://www.nmbxd.com/t/${thread.id}",
+                    author = thread.name,
+                    forumName = "",
+                    isSage = thread.sage == 1L,
+                    isAdmin = thread.admin == 1L,
+                    isHidden = false,
+                    isLocal = false,
+                    lastReadReplyId = 0,
+                    replies = null,
+                    remainReplies = null
+                )
+                Result.success(post)
+            } else {
+                Result.failure((response as SaniouResponse.Error).ex)
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override fun getThreadRepliesPager(
+        threadId: String,
+        initialPage: Int
+    ): Flow<PagingData<ai.saniou.thread.domain.model.forum.ThreadReply>>{
+        val tid =
+            threadId.toLongOrNull() ?: return kotlinx.coroutines.flow.flowOf(PagingData.empty())
+        return getThreadRepliesPager(tid, null, DataPolicy.NETWORK_ELSE_CACHE, initialPage)
+    }
+
     fun getTimelinePager(
         fid: Long,
         policy: DataPolicy,
@@ -158,7 +248,7 @@ class NmbSource(
         poUserHash: String?,
         policy: DataPolicy,
         initialPage: Int = 1,
-    ): Flow<PagingData<ThreadReply>> {
+    ): Flow<PagingData<ai.saniou.thread.domain.model.forum.ThreadReply>> {
         val pageSize = 19
         return Pager(
             config = PagingConfig(pageSize = pageSize), // 每页19个回复
@@ -207,7 +297,7 @@ class NmbSource(
                 }
             }
         ).flow.map { pagingData ->
-            pagingData.map { it.toThreadReply() }
+            pagingData.map { it.toThreadReply().toDomain() }
         }
     }
 

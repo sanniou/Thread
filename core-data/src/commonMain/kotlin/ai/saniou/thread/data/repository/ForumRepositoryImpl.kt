@@ -1,14 +1,11 @@
 package ai.saniou.thread.data.repository
 
-import ai.saniou.thread.db.Database
-import ai.saniou.thread.data.source.nmb.DataPolicy
-import ai.saniou.thread.data.source.nmb.NmbSource
 import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
+import ai.saniou.thread.db.Database
 import ai.saniou.thread.domain.model.forum.Forum
 import ai.saniou.thread.domain.model.forum.Post
 import ai.saniou.thread.domain.repository.ForumRepository
 import app.cash.paging.PagingData
-import app.cash.paging.map
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToOneOrNull
 import kotlinx.coroutines.Dispatchers
@@ -17,14 +14,14 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
-import ai.saniou.thread.data.source.discourse.DiscourseSource
 import ai.saniou.thread.domain.repository.Source
 
 class ForumRepositoryImpl(
     private val db: Database,
-    private val nmbSource: NmbSource,
-    private val discourseSource: DiscourseSource,
+    private val sources: Set<Source>,
 ) : ForumRepository {
+
+    private val sourceMap by lazy { sources.associateBy { it.id } }
 
     override fun getForumThreadsPaging(
         sourceId: String,
@@ -32,31 +29,9 @@ class ForumRepositoryImpl(
         isTimeline: Boolean,
         initialPage: Int,
     ): Flow<PagingData<Post>> {
-        return when (sourceId) {
-            "nmb" -> {
-                val fidLong = fid.toLongOrNull() ?: return kotlinx.coroutines.flow.flowOf(PagingData.empty())
-                val pagerFlow = if (isTimeline) {
-                    nmbSource.getTimelinePager(fidLong, DataPolicy.NETWORK_ELSE_CACHE, initialPage)
-                } else {
-                    nmbSource.getShowfPager(fidLong, DataPolicy.NETWORK_ELSE_CACHE, initialPage)
-                }
-                pagerFlow.map { pagingData ->
-                    pagingData.map { it.toDomain() }
-                }
-            }
-            "discourse" -> {
-                // TODO: Implement paging for discourse properly using Pager
-                // For now, we return empty or implement a basic flow if possible,
-                // but PagingSource is better.
-                // Since DiscourseSource currently returns Result<List<Post>>, we might need to adapt it.
-                // However, the task is "add discourse", let's assuming we use PagingSource for it later.
-                // For this step, I will throw NotImplemented or return empty to fix compilation first
-                // and then we can improve DiscourseSource to support Paging if needed,
-                // OR we just wrap the simple list in PagingData for now.
-                kotlinx.coroutines.flow.flowOf(PagingData.empty())
-            }
-            else -> kotlinx.coroutines.flow.flowOf(PagingData.empty())
-        }
+        val source = sourceMap[sourceId]
+        return source?.getThreadsPager(fid, isTimeline, initialPage)
+            ?: kotlinx.coroutines.flow.flowOf(PagingData.empty())
     }
 
     override fun getForumName(fid: Long): Flow<String?> =

@@ -9,11 +9,13 @@ class GetThreadRepliesPagingUseCase(
     private val threadRepository: ThreadRepository
 ) {
     operator fun invoke(
-        threadId: Long,
+        sourceId: String = "nmb",
+        threadId: String,
         isPoOnly: Boolean,
         initialPage: Int = 1
     ): Flow<PagingData<ThreadReply>> {
         return threadRepository.getThreadRepliesPaging(
+            sourceId = sourceId,
             threadId = threadId,
             isPoOnly = isPoOnly,
             initialPage = initialPage

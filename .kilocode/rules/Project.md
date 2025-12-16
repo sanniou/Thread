@@ -97,3 +97,6 @@
 - [ ] **Compose**: 优先使用 Material 3 组件。
 - [ ] **Error Handling**: ViewModel 使用 `UiStateWrapper` 和 `StateLayout` 处理加载和错误。
 - [ ] **Comments**: 复杂逻辑必须写中文注释解释 "Why"。
+- 为了兼容不同系统，ID 应该使用String，在针对不同 API 时，再进行转换
+  缓存策略差异：目前 NMB 走 DB 缓存，Discourse 走纯网络。未来可能需要抽象统一的缓存层（如 SourceCache 接口）来消除这种差异。
+  UI 细节：ThreadPage 中的部分 UI 组件（如引用弹窗、图片浏览）可能仍含有 NMB 特有的假设，需要进一步测试和泛化。

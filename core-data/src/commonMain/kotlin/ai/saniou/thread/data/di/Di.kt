@@ -108,12 +108,11 @@ val dataModule = DI.Module("dataModule") {
     bind<PostRepository>() with singleton { PostRepositoryImpl(instance()) }
     bind<TrendRepository>() with singleton { TrendRepositoryImpl(instance()) }
     bind<ReferenceRepository>() with singleton { ReferenceRepositoryImpl(instance(), instance()) }
-    bind<ThreadRepository>() with singleton { ThreadRepositoryImpl(instance(), instance()) }
+    bind<ThreadRepository>() with singleton { ThreadRepositoryImpl(instance(), instance(tag = "allSources")) }
     bind<ForumRepository>() with singleton {
         ForumRepositoryImpl(
             instance(),
-            instance<NmbSource>(),
-            instance<DiscourseSource>()
+            instance(tag = "allSources")
         )
     }
 

@@ -12,6 +12,7 @@ import ai.saniou.forum.workflow.reference.ReferenceViewModel
 import ai.saniou.forum.workflow.search.SearchViewModel
 import ai.saniou.forum.workflow.subscription.SubscriptionViewModel
 import ai.saniou.forum.workflow.thread.ThreadViewModel
+import ai.saniou.forum.workflow.thread.ThreadViewModelParams
 import ai.saniou.forum.workflow.trend.TrendViewModel
 import ai.saniou.forum.workflow.user.UserDetailViewModel
 import ai.saniou.forum.workflow.user.UserViewModel
@@ -60,6 +61,7 @@ val nmbFeatureModule = DI.Module("nmbFeatureModule") {
             instance(),
             instance(),
             instance(),
+            instance(),
             instance()
         )
     }
@@ -90,9 +92,9 @@ val nmbFeatureModule = DI.Module("nmbFeatureModule") {
     }
 
     // 帖子相关
-    bindFactory<Long, ThreadViewModel> { threadId ->
+    bindFactory<ThreadViewModelParams, ThreadViewModel> { params ->
         ThreadViewModel(
-            threadId = threadId,
+            params = params,
             instance(),
             instance(),
             instance(),

@@ -42,6 +42,7 @@ data class DiscourseTopic(
     val highestPostNumber: Int,
     @SerialName("image_url")
     val imageUrl: String? = null,
+    val excerpt: String? = null,
     @SerialName("created_at")
     val createdAt: String,
     @SerialName("last_posted_at")

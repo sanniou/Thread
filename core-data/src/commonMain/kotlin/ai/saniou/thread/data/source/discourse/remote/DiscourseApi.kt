@@ -2,6 +2,7 @@ package ai.saniou.thread.data.source.discourse.remote
 
 import ai.saniou.thread.data.source.discourse.remote.dto.DiscourseCategoriesResponse
 import ai.saniou.thread.data.source.discourse.remote.dto.DiscourseLatestPostsResponse
+import ai.saniou.thread.data.source.discourse.remote.dto.DiscourseTopicDetailResponse
 import de.jensklingenberg.ktorfit.http.GET
 import de.jensklingenberg.ktorfit.http.Path
 import de.jensklingenberg.ktorfit.http.Query
@@ -35,4 +36,14 @@ interface DiscourseApi {
         @Path("id") id: String,
         @Query("page") page: Int = 0
     ): DiscourseLatestPostsResponse
+
+    /**
+     * Get topic detail
+     * https://docs.discourse.org/#tag/Topics/operation/getTopic
+     */
+    @GET("t/{id}.json")
+    suspend fun getTopic(
+        @Path("id") id: String,
+        @Query("page") page: Int = 1
+    ): DiscourseTopicDetailResponse
 }

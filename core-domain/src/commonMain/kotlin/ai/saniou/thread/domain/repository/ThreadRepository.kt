@@ -14,22 +14,25 @@ interface ThreadRepository {
     /**
      * 获取帖子详情
      *
+     * @param sourceId 来源ID
      * @param id 帖子ID
      * @param forceRefresh 是否强制从网络刷新
      * @return 包含帖子详情的 Flow
      */
-    fun getThreadDetail(id: Long, forceRefresh: Boolean = false): Flow<Post>
+    fun getThreadDetail(sourceId: String, id: String, forceRefresh: Boolean = false): Flow<Post>
 
     /**
      * 获取帖子回复的分页数据
      *
+     * @param sourceId 来源ID
      * @param threadId 帖子ID
      * @param isPoOnly 是否只看PO主
      * @param initialPage 初始页码
      * @return 包含帖子回复分页数据的 Flow
      */
     fun getThreadRepliesPaging(
-        threadId: Long,
+        sourceId: String,
+        threadId: String,
         isPoOnly: Boolean,
         initialPage: Int = 1
     ): Flow<PagingData<ThreadReply>>

@@ -36,9 +36,14 @@ import kotlinx.coroutines.launch
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
+data class ThreadViewModelParams(
+    val sourceId: String,
+    val threadId: String
+)
+
 @OptIn(ExperimentalCoroutinesApi::class)
 class ThreadViewModel(
-    private val threadId: Long,
+    params: ThreadViewModelParams,
     private val getThreadDetailUseCase: GetThreadDetailUseCase,
     private val getThreadRepliesPagingUseCase: GetThreadRepliesPagingUseCase,
     private val toggleSubscriptionUseCase: ToggleSubscriptionUseCase,
@@ -51,8 +56,11 @@ class ThreadViewModel(
     private val cdnManager: CdnManager,
 ) : ScreenModel {
 
+    private val sourceId = params.sourceId
+    private val threadId = params.threadId
+
     private data class LoadRequest(
-        val threadId: Long,
+        val threadId: String,
         val isPoOnly: Boolean = false,
         val page: Int = 1,
     )
@@ -68,6 +76,7 @@ class ThreadViewModel(
     val replies: Flow<PagingData<ThreadReply>> =
         loadRequest.flatMapLatest { request ->
             getThreadRepliesPagingUseCase(
+                sourceId = sourceId,
                 threadId = request.threadId,
                 isPoOnly = request.isPoOnly,
                 initialPage = request.page
@@ -114,21 +123,23 @@ class ThreadViewModel(
 
     @OptIn(ExperimentalTime::class)
     private fun updateLastAccessTime() {
+        val tid = threadId.toLongOrNull() ?: return
         screenModelScope.launch {
-            updateThreadLastAccessTimeUseCase(threadId, Clock.System.now().epochSeconds)
+            updateThreadLastAccessTimeUseCase(tid, Clock.System.now().epochSeconds)
         }
     }
 
     private fun updateLastReadReplyId(replyId: Long) {
+        val tid = threadId.toLongOrNull() ?: return
         screenModelScope.launch {
-            updateThreadLastReadReplyIdUseCase(threadId, replyId)
+            updateThreadLastReadReplyIdUseCase(tid, replyId)
         }
     }
 
     private fun observeThreadDetails(forceRefresh: Boolean = false) {
         screenModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
-            getThreadDetailUseCase(threadId, forceRefresh)
+            getThreadDetailUseCase(sourceId, threadId, forceRefresh)
                 .flatMapLatest { detail ->
                     getForumNameUseCase(detail.fid).map { forumName ->
                         detail to (forumName ?: "")
@@ -160,7 +171,7 @@ class ThreadViewModel(
     private fun observeSubscriptionStatus() {
         screenModelScope.launch {
             val subscriptionKey = getActiveSubscriptionKeyUseCase() ?: return@launch
-            isSubscribedUseCase(subscriptionKey, threadId.toString()).collect { isSubscribed ->
+            isSubscribedUseCase(subscriptionKey, threadId).collect { isSubscribed ->
                 _state.update { it.copy(isSubscribed = isSubscribed) }
             }
         }
