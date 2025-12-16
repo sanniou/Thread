@@ -44,7 +44,7 @@ data class ForumDetail(
 
 fun ai.saniou.thread.db.table.ForumCategory.toForumCategory(forums: List<Forum>) =
     ForumCategory(
-        id = id,
+        id = id.toLong(),
         sort = sort,
         name = name,
         status = status,
@@ -52,8 +52,8 @@ fun ai.saniou.thread.db.table.ForumCategory.toForumCategory(forums: List<Forum>)
     )
 
 fun Forum.toForumDetail() = ForumDetail(
-    id = id,
-    fGroup = fGroup,
+    id = id.toLong(),
+    fGroup = fGroup.toLong(),
     sort = sort,
     name = name,
     showName = showName,
@@ -68,15 +68,17 @@ fun Forum.toForumDetail() = ForumDetail(
 )
 
 fun ForumCategory.toTable() = ai.saniou.thread.db.table.ForumCategory(
-    id = id,
+    id = id.toString(),
+    sourceId = "nmb",
     sort = sort,
     name = name,
     status = status
 )
 
 fun ForumDetail.toTable() = Forum(
-    id = id,
-    fGroup = fGroup,
+    id = id.toString(),
+    sourceId = "nmb",
+    fGroup = fGroup.toString(),
     sort = sort,
     name = name,
     showName = showName,

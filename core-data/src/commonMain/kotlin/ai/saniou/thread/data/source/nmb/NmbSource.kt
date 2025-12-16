@@ -76,9 +76,9 @@ class NmbSource(
         }
 
         // 3. Query from database and return
-        val forumsFromDb = db.forumQueries.getAllForum().executeAsList()
+        val forumsFromDb = db.forumQueries.getForumsBySource(id).executeAsList()
         val timelines = db.timeLineQueries.getAllTimeLines().executeAsList()
-        val categories = db.forumQueries.getAllForumCategory().executeAsList().associateBy { it.id }
+        val categories = db.forumQueries.getForumCategoriesBySource(id).executeAsList().associateBy { it.id }
 
         val forums = forumsFromDb.map { forum ->
             forum.toDomain().copy(
@@ -219,8 +219,7 @@ class NmbSource(
     }
 
     override fun getForum(forumId: String): Flow<DomainForum?> {
-        val fid = forumId.toLongOrNull() ?: return kotlinx.coroutines.flow.flowOf(null)
-        return db.forumQueries.getForum(fid)
+        return db.forumQueries.getForum(id = forumId, sourceId = id)
             .asFlow()
             .mapToOneOrNull(Dispatchers.Default)
             .map { it?.toDomain() }

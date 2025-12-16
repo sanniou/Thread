@@ -15,13 +15,13 @@ import kotlin.time.Instant
 import ai.saniou.thread.domain.model.forum.Forum as DomainForum
 
 fun Forum.toDomain(): DomainForum = DomainForum(
-    id = id.toString(),
+    id = id,
     name = name,
-    sourceName = "nmb",
+    sourceName = sourceId,
     tag = null,
     showName = showName,
     msg = msg,
-    groupId = fGroup.toString(),
+    groupId = fGroup,
     groupName = "", // This will be populated by the Source
     threadCount = threadCount,
     autoDelete = autoDelete,

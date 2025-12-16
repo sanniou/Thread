@@ -19,33 +19,28 @@ class FavoriteRepositoryImpl(
 ) : FavoriteRepository {
 
     override fun getFavoriteForums(sourceId: String): Flow<List<Forum>> {
-        // Currently, only nmb is supported
-        if (sourceId != "nmb") return kotlinx.coroutines.flow.flowOf(emptyList())
-
-        return db.favoriteForumQueries.getAllFavoriteForum()
+        return db.favoriteForumQueries.getAllFavoriteForum(sourceId)
             .asFlow()
             .mapToList(Dispatchers.IO)
-            .map { forums -> forums.map { it.toDomain()} }
+            .map { forums -> forums.map { it.toDomain() } }
     }
 
     @OptIn(ExperimentalTime::class)
     override suspend fun toggleFavorite(sourceId: String, forum: Forum) {
-        if (sourceId != "nmb") return
-
-        if (db.favoriteForumQueries.countFavoriteForum(forum.id.toLong()).executeAsOne() < 1L) {
+        if (db.favoriteForumQueries.countFavoriteForum(sourceId, forum.id).executeAsOne() < 1L) {
             db.favoriteForumQueries.insertFavoriteForum(
-                id = forum.id.toLong(),
+                id = forum.id,
+                sourceId = sourceId,
                 favoriteTime = Clock.System.now().toEpochMilliseconds(),
                 type = if (forum.tag == "timeline") FavoriteForumType.TIMELINE else FavoriteForumType.FORUM
             )
         } else {
-            db.favoriteForumQueries.deleteFavoriteForum(forum.id.toLong())
+            db.favoriteForumQueries.deleteFavoriteForum(sourceId, forum.id)
         }
     }
 
     override fun isFavorite(sourceId: String, forumId: String): Flow<Boolean> {
-        if (sourceId != "nmb") return kotlinx.coroutines.flow.flowOf(false)
-        return db.favoriteForumQueries.getFavoriteForum(forumId.toLong())
+        return db.favoriteForumQueries.getFavoriteForum(sourceId, forumId)
             .asFlow()
             .mapToList(Dispatchers.IO)
             .map { it.isNotEmpty() }
