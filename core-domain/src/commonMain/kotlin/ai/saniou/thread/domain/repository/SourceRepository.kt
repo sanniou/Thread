@@ -16,6 +16,11 @@ interface Source {
     val id: String
 
     /**
+     * 来源的显示名称，如 "A岛", "NGA"
+     */
+    val name: String
+
+    /**
      * 获取所有板块
      */
     suspend fun getForums(): Result<List<Forum>>
@@ -67,4 +72,9 @@ interface SourceRepository {
      * @param page 页码
      */
     suspend fun getAggregatedFeed(page: Int): Result<List<Post>>
+
+    /**
+     * 获取所有可用的信息源
+     */
+    fun getAvailableSources(): List<Source>
 }

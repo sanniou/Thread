@@ -21,6 +21,7 @@ import ai.saniou.thread.domain.usecase.post.GetReferenceUseCase
 import ai.saniou.thread.domain.usecase.post.ToggleFavoriteUseCase
 import ai.saniou.thread.domain.usecase.settings.GetSettingsUseCase
 import ai.saniou.thread.domain.usecase.settings.SaveSettingsUseCase
+import ai.saniou.thread.domain.usecase.source.GetAvailableSourcesUseCase
 import ai.saniou.thread.domain.usecase.subscription.GetSubscriptionFeedUseCase
 import ai.saniou.thread.domain.usecase.subscription.GetActiveSubscriptionKeyUseCase
 import ai.saniou.thread.domain.usecase.subscription.IsSubscribedUseCase
@@ -65,6 +66,7 @@ val domainModule = DI.Module("domainModule") {
     bindProvider { GetSubscriptionFeedUseCase(instance()) }
 
     // Forum
+    bindProvider { GetAvailableSourcesUseCase(instance()) }
     bindProvider { GetForumsUseCase(instance()) }
     bindProvider { GetFavoriteForumsUseCase(instance()) }
     bindProvider { GetForumThreadsPagingUseCase(instance()) }

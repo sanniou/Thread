@@ -8,6 +8,7 @@ import ai.saniou.forum.workflow.forum.ForumPage
 import ai.saniou.forum.workflow.history.HistoryPage
 import ai.saniou.coreui.state.StateLayout
 import ai.saniou.forum.workflow.home.ForumCategoryContract.Event
+import ai.saniou.forum.workflow.home.ForumCategoryContract.ForumCategoryUiState
 import ai.saniou.forum.workflow.home.ForumCategoryContract.ForumGroupUiState
 import ai.saniou.forum.workflow.search.SearchPage
 import ai.saniou.forum.workflow.subscription.SubscriptionPage
@@ -189,10 +190,7 @@ data class ForumCategoryPage(
             // Actually, ForumPage currently takes Long. I need to change ForumPage to take String.
             // I will do that in the next step.
             // For now, let's leave this as is, but be aware it will break if I pass non-long ID.
-            // NMB IDs are Long, Discourse are Long but stored as String in Forum.
-            // I'll need to update ForumPage to accept String.
             ForumPage(
-                sourceId = state.currentSourceId,
                 forumId = forum.id,
                 fgroupId = forum.groupId,
                 onMenuClick = onMenuClick
@@ -240,7 +238,7 @@ data class ForumCategoryPage(
                     HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
                     SourceSelector(
-                        currentSourceId = state.currentSourceId,
+                        state = state,
                         onSourceSelected = { viewModel.onEvent(Event.SelectSource(it)) }
                     )
 
@@ -312,7 +310,7 @@ data class ForumCategoryPage(
 
     @Composable
     private fun SourceSelector(
-        currentSourceId: String,
+        state: ForumCategoryUiState,
         onSourceSelected: (String) -> Unit
     ) {
         LazyRow(
@@ -320,16 +318,8 @@ data class ForumCategoryPage(
             contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            val sources = listOf(
-                "nmb" to "A岛",
-                "discourse" to "Discourse",
-                "tieba" to "贴吧",
-                "v2ex" to "V2EX",
-                "nga" to "NGA"
-            )
-
-            items(sources) { (id, name) ->
-                val isSelected = currentSourceId == id
+            items(state.availableSources) { source ->
+                val isSelected = state.currentSourceId == source.id
                 val backgroundColor = if (isSelected)
                     MaterialTheme.colorScheme.primaryContainer
                 else
@@ -344,12 +334,12 @@ data class ForumCategoryPage(
                     modifier = Modifier
                         .clip(MaterialTheme.shapes.medium)
                         .background(backgroundColor)
-                        .clickable { onSourceSelected(id) }
+                        .clickable { onSourceSelected(source.id) }
                         .padding(horizontal = 16.dp, vertical = 8.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = name,
+                        text = source.name,
                         style = MaterialTheme.typography.labelMedium,
                         color = contentColor,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium

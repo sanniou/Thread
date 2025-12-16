@@ -43,6 +43,7 @@ class NmbSource(
     private val db: Database,
 ) : Source {
     override val id: String = "nmb"
+    override val name: String = "A岛"
 
     @OptIn(ExperimentalTime::class)
     override suspend fun getForums(): Result<List<DomainForum>> {

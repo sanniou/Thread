@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.flowOf
  */
 class NgaSource : Source {
     override val id: String = "nga"
+    override val name: String = "NGA"
 
     override suspend fun getForums(): Result<List<Forum>> {
         // 骨架实现，返回空列表

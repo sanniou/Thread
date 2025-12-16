@@ -2,7 +2,11 @@ package ai.saniou.thread.data.repository
 
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.domain.repository.SettingsRepository
+import app.cash.sqldelight.coroutines.asFlow
+import app.cash.sqldelight.coroutines.mapToOneOrNull
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
@@ -25,6 +29,10 @@ class SettingsRepositoryImpl(
         return getValue(key, typeOf<T>())
     }
 
+    inline fun <reified T : Any> observeValue(key: String): Flow<T?> {
+        return observeValue(key, typeOf<T>())
+    }
+
     @Suppress("UNCHECKED_CAST")
     override suspend fun <T : Any> saveValue(key: String, value: T?, type: KType) {
         withContext(Dispatchers.IO) {
@@ -44,5 +52,18 @@ class SettingsRepositoryImpl(
                 Json.decodeFromString(serializer, it)
             }
         }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : Any> observeValue(key: String, type: KType): Flow<T?> {
+        return db.keyValueQueries.getKeyValue(key)
+            .asFlow()
+            .mapToOneOrNull(Dispatchers.IO)
+            .map { entity ->
+                entity?.value_?.let {
+                    val serializer = Json.serializersModule.serializer(type) as KSerializer<T>
+                    Json.decodeFromString(serializer, it)
+                }
+            }
     }
 }

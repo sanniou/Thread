@@ -15,6 +15,7 @@ import ai.saniou.thread.domain.repository.saveValue
 import ai.saniou.thread.domain.usecase.notice.GetNoticeUseCase
 import ai.saniou.thread.domain.usecase.notice.MarkNoticeAsReadUseCase
 import ai.saniou.thread.domain.usecase.post.ToggleFavoriteUseCase
+import ai.saniou.thread.domain.usecase.source.GetAvailableSourcesUseCase
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,14 +35,21 @@ class ForumCategoryViewModel(
     private val getNoticeUseCase: GetNoticeUseCase,
     private val markNoticeAsReadUseCase: MarkNoticeAsReadUseCase,
     private val settingsRepository: SettingsRepository,
+    private val getAvailableSourcesUseCase: GetAvailableSourcesUseCase,
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(ForumCategoryUiState())
     val state = _state.asStateFlow()
 
     init {
+        loadSources()
         onEvent(Event.LoadCategories)
         fetchNotice()
+    }
+
+    private fun loadSources() {
+        val sources = getAvailableSourcesUseCase()
+        _state.update { it.copy(availableSources = sources) }
     }
 
     fun onEvent(event: Event) {

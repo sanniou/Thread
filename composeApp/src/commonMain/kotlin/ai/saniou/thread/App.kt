@@ -13,7 +13,7 @@ import ai.saniou.reader.workflow.reader.ReaderPage
 import ai.saniou.thread.data.di.dataModule
 import ai.saniou.thread.domain.di.domainModule
 import ai.saniou.thread.domain.repository.SettingsRepository
-import ai.saniou.thread.domain.repository.getValue
+import ai.saniou.thread.domain.repository.observeValue
 import ai.saniou.thread.feature.cellularautomaton.CellularAutomatonScreen
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Forum
@@ -22,7 +22,8 @@ import androidx.compose.material.icons.filled.RssFeed
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.produceState
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
@@ -44,10 +45,8 @@ fun App() {
 
     withDI(di) {
         val settingsRepository: SettingsRepository by di.instance()
-        val currentSource = produceState("nmb") {
-            val saved: String? = settingsRepository.getValue("current_source_id")
-            value = saved ?: "nmb"
-        }
+        val currentSource by settingsRepository.observeValue<String>("current_source_id")
+            .collectAsState(initial = "nmb")
 
         MaterialTheme {
             Navigator(ForumRoute) { navigator ->
@@ -72,7 +71,7 @@ fun App() {
 
                 CompositionLocalProvider(
                     LocalAppDrawer provides appDrawer,
-                    LocalSourceId provides currentSource.value
+                    LocalSourceId provides (currentSource ?: "nmb")
                 ) {
                     navigator.lastItem.Content()
                 }

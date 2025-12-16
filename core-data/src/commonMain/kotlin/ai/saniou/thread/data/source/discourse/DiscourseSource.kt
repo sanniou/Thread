@@ -18,6 +18,7 @@ class DiscourseSource(
     private val api: DiscourseApi,
 ) : Source {
     override val id: String = "discourse"
+    override val name: String = "Discourse"
 
     override suspend fun getForums(): Result<List<Forum>> {
         return try {

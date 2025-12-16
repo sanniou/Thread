@@ -2,6 +2,7 @@ package ai.saniou.forum.workflow.home
 
 import ai.saniou.coreui.state.UiStateWrapper
 import ai.saniou.thread.domain.model.forum.Forum
+import ai.saniou.thread.domain.repository.Source
 
 /**
  * 定义 ForumCategory 功能模块的 UI 状态和事件
@@ -38,7 +39,8 @@ interface ForumCategoryContract {
         val favoriteForumIds: Set<String> = emptySet(),
         val toastMessage: String? = null,
         val notice: ai.saniou.thread.domain.model.forum.Notice? = null,
-        val currentSourceId: String = "nmb"
+        val currentSourceId: String = "nmb",
+        val availableSources: List<Source> = emptyList()
     )
 
     /**

@@ -45,4 +45,8 @@ class SourceRepositoryImpl(
             Result.failure(firstError ?: IllegalStateException("Unknown error during aggregation"))
         }
     }
+
+    override fun getAvailableSources(): List<Source> {
+        return sources.toList()
+    }
 }

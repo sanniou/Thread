@@ -62,6 +62,7 @@ val nmbFeatureModule = DI.Module("nmbFeatureModule") {
             instance(),
             instance(),
             instance(),
+            instance(),
             instance()
         )
     }
