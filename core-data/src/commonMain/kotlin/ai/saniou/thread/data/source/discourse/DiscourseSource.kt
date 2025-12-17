@@ -17,8 +17,10 @@ import kotlinx.coroutines.flow.map
 import kotlinx.datetime.Instant
 import ai.saniou.thread.domain.repository.Source
 import ai.saniou.thread.data.cache.SourceCache
+import ai.saniou.thread.data.paging.DataPolicy
 import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
 import ai.saniou.thread.data.source.nmb.remote.dto.toThreadWithInformation
+import ai.saniou.thread.db.Database
 import ai.saniou.thread.db.table.forum.GetThreadsInForumOffset
 import ai.saniou.thread.domain.repository.SettingsRepository
 import ai.saniou.thread.domain.repository.observeValue
@@ -26,6 +28,7 @@ import ai.saniou.thread.domain.repository.observeValue
 class DiscourseSource(
     private val api: DiscourseApi,
     private val cache: SourceCache,
+    private val db: Database,
     private val settingsRepository: SettingsRepository,
 ) : Source {
     override val id: String = "discourse"
@@ -77,7 +80,9 @@ class DiscourseSource(
                 fid = forumId,
                 api = api,
                 cache = cache,
-                initialPage = initialPage
+                initialPage = initialPage,
+                dataPolicy = DataPolicy.NETWORK_ELSE_CACHE,
+                db = db,
             ),
             pagingSourceFactory = {
                 cache.getForumThreadsPagingSource(id, forumId)
@@ -95,9 +100,9 @@ class DiscourseSource(
             // For now, let's create a basic Post from detail.
             val firstPost = response.postStream.posts.firstOrNull()
             val createdAt = try {
-                 Instant.parse(firstPost?.createdAt ?: "")
+                Instant.parse(firstPost?.createdAt ?: "")
             } catch (e: Exception) {
-                 Instant.fromEpochMilliseconds(0)
+                Instant.fromEpochMilliseconds(0)
             }
             val post = Post(
                 id = response.id.toString(),
@@ -134,7 +139,7 @@ class DiscourseSource(
 
     override fun getThreadRepliesPager(
         threadId: String,
-        initialPage: Int
+        initialPage: Int,
     ): Flow<PagingData<ThreadReply>> {
         return Pager(
             config = PagingConfig(pageSize = 20),

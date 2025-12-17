@@ -37,16 +37,17 @@ class ThreadRemoteMediator(
             itemIdExtractor = { it.threadId.toString() }
         ),
         fetcher = { page -> fetcher(page) },
-        saver = { threadDetail, page ->
+        saver = { threadDetail, page, _ ->
             db.threadQueries.upsertThread(threadDetail.toTable(sourceId, page.toLong()))
             threadDetail.toTableReply(sourceId, page.toLong())
                 .filter { it.userHash != "Tips" } // 过滤广告
                 .forEach(db.threadReplyQueries::upsertThreadReply)
         },
-        itemsExtractor = { threadDetail ->
+        endOfPaginationReached = { threadDetail ->
             // 过滤广告后判断是否为空
             threadDetail.toTableReply(sourceId, 0L)
                 .filter { it.userHash != "Tips" }
+                .isEmpty()
         },
         cacheChecker = { page ->
             val repliesInDb = db.threadReplyQueries.countRepliesByThreadIdAndPage(sourceId, threadId, page.toLong())
@@ -55,7 +56,8 @@ class ThreadRemoteMediator(
         },
         keyIncrementer = { it + 1 },
         keyDecrementer = { it - 1 },
-        keyToLong = { it.toLong() }
+        keyToLong = { it.toLong() },
+        longToKey = { it.toInt() }
     )
 
     override suspend fun load(

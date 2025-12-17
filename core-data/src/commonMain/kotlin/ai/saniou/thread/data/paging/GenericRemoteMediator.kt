@@ -38,12 +38,13 @@ class GenericRemoteMediator<Key : Any, Value : Any, ResponseType : Any>(
     private val initialKey: Key,
     private val remoteKeyStrategy: RemoteKeyStrategy<Key, Value>,
     private val fetcher: suspend (key: Key) -> SaniouResponse<ResponseType>,
-    private val saver: (ResponseType, Key) -> Unit,
-    private val itemsExtractor: (ResponseType) -> List<Value>,
+    private val saver: (ResponseType, Key, LoadType) -> Unit,
+    private val endOfPaginationReached: (ResponseType) -> Boolean,
     private val cacheChecker: (suspend (Key) -> Boolean)? = null,
     private val keyIncrementer: (Key) -> Key,
     private val keyDecrementer: (Key) -> Key,
-    private val keyToLong: (Key) -> Long
+    private val keyToLong: (Key) -> Long,
+    private val longToKey: (Long) -> Key
 ) : RemoteMediator<Key, Value>() {
 
     override suspend fun load(
@@ -54,8 +55,7 @@ class GenericRemoteMediator<Key : Any, Value : Any, ResponseType : Any>(
             LoadType.REFRESH -> {
                 val remoteKey = remoteKeyStrategy.getKeyClosestToCurrentPosition(state)
                 remoteKey?.nextKey?.let { nextKeyLong ->
-                    @Suppress("UNCHECKED_CAST")
-                    val nextKey = nextKeyLong.toInt() as Key
+                    val nextKey = longToKey(nextKeyLong)
                     keyDecrementer(nextKey)
                 } ?: initialKey
             }
@@ -64,16 +64,14 @@ class GenericRemoteMediator<Key : Any, Value : Any, ResponseType : Any>(
                 val remoteKey = remoteKeyStrategy.getKeyForFirstItem(state)
                 val prevKeyLong = remoteKey?.prevKey
                     ?: return RemoteMediatorMediatorResultSuccess(endOfPaginationReached = remoteKey != null)
-                @Suppress("UNCHECKED_CAST")
-                prevKeyLong.toInt() as Key
+                longToKey(prevKeyLong)
             }
 
             LoadType.APPEND -> {
                 val remoteKey = remoteKeyStrategy.getKeyForLastItem(state)
                 val nextKeyLong = remoteKey?.nextKey
                     ?: return RemoteMediatorMediatorResultSuccess(endOfPaginationReached = remoteKey != null)
-                @Suppress("UNCHECKED_CAST")
-                nextKeyLong.toInt() as Key
+                longToKey(nextKeyLong)
             }
         }
 
@@ -89,18 +87,17 @@ class GenericRemoteMediator<Key : Any, Value : Any, ResponseType : Any>(
         return when (val result = fetcher(key)) {
             is SaniouResponse.Success -> {
                 val responseData = result.data
-                val items = itemsExtractor(responseData)
-                val endOfPagination = items.isEmpty()
+                val endOfPagination = endOfPaginationReached(responseData)
 
                 db.transaction {
-                    saver(responseData, key)
+                    saver(responseData, key, loadType)
 
                     val prevKey = if (key == initialKey) null else keyDecrementer(key)
                     val nextKey = if (endOfPagination) null else keyIncrementer(key)
 
                     remoteKeyStrategy.insertKeys(key, prevKey, nextKey, endOfPagination)
                 }
-                
+
                 RemoteMediatorMediatorResultSuccess(endOfPaginationReached = endOfPagination)
             }
             is SaniouResponse.Error -> {

@@ -68,6 +68,13 @@
 2.  **契约**: 在 `feature` 模块中定义 `Contract` (State & Event)。
 3.  **实现**: ViewModel 仅通过 UseCase 交互，不直接触碰 Repository。
 
+### 2.5 分页数据加载 (Paging)
+所有分页数据加载必须使用 `GenericRemoteMediator`，禁止手动实现 `RemoteMediator`。
+- **GenericRemoteMediator**: 位于 `core-data/src/commonMain/kotlin/ai/saniou/thread/data/paging/GenericRemoteMediator.kt`。
+- **设计模式**: 使用组合（Delegate）模式，而非继承。
+- **职责**: 统一处理分页状态机、事务管理、LoadType 分发和 RemoteKeys 更新。
+- **使用方式**: 在具体的 Mediator 中实例化 `GenericRemoteMediator` 并委托 `load` 方法。
+
 ## 3. 模块地图 (Module Map)
 
 | 模块 | 职责 | 关键路径示例 |
@@ -104,5 +111,4 @@
 - [ ] **Error Handling**: ViewModel 使用 `UiStateWrapper` 和 `StateLayout` 处理加载和错误。
 - [ ] **Comments**: 复杂逻辑必须写中文注释解释 "Why"。
 - 为了兼容不同系统，ID 应该使用String，在针对不同 API 时，再进行转换
-  缓存策略差异：目前 NMB 走 DB 缓存，Discourse 走纯网络。未来可能需要抽象统一的缓存层（如 SourceCache 接口）来消除这种差异。
   UI 细节：ThreadPage 中的部分 UI 组件（如引用弹窗、图片浏览）可能仍含有 NMB 特有的假设，需要进一步测试和泛化。
