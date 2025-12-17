@@ -1,8 +1,9 @@
 package ai.saniou.thread.data.repository
 
-import ai.saniou.thread.db.Database
+import ai.saniou.thread.data.paging.DataPolicy
 import ai.saniou.thread.data.paging.SqlDelightPagingSource
 import ai.saniou.thread.data.source.nmb.SubscriptionRemoteMediator
+import ai.saniou.thread.db.Database
 import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
 import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
 import ai.saniou.thread.domain.model.forum.Post
@@ -49,7 +50,12 @@ class SubscriptionRepositoryImpl(
     override fun getSubscriptionFeed(subscriptionKey: String): Flow<PagingData<Post>> {
         return Pager(
             config = PagingConfig(pageSize = 20),
-            remoteMediator = SubscriptionRemoteMediator(subscriptionKey, nmbXdApi, db),
+            remoteMediator = SubscriptionRemoteMediator(
+                subscriptionKey,
+                nmbXdApi,
+                db,
+                DataPolicy.CACHE_ELSE_NETWORK
+            ),
             pagingSourceFactory = {
                 SqlDelightPagingSource(
                     countQueryProvider = {

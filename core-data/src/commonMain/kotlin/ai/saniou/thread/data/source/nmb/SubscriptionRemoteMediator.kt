@@ -1,102 +1,75 @@
 package ai.saniou.thread.data.source.nmb
 
-import ai.saniou.thread.db.Database
+import ai.saniou.thread.data.paging.DataPolicy
+import ai.saniou.thread.data.paging.DefaultRemoteKeyStrategy
+import ai.saniou.thread.data.paging.GenericRemoteMediator
 import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
 import ai.saniou.thread.data.source.nmb.remote.dto.Feed
 import ai.saniou.thread.data.source.nmb.remote.dto.RemoteKeyType
 import ai.saniou.thread.data.source.nmb.remote.dto.nowToEpochMilliseconds
 import ai.saniou.thread.data.source.nmb.remote.dto.toTable
+import ai.saniou.thread.db.Database
 import ai.saniou.thread.db.table.forum.SelectSubscriptionThread
-import ai.saniou.thread.network.SaniouResponse
 import app.cash.paging.ExperimentalPagingApi
 import app.cash.paging.LoadType
 import app.cash.paging.PagingState
 import app.cash.paging.RemoteMediator
 import app.cash.paging.RemoteMediatorMediatorResult
-import app.cash.paging.RemoteMediatorMediatorResultError
-import app.cash.paging.RemoteMediatorMediatorResultSuccess
-import kotlin.time.Clock
-import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalPagingApi::class)
 class SubscriptionRemoteMediator(
     private val subscriptionKey: String,
     private val forumRepository: NmbXdApi,
     private val db: Database,
+    private val dataPolicy: DataPolicy,
 ) : RemoteMediator<Int, SelectSubscriptionThread>() {
 
+    private val delegate = GenericRemoteMediator<Int, SelectSubscriptionThread, List<Feed>>(
+        db = db,
+        dataPolicy = dataPolicy,
+        initialKey = 1,
+        remoteKeyStrategy = DefaultRemoteKeyStrategy(
+            db = db,
+            type = RemoteKeyType.SUBSCRIBE,
+            id = subscriptionKey,
+            itemIdExtractor = { it.id }
+        ),
+        fetcher = { page -> forumRepository.feed(subscriptionKey, page.toLong()) },
+        saver = { feedDetail, page, loadType ->
+            if (loadType == LoadType.REFRESH) {
+                db.subscriptionQueries.deleteCloudSubscriptions(subscriptionKey)
+            }
 
-    @OptIn(ExperimentalTime::class)
+            feedDetail.forEach { feed ->
+                db.threadQueries.upsertThreadNoPage(feed.toTable("nmb", Long.MAX_VALUE))
+
+                db.subscriptionQueries.insertSubscription(
+                    subscriptionKey = subscriptionKey,
+                    sourceId = "nmb",
+                    threadId = feed.id.toString(),
+                    page = page.toLong(),
+                    subscriptionTime = feed.nowToEpochMilliseconds(),
+                    isLocal = 0
+                )
+            }
+        },
+        endOfPaginationReached = { it.isEmpty() },
+        cacheChecker = { page ->
+            val subscriptionsInDb = db.subscriptionQueries
+                .countSubscriptionsBySubscriptionKeyAndPage(subscriptionKey, page.toLong())
+                .executeAsOne()
+            subscriptionsInDb > 0
+        },
+        keyIncrementer = { it + 1 },
+        keyDecrementer = { it - 1 },
+        keyToLong = { it.toLong() },
+        longToKey = { it.toInt() }
+    )
+
     override suspend fun load(
         loadType: LoadType,
         state: PagingState<Int, SelectSubscriptionThread>,
     ): RemoteMediatorMediatorResult {
-        val page = when (loadType) {
-            LoadType.REFRESH -> 1L
-
-            LoadType.PREPEND -> return RemoteMediatorMediatorResultSuccess(true)   // 不向前翻
-
-            LoadType.APPEND -> {
-                val showId = state.pages.lastOrNull()?.data?.lastOrNull()?.id
-                    ?: return RemoteMediatorMediatorResultSuccess(true)
-                val showPage = db.subscriptionQueries.getSubscription(subscriptionKey, "nmb", showId)
-                    .executeAsOneOrNull()?.page ?: return RemoteMediatorMediatorResultSuccess(true)
-
-                val remoteKey = db.remoteKeyQueries.getRemoteKeyById(
-                    type = RemoteKeyType.SUBSCRIBE,
-                    id = subscriptionKey
-                ).executeAsOneOrNull() ?: return RemoteMediatorMediatorResultSuccess(true)
-
-                if (remoteKey.currKey > showPage) {
-                    return RemoteMediatorMediatorResultSuccess(true)
-                }
-                remoteKey.nextKey ?: return RemoteMediatorMediatorResultSuccess(true)
-            }
-        }
-
-
-
-        return when (val result = feedDetail(page = page)) {
-            is SaniouResponse.Success -> {
-                val feedDetail = result.data
-                val endOfPagination = feedDetail.isEmpty()
-
-                db.transaction {
-                    if (loadType == LoadType.REFRESH) {
-                        db.subscriptionQueries.deleteCloudSubscriptions(subscriptionKey)
-                    }
-
-                    feedDetail.forEach { feed ->
-                        db.threadQueries.upsertThreadNoPage(feed.toTable("nmb", Long.MAX_VALUE))
-
-                        db.subscriptionQueries.insertSubscription(
-                            subscriptionKey = subscriptionKey,
-                            sourceId = "nmb",
-                            threadId = feed.id.toString(),
-                            page = page,
-                            subscriptionTime = feed.nowToEpochMilliseconds(),
-                            isLocal = 0
-                        )
-                    }
-                    db.remoteKeyQueries.insertKey(
-                        type = RemoteKeyType.SUBSCRIBE,
-                        id = subscriptionKey,
-                        prevKey = if (page == 1L) null else page - 1,
-                        currKey = page,
-                        nextKey = if (endOfPagination) null else page + 1,
-                        updateAt = Clock.System.now().toEpochMilliseconds(),
-                    )
-                }
-
-                return RemoteMediatorMediatorResultSuccess(endOfPagination)
-            }
-
-            is SaniouResponse.Error -> RemoteMediatorMediatorResultError(result.ex)
-        }
+        return delegate.load(loadType, state)
     }
-
-    private suspend fun feedDetail(
-        page: Long,
-    ): SaniouResponse<List<Feed>> =
-        forumRepository.feed(subscriptionKey, page)
 }

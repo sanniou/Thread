@@ -51,6 +51,10 @@ SELECT count(*) FROM Subscription;
 countSubscriptionsBySubscriptionKey:
 SELECT count(*) FROM Subscription WHERE subscriptionKey = :subscriptionKey;
 
+-- 统计指定 subscriptionKey 和 page 的 Subscription 数量
+countSubscriptionsBySubscriptionKeyAndPage:
+SELECT count(*) FROM Subscription WHERE subscriptionKey = :subscriptionKey AND page = :page;
+
 -- 统计指定 threadId 的 Subscription 数量
 countSubscriptionsByThreadId:
 SELECT count(*) FROM Subscription WHERE sourceId = :sourceId AND threadId = :threadId;
