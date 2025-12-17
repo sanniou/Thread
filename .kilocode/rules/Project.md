@@ -103,12 +103,14 @@
 - database-common: `core-data/src/commonMain/sqldelight/ai/saniou/thread/db/table/`
 - database-forum: `core-data/src/commonMain/sqldelight/ai/saniou/thread/db/table/forum`
 - database-reader: `core-data/src/commonMain/sqldelight/ai/saniou/thread/db/table/reader`
+- mapper: `core-data/src/commonMain/kotlin/ai/saniou/thread/data/mapper/`
 
 
 ## 5. 最佳实践检查清单
 - [ ] **KISS**: 即使是复杂功能，API 设计也应保持简单。
 - [ ] **Compose**: 优先使用 Material 3 组件。
 - [ ] **Error Handling**: ViewModel 使用 `UiStateWrapper` 和 `StateLayout` 处理加载和错误。
+- [ ] **Caching**: 所有 `Source` 实现必须具备缓存能力，特别是对于配置类数据（如板块列表），应实现"网络优先，缓存兜底"或"缓存优先，过期更新"策略。
 - [ ] **Comments**: 复杂逻辑必须写中文注释解释 "Why"。
 - 为了兼容不同系统，ID 应该使用String，在针对不同 API 时，再进行转换
   UI 细节：ThreadPage 中的部分 UI 组件（如引用弹窗、图片浏览）可能仍含有 NMB 特有的假设，需要进一步测试和泛化。

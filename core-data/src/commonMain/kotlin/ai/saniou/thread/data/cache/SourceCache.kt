@@ -1,5 +1,6 @@
 package ai.saniou.thread.data.cache
 
+import ai.saniou.thread.db.table.forum.Forum
 import ai.saniou.thread.db.table.forum.GetThreadsInForumOffset
 import ai.saniou.thread.db.table.forum.Thread
 import ai.saniou.thread.db.table.forum.ThreadReply
@@ -66,4 +67,14 @@ interface SourceCache {
      * 更新帖子最后阅读的回复ID
      */
     suspend fun updateThreadLastReadReplyId(sourceId: String, threadId: String, replyId: Long)
+
+    /**
+     * 获取指定来源的所有板块
+     */
+    suspend fun getForums(sourceId: String): List<Forum>
+
+    /**
+     * 批量保存板块
+     */
+    suspend fun saveForums(forums: List<Forum>)
 }

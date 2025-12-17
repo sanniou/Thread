@@ -14,19 +14,6 @@ import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 import ai.saniou.thread.domain.model.forum.Forum as DomainForum
 
-fun Forum.toDomain(): DomainForum = DomainForum(
-    id = id,
-    name = name,
-    sourceName = sourceId,
-    tag = null,
-    showName = showName,
-    msg = msg,
-    groupId = fGroup,
-    groupName = "", // This will be populated by the Source
-    threadCount = threadCount,
-    autoDelete = autoDelete,
-)
-
 fun TimeLine.toDomain(): DomainForum = DomainForum(
     id = id.toString(),
     name = name,

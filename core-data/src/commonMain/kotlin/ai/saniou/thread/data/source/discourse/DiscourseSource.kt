@@ -4,6 +4,8 @@ import ai.saniou.thread.data.source.discourse.remote.DiscourseApi
 import ai.saniou.thread.data.source.discourse.remote.dto.DiscourseCategory
 import ai.saniou.thread.data.source.discourse.remote.dto.DiscourseTopic
 import ai.saniou.thread.data.source.discourse.remote.dto.DiscourseUser
+import ai.saniou.thread.data.mapper.toDomain
+import ai.saniou.thread.data.mapper.toEntity
 import ai.saniou.thread.domain.model.forum.Forum
 import ai.saniou.thread.domain.model.forum.Post
 import ai.saniou.thread.domain.model.forum.ThreadReply
@@ -40,11 +42,27 @@ class DiscourseSource(
 
     override suspend fun getForums(): Result<List<Forum>> {
         return try {
+            // 1. Try to fetch from network
             val response = api.getCategories()
             val forums = response.categoryList.categories.map { it.toForum() }
+            
+            // 2. Save to cache
+            cache.saveForums(forums.map { it.toEntity() })
+            
             Result.success(forums)
         } catch (e: Exception) {
-            Result.failure(e)
+            // 3. Fallback to cache if network fails
+            try {
+                val cachedForums = cache.getForums(id).map { it.toDomain() }
+                if (cachedForums.isNotEmpty()) {
+                    Result.success(cachedForums)
+                } else {
+                    Result.failure(e)
+                }
+            } catch (cacheError: Exception) {
+                // If cache also fails, return original error
+                Result.failure(e)
+            }
         }
     }
 

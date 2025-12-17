@@ -1,5 +1,6 @@
 package ai.saniou.thread.data.source.nmb
 
+import ai.saniou.thread.data.mapper.toDomain
 import ai.saniou.thread.data.paging.DataPolicy
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.db.table.Cookie

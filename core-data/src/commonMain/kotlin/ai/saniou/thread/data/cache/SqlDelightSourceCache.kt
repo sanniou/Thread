@@ -1,6 +1,7 @@
 package ai.saniou.thread.data.cache
 
 import ai.saniou.thread.db.Database
+import ai.saniou.thread.db.table.forum.Forum
 import ai.saniou.thread.db.table.forum.GetThreadsInForumOffset
 import ai.saniou.thread.db.table.forum.Thread
 import ai.saniou.thread.db.table.forum.ThreadReply
@@ -19,6 +20,7 @@ class SqlDelightSourceCache(
 
     private val threadQueries = db.threadQueries
     private val threadReplyQueries = db.threadReplyQueries
+    private val forumQueries = db.forumQueries
 
     override fun observeThread(sourceId: String, threadId: String): Flow<Thread?> {
         return threadQueries.getThread(sourceId, threadId)
@@ -129,6 +131,22 @@ class SqlDelightSourceCache(
     override suspend fun updateThreadLastReadReplyId(sourceId: String, threadId: String, replyId: Long) {
         withContext(Dispatchers.IO) {
             threadQueries.updateThreadLastReadReplyId(replyId, sourceId, threadId)
+        }
+    }
+
+    override suspend fun getForums(sourceId: String): List<Forum> {
+        return withContext(Dispatchers.IO) {
+            forumQueries.getForumsBySource(sourceId).executeAsList()
+        }
+    }
+
+    override suspend fun saveForums(forums: List<Forum>) {
+        withContext(Dispatchers.IO) {
+            forumQueries.transaction {
+                forums.forEach { forum ->
+                    forumQueries.insertForum(forum)
+                }
+            }
         }
     }
 }

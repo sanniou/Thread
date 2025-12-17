@@ -1,5 +1,6 @@
 package ai.saniou.thread.data.repository
 
+import ai.saniou.thread.data.mapper.toDomain
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.data.source.nmb.remote.dto.FavoriteForumType
 import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
