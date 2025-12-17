@@ -81,8 +81,8 @@ val dataModule = DI.Module("dataModule") {
     bindSingleton<SourceCache> { SqlDelightSourceCache(instance()) }
 
     // source and repository
-    bindSingleton<NmbSource> { NmbSource(instance(), instance()) }
-    bindSingleton<DiscourseSource> { DiscourseSource(instance(), instance()) }
+    bindSingleton<NmbSource> { NmbSource(instance(), instance(), instance()) }
+    bindSingleton<DiscourseSource> { DiscourseSource(instance(), instance(), instance()) }
     
     bind<Source>(tag = "nmb") with singleton { instance<NmbSource>() }
     bind<Source>(tag = "nga") with singleton { NgaSource() }

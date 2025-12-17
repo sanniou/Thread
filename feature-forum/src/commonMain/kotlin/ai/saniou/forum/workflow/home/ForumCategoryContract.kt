@@ -40,7 +40,8 @@ interface ForumCategoryContract {
         val toastMessage: String? = null,
         val notice: ai.saniou.thread.domain.model.forum.Notice? = null,
         val currentSourceId: String = "",
-        val availableSources: List<Source> = emptyList()
+        val availableSources: List<Source> = emptyList(),
+        val isCurrentSourceInitialized: Boolean = true
     )
 
     /**

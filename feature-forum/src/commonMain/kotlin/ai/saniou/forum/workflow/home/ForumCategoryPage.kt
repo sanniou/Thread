@@ -10,6 +10,7 @@ import ai.saniou.coreui.state.StateLayout
 import ai.saniou.forum.workflow.home.ForumCategoryContract.Event
 import ai.saniou.forum.workflow.home.ForumCategoryContract.ForumCategoryUiState
 import ai.saniou.forum.workflow.home.ForumCategoryContract.ForumGroupUiState
+import ai.saniou.forum.workflow.init.SourceInitScreen
 import ai.saniou.forum.workflow.search.SearchPage
 import ai.saniou.forum.workflow.subscription.SubscriptionPage
 import ai.saniou.forum.workflow.thread.ThreadPage
@@ -175,6 +176,16 @@ data class ForumCategoryPage(
         onMenuClick: () -> Unit
     ) {
         val viewModel: ForumCategoryViewModel = rememberScreenModel()
+
+        if (!state.isCurrentSourceInitialized) {
+            SourceInitScreen(
+                sourceId = state.currentSourceId,
+                onInitialized = {
+                    // Initialization handled by ViewModel observing flow
+                }
+            ).Content()
+            return
+        }
 
         state.currentForum?.let { forum ->
             // Use generic forum ID and sourceId

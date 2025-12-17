@@ -7,6 +7,7 @@ import ai.saniou.forum.workflow.history.HistoryViewModel
 import ai.saniou.forum.workflow.home.ForumCategoryViewModel
 import ai.saniou.forum.workflow.home.GreetImageViewModel
 import ai.saniou.forum.workflow.image.nmbImagePreviewModule
+import ai.saniou.forum.workflow.init.SourceInitViewModel
 import ai.saniou.forum.workflow.post.PostViewModel
 import ai.saniou.forum.workflow.reference.ReferenceViewModel
 import ai.saniou.forum.workflow.search.SearchViewModel
@@ -141,6 +142,15 @@ val nmbFeatureModule = DI.Module("nmbFeatureModule") {
 
 
     bindProvider { TrendViewModel(instance()) }
+
+    bindFactory<String, SourceInitViewModel> { sourceId ->
+        SourceInitViewModel(
+            sourceId = sourceId,
+            settingsRepository = instance(),
+            subscriptionRepository = instance(),
+            nmbSource = instance()
+        )
+    }
 }
 
 val nmbdi = DI {

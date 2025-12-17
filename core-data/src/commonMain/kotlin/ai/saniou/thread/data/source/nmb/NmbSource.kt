@@ -38,14 +38,21 @@ import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
+import ai.saniou.thread.domain.repository.SettingsRepository
+import ai.saniou.thread.domain.repository.observeValue
 import ai.saniou.thread.domain.model.forum.Forum as DomainForum
 
 class NmbSource(
     private val nmbXdApi: NmbXdApi,
     private val db: Database,
+    private val settingsRepository: SettingsRepository,
 ) : Source {
     override val id: String = "nmb"
     override val name: String = "A岛"
+
+    override val isInitialized: Flow<Boolean> =
+        settingsRepository.observeValue<Boolean>("nmb_initialized")
+            .map { it == true }
 
     @OptIn(ExperimentalTime::class)
     override suspend fun getForums(): Result<List<DomainForum>> {

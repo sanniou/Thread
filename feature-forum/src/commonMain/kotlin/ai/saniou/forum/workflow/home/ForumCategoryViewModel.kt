@@ -19,6 +19,7 @@ import ai.saniou.thread.domain.usecase.post.ToggleFavoriteUseCase
 import ai.saniou.thread.domain.usecase.source.GetAvailableSourcesUseCase
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
@@ -42,6 +43,8 @@ class ForumCategoryViewModel(
     private val _state = MutableStateFlow(ForumCategoryUiState())
     val state = _state.asStateFlow()
 
+    private var initCheckJob: Job? = null
+
     init {
         loadSources()
         fetchNotice()
@@ -59,7 +62,18 @@ class ForumCategoryViewModel(
                     currentSourceId = initialSourceId
                 )
             }
+            observeSourceInitialization(initialSourceId)
             onEvent(Event.LoadCategories)
+        }
+    }
+
+    private fun observeSourceInitialization(sourceId: String) {
+        initCheckJob?.cancel()
+        initCheckJob = screenModelScope.launch {
+            val source = state.value.availableSources.find { it.id == sourceId } ?: return@launch
+            source.isInitialized.collect { isInitialized ->
+                _state.update { it.copy(isCurrentSourceInitialized = isInitialized) }
+            }
         }
     }
 
@@ -82,6 +96,7 @@ class ForumCategoryViewModel(
             settingsRepository.saveValue("current_source_id", sourceId)
         }
         _state.update { it.copy(currentSourceId = sourceId) }
+        observeSourceInitialization(sourceId)
         loadCategories()
     }
 

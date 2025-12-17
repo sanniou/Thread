@@ -20,13 +20,20 @@ import ai.saniou.thread.data.cache.SourceCache
 import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
 import ai.saniou.thread.data.source.nmb.remote.dto.toThreadWithInformation
 import ai.saniou.thread.db.table.forum.GetThreadsInForumOffset
+import ai.saniou.thread.domain.repository.SettingsRepository
+import ai.saniou.thread.domain.repository.observeValue
 
 class DiscourseSource(
     private val api: DiscourseApi,
     private val cache: SourceCache,
+    private val settingsRepository: SettingsRepository,
 ) : Source {
     override val id: String = "discourse"
     override val name: String = "Discourse"
+
+    override val isInitialized: Flow<Boolean> =
+        settingsRepository.observeValue<Boolean>("discourse_initialized")
+            .map { it == true }
 
     override suspend fun getForums(): Result<List<Forum>> {
         return try {

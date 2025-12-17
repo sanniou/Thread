@@ -21,6 +21,11 @@ interface Source {
     val name: String
 
     /**
+     * 是否已初始化
+     */
+    val isInitialized: Flow<Boolean>
+
+    /**
      * 获取所有板块
      */
     suspend fun getForums(): Result<List<Forum>>
