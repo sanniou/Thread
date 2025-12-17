@@ -95,12 +95,6 @@ class ThreadRepositoryImpl(
         TODO("Not yet implemented")
     }
 
-    override suspend fun updateThreadLastAccessTime(threadId: Long, time: Long) {
-        // FIXME: Need sourceId
-        // withContext(Dispatchers.IO) {
-        //     cache.updateThreadLastAccessTime(sourceId, threadId.toString(), time)
-        // }
-    }
 
     override suspend fun updateThreadLastReadReplyId(threadId: Long, replyId: Long) {
         // FIXME: Need sourceId

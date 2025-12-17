@@ -38,7 +38,7 @@ import kotlin.time.ExperimentalTime
 
 data class ThreadViewModelParams(
     val sourceId: String,
-    val threadId: String
+    val threadId: String,
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -125,7 +125,7 @@ class ThreadViewModel(
     private fun updateLastAccessTime() {
         val tid = threadId.toLongOrNull() ?: return
         screenModelScope.launch {
-            updateThreadLastAccessTimeUseCase(tid, Clock.System.now().epochSeconds)
+            updateThreadLastAccessTimeUseCase(sourceId, tid.toString(), Clock.System.now().epochSeconds)
         }
     }
 
@@ -147,7 +147,9 @@ class ThreadViewModel(
                 }
                 .catch { e ->
                     _state.update {
-                        it.copy(isLoading = false, error = e.toAppError { observeThreadDetails(forceRefresh = true) })
+                        it.copy(
+                            isLoading = false,
+                            error = e.toAppError { observeThreadDetails(forceRefresh = true) })
                     }
                 }
                 .collectLatest { (detail, forumName) ->

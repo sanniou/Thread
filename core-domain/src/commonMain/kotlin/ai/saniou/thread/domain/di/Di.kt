@@ -10,7 +10,8 @@ import ai.saniou.thread.domain.usecase.forum.GetForumDetailUseCase
 import ai.saniou.thread.domain.usecase.forum.GetForumNameUseCase
 import ai.saniou.thread.domain.usecase.forum.GetForumsUseCase
 import ai.saniou.thread.domain.usecase.forum.GetForumThreadsPagingUseCase
-import ai.saniou.thread.domain.usecase.history.GetHistoryThreadsUseCase
+import ai.saniou.thread.domain.usecase.history.AddHistoryUseCase
+import ai.saniou.thread.domain.usecase.history.GetHistoryUseCase
 import ai.saniou.thread.domain.usecase.misc.GetGreetImageUseCase
 import ai.saniou.thread.domain.usecase.misc.GetTrendUseCase
 import ai.saniou.thread.domain.usecase.notice.GetNoticeUseCase
@@ -78,7 +79,7 @@ val domainModule = DI.Module("domainModule") {
     bindProvider { GetThreadRepliesUseCase(instance()) }
     bindProvider { GetThreadRepliesPagingUseCase(instance()) }
     bindProvider { GetThreadImagesUseCase(instance()) }
-    bindProvider { UpdateThreadLastAccessTimeUseCase(instance()) }
+    bindProvider { UpdateThreadLastAccessTimeUseCase(instance(), instance()) }
     bindProvider { UpdateThreadLastReadReplyIdUseCase(instance()) }
 
     // Post
@@ -113,7 +114,8 @@ val domainModule = DI.Module("domainModule") {
     bindProvider { MarkNoticeAsReadUseCase(instance()) }
 
     // History
-    bindProvider { GetHistoryThreadsUseCase(instance()) }
+    bindProvider { GetHistoryUseCase(instance()) }
+    bindProvider { AddHistoryUseCase(instance()) }
 
     // Settings
     bindProvider { GetSettingsUseCase(instance()) }

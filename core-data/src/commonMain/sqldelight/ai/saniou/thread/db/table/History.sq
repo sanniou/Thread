@@ -1,0 +1,63 @@
+-- 创建 History 表
+CREATE TABLE IF NOT EXISTS History (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    type TEXT NOT NULL, -- 'post' or 'article'
+    itemId TEXT NOT NULL, -- Post ID or Article ID
+    sourceId TEXT NOT NULL, -- 'nmb', 'nga', or feedSourceId
+    accessTime INTEGER NOT NULL,
+    UNIQUE(type, itemId, sourceId)
+);
+
+-- 为 History 表的 accessTime 字段创建索引
+CREATE INDEX IF NOT EXISTS idx_history_access_time ON History(accessTime);
+
+-- 插入 History 数据
+insertHistory:
+INSERT OR REPLACE INTO History (type, itemId, sourceId, accessTime)
+VALUES (?, ?, ?, ?);
+
+-- 删除 History 数据
+deleteHistory:
+DELETE FROM History WHERE id = ?;
+
+-- 清空历史记录
+clearHistory:
+DELETE FROM History;
+
+-- 查询历史记录 (Post)
+getPostHistory:
+SELECT History.*, Thread.*, ThreadInformation.last_read_reply_id
+FROM History
+JOIN Thread ON History.itemId = Thread.id AND History.sourceId = Thread.sourceId
+LEFT JOIN ThreadInformation ON Thread.id = ThreadInformation.id AND Thread.sourceId = ThreadInformation.sourceId
+WHERE History.type = 'post'
+ORDER BY History.accessTime DESC
+LIMIT :limit OFFSET :offset;
+
+-- 统计 Post 历史记录数量
+countPostHistory:
+SELECT count(*) FROM History WHERE type = 'post';
+
+-- 查询历史记录 (Article)
+getArticleHistory:
+SELECT History.*, ArticleEntity.*
+FROM History
+JOIN ArticleEntity ON History.itemId = ArticleEntity.id
+WHERE History.type = 'article'
+ORDER BY History.accessTime DESC
+LIMIT :limit OFFSET :offset;
+
+-- 统计 Article 历史记录数量
+countArticleHistory:
+SELECT count(*) FROM History WHERE type = 'article';
+
+-- 查询所有历史记录 (混合) - 需要在代码层合并或分别查询
+-- 这里提供一个按时间倒序获取所有历史记录 ID 的查询，以便在 Repository 层进行处理
+getAllHistoryIds:
+SELECT id, type, itemId, sourceId, accessTime
+FROM History
+ORDER BY accessTime DESC
+LIMIT :limit OFFSET :offset;
+
+countAllHistory:
+SELECT count(*) FROM History;

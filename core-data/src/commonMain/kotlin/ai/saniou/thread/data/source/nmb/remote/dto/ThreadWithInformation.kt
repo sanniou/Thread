@@ -1,6 +1,5 @@
 package ai.saniou.thread.data.source.nmb.remote.dto
 
-import ai.saniou.thread.db.table.forum.GetHistoryThreads
 import ai.saniou.thread.db.table.forum.GetThreadsInForum
 import ai.saniou.thread.db.table.forum.GetThreadsInForumOffset
 import ai.saniou.thread.db.table.forum.SearchThreads
@@ -127,28 +126,4 @@ fun GetThreadsInForumOffset.toThreadWithInformation(query: ThreadReplyQueries? =
         lastKey = lastKey,
         last_access_time = last_access_time,
         last_read_reply_id = last_read_reply_id,
-    )
-
-fun GetHistoryThreads.toThreadWithInformation(query: ThreadReplyQueries? = null) =
-    ThreadWithInformation(
-        id = id.toLong(),
-        fid = fid.toLong(),
-        replyCount = replyCount,
-        img = img,
-        ext = ext,
-        now = now,
-        userHash = userHash,
-        name = name,
-        title = title,
-        content = content,
-        sage = sage,
-        admin = admin,
-        hide = hide,
-        replies = query?.getLastFiveReplies(sourceId, id)?.executeAsList()?.map {
-            it.toThreadReply()
-        } ?: emptyList(),
-        remainReplies = remainReplies,
-        lastKey = lastKey,
-        last_access_time = last_access_time,
-        last_read_reply_id = last_read_reply_id
     )

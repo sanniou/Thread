@@ -315,22 +315,6 @@ class NmbSource(
         }
     }
 
-    fun getHistoryThreads(): Flow<PagingData<ThreadWithInformation>> {
-        return Pager(
-            config = PagingConfig(pageSize = 20),
-            pagingSourceFactory = {
-                QueryPagingSource(
-                    transacter = db.threadQueries,
-                    context = Dispatchers.Default,
-                    countQuery = db.threadQueries.countHistoryThreads(),
-                    queryProvider = db.threadQueries::getHistoryThreads
-                )
-            }
-        ).flow.map { pagingData ->
-            pagingData.map { it.toThreadWithInformation(db.threadReplyQueries) }
-        }
-    }
-
     suspend fun updateThreadLastAccessTime(threadId: Long, time: Long) {
         db.threadQueries.updateThreadLastAccessTime(time, id, threadId.toString())
     }

@@ -55,14 +55,6 @@ interface ThreadRepository {
     fun getThreadReplies(threadId: Long, isPoOnly: Boolean): Flow<List<ThreadReply>>
 
     /**
-     * 更新帖子的最后访问时间
-     *
-     * @param threadId 帖子ID
-     * @param time 时间戳
-     */
-    suspend fun updateThreadLastAccessTime(threadId: Long, time: Long)
-
-    /**
      * 更新帖子最后已读的回复ID
      *
      * @param threadId 帖子ID
