@@ -1,7 +1,7 @@
 package ai.saniou.thread.data.repository
 
 import ai.saniou.thread.db.Database
-import ai.saniou.thread.data.source.nmb.SqlDelightPagingSource
+import ai.saniou.thread.data.paging.SqlDelightPagingSource
 import ai.saniou.thread.data.source.nmb.SubscriptionRemoteMediator
 import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
 import ai.saniou.thread.data.source.nmb.remote.dto.toDomain

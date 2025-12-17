@@ -1,4 +1,4 @@
-package ai.saniou.thread.data.source.nmb
+package ai.saniou.thread.data.paging
 
 /**
  * 数据加载策略
@@ -21,5 +21,4 @@ enum class DataPolicy {
     NETWORK_ELSE_CACHE,
     CACHE_ONLY,
     NETWORK_ONLY,
-
 }

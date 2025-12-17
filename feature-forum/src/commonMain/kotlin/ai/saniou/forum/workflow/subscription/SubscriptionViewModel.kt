@@ -4,7 +4,7 @@ import ai.saniou.coreui.state.toAppError
 import ai.saniou.forum.workflow.subscription.SubscriptionContract.Effect
 import ai.saniou.forum.workflow.subscription.SubscriptionContract.Event
 import ai.saniou.forum.workflow.subscription.SubscriptionContract.State
-import ai.saniou.thread.data.source.nmb.DataPolicy
+import ai.saniou.thread.data.paging.DataPolicy
 import ai.saniou.thread.domain.usecase.subscription.GetSubscriptionFeedUseCase
 import ai.saniou.thread.domain.usecase.subscription.ObserveActiveSubscriptionKeyUseCase
 import ai.saniou.thread.domain.usecase.subscription.SaveSubscriptionKeyUseCase

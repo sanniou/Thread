@@ -1,4 +1,4 @@
-package ai.saniou.thread.data.source.nmb
+package ai.saniou.thread.data.paging
 
 import app.cash.paging.PagingSource
 import app.cash.paging.PagingSourceLoadParams

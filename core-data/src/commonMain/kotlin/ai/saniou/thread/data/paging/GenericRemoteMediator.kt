@@ -1,0 +1,115 @@
+package ai.saniou.thread.data.paging
+
+import ai.saniou.thread.db.Database
+import ai.saniou.thread.network.SaniouResponse
+import app.cash.paging.ExperimentalPagingApi
+import app.cash.paging.LoadType
+import app.cash.paging.PagingState
+import app.cash.paging.RemoteMediator
+import app.cash.paging.RemoteMediatorMediatorResult
+import app.cash.paging.RemoteMediatorMediatorResultError
+import app.cash.paging.RemoteMediatorMediatorResultSuccess
+
+/**
+ * 通用 RemoteMediator 实现
+ *
+ * 封装了 RemoteMediator 的通用逻辑，包括：
+ * 1. 键值解析 (Key Resolution): 根据 LoadType 确定加载的页码/键。
+ * 2. 策略检查 (Policy Check): 根据 DataPolicy 决定是否跳过网络请求。
+ * 3. 网络请求 (Network Fetch): 执行数据获取。
+ * 4. 事务处理 (Transaction): 在事务中保存数据并更新 RemoteKeys。
+ *
+ * @param Key 分页键类型 (例如 Int)
+ * @param Value 列表项类型 (例如 ThreadReply)，用于 PagingState 和 RemoteKeyStrategy
+ * @param ResponseType 网络响应的数据类型 (例如 Thread DTO 或 List<Forum>)
+ * @param db 数据库实例，用于事务控制
+ * @param dataPolicy 数据加载策略
+ * @param initialKey 初始键值 (例如第一页页码)
+ * @param remoteKeyStrategy 远程键策略，负责键的获取和存储
+ * @param fetcher 数据获取函数，返回 SaniouResponse<ResponseType>
+ * @param saver 数据保存函数，在事务中执行，接收 ResponseType
+ * @param itemsExtractor 从 ResponseType 中提取 List<Value>，用于判断分页是否结束
+ * @param cacheChecker (可选) 缓存检查函数，用于 CACHE_ELSE_NETWORK 策略。如果返回 true，则跳过网络请求。
+ */
+@OptIn(ExperimentalPagingApi::class)
+class GenericRemoteMediator<Key : Any, Value : Any, ResponseType : Any>(
+    private val db: Database,
+    private val dataPolicy: DataPolicy,
+    private val initialKey: Key,
+    private val remoteKeyStrategy: RemoteKeyStrategy<Key, Value>,
+    private val fetcher: suspend (key: Key) -> SaniouResponse<ResponseType>,
+    private val saver: (ResponseType, Key) -> Unit,
+    private val itemsExtractor: (ResponseType) -> List<Value>,
+    private val cacheChecker: (suspend (Key) -> Boolean)? = null,
+    private val keyIncrementer: (Key) -> Key,
+    private val keyDecrementer: (Key) -> Key,
+    private val keyToLong: (Key) -> Long
+) : RemoteMediator<Key, Value>() {
+
+    override suspend fun load(
+        loadType: LoadType,
+        state: PagingState<Key, Value>
+    ): RemoteMediatorMediatorResult {
+        val key: Key = when (loadType) {
+            LoadType.REFRESH -> {
+                val remoteKey = remoteKeyStrategy.getKeyClosestToCurrentPosition(state)
+                remoteKey?.nextKey?.let { nextKeyLong ->
+                    @Suppress("UNCHECKED_CAST")
+                    val nextKey = nextKeyLong.toInt() as Key
+                    keyDecrementer(nextKey)
+                } ?: initialKey
+            }
+
+            LoadType.PREPEND -> {
+                val remoteKey = remoteKeyStrategy.getKeyForFirstItem(state)
+                val prevKeyLong = remoteKey?.prevKey
+                    ?: return RemoteMediatorMediatorResultSuccess(endOfPaginationReached = remoteKey != null)
+                @Suppress("UNCHECKED_CAST")
+                prevKeyLong.toInt() as Key
+            }
+
+            LoadType.APPEND -> {
+                val remoteKey = remoteKeyStrategy.getKeyForLastItem(state)
+                val nextKeyLong = remoteKey?.nextKey
+                    ?: return RemoteMediatorMediatorResultSuccess(endOfPaginationReached = remoteKey != null)
+                @Suppress("UNCHECKED_CAST")
+                nextKeyLong.toInt() as Key
+            }
+        }
+
+        // 策略检查
+        if (dataPolicy == DataPolicy.CACHE_ELSE_NETWORK && cacheChecker != null) {
+            if (cacheChecker.invoke(key)) {
+                return RemoteMediatorMediatorResultSuccess(endOfPaginationReached = false)
+            }
+        } else if (dataPolicy == DataPolicy.CACHE_ONLY) {
+            return RemoteMediatorMediatorResultSuccess(endOfPaginationReached = true)
+        }
+
+        return when (val result = fetcher(key)) {
+            is SaniouResponse.Success -> {
+                val responseData = result.data
+                val items = itemsExtractor(responseData)
+                val endOfPagination = items.isEmpty()
+
+                db.transaction {
+                    saver(responseData, key)
+
+                    val prevKey = if (key == initialKey) null else keyDecrementer(key)
+                    val nextKey = if (endOfPagination) null else keyIncrementer(key)
+
+                    remoteKeyStrategy.insertKeys(key, prevKey, nextKey, endOfPagination)
+                }
+                
+                RemoteMediatorMediatorResultSuccess(endOfPaginationReached = endOfPagination)
+            }
+            is SaniouResponse.Error -> {
+                if (dataPolicy == DataPolicy.NETWORK_ELSE_CACHE) {
+                    RemoteMediatorMediatorResultSuccess(endOfPaginationReached = true)
+                } else {
+                    RemoteMediatorMediatorResultError(result.ex)
+                }
+            }
+        }
+    }
+}
