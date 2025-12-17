@@ -39,7 +39,7 @@ class SubscriptionRemoteMediator(
             LoadType.APPEND -> {
                 val showId = state.pages.lastOrNull()?.data?.lastOrNull()?.id
                     ?: return RemoteMediatorMediatorResultSuccess(true)
-                val showPage = db.subscriptionQueries.getSubscription(subscriptionKey, showId)
+                val showPage = db.subscriptionQueries.getSubscription(subscriptionKey, "nmb", showId)
                     .executeAsOneOrNull()?.page ?: return RemoteMediatorMediatorResultSuccess(true)
 
                 val remoteKey = db.remoteKeyQueries.getRemoteKeyById(
@@ -67,10 +67,12 @@ class SubscriptionRemoteMediator(
                     }
 
                     feedDetail.forEach { feed ->
-                        db.threadQueries.upsertThreadNoPage(feed.toTable(Long.MAX_VALUE))
+                        db.threadQueries.upsertThreadNoPage(feed.toTable("nmb", Long.MAX_VALUE))
 
                         db.subscriptionQueries.insertSubscription(
-                            subscriptionKey = subscriptionKey, threadId = feed.id,
+                            subscriptionKey = subscriptionKey,
+                            sourceId = "nmb",
+                            threadId = feed.id.toString(),
                             page = page,
                             subscriptionTime = feed.nowToEpochMilliseconds(),
                             isLocal = 0

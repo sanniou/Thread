@@ -9,12 +9,17 @@ import ai.saniou.thread.domain.model.forum.Post
 import ai.saniou.thread.domain.model.forum.ThreadReply
 import app.cash.paging.Pager
 import app.cash.paging.PagingConfig
+import app.cash.paging.ExperimentalPagingApi
 import app.cash.paging.PagingData
+import app.cash.paging.map
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.datetime.Instant
 import ai.saniou.thread.domain.repository.Source
-
 import ai.saniou.thread.data.cache.SourceCache
+import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
+import ai.saniou.thread.data.source.nmb.remote.dto.toThreadWithInformation
+import ai.saniou.thread.db.table.forum.GetThreadsInForumOffset
 
 class DiscourseSource(
     private val api: DiscourseApi,
@@ -71,7 +76,7 @@ class DiscourseSource(
                 cache.getForumThreadsPagingSource(id, forumId)
             }
         ).flow.map { pagingData ->
-            pagingData.map { it.toDomain() }
+            pagingData.map { it.toThreadWithInformation().toDomain() }
         }
     }
 

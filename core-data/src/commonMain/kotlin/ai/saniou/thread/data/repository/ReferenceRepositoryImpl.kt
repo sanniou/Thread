@@ -20,16 +20,16 @@ class ReferenceRepositoryImpl(
 ) : ReferenceRepository {
 
     override fun getReference(id: Long): Flow<ai.saniou.thread.domain.model.forum.ThreadReply> =
-        db.threadReplyQueries.getThreadReplyById(id)
+        db.threadReplyQueries.getThreadReplyById("nmb", id.toString())
             .asFlow()
             .mapToOneOrNull(Dispatchers.IO)
             .mapNotNull { it?.toDomain() }
             .onStart {
-                if (db.threadReplyQueries.getThreadReplyById(id).executeAsOneOrNull() == null) {
+                if (db.threadReplyQueries.getThreadReplyById("nmb", id.toString()).executeAsOneOrNull() == null) {
                     val html = api.refHtml(id)
                     val reply = parseRefHtml(html, id)
                     val threadIdForDb = if (reply.threadId > 0) reply.threadId else Long.MIN_VALUE
-                    db.threadReplyQueries.upsertThreadReply(reply.toTable(threadIdForDb))
+                    db.threadReplyQueries.upsertThreadReply(reply.toTable("nmb", threadIdForDb))
                 }
             }
             .flowOn(Dispatchers.IO)

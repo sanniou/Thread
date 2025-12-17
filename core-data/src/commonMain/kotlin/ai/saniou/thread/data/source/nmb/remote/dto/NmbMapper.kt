@@ -43,7 +43,7 @@ fun TimeLine.toDomain(): DomainForum = DomainForum(
 
 @OptIn(ExperimentalTime::class)
 fun SelectSubscriptionThread.toDomain(): Post = Post(
-    id = id.toString(),
+    id = id,
     sourceName = "nmb",
     sourceUrl = "https://nmb.ai/thread/$id",
     title = title,
@@ -51,7 +51,7 @@ fun SelectSubscriptionThread.toDomain(): Post = Post(
     author = name,
     userHash = userHash,
     createdAt = now.toTime(),
-    forumName = fid.toString(),
+    forumName = fid,
     replyCount = replyCount,
     img = img,
     ext = ext,
@@ -62,7 +62,7 @@ fun SelectSubscriptionThread.toDomain(): Post = Post(
     now = now,
     name = name,
     sage = sage,
-    fid = fid,
+    fid = fid.toLong(),
     admin = admin,
     hide = hide,
     // fixme  后续处理 lastReadReplyId 和 replies
@@ -103,15 +103,15 @@ fun ThreadWithInformation.toDomain(): Post = Post(
 
 @OptIn(ExperimentalTime::class)
 fun GetThread.toDomain(): Post = Post(
-    id = id.toString(),
-    sourceName = "nmb",
+    id = id,
+    sourceName = sourceId,
     sourceUrl = "https://nmb.ai/thread/$id",
     title = title,
     content = content,
     author = name,
     userHash = userHash,
     createdAt = now.toTime(),
-    forumName = fid.toString(),
+    forumName = fid,
     replyCount = replyCount,
     img = img,
     ext = ext,
@@ -122,7 +122,7 @@ fun GetThread.toDomain(): Post = Post(
     now = now,
     name = name,
     sage = sage,
-    fid = fid,
+    fid = fid.toLong(),
     admin = admin,
     hide = hide,
     // fixme  后续处理 lastReadReplyId 和 replies
@@ -133,9 +133,32 @@ fun GetThread.toDomain(): Post = Post(
 
 @OptIn(ExperimentalTime::class)
 fun String.toTime(): Instant {
+    val input = this.trim()
+    // If it's already in ISO format with 'T', parse directly
+    if (input.contains("T")) {
+        return try {
+            // Try parsing as standard ISO format first
+            Instant.parse(input)
+        } catch (e: IllegalArgumentException) {
+            // If that fails, try to clean up double T issue
+            val cleanedInput = input.replace(Regex("T{2,}"), "T")
+            try {
+                Instant.parse(cleanedInput)
+            } catch (e2: IllegalArgumentException) {
+                // If still fails, try to parse as local datetime
+                val isoString = if (cleanedInput.length > 11) {
+                    cleanedInput.take(10) + "T" + cleanedInput.substring(11)
+                } else {
+                    cleanedInput
+                }
+                LocalDateTime.parse(isoString).toInstant(TimeZone.currentSystemDefault())
+            }
+        }
+    }
+
     // 原始格式：2025-11-17(一)04:10:48
     // 1. 去掉括号和星期
-    val cleaned = this.replace(Regex("\\(.*?\\)"), "")
+    val cleaned = input.replace(Regex("\\(.*?\\)"), "")
 
     // cleaned: "2025-11-1704:10:48"
     // 2. 插入一个 T，变成 ISO-8601 兼容格式
@@ -171,7 +194,7 @@ fun Thread.toDomain(): Post = Post(
     now = now,
     name = name,
     sage = sage,
-    fid = fid,
+    fid = fid.toLong(),
     admin = admin,
     hide = hide,
     // fixme  后续处理 lastReadReplyId 和 replies
@@ -181,18 +204,19 @@ fun Thread.toDomain(): Post = Post(
 )
 
 @OptIn(ExperimentalTime::class)
-fun ThreadReply.toDomain(): ai.saniou.thread.domain.model.forum.ThreadReply = ai.saniou.thread.domain.model.forum.ThreadReply(
-    id = id.toLongOrNull() ?: 0L,
-    userHash = userHash,
-    admin = admin,
-    title = title,
-    now = now,
-    content = content,
-    img = img,
-    ext = ext,
-    name = name,
-    threadId = threadId.toLongOrNull() ?: 0L
-)
+fun ThreadReply.toDomain(): ai.saniou.thread.domain.model.forum.ThreadReply =
+    ai.saniou.thread.domain.model.forum.ThreadReply(
+        id = id.toLongOrNull() ?: 0L,
+        userHash = userHash,
+        admin = admin,
+        title = title,
+        now = now,
+        content = content,
+        img = img,
+        ext = ext,
+        name = name,
+        threadId = threadId.toLongOrNull() ?: 0L
+    )
 
 @OptIn(ExperimentalTime::class)
 fun ai.saniou.thread.data.source.nmb.remote.dto.ThreadReply.toDomain(): ai.saniou.thread.domain.model.forum.ThreadReply =

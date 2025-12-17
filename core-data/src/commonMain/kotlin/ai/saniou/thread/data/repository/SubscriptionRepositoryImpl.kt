@@ -82,14 +82,15 @@ class SubscriptionRepositoryImpl(
                 message = nmbXdApi.addFeed(subscriptionKey, subscriptionId.toLong())
                 db.subscriptionQueries.insertSubscription(
                     subscriptionKey = subscriptionKey,
-                    threadId = subscriptionId.toLong(),
+                    sourceId = "nmb",
+                    threadId = subscriptionId,
                     page = 1L,
                     subscriptionTime = Clock.System.now().epochSeconds,
                     isLocal = 1L
                 )
             } else {
                 message = nmbXdApi.delFeed(subscriptionKey, subscriptionId.toLong())
-                db.subscriptionQueries.deleteSubscription(subscriptionKey, subscriptionId.toLong())
+                db.subscriptionQueries.deleteSubscription(subscriptionKey, "nmb", subscriptionId)
             }
             Result.success(message)
         } catch (e: Exception) {
@@ -98,7 +99,7 @@ class SubscriptionRepositoryImpl(
     }
 
     override fun isSubscribed(subscriptionKey: String, postId: String): Flow<Boolean> {
-        return db.subscriptionQueries.isSubscribed(subscriptionKey, postId.toLong())
+        return db.subscriptionQueries.isSubscribed(subscriptionKey, "nmb", postId)
             .asFlow()
             .mapToOne(Dispatchers.Default)
     }
@@ -108,8 +109,8 @@ class SubscriptionRepositoryImpl(
             val localSubscriptions =
                 db.subscriptionQueries.getLocalSubscriptions(subscriptionKey).executeAsList()
             localSubscriptions.forEach {
-                nmbXdApi.addFeed(subscriptionKey, it.threadId)
-                db.subscriptionQueries.updateLocalFlag(subscriptionKey, it.threadId)
+                nmbXdApi.addFeed(subscriptionKey, it.threadId.toLong())
+                db.subscriptionQueries.updateLocalFlag(subscriptionKey, "nmb", it.threadId)
             }
         }
     }

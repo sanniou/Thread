@@ -35,8 +35,8 @@ data class ThreadWithInformation(
 
 fun GetThreadsInForum.toThreadWithInformation(query: ThreadReplyQueries? = null) =
     ThreadWithInformation(
-        id = id,
-        fid = fid,
+        id = id.toLong(),
+        fid = fid.toLong(),
         replyCount = replyCount,
         img = img,
         ext = ext,
@@ -48,7 +48,7 @@ fun GetThreadsInForum.toThreadWithInformation(query: ThreadReplyQueries? = null)
         sage = sage,
         admin = admin,
         hide = hide,
-        replies = query?.getLastFiveReplies(id)?.executeAsList()?.map {
+        replies = query?.getLastFiveReplies(sourceId, id)?.executeAsList()?.map {
             it.toThreadReply()
         } ?: emptyList(),
         remainReplies = remainReplies,
@@ -59,8 +59,8 @@ fun GetThreadsInForum.toThreadWithInformation(query: ThreadReplyQueries? = null)
 
 fun Thread.toThreadWithInformation(query: ThreadReplyQueries? = null) =
     ThreadWithInformation(
-        id = id,
-        fid = fid,
+        id = id.toLong(),
+        fid = fid.toLong(),
         replyCount = replyCount,
         img = img,
         ext = ext,
@@ -72,7 +72,7 @@ fun Thread.toThreadWithInformation(query: ThreadReplyQueries? = null) =
         sage = sage,
         admin = admin,
         hide = hide,
-        replies = query?.getLastFiveReplies(id)?.executeAsList()?.map {
+        replies = query?.getLastFiveReplies(sourceId, id)?.executeAsList()?.map {
             it.toThreadReply()
         } ?: emptyList(),
         remainReplies = null,
@@ -83,8 +83,8 @@ fun Thread.toThreadWithInformation(query: ThreadReplyQueries? = null) =
 
 fun SearchThreads.toThreadWithInformation(query: ThreadReplyQueries? = null) =
     ThreadWithInformation(
-        id = id,
-        fid = fid,
+        id = id.toLong(),
+        fid = fid.toLong(),
         replyCount = replyCount,
         img = img,
         ext = ext,
@@ -96,7 +96,7 @@ fun SearchThreads.toThreadWithInformation(query: ThreadReplyQueries? = null) =
         sage = sage,
         admin = admin,
         hide = hide,
-        replies = query?.getLastFiveReplies(id)?.executeAsList()?.map {
+        replies = query?.getLastFiveReplies(sourceId, id)?.executeAsList()?.map {
             it.toThreadReply()
         } ?: emptyList(),
         remainReplies = remainReplies,
@@ -107,8 +107,8 @@ fun SearchThreads.toThreadWithInformation(query: ThreadReplyQueries? = null) =
 
 fun GetThreadsInForumOffset.toThreadWithInformation(query: ThreadReplyQueries? = null) =
     ThreadWithInformation(
-        id = id,
-        fid = fid,
+        id = id.toLong(),
+        fid = fid.toLong(),
         replyCount = replyCount,
         img = img,
         ext = ext,
@@ -120,19 +120,19 @@ fun GetThreadsInForumOffset.toThreadWithInformation(query: ThreadReplyQueries? =
         sage = sage,
         admin = admin,
         hide = hide,
-        replies = query?.getLastFiveReplies(id)?.executeAsList()?.map {
+        replies = query?.getLastFiveReplies(sourceId, id)?.executeAsList()?.map {
             it.toThreadReply()
         } ?: emptyList(),
         remainReplies = remainReplies,
-        lastKey = lastKey!!,
-        last_access_time = last_access_time!!,
-        last_read_reply_id = last_read_reply_id!!,
+        lastKey = lastKey,
+        last_access_time = last_access_time,
+        last_read_reply_id = last_read_reply_id,
     )
 
 fun GetHistoryThreads.toThreadWithInformation(query: ThreadReplyQueries? = null) =
     ThreadWithInformation(
-        id = id,
-        fid = fid,
+        id = id.toLong(),
+        fid = fid.toLong(),
         replyCount = replyCount,
         img = img,
         ext = ext,
@@ -144,7 +144,7 @@ fun GetHistoryThreads.toThreadWithInformation(query: ThreadReplyQueries? = null)
         sage = sage,
         admin = admin,
         hide = hide,
-        replies = query?.getLastFiveReplies(id)?.executeAsList()?.map {
+        replies = query?.getLastFiveReplies(sourceId, id)?.executeAsList()?.map {
             it.toThreadReply()
         } ?: emptyList(),
         remainReplies = remainReplies,

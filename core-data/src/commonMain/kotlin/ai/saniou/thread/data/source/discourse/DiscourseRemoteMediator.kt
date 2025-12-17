@@ -4,6 +4,7 @@ import ai.saniou.thread.data.cache.SourceCache
 import ai.saniou.thread.data.source.discourse.remote.DiscourseApi
 import ai.saniou.thread.data.source.discourse.remote.dto.DiscourseTopic
 import ai.saniou.thread.data.source.discourse.remote.dto.DiscourseUser
+import ai.saniou.thread.db.table.forum.GetThreadsInForumOffset
 import ai.saniou.thread.db.table.forum.Thread
 import ai.saniou.thread.db.table.forum.ThreadReply
 import app.cash.paging.ExperimentalPagingApi
@@ -22,11 +23,11 @@ class DiscourseRemoteMediator(
     private val api: DiscourseApi,
     private val cache: SourceCache,
     private val initialPage: Int = 0
-) : RemoteMediator<Int, Thread>() {
+) : RemoteMediator<Int, GetThreadsInForumOffset>() {
 
     override suspend fun load(
         loadType: LoadType,
-        state: PagingState<Int, Thread>
+        state: PagingState<Int, GetThreadsInForumOffset>
     ): RemoteMediatorMediatorResult {
         val page = when (loadType) {
             LoadType.REFRESH -> initialPage

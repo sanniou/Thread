@@ -79,8 +79,8 @@ data class Feed(
 
 
 fun Thread.toFeed(isLocal: Boolean = false) = Feed(
-    id = id,
-    fid = fid,
+    id = id.toLong(),
+    fid = fid.toLong(),
     replyCount = replyCount,
     img = img,
     ext = ext,
@@ -103,8 +103,8 @@ fun Thread.toFeed(isLocal: Boolean = false) = Feed(
 )
 
 fun SelectSubscriptionThread.toFeed() = Feed(
-    id = id,
-    fid = fid,
+    id = id.toLong(),
+    fid = fid.toLong(),
     replyCount = replyCount,
     img = img,
     ext = ext,

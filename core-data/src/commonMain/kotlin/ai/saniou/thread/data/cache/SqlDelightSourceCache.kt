@@ -1,6 +1,7 @@
 package ai.saniou.thread.data.cache
 
 import ai.saniou.thread.db.Database
+import ai.saniou.thread.db.table.forum.GetThreadsInForumOffset
 import ai.saniou.thread.db.table.forum.Thread
 import ai.saniou.thread.db.table.forum.ThreadReply
 import app.cash.paging.PagingSource
@@ -9,6 +10,7 @@ import app.cash.sqldelight.coroutines.mapToOneOrNull
 import app.cash.sqldelight.paging3.QueryPagingSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
 class SqlDelightSourceCache(
@@ -22,6 +24,7 @@ class SqlDelightSourceCache(
         return threadQueries.getThread(sourceId, threadId)
             .asFlow()
             .mapToOneOrNull(Dispatchers.IO)
+            .map { it?.let { Thread(it.id, it.sourceId, it.fid, it.replyCount, it.img, it.ext, it.now, it.userHash, it.name, it.title, it.content, it.sage, it.admin, it.hide, it.page) } }
     }
 
     override fun getThreadRepliesPagingSource(
@@ -68,7 +71,7 @@ class SqlDelightSourceCache(
     override fun getForumThreadsPagingSource(
         sourceId: String,
         fid: String
-    ): PagingSource<Int, Thread> {
+    ): PagingSource<Int, GetThreadsInForumOffset> {
         return QueryPagingSource(
             transacter = threadQueries,
             context = Dispatchers.IO,

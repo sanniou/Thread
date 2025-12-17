@@ -1,5 +1,6 @@
 package ai.saniou.thread.data.cache
 
+import ai.saniou.thread.db.table.forum.GetThreadsInForumOffset
 import ai.saniou.thread.db.table.forum.Thread
 import ai.saniou.thread.db.table.forum.ThreadReply
 import app.cash.paging.PagingSource
@@ -29,7 +30,7 @@ interface SourceCache {
     fun getForumThreadsPagingSource(
         sourceId: String,
         fid: String
-    ): PagingSource<Int, Thread>
+    ): PagingSource<Int, GetThreadsInForumOffset>
 
     /**
      * 保存帖子详情
@@ -55,12 +56,12 @@ interface SourceCache {
      * 清除指定帖子的回复缓存
      */
     suspend fun clearThreadRepliesCache(sourceId: String, threadId: String)
-    
+
     /**
      * 更新帖子最后访问时间
      */
     suspend fun updateThreadLastAccessTime(sourceId: String, threadId: String, time: Long)
-    
+
     /**
      * 更新帖子最后阅读的回复ID
      */
