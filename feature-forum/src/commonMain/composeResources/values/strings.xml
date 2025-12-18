@@ -80,4 +80,28 @@
     <string name="post_page_error_ok">确定</string>
     <string name="post_page_success">发送成功</string>
 
+    <!-- SubscriptionPage -->
+    <string name="subscription_title">订阅列表</string>
+    <string name="subscription_unknown_error">未知错误</string>
+    <string name="subscription_pull_cloud">拉取云端订阅</string>
+    <string name="subscription_push_local">推送本地订阅</string>
+    <string name="subscription_set_id">设置订阅ID</string>
+    <string name="subscription_local_label">本地订阅</string>
+    <string name="subscription_empty">暂无订阅</string>
+    <string name="subscription_empty_hint">在帖子页面点击菜单可以添加订阅</string>
+    <string name="subscription_id_dialog_title">设置订阅ID</string>
+    <string name="subscription_id_dialog_message">订阅ID用于标识您的订阅列表，可以自定义或随机生成。</string>
+    <string name="subscription_id_label">订阅ID</string>
+    <string name="subscription_confirm">确定</string>
+    <string name="subscription_generate_random">随机生成</string>
+    <string name="subscription_cancel">取消</string>
+    <string name="subscription_push_success">推送成功</string>
+    <string name="subscription_push_failed">推送失败: %1$s</string>
+    <string name="subscription_unsubscribe_failed">取消订阅失败: %1$s</string>
+    <string name="subscription_id_missing">请先设置订阅ID</string>
+    <string name="subscription_id_empty_error">订阅ID不能为空</string>
+    <string name="subscription_empty_no_id">未设置订阅ID</string>
+    <string name="subscription_empty_no_id_hint">点击右上角设置按钮设置订阅ID</string>
+    <string name="subscription_unsubscribe">取消订阅</string>
+
 </resources>

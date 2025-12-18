@@ -53,6 +53,7 @@ import ai.saniou.thread.data.repository.ReaderRepositoryImpl
 import ai.saniou.thread.domain.repository.ReaderRepository
 import ai.saniou.thread.domain.repository.UserRepository
 import ai.saniou.thread.domain.usecase.reader.GetArticleCountsUseCase
+import ai.saniou.thread.domain.usecase.subscription.GenerateRandomSubscriptionIdUseCase
 import ai.saniou.thread.network.CookieProvider
 import de.jensklingenberg.ktorfit.Ktorfit
 import io.ktor.client.HttpClient
@@ -65,8 +66,8 @@ import org.kodein.di.singleton
 
 val dataModule = DI.Module("dataModule") {
     bindConstant<String>(tag = "nmbBaseUrl") { "https://api.nmb.best/api/" }
-    bindConstant<String>(tag = "discourseBaseUrl") { "https://meta.discourse.org/" }
-
+//    bindConstant<String>(tag = "discourseBaseUrl") { "https://meta.discourse.org/" }
+    bindConstant<String>(tag = "discourseBaseUrl") { "https://linux.do/" }
     bindSingleton<NmbXdApi> {
         val ktorfit: Ktorfit = instance(arg = instance<String>("nmbBaseUrl"))
         ktorfit.createNmbXdApi()
@@ -155,4 +156,5 @@ val dataModule = DI.Module("dataModule") {
         ReaderRepositoryImpl(instance(), instance(), instance())
     }
     bind<GetArticleCountsUseCase>() with singleton { GetArticleCountsUseCase(instance()) }
+    bind<GenerateRandomSubscriptionIdUseCase>() with singleton { GenerateRandomSubscriptionIdUseCase(instance()) }
 }

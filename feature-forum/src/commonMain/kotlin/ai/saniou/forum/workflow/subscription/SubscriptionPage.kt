@@ -29,11 +29,16 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CloudDownload
+import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -45,7 +50,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -54,7 +58,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.cash.paging.LoadStateError
@@ -65,7 +71,28 @@ import cafe.adriel.voyager.kodein.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.flow.collectLatest
+import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.stringResource
 import org.kodein.di.DI
+import thread.feature_forum.generated.resources.Res
+import thread.feature_forum.generated.resources.subscription_cancel
+import thread.feature_forum.generated.resources.subscription_confirm
+import thread.feature_forum.generated.resources.subscription_empty
+import thread.feature_forum.generated.resources.subscription_empty_hint
+import thread.feature_forum.generated.resources.subscription_empty_no_id
+import thread.feature_forum.generated.resources.subscription_empty_no_id_hint
+import thread.feature_forum.generated.resources.subscription_generate_random
+import thread.feature_forum.generated.resources.subscription_id_dialog_message
+import thread.feature_forum.generated.resources.subscription_id_dialog_title
+import thread.feature_forum.generated.resources.subscription_id_empty_error
+import thread.feature_forum.generated.resources.subscription_id_label
+import thread.feature_forum.generated.resources.subscription_local_label
+import thread.feature_forum.generated.resources.subscription_pull_cloud
+import thread.feature_forum.generated.resources.subscription_push_local
+import thread.feature_forum.generated.resources.subscription_set_id
+import thread.feature_forum.generated.resources.subscription_title
+import thread.feature_forum.generated.resources.subscription_unknown_error
+import thread.feature_forum.generated.resources.subscription_unsubscribe
 
 data class SubscriptionPage(
     val di: DI = nmbdi,
@@ -82,18 +109,18 @@ data class SubscriptionPage(
         val state by viewModel.state.collectAsStateWithLifecycle()
 
         LaunchedEffect(Unit) {
-            onUpdateTitle?.invoke("订阅列表")
+            onUpdateTitle?.invoke(getString(Res.string.subscription_title))
         }
 
         LaunchedEffect(viewModel.effect) {
             viewModel.effect.collectLatest { effect ->
                 when (effect) {
                     is SubscriptionContract.Effect.OnUnsubscribeResult -> {
-                        snackbarHostState.showSnackbar(effect.message ?: "未知错误")
+                        snackbarHostState.showSnackbar(effect.message ?: getString(Res.string.subscription_unknown_error))
                     }
 
                     is SubscriptionContract.Effect.OnPushResult -> {
-                        snackbarHostState.showSnackbar(effect.message ?: "未知错误")
+                        snackbarHostState.showSnackbar(effect.message ?: getString(Res.string.subscription_unknown_error))
                     }
                 }
             }
@@ -104,13 +131,13 @@ data class SubscriptionPage(
                 snackbarHost = { SnackbarHost(snackbarHostState) },
                 topBar = {
                     SaniouTopAppBar(
-                        title = "订阅列表",
+                        title = stringResource(Res.string.subscription_title),
                         onNavigationClick = { navigator.pop() },
                         actions = {
                             IconButton(onClick = { viewModel.onEvent(Event.OnPull) }) {
                                 Icon(
-                                    imageVector = Icons.Default.Info,
-                                    contentDescription = "拉取云端订阅"
+                                    imageVector = Icons.Default.CloudDownload,
+                                    contentDescription = stringResource(Res.string.subscription_pull_cloud)
                                 )
                             }
                             IconButton(
@@ -118,14 +145,14 @@ data class SubscriptionPage(
                                 enabled = state.isPushEnabled
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.Info,
-                                    contentDescription = "推送本地订阅"
+                                    imageVector = Icons.Default.CloudUpload,
+                                    contentDescription = stringResource(Res.string.subscription_push_local)
                                 )
                             }
                             IconButton(onClick = { viewModel.onEvent(Event.OnShowSubscriptionIdDialog) }) {
                                 Icon(
                                     imageVector = Icons.Default.Settings,
-                                    contentDescription = "设置订阅ID"
+                                    contentDescription = stringResource(Res.string.subscription_set_id)
                                 )
                             }
                         }
@@ -194,7 +221,7 @@ private fun SubscriptionContent(
                     LoadingIndicator()
                 }
             },
-            empty = { EmptyContent() }
+            empty = { EmptyContent(hasId = state.subscriptionId != null) }
         ) {
             LazyColumn(
                 contentPadding = PaddingValues(8.dp),
@@ -202,18 +229,46 @@ private fun SubscriptionContent(
             ) {
                 items(feeds.itemCount) { index ->
                     val feed = feeds[index] ?: return@items
-                    Box {
+                    var showMenu by remember { mutableStateOf(false) }
+                    var pressOffset by remember { mutableStateOf(DpOffset.Zero) }
+
+                    Box(
+                        modifier = Modifier.pointerInput(Unit) {
+                            detectTapGestures(
+                                onLongPress = { offset ->
+                                    showMenu = true
+                                    pressOffset = DpOffset(offset.x.toDp(), offset.y.toDp())
+                                },
+                                onTap = {
+                                    onThreadClicked(feed.id.toLong())
+                                }
+                            )
+                        }
+                    ) {
                         ForumThreadCard(
                             thread = feed,
                             onClick = { onThreadClicked(feed.id.toLong()) },
                             onImageClick = { img, ext -> onImageClick(feed.id.toLong(), img, ext) },
-//                    onUnsubscribe = { onEvent(Event.OnUnsubscribe(feed.id)) }
                         )
                         if (feed.isLocal) {
                             Icon(
                                 imageVector = Icons.Default.Info,
-                                contentDescription = "本地订阅",
+                                contentDescription = stringResource(Res.string.subscription_local_label),
                                 modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)
+                            )
+                        }
+
+                        DropdownMenu(
+                            expanded = showMenu,
+                            onDismissRequest = { showMenu = false },
+                            offset = pressOffset
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(Res.string.subscription_unsubscribe)) },
+                                onClick = {
+                                    onEvent(Event.OnUnsubscribe(feed.id.toLong()))
+                                    showMenu = false
+                                }
                             )
                         }
                     }
@@ -243,7 +298,10 @@ private fun ErrorContent(
 }
 
 @Composable
-private fun EmptyContent(modifier: Modifier = Modifier) {
+private fun EmptyContent(
+    hasId: Boolean,
+    modifier: Modifier = Modifier
+) {
     Box(
         modifier = modifier.fillMaxWidth(),
         contentAlignment = Alignment.Center
@@ -260,12 +318,12 @@ private fun EmptyContent(modifier: Modifier = Modifier) {
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = "暂无订阅",
+                text = stringResource(if (hasId) Res.string.subscription_empty else Res.string.subscription_empty_no_id),
                 style = MaterialTheme.typography.titleMedium
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "在帖子页面点击菜单可以添加订阅",
+                text = stringResource(if (hasId) Res.string.subscription_empty_hint else Res.string.subscription_empty_no_id_hint),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -281,40 +339,60 @@ private fun SubscriptionIdDialog(
     onGenerateRandom: () -> Unit,
 ) {
     var subscriptionId by remember { mutableStateOf(currentId) }
+    var isError by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("设置订阅ID") },
+        title = { Text(stringResource(Res.string.subscription_id_dialog_title)) },
         text = {
             Column {
                 Text(
-                    "订阅ID用于标识您的订阅列表，可以自定义或随机生成。",
+                    stringResource(Res.string.subscription_id_dialog_message),
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 OutlinedTextField(
                     value = subscriptionId,
-                    onValueChange = { subscriptionId = it },
-                    label = { Text("订阅ID") },
+                    onValueChange = {
+                        subscriptionId = it
+                        isError = false
+                    },
+                    label = { Text(stringResource(Res.string.subscription_id_label)) },
                     modifier = Modifier.fillMaxWidth(),
+                    isError = isError,
+                    supportingText = if (isError) {
+                        { Text(stringResource(Res.string.subscription_id_empty_error)) }
+                    } else null,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                    keyboardActions = KeyboardActions(onDone = { onConfirm(subscriptionId) })
+                    keyboardActions = KeyboardActions(onDone = {
+                        if (subscriptionId.isBlank()) {
+                            isError = true
+                        } else {
+                            onConfirm(subscriptionId)
+                        }
+                    })
                 )
             }
         },
         confirmButton = {
-            Button(onClick = { onConfirm(subscriptionId) }) {
-                Text("确定")
+            Button(onClick = {
+                if (subscriptionId.isBlank()) {
+                    isError = true
+                } else {
+                    onConfirm(subscriptionId)
+                }
+            }) {
+                Text(stringResource(Res.string.subscription_confirm))
             }
         },
         dismissButton = {
             Row {
                 TextButton(onClick = onGenerateRandom) {
-                    Text("随机生成")
+                    Text(stringResource(Res.string.subscription_generate_random))
                 }
                 Spacer(modifier = Modifier.weight(1f))
                 TextButton(onClick = onDismiss) {
-                    Text("取消")
+                    Text(stringResource(Res.string.subscription_cancel))
                 }
             }
         }

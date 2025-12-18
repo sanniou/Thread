@@ -5,6 +5,7 @@ import ai.saniou.forum.workflow.subscription.SubscriptionContract.Effect
 import ai.saniou.forum.workflow.subscription.SubscriptionContract.Event
 import ai.saniou.forum.workflow.subscription.SubscriptionContract.State
 import ai.saniou.thread.data.paging.DataPolicy
+import ai.saniou.thread.domain.usecase.subscription.GenerateRandomSubscriptionIdUseCase
 import ai.saniou.thread.domain.usecase.subscription.GetSubscriptionFeedUseCase
 import ai.saniou.thread.domain.usecase.subscription.ObserveActiveSubscriptionKeyUseCase
 import ai.saniou.thread.domain.usecase.subscription.SaveSubscriptionKeyUseCase
@@ -25,7 +26,8 @@ class SubscriptionViewModel(
     private val toggleSubscriptionUseCase: ToggleSubscriptionUseCase,
     private val syncLocalSubscriptionsUseCase: SyncLocalSubscriptionsUseCase,
     private val observeActiveSubscriptionKeyUseCase: ObserveActiveSubscriptionKeyUseCase,
-    private val saveSubscriptionKeyUseCase: SaveSubscriptionKeyUseCase
+    private val saveSubscriptionKeyUseCase: SaveSubscriptionKeyUseCase,
+    private val generateRandomSubscriptionIdUseCase: GenerateRandomSubscriptionIdUseCase,
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(State())
@@ -114,8 +116,7 @@ class SubscriptionViewModel(
     }
 
     private fun generateRandomSubscriptionId() {
-        // This logic should ideally be in a UseCase as well
-        val randomId = (1..10).map { ('a'..'z').random() }.joinToString("")
+        val randomId = generateRandomSubscriptionIdUseCase()
         setSubscriptionId(randomId)
     }
 

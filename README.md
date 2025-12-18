@@ -83,3 +83,4 @@
 -   [Compose Multiplatform Adaptive Navigation](https://developer.android.com/develop/ui/compose/layouts/adaptive/build-adaptive-navigation)
 - https://github.com/lumina37/aiotieba 。 https://github.com/HuanCheng65/TiebaLite
 - discourse api :https://docs.discourse.org/
+- https://github.com/goplayegg/AcfunQml/blob/d63d5fc2b4e570235f0dc5d92a4b8f65f08997f0/src/ui/global/AcService.qml#L568

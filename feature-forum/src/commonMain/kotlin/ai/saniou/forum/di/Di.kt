@@ -123,7 +123,7 @@ val nmbFeatureModule = DI.Module("nmbFeatureModule") {
     bindProvider { ReferenceViewModel(instance()) }
 
     // 订阅相关
-    bindProvider { SubscriptionViewModel(instance(), instance(), instance(), instance(), instance()) }
+    bindProvider { SubscriptionViewModel(instance(), instance(), instance(), instance(), instance(), instance()) }
 
     // 历史相关
     bindProvider { HistoryViewModel(instance()) }
