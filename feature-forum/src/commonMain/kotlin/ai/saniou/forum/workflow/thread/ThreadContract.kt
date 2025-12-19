@@ -33,7 +33,7 @@ interface ThreadContract {
         val totalPages: Int = 1,
         val isSubscribed: Boolean = false,
         val forumName: String = "",
-        val lastReadReplyId: Long = 0,
+        val lastReadReplyId: String = "",
         val isPoOnlyMode: Boolean = false,
         val isTogglingSubscription: Boolean = false
     )
@@ -72,7 +72,7 @@ interface ThreadContract {
          * 更新最后阅读的回复ID
          * @param id 回复 ID
          */
-        data class UpdateLastReadReplyId(val id: Long) : Event
+        data class UpdateLastReadReplyId(val id: String) : Event
 
         /**
          * 显示图片预览

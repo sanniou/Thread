@@ -205,7 +205,7 @@ class NmbSource(
                     isAdmin = thread.admin == 1L,
                     isHidden = false,
                     isLocal = false,
-                    lastReadReplyId = 0,
+                    lastReadReplyId = "",
                     replies = null,
                     remainReplies = null
                 )

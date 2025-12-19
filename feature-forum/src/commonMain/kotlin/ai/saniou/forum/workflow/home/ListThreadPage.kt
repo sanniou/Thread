@@ -92,8 +92,13 @@ fun ListThreadPage(
         ) {
             LazyColumn(
                 state = state,
-                contentPadding = PaddingValues(horizontal = Dimens.padding_medium),
-                verticalArrangement = Arrangement.spacedBy(Dimens.padding_small)
+                contentPadding = PaddingValues(
+                    start = Dimens.padding_medium,
+                    end = Dimens.padding_medium,
+                    top = Dimens.padding_medium,
+                    bottom = Dimens.padding_large
+                ),
+                verticalArrangement = Arrangement.spacedBy(Dimens.padding_medium)
             ) {
                 items(threads.itemCount) { index ->
                     val feed = threads[index] ?: return@items

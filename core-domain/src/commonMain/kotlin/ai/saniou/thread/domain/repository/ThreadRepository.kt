@@ -60,5 +60,5 @@ interface ThreadRepository {
      * @param threadId 帖子ID
      * @param replyId 回复ID
      */
-    suspend fun updateThreadLastReadReplyId(threadId: Long, replyId: Long)
+    suspend fun updateThreadLastReadReplyId(threadId: String, replyId: String)
 }

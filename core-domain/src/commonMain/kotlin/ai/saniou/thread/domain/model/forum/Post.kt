@@ -50,7 +50,7 @@ data class Post(
     val fid: Long,
     val admin: Long,
     val hide: Long,
-    val lastReadReplyId: Long,
+    val lastReadReplyId: String,
     val replies: List<ThreadReply>? = null,
     val remainReplies: Long? = null,
 )

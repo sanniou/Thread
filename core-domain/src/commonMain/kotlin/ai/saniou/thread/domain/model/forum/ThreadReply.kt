@@ -1,7 +1,7 @@
 package ai.saniou.thread.domain.model.forum
 
 data class ThreadReply(
-    val id: Long,
+    val id: String,
     val userHash: String,
     val admin: Long,
     val title: String,
@@ -10,5 +10,5 @@ data class ThreadReply(
     val img: String,
     val ext: String,
     val name: String,
-    val threadId: Long,
+    val threadId: String,
 )

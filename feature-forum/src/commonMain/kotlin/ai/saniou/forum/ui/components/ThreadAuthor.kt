@@ -1,6 +1,6 @@
 package ai.saniou.forum.ui.components
 
-import ai.saniou.thread.data.source.nmb.remote.dto.IBaseAuthor
+import ai.saniou.coreui.theme.Dimens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -22,30 +22,16 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun ThreadAuthor(
-    author: IBaseAuthor,
-    isPo: Boolean = false,
-    onClick: ((String) -> Unit)? = null,
-) {
-    ThreadAuthor(
-        userName = author.userHash,
-        showName = author.name,
-        threadTime = author.now,
-        isPo = isPo,
-        onClick = onClick
-    )
-}
-
-@Composable
-fun ThreadAuthor(
     userName: String,
     showName: String,
     threadTime: String,
     isPo: Boolean = false,
+    avatarUrl: String? = null,
     onClick: ((String) -> Unit)? = null,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(Dimens.padding_medium)
     ) {
         // 头像占位，根据 Hash 生成颜色
         val avatarColor = remember(userName) {
@@ -55,7 +41,7 @@ fun ThreadAuthor(
 
         Box(
             modifier = Modifier
-                .size(36.dp)
+                .size(Dimens.avatar_size_medium)
                 .clip(CircleShape)
                 .background(avatarColor)
                 .then(
@@ -63,6 +49,7 @@ fun ThreadAuthor(
                 ),
             contentAlignment = Alignment.Center
         ) {
+            // TODO: 如果有 avatarUrl，加载图片
             Text(
                 text = userName.take(1).uppercase(),
                 style = MaterialTheme.typography.titleMedium,
@@ -70,10 +57,10 @@ fun ThreadAuthor(
             )
         }
 
-        Column {
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(Dimens.padding_small)
             ) {
                 Text(
                     text = userName,

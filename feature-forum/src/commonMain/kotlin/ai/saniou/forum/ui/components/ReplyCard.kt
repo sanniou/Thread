@@ -3,7 +3,7 @@ package ai.saniou.forum.ui.components
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.BlankLinePolicy
 import ai.saniou.coreui.widgets.RichText
-import ai.saniou.thread.data.source.nmb.remote.dto.ThreadReply
+import ai.saniou.thread.domain.model.forum.ThreadReply
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -51,6 +51,11 @@ private fun ReplyItem(reply: ThreadReply) {
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = reply.now,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.outline
             )
         }
         RichText(

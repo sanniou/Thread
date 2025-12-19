@@ -129,10 +129,10 @@ class ThreadViewModel(
         }
     }
 
-    private fun updateLastReadReplyId(replyId: Long) {
+    private fun updateLastReadReplyId(replyId: String) {
         val tid = threadId.toLongOrNull() ?: return
         screenModelScope.launch {
-            updateThreadLastReadReplyIdUseCase(tid, replyId)
+            updateThreadLastReadReplyIdUseCase(tid.toString(), replyId)
         }
     }
 

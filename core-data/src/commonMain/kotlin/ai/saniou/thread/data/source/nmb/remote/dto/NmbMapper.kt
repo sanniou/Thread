@@ -53,7 +53,7 @@ fun SelectSubscriptionThread.toDomain(): Post = Post(
     admin = admin,
     hide = hide,
     // fixme  后续处理 lastReadReplyId 和 replies
-    lastReadReplyId = 0,
+    lastReadReplyId = "",
     replies = null,
     remainReplies = null
 )
@@ -83,7 +83,7 @@ fun ThreadWithInformation.toDomain(): Post = Post(
     admin = admin,
     hide = hide,
     // fixme  后续处理 lastReadReplyId 和 replies
-    lastReadReplyId = 0,
+    lastReadReplyId = "",
     replies = null,
     remainReplies = null
 )
@@ -113,7 +113,7 @@ fun GetThread.toDomain(): Post = Post(
     admin = admin,
     hide = hide,
     // fixme  后续处理 lastReadReplyId 和 replies
-    lastReadReplyId = 0,
+    lastReadReplyId = "",
     replies = null,
     remainReplies = null
 )
@@ -185,28 +185,13 @@ fun Thread.toDomain(): Post = Post(
     admin = admin,
     hide = hide,
     // fixme  后续处理 lastReadReplyId 和 replies
-    lastReadReplyId = 0,
+    lastReadReplyId = "",
     replies = null,
     remainReplies = null
 )
 
 @OptIn(ExperimentalTime::class)
 fun ThreadReply.toDomain(): ai.saniou.thread.domain.model.forum.ThreadReply =
-    ai.saniou.thread.domain.model.forum.ThreadReply(
-        id = id.toLongOrNull() ?: 0L,
-        userHash = userHash,
-        admin = admin,
-        title = title,
-        now = now,
-        content = content,
-        img = img,
-        ext = ext,
-        name = name,
-        threadId = threadId.toLongOrNull() ?: 0L
-    )
-
-@OptIn(ExperimentalTime::class)
-fun ai.saniou.thread.data.source.nmb.remote.dto.ThreadReply.toDomain(): ai.saniou.thread.domain.model.forum.ThreadReply =
     ai.saniou.thread.domain.model.forum.ThreadReply(
         id = id,
         userHash = userHash,
@@ -218,4 +203,19 @@ fun ai.saniou.thread.data.source.nmb.remote.dto.ThreadReply.toDomain(): ai.sanio
         ext = ext,
         name = name,
         threadId = threadId
+    )
+
+@OptIn(ExperimentalTime::class)
+fun ai.saniou.thread.data.source.nmb.remote.dto.ThreadReply.toDomain(): ai.saniou.thread.domain.model.forum.ThreadReply =
+    ai.saniou.thread.domain.model.forum.ThreadReply(
+        id = id.toString(),
+        userHash = userHash,
+        admin = admin,
+        title = title,
+        now = now,
+        content = content,
+        img = img,
+        ext = ext,
+        name = name,
+        threadId = threadId.toString()
     )

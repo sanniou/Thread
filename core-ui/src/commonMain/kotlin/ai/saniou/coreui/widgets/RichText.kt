@@ -141,7 +141,7 @@ private fun parseHtml(
         // 1.1 处理结构化标签 (在解码实体之前处理，以免实体解码产生干扰)
         // 策略：对于块级元素，替换为换行符的同时，吞噬周围的空白字符（包括源码中的换行符），
         // 从而由我们就地控制垂直间距，避免源码格式化导致的意外空行。
-        
+
         // <br>: 换行
         .replace(Regex("<br\\s*/?>[\\s\\r\\n]*", RegexOption.IGNORE_CASE), "\n")
         // <p>, <div>: 简单换行
@@ -167,7 +167,7 @@ private fun parseHtml(
         BlankLinePolicy.COLLAPSE -> cleanHtml.replace(Regex("(\\n\\s*){2,}"), "\n\n")
         BlankLinePolicy.REMOVE -> cleanHtml.lines().filter { it.isNotBlank() }.joinToString("\n")
     }
-    
+
     // Trim leading/trailing whitespace after tag processing
     cleanHtml = cleanHtml.trim()
 
@@ -198,7 +198,11 @@ private fun parseHtml(
                             // 仅当链接不在隐藏的剧透内容中时，它的注解才会被推入。
                             // 因此，只有在这种情况下才需要弹出。
                             if (hiddenSpoilerDepth == 0) {
-                                pop()
+                                try {
+                                    pop()
+                                } catch (e: Exception) {
+
+                                }
                             }
                         }
                         if (tag.name == "spoiler") {
@@ -221,7 +225,11 @@ private fun parseHtml(
                             pushLink(
                                 LinkAnnotation.Clickable(
                                     tagString,
-                                    linkInteractionListener = LinkInteractionListener { onSpoilerClick(id) }
+                                    linkInteractionListener = LinkInteractionListener {
+                                        onSpoilerClick(
+                                            id
+                                        )
+                                    }
                                 )
                             )
 
@@ -367,14 +375,16 @@ private fun parseTag(tagString: String): HtmlTag {
 private fun HtmlTag.toSpanStyle(
     currentStyle: SpanStyle,
     linkColor: Color,
-    ignoreColor: Boolean = false
+    ignoreColor: Boolean = false,
 ): SpanStyle {
     var newStyle = currentStyle
     when (name) {
         "b", "strong" -> newStyle = newStyle.copy(fontWeight = FontWeight.Bold)
         "i", "em" -> newStyle = newStyle.copy(fontStyle = FontStyle.Italic)
         "u" -> newStyle = newStyle.copy(textDecoration = TextDecoration.Underline)
-        "s", "strike", "del" -> newStyle = newStyle.copy(textDecoration = TextDecoration.LineThrough)
+        "s", "strike", "del" -> newStyle =
+            newStyle.copy(textDecoration = TextDecoration.LineThrough)
+
         "font" -> {
             if (!ignoreColor) {
                 val color = attributes["color"]?.let(::parseColorValue)

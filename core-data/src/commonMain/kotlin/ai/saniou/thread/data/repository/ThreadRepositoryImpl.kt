@@ -96,7 +96,7 @@ class ThreadRepositoryImpl(
     }
 
 
-    override suspend fun updateThreadLastReadReplyId(threadId: Long, replyId: Long) {
+    override suspend fun updateThreadLastReadReplyId(threadId: String, replyId: String) {
         // FIXME: Need sourceId
         // withContext(Dispatchers.IO) {
         //     cache.updateThreadLastReadReplyId(sourceId, threadId.toString(), replyId)

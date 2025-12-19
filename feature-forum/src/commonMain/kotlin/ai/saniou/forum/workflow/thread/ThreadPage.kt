@@ -340,7 +340,7 @@ private fun ThreadContentRouter(
     onTogglePoOnly: () -> Unit,
     onRefClick: (Long) -> Unit,
     onImageClick: (Int, List<ImageInfo>) -> Unit,
-    onUpdateLastReadId: (Long) -> Unit,
+    onUpdateLastReadId: (String) -> Unit,
     onCopy: (String) -> Unit,
     onBookmarkThread: (Post) -> Unit,
     onBookmarkReply: (ThreadReply) -> Unit,
@@ -490,11 +490,11 @@ fun ThreadSuccessContent(
     state: State,
     lazyListState: LazyListState,
     onRefresh: () -> Unit,
-    onReplyClicked: (Long) -> Unit,
+    onReplyClicked: (String) -> Unit,
     onTogglePoOnly: () -> Unit,
     onRefClick: (Long) -> Unit,
     onImageClick: (Int, List<ImageInfo>) -> Unit,
-    onUpdateLastReadId: (Long) -> Unit,
+    onUpdateLastReadId: (String) -> Unit,
     onCopy: (String) -> Unit,
     onBookmarkThread: (Post) -> Unit,
     onBookmarkReply: (ThreadReply) -> Unit,
@@ -523,7 +523,7 @@ fun ThreadSuccessContent(
     var hasScrolledToLastRead by remember { mutableStateOf(false) }
 
     LaunchedEffect(replies.itemCount, state.lastReadReplyId) {
-        if (!hasScrolledToLastRead && state.lastReadReplyId > 0L) {
+        if (!hasScrolledToLastRead && state.lastReadReplyId.isNotBlank()) {
             val lastReadItemIndex =
                 replies.itemSnapshotList.indexOfFirst { it?.id == state.lastReadReplyId }
 
@@ -579,7 +579,7 @@ fun ThreadSuccessContent(
 private fun ThreadList(
     state: State,
     lazyListState: LazyListState,
-    onReplyClicked: (Long) -> Unit,
+    onReplyClicked: (String) -> Unit,
     onTogglePoOnly: () -> Unit,
     onRefClick: (Long) -> Unit,
     onImageClick: (String, String) -> Unit,
@@ -920,7 +920,7 @@ fun ThreadMainPost(
 fun ThreadReply(
     reply: ThreadReply,
     poUserHash: String,
-    onReplyClicked: (Long) -> Unit,
+    onReplyClicked: (String) -> Unit,
     refClick: (Long) -> Unit,
     onImageClick: (String, String) -> Unit,
     onCopy: () -> Unit,

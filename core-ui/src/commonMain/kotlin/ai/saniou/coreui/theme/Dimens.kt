@@ -6,6 +6,7 @@ object Dimens {
     /**
      * The width at which the reader page switches to mobile layout.
      */
+    val avatar_size_medium = 24.dp
     val MobileWidth = 600.dp
     val padding_medium = 12.dp
     val padding_large = 16.dp

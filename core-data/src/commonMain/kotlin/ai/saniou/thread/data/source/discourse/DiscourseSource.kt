@@ -45,10 +45,10 @@ class DiscourseSource(
             // 1. Try to fetch from network
             val response = api.getCategories()
             val forums = response.categoryList.categories.map { it.toForum() }
-            
+
             // 2. Save to cache
             cache.saveForums(forums.map { it.toEntity() })
-            
+
             Result.success(forums)
         } catch (e: Exception) {
             // 3. Fallback to cache if network fails
@@ -145,7 +145,7 @@ class DiscourseSource(
                 isAdmin = false,
                 isHidden = false,
                 isLocal = false,
-                lastReadReplyId = 0,
+                lastReadReplyId = "",
                 replies = null,
                 remainReplies = null
             )
@@ -228,7 +228,7 @@ internal fun DiscourseTopic.toPost(usersMap: Map<Long, DiscourseUser>): Post {
         isAdmin = pinned || closed,
         isHidden = !visible,
         isLocal = false,
-        lastReadReplyId = 0,
+        lastReadReplyId = "",
         replies = null,
         remainReplies = null,
     )

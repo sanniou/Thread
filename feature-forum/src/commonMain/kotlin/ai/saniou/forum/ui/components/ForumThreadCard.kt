@@ -2,10 +2,9 @@ package ai.saniou.forum.ui.components
 
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.thread.data.source.nmb.remote.dto.IBaseThread
-import ai.saniou.thread.data.source.nmb.remote.dto.IBaseThreadReply
-import ai.saniou.thread.data.source.nmb.remote.dto.ThreadReply
 import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
 import ai.saniou.thread.domain.model.forum.Post
+import ai.saniou.thread.domain.model.forum.ThreadReply
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -70,7 +69,13 @@ fun ForumThreadCard(
         ) {
             // 统一的头部
             Column(verticalArrangement = Arrangement.spacedBy(Dimens.padding_small)) {
-                ThreadAuthor(thread.userHash, thread.name, thread.now, onClick = onUserClick)
+                ThreadAuthor(
+                    userName = thread.userHash,
+                    showName = thread.name,
+                    threadTime = thread.now,
+                    isPo = false, // 列表页通常不标记 PO
+                    onClick = onUserClick
+                )
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(Dimens.padding_small)
@@ -110,40 +115,21 @@ fun ForumThreadCard(
 
             // 内容区域
             ThreadBody(
-                thread.content,
-                thread.img,
-                thread.ext,
+                content = thread.content,
+                img = thread.img,
+                ext = thread.ext,
                 maxLines = 6,
                 onImageClick = { img, ext -> onImageClick?.invoke(img, ext) }
             )
 
             // 尾部
-            ThreadCardFooter(thread.replyCount, thread.replies?.map {
-                ThreadReply(
-                    id = it.id,
-                    userHash = it.userHash,
-                    admin = it.admin,
-                    title = it.title,
-                    now = it.now,
-                    content = it.content,
-                    img = it.img,
-                    ext = it.ext,
-                    name = it.name,
-                    threadId = it.threadId,
-                )
-            }, thread.remainReplies)
+            ThreadCardFooter(
+                replyCount = thread.replyCount,
+                replies = thread.replies,
+                remainReplies = thread.remainReplies
+            )
         }
     }
-}
-
-@Composable
-private fun ThreadCardFooter(thread: IBaseThread) {
-    val threadReply = thread as? IBaseThreadReply
-    ThreadCardFooter(
-        replyCount = thread.replyCount,
-        replies = threadReply?.replies ?: emptyList(),
-        remainReplies = threadReply?.remainReplies,
-    )
 }
 
 @Composable

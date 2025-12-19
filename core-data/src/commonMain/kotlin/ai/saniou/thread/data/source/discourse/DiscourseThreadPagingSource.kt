@@ -59,7 +59,7 @@ private fun DiscoursePost.toThreadReply(threadId: Long): ThreadReply {
     }
 
     return ThreadReply(
-        id = id,
+        id = id.toString(),
         userHash = username,
         admin = 0,
         title = "",
@@ -68,6 +68,6 @@ private fun DiscoursePost.toThreadReply(threadId: Long): ThreadReply {
         img = "",
         ext = "",
         name = name ?: username,
-        threadId = threadId,
+        threadId = threadId.toString(),
     )
 }
