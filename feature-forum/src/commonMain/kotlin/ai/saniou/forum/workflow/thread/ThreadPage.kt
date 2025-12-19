@@ -14,6 +14,7 @@ import ai.saniou.forum.ui.components.LoadingIndicator
 import ai.saniou.forum.ui.components.PageJumpDialog
 import ai.saniou.forum.ui.components.ReferencePopup
 import ai.saniou.forum.ui.components.SkeletonReplyItem
+import ai.saniou.forum.ui.components.Badge
 import ai.saniou.forum.ui.components.ThreadAuthor
 import ai.saniou.forum.ui.components.ThreadBody
 import ai.saniou.forum.workflow.image.ImageInfo
@@ -111,6 +112,7 @@ import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
+import org.kodein.di.compose.LocalDI
 import org.kodein.di.direct
 import org.kodein.di.instance
 
@@ -278,7 +280,7 @@ data class ThreadPage(
                         ImagePreviewPage(
                             ImagePreviewViewModelParams(
                                 imageProvider = ThreadImageProvider(
-                                    threadId = threadId.toLong(),
+                                    threadId = threadId.toLongOrNull() ?: 0L,
                                     getThreadImagesUseCase = nmbdi.direct.instance()
                                 ),
                                 initialImages = images,
@@ -505,9 +507,9 @@ fun ThreadSuccessContent(
     val allImages by remember(state.thread, replies.itemSnapshotList) {
         derivedStateOf {
             val imageList = mutableListOf<ImageInfo>()
-            state.thread?.let {
-                if (it.img.isNullOrBlank().not()) {
-                    imageList.add(ImageInfo(it.img!!, it.ext!!))
+            state.thread?.let { post ->
+                if (!post.img.isNullOrBlank()) {
+                    imageList.add(ImageInfo(post.img!!, post.ext ?: ""))
                 }
             }
             replies.itemSnapshotList.items.forEach { reply ->
@@ -631,22 +633,11 @@ private fun ThreadList(
         // 工具栏
         stickyHeader {
             state.thread?.let {
-                Surface(
-                    modifier = Modifier.fillParentMaxWidth(),
-                    color = MaterialTheme.colorScheme.surface,
-                ) {
-                    Column {
-                        ThreadToolbar(
-                            replyCount = it.replyCount.toString(),
-                            isPoOnly = state.isPoOnlyMode,
-                            onTogglePoOnly = onTogglePoOnly
-                        )
-                        HorizontalDivider(
-                            thickness = 1.dp,
-                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                        )
-                    }
-                }
+                ThreadToolbar(
+                    replyCount = it.replyCount.toString(),
+                    isPoOnly = state.isPoOnlyMode,
+                    onTogglePoOnly = onTogglePoOnly
+                )
             }
         }
 
@@ -736,48 +727,63 @@ private fun ThreadToolbar(
     isPoOnly: Boolean,
     onTogglePoOnly: () -> Unit,
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+    Surface(
+        color = MaterialTheme.colorScheme.surface,
+        tonalElevation = 3.dp,
+        shadowElevation = 2.dp
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = "全部回复",
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                text = " · $replyCount",
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-
-        FilterChip(
-            selected = isPoOnly,
-            onClick = onTogglePoOnly,
-            label = { Text("只看PO") },
-            leadingIcon = if (isPoOnly) {
-                {
-                    Icon(
-                        Icons.Default.Check,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp)
+        Column {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "全部回复",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = " ($replyCount)",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-            } else null,
-            colors = FilterChipDefaults.filterChipColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.3f),
-                labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
-            ),
-            border = null
-        )
+
+                FilterChip(
+                    selected = isPoOnly,
+                    onClick = onTogglePoOnly,
+                    label = { Text("只看PO") },
+                    leadingIcon = if (isPoOnly) {
+                        {
+                            Icon(
+                                Icons.Default.Check,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    } else null,
+                    colors = FilterChipDefaults.filterChipColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHighest.copy(
+                            alpha = 0.3f
+                        ),
+                        labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                        selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    ),
+                    border = null,
+                    shape = CircleShape
+                )
+            }
+            HorizontalDivider(
+                thickness = 1.dp,
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            )
+        }
     }
 }
 
@@ -798,32 +804,63 @@ fun ThreadMainPost(
             .background(MaterialTheme.colorScheme.surface)
             .padding(top = 16.dp, bottom = 24.dp),
     ) {
-        // 标题
-        if (thread.title.isNotBlank() && thread.title != "无标题") {
-            Text(
-                text = thread.title,
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 12.dp, start = 16.dp, end = 16.dp)
-            )
-        }
-
         // 头部信息
         Row(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            ThreadAuthor(thread.userHash, thread.name, thread.now, isPo = true, onClick = onUserClick)
-
-            Text(
-                text = "No.${thread.id}",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+            ThreadAuthor(
+                userName = thread.userHash,
+                showName = thread.name,
+                threadTime = thread.now,
+                isPo = true,
+                onClick = onUserClick,
+                badges = {
+                    if (thread.isAdmin) {
+                        Badge(
+                            text = "ADMIN",
+                            containerColor = MaterialTheme.colorScheme.errorContainer,
+                            contentColor = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                    }
+                    if (thread.isSage) {
+                        Badge(
+                            text = "SAGE",
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                    }
+                }
             )
+
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    text = "No.${thread.id}",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                if (thread.sourceName.isNotBlank()) {
+                    Text(
+                        text = thread.sourceName.uppercase(),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+                    )
+                }
+            }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // 标题
+        if (thread.title.isNotBlank() && thread.title != "无标题") {
+            Text(
+                text = thread.title,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 8.dp, start = 16.dp, end = 16.dp)
+            )
+        }
 
         // 正文
         Box(
@@ -951,10 +988,25 @@ fun ThreadReply(
         Column {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment = Alignment.Top,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                ThreadAuthor(reply.userHash, reply.name, reply.now, isPo = isPo, onClick = onUserClick)
+                ThreadAuthor(
+                    userName = reply.userHash,
+                    showName = reply.name,
+                    threadTime = reply.now,
+                    isPo = isPo,
+                    onClick = onUserClick,
+                    badges = {
+                        if (reply.admin == 1L) {
+                            Badge(
+                                text = "ADMIN",
+                                containerColor = MaterialTheme.colorScheme.errorContainer,
+                                contentColor = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                        }
+                    }
+                )
 
                 Text(
                     text = "No.${reply.id}",
@@ -993,7 +1045,17 @@ fun ThreadReply(
                 )
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            if (reply.title.isNotBlank() && reply.title != "无标题") {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = reply.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
             ThreadBody(
                 content = reply.content,
                 img = reply.img,

@@ -122,7 +122,16 @@ fun ReferencePopup(
                             ThreadAuthor(
                                 userName = reply.userHash,
                                 showName = reply.name,
-                                threadTime = reply.now
+                                threadTime = reply.now,
+                                badges = {
+                                    if (reply.admin == 1L) {
+                                        Badge(
+                                            text = "ADMIN",
+                                            containerColor = MaterialTheme.colorScheme.errorContainer,
+                                            contentColor = MaterialTheme.colorScheme.onErrorContainer
+                                        )
+                                    }
+                                }
                             )
                             Spacer(modifier = Modifier.height(12.dp))
                             ThreadBody(

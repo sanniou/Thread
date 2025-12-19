@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
@@ -21,7 +22,31 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Surface
 import androidx.compose.ui.unit.dp
+
+@Composable
+fun Badge(
+    text: String,
+    containerColor: Color,
+    contentColor: Color,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        color = containerColor,
+        shape = RoundedCornerShape(4.dp),
+        modifier = modifier
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Bold,
+            color = contentColor,
+            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+        )
+    }
+}
 
 @Composable
 fun ThreadAuthor(
@@ -32,6 +57,7 @@ fun ThreadAuthor(
     avatarUrl: String? = null,
     onClick: ((String) -> Unit)? = null,
     modifier: Modifier = Modifier,
+    badges: @Composable (() -> Unit)? = null,
 ) {
     Row(
         modifier = modifier,
@@ -93,6 +119,8 @@ fun ThreadAuthor(
                         color = MaterialTheme.colorScheme.secondary
                     )
                 }
+
+                badges?.invoke()
             }
 
             Text(
