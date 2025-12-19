@@ -2,6 +2,7 @@ package ai.saniou.forum.workflow.forum
 
 import ai.saniou.coreui.composition.LocalSourceId
 import ai.saniou.coreui.widgets.RichText
+import ai.saniou.coreui.widgets.SaniouLargeTopAppBar
 import ai.saniou.coreui.widgets.SaniouTopAppBar
 import ai.saniou.forum.di.nmbdi
 import ai.saniou.forum.workflow.home.ListThreadPage
@@ -25,21 +26,21 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import ai.saniou.forum.workflow.user.UserPage
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
@@ -49,12 +50,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.cash.paging.compose.collectAsLazyPagingItems
@@ -69,6 +72,7 @@ import org.kodein.di.instance
 
 data class ForumPage(
     val di: DI = nmbdi,
+    val sourceId: String? = null, // Optional for backward compatibility, but should be provided
     val forumId: String,
     val fgroupId: String,
     val onMenuClick: (() -> Unit)? = null,
@@ -77,6 +81,7 @@ data class ForumPage(
     // Compatibility constructor for existing navigation calls (mostly NMB)
     constructor(forumId: Long, fgroupId: Long, onMenuClick: (() -> Unit)? = null) : this(
         di = nmbdi,
+        sourceId = null,
         forumId = forumId.toString(),
         fgroupId = fgroupId.toString(),
         onMenuClick = onMenuClick
@@ -86,14 +91,17 @@ data class ForumPage(
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val sourceId = LocalSourceId.current
+        // Fallback to LocalSourceId if sourceId is not provided (legacy behavior)
+        val actualSourceId = sourceId ?: LocalSourceId.current
 
-        val viewModel: ForumViewModel = rememberScreenModel(tag = "${sourceId}_${fgroupId}_${forumId}") {
-            di.direct.instance(arg = Triple(sourceId, forumId, fgroupId))
+        val viewModel: ForumViewModel = rememberScreenModel(tag = "${actualSourceId}_${fgroupId}_${forumId}") {
+            di.direct.instance(arg = Triple(actualSourceId, forumId, fgroupId))
         }
         val state by viewModel.state.collectAsStateWithLifecycle()
         val threads = viewModel.threads.collectAsLazyPagingItems()
-        val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
+
+        // Use LargeTopAppBar for better design
+        val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
         val lazyListState = rememberLazyListState()
         val coroutineScope = rememberCoroutineScope()
         var expandedFab by remember { mutableStateOf(true) }
@@ -124,36 +132,48 @@ data class ForumPage(
             }
         }
 
-        if (state.showInfoDialog) {
-            ForumInfoDialog(
-                forumDetail = state.forumDetail,
-                onDismissRequest = { viewModel.onEvent(ForumContract.Event.ToggleInfoDialog(false)) }
-            )
-        }
-
         Scaffold(
             modifier = Modifier
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .nestedScroll(fabNestedScrollConnection),
             topBar = {
-                SaniouTopAppBar(
+                ai.saniou.coreui.widgets.SaniouLargeTopAppBar(
                     title = {
-                        Text(
-                            text = state.forumName,
-                            modifier = Modifier.pointerInput(Unit) {
-                                detectTapGestures(
-                                    onTap = {
-                                        if (lazyListState.firstVisibleItemIndex == 0 && lazyListState.firstVisibleItemScrollOffset == 0) {
-                                            threads.refresh()
-                                        } else {
-                                            coroutineScope.launch {
-                                                lazyListState.animateScrollToItem(0)
+                        Column {
+                            Text(
+                                text = state.forumName,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.pointerInput(Unit) {
+                                    detectTapGestures(
+                                        onTap = {
+                                            if (lazyListState.firstVisibleItemIndex == 0 && lazyListState.firstVisibleItemScrollOffset == 0) {
+                                                threads.refresh()
+                                            } else {
+                                                coroutineScope.launch {
+                                                    lazyListState.animateScrollToItem(0)
+                                                }
                                             }
                                         }
-                                    }
-                                )
+                                    )
+                                }
+                            )
+                            // Show subtitle only when expanded
+                            if (scrollBehavior.state.collapsedFraction < 0.5f && state.forumDetail != null) {
+                                val detail = state.forumDetail!!
+                                val subtitle = buildString {
+                                    if (detail.threadCount != null) append("${detail.threadCount} 串")
+                                    if (detail.interval != null) append(" · ${detail.interval}s")
+                                }
+                                if (subtitle.isNotBlank()) {
+                                    Text(
+                                        text = subtitle,
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
                             }
-                        )
+                        }
                     },
                     navigationIcon = {
                         if (onMenuClick != null) {
@@ -167,15 +187,6 @@ data class ForumPage(
                         }
                     },
                     actions = {
-                        IconButton(onClick = {
-                            viewModel.onEvent(
-                                ForumContract.Event.ToggleInfoDialog(
-                                    true
-                                )
-                            )
-                        }) {
-                            Icon(Icons.Outlined.Info, contentDescription = "板块信息")
-                        }
                         IconButton(onClick = {
                             navigator.push(UserPage())
                         }) {
@@ -201,91 +212,62 @@ data class ForumPage(
                 )
             }
         ) { innerPadding ->
-            ListThreadPage(
-                state = lazyListState,
-                threadFlow = viewModel.threads,
-                onThreadClicked = { threadId -> navigator.push(ThreadPage(threadId)) },
-                onImageClick = { _, imgPath, ext ->
-                    val imageInfo = ImageInfo(imgPath, ext)
-                    navigator.push(
-                        ImagePreviewPage(
-                            ImagePreviewViewModelParams(
-                                initialImages = listOf(imageInfo),
+            Column(modifier = Modifier.padding(innerPadding)) {
+                // Integrated Forum Info (Collapsible/Expandable could be better, but static for now is cleaner than dialog)
+                state.forumDetail?.let { detail ->
+                    if (detail.msg.isNotBlank()) {
+                        ForumRulesCard(msg = detail.msg)
+                    }
+                }
+
+                ListThreadPage(
+                    state = lazyListState,
+                    threadFlow = viewModel.threads,
+                    onThreadClicked = { threadId -> navigator.push(ThreadPage(threadId)) },
+                    onImageClick = { _, imgPath, ext ->
+                        val imageInfo = ImageInfo(imgPath, ext)
+                        navigator.push(
+                            ImagePreviewPage(
+                                ImagePreviewViewModelParams(
+                                    initialImages = listOf(imageInfo),
+                                )
                             )
                         )
-                    )
-                },
-                onUserClick = { userHash -> navigator.push(UserDetailPage(userHash)) },
-                modifier = Modifier.padding(innerPadding)
-            )
+                    },
+                    onUserClick = { userHash -> navigator.push(UserDetailPage(userHash)) },
+                    modifier = Modifier.weight(1f)
+                )
+            }
         }
     }
 
     @Composable
-    private fun ForumInfoDialog(
-        forumDetail: Forum?,
-        onDismissRequest: () -> Unit,
-    ) {
-        AlertDialog(
-            onDismissRequest = onDismissRequest,
-            title = { Text(text = forumDetail?.name ?: "板块信息") },
-            text = {
-                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                    if (forumDetail != null) {
-                        if (!forumDetail.msg.isBlank()) {
-                            RichText(
-                                text = forumDetail.msg,
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                        }
+    private fun ForumRulesCard(msg: String) {
+        var expanded by remember { mutableStateOf(false) }
 
-                        DetailItem("ID", forumDetail.id.toString())
-                        forumDetail.threadCount?.let {
-                            DetailItem("帖子数", it.toString())
-                        }
-                        forumDetail.interval?.let {
-                            DetailItem("发帖间隔", "${it}秒")
-                        }
-                        forumDetail.autoDelete?.let {
-                            if (it > 0) {
-                                DetailItem("自动删除", "${it}小时后")
-                            }
-                        }
-                        forumDetail.safeMode?.let {
-                            if (it == "1") {
-                                DetailItem("安全模式", "开启")
-                            }
-                        }
-                    } else {
-                        Text("暂无详细信息")
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = onDismissRequest) {
-                    Text("关闭")
+        Surface(
+            color = MaterialTheme.colorScheme.surfaceContainerLow,
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { expanded = !expanded }
+        ) {
+            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                RichText(
+                    text = msg,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = if (expanded) Int.MAX_VALUE else 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+                if (!expanded && msg.length > 50) { // Simple heuristic
+                    Icon(
+                        imageVector = Icons.Default.KeyboardArrowDown,
+                        contentDescription = "Expand",
+                        modifier = Modifier.align(Alignment.CenterHorizontally).size(16.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                    )
                 }
             }
-        )
-    }
-
-    @Composable
-    private fun DetailItem(label: String, value: String) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                text = value,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface
-            )
         }
     }
 }
