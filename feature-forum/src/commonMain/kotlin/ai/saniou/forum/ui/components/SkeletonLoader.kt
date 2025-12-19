@@ -51,19 +51,19 @@ private fun SkeletonThreadItem(brush: Brush) {
             .fillMaxWidth()
             .padding(16.dp, 16.dp, 16.dp, 24.dp)
     ) {
-        // 标题
-        SkeletonLine(
-            modifier = Modifier.fillMaxWidth(0.6f),
-            height = 28.dp, // HeadlineSmall size
-            brush = brush
-        )
+        // 作者信息 (Header)
+        SkeletonAuthor(brush)
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // 作者信息
-        SkeletonAuthor(brush)
+        // 标题 (Optional)
+        SkeletonLine(
+            modifier = Modifier.fillMaxWidth(0.4f),
+            height = 20.dp,
+            brush = brush
+        )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         // 内容
         SkeletonLine(modifier = Modifier.fillMaxWidth(), brush = brush)

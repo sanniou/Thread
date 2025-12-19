@@ -1,5 +1,6 @@
 package ai.saniou.forum.ui.components
 
+import ai.saniou.corecommon.utils.toRelativeTimeString
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.BlankLinePolicy
 import ai.saniou.coreui.widgets.RichText
@@ -25,10 +26,10 @@ fun RecentReplies(replies: List<ThreadReply>) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(Dimens.padding_medium))
-            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .clip(RoundedCornerShape(Dimens.padding_small))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
             .padding(Dimens.padding_medium),
-        verticalArrangement = Arrangement.spacedBy(Dimens.padding_small)
+        verticalArrangement = Arrangement.spacedBy(Dimens.padding_medium)
     ) {
         replies.forEach { reply ->
             ReplyItem(reply)
@@ -53,15 +54,15 @@ private fun ReplyItem(reply: ThreadReply) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
-                text = reply.now,
+                text = reply.createdAt.toRelativeTimeString(),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.outline
             )
         }
         RichText(
             text = reply.content,
-            style = MaterialTheme.typography.bodySmall,
-            maxLines = 2,
+            style = MaterialTheme.typography.bodyMedium,
+            maxLines = 3,
             overflow = TextOverflow.Ellipsis,
             blankLinePolicy = BlankLinePolicy.REMOVE
         )

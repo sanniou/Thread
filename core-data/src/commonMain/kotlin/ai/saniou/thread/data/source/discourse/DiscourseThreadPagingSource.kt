@@ -64,6 +64,7 @@ private fun DiscoursePost.toThreadReply(threadId: Long): ThreadReply {
         admin = 0,
         title = "",
         now = createdAt,
+        createdAt = replyCreatedAt,
         content = cooked,
         img = "",
         ext = "",

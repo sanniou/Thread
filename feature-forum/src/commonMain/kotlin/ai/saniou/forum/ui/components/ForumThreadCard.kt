@@ -1,23 +1,22 @@
 package ai.saniou.forum.ui.components
 
+import ai.saniou.corecommon.utils.toRelativeTimeString
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.thread.data.source.nmb.remote.dto.IBaseThread
 import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
 import ai.saniou.thread.domain.model.forum.Post
-import ai.saniou.thread.domain.model.forum.ThreadReply
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Face
-import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.ChatBubbleOutline
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -26,11 +25,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
-import org.jetbrains.compose.resources.stringResource
-import thread.feature_forum.generated.resources.Res
-import thread.feature_forum.generated.resources.empty_title
+import androidx.compose.ui.unit.dp
 
 
 @Composable
@@ -61,59 +58,63 @@ fun ForumThreadCard(
     ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .clickable(onClick = onClick),
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
     ) {
         Column(
             modifier = Modifier.padding(Dimens.padding_medium),
             verticalArrangement = Arrangement.spacedBy(Dimens.padding_small)
         ) {
-            // 统一的头部
-            Column(verticalArrangement = Arrangement.spacedBy(Dimens.padding_small)) {
+            // Header: Author & Badges
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
                 ThreadAuthor(
                     userName = thread.userHash,
                     showName = thread.name,
-                    threadTime = thread.now,
-                    isPo = false, // 列表页通常不标记 PO
-                    onClick = onUserClick
+                    threadTime = thread.createdAt.toRelativeTimeString(),
+                    isPo = false,
+                    onClick = onUserClick,
+                    modifier = Modifier.weight(1f)
                 )
+
+                // Badges (Admin, Sage)
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(Dimens.padding_small)
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.padding_extra_small),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     if (thread.isAdmin) {
-                        Surface(
-                            shape = CircleShape,
-                            color = MaterialTheme.colorScheme.primaryContainer
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Star,
-                                contentDescription = "管理员",
-                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                                modifier = Modifier
-                                    .size(Dimens.icon_size_medium)
-                                    .padding(Dimens.padding_extra_small)
-                            )
-                        }
+                        Badge(
+                            text = "ADMIN",
+                            containerColor = MaterialTheme.colorScheme.errorContainer,
+                            contentColor = MaterialTheme.colorScheme.onErrorContainer
+                        )
                     }
-                    Text(
-                        text = thread.title.ifBlank { stringResource(Res.string.empty_title) },
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f)
-                    )
                     if (thread.isSage) {
-                        Text(
+                        Badge(
                             text = "SAGE",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.error
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                         )
                     }
                 }
             }
 
-            // 内容区域
+            // Title (Only if meaningful)
+            if (thread.title.isNotBlank() && thread.title != "无标题") {
+                Text(
+                    text = thread.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+
+            // Content
             ThreadBody(
                 content = thread.content,
                 img = thread.img,
@@ -122,58 +123,83 @@ fun ForumThreadCard(
                 onImageClick = { img, ext -> onImageClick?.invoke(img, ext) }
             )
 
-            // 尾部
-            ThreadCardFooter(
-                replyCount = thread.replyCount,
-                replies = thread.replies,
-                remainReplies = thread.remainReplies
-            )
+            // Footer: Forum Name & Stats
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                // Source & Forum Name Badge
+                val sourceText = if (thread.sourceName.isNotBlank()) "${thread.sourceName.uppercase()} · " else ""
+                val footerText = "$sourceText${thread.forumName}"
+
+                if (footerText.isNotBlank()) {
+                    Surface(
+                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        shape = RoundedCornerShape(Dimens.padding_extra_small),
+                    ) {
+                        Text(
+                            text = footerText,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                // Reply Count
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.ChatBubbleOutline,
+                        contentDescription = "Replies",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Text(
+                        text = thread.replyCount.toString(),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            // Recent Replies
+            if (!thread.replies.isNullOrEmpty()) {
+                RecentReplies(thread.replies!!)
+                if ((thread.remainReplies ?: 0) > 0) {
+                    Text(
+                        text = "还有 ${thread.remainReplies} 条回复...",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(start = Dimens.padding_small, top = 4.dp)
+                    )
+                }
+            }
         }
     }
 }
 
 @Composable
-private fun ThreadCardFooter(
-    replyCount: Long,
-    replies: List<ThreadReply>?,
-    remainReplies: Long?,
+private fun Badge(
+    text: String,
+    containerColor: Color,
+    contentColor: Color
 ) {
-
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth()
+    Surface(
+        color = containerColor,
+        shape = RoundedCornerShape(4.dp),
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(Dimens.padding_extra_small)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Face,
-                contentDescription = "回复",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(Dimens.icon_size_small)
-            )
-            Text(
-                text = replyCount.toString(),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-
-        Spacer(modifier = Modifier.weight(1f))
-
-        if ((remainReplies ?: 0) > 0) {
-            Text(
-                text = "省略${remainReplies}条",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-
-    if (!replies.isNullOrEmpty()) {
-        Spacer(modifier = Modifier.height(Dimens.padding_small))
-        RecentReplies(replies)
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Bold,
+            color = contentColor,
+            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+        )
     }
 }
 

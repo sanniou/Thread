@@ -1,12 +1,14 @@
 package ai.saniou.forum.ui.components
 
 import ai.saniou.coreui.theme.Dimens
+import ai.saniou.coreui.widgets.NetworkImage
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
@@ -17,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
@@ -28,8 +31,10 @@ fun ThreadAuthor(
     isPo: Boolean = false,
     avatarUrl: String? = null,
     onClick: ((String) -> Unit)? = null,
+    modifier: Modifier = Modifier,
 ) {
     Row(
+        modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Dimens.padding_medium)
     ) {
@@ -49,12 +54,20 @@ fun ThreadAuthor(
                 ),
             contentAlignment = Alignment.Center
         ) {
-            // TODO: 如果有 avatarUrl，加载图片
-            Text(
-                text = userName.take(1).uppercase(),
-                style = MaterialTheme.typography.titleMedium,
-                color = Color.White
-            )
+            if (!avatarUrl.isNullOrBlank()) {
+                NetworkImage(
+                    imageUrl = avatarUrl,
+                    contentDescription = userName,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Text(
+                    text = userName.take(1).uppercase(),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color.White
+                )
+            }
         }
 
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {

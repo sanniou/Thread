@@ -38,7 +38,11 @@ fun NmbImage(
     val coroutineScope = rememberCoroutineScope()
 
     // 构建完整的图片URL
-    val imageUrl = cdnManager.buildImageUrl(imgPath, ext, isThumb)
+    val imageUrl = if (imgPath.startsWith("http")) {
+        imgPath
+    } else {
+        cdnManager.buildImageUrl(imgPath, ext, isThumb)
+    }
 
     // 记住是否正在重试
     var isRetrying by remember { mutableStateOf(false) }

@@ -2,9 +2,10 @@ package ai.saniou.thread.data.repository
 
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
-import ai.saniou.thread.data.source.nmb.remote.dto.ThreadReply
 import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
 import ai.saniou.thread.data.source.nmb.remote.dto.toTable
+import ai.saniou.thread.data.source.nmb.remote.dto.toTime
+import ai.saniou.thread.domain.model.forum.ThreadReply
 import ai.saniou.thread.domain.repository.ReferenceRepository
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToOneOrNull
@@ -13,13 +14,14 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onStart
+import kotlin.time.ExperimentalTime
 
 class ReferenceRepositoryImpl(
     private val api: NmbXdApi,
     private val db: Database,
 ) : ReferenceRepository {
 
-    override fun getReference(id: Long): Flow<ai.saniou.thread.domain.model.forum.ThreadReply> =
+    override fun getReference(id: Long): Flow<ThreadReply> =
         db.threadReplyQueries.getThreadReplyById("nmb", id.toString())
             .asFlow()
             .mapToOneOrNull(Dispatchers.IO)
@@ -28,12 +30,13 @@ class ReferenceRepositoryImpl(
                 if (db.threadReplyQueries.getThreadReplyById("nmb", id.toString()).executeAsOneOrNull() == null) {
                     val html = api.refHtml(id)
                     val reply = parseRefHtml(html, id)
-                    val threadIdForDb = if (reply.threadId > 0) reply.threadId else Long.MIN_VALUE
-                    db.threadReplyQueries.upsertThreadReply(reply.toTable("nmb", threadIdForDb))
+//                    val threadIdForDb = if (reply.threadId > 0) reply.threadId else Long.MIN_VALUE
+//                    db.threadReplyQueries.upsertThreadReply(reply.toTable("nmb", threadIdForDb))
                 }
             }
             .flowOn(Dispatchers.IO)
 
+    @OptIn(ExperimentalTime::class)
     private fun parseRefHtml(html: String, refId: Long): ThreadReply {
         val idRegex = """href="([^"]*)"[^>]*class="h-threads-info-id">No\.(\d+)""".toRegex()
         val titleRegex = """<span class="h-threads-info-title">(.*?)</span>""".toRegex()
@@ -82,16 +85,17 @@ class ReferenceRepositoryImpl(
         }
 
         return ThreadReply(
-            id = parsedId,
+            id = parsedId.toString(),
             userHash = userHash,
             admin = if (isAdmin) 1L else 0L,
             title = title,
             now = now,
+            createdAt = now.toTime(),
             content = content,
             img = img,
             ext = ext,
             name = name,
-            threadId = threadId
+            threadId = threadId.toString()
         )
     }
 }
