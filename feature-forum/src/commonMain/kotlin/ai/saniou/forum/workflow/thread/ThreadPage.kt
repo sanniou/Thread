@@ -12,7 +12,7 @@ import ai.saniou.forum.ui.components.LoadEndIndicator
 import ai.saniou.forum.ui.components.LoadingFailedIndicator
 import ai.saniou.forum.ui.components.LoadingIndicator
 import ai.saniou.forum.ui.components.PageJumpDialog
-import ai.saniou.forum.ui.components.ReferencePopup
+import ai.saniou.forum.ui.components.ReferenceSheet
 import ai.saniou.forum.ui.components.SkeletonReplyItem
 import ai.saniou.forum.ui.components.Badge
 import ai.saniou.forum.ui.components.ThreadAuthor
@@ -310,7 +310,7 @@ data class ThreadPage(
 
         // 引用弹窗
         if (showReferencePopup) {
-            ReferencePopup(
+            ReferenceSheet(
                 refId = currentReferenceId,
                 reply = referenceState.reply,
                 isLoading = referenceState.isLoading,
