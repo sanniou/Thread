@@ -175,41 +175,7 @@ class NmbSource(
                 // Actually `ThreadRepositoryImpl` uses `db.threadQueries.getThread` which returns `ThreadEntity`.
                 // Here we fetch remote.
                 val thread = response.data
-                // Map thread to Post.
-                // We can use `thread.toTable(page).toDomain()` logic if `toTable` creates entity and entity has `toDomain`.
-                // Or just manual map.
-                val post = Post(
-                    id = thread.id.toString(),
-                    fid = thread.fid,
-                    replyCount = thread.replyCount,
-                    img = thread.img,
-                    ext = thread.ext,
-                    now = thread.now,
-                    userHash = thread.userHash,
-                    name = thread.name,
-                    title = thread.title,
-                    content = thread.content,
-                    sage = thread.sage,
-                    admin = thread.admin,
-                    hide = 0, // assuming visible
-                    createdAt = try {
-                        Instant.parse(thread.now)
-                    } catch (e: Exception) {
-                        Instant.fromEpochMilliseconds(0)
-                    }, // NMB time format might need parsing
-                    sourceName = "nmb",
-                    sourceUrl = "https://www.nmbxd.com/t/${thread.id}",
-                    author = thread.name,
-                    forumName = "",
-                    isSage = thread.sage == 1L,
-                    isAdmin = thread.admin == 1L,
-                    isHidden = false,
-                    isLocal = false,
-                    lastReadReplyId = "",
-                    replies = null,
-                    remainReplies = null
-                )
-                Result.success(post)
+                Result.success(thread.toDomain())
             } else {
                 Result.failure((response as SaniouResponse.Error).ex)
             }

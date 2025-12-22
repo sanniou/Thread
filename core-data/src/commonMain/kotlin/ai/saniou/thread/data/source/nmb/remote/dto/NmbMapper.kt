@@ -52,9 +52,9 @@ fun SelectSubscriptionThread.toDomain(): Post = Post(
     fid = fid?.toLongOrNull() ?: 0,
     admin = admin ?: 0,
     hide = hide ?: 0,
-    // fixme  后续处理 lastReadReplyId 和 replies
+    // fixme  后续处理 lastReadReplyId
     lastReadReplyId = "",
-    replies = null,
+    replies = null, // SelectSubscriptionThread doesn't join with replies
     remainReplies = null
 )
 
@@ -82,10 +82,10 @@ fun ThreadWithInformation.toDomain(): Post = Post(
     fid = fid ?: 0,
     admin = admin ?: 0,
     hide = hide ?: 0,
-    // fixme  后续处理 lastReadReplyId 和 replies
+    // fixme  后续处理 lastReadReplyId
     lastReadReplyId = "",
-    replies = null,
-    remainReplies = null
+    replies = replies.map { it.toDomain() }.reversed(),
+    remainReplies = remainReplies
 )
 
 @OptIn(ExperimentalTime::class)
@@ -112,9 +112,9 @@ fun GetThread.toDomain(): Post = Post(
     fid = fid?.toLongOrNull() ?: 0,
     admin = admin ?: 0,
     hide = hide ?: 0,
-    // fixme  后续处理 lastReadReplyId 和 replies
+    // fixme  后续处理 lastReadReplyId
     lastReadReplyId = "",
-    replies = null,
+    replies = null, // GetThread doesn't join with replies
     remainReplies = null
 )
 
@@ -159,6 +159,35 @@ fun String.toTime(): Instant {
     // 4. 转为 epoch milliseconds（系统所在时区）
     return ldt.toInstant(TimeZone.currentSystemDefault())
 }
+
+@OptIn(ExperimentalTime::class)
+fun ai.saniou.thread.data.source.nmb.remote.dto.Thread.toDomain(): Post = Post(
+    id = id.toString(),
+    sourceName = "nmb",
+    sourceUrl = "https://nmb.ai/thread/$id",
+    title = title,
+    content = content,
+    author = name,
+    userHash = userHash,
+    createdAt = now.toTime(),
+    forumName = fid.toString(),
+    replyCount = replyCount,
+    img = img,
+    ext = ext,
+    isSage = sage > 0,
+    isAdmin = admin > 0,
+    isHidden = hide > 0,
+    isLocal = false,
+    now = now,
+    name = name,
+    sage = sage,
+    fid = fid,
+    admin = admin,
+    hide = hide,
+    lastReadReplyId = "",
+    replies = replies.map { it.toDomain() },
+    remainReplies = (replyCount - replies.size).coerceAtLeast(0)
+)
 
 @OptIn(ExperimentalTime::class)
 fun Thread.toDomain(): Post = Post(
