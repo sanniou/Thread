@@ -99,36 +99,38 @@ DELETE FROM ThreadReply WHERE sourceId = :sourceId AND threadId = :threadId AND 
 
 -- PagingSource (所有回复)
 countRepliesByThreadId:
-SELECT count(1) FROM ThreadReply WHERE sourceId = :sourceId AND threadId = :threadId;
+SELECT count(1) FROM ThreadReply WHERE sourceId = :sourceId AND threadId = :threadId AND page >= 0;
 
 getRepliesByThreadId:
 SELECT * FROM ThreadReply WHERE sourceId = :sourceId AND threadId = :threadId AND page = :page ORDER BY id ASC;
 
 getRepliesByThreadIdOffset:
-SELECT * FROM ThreadReply WHERE sourceId = :sourceId AND threadId = :threadId ORDER BY id ASC LIMIT :limit OFFSET :offset;
+SELECT * FROM ThreadReply WHERE sourceId = :sourceId AND threadId = :threadId  AND page >= 0 ORDER BY id ASC LIMIT :limit OFFSET :offset;
 
 -- PagingSource (只看PO)
 countRepliesByThreadIdAndUserHash:
-SELECT count(1) FROM ThreadReply WHERE sourceId = :sourceId AND threadId = :threadId AND userHash = :userHash;
+SELECT count(1) FROM ThreadReply WHERE sourceId = :sourceId AND threadId = :threadId AND userHash = :userHash AND page >= 0;
 
 getRepliesByThreadIdAndUserHash:
 SELECT * FROM ThreadReply WHERE sourceId = :sourceId AND threadId = :threadId AND userHash = :userHash AND page = :page ORDER BY id ASC;
 
 getRepliesByThreadIdAndUserHashOffset:
-SELECT * FROM ThreadReply WHERE sourceId = :sourceId AND threadId = :threadId AND userHash = :userHash ORDER BY id ASC LIMIT :limit OFFSET :offset;
+SELECT * FROM ThreadReply WHERE sourceId = :sourceId AND threadId = :threadId AND userHash = :userHash AND page >= 0 ORDER BY id ASC LIMIT :limit OFFSET :offset;
 
 searchReplies:
 SELECT * FROM ThreadReply
 WHERE (content LIKE ('%' || :query || '%') OR title LIKE ('%' || :query || '%'))
+AND page >= 0
 ORDER BY now DESC
 LIMIT :limit OFFSET :offset;
 
 countSearchReplies:
 SELECT count(*) FROM ThreadReply
-WHERE (content LIKE ('%' || :query || '%') OR title LIKE ('%' || :query || '%'));
+WHERE (content LIKE ('%' || :query || '%') OR title LIKE ('%' || :query || '%'))
+AND page >= 0;
 
 getRepliesByUserHashOffset:
-SELECT * FROM ThreadReply WHERE userHash = :userHash ORDER BY now DESC LIMIT :limit OFFSET :offset;
+SELECT * FROM ThreadReply WHERE userHash = :userHash  AND page >= 0 ORDER BY now DESC LIMIT :limit OFFSET :offset;
 
 countRepliesByUserHash:
-SELECT count(*) FROM ThreadReply WHERE userHash = :userHash;
+SELECT count(*) FROM ThreadReply WHERE userHash = :userHash  AND page >= 0;
