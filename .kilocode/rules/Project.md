@@ -91,8 +91,10 @@
 ## 4. 常用资源指引 (Resource Shortcuts)
 
 **设计系统 (Design System)**:
-- **尺寸定义**: `ai.saniou.coreui.theme.Dimens` (在 `core-ui`)
-- **颜色/主题**: `ai.saniou.coreui.theme.Theme`
+- **尺寸定义**: `ai.saniou.coreui.theme.Dimens` (在 `core-ui`)。使用语义化常量（如 `padding_medium`）而非硬编码。
+- **颜色/主题**: `ai.saniou.coreui.theme.Theme`。使用 `MaterialTheme.colorScheme`。
+- **排版**: `ai.saniou.coreui.theme.Type`。使用 `MaterialTheme.typography`。
+- **形状**: `ai.saniou.coreui.theme.Shape`。使用 `MaterialTheme.shapes`。
 
 **关键文件**:
 - **字符串资源**: `feature-*/src/commonMain/composeResources/values/strings.xml`
@@ -108,6 +110,7 @@
 
 ## 5. 最佳实践检查清单
 - [ ] **KISS**: 即使是复杂功能，API 设计也应保持简单。
+- [ ] **Theme**: 禁止在 UI 中硬编码颜色、字号和圆角。必须引用 `MaterialTheme` 和 `Dimens`。
 - [ ] **Compose**: 优先使用 Material 3 组件。
 - [ ] **Error Handling**: ViewModel 使用 `UiStateWrapper` 和 `StateLayout` 处理加载和错误。
 - [ ] **Caching**: 所有 `Source` 实现必须具备缓存能力，特别是对于配置类数据（如板块列表），应实现"网络优先，缓存兜底"或"缓存优先，过期更新"策略。

@@ -2,6 +2,7 @@ package ai.saniou.thread
 
 import ai.saniou.coreui.composition.LocalAppDrawer
 import ai.saniou.coreui.composition.LocalSourceId
+import ai.saniou.coreui.theme.CupcakeTheme
 import ai.saniou.coreui.widgets.DrawerMenuItem
 import ai.saniou.coreui.widgets.DrawerMenuRow
 import ai.saniou.forum.di.coreCommon
@@ -48,7 +49,7 @@ fun App() {
         val currentSource by settingsRepository.observeValue<String>("current_source_id")
             .collectAsState(initial = "nmb")
 
-        MaterialTheme {
+        CupcakeTheme {
             Navigator(
                 screen = ForumRoute,
                 disposeBehavior = NavigatorDisposeBehavior(disposeSteps = false),

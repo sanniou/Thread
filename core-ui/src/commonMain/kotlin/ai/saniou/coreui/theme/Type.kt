@@ -9,176 +9,202 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.sp
 
-// Set of Material typography styles to start with
+// Material 3 Typography
 val Typography = Typography(
+    displayLarge = TextStyle(
+        fontFamily = appFontFamily,
+        fontWeight = FontWeight.Normal,
+        fontSize = 57.sp,
+        lineHeight = 64.sp,
+        letterSpacing = (-0.25).sp
+    ),
+    displayMedium = TextStyle(
+        fontFamily = appFontFamily,
+        fontWeight = FontWeight.Normal,
+        fontSize = 45.sp,
+        lineHeight = 52.sp,
+        letterSpacing = 0.sp
+    ),
+    displaySmall = TextStyle(
+        fontFamily = appFontFamily,
+        fontWeight = FontWeight.Normal,
+        fontSize = 36.sp,
+        lineHeight = 44.sp,
+        letterSpacing = 0.sp
+    ),
+    headlineLarge = TextStyle(
+        fontFamily = appFontFamily,
+        fontWeight = FontWeight.Normal,
+        fontSize = 32.sp,
+        lineHeight = 40.sp,
+        letterSpacing = 0.sp
+    ),
+    headlineMedium = TextStyle(
+        fontFamily = appFontFamily,
+        fontWeight = FontWeight.Normal,
+        fontSize = 28.sp,
+        lineHeight = 36.sp,
+        letterSpacing = 0.sp
+    ),
+    headlineSmall = TextStyle(
+        fontFamily = appFontFamily,
+        fontWeight = FontWeight.Normal,
+        fontSize = 24.sp,
+        lineHeight = 32.sp,
+        letterSpacing = 0.sp
+    ),
+    titleLarge = TextStyle(
+        fontFamily = appFontFamily,
+        fontWeight = FontWeight.Bold,
+        fontSize = 22.sp,
+        lineHeight = 28.sp,
+        letterSpacing = 0.sp
+    ),
+    titleMedium = TextStyle(
+        fontFamily = appFontFamily,
+        fontWeight = FontWeight.Bold,
+        fontSize = 16.sp,
+        lineHeight = 24.sp,
+        letterSpacing = 0.15.sp
+    ),
+    titleSmall = TextStyle(
+        fontFamily = appFontFamily,
+        fontWeight = FontWeight.Bold,
+        fontSize = 14.sp,
+        lineHeight = 20.sp,
+        letterSpacing = 0.1.sp
+    ),
     bodyLarge = TextStyle(
-        fontFamily = FontFamily.Default,
+        fontFamily = appFontFamily,
         fontWeight = FontWeight.Normal,
         fontSize = 16.sp,
         lineHeight = 24.sp,
         letterSpacing = 0.5.sp
+    ),
+    bodyMedium = TextStyle(
+        fontFamily = appFontFamily,
+        fontWeight = FontWeight.Normal,
+        fontSize = 14.sp,
+        lineHeight = 20.sp,
+        letterSpacing = 0.25.sp
+    ),
+    bodySmall = TextStyle(
+        fontFamily = appFontFamily,
+        fontWeight = FontWeight.Normal,
+        fontSize = 12.sp,
+        lineHeight = 16.sp,
+        letterSpacing = 0.4.sp
+    ),
+    labelLarge = TextStyle(
+        fontFamily = appFontFamily,
+        fontWeight = FontWeight.Medium,
+        fontSize = 14.sp,
+        lineHeight = 20.sp,
+        letterSpacing = 0.1.sp
+    ),
+    labelMedium = TextStyle(
+        fontFamily = appFontFamily,
+        fontWeight = FontWeight.Medium,
+        fontSize = 12.sp,
+        lineHeight = 16.sp,
+        letterSpacing = 0.5.sp
+    ),
+    labelSmall = TextStyle(
+        fontFamily = appFontFamily,
+        fontWeight = FontWeight.Medium,
+        fontSize = 11.sp,
+        lineHeight = 16.sp,
+        letterSpacing = 0.5.sp
     )
 )
 
+// Legacy Compatibility Aliases (Deprecated)
+@Deprecated("Use Typography.displaySmall or custom style")
+val headline3 = Typography.displaySmall.copy(fontSize = 40.sp, fontStyle = FontStyle.Italic)
 
-val headline3 = TextStyle(
-    fontFamily = appFontFamily,
-    fontWeight = FontWeight.Normal,
-    fontStyle = FontStyle.Italic,
-    fontSize = 40.sp
-)
-val headline3Sans = TextStyle(
-    fontFamily = appFontFamily,
-    fontWeight = FontWeight.Normal,
-    fontSize = 40.sp
-)
-val headline4 = TextStyle(
-    fontFamily = appFontFamily,
-    fontWeight = FontWeight.Normal,
-    fontStyle = FontStyle.Italic,
-    fontSize = 30.sp
-)
-val headline4Sans = TextStyle(
-    fontFamily = appFontFamily,
-    fontWeight = FontWeight.Normal,
-    fontSize = 30.sp
-)
-val headline5 = TextStyle(
-    fontFamily = appFontFamily,
-    fontWeight = FontWeight.Normal,
-    fontStyle = FontStyle.Italic,
-    fontSize = 26.sp
-)
-val headline5Sans = TextStyle(
-    fontFamily = appFontFamily,
-    fontWeight = FontWeight.Normal,
-    fontSize = 26.sp
-)
-val headline6Sans = TextStyle(
-    fontFamily = appFontFamily,
-    fontWeight = FontWeight.Normal,
-    fontSize = 22.sp
-)
-val subtitle1 = TextStyle(
-    fontFamily = appFontFamily,
-    fontWeight = FontWeight.Normal,
-    fontSize = 18.sp
-)
-val subtitle1Bold = TextStyle(
-    fontFamily = appFontFamily,
-    fontWeight = FontWeight.Bold,
-    fontSize = 18.sp
-)
-val subtitle2 = TextStyle(
-    fontFamily = appFontFamily,
-    fontWeight = FontWeight.Normal,
-    fontSize = 16.sp
-)
-val subtitle2Bold = TextStyle(
-    fontFamily = appFontFamily,
-    fontWeight = FontWeight.Bold,
-    fontSize = 16.sp
-)
-val subtitle2BoldUnderline = TextStyle(
-    fontFamily = appFontFamily,
-    fontWeight = FontWeight.Bold,
-    fontSize = 16.sp,
-    textDecoration = TextDecoration.Underline
-)
-val body1 = TextStyle(
-    fontFamily = appFontFamily,
-    fontWeight = FontWeight.Normal,
-    fontSize = 16.sp
-)
-val body1UnderLine = TextStyle(
-    fontFamily = appFontFamily,
-    fontWeight = FontWeight.Normal,
-    fontSize = 16.sp,
-    textDecoration = TextDecoration.Underline
-)
-val body1Bold = TextStyle(
-    fontFamily = appFontFamily,
-    fontWeight = FontWeight.Bold,
-    fontSize = 16.sp
-)
-val body2 = TextStyle(
-    fontFamily = appFontFamily,
-    fontWeight = FontWeight.Normal,
-    fontSize = 14.sp
-)
-val body2SemiBold = TextStyle(
-    fontFamily = appFontFamily,
-    fontWeight = FontWeight.SemiBold,
-    fontSize = 14.sp
-)
-val body2Underline = TextStyle(
-    fontFamily = appFontFamily,
-    fontWeight = FontWeight.Normal,
-    fontSize = 14.sp,
-    textDecoration = TextDecoration.Underline
-)
-val body2Bold = TextStyle(
-    fontFamily = appFontFamily,
-    fontWeight = FontWeight.Bold,
-    fontSize = 14.sp
-)
-val body2BoldUnderline = TextStyle(
-    fontFamily = appFontFamily,
-    fontWeight = FontWeight.Bold,
-    fontSize = 14.sp,
-    textDecoration = TextDecoration.Underline
-)
-val body3 = TextStyle(
-    fontFamily = appFontFamily,
-    fontWeight = FontWeight.Normal,
-    fontSize = 13.sp
-)
-val caption = TextStyle(
-    fontFamily = appFontFamily,
-    fontWeight = FontWeight.Normal,
-    fontSize = 12.sp
-)
-val captionBold = TextStyle(
-    fontFamily = appFontFamily,
-    fontWeight = FontWeight.Bold,
-    fontSize = 12.sp
-)
-val captionUnderline = TextStyle(
-    fontFamily = appFontFamily,
-    fontWeight = FontWeight.Normal,
-    fontSize = 12.sp,
-    textDecoration = TextDecoration.Underline
-)
-val overLine = TextStyle(
-    fontFamily = appFontFamily,
-    fontWeight = FontWeight.Normal,
-    fontSize = 13.sp,
-    letterSpacing = 1.sp
-)
-val button1 = TextStyle(
-    fontFamily = appFontFamily,
-    fontWeight = FontWeight.Normal,
-    fontSize = 18.sp,
-    letterSpacing = 0.5.sp
-)
+@Deprecated("Use Typography.displaySmall")
+val headline3Sans = Typography.displaySmall.copy(fontSize = 40.sp)
 
-val button1Bold = TextStyle(
-    fontFamily = appFontFamily,
-    fontWeight = FontWeight.Bold,
-    fontSize = 18.sp
-)
-val button2 = TextStyle(
-    fontFamily = appFontFamily,
-    fontWeight = FontWeight.Normal,
-    fontSize = 14.sp
-)
-val button2Bold = TextStyle(
-    fontFamily = appFontFamily,
-    fontWeight = FontWeight.Bold,
-    fontSize = 14.sp
-)
-val footer = TextStyle(
-    fontFamily = appFontFamily,
-    fontWeight = FontWeight.Normal,
-    fontSize = 10.sp
-)
+@Deprecated("Use Typography.headlineLarge")
+val headline4 = Typography.headlineLarge.copy(fontSize = 30.sp, fontStyle = FontStyle.Italic)
+
+@Deprecated("Use Typography.headlineLarge")
+val headline4Sans = Typography.headlineLarge.copy(fontSize = 30.sp)
+
+@Deprecated("Use Typography.headlineMedium")
+val headline5 = Typography.headlineMedium.copy(fontSize = 26.sp, fontStyle = FontStyle.Italic)
+
+@Deprecated("Use Typography.headlineMedium")
+val headline5Sans = Typography.headlineMedium.copy(fontSize = 26.sp)
+
+@Deprecated("Use Typography.titleLarge")
+val headline6Sans = Typography.titleLarge
+
+@Deprecated("Use Typography.titleMedium")
+val subtitle1 = Typography.titleMedium.copy(fontSize = 18.sp, fontWeight = FontWeight.Normal)
+
+@Deprecated("Use Typography.titleMedium")
+val subtitle1Bold = Typography.titleMedium.copy(fontSize = 18.sp, fontWeight = FontWeight.Bold)
+
+@Deprecated("Use Typography.titleMedium")
+val subtitle2 = Typography.titleMedium.copy(fontWeight = FontWeight.Normal)
+
+@Deprecated("Use Typography.titleMedium")
+val subtitle2Bold = Typography.titleMedium
+
+@Deprecated("Use Typography.titleMedium with underline")
+val subtitle2BoldUnderline = Typography.titleMedium.copy(textDecoration = TextDecoration.Underline)
+
+@Deprecated("Use Typography.bodyLarge")
+val body1 = Typography.bodyLarge
+
+@Deprecated("Use Typography.bodyLarge with underline")
+val body1UnderLine = Typography.bodyLarge.copy(textDecoration = TextDecoration.Underline)
+
+@Deprecated("Use Typography.bodyLarge with bold")
+val body1Bold = Typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
+
+@Deprecated("Use Typography.bodyMedium")
+val body2 = Typography.bodyMedium
+
+@Deprecated("Use Typography.bodyMedium with semi-bold")
+val body2SemiBold = Typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
+
+@Deprecated("Use Typography.bodyMedium with underline")
+val body2Underline = Typography.bodyMedium.copy(textDecoration = TextDecoration.Underline)
+
+@Deprecated("Use Typography.bodyMedium with bold")
+val body2Bold = Typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
+
+@Deprecated("Use Typography.bodyMedium with bold and underline")
+val body2BoldUnderline = Typography.bodyMedium.copy(fontWeight = FontWeight.Bold, textDecoration = TextDecoration.Underline)
+
+@Deprecated("Use Typography.bodySmall")
+val body3 = Typography.bodySmall.copy(fontSize = 13.sp)
+
+@Deprecated("Use Typography.bodySmall")
+val caption = Typography.bodySmall
+
+@Deprecated("Use Typography.bodySmall with bold")
+val captionBold = Typography.bodySmall.copy(fontWeight = FontWeight.Bold)
+
+@Deprecated("Use Typography.bodySmall with underline")
+val captionUnderline = Typography.bodySmall.copy(textDecoration = TextDecoration.Underline)
+
+@Deprecated("Use Typography.labelLarge")
+val overLine = Typography.labelLarge.copy(fontSize = 13.sp, letterSpacing = 1.sp)
+
+@Deprecated("Use Typography.labelLarge")
+val button1 = Typography.labelLarge.copy(fontSize = 18.sp, letterSpacing = 0.5.sp)
+
+@Deprecated("Use Typography.labelLarge with bold")
+val button1Bold = Typography.labelLarge.copy(fontSize = 18.sp, fontWeight = FontWeight.Bold)
+
+@Deprecated("Use Typography.labelLarge")
+val button2 = Typography.labelLarge
+
+@Deprecated("Use Typography.labelLarge with bold")
+val button2Bold = Typography.labelLarge.copy(fontWeight = FontWeight.Bold)
+
+@Deprecated("Use Typography.labelSmall")
+val footer = Typography.labelSmall.copy(fontSize = 10.sp)

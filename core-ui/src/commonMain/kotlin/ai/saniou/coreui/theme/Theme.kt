@@ -92,10 +92,15 @@ fun CupcakeTheme(
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = LightColors
+    val colorScheme = if (darkTheme) {
+        DarkColors
+    } else {
+        LightColors
+    }
 
     MaterialTheme(
         colorScheme = colorScheme,
+        shapes = Shapes,
         typography = Typography,
         content = content
     )
