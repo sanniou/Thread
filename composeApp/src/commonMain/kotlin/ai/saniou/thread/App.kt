@@ -27,6 +27,7 @@ import androidx.compose.runtime.getValue
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
+import cafe.adriel.voyager.navigator.NavigatorDisposeBehavior
 import cafe.adriel.voyager.navigator.currentOrThrow
 import org.kodein.di.DI
 import org.kodein.di.compose.withDI
@@ -42,14 +43,16 @@ fun App() {
         import(nmbImagePreviewModule)
         import(nmbFeatureModule)
     }
-
     withDI(di) {
         val settingsRepository: SettingsRepository by di.instance()
         val currentSource by settingsRepository.observeValue<String>("current_source_id")
             .collectAsState(initial = "nmb")
 
         MaterialTheme {
-            Navigator(ForumRoute) { navigator ->
+            Navigator(
+                screen = ForumRoute,
+                disposeBehavior = NavigatorDisposeBehavior(disposeSteps = false),
+            ) { navigator ->
                 val appDrawer = @Composable {
                     DrawerMenuRow(
                         menuItems = listOf(
@@ -68,12 +71,16 @@ fun App() {
                         )
                     )
                 }
+                val navigator = LocalNavigator.currentOrThrow
+                val currentScreen = navigator.lastItem
 
                 CompositionLocalProvider(
                     LocalAppDrawer provides appDrawer,
                     LocalSourceId provides (currentSource ?: "nmb")
                 ) {
-                    navigator.lastItem.Content()
+                    navigator.saveableState("currentScreen") {
+                        currentScreen.Content()
+                    }
                 }
             }
         }
