@@ -352,14 +352,13 @@ private fun ThreadContentRouter(
     onUserClick: (String) -> Unit,
 ) {
     Box(modifier = modifier) {
-        when {
-            state.isLoading && state.thread == null -> ThreadShimmer()
-            state.error != null -> ThreadErrorContent(
+        if (state.error != null) {
+            ThreadErrorContent(
                 error = state.error,
                 onRetry = onRefresh
             )
-
-            state.thread != null -> ThreadSuccessContent(
+        } else {
+            ThreadSuccessContent(
                 state = state,
                 lazyListState = lazyListState,
                 onRefresh = { /* Handled by PullToRefresh */ },
@@ -476,6 +475,20 @@ private fun ThreadShimmer() {
 
             // 回复骨架屏
             repeat(3) {
+                SkeletonReplyItem(brush)
+            }
+        }
+    }
+}
+
+@Composable
+private fun ThreadReplyShimmer() {
+    ShimmerContainer { brush ->
+        Column(
+            modifier = Modifier.padding(Dimens.padding_standard),
+            verticalArrangement = Arrangement.spacedBy(Dimens.padding_small)
+        ) {
+            repeat(5) {
                 SkeletonReplyItem(brush)
             }
         }
@@ -668,7 +681,14 @@ private fun ThreadList(
         // Paging 加载状态
         item {
             when {
-                replies.loadState.refresh is LoadStateLoading && replies.itemCount == 0 -> ThreadShimmer()
+                replies.loadState.refresh is LoadStateLoading && replies.itemCount == 0 -> {
+                    if (state.thread == null) {
+                        ThreadShimmer()
+                    } else {
+                        ThreadReplyShimmer()
+                    }
+                }
+
                 replies.loadState.refresh is LoadStateError -> {
                     // 错误状态已在顶层处理
                 }

@@ -27,17 +27,21 @@ class ReferenceRepositoryImpl(
             .mapToOneOrNull(Dispatchers.IO)
             .mapNotNull { it?.toDomain() }
             .onStart {
-                if (db.threadReplyQueries.getThreadReplyById("nmb", id.toString()).executeAsOneOrNull() == null) {
+                if (db.threadReplyQueries.getThreadReplyById("nmb", id.toString())
+                        .executeAsOneOrNull() == null
+                ) {
                     val html = api.refHtml(id)
                     val reply = parseRefHtml(html, id)
-//                    val threadIdForDb = if (reply.threadId > 0) reply.threadId else Long.MIN_VALUE
-//                    db.threadReplyQueries.upsertThreadReply(reply.toTable("nmb", threadIdForDb))
+                    db.threadReplyQueries.upsertThreadReply(reply)
                 }
             }
             .flowOn(Dispatchers.IO)
 
     @OptIn(ExperimentalTime::class)
-    private fun parseRefHtml(html: String, refId: Long): ThreadReply {
+    private fun parseRefHtml(
+        html: String,
+        refId: Long,
+    ): ai.saniou.thread.db.table.forum.ThreadReply {
         val idRegex = """href="([^"]*)"[^>]*class="h-threads-info-id">No\.(\d+)""".toRegex()
         val titleRegex = """<span class="h-threads-info-title">(.*?)</span>""".toRegex()
         val nameRegex = """<span class="h-threads-info-email"[^>]*>(.*?)</span>""".toRegex()
@@ -84,18 +88,19 @@ class ReferenceRepositoryImpl(
             }
         }
 
-        return ThreadReply(
+        return ai.saniou.thread.db.table.forum.ThreadReply(
             id = parsedId.toString(),
             userHash = userHash,
             admin = if (isAdmin) 1L else 0L,
             title = title,
             now = now,
-            createdAt = now.toTime(),
             content = content,
             img = img,
             ext = ext,
             name = name,
-            threadId = threadId.toString()
+            threadId = threadId.toString(),
+            sourceId = "nmb",
+            page = Long.MIN_VALUE
         )
     }
 }
