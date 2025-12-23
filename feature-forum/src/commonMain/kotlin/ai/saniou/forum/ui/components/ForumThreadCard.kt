@@ -184,23 +184,4 @@ fun ForumThreadCard(
     }
 }
 
-@Composable
-private fun Badge(
-    text: String,
-    containerColor: Color,
-    contentColor: Color
-) {
-    Surface(
-        color = containerColor,
-        shape = MaterialTheme.shapes.extraSmall,
-    ) {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.Bold,
-            color = contentColor,
-            modifier = Modifier.padding(horizontal = Dimens.padding_small, vertical = Dimens.padding_tiny)
-        )
-    }
-}
 

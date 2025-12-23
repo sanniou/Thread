@@ -27,28 +27,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun Badge(
-    text: String,
-    containerColor: Color,
-    contentColor: Color,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        color = containerColor,
-        shape = RoundedCornerShape(4.dp),
-        modifier = modifier
-    ) {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.Bold,
-            color = contentColor,
-            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
-        )
-    }
-}
-
-@Composable
 fun ThreadAuthor(
     userName: String,
     showName: String,
