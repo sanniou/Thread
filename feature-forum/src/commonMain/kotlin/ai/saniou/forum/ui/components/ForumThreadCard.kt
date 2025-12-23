@@ -59,13 +59,14 @@ fun ForumThreadCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
+        shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.elevatedCardColors(
             containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
         Column(
-            modifier = Modifier.padding(Dimens.padding_medium),
-            verticalArrangement = Arrangement.spacedBy(Dimens.padding_small)
+            modifier = Modifier.padding(Dimens.padding_standard),
+            verticalArrangement = Arrangement.spacedBy(Dimens.padding_medium)
         ) {
             // Header: Author & Badges
             Row(
@@ -84,7 +85,7 @@ fun ForumThreadCard(
 
                 // Badges (Admin, Sage)
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(Dimens.padding_extra_small),
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.padding_tiny),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     if (thread.isAdmin) {
@@ -135,13 +136,13 @@ fun ForumThreadCard(
                 if (footerText.isNotBlank()) {
                     Surface(
                         color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                        shape = RoundedCornerShape(Dimens.padding_extra_small),
+                        shape = MaterialTheme.shapes.extraSmall,
                     ) {
                         Text(
                             text = footerText,
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            modifier = Modifier.padding(horizontal = Dimens.padding_small, vertical = Dimens.padding_tiny)
                         )
                     }
                 }
@@ -151,13 +152,13 @@ fun ForumThreadCard(
                 // Reply Count
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.padding_tiny)
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.ChatBubbleOutline,
                         contentDescription = "Replies",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(Dimens.icon_size_small)
                     )
                     Text(
                         text = thread.replyCount.toString(),
@@ -175,7 +176,7 @@ fun ForumThreadCard(
                         text = "还有 ${thread.remainReplies} 条回复...",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(start = Dimens.padding_small, top = 4.dp)
+                        modifier = Modifier.padding(start = Dimens.padding_small, top = Dimens.padding_tiny)
                     )
                 }
             }
@@ -191,14 +192,14 @@ private fun Badge(
 ) {
     Surface(
         color = containerColor,
-        shape = RoundedCornerShape(4.dp),
+        shape = MaterialTheme.shapes.extraSmall,
     ) {
         Text(
             text = text,
             style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.Bold,
             color = contentColor,
-            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+            modifier = Modifier.padding(horizontal = Dimens.padding_small, vertical = Dimens.padding_tiny)
         )
     }
 }

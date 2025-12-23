@@ -99,7 +99,7 @@ fun ThreadBody(
                     modifier = Modifier
                         .height(Dimens.image_height_medium)
                         .wrapContentWidth(Alignment.Start)
-                        .clip(RoundedCornerShape(Dimens.padding_small))
+                        .clip(MaterialTheme.shapes.small)
                         .combinedClickable(
                             onClick = { onImageClick(img, ext) },
                             onLongClick = {

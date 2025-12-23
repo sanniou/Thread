@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,10 +33,11 @@ fun ThreadListSkeleton(
     itemCount: Int = 5
 ) {
     ShimmerContainer(modifier = modifier.padding(Dimens.padding_small)) { brush ->
-        Column {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(Dimens.padding_medium)
+        ) {
             repeat(itemCount) {
                 SkeletonThreadItem(brush)
-                Spacer(modifier = Modifier.height(Dimens.padding_small))
             }
         }
     }
@@ -49,35 +51,37 @@ private fun SkeletonThreadItem(brush: Brush) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp, 16.dp, 16.dp, 24.dp)
+            .padding(Dimens.padding_standard)
     ) {
         // 作者信息 (Header)
         SkeletonAuthor(brush)
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(Dimens.padding_medium))
 
         // 标题 (Optional)
         SkeletonLine(
             modifier = Modifier.fillMaxWidth(0.4f),
-            height = 20.dp,
+            height = 24.dp, // titleMedium line height
             brush = brush
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(Dimens.padding_small))
 
         // 内容
         SkeletonLine(modifier = Modifier.fillMaxWidth(), brush = brush)
-        Spacer(modifier = Modifier.height(Dimens.padding_extra_small))
+        Spacer(modifier = Modifier.height(Dimens.padding_tiny))
         SkeletonLine(modifier = Modifier.fillMaxWidth(0.9f), brush = brush)
-        Spacer(modifier = Modifier.height(Dimens.padding_extra_small))
+        Spacer(modifier = Modifier.height(Dimens.padding_tiny))
         SkeletonLine(modifier = Modifier.fillMaxWidth(0.7f), brush = brush)
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(Dimens.padding_standard))
 
         // 图片占位
         SkeletonLine(
-            modifier = Modifier.fillMaxWidth(),
-            height = 200.dp,
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(MaterialTheme.shapes.small),
+            height = Dimens.image_height_medium,
             brush = brush
         )
     }
@@ -88,17 +92,17 @@ private fun SkeletonThreadItem(brush: Brush) {
  */
 @Composable
 fun SkeletonReplyItem(brush: Brush) {
-    Column(modifier = Modifier.padding(16.dp, 12.dp)) {
+    Column(modifier = Modifier.padding(Dimens.padding_standard, Dimens.padding_medium)) {
         // 回复者信息
         SkeletonAuthor(brush)
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(Dimens.padding_medium))
 
         // 回复内容
         SkeletonLine(modifier = Modifier.fillMaxWidth(), brush = brush)
-        Spacer(modifier = Modifier.height(Dimens.padding_extra_small))
+        Spacer(modifier = Modifier.height(Dimens.padding_tiny))
         SkeletonLine(modifier = Modifier.fillMaxWidth(0.8f), brush = brush)
-        Spacer(modifier = Modifier.height(Dimens.padding_extra_small))
+        Spacer(modifier = Modifier.height(Dimens.padding_tiny))
         SkeletonLine(modifier = Modifier.fillMaxWidth(0.6f), brush = brush)
     }
 }
@@ -107,27 +111,27 @@ fun SkeletonReplyItem(brush: Brush) {
 internal fun SkeletonAuthor(brush: Brush) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp)
+        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(Dimens.padding_medium)
     ) {
         // 头像占位
         Box(
             modifier = Modifier
-                .size(36.dp)
+                .size(Dimens.avatar_size_medium)
                 .clip(CircleShape)
                 .background(brush)
         )
 
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(Dimens.padding_tiny)) {
             // 用户ID
             SkeletonLine(
                 modifier = Modifier.width(80.dp),
-                height = 14.dp,
+                height = 16.dp, // labelMedium
                 brush = brush
             )
             // 时间
             SkeletonLine(
                 modifier = Modifier.width(100.dp),
-                height = 12.dp,
+                height = 14.dp, // labelSmall
                 brush = brush
             )
         }

@@ -26,8 +26,8 @@ fun RecentReplies(replies: List<ThreadReply>) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(Dimens.padding_small))
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+            .clip(MaterialTheme.shapes.small)
+            .background(MaterialTheme.colorScheme.surfaceContainer)
             .padding(Dimens.padding_medium),
         verticalArrangement = Arrangement.spacedBy(Dimens.padding_medium)
     ) {
@@ -41,11 +41,11 @@ fun RecentReplies(replies: List<ThreadReply>) {
 @Composable
 private fun ReplyItem(reply: ThreadReply) {
     Column(
-        verticalArrangement = Arrangement.spacedBy(Dimens.padding_extra_small)
+        verticalArrangement = Arrangement.spacedBy(Dimens.padding_tiny)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(Dimens.padding_extra_small)
+            horizontalArrangement = Arrangement.spacedBy(Dimens.padding_tiny)
         ) {
             Text(
                 text = reply.userHash,
