@@ -158,6 +158,7 @@ class DiscourseSource(
     override fun getThreadRepliesPager(
         threadId: String,
         initialPage: Int,
+        isPoOnly: Boolean,
     ): Flow<PagingData<ThreadReply>> {
         return Pager(
             config = PagingConfig(pageSize = 20),

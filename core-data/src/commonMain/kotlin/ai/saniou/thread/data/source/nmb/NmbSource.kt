@@ -186,11 +186,12 @@ class NmbSource(
 
     override fun getThreadRepliesPager(
         threadId: String,
-        initialPage: Int
-    ): Flow<PagingData<ai.saniou.thread.domain.model.forum.ThreadReply>>{
+        initialPage: Int,
+        isPoOnly: Boolean,
+    ): Flow<PagingData<ai.saniou.thread.domain.model.forum.ThreadReply>> {
         val tid =
             threadId.toLongOrNull() ?: return kotlinx.coroutines.flow.flowOf(PagingData.empty())
-        return getThreadRepliesPager(tid, null, DataPolicy.NETWORK_ELSE_CACHE, initialPage)
+        return getThreadRepliesPager(tid, null, DataPolicy.NETWORK_ELSE_CACHE, initialPage, isPoOnly)
     }
 
     override fun getForum(forumId: String): Flow<DomainForum?> {
@@ -232,6 +233,7 @@ class NmbSource(
         poUserHash: String?,
         policy: DataPolicy,
         initialPage: Int = 1,
+        isPoOnly: Boolean = false,
     ): Flow<PagingData<ai.saniou.thread.domain.model.forum.ThreadReply>> {
         val pageSize = 19
         return Pager(
@@ -243,20 +245,44 @@ class NmbSource(
                 db = db,
                 dataPolicy = policy,
                 initialPage = initialPage,
-                fetcher = { page -> nmbXdApi.thread(threadId, page.toLong()) }
+                isPoOnly = isPoOnly,
+                fetcher = { page ->
+                    if (isPoOnly) {
+                        nmbXdApi.po(threadId, page.toLong())
+                    } else {
+                        nmbXdApi.thread(threadId, page.toLong())
+                    }
+                }
             ),
             pagingSourceFactory = {
-                if (poUserHash != null) {
-                    // 只看PO
+                if (isPoOnly) {
+                    QueryPagingSource(
+                        transacter = db.threadReplyQueries,
+                        context = Dispatchers.Default,
+                        countQuery = db.threadReplyQueries.countRepliesByThreadIdPoMode(
+                            sourceId = id,
+                            threadId = threadId.toString()
+                        ),
+                        queryProvider = { limit, offset ->
+                            db.threadReplyQueries.getRepliesByThreadIdPoModeOffset(
+                                sourceId = id,
+                                threadId = threadId.toString(),
+                                limit = limit,
+                                offset = offset,
+                            )
+                        }
+                    )
+                } else if (poUserHash != null) {
+                    // 只看指定PO (Old logic, maybe deprecated or specific use case)
                     QueryPagingSource(
                         transacter = db.threadReplyQueries,
                         context = Dispatchers.Default,
                         countQuery =
-                            db.threadReplyQueries.countRepliesByThreadIdAndUserHash(
-                                id,
-                                threadId.toString(),
-                                poUserHash
-                            ),
+                        db.threadReplyQueries.countRepliesByThreadIdAndUserHash(
+                            id,
+                            threadId.toString(),
+                            poUserHash
+                        ),
                         queryProvider = { limit, offset ->
                             db.threadReplyQueries.getRepliesByThreadIdAndUserHashOffset(
                                 sourceId = id,
@@ -272,7 +298,10 @@ class NmbSource(
                     QueryPagingSource(
                         transacter = db.threadReplyQueries,
                         context = Dispatchers.Default,
-                        countQuery = db.threadReplyQueries.countRepliesByThreadId(id, threadId.toString()),
+                        countQuery = db.threadReplyQueries.countRepliesByThreadId(
+                            id,
+                            threadId.toString()
+                        ),
                         queryProvider = { limit, offset ->
                             db.threadReplyQueries.getRepliesByThreadIdOffset(
                                 sourceId = id,

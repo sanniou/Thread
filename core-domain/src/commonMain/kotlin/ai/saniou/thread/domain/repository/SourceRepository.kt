@@ -51,6 +51,7 @@ interface Source {
     fun getThreadRepliesPager(
         threadId: String,
         initialPage: Int,
+        isPoOnly: Boolean = false,
     ): Flow<PagingData<ThreadReply>>
 
     /**

@@ -5,6 +5,7 @@ enum class RemoteKeyType {
     FORUM,
     REPLY,
     THREAD,
+    THREAD_PO,
     SUBSCRIBE,
     HISTORY,
 }

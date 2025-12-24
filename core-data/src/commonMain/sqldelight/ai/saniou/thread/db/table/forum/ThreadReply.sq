@@ -20,11 +20,22 @@ CREATE TABLE IF NOT EXISTS ThreadReply (
 -- 为 ThreadReply 表的 thread_id 字段创建索引
 CREATE INDEX IF NOT EXISTS idx_thread_reply_thread_id ON ThreadReply(sourceId, threadId);
 
--- 插入 ThreadReply 数据
+-- 插入 ThreadReply 数据 (智能更新 Page：如果新数据的 Page < 0 (来自 PO API)，且旧数据 Page >= 0，则保留旧 Page)
 upsertThreadReply:
-INSERT OR REPLACE INTO ThreadReply (
+INSERT INTO ThreadReply (
     id, sourceId, threadId, page, userHash, admin, title, now, content, img, ext, name
-) VALUES ?;
+) VALUES ?
+ON CONFLICT(sourceId, id) DO UPDATE SET
+    threadId = excluded.threadId,
+    page = CASE WHEN excluded.page >= 0 THEN excluded.page ELSE ThreadReply.page END,
+    userHash = excluded.userHash,
+    admin = excluded.admin,
+    title = excluded.title,
+    now = excluded.now,
+    content = excluded.content,
+    img = excluded.img,
+    ext = excluded.ext,
+    name = excluded.name;
 
 -- 更新 ThreadReply 数据
 updateThreadReply:
@@ -105,17 +116,36 @@ getRepliesByThreadId:
 SELECT * FROM ThreadReply WHERE sourceId = :sourceId AND threadId = :threadId AND page = :page ORDER BY id ASC;
 
 getRepliesByThreadIdOffset:
-SELECT * FROM ThreadReply WHERE sourceId = :sourceId AND threadId = :threadId  AND page >= 0 ORDER BY id ASC LIMIT :limit OFFSET :offset;
+SELECT * FROM ThreadReply WHERE sourceId = :sourceId AND threadId = :threadId AND page >= 0 ORDER BY id ASC LIMIT :limit OFFSET :offset;
 
 -- PagingSource (只看PO)
 countRepliesByThreadIdAndUserHash:
-SELECT count(1) FROM ThreadReply WHERE sourceId = :sourceId AND threadId = :threadId AND userHash = :userHash AND page >= 0;
+SELECT count(1) FROM ThreadReply WHERE sourceId = :sourceId AND threadId = :threadId AND userHash = :userHash;
 
 getRepliesByThreadIdAndUserHash:
 SELECT * FROM ThreadReply WHERE sourceId = :sourceId AND threadId = :threadId AND userHash = :userHash AND page = :page ORDER BY id ASC;
 
 getRepliesByThreadIdAndUserHashOffset:
-SELECT * FROM ThreadReply WHERE sourceId = :sourceId AND threadId = :threadId AND userHash = :userHash AND page >= 0 ORDER BY id ASC LIMIT :limit OFFSET :offset;
+SELECT * FROM ThreadReply WHERE sourceId = :sourceId AND threadId = :threadId AND userHash = :userHash ORDER BY id ASC LIMIT :limit OFFSET :offset;
+
+-- PagingSource (PO Mode using JOIN)
+countRepliesByThreadIdPoMode:
+SELECT count(1)
+FROM ThreadReply
+JOIN Thread ON ThreadReply.sourceId = Thread.sourceId AND ThreadReply.threadId = Thread.id
+WHERE ThreadReply.sourceId = :sourceId
+  AND ThreadReply.threadId = :threadId
+  AND ThreadReply.userHash = Thread.userHash;
+
+getRepliesByThreadIdPoModeOffset:
+SELECT ThreadReply.*
+FROM ThreadReply
+JOIN Thread ON ThreadReply.sourceId = Thread.sourceId AND ThreadReply.threadId = Thread.id
+WHERE ThreadReply.sourceId = :sourceId
+  AND ThreadReply.threadId = :threadId
+  AND ThreadReply.userHash = Thread.userHash
+ORDER BY ThreadReply.id ASC
+LIMIT :limit OFFSET :offset;
 
 searchReplies:
 SELECT * FROM ThreadReply

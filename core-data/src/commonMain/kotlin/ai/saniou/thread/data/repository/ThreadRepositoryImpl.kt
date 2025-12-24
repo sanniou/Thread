@@ -71,7 +71,7 @@ class ThreadRepositoryImpl(
         initialPage: Int,
     ): Flow<PagingData<ThreadReply>> {
         val source = sourceMap[sourceId]
-        return source?.getThreadRepliesPager(threadId, initialPage)
+        return source?.getThreadRepliesPager(threadId, initialPage, isPoOnly)
             ?: kotlinx.coroutines.flow.flowOf(PagingData.empty())
     }
 

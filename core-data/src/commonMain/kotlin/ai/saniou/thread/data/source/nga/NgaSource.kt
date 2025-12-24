@@ -43,7 +43,8 @@ class NgaSource : Source {
 
     override fun getThreadRepliesPager(
         threadId: String,
-        initialPage: Int
+        initialPage: Int,
+        isPoOnly: Boolean,
     ): Flow<PagingData<ThreadReply>> {
         return flowOf(PagingData.empty())
     }
