@@ -3,6 +3,7 @@ package ai.saniou.thread.network
 import de.jensklingenberg.ktorfit.Ktorfit
 import de.jensklingenberg.ktorfit.ktorfit
 import io.ktor.client.HttpClient
+import io.ktor.client.HttpClientConfig
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.DefaultRequest
 import io.ktor.client.plugins.compression.ContentEncoding
@@ -18,7 +19,11 @@ import io.ktor.http.HttpHeaders
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
-fun SaniouKtorfit(baseUrl: String, cookieProvider: CookieProvider?): Ktorfit = ktorfit {
+fun SaniouKtorfit(
+    baseUrl: String,
+    cookieProvider: CookieProvider? = null,
+    clientConfig: HttpClientConfig<*>.() -> Unit = {}
+): Ktorfit = ktorfit {
     baseUrl(baseUrl)
     httpClient(
         HttpClient(CIO) {
@@ -50,6 +55,7 @@ fun SaniouKtorfit(baseUrl: String, cookieProvider: CookieProvider?): Ktorfit = k
                 level = LogLevel.ALL
                 sanitizeHeader { header -> header == HttpHeaders.Authorization }
             }
+            clientConfig()
         }
     )
     converterFactories(

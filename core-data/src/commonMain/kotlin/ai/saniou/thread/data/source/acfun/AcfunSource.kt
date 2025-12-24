@@ -9,9 +9,14 @@ import ai.saniou.thread.domain.model.forum.TrendResult
 import ai.saniou.thread.domain.repository.Source
 import ai.saniou.thread.domain.repository.SourceCapabilities
 import ai.saniou.thread.network.SaniouResponse
+import app.cash.paging.Pager
+import app.cash.paging.PagingConfig
 import app.cash.paging.PagingData
+import app.cash.paging.PagingSource
+import app.cash.paging.PagingState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.datetime.Instant
 
 class AcfunSource(
     private val acfunApi: AcfunApi
@@ -45,8 +50,46 @@ class AcfunSource(
     }
 
     override suspend fun getThreadDetail(threadId: String, page: Int): Result<Post> {
-        // TODO: Implement getThreadDetail
-        return Result.failure(NotImplementedError())
+        val articleId =
+            threadId.toLongOrNull() ?: return Result.failure(IllegalArgumentException("Invalid threadId"))
+
+        return when (val response = acfunApi.getArticleInfo(articleId)) {
+            is SaniouResponse.Success -> {
+                val data = response.data.data
+                if (data != null) {
+                    val post = Post(
+                        id = data.articleId.toString(),
+                        sourceName = "acfun",
+                        sourceUrl = "https://www.acfun.cn/a/ac${data.articleId}",
+                        title = data.contentTitle,
+                        content = data.parts?.joinToString("\n") { it.content } ?: data.description
+                        ?: "",
+                        author = data.user?.userName ?: "Unknown",
+                        userHash = data.user?.userId?.toString() ?: "",
+                        createdAt = Instant.fromEpochMilliseconds(data.createTimeMillis ?: 0),
+                        forumName = data.channel?.name ?: "文章",
+                        replyCount = data.commentCount ?: 0,
+                        img = data.coverUrl,
+                        ext = null,
+                        isSage = false,
+                        isAdmin = false,
+                        isHidden = false,
+                        now = "",
+                        name = data.user?.userName ?: "Unknown",
+                        sage = 0,
+                        fid = data.channel?.id?.toLong() ?: 0,
+                        admin = 0,
+                        hide = 0,
+                        lastReadReplyId = ""
+                    )
+                    Result.success(post)
+                } else {
+                    Result.failure(Exception(response.data.message ?: "Unknown error"))
+                }
+            }
+
+            is SaniouResponse.Error -> Result.failure(response.ex)
+        }
     }
 
     override fun getThreadRepliesPager(
@@ -54,7 +97,58 @@ class AcfunSource(
         initialPage: Int,
         isPoOnly: Boolean
     ): Flow<PagingData<ThreadReply>> {
-        return flowOf(PagingData.empty())
+        return Pager(
+            config = PagingConfig(pageSize = 20),
+            pagingSourceFactory = {
+                object : PagingSource<String, ThreadReply>() {
+                    override suspend fun load(params: LoadParams<String>): LoadResult<String, ThreadReply> {
+                        val pcursor = params.key ?: "0"
+                        val sourceId = threadId.toLongOrNull()
+                            ?: return LoadResult.Error(IllegalArgumentException("Invalid threadId"))
+
+                        return when (val response = acfunApi.getCommentList(
+                            sourceId,
+                            1,
+                            pcursor,
+                            20,
+                            if (pcursor == "0") 1 else 0
+                        )) { // sourceType 1 for article
+                            is SaniouResponse.Success -> {
+                                val list = response.data.rootComments ?: emptyList()
+                                val nextKey =
+                                    if (response.data.pcursor == "nomore" || list.isEmpty()) null else response.data.pcursor
+
+                                val replies = list.map { comment ->
+                                    ThreadReply(
+                                        id = comment.commentId.toString(),
+                                        content = comment.content ?: "",
+//                                        author = comment.user?.userName ?: "Unknown",
+                                        userHash = comment.user?.userId?.toString() ?: "",
+                                        createdAt = Instant.fromEpochMilliseconds(
+                                            comment.timestamp ?: 0
+                                        ),
+                                        img = "",
+                                        ext = "",
+                                        now = comment.postDate ?: "",
+                                        name = comment.user?.userName ?: "Unknown",
+                                        admin = 0,
+                                        title = "No.${comment.floor}",
+                                        threadId = threadId,
+                                    )
+                                }
+                                LoadResult.Page(data = replies, prevKey = null, nextKey = nextKey)
+                            }
+
+                            is SaniouResponse.Error -> LoadResult.Error(response.ex)
+                        }
+                    }
+
+                    override fun getRefreshKey(state: PagingState<String, ThreadReply>): String? {
+                        return null
+                    }
+                }
+            }
+        ).flow
     }
 
     override fun getForum(forumId: String): Flow<Forum?> {
@@ -74,14 +168,13 @@ class AcfunSource(
                             rank = (index + 1).toString().padStart(2, '0'),
                             trendNum = "围观: ${item.viewCountShow ?: item.viewCount ?: 0}",
                             forum = "[${item.channelName ?: "文章"}]",
-                            isNew = false, // Acfun API doesn't seem to provide "isNew" flag directly
+                            isNew = false,
                             threadId = item.resourceId,
                             contentPreview = "${item.contentTitle ?: ""}\n${item.userName ?: ""}"
                         )
                     }
-                    // AcFun doesn't provide a specific trend date, so we use the current date
                     val trendResult = TrendResult(
-                        date = "", // Or current date if needed by UI
+                        date = "",
                         items = trends
                     )
                     Result.success(trendResult)

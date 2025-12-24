@@ -19,6 +19,8 @@ import ai.saniou.thread.data.repository.TrendRepositoryImpl
 import ai.saniou.thread.data.repository.UserRepositoryImpl
 import ai.saniou.thread.data.source.acfun.AcfunSource
 import ai.saniou.thread.data.source.acfun.remote.AcfunApi
+import ai.saniou.thread.data.source.acfun.remote.AcfunHeaderPlugin
+import ai.saniou.thread.data.source.acfun.remote.AcfunTokenManager
 import ai.saniou.thread.data.source.acfun.remote.createAcfunApi
 import ai.saniou.thread.data.source.nga.NgaSource
 import ai.saniou.thread.data.source.nmb.NmbCookieProvider
@@ -59,6 +61,7 @@ import ai.saniou.thread.domain.repository.UserRepository
 import ai.saniou.thread.domain.usecase.reader.GetArticleCountsUseCase
 import ai.saniou.thread.domain.usecase.subscription.GenerateRandomSubscriptionIdUseCase
 import ai.saniou.thread.network.CookieProvider
+import ai.saniou.thread.network.SaniouKtorfit
 import de.jensklingenberg.ktorfit.Ktorfit
 import io.ktor.client.HttpClient
 import org.kodein.di.DI
@@ -82,8 +85,17 @@ val dataModule = DI.Module("dataModule") {
         ktorfit.createDiscourseApi()
     }
     bindConstant<String>(tag = "acfunBaseUrl") { "https://api-new.acfunchina.com/" }
+    bindSingleton<AcfunTokenManager> { AcfunTokenManager(instance()) }
     bindSingleton<AcfunApi> {
-        val ktorfit: Ktorfit = instance(arg = instance<String>("acfunBaseUrl"))
+        val tokenManager = instance<AcfunTokenManager>()
+        val ktorfit = SaniouKtorfit(
+            baseUrl = instance("acfunBaseUrl"),
+            cookieProvider = null
+        ) {
+            install(AcfunHeaderPlugin) {
+                this.tokenManager = tokenManager
+            }
+        }
         ktorfit.createAcfunApi()
     }
 

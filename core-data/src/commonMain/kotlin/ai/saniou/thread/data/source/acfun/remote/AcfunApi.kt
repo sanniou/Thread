@@ -1,5 +1,7 @@
 package ai.saniou.thread.data.source.acfun.remote
 
+import ai.saniou.thread.data.source.acfun.remote.dto.AcfunArticleResponse
+import ai.saniou.thread.data.source.acfun.remote.dto.AcfunCommentListResponse
 import ai.saniou.thread.data.source.acfun.remote.dto.AcfunRankResponse
 import ai.saniou.thread.network.SaniouResponse
 import de.jensklingenberg.ktorfit.http.Body
@@ -194,7 +196,7 @@ interface AcfunApi {
     @GET("https://api-new.app.acfun.cn/rest/app/article/info")
     suspend fun getArticleInfo(
         @Query("articleId") articleId: Long
-    ): SaniouResponse<Any>
+    ): SaniouResponse<AcfunArticleResponse>
 
     /**
      * 获取推荐视频列表 (相关推荐)
@@ -237,7 +239,7 @@ interface AcfunApi {
         @Query("pcursor") pcursor: String,
         @Query("count") count: Int = 20,
         @Query("showHotComments") showHotComments: Int
-    ): SaniouResponse<Any>
+    ): SaniouResponse<AcfunCommentListResponse>
 
     /**
      * 获取子评论 (楼中楼)
