@@ -106,6 +106,7 @@
 - database-forum: `core-data/src/commonMain/sqldelight/ai/saniou/thread/db/table/forum`
 - database-reader: `core-data/src/commonMain/sqldelight/ai/saniou/thread/db/table/reader`
 - mapper: `core-data/src/commonMain/kotlin/ai/saniou/thread/data/mapper/`
+- [DateParser.kt](../../core-common/src/commonMain/kotlin/ai/saniou/corecommon/utils/DateParser.kt)
 
 
 ## 5. 最佳实践检查清单
@@ -115,6 +116,7 @@
 - [ ] **Error Handling**: ViewModel 使用 `UiStateWrapper` 和 `StateLayout` 处理加载和错误。
 - [ ] **Caching**: 所有 `Source` 实现必须具备缓存能力，特别是对于配置类数据（如板块列表），应实现"网络优先，缓存兜底"或"缓存优先，过期更新"策略。
 - [ ] **Comments**: 复杂逻辑必须写中文注释解释 "Why"。
+- [ ] **Utils**: 涉及特定格式字符串解析（如日期、特定文本结构）时，优先考虑封装为独立的 Utils 类或扩展函数，避免在业务逻辑中散落硬编码。
 - 为了兼容不同系统，ID 应该使用String，在针对不同 API 时，再进行转换
 - UI 细节：随着不同源的加入，应该丰富各种UI细节。。
 - 目标是打造一个全 source 支持的，风格化，细节丰富的设计感优秀页面

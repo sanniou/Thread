@@ -40,6 +40,7 @@ kotlin {
         commonMain.dependencies {
             implementation(project(":core-domain"))
             implementation(project(":core-network"))
+            implementation(project(":core-common"))
             api(libs.ktorfit.lib)
             api(libs.kodein.di)
             api(libs.kottage)

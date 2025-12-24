@@ -141,7 +141,9 @@ val nmbFeatureModule = DI.Module("nmbFeatureModule") {
     bindProvider { BookmarkViewModel(instance(), instance(), instance()) }
 
 
-    bindProvider { TrendViewModel(instance()) }
+    bindFactory<String, TrendViewModel> { sourceId ->
+        TrendViewModel(sourceId, instance(), instance(), instance())
+    }
 
     bindFactory<String, SourceInitViewModel> { sourceId ->
         SourceInitViewModel(

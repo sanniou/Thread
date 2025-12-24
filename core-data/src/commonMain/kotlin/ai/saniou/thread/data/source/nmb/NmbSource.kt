@@ -42,6 +42,8 @@ import kotlin.time.Instant
 import ai.saniou.thread.domain.repository.SettingsRepository
 import ai.saniou.thread.domain.repository.observeValue
 import ai.saniou.thread.domain.model.forum.Forum as DomainForum
+import ai.saniou.thread.domain.model.forum.TrendResult
+import ai.saniou.thread.domain.repository.SourceCapabilities
 
 class NmbSource(
     private val nmbXdApi: NmbXdApi,
@@ -50,6 +52,12 @@ class NmbSource(
 ) : Source {
     override val id: String = "nmb"
     override val name: String = "A岛"
+
+    override val capabilities: SourceCapabilities = SourceCapabilities(
+        supportsTrend = true,
+        supportsTrendHistory = true,
+        supportsPagination = true
+    )
 
     override val isInitialized: Flow<Boolean> =
         settingsRepository.observeValue<Boolean>("nmb_initialized")

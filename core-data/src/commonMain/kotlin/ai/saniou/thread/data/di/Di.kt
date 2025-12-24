@@ -17,6 +17,9 @@ import ai.saniou.thread.data.repository.ThreadRepositoryImpl
 import ai.saniou.thread.data.repository.TagRepositoryImpl
 import ai.saniou.thread.data.repository.TrendRepositoryImpl
 import ai.saniou.thread.data.repository.UserRepositoryImpl
+import ai.saniou.thread.data.source.acfun.AcfunSource
+import ai.saniou.thread.data.source.acfun.remote.AcfunApi
+import ai.saniou.thread.data.source.acfun.remote.createAcfunApi
 import ai.saniou.thread.data.source.nga.NgaSource
 import ai.saniou.thread.data.source.nmb.NmbCookieProvider
 import ai.saniou.thread.data.source.nmb.NmbSource
@@ -50,6 +53,7 @@ import ai.saniou.thread.data.parser.HtmlParser
 import ai.saniou.thread.data.parser.JsonParser
 import ai.saniou.thread.data.parser.RssParser
 import ai.saniou.thread.data.repository.ReaderRepositoryImpl
+import ai.saniou.thread.data.source.acfun.remote.dto.AcfunChannel
 import ai.saniou.thread.domain.repository.ReaderRepository
 import ai.saniou.thread.domain.repository.UserRepository
 import ai.saniou.thread.domain.usecase.reader.GetArticleCountsUseCase
@@ -77,6 +81,11 @@ val dataModule = DI.Module("dataModule") {
         val ktorfit: Ktorfit = instance(arg = instance<String>("discourseBaseUrl"))
         ktorfit.createDiscourseApi()
     }
+    bindConstant<String>(tag = "acfunBaseUrl") { "https://api-new.acfunchina.com/" }
+    bindSingleton<AcfunApi> {
+        val ktorfit: Ktorfit = instance(arg = instance<String>("acfunBaseUrl"))
+        ktorfit.createAcfunApi()
+    }
 
     // cache
     bindSingleton<SourceCache> { SqlDelightSourceCache(instance()) }
@@ -84,9 +93,11 @@ val dataModule = DI.Module("dataModule") {
     // source and repository
     bindSingleton<NmbSource> { NmbSource(instance(), instance(), instance()) }
     bindSingleton<DiscourseSource> { DiscourseSource(instance(), instance(), instance(), instance()) }
+    bindSingleton<AcfunSource> { AcfunSource(instance()) }
 
     bind<Source>(tag = "nmb") with singleton { instance<NmbSource>() }
     bind<Source>(tag = "nga") with singleton { NgaSource() }
+    bind<Source>(tag = "acfun") with singleton { instance<AcfunSource>() }
     bind<Source>(tag = "discourse") with singleton { instance<DiscourseSource>() }
 
     // "allInstance" only work in jvm current ,wait upgrade        val sources: Set<Source> = DI.allInstances()
@@ -95,6 +106,7 @@ val dataModule = DI.Module("dataModule") {
             add(instance(tag = "nmb"))
             add(instance(tag = "nga"))
             add(instance(tag = "discourse"))
+            add(instance(tag = "acfun"))
         }
     }
 
@@ -112,7 +124,7 @@ val dataModule = DI.Module("dataModule") {
     bind<NoticeRepository>() with singleton { NoticeRepositoryImpl(instance(), instance(), instance()) }
     bind<HistoryRepository>() with singleton { HistoryRepositoryImpl(instance()) }
     bind<PostRepository>() with singleton { PostRepositoryImpl(instance()) }
-    bind<TrendRepository>() with singleton { TrendRepositoryImpl(instance()) }
+    bind<TrendRepository>() with singleton { TrendRepositoryImpl(instance(),instance()) }
     bind<ReferenceRepository>() with singleton { ReferenceRepositoryImpl(instance(), instance()) }
     bind<ThreadRepository>() with singleton {
         ThreadRepositoryImpl(

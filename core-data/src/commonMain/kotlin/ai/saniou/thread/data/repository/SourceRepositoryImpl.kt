@@ -49,4 +49,8 @@ class SourceRepositoryImpl(
     override fun getAvailableSources(): List<Source> {
         return sources.toList()
     }
+
+    override fun getSource(sourceId: String): Source? {
+        return sources.find { it.id == sourceId }
+    }
 }

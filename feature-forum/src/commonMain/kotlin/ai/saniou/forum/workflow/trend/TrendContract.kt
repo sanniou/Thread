@@ -36,7 +36,15 @@ interface TrendContract {
         val trendDate: String = "",
         val items: List<TrendItem> = emptyList(),
         val dayOffset: Int = 0, // 0 = 今天, 1 = 昨天, etc.
-        val rawThread: Thread? = null // 保留原始数据以备不时之需
+        val rawThread: Thread? = null, // 保留原始数据以备不时之需
+        val currentSource: SourceInfo = SourceInfo("nmb", "A岛", true) // 当前数据源信息
+    )
+
+    @Serializable
+    data class SourceInfo(
+        val id: String,
+        val name: String,
+        val supportsHistory: Boolean
     )
 
     /**
@@ -67,6 +75,11 @@ interface TrendContract {
          * 查看后一天
          */
         object NextDay : Event
+
+        /**
+         * 切换数据源
+         */
+        object ToggleSource : Event
     }
 
     /**

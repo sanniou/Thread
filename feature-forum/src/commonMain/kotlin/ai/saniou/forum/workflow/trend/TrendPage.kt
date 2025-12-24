@@ -32,6 +32,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -66,11 +67,15 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
+import ai.saniou.coreui.composition.LocalSourceId
+import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.kodein.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.flow.collectLatest
 import org.kodein.di.DI
+import org.kodein.di.direct
+import org.kodein.di.instance
 
 data class TrendPage(
     val di: DI = nmbdi,
@@ -81,7 +86,10 @@ data class TrendPage(
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val viewModel: TrendViewModel = rememberScreenModel()
+        val sourceId = LocalSourceId.current
+        val viewModel: TrendViewModel = rememberScreenModel(tag = sourceId) {
+            di.direct.instance(arg = sourceId)
+        }
         val state by viewModel.state.collectAsState()
         val snackbarHostState = remember { SnackbarHostState() }
         var showSourceDialog by remember { mutableStateOf(false) }
@@ -189,17 +197,23 @@ data class TrendPage(
                         containerColor = MaterialTheme.colorScheme.primaryContainer
                     ),
                     actions = {
-                        IconButton(onClick = { viewModel.onEvent(Event.PreviousDay) }) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "前一天")
-                        }
-                        IconButton(
-                            onClick = { viewModel.onEvent(Event.NextDay) },
-                            enabled = state.dayOffset > 0
-                        ) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "后一天")
-                        }
-                        IconButton(onClick = { viewModel.onEvent(Event.OnInfoClick) }) {
-                            Icon(Icons.Default.Info, contentDescription = "源地址")
+                        if (state.currentSource.supportsHistory) {
+                            IconButton(onClick = { viewModel.onEvent(Event.PreviousDay) }) {
+                                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "前一天")
+                            }
+                            IconButton(
+                                onClick = { viewModel.onEvent(Event.NextDay) },
+                                enabled = state.dayOffset > 0
+                            ) {
+                                Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "后一天")
+                            }
+                            IconButton(onClick = { viewModel.onEvent(Event.OnInfoClick) }) {
+                                Icon(Icons.Default.Info, contentDescription = "源地址")
+                            }
+                        } else {
+                            IconButton(onClick = { viewModel.onEvent(Event.Refresh) }) {
+                                Icon(Icons.Default.Refresh, contentDescription = "刷新")
+                            }
                         }
                     }
                 )

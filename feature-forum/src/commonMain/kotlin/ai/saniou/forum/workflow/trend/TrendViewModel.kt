@@ -4,6 +4,10 @@ import ai.saniou.coreui.state.toAppError
 import ai.saniou.forum.workflow.trend.TrendContract.Effect
 import ai.saniou.forum.workflow.trend.TrendContract.Event
 import ai.saniou.forum.workflow.trend.TrendContract.State
+import ai.saniou.thread.domain.repository.SettingsRepository
+import ai.saniou.thread.domain.repository.SourceRepository
+import ai.saniou.thread.domain.repository.getValue
+import ai.saniou.thread.domain.repository.saveValue
 import ai.saniou.thread.domain.usecase.misc.GetTrendUseCase
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
@@ -15,7 +19,10 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class TrendViewModel(
-    private val getTrendUseCase: GetTrendUseCase
+    private val sourceId: String,
+    private val getTrendUseCase: GetTrendUseCase,
+    private val settingsRepository: SettingsRepository,
+    private val sourceRepository: SourceRepository
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(State())
@@ -25,7 +32,25 @@ class TrendViewModel(
     val effect = _effect.receiveAsFlow()
 
     init {
-        loadTrend()
+        screenModelScope.launch {
+            updateCurrentSourceInfo(sourceId)
+            loadTrend()
+        }
+    }
+
+    private fun updateCurrentSourceInfo(sourceId: String) {
+        val source = sourceRepository.getSource(sourceId)
+        if (source != null) {
+            _state.update {
+                it.copy(
+                    currentSource = TrendContract.SourceInfo(
+                        id = source.id,
+                        name = source.name,
+                        supportsHistory = source.capabilities.supportsTrendHistory
+                    )
+                )
+            }
+        }
     }
 
     fun onEvent(event: Event) {
@@ -47,9 +72,12 @@ class TrendViewModel(
                 }
             }
             Event.OnInfoClick -> {
-                 screenModelScope.launch {
+                screenModelScope.launch {
                     _effect.send(Effect.ShowInfoDialog("https://www.nmbxd1.com/t/50248044"))
                 }
+            }
+            Event.ToggleSource -> {
+                // Source switching is handled globally now
             }
         }
     }
@@ -58,7 +86,7 @@ class TrendViewModel(
         screenModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null, dayOffset = dayOffset) }
 
-            getTrendUseCase(forceRefresh, dayOffset)
+            getTrendUseCase(sourceId, forceRefresh, dayOffset)
                 .onSuccess { result ->
                     val (trendDate, items, correctedDayOffset) = result
                     _state.update {

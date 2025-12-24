@@ -3,6 +3,7 @@ package ai.saniou.thread.domain.repository
 import ai.saniou.thread.domain.model.forum.Forum
 import ai.saniou.thread.domain.model.forum.Post
 import ai.saniou.thread.domain.model.forum.ThreadReply
+import ai.saniou.thread.domain.model.forum.TrendResult
 import app.cash.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 
@@ -24,6 +25,11 @@ interface Source {
      * 是否已初始化
      */
     val isInitialized: Flow<Boolean>
+
+    /**
+     * 功能能力标志
+     */
+    val capabilities: SourceCapabilities get() = SourceCapabilities()
 
     /**
      * 获取所有板块
@@ -58,7 +64,19 @@ interface Source {
      * 获取板块详情
      */
     fun getForum(forumId: String): Flow<Forum?>
+
+    /**
+     * 获取热门榜单
+     */
+    suspend fun getTrendList(forceRefresh: Boolean, dayOffset: Int): Result<TrendResult> =
+        Result.failure(NotImplementedError("Trend not supported for this source"))
 }
+
+data class SourceCapabilities(
+    val supportsTrend: Boolean = false,
+    val supportsTrendHistory: Boolean = false,
+    val supportsPagination: Boolean = true
+)
 
 /**
  * 信息流仓库接口，定义了领域层需要的数据操作
@@ -88,4 +106,9 @@ interface SourceRepository {
      * 获取所有可用的信息源
      */
     fun getAvailableSources(): List<Source>
+
+    /**
+     * 获取指定 ID 的 Source
+     */
+    fun getSource(sourceId: String): Source?
 }

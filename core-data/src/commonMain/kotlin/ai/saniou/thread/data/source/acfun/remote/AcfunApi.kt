@@ -1,5 +1,6 @@
 package ai.saniou.thread.data.source.acfun.remote
 
+import ai.saniou.thread.data.source.acfun.remote.dto.AcfunRankResponse
 import ai.saniou.thread.network.SaniouResponse
 import de.jensklingenberg.ktorfit.http.Body
 import de.jensklingenberg.ktorfit.http.Field
@@ -161,6 +162,15 @@ interface AcfunApi {
      */
     @GET("https://api-new.app.acfun.cn/rest/app/rank/getChannelList")
     suspend fun getRankChannelList(): SaniouResponse<Any>
+
+    /**
+     * 获取文章热门榜
+     */
+    @GET("https://api-new.acfunchina.com/rest/app/rank/channel")
+    suspend fun getArticleHotRank(
+        @Query("rankPeriod") rankPeriod: String = "THREE_DAYS",
+        @Query("channelId") channelId: Int = 63
+    ): SaniouResponse<AcfunRankResponse>
 
     /**
      * 获取视频播放信息 (核心接口)

@@ -1,9 +1,13 @@
 package ai.saniou.thread.data.repository
 
 import ai.saniou.thread.data.source.nmb.NmbSource
+import ai.saniou.corecommon.utils.DateParser
 import ai.saniou.thread.domain.model.forum.Trend
 import ai.saniou.thread.domain.model.forum.TrendResult
+import ai.saniou.thread.domain.repository.SettingsRepository
+import ai.saniou.thread.domain.repository.SourceRepository
 import ai.saniou.thread.domain.repository.TrendRepository
+import ai.saniou.thread.domain.repository.getValue
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.LocalDate
@@ -17,12 +21,21 @@ import kotlin.time.ExperimentalTime
 @OptIn(ExperimentalTime::class)
 class TrendRepositoryImpl(
     private val nmbSource: NmbSource,
+    private val sourceRepository: SourceRepository
 ) : TrendRepository {
 
     override suspend fun getTrendItems(
+        sourceId: String,
         forceRefresh: Boolean,
         dayOffset: Int,
     ): Result<TrendResult> {
+        if (sourceId != "nmb") {
+            val source = sourceRepository.getSource(sourceId)
+                ?: return Result.failure(IllegalStateException("Source not found: $sourceId"))
+                
+            return source.getTrendList(forceRefresh, dayOffset)
+        }
+
         val trendThreadId = 50248044L
         val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
         val targetDate = today.minus(dayOffset, DateTimeUnit.DAY)
@@ -55,8 +68,8 @@ class TrendRepositoryImpl(
             var predictedPage: Int? = null
             try {
                 // now string format: 2023-12-24(日)00:15:22
-                val startDate = LocalDate.parse(cachedStart.take(10))
-                val endDate = LocalDate.parse(cachedEnd.take(10))
+                val startDate = DateParser.parseDateFromNowString(cachedStart) ?: throw IllegalArgumentException("Invalid start date")
+                val endDate = DateParser.parseDateFromNowString(cachedEnd) ?: throw IllegalArgumentException("Invalid end date")
 
                 if (targetDate in startDate..endDate) {
                     predictedPage = cachedPage
@@ -150,13 +163,9 @@ class TrendRepositoryImpl(
                 
                 // Calculate corrected dayOffset if the fetched date doesn't match targetDate
                 var correctedDayOffset: Int? = null
-                try {
-                    val fetchedDate = LocalDate.parse(reply.now.take(10))
-                    if (fetchedDate != targetDate) {
-                        correctedDayOffset = today.daysUntil(fetchedDate) * -1
-                    }
-                } catch (e: Exception) {
-                    // Ignore parsing errors
+                val fetchedDate = DateParser.parseDateFromNowString(reply.now)
+                if (fetchedDate != null && fetchedDate != targetDate) {
+                    correctedDayOffset = today.daysUntil(fetchedDate) * -1
                 }
 
                 val parsedItems = parseTrendContent(reply.content)
