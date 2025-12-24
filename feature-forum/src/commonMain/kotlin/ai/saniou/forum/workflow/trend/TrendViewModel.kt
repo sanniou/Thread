@@ -31,6 +31,16 @@ class TrendViewModel(
     fun onEvent(event: Event) {
         when (event) {
             Event.Refresh -> loadTrend(forceRefresh = true)
+            Event.PreviousDay -> {
+                val currentOffset = state.value.dayOffset
+                loadTrend(dayOffset = currentOffset + 1)
+            }
+            Event.NextDay -> {
+                val currentOffset = state.value.dayOffset
+                if (currentOffset > 0) {
+                    loadTrend(dayOffset = currentOffset - 1)
+                }
+            }
             is Event.OnTrendItemClick -> {
                 screenModelScope.launch {
                     _effect.send(Effect.NavigateToThread(event.threadId))
@@ -44,11 +54,11 @@ class TrendViewModel(
         }
     }
 
-    private fun loadTrend(forceRefresh: Boolean = false) {
+    private fun loadTrend(forceRefresh: Boolean = false, dayOffset: Int = state.value.dayOffset) {
         screenModelScope.launch {
-            _state.update { it.copy(isLoading = true, error = null) }
+            _state.update { it.copy(isLoading = true, error = null, dayOffset = dayOffset) }
 
-            getTrendUseCase(forceRefresh)
+            getTrendUseCase(forceRefresh, dayOffset)
                 .onSuccess { (trendDate, items) ->
                     _state.update {
                         it.copy(
@@ -59,7 +69,7 @@ class TrendViewModel(
                     }
                 }
                 .onFailure { e ->
-                    _state.update { it.copy(isLoading = false, error = e.toAppError { loadTrend(forceRefresh = true) }) }
+                    _state.update { it.copy(isLoading = false, error = e.toAppError { loadTrend(forceRefresh = true, dayOffset) }) }
                 }
         }
     }

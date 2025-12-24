@@ -35,6 +35,7 @@ interface TrendContract {
         val error: AppError? = null,
         val trendDate: String = "",
         val items: List<TrendItem> = emptyList(),
+        val dayOffset: Int = 0, // 0 = 今天, 1 = 昨天, etc.
         val rawThread: Thread? = null // 保留原始数据以备不时之需
     )
 
@@ -56,6 +57,16 @@ interface TrendContract {
          * 点击信息按钮（显示源地址）
          */
         object OnInfoClick : Event
+
+        /**
+         * 查看前一天
+         */
+        object PreviousDay : Event
+
+        /**
+         * 查看后一天
+         */
+        object NextDay : Event
     }
 
     /**

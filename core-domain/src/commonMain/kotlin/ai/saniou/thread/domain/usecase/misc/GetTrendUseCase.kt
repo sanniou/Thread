@@ -6,7 +6,7 @@ import ai.saniou.thread.domain.repository.TrendRepository
 class GetTrendUseCase(
     private val trendRepository: TrendRepository
 ) {
-    suspend operator fun invoke(forceRefresh: Boolean): Result<Pair<String, List<Trend>>> {
-        return trendRepository.getTrendItems(forceRefresh)
+    suspend operator fun invoke(forceRefresh: Boolean, dayOffset: Int = 0): Result<Pair<String, List<Trend>>> {
+        return trendRepository.getTrendItems(forceRefresh, dayOffset)
     }
 }

@@ -13,11 +13,14 @@ class TrendRepositoryImpl(
     private val nmbSource: NmbSource,
 ) : TrendRepository {
 
-    override suspend fun getTrendItems(forceRefresh: Boolean): Result<Pair<String, List<Trend>>> {
+    override suspend fun getTrendItems(
+        forceRefresh: Boolean,
+        dayOffset: Int
+    ): Result<Pair<String, List<Trend>>> {
         val trendThreadId = 50248044L
 
-        // 1. Try to get from local cache if not force refreshing
-        if (!forceRefresh) {
+        // 1. Try to get from local cache if not force refreshing and requesting today's trend
+        if (!forceRefresh && dayOffset == 0) {
             val localLatestReply = nmbSource.getLocalLatestReply(trendThreadId)
             if (localLatestReply != null) {
                 val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
@@ -33,15 +36,39 @@ class TrendRepositoryImpl(
         return try {
             nmbSource.getTrendThread(page = 1).mapCatching { firstPageThread ->
                 val replyCount = firstPageThread.replyCount
-                val lastPage = (replyCount / 19) + if (replyCount % 19 > 0) 1 else 0
 
-                val lastPageThread =
-                    nmbSource.getTrendThread(page = lastPage.toInt()).getOrThrow()
-                val latestReply = lastPageThread.replies.lastOrNull()
-                    ?: throw IllegalStateException("无趋势数据")
+                // Calculate target index based on dayOffset
+                // dayOffset = 0 -> last reply
+                // dayOffset = 1 -> second to last reply
+                val targetIndex = replyCount - 1 - dayOffset
 
-                val parsedItems = parseTrendContent(latestReply.content)
-                latestReply.now to parsedItems
+                if (targetIndex < 0) {
+                    throw IllegalStateException("没有更多历史数据了")
+                }
+
+                val targetPage = (targetIndex / 19) + 1
+                val indexInPage = (targetIndex % 19).toInt()
+
+                val targetPageThread = if (targetPage == 1L) {
+                    firstPageThread
+                } else {
+                    nmbSource.getTrendThread(page = targetPage.toInt()).getOrThrow()
+                }
+
+                val replies = targetPageThread.replies
+                if (replies.isEmpty()) {
+                    throw IllegalStateException("无趋势数据")
+                }
+
+                // Handle potential index out of bounds if replyCount was slightly off or replies are missing
+                val reply = if (indexInPage < replies.size) {
+                    replies[indexInPage]
+                } else {
+                    replies.last()
+                }
+
+                val parsedItems = parseTrendContent(reply.content)
+                reply.now to parsedItems
             }
         } catch (e: Exception) {
             Result.failure(e)
