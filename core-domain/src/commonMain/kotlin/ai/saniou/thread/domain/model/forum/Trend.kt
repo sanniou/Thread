@@ -8,3 +8,9 @@ data class Trend(
     val threadId: Long,
     val contentPreview: String
 )
+
+data class TrendResult(
+    val date: String,
+    val items: List<Trend>,
+    val correctedDayOffset: Int? = null
+)

@@ -366,6 +366,21 @@ class NmbSource(
         )
     }
 
+    suspend fun getTrendAnchor(): Triple<Int, String, String>? {
+        return db.keyValueQueries.getKeyValue("trend_anchor")
+            .executeAsOneOrNull()
+            ?.content
+            ?.split("|")
+            ?.let {
+                if (it.size == 3) {
+                    Triple(it[0].toInt(), it[1], it[2])
+                } else null
+            }
+    }
+
+    suspend fun setTrendAnchor(page: Int, startNow: String, endNow: String) {
+        db.keyValueQueries.insertKeyValue("trend_anchor", "$page|$startNow|$endNow")
+    }
 
     /**
      * 获取引用的回复内容
@@ -486,6 +501,14 @@ class NmbSource(
             .executeAsList()
             .maxByOrNull { it.id.toLong() } // 确保取 ID 最大的，即最新的
             ?.toThreadReply()
+    }
+
+    suspend fun getLocalReplyByDate(threadId: Long, datePattern: String): ThreadReply? {
+        return db.threadReplyQueries.getReplyByThreadIdAndDate(
+            sourceId = id,
+            threadId = threadId.toString(),
+            datePattern = "$datePattern%"
+        ).executeAsOneOrNull()?.toThreadReply()
     }
 
     fun searchThreadsPager(query: String): Flow<PagingData<ThreadWithInformation>> {

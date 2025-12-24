@@ -47,7 +47,7 @@ class SettingsRepositoryImpl(
     @Suppress("UNCHECKED_CAST")
     override suspend fun <T : Any> getValue(key: String, type: KType): T? {
         return withContext(Dispatchers.IO) {
-            db.keyValueQueries.getKeyValue(key).executeAsOneOrNull()?.value_?.let {
+            db.keyValueQueries.getKeyValue(key).executeAsOneOrNull()?.content?.let {
                 val serializer = Json.serializersModule.serializer(type) as KSerializer<T>
                 Json.decodeFromString(serializer, it)
             }
@@ -60,7 +60,7 @@ class SettingsRepositoryImpl(
             .asFlow()
             .mapToOneOrNull(Dispatchers.IO)
             .map { entity ->
-                entity?.value_?.let {
+                entity?.content?.let {
                     val serializer = Json.serializersModule.serializer(type) as KSerializer<T>
                     Json.decodeFromString(serializer, it)
                 }

@@ -35,7 +35,7 @@ class SubscriptionRepositoryImpl(
 
     override suspend fun getActiveSubscriptionKey(): String? {
         return withContext(Dispatchers.IO) {
-            db.keyValueQueries.getKeyValue("active_subscription_key").executeAsOneOrNull()?.value_
+            db.keyValueQueries.getKeyValue("active_subscription_key").executeAsOneOrNull()?.content
         }
     }
 
@@ -43,7 +43,7 @@ class SubscriptionRepositoryImpl(
         return db.keyValueQueries.getKeyValue("active_subscription_key")
             .asFlow()
             .mapToOneOrNull(Dispatchers.IO)
-            .map { it?.value_ }
+            .map { it?.content }
     }
 
     @OptIn(ExperimentalPagingApi::class)

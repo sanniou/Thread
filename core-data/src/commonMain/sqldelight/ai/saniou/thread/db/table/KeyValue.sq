@@ -1,10 +1,10 @@
 CREATE TABLE KeyValue (
     key TEXT NOT NULL PRIMARY KEY,
-    value TEXT NOT NULL
+    content TEXT NOT NULL
 );
 
 insertKeyValue:
-INSERT OR REPLACE INTO KeyValue(key, value) VALUES (?, ?);
+INSERT OR REPLACE INTO KeyValue(key, content) VALUES (?, ?);
 
 getKeyValue:
 SELECT * FROM KeyValue WHERE key = ?;

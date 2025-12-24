@@ -59,12 +59,14 @@ class TrendViewModel(
             _state.update { it.copy(isLoading = true, error = null, dayOffset = dayOffset) }
 
             getTrendUseCase(forceRefresh, dayOffset)
-                .onSuccess { (trendDate, items) ->
+                .onSuccess { result ->
+                    val (trendDate, items, correctedDayOffset) = result
                     _state.update {
                         it.copy(
                             isLoading = false,
                             trendDate = trendDate,
-                            items = items.map { it.toUI() }
+                            items = items.map { item -> item.toUI() },
+                            dayOffset = correctedDayOffset ?: it.dayOffset
                         )
                     }
                 }

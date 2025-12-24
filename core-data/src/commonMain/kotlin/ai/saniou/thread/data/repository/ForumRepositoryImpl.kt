@@ -59,9 +59,9 @@ class ForumRepositoryImpl(
 
     override suspend fun getLastOpenedForum(): Forum? {
         return withContext(Dispatchers.IO) {
-            val fid = db.keyValueQueries.getKeyValue("last_opened_forum_id").executeAsOneOrNull()?.value_
+            val fid = db.keyValueQueries.getKeyValue("last_opened_forum_id").executeAsOneOrNull()?.content
             val sourceId =
-                db.keyValueQueries.getKeyValue("last_opened_forum_source").executeAsOneOrNull()?.value_
+                db.keyValueQueries.getKeyValue("last_opened_forum_source").executeAsOneOrNull()?.content
                     ?: "nmb"
 
             if (fid != null) {

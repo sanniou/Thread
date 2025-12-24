@@ -164,3 +164,7 @@ SELECT * FROM ThreadReply WHERE userHash = :userHash  AND page >= 0 ORDER BY now
 
 countRepliesByUserHash:
 SELECT count(*) FROM ThreadReply WHERE userHash = :userHash  AND page >= 0;
+
+-- 根据日期查找回复 (用于 Trend 缓存)
+getReplyByThreadIdAndDate:
+SELECT * FROM ThreadReply WHERE sourceId = :sourceId AND threadId = :threadId AND now LIKE :datePattern LIMIT 1;

@@ -2,10 +2,16 @@ package ai.saniou.thread.data.repository
 
 import ai.saniou.thread.data.source.nmb.NmbSource
 import ai.saniou.thread.domain.model.forum.Trend
+import ai.saniou.thread.domain.model.forum.TrendResult
 import ai.saniou.thread.domain.repository.TrendRepository
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.daysUntil
+import kotlinx.datetime.minus
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
+import kotlin.time.Duration.Companion.days
 import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalTime::class)
@@ -15,24 +21,90 @@ class TrendRepositoryImpl(
 
     override suspend fun getTrendItems(
         forceRefresh: Boolean,
-        dayOffset: Int
-    ): Result<Pair<String, List<Trend>>> {
+        dayOffset: Int,
+    ): Result<TrendResult> {
         val trendThreadId = 50248044L
+        val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+        val targetDate = today.minus(dayOffset, DateTimeUnit.DAY)
 
-        // 1. Try to get from local cache if not force refreshing and requesting today's trend
-        if (!forceRefresh && dayOffset == 0) {
-            val localLatestReply = nmbSource.getLocalLatestReply(trendThreadId)
-            if (localLatestReply != null) {
-                val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
-                // Check if cached data is from today
-                if (localLatestReply.now.contains(today.toString())) {
+        // 1. Try to get from local cache if not force refreshing
+        if (!forceRefresh) {
+            if (dayOffset == 0) {
+                // For today, check if the latest reply is from today
+                val localLatestReply = nmbSource.getLocalLatestReply(trendThreadId)
+                if (localLatestReply != null && localLatestReply.now.contains(today.toString())) {
                     val parsedItems = parseTrendContent(localLatestReply.content)
-                    return Result.success(localLatestReply.now to parsedItems)
+                    return Result.success(TrendResult(localLatestReply.now, parsedItems))
+                }
+            } else {
+                // For historical days, check if we have a reply with the target date
+                val localReply = nmbSource.getLocalReplyByDate(trendThreadId, targetDate.toString())
+                if (localReply != null) {
+                    val parsedItems = parseTrendContent(localReply.content)
+                    return Result.success(TrendResult(localReply.now, parsedItems))
                 }
             }
         }
 
         // 2. Fetch from network
+
+        // Optimization: Try to use cached page anchor to avoid fetching page 1
+        val anchor = nmbSource.getTrendAnchor()
+        if (anchor != null) {
+            val (cachedPage, cachedStart, cachedEnd) = anchor
+            var predictedPage: Int? = null
+            try {
+                // now string format: 2023-12-24(日)00:15:22
+                val startDate = LocalDate.parse(cachedStart.take(10))
+                val endDate = LocalDate.parse(cachedEnd.take(10))
+
+                if (targetDate in startDate..endDate) {
+                    predictedPage = cachedPage
+                } else if (targetDate > endDate) {
+                    val daysNeeded = endDate.daysUntil(targetDate)
+                    val countOnPage = startDate.daysUntil(endDate) + 1
+                    val remainingSlots = 19 - countOnPage
+
+                    if (daysNeeded <= remainingSlots) {
+                        predictedPage = cachedPage
+                    } else {
+                        val remainingDays = daysNeeded - remainingSlots
+                        val additionalPages = (remainingDays - 1) / 19 + 1
+                        predictedPage = cachedPage + additionalPages
+                    }
+                } else { // targetDate < startDate
+                    val daysDiff = targetDate.daysUntil(startDate)
+                    val pageOffset = (daysDiff - 1) / 19 + 1
+                    predictedPage = cachedPage - pageOffset
+                }
+            } catch (e: Exception) {
+                // Date parse error or calculation error, ignore optimization
+            }
+
+            if (predictedPage != null && predictedPage > 0) {
+                try {
+                    val thread = nmbSource.getTrendThread(page = predictedPage).getOrThrow()
+                    val replies = thread.replies
+                    val reply = replies.find { it.now.contains(targetDate.toString()) }
+
+                    if (reply != null) {
+                        if (replies.isNotEmpty()) {
+                            nmbSource.setTrendAnchor(
+                                predictedPage,
+                                replies.first().now,
+                                replies.last().now
+                            )
+                        }
+                        val parsedItems = parseTrendContent(reply.content)
+                        return Result.success(TrendResult(reply.now, parsedItems))
+                    }
+                } catch (e: Exception) {
+                    // Fallback to standard logic if prediction fails
+                }
+            }
+        }
+
+        // Standard logic: Fetch page 1 to get total count
         return try {
             nmbSource.getTrendThread(page = 1).mapCatching { firstPageThread ->
                 val replyCount = firstPageThread.replyCount
@@ -67,8 +139,28 @@ class TrendRepositoryImpl(
                     replies.last()
                 }
 
+                // Update anchor for next time
+                if (replies.isNotEmpty()) {
+                    nmbSource.setTrendAnchor(
+                        targetPage.toInt(),
+                        replies.first().now,
+                        replies.last().now
+                    )
+                }
+                
+                // Calculate corrected dayOffset if the fetched date doesn't match targetDate
+                var correctedDayOffset: Int? = null
+                try {
+                    val fetchedDate = LocalDate.parse(reply.now.take(10))
+                    if (fetchedDate != targetDate) {
+                        correctedDayOffset = today.daysUntil(fetchedDate) * -1
+                    }
+                } catch (e: Exception) {
+                    // Ignore parsing errors
+                }
+
                 val parsedItems = parseTrendContent(reply.content)
-                reply.now to parsedItems
+                TrendResult(reply.now, parsedItems, correctedDayOffset)
             }
         } catch (e: Exception) {
             Result.failure(e)
