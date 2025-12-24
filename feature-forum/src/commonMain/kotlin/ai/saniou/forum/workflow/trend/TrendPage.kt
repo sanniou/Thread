@@ -28,7 +28,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -69,7 +71,10 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.flow.collectLatest
 import org.kodein.di.DI
 
-data class TrendPage(val di: DI = nmbdi) : Screen {
+data class TrendPage(
+    val di: DI = nmbdi,
+    val onMenuClick: (() -> Unit)? = null
+) : Screen {
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
@@ -161,7 +166,24 @@ data class TrendPage(val di: DI = nmbdi) : Screen {
                             subtitle = state.trendDate.takeIf { it.isNotEmpty() }
                         )
                     },
-                    onNavigationClick = { navigator.pop() },
+                    onNavigationClick = {
+                        if (onMenuClick != null) {
+                            onMenuClick.invoke()
+                        } else {
+                            navigator.pop()
+                        }
+                    },
+                    navigationIcon = {
+                        if (onMenuClick != null) {
+                            IconButton(onClick = { onMenuClick.invoke() }) {
+                                Icon(Icons.Default.Menu, contentDescription = "Menu")
+                            }
+                        } else {
+                            IconButton(onClick = { navigator.pop() }) {
+                                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                            }
+                        }
+                    },
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = MaterialTheme.colorScheme.primaryContainer
                     ),

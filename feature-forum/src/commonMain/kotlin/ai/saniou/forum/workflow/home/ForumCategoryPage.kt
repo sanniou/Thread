@@ -3,6 +3,7 @@ package ai.saniou.forum.workflow.home
 import ai.saniou.coreui.composition.LocalAppDrawer
 import ai.saniou.coreui.state.StateLayout
 import ai.saniou.coreui.widgets.DrawerHeader
+import ai.saniou.coreui.widgets.RichText
 import ai.saniou.forum.di.nmbdi
 import ai.saniou.forum.workflow.bookmark.BookmarkPage
 import ai.saniou.forum.workflow.forum.ForumPage
@@ -15,6 +16,7 @@ import ai.saniou.forum.workflow.search.SearchPage
 import ai.saniou.forum.workflow.subscription.SubscriptionPage
 import ai.saniou.forum.workflow.thread.ThreadPage
 import ai.saniou.forum.workflow.trend.TrendPage
+import ai.saniou.thread.domain.model.forum.Notice
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -47,6 +49,9 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.DrawerState
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -187,20 +192,38 @@ data class ForumCategoryPage(
             return
         }
 
-        state.currentForum?.let { forum ->
-            ForumPage(
-                sourceId = state.currentSourceId,
-                forumId = forum.id,
-                fgroupId = forum.groupId,
-                onMenuClick = onMenuClick
-            ).Content()
-        } ?: run {
-            HomeDashboard(
-                notice = state.notice,
-                onMenuClick = onMenuClick,
-                onDismissNotice = { viewModel.onEvent(Event.MarkNoticeRead) }
-            )
+        Column(modifier = Modifier.fillMaxSize()) {
+            state.notice?.let { notice ->
+                NoticeBanner(
+                    notice = notice,
+                    onDismiss = { viewModel.onEvent(Event.MarkNoticeRead) }
+                )
+            }
+
+            state.currentForum?.let { forum ->
+                ForumPage(
+                    sourceId = state.currentSourceId,
+                    forumId = forum.id,
+                    fgroupId = forum.groupId,
+                    onMenuClick = onMenuClick
+                ).Content()
+            } ?: run {
+                TrendPage(
+                    onMenuClick = onMenuClick
+                ).Content()
+            }
         }
+    }
+
+    @Composable
+    private fun NoticeBanner(
+        notice: Notice,
+        onDismiss: () -> Unit
+    ) {
+        NoticeDisplay(
+            notice = notice,
+            onDismiss = onDismiss
+        )
     }
 
     @Composable
@@ -316,7 +339,7 @@ data class ForumCategoryPage(
         onCloseDrawer: () -> Unit
     ) {
         val items = listOf(
-            DrawerItemData("主页", Icons.Default.Home, state.currentForum == null) {
+            DrawerItemData("综合趋势", Icons.Default.Home, state.currentForum == null) {
                 viewModel.onEvent(Event.SelectHome)
                 onCloseDrawer()
             },
@@ -326,10 +349,6 @@ data class ForumCategoryPage(
             },
             DrawerItemData(stringResource(Res.string.drawer_bookmark), Icons.Default.Star, false) {
                 navigator.push(BookmarkPage)
-                onCloseDrawer()
-            },
-            DrawerItemData("综合趋势", Icons.Default.Send, false) {
-                navigator.push(TrendPage())
                 onCloseDrawer()
             },
             DrawerItemData(stringResource(Res.string.drawer_history), Icons.Default.DateRange, false) {
@@ -438,6 +457,42 @@ data class ForumCategoryPage(
                 contentDescription = if (isExpanded) stringResource(Res.string.category_collapse) else stringResource(Res.string.category_expand),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
+        }
+    }
+
+    @Composable
+    fun NoticeDisplay(notice: Notice, onDismiss: () -> Unit) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            shape = MaterialTheme.shapes.medium,
+            elevation = CardDefaults.cardElevation(4.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = "公告",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                RichText(
+                    text = notice.content,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    Button(onClick = onDismiss) {
+                        Text("不再显示")
+                    }
+                }
+            }
         }
     }
 }
