@@ -6,7 +6,7 @@ import ai.saniou.forum.initializer.AppInitializer
 import ai.saniou.forum.workflow.home.ForumCategoryContract.Event
 import ai.saniou.forum.workflow.home.ForumCategoryContract.ForumCategoryUiState
 import ai.saniou.forum.workflow.home.ForumCategoryContract.ForumGroupUiState
-import ai.saniou.thread.domain.model.forum.Forum
+import ai.saniou.thread.domain.model.forum.Channel as Forum
 import ai.saniou.thread.domain.repository.ForumRepository
 import ai.saniou.thread.domain.usecase.forum.GetFavoriteForumsUseCase
 import ai.saniou.thread.domain.usecase.forum.GetForumsUseCase

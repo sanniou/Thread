@@ -2,8 +2,11 @@ package ai.saniou.thread.data.source.discourse
 
 import ai.saniou.thread.data.source.discourse.remote.DiscourseApi
 import ai.saniou.thread.data.source.discourse.remote.dto.DiscoursePost
-import ai.saniou.thread.domain.model.forum.ThreadReply
+import ai.saniou.thread.domain.model.forum.Comment as ThreadReply
+import ai.saniou.thread.domain.model.forum.Author
 import app.cash.paging.PagingSource
+import app.cash.paging.PagingSourceLoadParams
+import app.cash.paging.PagingSourceLoadResult
 import app.cash.paging.PagingState
 import kotlinx.datetime.Instant
 
@@ -58,17 +61,22 @@ private fun DiscoursePost.toThreadReply(threadId: Long): ThreadReply {
         Instant.fromEpochMilliseconds(0)
     }
 
+    val author = Author(
+        id = username,
+        name = name ?: username,
+        avatar = avatarTemplate // Assuming avatarTemplate is available or mapped elsewhere if needed
+    )
+
     return ThreadReply(
         id = id.toString(),
-        userHash = username,
-        admin = 0,
+        topicId = threadId.toString(),
+        author = author,
+        createdAt = kotlin.time.Instant.fromEpochMilliseconds(replyCreatedAt.toEpochMilliseconds()),
         title = "",
-        now = createdAt,
-        createdAt = replyCreatedAt,
         content = cooked,
-        img = "",
-        ext = "",
-        name = name ?: username,
-        threadId = threadId.toString(),
+        images = emptyList(), // TODO: Extract images from cooked content or other fields
+        isAdmin = false, // TODO: Map admin status from user_title or similar
+        floor = postNumber,
+        replyToId = replyToPostNumber?.toString()
     )
 }

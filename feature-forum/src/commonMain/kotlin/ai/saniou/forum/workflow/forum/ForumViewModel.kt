@@ -4,7 +4,7 @@ import ai.saniou.forum.workflow.forum.ForumContract.Effect
 import ai.saniou.forum.workflow.forum.ForumContract.Event
 import ai.saniou.forum.workflow.forum.ForumContract.State
 import ai.saniou.thread.data.paging.DataPolicy
-import ai.saniou.thread.domain.model.forum.Post
+import ai.saniou.thread.domain.model.forum.Topic as Post
 import ai.saniou.thread.domain.usecase.forum.GetForumDetailUseCase
 import ai.saniou.thread.domain.usecase.forum.GetForumNameUseCase
 import ai.saniou.thread.domain.usecase.forum.GetForumThreadsPagingUseCase

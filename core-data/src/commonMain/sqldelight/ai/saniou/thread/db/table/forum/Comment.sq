@@ -1,0 +1,167 @@
+-- 创建 Comment 表 (原 ThreadReply)
+CREATE TABLE IF NOT EXISTS Comment (
+    id TEXT NOT NULL,
+    sourceId TEXT NOT NULL,
+    topicId TEXT NOT NULL, -- 原 threadId
+    page INTEGER NOT NULL,
+    userHash TEXT NOT NULL,
+    admin INTEGER NOT NULL,
+    title TEXT, -- 可为空
+    createdAt INTEGER NOT NULL, -- 原 now
+    content TEXT NOT NULL,
+    authorName TEXT NOT NULL, -- 原 name
+    floor INTEGER, -- 新增 floor
+    replyToId TEXT, -- 新增 replyToId
+    PRIMARY KEY (sourceId, id),
+    FOREIGN KEY (sourceId, topicId) REFERENCES Topic(sourceId, id) ON DELETE CASCADE
+);
+
+-- 索引迁移
+CREATE INDEX IF NOT EXISTS idx_comment_topic_id ON Comment(sourceId, topicId);
+
+-- 插入 Comment 数据
+upsertComment:
+INSERT INTO Comment (
+    id, sourceId, topicId, page, userHash, admin, title, createdAt, content, authorName, floor, replyToId
+) VALUES ?
+ON CONFLICT(sourceId, id) DO UPDATE SET
+    topicId = excluded.topicId,
+    page = CASE WHEN excluded.page >= 0 THEN excluded.page ELSE Comment.page END,
+    userHash = excluded.userHash,
+    admin = excluded.admin,
+    title = excluded.title,
+    createdAt = excluded.createdAt,
+    content = excluded.content,
+    authorName = excluded.authorName,
+    floor = excluded.floor,
+    replyToId = excluded.replyToId;
+
+-- 更新 Comment 数据
+updateComment:
+UPDATE Comment SET
+    topicId=?,
+    page=?,
+    userHash = ?,
+    admin = ?,
+    title = ?,
+    createdAt = ?,
+    content = ?,
+    authorName = ?,
+    floor = ?,
+    replyToId = ?
+WHERE sourceId = ? AND id = ?;
+
+-- 删除 Comment 数据
+deleteComment:
+DELETE FROM Comment WHERE sourceId = ? AND id = ?;
+
+-- 删除指定 topicId 的 Comment 数据
+deleteCommentsByTopicId:
+DELETE FROM Comment WHERE sourceId = ? AND topicId = ?;
+
+-- 查询指定 topicId 的 Comment 数据
+getCommentsByPage:
+SELECT * FROM Comment WHERE sourceId = :sourceId AND topicId = :topicId AND (:poUserHash IS NULL OR userHash = :poUserHash) AND page = :page ORDER BY id ASC;
+
+getComments:
+SELECT * FROM Comment WHERE sourceId = :sourceId AND topicId = :topicId ORDER BY id ASC LIMIT :limit OFFSET :offset;
+
+-- 获取指定 id 的 Comment
+getCommentById:
+SELECT * FROM Comment WHERE sourceId = :sourceId AND id = :id;
+
+-- 获取指定 topicId 的最后五条回复
+getLastFiveComments:
+SELECT * FROM Comment WHERE sourceId = :sourceId AND topicId = :topicId ORDER BY id DESC LIMIT 5;
+
+-- 统计有效的 Comment 数量
+countValidComments:
+SELECT count(*) FROM Comment WHERE sourceId = :sourceId AND topicId = :topicId AND page >=0 AND userHash!='Tips';
+
+getCommentsByUserHash:
+SELECT * FROM Comment WHERE sourceId = :sourceId AND topicId = :topicId AND userHash = :userHash ORDER BY id ASC LIMIT :limit OFFSET :offset;
+
+countCommentsByUserHash:
+SELECT count(*) FROM Comment WHERE sourceId = :sourceId AND topicId = :topicId AND userHash = :userHash;
+
+isPageExist:
+SELECT EXISTS(SELECT 1 FROM Comment WHERE sourceId = :sourceId AND topicId = :topicId AND page = :page);
+
+deleteCommentsByPage:
+DELETE FROM Comment WHERE sourceId = :sourceId AND topicId = :topicId AND page = :page;
+
+countCommentsByPage:
+SELECT count(*) FROM Comment WHERE sourceId = :sourceId AND topicId = :topicId AND page = :page;
+
+-- getCommentImagesWithContent 暂时移除，现在需要查 Image 表
+
+getMaxPage:
+SELECT MAX(page) FROM Comment WHERE sourceId = :sourceId AND topicId = :topicId;
+
+-- RemoteMediator 使用的查询
+countCommentsByTopicIdAndPage:
+SELECT count(1) FROM Comment WHERE sourceId = :sourceId AND topicId = :topicId AND page = :page;
+
+deleteCommentsByTopicIdAndPage:
+DELETE FROM Comment WHERE sourceId = :sourceId AND topicId = :topicId AND page = :page;
+
+-- PagingSource (所有回复)
+countCommentsByTopicId:
+SELECT count(1) FROM Comment WHERE sourceId = :sourceId AND topicId = :topicId AND page >= 0;
+
+getCommentsByTopicId:
+SELECT * FROM Comment WHERE sourceId = :sourceId AND topicId = :topicId AND page = :page ORDER BY id ASC;
+
+getCommentsByTopicIdOffset:
+SELECT * FROM Comment WHERE sourceId = :sourceId AND topicId = :topicId AND page >= 0 ORDER BY id ASC LIMIT :limit OFFSET :offset;
+
+-- PagingSource (只看PO)
+countCommentsByTopicIdAndUserHash:
+SELECT count(1) FROM Comment WHERE sourceId = :sourceId AND topicId = :topicId AND userHash = :userHash;
+
+getCommentsByTopicIdAndUserHash:
+SELECT * FROM Comment WHERE sourceId = :sourceId AND topicId = :topicId AND userHash = :userHash AND page = :page ORDER BY id ASC;
+
+getCommentsByTopicIdAndUserHashOffset:
+SELECT * FROM Comment WHERE sourceId = :sourceId AND topicId = :topicId AND userHash = :userHash ORDER BY id ASC LIMIT :limit OFFSET :offset;
+
+-- PagingSource (PO Mode using JOIN)
+countCommentsByTopicIdPoMode:
+SELECT count(1)
+FROM Comment
+JOIN Topic ON Comment.sourceId = Topic.sourceId AND Comment.topicId = Topic.id
+WHERE Comment.sourceId = :sourceId
+  AND Comment.topicId = :topicId
+  AND Comment.userHash = Topic.userHash;
+
+getCommentsByTopicIdPoModeOffset:
+SELECT Comment.*
+FROM Comment
+JOIN Topic ON Comment.sourceId = Topic.sourceId AND Comment.topicId = Topic.id
+WHERE Comment.sourceId = :sourceId
+  AND Comment.topicId = :topicId
+  AND Comment.userHash = Topic.userHash
+ORDER BY Comment.id ASC
+LIMIT :limit OFFSET :offset;
+
+searchComments:
+SELECT * FROM Comment
+WHERE (content LIKE ('%' || :query || '%') OR title LIKE ('%' || :query || '%'))
+AND page >= 0
+ORDER BY createdAt DESC
+LIMIT :limit OFFSET :offset;
+
+countSearchComments:
+SELECT count(*) FROM Comment
+WHERE (content LIKE ('%' || :query || '%') OR title LIKE ('%' || :query || '%'))
+AND page >= 0;
+
+getCommentsByUserHashOffset:
+SELECT * FROM Comment WHERE userHash = :userHash  AND page >= 0 ORDER BY createdAt DESC LIMIT :limit OFFSET :offset;
+
+countCommentsByUserHashNoTopic:
+SELECT count(*) FROM Comment WHERE userHash = :userHash  AND page >= 0;
+
+-- 根据日期查找回复 (用于 Trend 缓存)
+getCommentByTopicIdAndDate:
+SELECT * FROM Comment WHERE sourceId = :sourceId AND topicId = :topicId AND createdAt = :createdAt LIMIT 1;

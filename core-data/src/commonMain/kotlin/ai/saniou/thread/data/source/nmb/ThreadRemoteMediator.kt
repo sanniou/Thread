@@ -8,7 +8,7 @@ import ai.saniou.thread.data.source.nmb.remote.dto.Thread
 import ai.saniou.thread.data.source.nmb.remote.dto.toTable
 import ai.saniou.thread.data.source.nmb.remote.dto.toTableReply
 import ai.saniou.thread.db.Database
-import ai.saniou.thread.db.table.forum.ThreadReply
+import ai.saniou.thread.db.table.forum.Comment as ThreadReply
 import ai.saniou.thread.network.SaniouResponse
 import app.cash.paging.ExperimentalPagingApi
 import app.cash.paging.LoadType
@@ -45,17 +45,17 @@ class ThreadRemoteMediator(
             db = db,
             type = if (isPoOnly) RemoteKeyType.THREAD_PO else RemoteKeyType.THREAD,
             id = threadId,
-            itemIdExtractor = { it.threadId.toString() }
+            itemIdExtractor = { it.topicId } // topicId (threadId)
         ),
         fetcher = { page -> fetcher(page) },
         saver = { threadDetail, page, _ ->
             val storagePage = page.toStoragePage()
             // Use upsertThreadNoPage to avoid overwriting the 'page' field (which represents Forum Page)
             // with the Reply Page number, unless it's a new insertion.
-            db.threadQueries.upsertThreadNoPage(threadDetail.toTable(sourceId, storagePage))
+            db.topicQueries.upsertTopicNoPage(threadDetail.toTable(sourceId, storagePage))
             threadDetail.toTableReply(sourceId, storagePage)
                 .filter { it.userHash != "Tips" } // 过滤广告
-                .forEach(db.threadReplyQueries::upsertThreadReply)
+                .forEach(db.commentQueries::upsertComment)
         },
         endOfPaginationReached = { threadDetail ->
             // 过滤广告后判断是否为空
@@ -66,7 +66,7 @@ class ThreadRemoteMediator(
         },
         cacheChecker = { page ->
             val storagePage = page.toStoragePage()
-            val repliesInDb = db.threadReplyQueries.countRepliesByThreadIdAndPage(
+            val repliesInDb = db.commentQueries.countCommentsByTopicIdAndPage(
                 sourceId,
                 threadId,
                 storagePage

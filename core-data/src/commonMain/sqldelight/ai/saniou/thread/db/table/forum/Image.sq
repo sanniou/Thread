@@ -1,0 +1,34 @@
+import ai.saniou.thread.domain.model.forum.ImageType;
+
+-- 创建 Image 表
+CREATE TABLE IF NOT EXISTS Image (
+    id TEXT NOT NULL,
+    sourceId TEXT NOT NULL,
+    parentId TEXT NOT NULL, -- 关联的 Topic 或 Comment ID
+    parentType TEXT AS ImageType NOT NULL, -- 枚举: Topic, Comment
+    originalUrl TEXT NOT NULL,
+    thumbnailUrl TEXT,
+    name TEXT,
+    extension TEXT,
+    width INTEGER,
+    height INTEGER,
+    sortOrder INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (sourceId, parentId, id)
+);
+
+-- 索引
+CREATE INDEX IF NOT EXISTS idx_image_parent ON Image(sourceId, parentId, parentType);
+
+-- 插入或更新图片
+upsertImage:
+INSERT OR REPLACE INTO Image (
+    id, sourceId, parentId, parentType, originalUrl, thumbnailUrl, name, extension, width, height, sortOrder
+) VALUES ?;
+
+-- 获取指定 Parent 的所有图片
+getImagesByParent:
+SELECT * FROM Image WHERE sourceId = :sourceId AND parentId = :parentId AND parentType = :parentType ORDER BY sortOrder ASC;
+
+-- 删除指定 Parent 的所有图片
+deleteImagesByParent:
+DELETE FROM Image WHERE sourceId = :sourceId AND parentId = :parentId AND parentType = :parentType;

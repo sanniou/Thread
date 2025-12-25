@@ -1,9 +1,9 @@
 package ai.saniou.thread.data.cache
 
-import ai.saniou.thread.db.table.forum.Forum
-import ai.saniou.thread.db.table.forum.GetThreadsInForumOffset
-import ai.saniou.thread.db.table.forum.Thread
-import ai.saniou.thread.db.table.forum.ThreadReply
+import ai.saniou.thread.db.table.forum.Channel
+import ai.saniou.thread.db.table.forum.GetTopicsInChannelOffset
+import ai.saniou.thread.db.table.forum.Topic
+import ai.saniou.thread.db.table.forum.Comment
 import app.cash.paging.PagingSource
 import kotlinx.coroutines.flow.Flow
 
@@ -14,7 +14,7 @@ interface SourceCache {
     /**
      * 观察指定帖子的详情
      */
-    fun observeThread(sourceId: String, threadId: String): Flow<Thread?>
+    fun observeThread(sourceId: String, threadId: String): Flow<Topic?>
 
     /**
      * 观察指定帖子的回复列表（分页）
@@ -22,31 +22,31 @@ interface SourceCache {
     fun getThreadRepliesPagingSource(
         sourceId: String,
         threadId: String,
-        userHash: String? = null
-    ): PagingSource<Int, ThreadReply>
+        userHash: String? = null,
+    ): PagingSource<Int, Comment>
 
     /**
      * 观察指定板块的帖子列表（分页）
      */
     fun getForumThreadsPagingSource(
         sourceId: String,
-        fid: String
-    ): PagingSource<Int, GetThreadsInForumOffset>
+        fid: String,
+    ): PagingSource<Int, GetTopicsInChannelOffset>
 
     /**
      * 保存帖子详情
      */
-    suspend fun saveThread(thread: Thread)
+    suspend fun saveThread(thread: Topic)
 
     /**
      * 批量保存帖子
      */
-    suspend fun saveThreads(threads: List<Thread>)
+    suspend fun saveThreads(threads: List<Topic>)
 
     /**
      * 保存回复列表
      */
-    suspend fun saveReplies(replies: List<ThreadReply>)
+    suspend fun saveReplies(replies: List<Comment>)
 
     /**
      * 清除指定板块的缓存
@@ -71,10 +71,10 @@ interface SourceCache {
     /**
      * 获取指定来源的所有板块
      */
-    suspend fun getForums(sourceId: String): List<Forum>
+    suspend fun getForums(sourceId: String): List<Channel>
 
     /**
      * 批量保存板块
      */
-    suspend fun saveForums(forums: List<Forum>)
+    suspend fun saveForums(forums: List<Channel>)
 }

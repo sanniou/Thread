@@ -5,8 +5,8 @@ import ai.saniou.forum.workflow.thread.ThreadContract.Effect
 import ai.saniou.forum.workflow.thread.ThreadContract.Event
 import ai.saniou.forum.workflow.thread.ThreadContract.State
 import ai.saniou.thread.domain.model.bookmark.Bookmark
-import ai.saniou.thread.domain.model.forum.Post
-import ai.saniou.thread.domain.model.forum.ThreadReply
+import ai.saniou.thread.domain.model.forum.Topic as Post
+import ai.saniou.thread.domain.model.forum.Comment as ThreadReply
 import ai.saniou.thread.domain.usecase.bookmark.AddBookmarkUseCase
 import ai.saniou.thread.domain.usecase.forum.GetForumNameUseCase
 import ai.saniou.thread.domain.usecase.subscription.GetActiveSubscriptionKeyUseCase

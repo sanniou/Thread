@@ -12,7 +12,7 @@ import ai.saniou.forum.workflow.image.ImagePreviewViewModelParams
 import ai.saniou.forum.workflow.post.PostPage
 import ai.saniou.forum.workflow.thread.ThreadPage
 import ai.saniou.forum.workflow.user.UserDetailPage
-import ai.saniou.thread.domain.model.forum.Forum
+import ai.saniou.thread.domain.model.forum.Channel as Forum
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

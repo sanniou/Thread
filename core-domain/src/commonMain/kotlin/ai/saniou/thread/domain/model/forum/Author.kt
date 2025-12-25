@@ -10,5 +10,6 @@ package ai.saniou.thread.domain.model.forum
 data class Author(
     val id: String,
     val name: String,
-    val avatar: String? = null
+    val avatar: String? = null,
+    val sourceName: String? = null
 )

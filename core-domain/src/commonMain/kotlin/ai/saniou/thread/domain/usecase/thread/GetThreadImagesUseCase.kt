@@ -8,6 +8,6 @@ class GetThreadImagesUseCase(
     private val threadRepository: ThreadRepository
 ) {
     operator fun invoke(threadId: Long): Flow<List<Image>> {
-        return threadRepository.getThreadImages(threadId)
+        return threadRepository.getTopicImages(threadId)
     }
 }

@@ -1,0 +1,150 @@
+-- 创建 TopicInformation 表 (原 ThreadInformation)
+CREATE TABLE IF NOT EXISTS TopicInformation (
+    id TEXT NOT NULL,
+    sourceId TEXT NOT NULL,
+    remainingCount INTEGER, -- 原 remainReplies
+    lastKey INTEGER NOT NULL,
+    last_access_time INTEGER NOT NULL DEFAULT 0,
+    last_read_comment_id INTEGER NOT NULL DEFAULT 0, -- 原 last_read_reply_id
+    PRIMARY KEY (sourceId, id)
+);
+
+-- 创建 Topic 表 (原 Thread)
+CREATE TABLE IF NOT EXISTS Topic (
+    id TEXT NOT NULL,
+    sourceId TEXT NOT NULL,
+    channelId TEXT NOT NULL, -- 原 fid
+    commentCount INTEGER NOT NULL, -- 原 replyCount
+    createdAt INTEGER NOT NULL, -- 原 now, 统一为 Long 时间戳
+    userHash TEXT NOT NULL,
+    authorName TEXT NOT NULL, -- 原 name
+    title TEXT, -- 可为空
+    content TEXT NOT NULL,
+    sage INTEGER NOT NULL,
+    admin INTEGER NOT NULL,
+    hide INTEGER NOT NULL,
+    page INTEGER NOT NULL,
+    PRIMARY KEY (sourceId, id)
+);
+
+-- 索引迁移
+CREATE INDEX IF NOT EXISTS idx_topic_last_key ON TopicInformation(lastKey);
+CREATE INDEX IF NOT EXISTS idx_topic_last_access_time ON TopicInformation(last_access_time);
+CREATE INDEX IF NOT EXISTS idx_topic_channel_id ON Topic(sourceId, channelId);
+
+-- 插入 Topic 数据 (无 Page)
+upsertTopicNoPage:
+INSERT INTO Topic (
+    id, sourceId, channelId, commentCount, createdAt, userHash, authorName, title, content, sage, admin, hide, page
+) VALUES ?
+ON CONFLICT (sourceId, id) DO UPDATE SET
+    commentCount = excluded.commentCount,
+    createdAt = excluded.createdAt,
+    userHash = excluded.userHash,
+    authorName = excluded.authorName,
+    title = COALESCE(excluded.title, Topic.title),
+    content = excluded.content,
+    sage = excluded.sage,
+    admin = excluded.admin,
+    hide = excluded.hide;
+
+-- 插入 Topic 数据
+upsertTopic:
+INSERT OR REPLACE INTO Topic (
+    id, sourceId, channelId, commentCount, createdAt, userHash, authorName, title, content, sage, admin, hide, page
+) VALUES ?;
+
+-- 插入或更新 TopicInformation 数据
+upsertTopicInformation:
+INSERT INTO TopicInformation (id, sourceId, remainingCount, lastKey)
+VALUES (?, ?, ?, ?)
+ON CONFLICT(sourceId, id) DO UPDATE SET
+    remainingCount = excluded.remainingCount,
+    lastKey = excluded.lastKey;
+
+-- 查询 Topic 数据 (方法名保留原逻辑但改名)
+countTopicsByChannelAndPage:
+SELECT count(1) FROM Topic WHERE sourceId = :sourceId AND channelId = :channelId AND page = :page;
+
+deleteTopicsByChannelAndPage:
+DELETE FROM Topic WHERE sourceId = :sourceId AND channelId = :channelId AND page = :page;
+
+-- 查询 TopicInformation 数据
+getTopicInformation:
+SELECT * FROM TopicInformation WHERE sourceId = :sourceId AND id = :id;
+
+-- 查询所有 Topic 数据
+getAllTopics:
+SELECT * FROM Topic;
+
+-- 更新 Topic 数据
+updateTopic:
+UPDATE Topic SET
+    channelId = ?,
+    commentCount = ?,
+    createdAt = ?,
+    userHash = ?,
+    authorName = ?,
+    title = ?,
+    content = ?,
+    sage = ?,
+    admin = ?,
+    hide = ?
+WHERE sourceId = ? AND id = ?;
+
+-- 删除 TopicInformation 数据
+deleteTopicInformation:
+DELETE FROM TopicInformation WHERE sourceId = ? AND id = ?;
+
+-- 删除 Topic 数据
+deleteTopic:
+DELETE FROM Topic WHERE sourceId = ? AND id = ?;
+
+-- 删除 Topic 页的数据
+deleteTopicPage:
+DELETE FROM Topic WHERE sourceId = ? AND channelId = ?;
+
+getTopic:
+SELECT Topic.*, TopicInformation.last_read_comment_id
+FROM Topic
+LEFT JOIN TopicInformation ON Topic.id = TopicInformation.id AND Topic.sourceId = TopicInformation.sourceId
+WHERE Topic.sourceId = :sourceId AND Topic.id = :id;
+
+countTopicsByChannel:
+SELECT count(*) FROM Topic WHERE sourceId = :sourceId AND channelId = :channelId;
+
+getTopicsInChannel:
+SELECT * FROM Topic LEFT JOIN TopicInformation ON Topic.id = TopicInformation.id AND Topic.sourceId = TopicInformation.sourceId WHERE Topic.sourceId = :sourceId AND channelId = :channelId AND page = :page ORDER BY lastKey DESC;
+
+getTopicsByChannel:
+SELECT * FROM Topic WHERE sourceId = :sourceId AND channelId = :channelId AND page = :page;
+
+getTopicsInChannelOffset:
+SELECT * FROM Topic LEFT JOIN TopicInformation ON Topic.id = TopicInformation.id AND Topic.sourceId = TopicInformation.sourceId WHERE Topic.sourceId = :sourceId AND channelId = :channelId ORDER BY lastKey DESC LIMIT :limit OFFSET :offset;
+
+updateTopicLastAccessTime:
+UPDATE TopicInformation SET last_access_time = :last_access_time WHERE sourceId = :sourceId AND id = :id;
+
+updateTopicLastReadCommentId:
+UPDATE TopicInformation SET last_read_comment_id = :last_read_comment_id WHERE sourceId = :sourceId AND id = :id;
+
+searchTopics:
+SELECT * FROM Topic
+LEFT JOIN TopicInformation ON Topic.id = TopicInformation.id AND Topic.sourceId = TopicInformation.sourceId
+WHERE (CAST(Topic.id AS TEXT) LIKE ('%' || :query || '%') OR title LIKE ('%' || :query || '%') OR content LIKE ('%' || :query || '%'))
+ORDER BY lastKey DESC
+LIMIT :limit OFFSET :offset;
+
+countSearchTopics:
+SELECT count(*) FROM Topic
+WHERE (CAST(id AS TEXT) LIKE ('%' || :query || '%') OR title LIKE ('%' || :query || '%') OR content LIKE ('%' || :query || '%'));
+
+getTopicsByUserHashOffset:
+SELECT Topic.* FROM Topic
+LEFT JOIN TopicInformation ON Topic.id = TopicInformation.id AND Topic.sourceId = TopicInformation.sourceId
+WHERE userHash = :userHash
+ORDER BY lastKey DESC
+LIMIT :limit OFFSET :offset;
+
+countTopicsByUserHash:
+SELECT count(*) FROM Topic WHERE userHash = :userHash;

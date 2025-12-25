@@ -1,10 +1,10 @@
 package ai.saniou.thread.data.cache
 
 import ai.saniou.thread.db.Database
-import ai.saniou.thread.db.table.forum.Forum
-import ai.saniou.thread.db.table.forum.GetThreadsInForumOffset
-import ai.saniou.thread.db.table.forum.Thread
-import ai.saniou.thread.db.table.forum.ThreadReply
+import ai.saniou.thread.db.table.forum.Channel
+import ai.saniou.thread.db.table.forum.GetTopicsInChannelOffset
+import ai.saniou.thread.db.table.forum.Topic
+import ai.saniou.thread.db.table.forum.Comment
 import app.cash.paging.PagingSource
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToOneOrNull
@@ -15,36 +15,36 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
 class SqlDelightSourceCache(
-    private val db: Database
+    db: Database
 ) : SourceCache {
 
-    private val threadQueries = db.threadQueries
-    private val threadReplyQueries = db.threadReplyQueries
-    private val forumQueries = db.forumQueries
+    private val topicQueries = db.topicQueries
+    private val commentQueries = db.commentQueries
+    private val channelQueries = db.channelQueries
 
-    override fun observeThread(sourceId: String, threadId: String): Flow<Thread?> {
-        return threadQueries.getThread(sourceId, threadId)
+    override fun observeThread(sourceId: String, threadId: String): Flow<Topic?> {
+        return topicQueries.getTopic(sourceId, threadId)
             .asFlow()
             .mapToOneOrNull(Dispatchers.IO)
-            .map { it?.let { Thread(it.id, it.sourceId, it.fid, it.replyCount, it.img, it.ext, it.now, it.userHash, it.name, it.title, it.content, it.sage, it.admin, it.hide, it.page) } }
+            .map { it?.let { Topic(it.id, it.sourceId, it.channelId, it.commentCount, it.createdAt, it.userHash, it.authorName, it.title, it.content, it.sage, it.admin, it.hide, it.page) } }
     }
 
     override fun getThreadRepliesPagingSource(
         sourceId: String,
         threadId: String,
         userHash: String?
-    ): PagingSource<Int, ThreadReply> {
+    ): PagingSource<Int, Comment> {
         return if (userHash != null) {
             QueryPagingSource(
-                transacter = threadReplyQueries,
+                transacter = commentQueries,
                 context = Dispatchers.IO,
-                countQuery = threadReplyQueries.countRepliesByThreadIdAndUserHash(
+                countQuery = commentQueries.countCommentsByTopicIdAndUserHash(
                     sourceId,
                     threadId,
                     userHash
                 ),
                 queryProvider = { limit, offset ->
-                    threadReplyQueries.getRepliesByThreadIdAndUserHashOffset(
+                    commentQueries.getCommentsByTopicIdAndUserHashOffset(
                         sourceId,
                         threadId,
                         userHash,
@@ -55,11 +55,11 @@ class SqlDelightSourceCache(
             )
         } else {
             QueryPagingSource(
-                transacter = threadReplyQueries,
+                transacter = commentQueries,
                 context = Dispatchers.IO,
-                countQuery = threadReplyQueries.countRepliesByThreadId(sourceId, threadId),
+                countQuery = commentQueries.countCommentsByTopicId(sourceId, threadId),
                 queryProvider = { limit, offset ->
-                    threadReplyQueries.getRepliesByThreadIdOffset(
+                    commentQueries.getCommentsByTopicIdOffset(
                         sourceId,
                         threadId,
                         limit,
@@ -73,38 +73,38 @@ class SqlDelightSourceCache(
     override fun getForumThreadsPagingSource(
         sourceId: String,
         fid: String
-    ): PagingSource<Int, GetThreadsInForumOffset> {
+    ): PagingSource<Int, GetTopicsInChannelOffset> {
         return QueryPagingSource(
-            transacter = threadQueries,
+            transacter = topicQueries,
             context = Dispatchers.IO,
-            countQuery = threadQueries.countThreadsByFid(sourceId, fid),
+            countQuery = topicQueries.countTopicsByChannel(sourceId, fid),
             queryProvider = { limit, offset ->
-                threadQueries.getThreadsInForumOffset(sourceId, fid, limit, offset)
+                topicQueries.getTopicsInChannelOffset(sourceId, fid, limit, offset)
             }
         )
     }
 
-    override suspend fun saveThread(thread: Thread) {
+    override suspend fun saveThread(thread: Topic) {
         withContext(Dispatchers.IO) {
-            threadQueries.upsertThread(thread)
+            topicQueries.upsertTopic(thread)
         }
     }
 
-    override suspend fun saveThreads(threads: List<Thread>) {
+    override suspend fun saveThreads(threads: List<Topic>) {
         withContext(Dispatchers.IO) {
-            threadQueries.transaction {
+            topicQueries.transaction {
                 threads.forEach { thread ->
-                    threadQueries.upsertThread(thread)
+                    topicQueries.upsertTopic(thread)
                 }
             }
         }
     }
 
-    override suspend fun saveReplies(replies: List<ThreadReply>) {
+    override suspend fun saveReplies(replies: List<Comment>) {
         withContext(Dispatchers.IO) {
-            threadReplyQueries.transaction {
+            commentQueries.transaction {
                 replies.forEach { reply ->
-                    threadReplyQueries.upsertThreadReply(reply)
+                    commentQueries.upsertComment(reply)
                 }
             }
         }
@@ -112,39 +112,39 @@ class SqlDelightSourceCache(
 
     override suspend fun clearForumCache(sourceId: String, fid: String) {
         withContext(Dispatchers.IO) {
-            threadQueries.deleteThreadPage(sourceId, fid)
+            topicQueries.deleteTopicPage(sourceId, fid)
         }
     }
 
     override suspend fun clearThreadRepliesCache(sourceId: String, threadId: String) {
         withContext(Dispatchers.IO) {
-            threadReplyQueries.deleteThreadRepliesByThreadId(sourceId, threadId)
+            commentQueries.deleteCommentsByTopicId(sourceId, threadId)
         }
     }
 
     override suspend fun updateThreadLastAccessTime(sourceId: String, threadId: String, time: Long) {
         withContext(Dispatchers.IO) {
-            threadQueries.updateThreadLastAccessTime(time, sourceId, threadId)
+            topicQueries.updateTopicLastAccessTime(time, sourceId, threadId)
         }
     }
 
     override suspend fun updateThreadLastReadReplyId(sourceId: String, threadId: String, replyId: Long) {
         withContext(Dispatchers.IO) {
-            threadQueries.updateThreadLastReadReplyId(replyId, sourceId, threadId)
+            topicQueries.updateTopicLastReadCommentId(replyId, sourceId, threadId)
         }
     }
 
-    override suspend fun getForums(sourceId: String): List<Forum> {
+    override suspend fun getForums(sourceId: String): List<Channel> {
         return withContext(Dispatchers.IO) {
-            forumQueries.getForumsBySource(sourceId).executeAsList()
+            channelQueries.getChannelsBySource(sourceId).executeAsList()
         }
     }
 
-    override suspend fun saveForums(forums: List<Forum>) {
+    override suspend fun saveForums(forums: List<Channel>) {
         withContext(Dispatchers.IO) {
-            forumQueries.transaction {
+            channelQueries.transaction {
                 forums.forEach { forum ->
-                    forumQueries.insertForum(forum)
+                    channelQueries.insertChannel(forum)
                 }
             }
         }

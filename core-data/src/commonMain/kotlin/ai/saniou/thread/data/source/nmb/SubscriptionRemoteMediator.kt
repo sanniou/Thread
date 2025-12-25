@@ -9,7 +9,7 @@ import ai.saniou.thread.data.source.nmb.remote.dto.RemoteKeyType
 import ai.saniou.thread.data.source.nmb.remote.dto.nowToEpochMilliseconds
 import ai.saniou.thread.data.source.nmb.remote.dto.toTable
 import ai.saniou.thread.db.Database
-import ai.saniou.thread.db.table.forum.SelectSubscriptionThread
+import ai.saniou.thread.db.table.forum.SelectSubscriptionTopic
 import app.cash.paging.ExperimentalPagingApi
 import app.cash.paging.LoadType
 import app.cash.paging.PagingState
@@ -22,9 +22,9 @@ class SubscriptionRemoteMediator(
     private val forumRepository: NmbXdApi,
     private val db: Database,
     private val dataPolicy: DataPolicy,
-) : RemoteMediator<Int, SelectSubscriptionThread>() {
+) : RemoteMediator<Int, SelectSubscriptionTopic>() {
 
-    private val delegate = GenericRemoteMediator<Int, SelectSubscriptionThread, List<Feed>>(
+    private val delegate = GenericRemoteMediator<Int, SelectSubscriptionTopic, List<Feed>>(
         db = db,
         dataPolicy = dataPolicy,
         initialKey = 1,
@@ -41,12 +41,12 @@ class SubscriptionRemoteMediator(
             }
 
             feedDetail.forEach { feed ->
-                db.threadQueries.upsertThreadNoPage(feed.toTable("nmb", Long.MAX_VALUE))
+                db.topicQueries.upsertTopicNoPage(feed.toTable("nmb", Long.MAX_VALUE))
 
                 db.subscriptionQueries.insertSubscription(
                     subscriptionKey = subscriptionKey,
                     sourceId = "nmb",
-                    threadId = feed.id.toString(),
+                    topicId = feed.id.toString(),
                     page = page.toLong(),
                     subscriptionTime = feed.nowToEpochMilliseconds(),
                     isLocal = 0
@@ -68,7 +68,7 @@ class SubscriptionRemoteMediator(
 
     override suspend fun load(
         loadType: LoadType,
-        state: PagingState<Int, SelectSubscriptionThread>,
+        state: PagingState<Int, SelectSubscriptionTopic>,
     ): RemoteMediatorMediatorResult {
         return delegate.load(loadType, state)
     }

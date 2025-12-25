@@ -28,8 +28,8 @@ import ai.saniou.forum.workflow.reference.ReferenceViewModel
 import ai.saniou.forum.workflow.thread.ThreadContract.Effect
 import ai.saniou.forum.workflow.thread.ThreadContract.Event
 import ai.saniou.forum.workflow.thread.ThreadContract.State
-import ai.saniou.thread.domain.model.forum.Post
-import ai.saniou.thread.domain.model.forum.ThreadReply
+import ai.saniou.thread.domain.model.forum.Topic as Post
+import ai.saniou.thread.domain.model.forum.Comment as ThreadReply
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable

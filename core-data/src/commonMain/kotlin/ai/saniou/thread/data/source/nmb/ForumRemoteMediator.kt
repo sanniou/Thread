@@ -1,8 +1,7 @@
 package ai.saniou.thread.data.source.nmb
 
 import ai.saniou.thread.db.Database
-import ai.saniou.thread.db.table.forum.GetThreadsInForumOffset
-import ai.saniou.thread.db.table.RemoteKeys
+import ai.saniou.thread.db.table.forum.GetTopicsInChannelOffset as GetThreadsInForumOffset
 import ai.saniou.thread.data.source.nmb.remote.dto.Forum
 import ai.saniou.thread.data.source.nmb.remote.dto.RemoteKeyType
 import ai.saniou.thread.data.source.nmb.remote.dto.toTable
@@ -16,10 +15,6 @@ import app.cash.paging.LoadType
 import app.cash.paging.PagingState
 import app.cash.paging.RemoteMediator
 import app.cash.paging.RemoteMediatorMediatorResult
-import app.cash.paging.RemoteMediatorMediatorResultError
-import app.cash.paging.RemoteMediatorMediatorResultSuccess
-import kotlin.time.Clock
-import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalPagingApi::class)
 class ForumRemoteMediator(
@@ -39,29 +34,29 @@ class ForumRemoteMediator(
             db = db,
             type = RemoteKeyType.FORUM,
             id = fid,
-            itemIdExtractor = { it.fid.toString() }
+            itemIdExtractor = { it.channelId }
         ),
         fetcher = { page -> fetcher(page) },
         saver = { forums, page, loadType ->
             if (loadType == LoadType.REFRESH) {
-                db.threadQueries.deleteThreadsByFidAndPage(sourceId, fid, page.toLong())
+                db.topicQueries.deleteTopicsByChannelAndPage(sourceId, fid, page.toLong())
             }
             forums.forEach { forum ->
-                db.threadQueries.upsertThread(forum.toTable(sourceId, page.toLong()))
-                db.threadQueries.upsertThreadInformation(
+                db.topicQueries.upsertTopic(forum.toTable(sourceId, page.toLong()))
+                db.topicQueries.upsertTopicInformation(
                     id = forum.id.toString(),
                     sourceId = sourceId,
-                    remainReplies = forum.remainReplies,
+                    remainingCount = forum.remainingCount, // remainReplies -> remainingCount
                     lastKey = forum.replies.lastOrNull()?.id ?: forum.id
                 )
                 forum.toTableReply(sourceId)
-                    .forEach(db.threadReplyQueries::upsertThreadReply)
+                    .forEach(db.commentQueries::upsertComment)
             }
         },
         endOfPaginationReached = { it.isEmpty() },
         cacheChecker = { page ->
             val threadsInDb =
-                db.threadQueries.countThreadsByFidAndPage(sourceId, fid, page.toLong())
+                db.topicQueries.countTopicsByChannelAndPage(sourceId, fid, page.toLong())
                     .executeAsOne()
             threadsInDb > 0
         },

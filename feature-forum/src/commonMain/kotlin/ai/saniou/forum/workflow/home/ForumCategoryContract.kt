@@ -1,7 +1,7 @@
 package ai.saniou.forum.workflow.home
 
 import ai.saniou.coreui.state.UiStateWrapper
-import ai.saniou.thread.domain.model.forum.Forum
+import ai.saniou.thread.domain.model.forum.Channel as Forum
 import ai.saniou.thread.domain.repository.Source
 
 /**

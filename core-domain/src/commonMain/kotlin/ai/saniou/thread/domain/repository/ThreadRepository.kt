@@ -1,8 +1,8 @@
 package ai.saniou.thread.domain.repository
 
 import ai.saniou.thread.domain.model.forum.Image
-import ai.saniou.thread.domain.model.forum.Post
-import ai.saniou.thread.domain.model.forum.ThreadReply
+import ai.saniou.thread.domain.model.forum.Topic as Post
+import ai.saniou.thread.domain.model.forum.Comment as ThreadReply
 import app.cash.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 
@@ -43,7 +43,7 @@ interface ThreadRepository {
      * @param threadId 帖子ID
      * @return 包含图片列表的 Flow
      */
-    fun getThreadImages(threadId: Long): Flow<List<Image>>
+    fun getTopicImages(threadId: Long): Flow<List<Image>>
 
     /**
      * 获取帖子的所有回复（非分页）

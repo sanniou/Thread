@@ -1,9 +1,11 @@
 package ai.saniou.thread.data.source.nmb.remote.dto
 
 import ai.saniou.corecommon.utils.toTime
-import ai.saniou.thread.db.table.forum.SelectSubscriptionThread
-import ai.saniou.thread.db.table.forum.Thread
-import ai.saniou.thread.domain.model.forum.Post
+import ai.saniou.thread.db.table.forum.SelectSubscriptionTopic
+import ai.saniou.thread.db.table.forum.Topic as Thread
+import ai.saniou.thread.domain.model.forum.Topic as Post
+import ai.saniou.thread.domain.model.forum.Author
+import ai.saniou.thread.domain.model.forum.Image
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
@@ -13,39 +15,7 @@ import kotlinx.serialization.json.JsonNames
 import kotlin.time.ExperimentalTime
 
 /**
- * [].id 	String 	串的 ID
- * [].user_id 	String 	发串的用户 ID？
- * [].fid 	String 	串所属的版面 ID
- * [].reply_count 	String 	回复数量
- * [].recent_replies 	String 	最近几条回复的 ID，使用的是 [0,1,2,3] 这样的类似于数组的格式
- * [].category 	String 	？
- * [].file_id 	String 	？
- * [].img 	String 	参见“查看版面”，不再重复
- * [].ext 	String
- * [].now 	String
- * [].user_hash 	String
- * [].name 	String
- * [].email 	String
- * [].title 	String
- * [].content 	String
- * [].status 	String
- * [].admin 	String
- * [].hide 	String
- * [].po 	String 	？
- *
- *     {
- *         "id": "52592201",
- *         "fid": "106",
- *         "img": "2022-10-10\/6343f92fce7ad",
- *         "ext": ".jpg",
- *         "now": "2022-10-10(一)18:51:25",
- *         "user_hash": "u4KtXpW",
- *         "name": "",
- *         "email": "",
- *         "title": "",
- *         "content": "要不然拼多多拼单开个集中串吧<br \/>\n<br \/>\n我先来",
- *         "admin": "0"
- *     }
+ * Feed DTO
  */
 @Serializable
 @OptIn(ExperimentalSerializationApi::class)
@@ -79,44 +49,20 @@ data class Feed(
 ) : IBaseThread
 
 
-fun Thread.toFeed(isLocal: Boolean = false) = Feed(
+fun SelectSubscriptionTopic.toFeed() = Feed(
     id = id.toLong(),
-    fid = fid.toLong(),
-    replyCount = replyCount,
-    img = img,
-    ext = ext,
-    title = title,
-    content = content,
-    admin = admin,
-    hide = hide,
-    now = now,
-    userHash = userHash,
-    name = name,
-    sage = sage,
-    userId = "",
-    recentReplies = "[]",
-    category = "",
-    fileId = "",
-    email = "",
-    status = "",
-    po = "",
-    isLocal = isLocal
-)
-
-fun SelectSubscriptionThread.toFeed() = Feed(
-    id = id.toLong(),
-    fid = fid.toLong(),
-    replyCount = replyCount,
-    img = img,
-    ext = ext,
-    title = title,
-    content = content,
-    admin = admin,
-    hide = hide,
-    now = now,
-    userHash = userHash,
-    name = name,
-    sage = sage,
+    fid = channelId.toLong(),
+    replyCount = commentCount ?: 0,
+    img = "",
+    ext = "",
+    title = title ?: "",
+    content = content ?: "",
+    admin = admin ?: 0,
+    hide = hide ?: 0,
+    now = createdAt.toString(),
+    userHash = userHash ?: "",
+    name = authorName ?: "",
+    sage = sage ?: 0,
     userId = "",
     recentReplies = "[]",
     category = "",
@@ -130,23 +76,20 @@ fun SelectSubscriptionThread.toFeed() = Feed(
 fun Feed.toTable(sourceId: String, page: Long) = Thread(
     id = id.toString(),
     sourceId = sourceId,
-    fid = fid.toString(),
-    replyCount = replyCount,
-    img = img,
-    ext = ext,
+    channelId = fid.toString(),
+    commentCount = replyCount,
+    createdAt = nowToEpochMilliseconds(), // now -> createdAt (Long)
+    userHash = userHash,
+    authorName = name,
     title = title,
     content = content,
+    sage = sage,
     admin = admin,
     hide = hide,
-    now = now,
-    userHash = userHash,
-    name = name,
-    sage = sage,
     page = page
 )
 
 @OptIn(ExperimentalTime::class)
-
 fun Feed.nowToEpochMilliseconds(): Long {
     // 原始格式：2025-11-17(一)04:10:48
     // 1. 去掉括号和星期
@@ -166,34 +109,46 @@ fun Feed.nowToEpochMilliseconds(): Long {
 }
 
 @OptIn(ExperimentalTime::class)
-fun IBaseThread.toDomain(): Post = Post(
-    id = id.toString(),
-    sourceName = "nmb",
-    sourceUrl = "https://nmb.ai/thread/$id",
-    title = title,
-    content = content,
-    author = name,
-    userHash = userHash,
-    createdAt = now.toTime(),
-    forumName = fid.toString(),
-    replyCount = replyCount,
-    img = img.ifBlank { null },
-    ext = ext.ifBlank { null },
-    isSage = sage > 0,
-    isAdmin = admin > 0,
-    isHidden = hide > 0,
-    isLocal = false,
-    now = now,
-    name = name,
-    sage = sage,
-    fid = fid,
-    admin = admin,
-    hide = hide,
-    // fixme  后续处理 lastReadReplyId 和 replies
-    lastReadReplyId = "",
-    replies = null,
-    remainReplies = null
-)
+fun IBaseThread.toDomain(): Post {
+    val author = Author(
+        id = userHash,
+        name = name,
+        sourceName = "nmb"
+    )
+    val images = if (img.isNotBlank() && ext.isNotBlank()) {
+        listOf(
+            Image(
+                originalUrl = "$img$ext",
+                thumbnailUrl = "$img$ext",
+                extension = ext
+            )
+        )
+    } else {
+        emptyList()
+    }
+
+    return Post(
+        id = id.toString(),
+        sourceName = "nmb",
+        sourceUrl = "https://nmb.ai/thread/$id",
+        title = title,
+        content = content,
+        author = author,
+        createdAt = now.toTime(),
+        channelId = fid.toString(), // channelId
+        channelName = "",
+        commentCount = replyCount, // commentCount
+        images = images,
+        isSage = sage > 0,
+        isAdmin = admin > 0,
+        isHidden = hide > 0,
+        isLocal = false,
+        // fixme  后续处理 lastReadCommentId 和 comments
+        lastReadCommentId = null,
+        comments = emptyList(),
+        remainingCount = null
+    )
+}
 
 interface IBaseThread : IBaseAuthor, IThreadBody {
 
@@ -220,5 +175,5 @@ interface IThreadBody {
 
 interface IBaseThreadReply {
     val replies: List<ThreadReply>
-    val remainReplies: Long?
+     val remainingCount: Long? // Remove or rename if needed, Post interface doesn't enforce it directly here
 }

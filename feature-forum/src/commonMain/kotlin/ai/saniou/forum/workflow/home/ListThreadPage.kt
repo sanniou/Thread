@@ -10,7 +10,7 @@ import ai.saniou.forum.ui.components.LoadingIndicator
 import ai.saniou.forum.ui.components.ThreadListSkeleton
 import ai.saniou.thread.data.source.nmb.remote.dto.ThreadWithInformation
 import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
-import ai.saniou.thread.domain.model.forum.Post
+import ai.saniou.thread.domain.model.forum.Topic as Post
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column

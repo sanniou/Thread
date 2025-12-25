@@ -1,6 +1,7 @@
 package ai.saniou.thread.data.mapper
 
 import ai.saniou.thread.db.table.Cookie
+import kotlin.time.Instant
 import ai.saniou.thread.domain.model.forum.Cookie as DomainCookie
 
 fun Cookie.toDomain(): DomainCookie {
@@ -8,8 +9,8 @@ fun Cookie.toDomain(): DomainCookie {
         alias = alias,
         value = cookie,
         sort = sort,
-        lastUsedAt = lastUsedAt,
-        createdAt = createdAt,
+        lastUsedAt = Instant.fromEpochMilliseconds(lastUsedAt),
+        createdAt = Instant.fromEpochMilliseconds(createdAt),
     )
 }
 

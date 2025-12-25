@@ -6,7 +6,7 @@ import ai.saniou.thread.data.source.nmb.SubscriptionRemoteMediator
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
 import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
-import ai.saniou.thread.domain.model.forum.Post
+import ai.saniou.thread.domain.model.forum.Topic as Post
 import ai.saniou.thread.domain.repository.SubscriptionRepository
 import app.cash.paging.ExperimentalPagingApi
 import app.cash.paging.Pager
@@ -64,7 +64,7 @@ class SubscriptionRepositoryImpl(
                     transacter = db.subscriptionQueries,
                     context = Dispatchers.IO,
                     pageQueryProvider = { page ->
-                        db.subscriptionQueries.selectSubscriptionThread(
+                        db.subscriptionQueries.selectSubscriptionTopic(
                             subscriptionKey = subscriptionKey,
                             page = page.toLong()
                         )
@@ -89,7 +89,7 @@ class SubscriptionRepositoryImpl(
                 db.subscriptionQueries.insertSubscription(
                     subscriptionKey = subscriptionKey,
                     sourceId = "nmb",
-                    threadId = subscriptionId,
+                    topicId = subscriptionId,
                     page = 1L,
                     subscriptionTime = Clock.System.now().epochSeconds,
                     isLocal = 1L
@@ -115,8 +115,8 @@ class SubscriptionRepositoryImpl(
             val localSubscriptions =
                 db.subscriptionQueries.getLocalSubscriptions(subscriptionKey).executeAsList()
             localSubscriptions.forEach {
-                nmbXdApi.addFeed(subscriptionKey, it.threadId.toLong())
-                db.subscriptionQueries.updateLocalFlag(subscriptionKey, "nmb", it.threadId)
+                nmbXdApi.addFeed(subscriptionKey, it.topicId.toLong())
+                db.subscriptionQueries.updateLocalFlag(subscriptionKey, "nmb", it.topicId)
             }
         }
     }

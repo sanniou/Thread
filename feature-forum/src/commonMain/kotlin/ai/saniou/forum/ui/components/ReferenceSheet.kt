@@ -1,6 +1,6 @@
 package ai.saniou.forum.ui.components
 
-import ai.saniou.thread.domain.model.forum.ThreadReply
+import ai.saniou.thread.domain.model.forum.Comment as ThreadReply
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box

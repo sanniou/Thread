@@ -5,7 +5,7 @@ import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
 import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
 import ai.saniou.thread.data.source.nmb.remote.dto.toTable
 import ai.saniou.corecommon.utils.toTime
-import ai.saniou.thread.domain.model.forum.ThreadReply
+import ai.saniou.thread.domain.model.forum.Comment as ThreadReply
 import ai.saniou.thread.domain.repository.ReferenceRepository
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToOneOrNull
@@ -22,17 +22,17 @@ class ReferenceRepositoryImpl(
 ) : ReferenceRepository {
 
     override fun getReference(id: Long): Flow<ThreadReply> =
-        db.threadReplyQueries.getThreadReplyById("nmb", id.toString())
+        db.commentQueries.getCommentById("nmb", id.toString())
             .asFlow()
             .mapToOneOrNull(Dispatchers.IO)
-            .mapNotNull { it?.toDomain() }
+            .mapNotNull { it?.toDomain(db.imageQueries) }
             .onStart {
-                if (db.threadReplyQueries.getThreadReplyById("nmb", id.toString())
+                if (db.commentQueries.getCommentById("nmb", id.toString())
                         .executeAsOneOrNull() == null
                 ) {
                     val html = api.refHtml(id)
                     val reply = parseRefHtml(html, id)
-                    db.threadReplyQueries.upsertThreadReply(reply)
+                    db.commentQueries.upsertComment(reply)
                 }
             }
             .flowOn(Dispatchers.IO)
@@ -41,7 +41,7 @@ class ReferenceRepositoryImpl(
     private fun parseRefHtml(
         html: String,
         refId: Long,
-    ): ai.saniou.thread.db.table.forum.ThreadReply {
+    ): ai.saniou.thread.db.table.forum.Comment {
         val idRegex = """href="([^"]*)"[^>]*class="h-threads-info-id">No\.(\d+)""".toRegex()
         val titleRegex = """<span class="h-threads-info-title">(.*?)</span>""".toRegex()
         val nameRegex = """<span class="h-threads-info-email"[^>]*>(.*?)</span>""".toRegex()
@@ -70,37 +70,24 @@ class ReferenceRepositoryImpl(
         val now = timeRegex.find(html)?.groupValues?.get(1) ?: ""
         val content = contentRegex.find(html)?.groupValues?.get(1)?.trim() ?: ""
 
-        var img = ""
-        var ext = ""
-        val imgMatch = imgRegex.find(html)
-        if (imgMatch != null) {
-            val imgUrl = imgMatch.groupValues[1]
-            if (imgUrl.contains("/image/")) {
-                val parts = imgUrl.split("/image/")
-                if (parts.size > 1) {
-                    val filename = parts[1]
-                    val dotIndex = filename.lastIndexOf('.')
-                    if (dotIndex != -1) {
-                        img = filename.substring(0, dotIndex)
-                        ext = filename.substring(dotIndex)
-                    }
-                }
-            }
-        }
+        // TODO: Handle image parsing and saving to Image table
+        // For now, we only populate the fields available in the new Comment table
+        // img/ext columns are removed from Comment table
 
-        return ai.saniou.thread.db.table.forum.ThreadReply(
+        return ai.saniou.thread.db.table.forum.Comment(
             id = parsedId.toString(),
+            sourceId = "nmb",
+            topicId = threadId.toString(),
+            page = Long.MIN_VALUE,
             userHash = userHash,
             admin = if (isAdmin) 1L else 0L,
             title = title,
-            now = now,
+            createdAt = now.toTime().epochSeconds,
             content = content,
-            img = img,
-            ext = ext,
-            name = name,
-            threadId = threadId.toString(),
-            sourceId = "nmb",
-            page = Long.MIN_VALUE
+            // img/ext removed
+            authorName = name,
+            floor = null,
+            replyToId = null
         )
     }
 }

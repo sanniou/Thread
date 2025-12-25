@@ -2,14 +2,15 @@ package ai.saniou.thread.data.source.acfun
 
 import ai.saniou.thread.data.source.acfun.remote.AcfunApi
 import ai.saniou.thread.data.source.acfun.remote.AcfunTokenManager
-import ai.saniou.thread.domain.model.forum.Forum
-import ai.saniou.thread.domain.model.forum.Post
-import ai.saniou.thread.domain.model.forum.ThreadReply
+import ai.saniou.thread.domain.model.forum.Channel as Forum
+import ai.saniou.thread.domain.model.forum.Topic as Post
+import ai.saniou.thread.domain.model.forum.Comment as ThreadReply
 import ai.saniou.thread.domain.model.forum.Trend
 import ai.saniou.thread.domain.model.forum.TrendResult
 import ai.saniou.thread.domain.repository.Source
 import ai.saniou.thread.domain.repository.SourceCapabilities
 import ai.saniou.thread.network.SaniouResponse
+import ai.saniou.thread.domain.model.forum.Author
 import app.cash.paging.Pager
 import app.cash.paging.PagingConfig
 import app.cash.paging.PagingData
@@ -23,6 +24,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Instant
+import kotlin.time.Clock
 
 class AcfunSource(
     private val acfunApi: AcfunApi,
@@ -102,29 +104,23 @@ class AcfunSource(
                 val data = response.data
                 if (data.result == 0) {
                     val post = Post(
-                        id = data.articleId ?: threadId,
+                        id = data.articleId?.toString() ?: threadId.toString(),
                         sourceName = "acfun",
                         sourceUrl = "https://www.acfun.cn/a/ac${data.articleId}",
                         title = data.title?:"",
                         content = data.parts?.joinToString("\n") { it.content } ?: data.description
                         ?: "",
-                        author = data.user?.name ?: "Unknown",
-                        userHash = data.user?.id ?: "",
+                        author = Author(id = data.user?.id?.toString() ?: "", name = data.user?.name ?: "Unknown"),
                         createdAt = Instant.fromEpochMilliseconds(data.createTimeMillis ?: 0),
-                        forumName = data.channel?.name ?: "文章",
-                        replyCount = (data.commentCount ?: 0).toLong(),
-                        img = data.coverUrl ?: "",
-                        ext = null,
+                        channelName = data.channel?.name ?: "文章",
+                        commentCount = (data.commentCount ?: 0).toLong(),
+                        images = emptyList(), // TODO: extract images from content or coverUrl
                         isSage = false,
                         isAdmin = false,
                         isHidden = false,
-                        now = data.createTime ?: "",
-                        name = data.user?.name ?: "Unknown",
-                        sage = 0,
-                        fid = data.channel?.id?.toLong() ?: 0,
-                        admin = 0,
-                        hide = 0,
-                        lastReadReplyId = ""
+                        isLocal = false,
+                        channelId = data.channel?.id?.toString() ?: "0",
+                        lastReadCommentId = "",
                     )
                     Result.success(post)
                 } else {
@@ -166,18 +162,18 @@ class AcfunSource(
                                     ThreadReply(
                                         id = comment.commentId.toString(),
                                         content = comment.content ?: "",
-//                                        author = comment.user?.userName ?: "Unknown",
-                                        userHash = comment.user?.id?.toString() ?: "",
+                                        author = Author(
+                                            id = comment.user?.id?.toString() ?: "",
+                                            name = comment.user?.name ?: "Unknown",
+                                            avatar = comment.user?.headUrl
+                                        ),
                                         createdAt = Instant.fromEpochMilliseconds(
                                             comment.timestamp ?: 0
                                         ),
-                                        img = "",
-                                        ext = "",
-                                        now = comment.postDate ?: "",
-                                        name = comment.user?.name ?: "Unknown",
-                                        admin = 0,
+                                        images = emptyList(),
+                                        isAdmin = false,
                                         title = "No.${comment.floor}",
-                                        threadId = threadId,
+                                        topicId = threadId,
                                     )
                                 }
                                 LoadResult.Page(data = replies, prevKey = null, nextKey = nextKey)
@@ -211,14 +207,14 @@ class AcfunSource(
                         Trend(
                             rank = (index + 1).toString().padStart(2, '0'),
                             trendNum = "围观: ${item.viewCountShow ?: item.viewCount ?: 0}",
-                            forum = "[${item.channelName ?: "文章"}]",
+                            channel = "[${item.channelName ?: "文章"}]",
                             isNew = false,
-                            threadId = item.resourceId,
+                            topicId = item.resourceId.toString(),
                             contentPreview = "${item.contentTitle ?: ""}\n${item.userName ?: ""}"
                         )
                     }
                     val trendResult = TrendResult(
-                        date = "",
+                        date = Clock.System.now(),
                         items = trends
                     )
                     Result.success(trendResult)

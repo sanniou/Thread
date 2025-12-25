@@ -1,8 +1,8 @@
 package ai.saniou.forum.workflow.thread
 
 import ai.saniou.coreui.state.AppError
-import ai.saniou.thread.domain.model.forum.Post
-import ai.saniou.thread.domain.model.forum.ThreadReply
+import ai.saniou.thread.domain.model.forum.Topic as Post
+import ai.saniou.thread.domain.model.forum.Comment as ThreadReply
 import app.cash.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow

@@ -4,7 +4,7 @@ import ai.saniou.corecommon.utils.toRelativeTimeString
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.thread.data.source.nmb.remote.dto.IBaseThread
 import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
-import ai.saniou.thread.domain.model.forum.Post
+import ai.saniou.thread.domain.model.forum.Topic as Post
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

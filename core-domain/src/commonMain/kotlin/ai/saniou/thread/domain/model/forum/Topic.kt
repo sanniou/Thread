@@ -21,7 +21,7 @@ import kotlin.time.Instant
  * @param sourceName 来源标识
  * @param sourceUrl 来源URL
  * @param comments 评论列表 (原 replies)
- * @param remainComments 剩余评论数
+ * @param remainingCount 剩余评论数
  * @param lastReadCommentId 最后阅读的评论ID
  */
 data class Topic(
@@ -29,7 +29,7 @@ data class Topic(
     val channelId: String,
     val channelName: String,
 
-    val title: String,
+    val title: String?,
     val content: String,
 
     val author: Author,
@@ -51,6 +51,6 @@ data class Topic(
 
     // 详情页数据
     val comments: List<Comment> = emptyList(),
-    val remainComments: Long? = null,
+    val remainingCount: Long? = null,
     val lastReadCommentId: String? = null
 )

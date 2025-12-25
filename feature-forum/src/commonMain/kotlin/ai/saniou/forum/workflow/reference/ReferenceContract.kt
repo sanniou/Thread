@@ -1,6 +1,6 @@
 package ai.saniou.forum.workflow.reference
 
-import ai.saniou.thread.domain.model.forum.ThreadReply
+import ai.saniou.thread.domain.model.forum.Comment as ThreadReply
 
 interface ReferenceContract {
     data class State(

@@ -2,15 +2,15 @@
 CREATE TABLE IF NOT EXISTS Subscription (
     subscriptionKey TEXT NOT NULL,
     sourceId TEXT NOT NULL,
-    threadId TEXT NOT NULL,
+    topicId TEXT NOT NULL, -- 原 threadId
     page INTEGER NOT NULL,
     subscriptionTime INTEGER NOT NULL,
     isLocal INTEGER NOT NULL DEFAULT 0, -- 0: cloud, 1: local
-    PRIMARY KEY (subscriptionKey, sourceId, threadId)
+    PRIMARY KEY (subscriptionKey, sourceId, topicId)
 );
 
--- 为 threadId 字段创建索引
-CREATE INDEX IF NOT EXISTS idx_subscription_thread_id ON Subscription(sourceId, threadId);
+-- 为 topicId 字段创建索引
+CREATE INDEX IF NOT EXISTS idx_subscription_topic_id ON Subscription(sourceId, topicId);
 
 -- 为 subscriptionKey 字段创建索引
 CREATE INDEX IF NOT EXISTS idx_subscription_key ON Subscription(subscriptionKey);
@@ -18,30 +18,30 @@ CREATE INDEX IF NOT EXISTS idx_subscription_key ON Subscription(subscriptionKey)
 -- 插入 Subscription 数据
 insertSubscription:
 INSERT OR REPLACE INTO Subscription (
-    subscriptionKey, sourceId, threadId, page, subscriptionTime, isLocal
+    subscriptionKey, sourceId, topicId, page, subscriptionTime, isLocal
 ) VALUES (?, ?, ?, ?, ?, ?);
 
 -- 更新 Subscription 数据
 updateSubscription:
 UPDATE Subscription SET
     subscriptionTime = ?
-WHERE subscriptionKey = ? AND sourceId = ? AND threadId = ?;
+WHERE subscriptionKey = ? AND sourceId = ? AND topicId = ?;
 
 -- 删除 Subscription 数据
 deleteSubscription:
-DELETE FROM Subscription WHERE subscriptionKey = ? AND sourceId = ? AND threadId = ?;
+DELETE FROM Subscription WHERE subscriptionKey = ? AND sourceId = ? AND topicId = ?;
 
 -- 查询指定 subscriptionKey 的 Subscription 数据
 getSubscriptionsBySubscriptionKey:
 SELECT * FROM Subscription WHERE subscriptionKey = :subscriptionKey;
 
--- 查询指定 subscriptionKey 和 threadId 的 Subscription 数据
+-- 查询指定 subscriptionKey 和 topicId 的 Subscription 数据
 getSubscription:
-SELECT * FROM Subscription WHERE subscriptionKey = :subscriptionKey AND sourceId = :sourceId AND threadId = :threadId;
+SELECT * FROM Subscription WHERE subscriptionKey = :subscriptionKey AND sourceId = :sourceId AND topicId = :topicId;
 
--- 查询指定 threadId 的 Subscription 数据
-getSubscriptionsByThreadId:
-SELECT * FROM Subscription WHERE sourceId = :sourceId AND threadId = :threadId;
+-- 查询指定 topicId 的 Subscription 数据
+getSubscriptionsByTopicId:
+SELECT * FROM Subscription WHERE sourceId = :sourceId AND topicId = :topicId;
 
 -- 统计 Subscription 数量
 countSubscriptions:
@@ -55,22 +55,22 @@ SELECT count(*) FROM Subscription WHERE subscriptionKey = :subscriptionKey;
 countSubscriptionsBySubscriptionKeyAndPage:
 SELECT count(*) FROM Subscription WHERE subscriptionKey = :subscriptionKey AND page = :page;
 
--- 统计指定 threadId 的 Subscription 数量
-countSubscriptionsByThreadId:
-SELECT count(*) FROM Subscription WHERE sourceId = :sourceId AND threadId = :threadId;
+-- 统计指定 topicId 的 Subscription 数量
+countSubscriptionsByTopicId:
+SELECT count(*) FROM Subscription WHERE sourceId = :sourceId AND topicId = :topicId;
 
--- 联表查询 key Thread 数据
-selectSubscriptionThread:
+-- 联表查询 key Topic 数据 (原 Thread)
+selectSubscriptionTopic:
 SELECT T.*, S.isLocal
 FROM Subscription AS S
-JOIN Thread AS T ON S.threadId = T.id AND S.sourceId = T.sourceId
+JOIN Topic AS T ON S.topicId = T.id AND S.sourceId = T.sourceId
 WHERE S.subscriptionKey = :subscriptionKey AND S.page = :page
 ORDER BY S.subscriptionTime DESC;
 
 isSubscribed:
 SELECT EXISTS (
     SELECT 1 FROM Subscription
-    WHERE subscriptionKey = :subscriptionKey AND sourceId = :sourceId AND threadId = :threadId
+    WHERE subscriptionKey = :subscriptionKey AND sourceId = :sourceId AND topicId = :topicId
 );
 
 countLocalSubscriptions:
@@ -80,7 +80,7 @@ getLocalSubscriptions:
 SELECT * FROM Subscription WHERE subscriptionKey = :subscriptionKey AND isLocal = 1;
 
 updateLocalFlag:
-UPDATE Subscription SET isLocal = 0 WHERE subscriptionKey = :subscriptionKey AND sourceId = :sourceId AND threadId = :threadId;
+UPDATE Subscription SET isLocal = 0 WHERE subscriptionKey = :subscriptionKey AND sourceId = :sourceId AND topicId = :topicId;
 
 deleteCloudSubscriptions:
 DELETE FROM Subscription WHERE subscriptionKey = :subscriptionKey AND isLocal = 0;

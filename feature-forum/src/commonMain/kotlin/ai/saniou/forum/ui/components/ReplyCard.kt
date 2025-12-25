@@ -4,7 +4,7 @@ import ai.saniou.corecommon.utils.toRelativeTimeString
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.BlankLinePolicy
 import ai.saniou.coreui.widgets.RichText
-import ai.saniou.thread.domain.model.forum.ThreadReply
+import ai.saniou.thread.domain.model.forum.Comment as ThreadReply
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

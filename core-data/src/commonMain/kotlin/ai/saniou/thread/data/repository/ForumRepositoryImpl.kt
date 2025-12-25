@@ -2,8 +2,8 @@ package ai.saniou.thread.data.repository
 
 import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
 import ai.saniou.thread.db.Database
-import ai.saniou.thread.domain.model.forum.Forum
-import ai.saniou.thread.domain.model.forum.Post
+import ai.saniou.thread.domain.model.forum.Channel as Forum
+import ai.saniou.thread.domain.model.forum.Topic as Post
 import ai.saniou.thread.domain.repository.ForumRepository
 import app.cash.paging.PagingData
 import app.cash.sqldelight.coroutines.asFlow

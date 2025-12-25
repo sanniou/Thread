@@ -7,7 +7,7 @@ import ai.saniou.forum.workflow.image.ImagePreviewPage
 import ai.saniou.forum.workflow.image.ImagePreviewViewModelParams
 import ai.saniou.forum.workflow.thread.ThreadPage
 import ai.saniou.forum.workflow.user.UserDetailPage
-import ai.saniou.thread.domain.model.forum.Post
+import ai.saniou.thread.domain.model.forum.Topic as Post
 import ai.saniou.thread.domain.model.history.HistoryPost
 import app.cash.paging.compose.collectAsLazyPagingItems
 import androidx.compose.foundation.layout.padding

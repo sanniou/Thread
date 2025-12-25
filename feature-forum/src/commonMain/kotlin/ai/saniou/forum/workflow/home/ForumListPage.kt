@@ -5,7 +5,7 @@ import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.MBToolbar
 import ai.saniou.forum.workflow.forum.ForumPage
 import ai.saniou.forum.workflow.home.ForumCategoryContract.Event
-import ai.saniou.thread.domain.model.forum.Forum
+import ai.saniou.thread.domain.model.forum.Channel as Forum
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

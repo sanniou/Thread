@@ -1,10 +1,9 @@
 package ai.saniou.thread.data.source.nmb.remote.dto
 
-import ai.saniou.thread.db.table.forum.GetThreadsInForum
-import ai.saniou.thread.db.table.forum.GetThreadsInForumOffset
-import ai.saniou.thread.db.table.forum.SearchThreads
-import ai.saniou.thread.db.table.forum.Thread
-import ai.saniou.thread.db.table.forum.ThreadReplyQueries
+import ai.saniou.thread.db.table.forum.GetTopicsInChannelOffset as GetThreadsInForumOffset
+import ai.saniou.thread.db.table.forum.SearchTopics as SearchThreads
+import ai.saniou.thread.db.table.forum.Topic as Thread
+import ai.saniou.thread.db.table.forum.CommentQueries as ThreadReplyQueries
 import kotlinx.serialization.json.JsonNames
 
 data class ThreadWithInformation(
@@ -26,55 +25,31 @@ data class ThreadWithInformation(
     override val hide: Long,
     @JsonNames("Replies")
     override val replies: List<ThreadReply>,
-    override val remainReplies: Long?,
+    override val remainingCount: Long?,
     val lastKey: Long?,
     val last_access_time: Long?,
     val last_read_reply_id: Long?,
 ) : IBaseThread, IThreadBody, IBaseThreadReply
 
-fun GetThreadsInForum.toThreadWithInformation(query: ThreadReplyQueries? = null) =
-    ThreadWithInformation(
-        id = id.toLong(),
-        fid = fid.toLong(),
-        replyCount = replyCount,
-        img = img,
-        ext = ext,
-        now = now,
-        userHash = userHash,
-        name = name,
-        title = title,
-        content = content,
-        sage = sage,
-        admin = admin,
-        hide = hide,
-        replies = query?.getLastFiveReplies(sourceId, id)?.executeAsList()?.map {
-            it.toThreadReply()
-        } ?: emptyList(),
-        remainReplies = remainReplies,
-        lastKey = lastKey!!,
-        last_access_time = last_access_time!!,
-        last_read_reply_id = last_read_reply_id!!,
-    )
-
 fun Thread.toThreadWithInformation(query: ThreadReplyQueries? = null) =
     ThreadWithInformation(
         id = id.toLong(),
-        fid = fid.toLong(),
-        replyCount = replyCount,
-        img = img,
-        ext = ext,
-        now = now,
+        fid = channelId.toLong(),
+        replyCount = commentCount,
+        img = "",
+        ext = "",
+        now = createdAt.toString(),
         userHash = userHash,
-        name = name,
-        title = title,
+        name = authorName,
+        title = title ?: "",
         content = content,
         sage = sage,
         admin = admin,
         hide = hide,
-        replies = query?.getLastFiveReplies(sourceId, id)?.executeAsList()?.map {
+        replies = query?.getLastFiveComments(sourceId, id)?.executeAsList()?.map {
             it.toThreadReply()
         } ?: emptyList(),
-        remainReplies = null,
+        remainingCount = null,
         lastKey = null,
         last_access_time = null,
         last_read_reply_id = null,
@@ -83,47 +58,47 @@ fun Thread.toThreadWithInformation(query: ThreadReplyQueries? = null) =
 fun SearchThreads.toThreadWithInformation(query: ThreadReplyQueries? = null) =
     ThreadWithInformation(
         id = id.toLong(),
-        fid = fid.toLong(),
-        replyCount = replyCount,
-        img = img,
-        ext = ext,
-        now = now,
+        fid = channelId.toLong(),
+        replyCount = commentCount,
+        img = "",
+        ext = "",
+        now = createdAt.toString(),
         userHash = userHash,
-        name = name,
-        title = title,
+        name = authorName,
+        title = title ?: "",
         content = content,
         sage = sage,
         admin = admin,
         hide = hide,
-        replies = query?.getLastFiveReplies(sourceId, id)?.executeAsList()?.map {
+        replies = query?.getLastFiveComments(sourceId, id)?.executeAsList()?.map {
             it.toThreadReply()
         } ?: emptyList(),
-        remainReplies = remainReplies,
+        remainingCount = remainingCount,
         lastKey = lastKey,
         last_access_time = last_access_time,
-        last_read_reply_id = last_read_reply_id,
+        last_read_reply_id = last_read_comment_id,
     )
 
 fun GetThreadsInForumOffset.toThreadWithInformation(query: ThreadReplyQueries? = null) =
     ThreadWithInformation(
         id = id.toLong(),
-        fid = fid.toLong(),
-        replyCount = replyCount,
-        img = img,
-        ext = ext,
-        now = now,
+        fid = channelId.toLong(),
+        replyCount = commentCount,
+        img = "",
+        ext = "",
+        now = createdAt.toString(),
         userHash = userHash,
-        name = name,
-        title = title,
+        name = authorName,
+        title = title ?: "",
         content = content,
         sage = sage,
         admin = admin,
         hide = hide,
-        replies = query?.getLastFiveReplies(sourceId, id)?.executeAsList()?.map {
+        replies = query?.getLastFiveComments(sourceId, id)?.executeAsList()?.map {
             it.toThreadReply()
         } ?: emptyList(),
-        remainReplies = remainReplies,
+        remainingCount = remainingCount,
         lastKey = lastKey,
         last_access_time = last_access_time,
-        last_read_reply_id = last_read_reply_id,
+        last_read_reply_id = last_read_comment_id,
     )

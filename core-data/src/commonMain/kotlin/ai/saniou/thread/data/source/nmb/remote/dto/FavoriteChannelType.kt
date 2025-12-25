@@ -1,6 +1,6 @@
 package ai.saniou.thread.data.source.nmb.remote.dto
 
-enum class FavoriteForumType {
+enum class FavoriteChannelType {
     TIMELINE,
-    FORUM,
+    CHANNEL,
 }

@@ -1,6 +1,6 @@
 package ai.saniou.thread.domain.repository
 
-import ai.saniou.thread.domain.model.forum.Forum
+import ai.saniou.thread.domain.model.forum.Channel as Forum
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -11,7 +11,7 @@ interface FavoriteRepository {
      * 获取指定来源的所有收藏板块
      * @param sourceId 信息源ID
      */
-    fun getFavoriteForums(sourceId: String): Flow<List<Forum>>
+    fun getFavoriteChannels(sourceId: String): Flow<List<Forum>>
 
     /**
      * 切换一个板块的收藏状态

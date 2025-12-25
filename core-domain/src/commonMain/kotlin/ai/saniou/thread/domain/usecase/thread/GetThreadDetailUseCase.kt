@@ -1,6 +1,6 @@
 package ai.saniou.thread.domain.usecase.thread
 
-import ai.saniou.thread.domain.model.forum.Post
+import ai.saniou.thread.domain.model.forum.Topic as Post
 import ai.saniou.thread.domain.repository.ThreadRepository
 import kotlinx.coroutines.flow.Flow
 

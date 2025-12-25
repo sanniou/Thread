@@ -3,7 +3,7 @@ package ai.saniou.thread.data.source.discourse
 import ai.saniou.thread.data.source.discourse.remote.DiscourseApi
 import ai.saniou.thread.data.source.discourse.remote.dto.DiscourseTopic
 import ai.saniou.thread.data.source.discourse.remote.dto.DiscourseUser
-import ai.saniou.thread.domain.model.forum.Post
+import ai.saniou.thread.domain.model.forum.Topic as Post
 import app.cash.paging.PagingSource
 import app.cash.paging.PagingState
 

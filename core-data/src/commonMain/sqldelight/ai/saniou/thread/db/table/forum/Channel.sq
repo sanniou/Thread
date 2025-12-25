@@ -1,0 +1,105 @@
+-- 创建 Channel 表 (原 Forum)
+CREATE TABLE IF NOT EXISTS Channel (
+    id TEXT NOT NULL,
+    sourceId TEXT NOT NULL,
+    fGroup TEXT NOT NULL,
+    sort INTEGER ,
+    name TEXT NOT NULL,
+    displayName TEXT, -- 原 showName
+    description TEXT NOT NULL, -- 原 msg
+    interval INTEGER,
+    safeMode TEXT,
+    autoDelete INTEGER,
+    topicCount INTEGER, -- 原 threadCount
+    permissionLevel TEXT,
+    forumFuseId TEXT,
+    status TEXT,
+    PRIMARY KEY (sourceId, id)
+);
+
+-- 创建 ChannelCategory 表 (原 ForumCategory)
+CREATE TABLE IF NOT EXISTS ChannelCategory (
+    id TEXT NOT NULL,
+    sourceId TEXT NOT NULL,
+    sort INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    status TEXT NOT NULL,
+    PRIMARY KEY (sourceId, id)
+);
+
+-- 索引迁移
+CREATE INDEX IF NOT EXISTS idx_channel_id ON Channel(sourceId, id);
+CREATE INDEX IF NOT EXISTS idx_channel_category_id ON ChannelCategory(sourceId, id);
+
+-- 插入 Channel 数据
+insertChannel:
+INSERT OR REPLACE INTO Channel (
+    id, sourceId, fGroup, sort, name, displayName, description, interval, safeMode, autoDelete, topicCount, permissionLevel, forumFuseId,  status
+) VALUES ?;
+
+-- 插入 ChannelCategory 数据
+insertChannelCategory:
+INSERT OR REPLACE INTO ChannelCategory (
+    id, sourceId, sort, name, status
+) VALUES ?;
+
+-- 更新 Channel 数据
+updateChannel:
+UPDATE Channel SET
+    fGroup = ?,
+    sort = ?,
+    name = ?,
+    displayName = ?,
+    description = ?,
+    interval = ?,
+    safeMode = ?,
+    autoDelete = ?,
+    topicCount = ?,
+    permissionLevel = ?,
+    forumFuseId = ?,
+    status = ?
+WHERE sourceId = ? AND id = ?;
+
+-- 更新 ChannelCategory 数据
+updateChannelCategory:
+UPDATE ChannelCategory SET
+    sort = ?,
+    name = ?,
+    status = ?
+WHERE sourceId = ? AND id = ?;
+
+-- 删除 Channel 数据
+deleteChannel:
+DELETE FROM Channel WHERE sourceId = ? AND id = ?;
+
+-- 删除 ChannelCategory 数据
+deleteChannelCategory:
+DELETE FROM ChannelCategory WHERE sourceId = ? AND id = ?;
+
+-- 查询所有 Channel 数据
+getAllChannels:
+SELECT * FROM Channel;
+
+-- 查询指定源的所有 Channel 数据
+getChannelsBySource:
+SELECT * FROM Channel WHERE sourceId = :sourceId;
+
+-- 查询所有 ChannelCategory 数据
+getAllChannelCategories:
+SELECT * FROM ChannelCategory;
+
+-- 查询指定源的所有 ChannelCategory 数据
+getChannelCategoriesBySource:
+SELECT * FROM ChannelCategory WHERE sourceId = :sourceId;
+
+-- 查询指定 Channel 数据
+getChannel:
+SELECT * FROM Channel WHERE sourceId = :sourceId AND id = :id;
+
+-- 获取指定 ChannelCategory 的所有子 Channel 数据 (原 getGroupForum)
+getChannelsByCategory:
+SELECT * FROM Channel WHERE sourceId = :sourceId AND fGroup = :groupId;
+
+-- 查询指定 ChannelCategory 数据
+getChannelCategory:
+SELECT * FROM ChannelCategory WHERE sourceId = :sourceId AND id = :id;

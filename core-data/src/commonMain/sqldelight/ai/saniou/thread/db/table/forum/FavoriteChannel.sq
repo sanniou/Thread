@@ -1,0 +1,32 @@
+import ai.saniou.thread.data.source.nmb.remote.dto.FavoriteChannelType;
+
+-- 创建 FavoriteChannel 表 (原 FavoriteForum)
+CREATE TABLE IF NOT EXISTS FavoriteChannel (
+    id TEXT NOT NULL,
+    sourceId TEXT NOT NULL,
+    favoriteTime INTEGER NOT NULL,
+    type TEXT AS FavoriteChannelType NOT NULL,
+    PRIMARY KEY (sourceId, id)
+);
+
+-- Count FavoriteChannel
+countFavoriteChannel:
+SELECT COUNT(*) FROM FavoriteChannel WHERE sourceId = :sourceId AND id = :id;
+
+
+-- 插入 FavoriteChannel 数据
+insertFavoriteChannel:
+INSERT OR REPLACE INTO FavoriteChannel (id, sourceId, favoriteTime,  type)
+VALUES (?, ?, ?, ?);
+
+-- 删除 FavoriteChannel 数据
+deleteFavoriteChannel:
+DELETE FROM FavoriteChannel WHERE sourceId = :sourceId AND id = :id;
+
+-- 查询所有 FavoriteChannel 数据 (关联 Channel 表)
+getAllFavoriteChannel:
+SELECT Channel.* FROM FavoriteChannel JOIN Channel ON FavoriteChannel.id = Channel.id AND FavoriteChannel.sourceId = Channel.sourceId WHERE FavoriteChannel.sourceId = :sourceId;
+
+-- 查询指定 FavoriteChannel 数据
+getFavoriteChannel:
+SELECT * FROM FavoriteChannel WHERE sourceId = :sourceId AND id = :id;

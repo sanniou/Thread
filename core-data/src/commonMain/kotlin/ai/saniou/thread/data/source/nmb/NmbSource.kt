@@ -1,10 +1,8 @@
 package ai.saniou.thread.data.source.nmb
 
+import ai.saniou.corecommon.utils.toTime
 import ai.saniou.thread.data.mapper.toDomain
 import ai.saniou.thread.data.paging.DataPolicy
-import ai.saniou.thread.db.Database
-import ai.saniou.thread.db.table.Cookie
-import ai.saniou.thread.db.table.forum.GetThreadsInForumOffset
 import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
 import ai.saniou.thread.data.source.nmb.remote.dto.Forum
 import ai.saniou.thread.data.source.nmb.remote.dto.RemoteKeyType
@@ -15,11 +13,14 @@ import ai.saniou.thread.data.source.nmb.remote.dto.ThreadWithInformation
 import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
 import ai.saniou.thread.data.source.nmb.remote.dto.toTable
 import ai.saniou.thread.data.source.nmb.remote.dto.toTableReply
-import ai.saniou.thread.data.source.nmb.remote.dto.toThreadReply
 import ai.saniou.thread.data.source.nmb.remote.dto.toThreadWithInformation
-import ai.saniou.thread.domain.model.forum.Post
-import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
+import ai.saniou.thread.db.Database
+import ai.saniou.thread.db.table.Cookie
+import ai.saniou.thread.domain.model.forum.ImageType
+import ai.saniou.thread.domain.repository.SettingsRepository
 import ai.saniou.thread.domain.repository.Source
+import ai.saniou.thread.domain.repository.SourceCapabilities
+import ai.saniou.thread.domain.repository.observeValue
 import ai.saniou.thread.network.SaniouResponse
 import app.cash.paging.ExperimentalPagingApi
 import app.cash.paging.Pager
@@ -39,11 +40,10 @@ import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
-import ai.saniou.thread.domain.repository.SettingsRepository
-import ai.saniou.thread.domain.repository.observeValue
-import ai.saniou.thread.domain.model.forum.Forum as DomainForum
-import ai.saniou.thread.domain.model.forum.TrendResult
-import ai.saniou.thread.domain.repository.SourceCapabilities
+import ai.saniou.thread.db.table.forum.GetTopicsInChannelOffset as GetThreadsInForumOffset
+import ai.saniou.thread.domain.model.forum.Channel as DomainForum
+import ai.saniou.thread.domain.model.forum.Comment as DomainComment
+import ai.saniou.thread.domain.model.forum.Topic as Post
 
 class NmbSource(
     private val nmbXdApi: NmbXdApi,
@@ -93,9 +93,10 @@ class NmbSource(
         }
 
         // 3. Query from database and return
-        val forumsFromDb = db.forumQueries.getForumsBySource(id).executeAsList()
+        val forumsFromDb = db.channelQueries.getChannelsBySource(id).executeAsList()
         val timelines = db.timeLineQueries.getAllTimeLines().executeAsList()
-        val categories = db.forumQueries.getForumCategoriesBySource(id).executeAsList().associateBy { it.id }
+        val categories =
+            db.channelQueries.getChannelCategoriesBySource(id).executeAsList().associateBy { it.id }
 
         val forums = forumsFromDb.map { forum ->
             forum.toDomain().copy(
@@ -118,9 +119,9 @@ class NmbSource(
                     category.copy(forums = category.forums.filter { it.id > 0 })
                 }
                 forumCategories.forEach { forumCategory ->
-                    db.forumQueries.insertForumCategory(forumCategory.toTable())
+                    db.channelQueries.insertChannelCategory(forumCategory.toTable())
                     forumCategory.forums.forEach { forumDetail ->
-                        db.forumQueries.insertForum(forumDetail.toTable())
+                        db.channelQueries.insertChannel(forumDetail.toTable())
                     }
                 }
             }
@@ -167,22 +168,12 @@ class NmbSource(
         return try {
             val tid = threadId.toLongOrNull()
                 ?: return Result.failure(IllegalArgumentException("Invalid NMB thread ID"))
-            // NMB API returns replies list but also thread info in the structure if using `thread` endpoint?
-            // Actually `nmbXdApi.thread` returns `Thread`.
-            // We map `Thread` to `Post`.
+
             val response = nmbXdApi.thread(tid, page.toLong())
             if (response is SaniouResponse.Success) {
-                // Thread to Post mapping needs to be checked.
-                // Assuming `toDomain()` exists or we can construct it.
-                // ThreadWithInformation has `toDomain()`. `Thread` has `toDomain()`?
-                // `ai.saniou.thread.data.source.nmb.remote.dto.Thread` might not have direct toDomain to Post.
-                // But `ThreadWithInformation` does.
-                // `thread` endpoint returns `Thread` which contains `id`, `fid`, etc.
-                // Let's assume we can map it.
-                // For now, I'll use a placeholder or implement mapping if simple.
-                // Actually `ThreadRepositoryImpl` uses `db.threadQueries.getThread` which returns `ThreadEntity`.
-                // Here we fetch remote.
                 val thread = response.data
+                // Use default emptyList for images from remote since we don't have ImageQueries here for remote data yet
+                // Or map remote images if available in DTO
                 Result.success(thread.toDomain())
             } else {
                 Result.failure((response as SaniouResponse.Error).ex)
@@ -196,14 +187,20 @@ class NmbSource(
         threadId: String,
         initialPage: Int,
         isPoOnly: Boolean,
-    ): Flow<PagingData<ai.saniou.thread.domain.model.forum.ThreadReply>> {
+    ): Flow<PagingData<DomainComment>> {
         val tid =
             threadId.toLongOrNull() ?: return kotlinx.coroutines.flow.flowOf(PagingData.empty())
-        return getThreadRepliesPager(tid, null, DataPolicy.NETWORK_ELSE_CACHE, initialPage, isPoOnly)
+        return getThreadRepliesPager(
+            tid,
+            null,
+            DataPolicy.NETWORK_ELSE_CACHE,
+            initialPage,
+            isPoOnly
+        )
     }
 
     override fun getForum(forumId: String): Flow<DomainForum?> {
-        return db.forumQueries.getForum(id = forumId, sourceId = id)
+        return db.channelQueries.getChannel(id = forumId, sourceId = id)
             .asFlow()
             .mapToOneOrNull(Dispatchers.Default)
             .map { it?.toDomain() }
@@ -219,7 +216,7 @@ class NmbSource(
             policy = policy,
             initialPage = initialPage,
             fetcher = { page -> nmbXdApi.timeline(fid.toLong(), page.toLong()) }
-        ).flow.map { pagingData -> pagingData.map { it.toThreadWithInformation(db.threadReplyQueries) } }
+        ).flow.map { pagingData -> pagingData.map { it.toThreadWithInformation(db.commentQueries) } }
     }
 
     fun getShowfPager(
@@ -232,7 +229,7 @@ class NmbSource(
             policy = policy,
             initialPage = initialPage,
             fetcher = { page -> nmbXdApi.showf(fid, page.toLong()) }
-        ).flow.map { pagingData -> pagingData.map { it.toThreadWithInformation(db.threadReplyQueries) } }
+        ).flow.map { pagingData -> pagingData.map { it.toThreadWithInformation(db.commentQueries) } }
     }
 
     @OptIn(ExperimentalPagingApi::class)
@@ -242,7 +239,7 @@ class NmbSource(
         policy: DataPolicy,
         initialPage: Int = 1,
         isPoOnly: Boolean = false,
-    ): Flow<PagingData<ai.saniou.thread.domain.model.forum.ThreadReply>> {
+    ): Flow<PagingData<DomainComment>> {
         val pageSize = 19
         return Pager(
             config = PagingConfig(pageSize = pageSize), // 每页19个回复
@@ -265,16 +262,16 @@ class NmbSource(
             pagingSourceFactory = {
                 if (isPoOnly) {
                     QueryPagingSource(
-                        transacter = db.threadReplyQueries,
+                        transacter = db.commentQueries,
                         context = Dispatchers.Default,
-                        countQuery = db.threadReplyQueries.countRepliesByThreadIdPoMode(
+                        countQuery = db.commentQueries.countCommentsByTopicIdPoMode(
                             sourceId = id,
-                            threadId = threadId.toString()
+                            topicId = threadId.toString()
                         ),
                         queryProvider = { limit, offset ->
-                            db.threadReplyQueries.getRepliesByThreadIdPoModeOffset(
+                            db.commentQueries.getCommentsByTopicIdPoModeOffset(
                                 sourceId = id,
-                                threadId = threadId.toString(),
+                                topicId = threadId.toString(),
                                 limit = limit,
                                 offset = offset,
                             )
@@ -283,18 +280,18 @@ class NmbSource(
                 } else if (poUserHash != null) {
                     // 只看指定PO (Old logic, maybe deprecated or specific use case)
                     QueryPagingSource(
-                        transacter = db.threadReplyQueries,
+                        transacter = db.commentQueries,
                         context = Dispatchers.Default,
                         countQuery =
-                        db.threadReplyQueries.countRepliesByThreadIdAndUserHash(
-                            id,
-                            threadId.toString(),
-                            poUserHash
-                        ),
+                            db.commentQueries.countCommentsByTopicIdAndUserHash(
+                                id,
+                                threadId.toString(),
+                                poUserHash
+                            ),
                         queryProvider = { limit, offset ->
-                            db.threadReplyQueries.getRepliesByThreadIdAndUserHashOffset(
+                            db.commentQueries.getCommentsByTopicIdAndUserHashOffset(
                                 sourceId = id,
-                                threadId = threadId.toString(),
+                                topicId = threadId.toString(),
                                 userHash = poUserHash,
                                 limit = limit,
                                 offset = offset,
@@ -304,16 +301,16 @@ class NmbSource(
                 } else {
                     // 查看全部
                     QueryPagingSource(
-                        transacter = db.threadReplyQueries,
+                        transacter = db.commentQueries,
                         context = Dispatchers.Default,
-                        countQuery = db.threadReplyQueries.countRepliesByThreadId(
+                        countQuery = db.commentQueries.countCommentsByTopicId(
                             id,
                             threadId.toString()
                         ),
                         queryProvider = { limit, offset ->
-                            db.threadReplyQueries.getRepliesByThreadIdOffset(
+                            db.commentQueries.getCommentsByTopicIdOffset(
                                 sourceId = id,
-                                threadId = threadId.toString(),
+                                topicId = threadId.toString(),
                                 limit = limit,
                                 offset = offset
                             )
@@ -322,16 +319,16 @@ class NmbSource(
                 }
             }
         ).flow.map { pagingData ->
-            pagingData.map { it.toThreadReply().toDomain() }
+            pagingData.map { it.toDomain(db.imageQueries) }
         }
     }
 
     suspend fun updateThreadLastAccessTime(threadId: Long, time: Long) {
-        db.threadQueries.updateThreadLastAccessTime(time, id, threadId.toString())
+        db.topicQueries.updateTopicLastAccessTime(time, id, threadId.toString())
     }
 
     suspend fun updateThreadLastReadReplyId(threadId: Long, replyId: Long) {
-        db.threadQueries.updateThreadLastReadReplyId(replyId, id, threadId.toString())
+        db.topicQueries.updateTopicLastReadCommentId(replyId, id, threadId.toString())
     }
 
     fun observeIsSubscribed(subscriptionKey: String, threadId: Long): Flow<Boolean> {
@@ -345,7 +342,7 @@ class NmbSource(
         db.subscriptionQueries.insertSubscription(
             subscriptionKey = subscriptionKey,
             sourceId = id,
-            threadId = thread.id.toString(),
+            topicId = thread.id.toString(),
             page = 1L,
             subscriptionTime = Clock.System.now().epochSeconds,
             isLocal = 1L
@@ -443,11 +440,11 @@ class NmbSource(
             ),
             pagingSourceFactory = {
                 QueryPagingSource(
-                    transacter = db.threadQueries,
+                    transacter = db.topicQueries,
                     context = Dispatchers.Default,
-                    countQuery = db.threadQueries.countThreadsByFid(id, fid.toString()),
+                    countQuery = db.topicQueries.countTopicsByChannel(id, fid.toString()),
                     queryProvider = { limit, offset ->
-                        db.threadQueries.getThreadsInForumOffset(id, fid.toString(), limit, offset)
+                        db.topicQueries.getTopicsInChannelOffset(id, fid.toString(), limit, offset)
                     },
                 )
             }
@@ -463,10 +460,25 @@ class NmbSource(
                 is SaniouResponse.Success -> {
                     val thread = response.data
                     // 更新数据库
-                    db.threadQueries.transaction {
-                        db.threadQueries.upsertThread(thread.toTable(id, page = page.toLong()))
+                    db.topicQueries.transaction {
+                        db.topicQueries.upsertTopic(thread.toTable(id, page = page.toLong()))
+                        // 保存 Topic 图片
+                        thread.toDomain().images.forEachIndexed { index, image ->
+                            db.imageQueries.upsertImage(
+                                image.toTable(id, thread.id.toString(), ImageType.Topic, index)
+                            )
+                        }
+
                         thread.toTableReply(id, page.toLong())
-                            .forEach(db.threadReplyQueries::upsertThreadReply)
+                            .forEach { reply ->
+                                db.commentQueries.upsertComment(reply)
+                                // 保存 Comment 图片
+                                reply.toDomain().images.forEachIndexed { index, image ->
+                                    db.imageQueries.upsertImage(
+                                        image.toTable(id, reply.id, ImageType.Comment, index)
+                                    )
+                                }
+                            }
                     }
                     Result.success(thread.replies)
                 }
@@ -486,10 +498,30 @@ class NmbSource(
                 is SaniouResponse.Success -> {
                     val thread = response.data
                     // 保存到数据库
-                    db.threadQueries.transaction {
-                        db.threadQueries.upsertThread(thread.toTable(id, page = page.toLong()))
+                    db.topicQueries.transaction {
+                        db.topicQueries.upsertTopic(thread.toTable(id, page = page.toLong()))
+                        // 保存 Topic 图片
+                        thread.toDomain().images.forEachIndexed { index, image ->
+                            db.imageQueries.upsertImage(
+                                image.toTable(id, thread.id.toString(), ImageType.Topic, index)
+                            )
+                        }
+
                         thread.toTableReply(id, page.toLong())
-                            .forEach(db.threadReplyQueries::upsertThreadReply)
+                            .forEach { reply ->
+                                db.commentQueries.upsertComment(reply)
+                                // 保存 Comment 图片
+                                reply.toDomain().images.forEachIndexed { index, image ->
+                                    db.imageQueries.upsertImage(
+                                        image.toTable(
+                                            id,
+                                            reply.id.toString(),
+                                            ImageType.Comment,
+                                            index
+                                        )
+                                    )
+                                }
+                            }
                     }
                     Result.success(thread)
                 }
@@ -501,22 +533,19 @@ class NmbSource(
         }
     }
 
-    suspend fun getLocalLatestReply(threadId: Long): ThreadReply? {
-        // 获取最后5条回复中的第一条（假设 getLastFiveReplies 是倒序的，即最新的在前）
-        // 如果不是倒序，可能需要调整。通常论坛的“最后几条”是用于列表展示，往往是倒序。
-        // 根据 Thread.kt 中的 toThread 实现，它取了 getLastFiveReplies，推测是用于展示 Thread 预览，应该是包含最新回复的。
-        return db.threadReplyQueries.getLastFiveReplies(id, threadId.toString())
+    suspend fun getLocalLatestReply(threadId: Long): DomainComment? {
+        return db.commentQueries.getLastFiveComments(id, threadId.toString())
             .executeAsList()
-            .maxByOrNull { it.id.toLong() } // 确保取 ID 最大的，即最新的
-            ?.toThreadReply()
+            .maxByOrNull { it.id.toLong() }
+            ?.toDomain(db.imageQueries)
     }
 
-    suspend fun getLocalReplyByDate(threadId: Long, datePattern: String): ThreadReply? {
-        return db.threadReplyQueries.getReplyByThreadIdAndDate(
+    suspend fun getLocalReplyByDate(threadId: Long, datePattern: String): DomainComment? {
+        return db.commentQueries.getCommentByTopicIdAndDate(
             sourceId = id,
-            threadId = threadId.toString(),
-            datePattern = "$datePattern%"
-        ).executeAsOneOrNull()?.toThreadReply()
+            topicId = threadId.toString(),
+            createdAt = datePattern.toTime().epochSeconds
+        ).executeAsOneOrNull()?.toDomain(db.imageQueries)
     }
 
     fun searchThreadsPager(query: String): Flow<PagingData<ThreadWithInformation>> {
@@ -524,34 +553,34 @@ class NmbSource(
             config = PagingConfig(pageSize = 20),
             pagingSourceFactory = {
                 QueryPagingSource(
-                    transacter = db.threadQueries,
+                    transacter = db.topicQueries,
                     context = Dispatchers.Default,
-                    countQuery = db.threadQueries.countSearchThreads(query),
+                    countQuery = db.topicQueries.countSearchTopics(query),
                     queryProvider = { limit, offset ->
-                        db.threadQueries.searchThreads(query, limit, offset)
+                        db.topicQueries.searchTopics(query, limit, offset)
                     }
                 )
             }
         ).flow.map { pagingData ->
-            pagingData.map { it.toThreadWithInformation(db.threadReplyQueries) }
+            pagingData.map { it.toThreadWithInformation(db.commentQueries) }
         }
     }
 
-    fun searchRepliesPager(query: String): Flow<PagingData<ThreadReply>> {
+    fun searchRepliesPager(query: String): Flow<PagingData<DomainComment>> {
         return Pager(
             config = PagingConfig(pageSize = 20),
             pagingSourceFactory = {
                 QueryPagingSource(
-                    transacter = db.threadReplyQueries,
+                    transacter = db.commentQueries,
                     context = Dispatchers.Default,
-                    countQuery = db.threadReplyQueries.countSearchReplies(query),
+                    countQuery = db.commentQueries.countSearchComments(query),
                     queryProvider = { limit, offset ->
-                        db.threadReplyQueries.searchReplies(query, limit, offset)
+                        db.commentQueries.searchComments(query, limit, offset)
                     }
                 )
             }
         ).flow.map { pagingData ->
-            pagingData.map { it.toThreadReply() }
+            pagingData.map { it.toDomain(db.imageQueries) }
         }
     }
 
@@ -560,34 +589,34 @@ class NmbSource(
             config = PagingConfig(pageSize = 20),
             pagingSourceFactory = {
                 QueryPagingSource(
-                    transacter = db.threadQueries,
+                    transacter = db.topicQueries,
                     context = Dispatchers.Default,
-                    countQuery = db.threadQueries.countThreadsByUserHash(userHash),
+                    countQuery = db.topicQueries.countTopicsByUserHash(userHash),
                     queryProvider = { limit, offset ->
-                        db.threadQueries.getThreadsByUserHashOffset(userHash, limit, offset)
+                        db.topicQueries.getTopicsByUserHashOffset(userHash, limit, offset)
                     }
                 )
             }
         ).flow.map { pagingData ->
-            pagingData.map { it.toThreadWithInformation(db.threadReplyQueries) }
+            pagingData.map { it.toThreadWithInformation(db.commentQueries) }
         }
     }
 
-    fun getUserRepliesPager(userHash: String): Flow<PagingData<ThreadReply>> {
+    fun getUserRepliesPager(userHash: String): Flow<PagingData<DomainComment>> {
         return Pager(
             config = PagingConfig(pageSize = 20),
             pagingSourceFactory = {
                 QueryPagingSource(
-                    transacter = db.threadReplyQueries,
+                    transacter = db.commentQueries,
                     context = Dispatchers.Default,
-                    countQuery = db.threadReplyQueries.countRepliesByUserHash(userHash),
+                    countQuery = db.commentQueries.countCommentsByUserHashNoTopic(userHash),
                     queryProvider = { limit, offset ->
-                        db.threadReplyQueries.getRepliesByUserHashOffset(userHash, limit, offset)
+                        db.commentQueries.getCommentsByUserHashOffset(userHash, limit, offset)
                     }
                 )
             }
         ).flow.map { pagingData ->
-            pagingData.map { it.toThreadReply() }
+            pagingData.map { it.toDomain(db.imageQueries) }
         }
     }
 }

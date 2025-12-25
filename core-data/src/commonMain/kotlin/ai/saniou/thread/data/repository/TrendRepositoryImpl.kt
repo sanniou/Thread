@@ -2,6 +2,7 @@ package ai.saniou.thread.data.repository
 
 import ai.saniou.thread.data.source.nmb.NmbSource
 import ai.saniou.corecommon.utils.DateParser
+import ai.saniou.corecommon.utils.toTime
 import ai.saniou.thread.domain.model.forum.Trend
 import ai.saniou.thread.domain.model.forum.TrendResult
 import ai.saniou.thread.domain.repository.SettingsRepository
@@ -32,7 +33,7 @@ class TrendRepositoryImpl(
         if (sourceId != "nmb") {
             val source = sourceRepository.getSource(sourceId)
                 ?: return Result.failure(IllegalStateException("Source not found: $sourceId"))
-                
+
             return source.getTrendList(forceRefresh, dayOffset)
         }
 
@@ -45,16 +46,19 @@ class TrendRepositoryImpl(
             if (dayOffset == 0) {
                 // For today, check if the latest reply is from today
                 val localLatestReply = nmbSource.getLocalLatestReply(trendThreadId)
-                if (localLatestReply != null && localLatestReply.now.contains(today.toString())) {
-                    val parsedItems = parseTrendContent(localLatestReply.content)
-                    return Result.success(TrendResult(localLatestReply.now, parsedItems))
+                if (localLatestReply != null) {
+                    val replyDate = localLatestReply.createdAt.toLocalDateTime(TimeZone.currentSystemDefault()).date
+                    if (replyDate == today) {
+                        val parsedItems = parseTrendContent(localLatestReply.content)
+                        return Result.success(TrendResult(localLatestReply.createdAt, parsedItems))
+                    }
                 }
             } else {
                 // For historical days, check if we have a reply with the target date
                 val localReply = nmbSource.getLocalReplyByDate(trendThreadId, targetDate.toString())
                 if (localReply != null) {
                     val parsedItems = parseTrendContent(localReply.content)
-                    return Result.success(TrendResult(localReply.now, parsedItems))
+                    return Result.success(TrendResult(localReply.createdAt, parsedItems))
                 }
             }
         }
@@ -109,7 +113,9 @@ class TrendRepositoryImpl(
                             )
                         }
                         val parsedItems = parseTrendContent(reply.content)
-                        return Result.success(TrendResult(reply.now, parsedItems))
+                        // Trend DTO Reply still has 'now' string, but if we get from DB we need to handle Instant
+                        // Here 'reply' is from Source (DTO), so 'now' is String.
+                        return Result.success(TrendResult(reply.now.toTime(), parsedItems))
                     }
                 } catch (e: Exception) {
                     // Fallback to standard logic if prediction fails
@@ -160,7 +166,7 @@ class TrendRepositoryImpl(
                         replies.last().now
                     )
                 }
-                
+
                 // Calculate corrected dayOffset if the fetched date doesn't match targetDate
                 var correctedDayOffset: Int? = null
                 val fetchedDate = DateParser.parseDateFromNowString(reply.now)
@@ -169,7 +175,7 @@ class TrendRepositoryImpl(
                 }
 
                 val parsedItems = parseTrendContent(reply.content)
-                TrendResult(reply.now, parsedItems, correctedDayOffset)
+                TrendResult(reply.now.toTime(), parsedItems, correctedDayOffset)
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -195,8 +201,8 @@ class TrendRepositoryImpl(
             val isNew = headerMatch.groupValues[4].isNotEmpty()
 
             // Regex to extract thread ID: >>No.67520848
-            // 修复：兼容 HTML 实体 &gt;
-            val threadIdRegex = """(?:>>|&gt;&gt;)No\.(\d+)""".toRegex()
+            // 修复：兼容 HTML 实体 >
+            val threadIdRegex = """(?:>>|>>)No\.(\d+)""".toRegex()
             val threadIdMatch = threadIdRegex.find(segment)
             val threadId = threadIdMatch?.groupValues?.get(1)?.toLongOrNull() ?: continue
 
@@ -211,7 +217,7 @@ class TrendRepositoryImpl(
             // Keep HTML tags and entities for RichText rendering
             contentPreview = contentPreview.trim()
 
-            items.add(Trend(rank, trendNum, forum, isNew, threadId, contentPreview))
+            items.add(Trend(rank, trendNum, forum, isNew, threadId.toString(), contentPreview))
         }
 
         return items

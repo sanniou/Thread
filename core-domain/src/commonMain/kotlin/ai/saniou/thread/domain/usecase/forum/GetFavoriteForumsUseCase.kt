@@ -1,6 +1,6 @@
 package ai.saniou.thread.domain.usecase.forum
 
-import ai.saniou.thread.domain.model.forum.Forum
+import ai.saniou.thread.domain.model.forum.Channel as Forum
 import ai.saniou.thread.domain.repository.FavoriteRepository
 import kotlinx.coroutines.flow.Flow
 
@@ -9,6 +9,6 @@ import kotlinx.coroutines.flow.Flow
  */
 class GetFavoriteForumsUseCase(private val favoriteRepository: FavoriteRepository) {
     operator fun invoke(sourceId: String): Flow<List<Forum>> {
-        return favoriteRepository.getFavoriteForums(sourceId)
+        return favoriteRepository.getFavoriteChannels(sourceId)
     }
 }

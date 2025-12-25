@@ -1,5 +1,6 @@
 package ai.saniou.thread.data.source.discourse
 
+import ai.saniou.corecommon.utils.toTime
 import ai.saniou.thread.data.cache.SourceCache
 import ai.saniou.thread.data.paging.DataPolicy
 import ai.saniou.thread.data.paging.DefaultRemoteKeyStrategy
@@ -10,18 +11,14 @@ import ai.saniou.thread.data.source.discourse.remote.dto.DiscourseTopic
 import ai.saniou.thread.data.source.discourse.remote.dto.DiscourseUser
 import ai.saniou.thread.data.source.nmb.remote.dto.RemoteKeyType
 import ai.saniou.thread.db.Database
-import ai.saniou.thread.db.table.forum.GetThreadsInForumOffset
-import ai.saniou.thread.db.table.forum.Thread
-import ai.saniou.thread.db.table.forum.ThreadReply
+import ai.saniou.thread.db.table.forum.GetTopicsInChannelOffset as GetThreadsInForumOffset
+import ai.saniou.thread.db.table.forum.Topic as Thread
 import ai.saniou.thread.network.SaniouResponse
 import app.cash.paging.ExperimentalPagingApi
 import app.cash.paging.LoadType
 import app.cash.paging.PagingState
 import app.cash.paging.RemoteMediator
 import app.cash.paging.RemoteMediatorMediatorResult
-import app.cash.paging.RemoteMediatorMediatorResultError
-import app.cash.paging.RemoteMediatorMediatorResultSuccess
-import kotlinx.datetime.Instant
 
 @OptIn(ExperimentalPagingApi::class)
 class DiscourseRemoteMediator(
@@ -43,7 +40,7 @@ class DiscourseRemoteMediator(
                 db = db,
                 type = RemoteKeyType.FORUM,
                 id = fid,
-                itemIdExtractor = { it.fid.toString() }
+                itemIdExtractor = { it.channelId }
             ),
             fetcher = { page ->
                 try {
@@ -65,30 +62,14 @@ class DiscourseRemoteMediator(
                 }
 
                 if (loadType == LoadType.REFRESH) {
-                    // 注意：这里不能直接调用 suspend 函数，因为 saver 是在 db.transaction 中调用的
-                    // 而 db.transaction 也是 suspend 函数，但是 GenericRemoteMediator 的 saver 参数不是 suspend
-                    // 这是一个潜在的问题。
-                    // 不过，GenericRemoteMediator 的 saver 是在 db.transaction 块内调用的。
-                    // SQLDelight 的 transaction 块是同步执行的（在 JDBC 驱动上），但在协程驱动上可能是 suspend。
-                    // 检查 GenericRemoteMediator 的定义，saver 是 (ResponseType, Key, LoadType) -> Unit
-                    // 这意味着 saver 不能包含 suspend 调用。
-                    // cache.clearForumCache 是 suspend 函数吗？
-                    // 检查 SourceCache 接口定义：suspend fun clearForumCache(sourceId: String, fid: String)
-                    // 是的，它是 suspend。
-                    // 所以我们不能在这里直接调用 cache.clearForumCache。
-                    // 我们需要直接操作数据库，或者修改 GenericRemoteMediator 以支持 suspend saver。
-                    // 鉴于 GenericRemoteMediator 使用 db.transaction，它通常期望同步的数据库操作。
-                    // 让我们直接使用 db.threadQueries 来删除数据，就像 ForumRemoteMediator 那样。
-                    db.threadQueries.deleteThreadsByFidAndPage(sourceId, fid, page.toLong())
+                    db.topicQueries.deleteTopicsByChannelAndPage(sourceId, fid, page.toLong())
                 }
-                // cache.saveThreads 也是 suspend。
-                // 我们需要直接使用 db.threadQueries。
                 threads.forEach { thread ->
-                    db.threadQueries.upsertThread(thread)
-                    db.threadQueries.upsertThreadInformation(
+                    db.topicQueries.upsertTopic(thread)
+                    db.topicQueries.upsertTopicInformation(
                         id = thread.id,
                         sourceId = sourceId,
-                        remainReplies = 0, // Discourse API doesn't seem to provide this directly in topic list
+                        remainingCount = 0,
                         lastKey = 0 // Placeholder
                     )
                 }
@@ -98,7 +79,7 @@ class DiscourseRemoteMediator(
             },
             cacheChecker = { page ->
                 val threadsInDb =
-                    db.threadQueries.countThreadsByFidAndPage(sourceId, fid, page.toLong())
+                    db.topicQueries.countTopicsByChannelAndPage(sourceId, fid, page.toLong())
                         .executeAsOne()
                 threadsInDb > 0
             },
@@ -129,13 +110,14 @@ private fun DiscourseTopic.toThreadEntity(
     return Thread(
         id = id.toString(),
         sourceId = sourceId,
-        fid = categoryId.toString(),
-        replyCount = replyCount.toLong(),
-        img = imageUrl ?: "",
-        ext = "",
-        now = createdAt,
+        channelId = categoryId.toString(),
+        commentCount = replyCount.toLong(),
+        // Image handled separately, set empty for now
+        // img = imageUrl ?: "",
+        // ext = "",
+        createdAt = createdAt.toTime().epochSeconds,
         userHash = user?.username ?: "Unknown",
-        name = user?.name ?: user?.username ?: "Anonymous",
+        authorName = user?.name ?: user?.username ?: "Anonymous",
         title = title,
         content = excerpt ?: fancyTitle,
         sage = 0,

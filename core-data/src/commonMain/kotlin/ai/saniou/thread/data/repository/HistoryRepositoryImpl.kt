@@ -20,7 +20,7 @@ import kotlinx.datetime.Instant
 import kotlin.time.Clock
 
 class HistoryRepositoryImpl(
-    private val db: Database
+    private val db: Database,
 ) : HistoryRepository {
 
     override fun getHistory(): Flow<PagingData<HistoryItem>> {
@@ -39,24 +39,29 @@ class HistoryRepositoryImpl(
                 val accessTime = Instant.fromEpochMilliseconds(history.accessTime)
                 when (history.type) {
                     "post" -> {
-                        // Fetch Post details
-                        val post = db.threadQueries.getThread(history.sourceId, history.itemId)
-                            .executeAsOneOrNull()?.toDomain()
+                        // Fetch Topic details (原 Post)
+                        val post = db.topicQueries.getTopic(history.sourceId, history.itemId)
+                            .executeAsOneOrNull()?.let { entity ->
+                                // 需要传入 imageQueries
+                                entity.toDomain(db.imageQueries)
+                            }
                         if (post != null) {
                             HistoryPost(post, accessTime)
                         } else {
                             throw IllegalStateException("Post not found for history item: ${history.itemId}")
                         }
                     }
+
                     "article" -> {
                         val article = db.articleQueries.getArticleById(history.itemId)
                             .executeAsOneOrNull()?.toDomain()
                         if (article != null) {
                             HistoryArticle(article, accessTime)
                         } else {
-                             throw IllegalStateException("Article not found for history item: ${history.itemId}")
+                            throw IllegalStateException("Article not found for history item: ${history.itemId}")
                         }
                     }
+
                     else -> throw IllegalArgumentException("Unknown history type: ${history.type}")
                 }
             }
@@ -75,6 +80,7 @@ class HistoryRepositoryImpl(
                         accessTime = now
                     )
                 }
+
                 is HistoryArticle -> {
                     db.historyQueries.insertHistory(
                         type = "article",

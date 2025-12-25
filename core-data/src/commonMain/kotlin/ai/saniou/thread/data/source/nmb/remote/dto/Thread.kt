@@ -1,10 +1,12 @@
 package ai.saniou.thread.data.source.nmb.remote.dto
 
-import ai.saniou.thread.db.table.forum.ThreadReplyQueries
+import ai.saniou.corecommon.utils.toTime
+import ai.saniou.thread.db.table.forum.CommentQueries
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonNames
-
+import ai.saniou.thread.db.table.forum.Comment as TableComment
+import ai.saniou.thread.db.table.forum.Topic as TableTopic
 
 @Serializable
 @OptIn(ExperimentalSerializationApi::class)
@@ -45,73 +47,72 @@ data class ThreadReply(
     val threadId: Long = 0,
 ) : IBaseAuthor, IThreadBody
 
-fun ThreadReply.toTable(sourceId: String, threadId: Long, page: Long = Long.MIN_VALUE) =
-    ai.saniou.thread.db.table.forum.ThreadReply(
+fun ThreadReply.toTableReply(sourceId: String, threadId: Long, page: Long = Long.MIN_VALUE) =
+    TableComment(
         id = this.id.toString(),
         sourceId = sourceId,
         userHash = this.userHash,
         admin = this.admin,
         title = this.title,
-        now = this.now,
+        createdAt = now.toTime().epochSeconds,
         content = this.content,
-        img = this.img,
-        ext = this.ext,
-        name = this.name,
-        threadId = threadId.toString(),
+        // img/ext removed, need to save to Image table
+        authorName = this.name,
+        topicId = threadId.toString(),
         page = page,
+        floor = null,
+        replyToId = null
     )
 
 fun Thread.toTableReply(sourceId: String, page: Long) = this.replies.mapIndexed { index, it ->
-    it.toTable(
+    it.toTableReply(
         sourceId = sourceId,
         threadId = this.id,
         page = page,
     )
 }
 
-fun ai.saniou.thread.db.table.forum.ThreadReply.toThreadReply() = ThreadReply(
+fun TableComment.toThreadReply() = ThreadReply(
     id = id.toLongOrNull() ?: 0L,
     userHash = userHash,
     admin = admin,
-    title = title,
-    now = now,
+    title = title ?: "",
+    now = createdAt.toString(), // FIXME: Format timestamp back to string if needed
     content = content,
-    img = img,
-    ext = ext,
-    name = name,
-    threadId = threadId.toLongOrNull() ?: 0L,
+    img = "", // Image handled separately
+    ext = "",
+    name = authorName,
+    threadId = topicId.toLongOrNull() ?: 0L,
 )
 
-fun ai.saniou.thread.db.table.forum.Thread.toThread(query: ThreadReplyQueries? = null) = Thread(
+fun TableTopic.toThread(query: CommentQueries? = null) = Thread(
     id = id.toLongOrNull() ?: 0L,
-    fid = fid.toLongOrNull() ?: 0L,
-    replyCount = replyCount,
-    img = img,
-    ext = ext,
-    now = now,
+    fid = channelId.toLongOrNull() ?: 0L,
+    replyCount = commentCount,
+    img = "", // Image handled separately
+    ext = "",
+    now = createdAt.toString(),
     userHash = userHash,
-    name = name,
-    title = title,
+    name = authorName,
+    title = title ?: "",
     content = content,
     sage = sage,
     admin = admin,
     hide = hide,
-    replies = query?.getLastFiveReplies(sourceId, id)?.executeAsList()?.map {
+    replies = query?.getLastFiveComments(sourceId, id)?.executeAsList()?.map {
         it.toThreadReply()
     } ?: emptyList()
 )
 
 
-fun Thread.toTable(sourceId: String, page: Long) = ai.saniou.thread.db.table.forum.Thread(
+fun Thread.toTable(sourceId: String, page: Long) = TableTopic(
     id = id.toString(),
     sourceId = sourceId,
-    fid = fid.toString(),
-    replyCount = replyCount,
-    img = img,
-    ext = ext,
-    now = now,
+    channelId = fid.toString(),
+    commentCount = replyCount,
+    createdAt = now.toTime().epochSeconds,
     userHash = userHash,
-    name = name,
+    authorName = name,
     title = title,
     content = content,
     sage = sage,

@@ -6,9 +6,10 @@ import ai.saniou.thread.data.source.discourse.remote.dto.DiscourseTopic
 import ai.saniou.thread.data.source.discourse.remote.dto.DiscourseUser
 import ai.saniou.thread.data.mapper.toDomain
 import ai.saniou.thread.data.mapper.toEntity
-import ai.saniou.thread.domain.model.forum.Forum
-import ai.saniou.thread.domain.model.forum.Post
-import ai.saniou.thread.domain.model.forum.ThreadReply
+import ai.saniou.thread.domain.model.forum.Channel as Forum
+import ai.saniou.thread.domain.model.forum.Topic as Post
+import ai.saniou.thread.domain.model.forum.Comment as ThreadReply
+import ai.saniou.thread.domain.model.forum.Author
 import app.cash.paging.Pager
 import app.cash.paging.PagingConfig
 import app.cash.paging.ExperimentalPagingApi
@@ -23,7 +24,6 @@ import ai.saniou.thread.data.paging.DataPolicy
 import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
 import ai.saniou.thread.data.source.nmb.remote.dto.toThreadWithInformation
 import ai.saniou.thread.db.Database
-import ai.saniou.thread.db.table.forum.GetThreadsInForumOffset
 import ai.saniou.thread.domain.repository.SettingsRepository
 import ai.saniou.thread.domain.repository.observeValue
 
@@ -106,16 +106,13 @@ class DiscourseSource(
                 cache.getForumThreadsPagingSource(id, forumId)
             }
         ).flow.map { pagingData ->
-            pagingData.map { it.toThreadWithInformation().toDomain() }
+            pagingData.map { it.toThreadWithInformation(db.commentQueries).toDomain() }
         }
     }
 
     override suspend fun getThreadDetail(threadId: String, page: Int): Result<Post> {
         return try {
             val response = api.getTopic(threadId, page)
-            // Need to map detail response to Post
-            // Since toPost extension is for DiscourseTopic (list item), we might need another mapper or adapt.
-            // For now, let's create a basic Post from detail.
             val firstPost = response.postStream.posts.firstOrNull()
             val createdAt = try {
                 Instant.parse(firstPost?.createdAt ?: "")
@@ -124,30 +121,26 @@ class DiscourseSource(
             }
             val post = Post(
                 id = response.id.toString(),
-                fid = response.categoryId,
-                replyCount = response.replyCount.toLong(),
-                img = "", // Detail doesn't easily give single image unless parsed from content
-                ext = "",
-                now = firstPost?.createdAt ?: "",
-                userHash = firstPost?.username ?: "",
-                name = firstPost?.name ?: firstPost?.username ?: "Anonymous",
+                channelId = response.categoryId.toString(), // fid -> channelId
+                commentCount = response.replyCount.toLong(), // replyCount -> commentCount
+                images = emptyList(), // TODO: parse images
+                createdAt = kotlin.time.Instant.fromEpochMilliseconds(createdAt.toEpochMilliseconds()),
                 title = response.title,
                 content = firstPost?.cooked ?: "", // Use full content
-                sage = 0,
-                admin = 0,
-                hide = 0,
-                createdAt = createdAt,
                 sourceName = "discourse",
                 sourceUrl = "https://meta.discourse.org/t/${response.id}",
-                author = firstPost?.name ?: firstPost?.username ?: "Anonymous",
-                forumName = "Discourse",
+                author = Author(
+                    id = firstPost?.username ?: "",
+                    name = firstPost?.name ?: firstPost?.username ?: "Anonymous"
+                ), // author -> Author object
+                channelName = "Discourse", // forumName -> channelName
                 isSage = false,
                 isAdmin = false,
                 isHidden = false,
                 isLocal = false,
-                lastReadReplyId = "",
-                replies = null,
-                remainReplies = null
+                lastReadCommentId = "", // lastReadReplyId -> lastReadCommentId
+                comments = emptyList(), // replies -> comments
+                remainingCount = null // remainReplies -> remainingCount
             )
             Result.success(post)
         } catch (e: Exception) {
@@ -178,13 +171,13 @@ private fun DiscourseCategory.toForum(): Forum {
     return Forum(
         id = id.toString(),
         name = name,
-        showName = name,
-        msg = descriptionText ?: description ?: "",
+        displayName = name, // showName -> displayName
+        description = descriptionText ?: description ?: "", // msg -> description
         groupId = parentCategoryId?.toString() ?: "0",
         groupName = "Discourse", // Could map parent category name if we fetch it
         sourceName = "discourse",
         tag = null,
-        threadCount = topicCount.toLong(),
+        topicCount = topicCount.toLong(), // threadCount -> topicCount
         autoDelete = null,
         interval = null,
         safeMode = if (readRestricted) "restricted" else "public"
@@ -198,8 +191,6 @@ internal fun DiscourseTopic.toPost(usersMap: Map<Long, DiscourseUser>): Post {
             ?: posters.firstOrNull()?.userId
     val user = originalPosterId?.let { usersMap[it] }
 
-    // 构造 Post 对象，这里需要根据实际 Post 结构进行适配
-    // 注意：Discourse 的 Topic 和 NMB 的 Post 结构不同，这里做简化映射
     val postCreatedAt = try {
         Instant.parse(createdAt)
     } catch (e: Exception) {
@@ -208,29 +199,27 @@ internal fun DiscourseTopic.toPost(usersMap: Map<Long, DiscourseUser>): Post {
 
     return Post(
         id = id.toString(),
-        fid = categoryId,
-        replyCount = replyCount.toLong(),
-        img = imageUrl ?: "",
-        ext = "", // Discourse 通常没有扩展名概念，图片直接是 URL
-        now = createdAt, // 使用创建时间
-        userHash = user?.username ?: "Unknown",
-        name = user?.name ?: user?.username ?: "Anonymous",
+        channelId = categoryId.toString(), // fid -> channelId
+        commentCount = replyCount.toLong(), // replyCount -> commentCount
+        images = imageUrl?.let {
+            listOf(ai.saniou.thread.domain.model.forum.Image(originalUrl = it, thumbnailUrl = it))
+        } ?: emptyList(), // img/ext -> images
         title = title,
         content = excerpt ?: fancyTitle,
-        sage = 0, // Discourse 没有 sage
-        admin = if (pinned || closed) 1 else 0,
-        hide = if (!visible) 1 else 0,
-        createdAt = postCreatedAt,
+        createdAt = kotlin.time.Instant.fromEpochMilliseconds(postCreatedAt.toEpochMilliseconds()), // now -> createdAt
         sourceName = "discourse",
         sourceUrl = "https://meta.discourse.org/t/$slug/$id",
-        author = user?.name ?: user?.username ?: "Anonymous",
-        forumName = "Discourse", // Could be mapped from category if available
+        author = Author(
+            id = user?.username ?: "Unknown",
+            name = user?.name ?: user?.username ?: "Anonymous"
+        ),
+        channelName = "Discourse", // forumName -> channelName
         isSage = false,
         isAdmin = pinned || closed,
         isHidden = !visible,
         isLocal = false,
-        lastReadReplyId = "",
-        replies = null,
-        remainReplies = null,
+        lastReadCommentId = "", // lastReadReplyId -> lastReadCommentId
+        comments = emptyList(), // replies -> comments
+        remainingCount = null, // remainReplies -> remainingCount
     )
 }

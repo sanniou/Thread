@@ -1,7 +1,8 @@
 package ai.saniou.thread.data.source.nmb.remote.dto
 
-import ai.saniou.thread.db.table.forum.Thread
-import ai.saniou.thread.db.table.forum.ThreadReply
+import ai.saniou.corecommon.utils.toTime
+import ai.saniou.thread.db.table.forum.Topic as Thread
+import ai.saniou.thread.db.table.forum.Comment as ThreadReply
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonNames
@@ -36,7 +37,7 @@ data class Forum(
     @JsonNames("Replies")
     override val replies: List<ThreadReplyEntity>,
     @JsonNames("RemainReplies")
-    override val remainReplies: Long? = null,// 网页版除去显示的最近几条回复后剩余的回复数量,“回应有……篇被省略。要阅读所有回应请按下回应链接。”
+    override val remainingCount: Long? = null,// 网页版除去显示的最近几条回复后剩余的回复数量,“回应有……篇被省略。要阅读所有回应请按下回应链接。”
 ) : IBaseThread, IBaseThreadReply
 
 @Serializable
@@ -64,13 +65,11 @@ data class Reply(
 fun Forum.toTable(sourceId: String, page: Long) = Thread(
     id = this.id.toString(),
     sourceId = sourceId,
-    fid = this.fid.toString(),
-    replyCount = this.replyCount,
-    img = this.img,
-    ext = this.ext,
-    now = this.now,
+    channelId = this.fid.toString(),
+    commentCount = this.replyCount,
+    createdAt = now.toTime().epochSeconds,
     userHash = this.userHash,
-    name = this.name,
+    authorName = this.name,
     title = this.title,
     content = this.content,
     sage = this.sage,
@@ -83,15 +82,15 @@ fun Forum.toTableReply(sourceId: String) = this.replies.map { reply ->
     ThreadReply(
         id = reply.id.toString(),
         sourceId = sourceId,
-        img = reply.img,
-        ext = reply.ext,
-        now = reply.now,
+        authorName = reply.name,
+        createdAt = now.toTime().epochSeconds,
         userHash = reply.userHash,
-        name = reply.name,
         title = reply.title,
         content = reply.content,
         admin = reply.admin,
-        threadId = this.id.toString(),
-        page = Long.MIN_VALUE //unknown
+        topicId = this.id.toString(),
+        page = Long.MIN_VALUE, //unknown
+        floor = null,
+        replyToId = null
     )
 }
