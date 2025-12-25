@@ -2,6 +2,7 @@ package ai.saniou.forum.ui.components
 
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.NetworkImage
+import ai.saniou.thread.domain.model.forum.Author
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -9,7 +10,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
@@ -22,14 +22,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Surface
 import androidx.compose.ui.unit.dp
 
 @Composable
 fun ThreadAuthor(
-    userName: String,
-    showName: String,
+    author: Author,
     threadTime: String,
     isPo: Boolean = false,
     avatarUrl: String? = null,
@@ -43,8 +40,8 @@ fun ThreadAuthor(
         horizontalArrangement = Arrangement.spacedBy(Dimens.padding_medium)
     ) {
         // 头像占位，根据 Hash 生成颜色
-        val avatarColor = remember(userName) {
-            val hash = userName.hashCode()
+        val avatarColor = remember(author.id) {
+            val hash = author.id.hashCode()
             Color(hash).copy(alpha = 1f)
         }
 
@@ -54,20 +51,20 @@ fun ThreadAuthor(
                 .clip(CircleShape)
                 .background(avatarColor)
                 .then(
-                    if (onClick != null) Modifier.clickable { onClick(userName) } else Modifier
+                    if (onClick != null) Modifier.clickable { onClick(author.id) } else Modifier
                 ),
             contentAlignment = Alignment.Center
         ) {
             if (!avatarUrl.isNullOrBlank()) {
                 NetworkImage(
                     imageUrl = avatarUrl,
-                    contentDescription = userName,
+                    contentDescription = author.id,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
                 )
             } else {
                 Text(
-                    text = userName.take(1).uppercase(),
+                    text = author.id.take(1).uppercase(),
                     style = MaterialTheme.typography.titleMedium,
                     color = Color.White
                 )
@@ -80,7 +77,7 @@ fun ThreadAuthor(
                 horizontalArrangement = Arrangement.spacedBy(Dimens.padding_small)
             ) {
                 Text(
-                    text = userName,
+                    text = author.id,
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -90,9 +87,9 @@ fun ThreadAuthor(
                     PoTag(isPo = true)
                 }
 
-                if (showName.isNotBlank() && showName != "无名氏") {
+                if (author.name.isNotBlank() && author.name != "无名氏") {
                     Text(
-                        text = showName,
+                        text = author.name,
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.secondary
                     )

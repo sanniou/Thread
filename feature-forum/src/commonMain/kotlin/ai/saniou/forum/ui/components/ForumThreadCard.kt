@@ -75,8 +75,7 @@ fun ForumThreadCard(
                 verticalAlignment = Alignment.Top
             ) {
                 ThreadAuthor(
-                    userName = thread.userHash,
-                    showName = thread.name,
+                    author = thread.author,
                     threadTime = thread.createdAt.toRelativeTimeString(),
                     isPo = false,
                     onClick = onUserClick,
@@ -106,7 +105,7 @@ fun ForumThreadCard(
             }
 
             // Title (Only if meaningful)
-            if (thread.title.isNotBlank() && thread.title != "无标题") {
+            if (thread.title.isNullOrBlank() && thread.title != "无标题") {
                 Text(
                     text = thread.title,
                     style = MaterialTheme.typography.titleMedium,
@@ -130,7 +129,8 @@ fun ForumThreadCard(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 // Source & Forum Name Badge
-                val sourceText = if (thread.sourceName.isNotBlank()) "${thread.sourceName.uppercase()} · " else ""
+                val sourceText =
+                    if (thread.sourceName.isNotBlank()) "${thread.sourceName.uppercase()} · " else ""
                 val footerText = "$sourceText${thread.forumName}"
 
                 if (footerText.isNotBlank()) {
@@ -142,7 +142,10 @@ fun ForumThreadCard(
                             text = footerText,
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(horizontal = Dimens.padding_small, vertical = Dimens.padding_tiny)
+                            modifier = Modifier.padding(
+                                horizontal = Dimens.padding_small,
+                                vertical = Dimens.padding_tiny
+                            )
                         )
                     }
                 }
@@ -176,7 +179,10 @@ fun ForumThreadCard(
                         text = "还有 ${thread.remainReplies} 条回复...",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(start = Dimens.padding_small, top = Dimens.padding_tiny)
+                        modifier = Modifier.padding(
+                            start = Dimens.padding_small,
+                            top = Dimens.padding_tiny
+                        )
                     )
                 }
             }
