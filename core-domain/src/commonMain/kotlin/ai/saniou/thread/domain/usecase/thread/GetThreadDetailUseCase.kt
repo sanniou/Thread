@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.Flow
  * 而不关心数据的具体来源（网络、数据库等）。
  */
 class GetThreadDetailUseCase(
-    private val threadRepository: ThreadRepository
+    private val threadRepository: ThreadRepository,
 ) {
     /**
      * @param sourceId 来源 ID
@@ -19,7 +19,7 @@ class GetThreadDetailUseCase(
      * @param forceRefresh 是否强制从网络刷新
      * @return 包含帖子详情的 Flow
      */
-    operator fun invoke(sourceId: String = "nmb", id: String, forceRefresh: Boolean = false): Flow<Post> {
+    operator fun invoke(sourceId: String, id: String, forceRefresh: Boolean = false): Flow<Post> {
         return threadRepository.getThreadDetail(sourceId, id, forceRefresh)
     }
 }

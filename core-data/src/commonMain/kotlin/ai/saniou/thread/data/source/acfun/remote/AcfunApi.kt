@@ -3,6 +3,7 @@ package ai.saniou.thread.data.source.acfun.remote
 import ai.saniou.thread.data.source.acfun.remote.dto.AcfunArticleResponse
 import ai.saniou.thread.data.source.acfun.remote.dto.AcfunCommentListResponse
 import ai.saniou.thread.data.source.acfun.remote.dto.AcfunRankResponse
+import ai.saniou.thread.data.source.acfun.remote.dto.AcfunVisitorLoginResponse
 import ai.saniou.thread.network.SaniouResponse
 import de.jensklingenberg.ktorfit.http.Body
 import de.jensklingenberg.ktorfit.http.Field
@@ -32,6 +33,17 @@ interface AcfunApi {
     // ============================================================================================
     // 鉴权与 Token (Authentication)
     // ============================================================================================
+
+    /**
+     * 游客登录
+     *
+     * @param sid 固定为 "acfun.api.visitor"
+     */
+    @POST("https://id.app.acfun.cn/rest/app/visitor/login")
+    @FormUrlEncoded
+    suspend fun visitorLogin(
+        @Field("sid") sid: String = "acfun.api.visitor"
+    ): SaniouResponse<AcfunVisitorLoginResponse>
 
     /**
      * 账号登录

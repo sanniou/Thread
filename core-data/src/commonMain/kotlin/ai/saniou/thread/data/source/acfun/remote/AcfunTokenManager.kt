@@ -25,6 +25,9 @@ class AcfunTokenManager(
     private val _acSecurity = MutableStateFlow<String?>(null)
     val acSecurity: StateFlow<String?> = _acSecurity.asStateFlow()
 
+    private val _userId = MutableStateFlow<Long?>(null)
+    val userId: StateFlow<Long?> = _userId.asStateFlow()
+
     private val mutex = Mutex()
 
     suspend fun getUdid(): String {
@@ -46,37 +49,54 @@ class AcfunTokenManager(
 
     suspend fun setTokens(
         cookie: String,
-        token: String,
-        acSecurity: String
+        token: String?,
+        acSecurity: String?,
+        userId: Long?
     ) {
         mutex.withLock {
             _cookie.value = cookie
             _token.value = token
             _acSecurity.value = acSecurity
-            // TODO: Persist sensitive tokens if needed (using secure storage)
+            _userId.value = userId
+
             settingsRepository.saveValue(KEY_COOKIE, cookie)
-            settingsRepository.saveValue(KEY_TOKEN, token)
-            settingsRepository.saveValue(KEY_AC_SECURITY, acSecurity)
+            if (token != null) settingsRepository.saveValue(KEY_TOKEN, token)
+            if (acSecurity != null) settingsRepository.saveValue(KEY_AC_SECURITY, acSecurity)
+            if (userId != null) settingsRepository.saveValue(KEY_USER_ID, userId)
         }
     }
-    
+
     suspend fun loadTokens() {
         mutex.withLock {
-             _cookie.value = settingsRepository.getValue<String>(KEY_COOKIE)
-             _token.value = settingsRepository.getValue<String>(KEY_TOKEN)
-             _acSecurity.value = settingsRepository.getValue<String>(KEY_AC_SECURITY)
+            _cookie.value = settingsRepository.getValue<String>(KEY_COOKIE)
+            _token.value = settingsRepository.getValue<String>(KEY_TOKEN)
+            _acSecurity.value = settingsRepository.getValue<String>(KEY_AC_SECURITY)
+            _userId.value = settingsRepository.getValue<Long>(KEY_USER_ID)
         }
     }
-    
+
     suspend fun getCookie(): String? = _cookie.value ?: run { loadTokens(); _cookie.value }
     suspend fun getToken(): String? = _token.value ?: run { loadTokens(); _token.value }
     suspend fun getAcSecurity(): String? = _acSecurity.value ?: run { loadTokens(); _acSecurity.value }
 
+    suspend fun buildVisitorCookie(acSecurity: String, userId: Long, serviceToken: String): String {
+        val udid = getUdid()
+        // did=eeb4d228-fbce-35e2-99a8-f315da8d0a06;safety_id=AAKF9RgCxTeIVoWwux-2Sl5A
+        // ;acSecurity=HWH9i0fGGpB00S8nOHMiZg==;userId=1000000258636841;acfun.api.visitor_st=ChRhY2Z1bi5hcGkudmlzaXRvci5zdBJwbT0de9VeO2KZE3ddiJ_N4-aK4IaqpJU_bNx1mcu2DeSuyZ8PHPFdTQcFheToAjVlLVy0FIMW1jxFCi2H2c1bxt4rkGGKWL_XrLR2ltNRtV05zRlncHfHl3s-2NEAXd8Z0jm_CAR_0VAsQpl_3z5_ehoStq8KBd_X3fCH8_FUsjZpiYZSIiAqFVPj6WymXh5sai6DhvBmgIvkvSBRq6MH9fd4bmFuNCgFMAE
+        return buildString {
+            append("did=$udid")
+            append(";safety_id=AAFAsQ04RM6Acm0WUcbfyJ5Q") // Hardcoded safety_id as seen in AcService.qml
+            append(";acSecurity=$acSecurity")
+            append(";userId=$userId")
+            append(";acfun.api.visitor_st=$serviceToken")
+        }
+    }
 
     companion object {
         private const val KEY_UDID = "acfun_udid"
         private const val KEY_COOKIE = "acfun_cookie"
         private const val KEY_TOKEN = "acfun_token"
         private const val KEY_AC_SECURITY = "acfun_ac_security"
+        private const val KEY_USER_ID = "acfun_user_id"
     }
 }

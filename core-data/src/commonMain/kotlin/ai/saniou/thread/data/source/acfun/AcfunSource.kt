@@ -1,6 +1,7 @@
 package ai.saniou.thread.data.source.acfun
 
 import ai.saniou.thread.data.source.acfun.remote.AcfunApi
+import ai.saniou.thread.data.source.acfun.remote.AcfunTokenManager
 import ai.saniou.thread.domain.model.forum.Forum
 import ai.saniou.thread.domain.model.forum.Post
 import ai.saniou.thread.domain.model.forum.ThreadReply
@@ -14,16 +15,59 @@ import app.cash.paging.PagingConfig
 import app.cash.paging.PagingData
 import app.cash.paging.PagingSource
 import app.cash.paging.PagingState
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 import kotlinx.datetime.Instant
 
 class AcfunSource(
-    private val acfunApi: AcfunApi
+    private val acfunApi: AcfunApi,
+    private val acfunTokenManager: AcfunTokenManager
 ) : Source {
     override val id: String = "acfun"
     override val name: String = "AcFun"
-    override val isInitialized: Flow<Boolean> = flowOf(true)
+
+    private val _isInitialized = MutableStateFlow(false)
+    override val isInitialized: Flow<Boolean> = _isInitialized
+
+    init {
+        CoroutineScope(Dispatchers.IO).launch {
+            initialize()
+        }
+    }
+
+    private suspend fun initialize() {
+        acfunTokenManager.loadTokens()
+        if (acfunTokenManager.getToken() == null) {
+            when (val response = acfunApi.visitorLogin()) {
+                is SaniouResponse.Success -> {
+                    val data = response.data
+                    if (data.result == 0 && data.acSecurity != null && data.userId != null && data.serviceToken != null) {
+                        val cookie = acfunTokenManager.buildVisitorCookie(
+                            data.acSecurity,
+                            data.userId,
+                            data.serviceToken
+                        )
+                        acfunTokenManager.setTokens(
+                            cookie = cookie,
+                            token = null,
+                            acSecurity = data.acSecurity,
+                            userId = data.userId
+                        )
+                    }
+                }
+
+                is SaniouResponse.Error -> {
+                    // Handle initialization error silently or log it
+                }
+            }
+        }
+        _isInitialized.value = true
+    }
 
     override val capabilities: SourceCapabilities = SourceCapabilities(
         supportsTrend = true,
@@ -55,27 +99,27 @@ class AcfunSource(
 
         return when (val response = acfunApi.getArticleInfo(articleId)) {
             is SaniouResponse.Success -> {
-                val data = response.data.data
-                if (data != null) {
+                val data = response.data
+                if (data.result == 0) {
                     val post = Post(
-                        id = data.articleId.toString(),
+                        id = data.articleId ?: threadId,
                         sourceName = "acfun",
                         sourceUrl = "https://www.acfun.cn/a/ac${data.articleId}",
-                        title = data.contentTitle,
+                        title = data.title?:"",
                         content = data.parts?.joinToString("\n") { it.content } ?: data.description
                         ?: "",
-                        author = data.user?.userName ?: "Unknown",
-                        userHash = data.user?.userId?.toString() ?: "",
+                        author = data.user?.name ?: "Unknown",
+                        userHash = data.user?.id ?: "",
                         createdAt = Instant.fromEpochMilliseconds(data.createTimeMillis ?: 0),
                         forumName = data.channel?.name ?: "文章",
-                        replyCount = data.commentCount ?: 0,
-                        img = data.coverUrl,
+                        replyCount = (data.commentCount ?: 0).toLong(),
+                        img = data.coverUrl ?: "",
                         ext = null,
                         isSage = false,
                         isAdmin = false,
                         isHidden = false,
-                        now = "",
-                        name = data.user?.userName ?: "Unknown",
+                        now = data.createTime ?: "",
+                        name = data.user?.name ?: "Unknown",
                         sage = 0,
                         fid = data.channel?.id?.toLong() ?: 0,
                         admin = 0,
@@ -84,7 +128,7 @@ class AcfunSource(
                     )
                     Result.success(post)
                 } else {
-                    Result.failure(Exception(response.data.message ?: "Unknown error"))
+                    Result.failure(Exception("Get article info failed: result=${data.result}"))
                 }
             }
 
@@ -123,14 +167,14 @@ class AcfunSource(
                                         id = comment.commentId.toString(),
                                         content = comment.content ?: "",
 //                                        author = comment.user?.userName ?: "Unknown",
-                                        userHash = comment.user?.userId?.toString() ?: "",
+                                        userHash = comment.user?.id?.toString() ?: "",
                                         createdAt = Instant.fromEpochMilliseconds(
                                             comment.timestamp ?: 0
                                         ),
                                         img = "",
                                         ext = "",
                                         now = comment.postDate ?: "",
-                                        name = comment.user?.userName ?: "Unknown",
+                                        name = comment.user?.name ?: "Unknown",
                                         admin = 0,
                                         title = "No.${comment.floor}",
                                         threadId = threadId,

@@ -105,7 +105,7 @@ val dataModule = DI.Module("dataModule") {
     // source and repository
     bindSingleton<NmbSource> { NmbSource(instance(), instance(), instance()) }
     bindSingleton<DiscourseSource> { DiscourseSource(instance(), instance(), instance(), instance()) }
-    bindSingleton<AcfunSource> { AcfunSource(instance()) }
+    bindSingleton<AcfunSource> { AcfunSource(instance(),instance()) }
 
     bind<Source>(tag = "nmb") with singleton { instance<NmbSource>() }
     bind<Source>(tag = "nga") with singleton { NgaSource() }
