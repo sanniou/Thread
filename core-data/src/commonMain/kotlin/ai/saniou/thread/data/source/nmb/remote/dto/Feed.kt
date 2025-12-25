@@ -1,5 +1,6 @@
 package ai.saniou.thread.data.source.nmb.remote.dto
 
+import ai.saniou.corecommon.utils.toTime
 import ai.saniou.thread.db.table.forum.SelectSubscriptionThread
 import ai.saniou.thread.db.table.forum.Thread
 import ai.saniou.thread.domain.model.forum.Post

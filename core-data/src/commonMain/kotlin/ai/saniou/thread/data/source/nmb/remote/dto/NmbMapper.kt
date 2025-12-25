@@ -1,15 +1,11 @@
 package ai.saniou.thread.data.source.nmb.remote.dto
 
-import ai.saniou.thread.db.table.forum.Forum
+import ai.saniou.corecommon.utils.toTime
 import ai.saniou.thread.db.table.forum.GetThread
 import ai.saniou.thread.db.table.forum.SelectSubscriptionThread
-import ai.saniou.thread.db.table.forum.Thread
 import ai.saniou.thread.db.table.forum.ThreadReply
 import ai.saniou.thread.db.table.forum.TimeLine
 import ai.saniou.thread.domain.model.forum.Post
-import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toInstant
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 import ai.saniou.thread.domain.model.forum.Forum as DomainForum
@@ -117,48 +113,6 @@ fun GetThread.toDomain(): Post = Post(
     replies = null, // GetThread doesn't join with replies
     remainReplies = null
 )
-
-@OptIn(ExperimentalTime::class)
-fun String.toTime(): Instant {
-    val input = this.trim()
-    // If it's already in ISO format with 'T', parse directly
-    if (input.contains("T")) {
-        return try {
-            // Try parsing as standard ISO format first
-            Instant.parse(input)
-        } catch (e: IllegalArgumentException) {
-            // If that fails, try to clean up double T issue
-            val cleanedInput = input.replace(Regex("T{2,}"), "T")
-            try {
-                Instant.parse(cleanedInput)
-            } catch (e2: IllegalArgumentException) {
-                // If still fails, try to parse as local datetime
-                val isoString = if (cleanedInput.length > 11) {
-                    cleanedInput.take(10) + "T" + cleanedInput.substring(11)
-                } else {
-                    cleanedInput
-                }
-                LocalDateTime.parse(isoString).toInstant(TimeZone.currentSystemDefault())
-            }
-        }
-    }
-
-    // 原始格式：2025-11-17(一)04:10:48
-    // 1. 去掉括号和星期
-    val cleaned = input.replace(Regex("\\(.*?\\)"), "")
-
-    // cleaned: "2025-11-1704:10:48"
-    // 2. 插入一个 T，变成 ISO-8601 兼容格式
-    val isoString = cleaned.take(10) + "T" + cleaned.substring(10)
-
-    // isoString: "2025-11-17T04:10:48"
-
-    // 3. 解析成 LocalDateTime
-    val ldt = LocalDateTime.parse(isoString)
-
-    // 4. 转为 epoch milliseconds（系统所在时区）
-    return ldt.toInstant(TimeZone.currentSystemDefault())
-}
 
 @OptIn(ExperimentalTime::class)
 fun ai.saniou.thread.data.source.nmb.remote.dto.Thread.toDomain(): Post = Post(

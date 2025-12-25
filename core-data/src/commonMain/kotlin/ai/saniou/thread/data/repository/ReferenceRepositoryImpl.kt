@@ -4,7 +4,7 @@ import ai.saniou.thread.db.Database
 import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
 import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
 import ai.saniou.thread.data.source.nmb.remote.dto.toTable
-import ai.saniou.thread.data.source.nmb.remote.dto.toTime
+import ai.saniou.corecommon.utils.toTime
 import ai.saniou.thread.domain.model.forum.ThreadReply
 import ai.saniou.thread.domain.repository.ReferenceRepository
 import app.cash.sqldelight.coroutines.asFlow

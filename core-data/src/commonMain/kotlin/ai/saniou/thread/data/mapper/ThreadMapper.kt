@@ -1,6 +1,7 @@
 package ai.saniou.thread.data.mapper
 
-import ai.saniou.thread.data.source.nmb.remote.dto.toTime
+
+import ai.saniou.corecommon.utils.toTime
 import ai.saniou.thread.db.table.forum.Thread
 import ai.saniou.thread.domain.model.forum.Post
 import kotlin.time.Instant
