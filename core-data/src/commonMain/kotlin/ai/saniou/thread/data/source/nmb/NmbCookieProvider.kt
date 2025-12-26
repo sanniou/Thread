@@ -11,6 +11,7 @@ class NmbCookieProvider(
     private val database: Database
 ) : CookieProvider {
     override suspend fun getCookieValue(): String? {
-        return database.cookieQueries.getSortedCookies().asFlow().mapToList(Dispatchers.Default).first().firstOrNull()?.cookie
+        val cookie = database.cookieQueries.getSortedCookies().asFlow().mapToList(Dispatchers.Default).first().firstOrNull()?.cookie
+        return cookie?.let { "userhash=$it" }
     }
 }

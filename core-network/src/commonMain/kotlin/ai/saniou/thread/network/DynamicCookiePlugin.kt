@@ -9,11 +9,8 @@ val DynamicCookiePlugin = createClientPlugin("DynamicCookiePlugin", ::PluginConf
     val cookieProvider = pluginConfig.cookieProvider
 
     onRequest { request, _ ->
-        // 仅对特定的 host 添加 Cookie
-        if (request.url.host == "api.nmb.best" || request.url.host == "www.nmbxd1.com" || request.url.host == "www.nmbxd.com") {
-            cookieProvider?.getCookieValue()?.let {
-                request.headers.append("Cookie", "userhash=$it")
-            }
+        cookieProvider?.getCookieValue()?.let {
+            request.headers.append("Cookie", it)
         }
     }
 }
