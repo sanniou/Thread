@@ -5,9 +5,9 @@ import ai.saniou.forum.workflow.forum.ForumContract.Event
 import ai.saniou.forum.workflow.forum.ForumContract.State
 import ai.saniou.thread.data.paging.DataPolicy
 import ai.saniou.thread.domain.model.forum.Topic as Post
-import ai.saniou.thread.domain.usecase.forum.GetForumDetailUseCase
-import ai.saniou.thread.domain.usecase.forum.GetForumNameUseCase
-import ai.saniou.thread.domain.usecase.forum.GetForumThreadsPagingUseCase
+import ai.saniou.thread.domain.usecase.channel.GetChannelDetailUseCase
+import ai.saniou.thread.domain.usecase.channel.GetChannelNameUseCase
+import ai.saniou.thread.domain.usecase.channel.GetChannelTopicsPagingUseCase
 import app.cash.paging.PagingData
 import app.cash.paging.cachedIn
 import cafe.adriel.voyager.core.model.ScreenModel
@@ -27,9 +27,9 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ForumViewModel(
-    getForumThreadsPagingUseCase: GetForumThreadsPagingUseCase,
-    getForumDetailUseCase: GetForumDetailUseCase,
-    getForumNameUseCase: GetForumNameUseCase,
+    getChannelTopicsPagingUseCase: GetChannelTopicsPagingUseCase,
+    getChannelDetailUseCase: GetChannelDetailUseCase,
+    getChannelNameUseCase: GetChannelNameUseCase,
     private val sourceId: String,
     private val forumId: String,
     private val fgroupId: String,
@@ -50,7 +50,7 @@ class ForumViewModel(
 
     val threads: Flow<PagingData<Post>> =
         loadParams.flatMapLatest { request ->
-            getForumThreadsPagingUseCase(
+            getChannelTopicsPagingUseCase(
                 sourceId = sourceId,
                 fid = request.fid,
                 isTimeline = request.fgroup == "-1",
@@ -59,8 +59,8 @@ class ForumViewModel(
         }.cachedIn(screenModelScope)
 
     val state: StateFlow<State> = combine(
-        getForumNameUseCase(sourceId, forumId),
-        getForumDetailUseCase(sourceId, forumId),
+        getChannelNameUseCase(sourceId, forumId),
+        getChannelDetailUseCase(sourceId, forumId),
         showInfoDialog
     ) { forumName, forumDetail, showDialog ->
         State(

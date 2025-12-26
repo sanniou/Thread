@@ -2,8 +2,8 @@ package ai.saniou.thread.domain.model.feed
 
 import ai.saniou.thread.domain.model.forum.Topic as Post
 import ai.saniou.thread.domain.model.reader.Article
-import kotlinx.datetime.Instant
 import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
 sealed interface TimelineItem {
     val uniqueId: String

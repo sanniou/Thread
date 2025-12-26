@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.Flow
 /**
  * 帖子相关的仓库接口，定义了帖子数据的契约
  */
-interface ThreadRepository {
+interface TopicRepository {
 
     /**
      * 获取帖子详情
@@ -19,7 +19,7 @@ interface ThreadRepository {
      * @param forceRefresh 是否强制从网络刷新
      * @return 包含帖子详情的 Flow
      */
-    fun getThreadDetail(sourceId: String, id: String, forceRefresh: Boolean = false): Flow<Post>
+    fun getTopicDetail(sourceId: String, id: String, forceRefresh: Boolean = false): Flow<Post>
 
     /**
      * 获取帖子回复的分页数据
@@ -30,7 +30,7 @@ interface ThreadRepository {
      * @param initialPage 初始页码
      * @return 包含帖子回复分页数据的 Flow
      */
-    fun getThreadRepliesPaging(
+    fun getTopicCommentsPaging(
         sourceId: String,
         threadId: String,
         isPoOnly: Boolean,
@@ -52,7 +52,7 @@ interface ThreadRepository {
      * @param isPoOnly 是否只看PO主
      * @return 包含帖子回复列表的 Flow
      */
-    fun getThreadReplies(threadId: Long, isPoOnly: Boolean): Flow<List<ThreadReply>>
+    fun getTopicComments(threadId: Long, isPoOnly: Boolean): Flow<List<ThreadReply>>
 
     /**
      * 更新帖子最后已读的回复ID
@@ -60,5 +60,5 @@ interface ThreadRepository {
      * @param threadId 帖子ID
      * @param replyId 回复ID
      */
-    suspend fun updateThreadLastReadReplyId(threadId: String, replyId: String)
+    suspend fun updateTopicLastReadCommentId(threadId: String, replyId: String)
 }

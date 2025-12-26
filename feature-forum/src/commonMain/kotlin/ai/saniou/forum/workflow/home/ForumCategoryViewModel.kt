@@ -7,9 +7,9 @@ import ai.saniou.forum.workflow.home.ForumCategoryContract.Event
 import ai.saniou.forum.workflow.home.ForumCategoryContract.ForumCategoryUiState
 import ai.saniou.forum.workflow.home.ForumCategoryContract.ForumGroupUiState
 import ai.saniou.thread.domain.model.forum.Channel as Forum
-import ai.saniou.thread.domain.repository.ForumRepository
-import ai.saniou.thread.domain.usecase.forum.GetFavoriteForumsUseCase
-import ai.saniou.thread.domain.usecase.forum.GetForumsUseCase
+import ai.saniou.thread.domain.repository.ChannelRepository
+import ai.saniou.thread.domain.usecase.channel.GetFavoriteChannelsUseCase
+import ai.saniou.thread.domain.usecase.channel.GetChannelsUseCase
 import ai.saniou.thread.domain.repository.SettingsRepository
 import ai.saniou.thread.domain.repository.getValue
 import ai.saniou.thread.domain.repository.saveValue
@@ -29,11 +29,11 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class ForumCategoryViewModel(
-    private val getForumsUseCase: GetForumsUseCase,
-    private val getFavoriteForumsUseCase: GetFavoriteForumsUseCase,
+    private val getChannelsUseCase: GetChannelsUseCase,
+    private val getFavoriteChannelsUseCase: GetFavoriteChannelsUseCase,
     private val toggleFavoriteUseCase: ToggleFavoriteUseCase,
     private val appInitializer: AppInitializer,
-    private val forumRepository: ForumRepository,
+    private val channelRepository: ChannelRepository,
     private val getNoticeUseCase: GetNoticeUseCase,
     private val markNoticeAsReadUseCase: MarkNoticeAsReadUseCase,
     private val settingsRepository: SettingsRepository,
@@ -124,14 +124,14 @@ class ForumCategoryViewModel(
             appInitializer.initialize()
 
             // TODO: Replace with a UseCase
-            val lastOpenedForum = forumRepository.getLastOpenedForum()
+            val lastOpenedForum = channelRepository.getLastOpenedChannel()
             // 如果最后打开的板块不是当前源的，则不选中
             val lastOpenedForumId = if (lastOpenedForum?.sourceName == state.value.currentSourceId) lastOpenedForum.id else null
             val currentSourceId = state.value.currentSourceId
 
             // Use Dispatchers.IO for database/network calls
-            val forumsFlow = flow { emit(getForumsUseCase(currentSourceId)) }
-            val favoritesFlow = getFavoriteForumsUseCase(currentSourceId)
+            val forumsFlow = flow { emit(getChannelsUseCase(currentSourceId)) }
+            val favoritesFlow = getFavoriteChannelsUseCase(currentSourceId)
 
             forumsFlow.combine(favoritesFlow) { forumsResult, favorites ->
                 forumsResult.map { forums ->
@@ -205,7 +205,7 @@ class ForumCategoryViewModel(
 
     private fun selectForum(forum: Forum) {
         screenModelScope.launch {
-            forumRepository.saveLastOpenedForum(forum)
+            channelRepository.saveLastOpenedChannel(forum)
         }
         _state.update { it.copy(currentForum = forum) }
     }

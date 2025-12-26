@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 /**
  * 板块相关的仓库接口，定义了板块数据的契约
  */
-interface ForumRepository {
+interface ChannelRepository {
 
     /**
      * 获取板块下的帖子分页数据
@@ -18,7 +18,7 @@ interface ForumRepository {
      * @param initialPage 初始页码
      * @return 包含帖子分页数据的 Flow
      */
-    fun getForumThreadsPaging(
+    fun getChannelTopicsPaging(
         sourceId: String,
         fid: String,
         isTimeline: Boolean,
@@ -32,7 +32,7 @@ interface ForumRepository {
      * @param fid 板块ID
      * @return 包含板块名称的 Flow, 如果找不到则为 null
      */
-    fun getForumName(sourceId: String, fid: String): Flow<String?>
+    fun getChannelName(sourceId: String, fid: String): Flow<String?>
 
     /**
      * 获取板块详情
@@ -41,17 +41,17 @@ interface ForumRepository {
      * @param fid 板块ID
      * @return 包含板块详情的 Flow
      */
-    fun getForumDetail(sourceId: String, fid: String): Flow<Forum?>
+    fun getChannelDetail(sourceId: String, fid: String): Flow<Forum?>
 
     /**
      * 保存最后打开的板块
      * @param forum 要保存的板块，如果为null则清除记录
      */
-    suspend fun saveLastOpenedForum(forum: Forum?)
+    suspend fun saveLastOpenedChannel(forum: Forum?)
 
     /**
      * 获取最后打开的板块
      * @return 最后打开的板块，如果不存在则为null
      */
-    suspend fun getLastOpenedForum(): Forum?
+    suspend fun getLastOpenedChannel(): Forum?
 }

@@ -1,7 +1,7 @@
 package ai.saniou.forum.workflow.image
 
 import ai.saniou.thread.domain.model.forum.Image
-import ai.saniou.thread.domain.usecase.thread.GetThreadImagesUseCase
+import ai.saniou.thread.domain.usecase.thread.GetTopicImagesUseCase
 import kotlinx.coroutines.flow.Flow
 
 
@@ -18,9 +18,9 @@ interface ImageProvider {
  */
 class ThreadImageProvider(
     private val threadId: Long,
-    private val getThreadImagesUseCase: GetThreadImagesUseCase
+    private val getTopicImagesUseCase: GetTopicImagesUseCase
 ) : ImageProvider {
     override fun load(): Flow<List<Image>> {
-        return getThreadImagesUseCase(threadId)
+        return getTopicImagesUseCase(threadId)
     }
 }

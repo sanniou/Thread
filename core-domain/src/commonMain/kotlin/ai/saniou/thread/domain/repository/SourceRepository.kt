@@ -86,7 +86,7 @@ interface SourceRepository {
      * 从指定的信息源获取板块列表
      * @param sourceId 信息源ID
      */
-    suspend fun getForums(sourceId: String): Result<List<Forum>>
+    suspend fun getChannels(sourceId: String): Result<List<Forum>>
 
     /**
      * 从指定信息源的板块获取帖子列表

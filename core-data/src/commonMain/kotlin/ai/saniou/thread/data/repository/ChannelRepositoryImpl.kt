@@ -1,30 +1,26 @@
 package ai.saniou.thread.data.repository
 
-import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.domain.model.forum.Channel as Forum
 import ai.saniou.thread.domain.model.forum.Topic as Post
-import ai.saniou.thread.domain.repository.ForumRepository
+import ai.saniou.thread.domain.repository.ChannelRepository
 import app.cash.paging.PagingData
-import app.cash.sqldelight.coroutines.asFlow
-import app.cash.sqldelight.coroutines.mapToOneOrNull
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
 import ai.saniou.thread.domain.repository.Source
 
-class ForumRepositoryImpl(
+class ChannelRepositoryImpl(
     private val db: Database,
     private val sources: Set<Source>,
-) : ForumRepository {
+) : ChannelRepository {
 
     private val sourceMap by lazy { sources.associateBy { it.id } }
 
-    override fun getForumThreadsPaging(
+    override fun getChannelTopicsPaging(
         sourceId: String,
         fid: String,
         isTimeline: Boolean,
@@ -35,17 +31,17 @@ class ForumRepositoryImpl(
             ?: kotlinx.coroutines.flow.flowOf(PagingData.empty())
     }
 
-    override fun getForumName(sourceId: String, fid: String): Flow<String?> {
+    override fun getChannelName(sourceId: String, fid: String): Flow<String?> {
         val source = sourceMap[sourceId] ?: return kotlinx.coroutines.flow.flowOf(null)
         return source.getForum(fid).map { it?.name }
     }
 
-    override fun getForumDetail(sourceId: String, fid: String): Flow<Forum?> {
+    override fun getChannelDetail(sourceId: String, fid: String): Flow<Forum?> {
         val source = sourceMap[sourceId] ?: return kotlinx.coroutines.flow.flowOf(null)
         return source.getForum(fid)
     }
 
-    override suspend fun saveLastOpenedForum(forum: Forum?) {
+    override suspend fun saveLastOpenedChannel(forum: Forum?) {
         withContext(Dispatchers.IO) {
             if (forum != null) {
                 db.keyValueQueries.insertKeyValue("last_opened_forum_id", forum.id)
@@ -57,7 +53,7 @@ class ForumRepositoryImpl(
         }
     }
 
-    override suspend fun getLastOpenedForum(): Forum? {
+    override suspend fun getLastOpenedChannel(): Forum? {
         return withContext(Dispatchers.IO) {
             val fid = db.keyValueQueries.getKeyValue("last_opened_forum_id").executeAsOneOrNull()?.content
             val sourceId =

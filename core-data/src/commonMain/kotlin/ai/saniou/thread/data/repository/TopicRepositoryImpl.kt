@@ -8,7 +8,7 @@ import ai.saniou.thread.domain.model.forum.Image
 import ai.saniou.thread.domain.model.forum.Topic as Post
 import ai.saniou.thread.domain.model.forum.Comment as ThreadReply
 import ai.saniou.thread.domain.repository.Source
-import ai.saniou.thread.domain.repository.ThreadRepository
+import ai.saniou.thread.domain.repository.TopicRepository
 import ai.saniou.thread.domain.model.forum.ImageType
 import app.cash.paging.PagingData
 import app.cash.sqldelight.coroutines.asFlow
@@ -22,15 +22,15 @@ import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.withContext
 
-class ThreadRepositoryImpl(
+class TopicRepositoryImpl(
     private val db: Database,
     private val sources: Set<Source>,
     private val cache: SourceCache,
-) : ThreadRepository {
+) : TopicRepository {
 
     private val sourceMap by lazy { sources.associateBy { it.id } }
 
-    override fun getThreadDetail(sourceId: String, id: String, forceRefresh: Boolean): Flow<Post> {
+    override fun getTopicDetail(sourceId: String, id: String, forceRefresh: Boolean): Flow<Post> {
         return cache.observeThread(sourceId, id)
             .mapNotNull { it?.toDomain(db.imageQueries) }
             .onStart {
@@ -52,7 +52,7 @@ class ThreadRepositoryImpl(
             .flowOn(Dispatchers.IO)
     }
 
-    override fun getThreadRepliesPaging(
+    override fun getTopicCommentsPaging(
         sourceId: String,
         threadId: String,
         isPoOnly: Boolean,
@@ -91,7 +91,7 @@ class ThreadRepositoryImpl(
             }
     }
 
-    override fun getThreadReplies(
+    override fun getTopicComments(
         threadId: Long,
         isPoOnly: Boolean,
     ): Flow<List<ThreadReply>> {
@@ -99,11 +99,11 @@ class ThreadRepositoryImpl(
     }
 
 
-    override suspend fun updateThreadLastReadReplyId(threadId: String, replyId: String) {
+    override suspend fun updateTopicLastReadCommentId(threadId: String, replyId: String) {
         // FIXME: Need sourceId. Assuming "nmb" for now or fetch from existing thread context.
         val sourceId = "nmb"
         withContext(Dispatchers.IO) {
-             cache.updateThreadLastReadReplyId(sourceId, threadId, replyId)
+             cache.updateTopicLastReadCommentId(sourceId, threadId, replyId)
         }
     }
 }

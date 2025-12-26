@@ -280,7 +280,7 @@ data class ThreadPage(
                             ImagePreviewViewModelParams(
                                 imageProvider = ThreadImageProvider(
                                     threadId = threadId.toLongOrNull() ?: 0L,
-                                    getThreadImagesUseCase = nmbdi.direct.instance()
+                                    getTopicImagesUseCase = nmbdi.direct.instance()
                                 ),
                                 initialImages = images,
                                 initialIndex = initialIndex

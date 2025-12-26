@@ -2,7 +2,7 @@ package ai.saniou.thread.domain.model.history
 
 import ai.saniou.thread.domain.model.forum.Topic as Post
 import ai.saniou.thread.domain.model.reader.Article
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 
 sealed interface HistoryItem {
     val uniqueId: String

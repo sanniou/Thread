@@ -66,7 +66,7 @@ interface SourceCache {
     /**
      * 更新帖子最后阅读的回复ID
      */
-    suspend fun updateThreadLastReadReplyId(sourceId: String, threadId: String, replyId: String)
+    suspend fun updateTopicLastReadCommentId(sourceId: String, threadId: String, replyId: String)
 
     /**
      * 获取指定来源的所有板块

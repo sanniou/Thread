@@ -17,7 +17,7 @@ import app.cash.paging.PagingData
 import app.cash.paging.map
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import ai.saniou.thread.domain.repository.Source
 import ai.saniou.thread.data.cache.SourceCache
 import ai.saniou.thread.data.paging.DataPolicy

@@ -5,11 +5,11 @@ import ai.saniou.thread.domain.usecase.bookmark.GetBookmarksUseCase
 import ai.saniou.thread.domain.usecase.bookmark.GetTagsUseCase
 import ai.saniou.thread.domain.usecase.bookmark.IsBookmarkedUseCase
 import ai.saniou.thread.domain.usecase.bookmark.RemoveBookmarkUseCase
-import ai.saniou.thread.domain.usecase.forum.GetFavoriteForumsUseCase
-import ai.saniou.thread.domain.usecase.forum.GetForumDetailUseCase
-import ai.saniou.thread.domain.usecase.forum.GetForumNameUseCase
-import ai.saniou.thread.domain.usecase.forum.GetForumsUseCase
-import ai.saniou.thread.domain.usecase.forum.GetForumThreadsPagingUseCase
+import ai.saniou.thread.domain.usecase.channel.GetFavoriteChannelsUseCase
+import ai.saniou.thread.domain.usecase.channel.GetChannelDetailUseCase
+import ai.saniou.thread.domain.usecase.channel.GetChannelNameUseCase
+import ai.saniou.thread.domain.usecase.channel.GetChannelsUseCase
+import ai.saniou.thread.domain.usecase.channel.GetChannelTopicsPagingUseCase
 import ai.saniou.thread.domain.usecase.history.AddHistoryUseCase
 import ai.saniou.thread.domain.usecase.history.GetHistoryUseCase
 import ai.saniou.thread.domain.usecase.misc.GetGreetImageUseCase
@@ -30,12 +30,12 @@ import ai.saniou.thread.domain.usecase.subscription.ObserveActiveSubscriptionKey
 import ai.saniou.thread.domain.usecase.subscription.SaveSubscriptionKeyUseCase
 import ai.saniou.thread.domain.usecase.subscription.SyncLocalSubscriptionsUseCase
 import ai.saniou.thread.domain.usecase.subscription.ToggleSubscriptionUseCase
-import ai.saniou.thread.domain.usecase.thread.GetThreadDetailUseCase
-import ai.saniou.thread.domain.usecase.thread.GetThreadImagesUseCase
-import ai.saniou.thread.domain.usecase.thread.GetThreadRepliesPagingUseCase
-import ai.saniou.thread.domain.usecase.thread.GetThreadRepliesUseCase
-import ai.saniou.thread.domain.usecase.thread.UpdateThreadLastAccessTimeUseCase
-import ai.saniou.thread.domain.usecase.thread.UpdateThreadLastReadReplyIdUseCase
+import ai.saniou.thread.domain.usecase.thread.GetTopicDetailUseCase
+import ai.saniou.thread.domain.usecase.thread.GetTopicImagesUseCase
+import ai.saniou.thread.domain.usecase.thread.GetTopicCommentsPagingUseCase
+import ai.saniou.thread.domain.usecase.thread.GetTopicCommentsUseCase
+import ai.saniou.thread.domain.usecase.thread.UpdateTopicLastAccessTimeUseCase
+import ai.saniou.thread.domain.usecase.thread.UpdateTopicLastReadCommentIdUseCase
 import ai.saniou.thread.domain.usecase.user.AddCookieUseCase
 import ai.saniou.thread.domain.usecase.user.DeleteCookieUseCase
 import ai.saniou.thread.domain.usecase.user.GetUserProfileUseCase
@@ -68,19 +68,19 @@ val domainModule = DI.Module("domainModule") {
 
     // Forum
     bindProvider { GetAvailableSourcesUseCase(instance()) }
-    bindProvider { GetForumsUseCase(instance()) }
-    bindProvider { GetFavoriteForumsUseCase(instance()) }
-    bindProvider { GetForumThreadsPagingUseCase(instance()) }
-    bindProvider { GetForumNameUseCase(instance()) }
-    bindProvider { GetForumDetailUseCase(instance()) }
+    bindProvider { GetChannelsUseCase(instance()) }
+    bindProvider { GetFavoriteChannelsUseCase(instance()) }
+    bindProvider { GetChannelTopicsPagingUseCase(instance()) }
+    bindProvider { GetChannelNameUseCase(instance()) }
+    bindProvider { GetChannelDetailUseCase(instance()) }
 
     // Thread
-    bindProvider { GetThreadDetailUseCase(instance()) }
-    bindProvider { GetThreadRepliesUseCase(instance()) }
-    bindProvider { GetThreadRepliesPagingUseCase(instance()) }
-    bindProvider { GetThreadImagesUseCase(instance()) }
-    bindProvider { UpdateThreadLastAccessTimeUseCase(instance(), instance()) }
-    bindProvider { UpdateThreadLastReadReplyIdUseCase(instance()) }
+    bindProvider { GetTopicDetailUseCase(instance()) }
+    bindProvider { GetTopicCommentsUseCase(instance()) }
+    bindProvider { GetTopicCommentsPagingUseCase(instance()) }
+    bindProvider { GetTopicImagesUseCase(instance()) }
+    bindProvider { UpdateTopicLastAccessTimeUseCase(instance(), instance()) }
+    bindProvider { UpdateTopicLastReadCommentIdUseCase(instance()) }
 
     // Post
     bindProvider { CreateThreadUseCase(instance()) }

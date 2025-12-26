@@ -8,7 +8,7 @@ import app.cash.paging.PagingSource
 import app.cash.paging.PagingSourceLoadParams
 import app.cash.paging.PagingSourceLoadResult
 import app.cash.paging.PagingState
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 
 class DiscourseThreadPagingSource(
     private val api: DiscourseApi,

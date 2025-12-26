@@ -8,16 +8,16 @@ import ai.saniou.thread.domain.model.bookmark.Bookmark
 import ai.saniou.thread.domain.model.forum.Topic as Post
 import ai.saniou.thread.domain.model.forum.Comment as ThreadReply
 import ai.saniou.thread.domain.usecase.bookmark.AddBookmarkUseCase
-import ai.saniou.thread.domain.usecase.forum.GetForumNameUseCase
+import ai.saniou.thread.domain.usecase.channel.GetChannelNameUseCase
 import ai.saniou.thread.domain.usecase.subscription.GetActiveSubscriptionKeyUseCase
 import ai.saniou.thread.domain.usecase.subscription.IsSubscribedUseCase
 import ai.saniou.thread.domain.usecase.subscription.ToggleSubscriptionUseCase
-import ai.saniou.thread.domain.usecase.thread.GetThreadDetailUseCase
-import ai.saniou.thread.domain.usecase.thread.GetThreadRepliesPagingUseCase
+import ai.saniou.thread.domain.usecase.thread.GetTopicDetailUseCase
+import ai.saniou.thread.domain.usecase.thread.GetTopicCommentsPagingUseCase
 import ai.saniou.thread.data.manager.CdnManager
 import ai.saniou.thread.domain.model.forum.Image
-import ai.saniou.thread.domain.usecase.thread.UpdateThreadLastAccessTimeUseCase
-import ai.saniou.thread.domain.usecase.thread.UpdateThreadLastReadReplyIdUseCase
+import ai.saniou.thread.domain.usecase.thread.UpdateTopicLastAccessTimeUseCase
+import ai.saniou.thread.domain.usecase.thread.UpdateTopicLastReadCommentIdUseCase
 import app.cash.paging.PagingData
 import app.cash.paging.cachedIn
 import cafe.adriel.voyager.core.model.ScreenModel
@@ -45,15 +45,15 @@ data class ThreadViewModelParams(
 @OptIn(ExperimentalCoroutinesApi::class)
 class ThreadViewModel(
     params: ThreadViewModelParams,
-    private val getThreadDetailUseCase: GetThreadDetailUseCase,
-    private val getThreadRepliesPagingUseCase: GetThreadRepliesPagingUseCase,
+    private val getTopicDetailUseCase: GetTopicDetailUseCase,
+    private val getTopicCommentsPagingUseCase: GetTopicCommentsPagingUseCase,
     private val toggleSubscriptionUseCase: ToggleSubscriptionUseCase,
     private val addBookmarkUseCase: AddBookmarkUseCase,
     private val getActiveSubscriptionKeyUseCase: GetActiveSubscriptionKeyUseCase,
     private val isSubscribedUseCase: IsSubscribedUseCase,
-    private val getForumNameUseCase: GetForumNameUseCase,
-    private val updateThreadLastAccessTimeUseCase: UpdateThreadLastAccessTimeUseCase,
-    private val updateThreadLastReadReplyIdUseCase: UpdateThreadLastReadReplyIdUseCase,
+    private val getChannelNameUseCase: GetChannelNameUseCase,
+    private val updateTopicLastAccessTimeUseCase: UpdateTopicLastAccessTimeUseCase,
+    private val updateTopicLastReadCommentIdUseCase: UpdateTopicLastReadCommentIdUseCase,
     private val cdnManager: CdnManager,
 ) : ScreenModel {
 
@@ -76,7 +76,7 @@ class ThreadViewModel(
 
     val replies: Flow<PagingData<ThreadReply>> =
         loadRequest.flatMapLatest { request ->
-            getThreadRepliesPagingUseCase(
+            getTopicCommentsPagingUseCase(
                 sourceId = sourceId,
                 threadId = request.threadId,
                 isPoOnly = request.isPoOnly,
@@ -126,7 +126,7 @@ class ThreadViewModel(
     private fun updateLastAccessTime() {
         val tid = threadId.toLongOrNull() ?: return
         screenModelScope.launch {
-            updateThreadLastAccessTimeUseCase(
+            updateTopicLastAccessTimeUseCase(
                 sourceId,
                 tid.toString(),
                 Clock.System.now().epochSeconds
@@ -137,16 +137,16 @@ class ThreadViewModel(
     private fun updateLastReadReplyId(replyId: String) {
         val tid = threadId.toLongOrNull() ?: return
         screenModelScope.launch {
-            updateThreadLastReadReplyIdUseCase(tid.toString(), replyId)
+            updateTopicLastReadCommentIdUseCase(tid.toString(), replyId)
         }
     }
 
     private fun observeThreadDetails(forceRefresh: Boolean = false) {
         screenModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
-            getThreadDetailUseCase(sourceId, threadId, forceRefresh)
+            getTopicDetailUseCase(sourceId, threadId, forceRefresh)
                 .flatMapLatest { detail ->
-                    getForumNameUseCase(sourceId, detail.channelId).map { forumName ->
+                    getChannelNameUseCase(sourceId, detail.channelId).map { forumName ->
                         detail to (forumName ?: "")
                     }
                 }

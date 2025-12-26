@@ -1,12 +1,12 @@
 package ai.saniou.thread.domain.usecase.thread
 
 import ai.saniou.thread.domain.model.forum.Comment as ThreadReply
-import ai.saniou.thread.domain.repository.ThreadRepository
+import ai.saniou.thread.domain.repository.TopicRepository
 import app.cash.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 
-class GetThreadRepliesPagingUseCase(
-    private val threadRepository: ThreadRepository
+class GetTopicCommentsPagingUseCase(
+    private val topicRepository: TopicRepository
 ) {
     operator fun invoke(
         sourceId: String = "nmb",
@@ -14,7 +14,7 @@ class GetThreadRepliesPagingUseCase(
         isPoOnly: Boolean,
         initialPage: Int = 1
     ): Flow<PagingData<ThreadReply>> {
-        return threadRepository.getThreadRepliesPaging(
+        return topicRepository.getTopicCommentsPaging(
             sourceId = sourceId,
             threadId = threadId,
             isPoOnly = isPoOnly,

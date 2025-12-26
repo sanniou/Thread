@@ -14,7 +14,7 @@ class SourceRepositoryImpl(
 
     private val sourceMap by lazy { sources.associateBy { it.id } }
 
-    override suspend fun getForums(sourceId: String): Result<List<Forum>> {
+    override suspend fun getChannels(sourceId: String): Result<List<Forum>> {
         val source = sourceMap[sourceId] ?: return Result.failure(IllegalArgumentException("Source not found: $sourceId"))
         return source.getForums()
     }
