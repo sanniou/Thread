@@ -1,7 +1,7 @@
 package ai.saniou.forum.workflow.thread
 
 import ai.saniou.corecommon.utils.toRelativeTimeString
-import ai.saniou.coreui.composition.LocalSourceId
+import ai.saniou.coreui.composition.LocalForumSourceId
 import ai.saniou.coreui.state.AppError
 import ai.saniou.coreui.state.DefaultError
 import ai.saniou.coreui.theme.Dimens
@@ -130,7 +130,7 @@ data class ThreadPage(
         val lazyListState = rememberLazyListState()
         val coroutineScope = rememberCoroutineScope()
         val clipboardManager = LocalClipboardManager.current
-        val sourceId = LocalSourceId.current
+        val sourceId = LocalForumSourceId.current
 
         val viewModel: ThreadViewModel = rememberScreenModel(tag = "$sourceId:$threadId") {
             nmbdi.direct.instance(arg = ThreadViewModelParams(sourceId, threadId))

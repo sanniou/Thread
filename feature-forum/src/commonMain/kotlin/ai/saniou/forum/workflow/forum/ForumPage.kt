@@ -1,6 +1,6 @@
 package ai.saniou.forum.workflow.forum
 
-import ai.saniou.coreui.composition.LocalSourceId
+import ai.saniou.coreui.composition.LocalForumSourceId
 import ai.saniou.coreui.widgets.RichText
 import ai.saniou.forum.di.nmbdi
 import ai.saniou.forum.workflow.home.ListThreadPage
@@ -82,7 +82,7 @@ data class ForumPage(
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         // Fallback to LocalSourceId if sourceId is not provided (legacy behavior)
-        val actualSourceId = sourceId ?: LocalSourceId.current
+        val actualSourceId = sourceId ?: LocalForumSourceId.current
 
         val viewModel: ForumViewModel = rememberScreenModel(tag = "${actualSourceId}_${fgroupId}_${forumId}") {
             di.direct.instance(arg = Triple(actualSourceId, forumId, fgroupId))

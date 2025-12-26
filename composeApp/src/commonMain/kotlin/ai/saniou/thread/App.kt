@@ -1,7 +1,7 @@
 package ai.saniou.thread
 
 import ai.saniou.coreui.composition.LocalAppDrawer
-import ai.saniou.coreui.composition.LocalSourceId
+import ai.saniou.coreui.composition.LocalForumSourceId
 import ai.saniou.coreui.theme.CupcakeTheme
 import ai.saniou.coreui.widgets.DrawerMenuItem
 import ai.saniou.coreui.widgets.DrawerMenuRow
@@ -20,7 +20,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.Games
 import androidx.compose.material.icons.filled.RssFeed
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
@@ -77,7 +76,7 @@ fun App() {
 
                 CompositionLocalProvider(
                     LocalAppDrawer provides appDrawer,
-                    LocalSourceId provides (currentSource ?: "nmb")
+                    LocalForumSourceId provides (currentSource ?: "nmb")
                 ) {
                     navigator.saveableState("currentScreen") {
                         currentScreen.Content()

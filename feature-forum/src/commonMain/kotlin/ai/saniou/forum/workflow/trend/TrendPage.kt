@@ -66,7 +66,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
-import ai.saniou.coreui.composition.LocalSourceId
+import ai.saniou.coreui.composition.LocalForumSourceId
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -84,7 +84,7 @@ data class TrendPage(
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val sourceId = LocalSourceId.current
+        val sourceId = LocalForumSourceId.current
         val viewModel: TrendViewModel = rememberScreenModel(tag = sourceId) {
             di.direct.instance(arg = sourceId)
         }
