@@ -16,6 +16,7 @@ import io.ktor.client.plugins.logging.LoggingFormat
 import io.ktor.client.request.header
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
+import io.ktor.http.userAgent
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
@@ -50,6 +51,7 @@ fun SaniouKtorfit(
             }
             install(DefaultRequest) {
                 header(HttpHeaders.ContentType, ContentType.Application.Json)
+                userAgent(NetworkConstants.USER_AGENT)
             }
             install(Logging) {
                 format = LoggingFormat.OkHttp

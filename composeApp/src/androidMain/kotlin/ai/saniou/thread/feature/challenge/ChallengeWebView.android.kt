@@ -3,6 +3,7 @@ package ai.saniou.thread.feature.challenge
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import ai.saniou.thread.network.NetworkConstants
 import com.multiplatform.webview.cookie.Cookie
 import com.multiplatform.webview.web.WebView
 import com.multiplatform.webview.web.rememberWebViewNavigator
@@ -35,7 +36,7 @@ actual fun ChallengeWebView(
         navigator = navigator,
         modifier = modifier,
         onCreated = {
-            it.settings.userAgentString = "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36"
+            it.settings.userAgentString = NetworkConstants.USER_AGENT
             it.settings.javaScriptEnabled = true
             it.settings.domStorageEnabled = true
         },
