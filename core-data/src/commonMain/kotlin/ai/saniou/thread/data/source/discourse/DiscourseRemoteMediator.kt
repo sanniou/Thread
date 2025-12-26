@@ -70,7 +70,7 @@ class DiscourseRemoteMediator(
                         id = thread.id,
                         sourceId = sourceId,
                         remainingCount = 0,
-                        lastKey = 0 // Placeholder
+                        latestCommentId = "" // Placeholder
                     )
                 }
             },

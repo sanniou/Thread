@@ -138,7 +138,7 @@ class DiscourseSource(
                 isAdmin = false,
                 isHidden = false,
                 isLocal = false,
-                lastReadCommentId = "", // lastReadReplyId -> lastReadCommentId
+                lastViewedCommentId = "", // lastReadReplyId -> lastReadCommentId
                 comments = emptyList(), // replies -> comments
                 remainingCount = null // remainReplies -> remainingCount
             )
@@ -218,7 +218,7 @@ internal fun DiscourseTopic.toPost(usersMap: Map<Long, DiscourseUser>): Post {
         isAdmin = pinned || closed,
         isHidden = !visible,
         isLocal = false,
-        lastReadCommentId = "", // lastReadReplyId -> lastReadCommentId
+        lastViewedCommentId = "", // lastReadReplyId -> lastReadCommentId
         comments = emptyList(), // replies -> comments
         remainingCount = null, // remainReplies -> remainingCount
     )

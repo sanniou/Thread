@@ -2,14 +2,11 @@ package ai.saniou.forum.workflow.history
 
 import ai.saniou.coreui.widgets.SaniouTopAppBar
 import ai.saniou.forum.workflow.home.ListThreadPage
-import ai.saniou.forum.workflow.image.ImageInfo
 import ai.saniou.forum.workflow.image.ImagePreviewPage
 import ai.saniou.forum.workflow.image.ImagePreviewViewModelParams
 import ai.saniou.forum.workflow.thread.ThreadPage
 import ai.saniou.forum.workflow.user.UserDetailPage
-import ai.saniou.thread.domain.model.forum.Topic as Post
 import ai.saniou.thread.domain.model.history.HistoryPost
-import app.cash.paging.compose.collectAsLazyPagingItems
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
@@ -18,13 +15,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import app.cash.paging.filter
+import app.cash.paging.map
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import kotlinx.coroutines.flow.map
 import org.kodein.di.compose.localDI
 import org.kodein.di.instance
-import app.cash.paging.map
-import kotlinx.coroutines.flow.map
+import ai.saniou.thread.domain.model.forum.Topic as Post
 
 class HistoryPage : Screen {
     @OptIn(ExperimentalMaterial3Api::class)
@@ -104,12 +102,11 @@ class HistoryPage : Screen {
                         .map { (it as HistoryPost).post }
                 },
                 onThreadClicked = { navigator.push(ThreadPage(it)) },
-                onImageClick = { _, imgPath, ext ->
-                    val imageInfo = ImageInfo(imgPath, ext)
+                onImageClick = { _, img ->
                     navigator.push(
                         ImagePreviewPage(
                             ImagePreviewViewModelParams(
-                                initialImages = listOf(imageInfo),
+                                initialImages = listOf(img),
                             ),
                         )
                     )

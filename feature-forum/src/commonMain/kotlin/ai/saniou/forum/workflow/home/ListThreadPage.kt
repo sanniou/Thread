@@ -10,6 +10,7 @@ import ai.saniou.forum.ui.components.LoadingIndicator
 import ai.saniou.forum.ui.components.ThreadListSkeleton
 import ai.saniou.thread.data.source.nmb.remote.dto.ThreadWithInformation
 import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
+import ai.saniou.thread.domain.model.forum.Image
 import ai.saniou.thread.domain.model.forum.Topic as Post
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -42,29 +43,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 @Composable
-fun ListThreadPageOld(
-    threadFlow: Flow<PagingData<ThreadWithInformation>>,
-    onThreadClicked: (Long) -> Unit,
-    onImageClick: (Long, String, String) -> Unit,
-    onUserClick: (String) -> Unit,
-    modifier: Modifier = Modifier,
-    state: LazyListState = rememberLazyListState(),
-) {
-    ListThreadPage(
-        threadFlow = threadFlow.map { it.map { it.toDomain() } },
-        onThreadClicked = onThreadClicked,
-        onImageClick = onImageClick,
-        onUserClick = onUserClick,
-        modifier = modifier,
-        state = state,
-    )
-}
-
-@Composable
 fun ListThreadPage(
     threadFlow: Flow<PagingData<Post>>,
     onThreadClicked: (Long) -> Unit,
-    onImageClick: (Long, String, String) -> Unit,
+    onImageClick: (Long, Image) -> Unit,
     onUserClick: (String) -> Unit,
     modifier: Modifier = Modifier,
     state: LazyListState = rememberLazyListState(),
@@ -105,7 +87,7 @@ fun ListThreadPage(
                     ForumThreadCard(
                         thread = feed,
                         onClick = { onThreadClicked(feed.id.toLong()) },
-                        onImageClick = { img, ext -> onImageClick(feed.id.toLong(), img, ext) },
+                        onImageClick = { img -> onImageClick(feed.id.toLong(), img) },
                         onUserClick = onUserClick
                     )
                 }

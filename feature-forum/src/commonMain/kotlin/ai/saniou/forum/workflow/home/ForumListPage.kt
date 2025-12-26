@@ -196,10 +196,10 @@ object ForumListPage : Screen {
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
-                    if (forum.msg.isNotBlank()) {
+                    if (forum.description.isNotBlank()) {
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = forum.msg.replace(Regex("<[^>]*>"), "").trim(),
+                            text = forum.description.replace(Regex("<[^>]*>"), "").trim(),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 1

@@ -2,6 +2,7 @@ package ai.saniou.forum.workflow.search
 
 import ai.saniou.thread.data.source.nmb.remote.dto.ThreadReply
 import ai.saniou.thread.data.source.nmb.remote.dto.ThreadWithInformation
+import ai.saniou.thread.domain.model.forum.Comment
 import app.cash.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
@@ -11,7 +12,7 @@ interface SearchContract {
         val query: String = "",
         val searchType: SearchType = SearchType.THREAD,
         val threadPagingData: Flow<PagingData<ThreadWithInformation>> = emptyFlow(),
-        val replyPagingData: Flow<PagingData<ThreadReply>> = emptyFlow(),
+        val replyPagingData: Flow<PagingData<Comment>> = emptyFlow(),
     )
 
     sealed class Event {

@@ -3,6 +3,7 @@ package ai.saniou.forum.workflow.image
 import ai.saniou.forum.workflow.image.ImagePreviewContract.Effect
 import ai.saniou.forum.workflow.image.ImagePreviewContract.Event
 import ai.saniou.forum.workflow.image.ImagePreviewContract.State
+import ai.saniou.thread.domain.model.forum.Image
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.channels.Channel
@@ -19,18 +20,9 @@ import org.kodein.di.DI
 import org.kodein.di.bind
 import org.kodein.di.factory
 
-/**
- * 图片预览数据类
- */
-data class ImageInfo(
-    val imgPath: String,
-    val ext: String,
-    val isThumb: Boolean = false,
-)
-
 class ImagePreviewViewModel(
     private val imageProvider: ImageProvider?,
-    initialImages: List<ImageInfo>,
+    initialImages: List<Image>,
     initialIndex: Int,
 ) : ScreenModel, ImagePreviewContract {
 
@@ -69,9 +61,6 @@ class ImagePreviewViewModel(
             .onStart {
                 _state.update { it.copy(isLoading = true) }
             }
-            .map { images ->
-                images.map { ImageInfo(it.name, it.ext) }
-            }
             .onEach { newImages ->
                 _state.update {
                     it.copy(
@@ -93,13 +82,13 @@ val imagePreviewViewModelModule = DI.Module("ImagePreviewViewModelModule") {
         ImagePreviewViewModel(
             imageProvider = params.imageProvider,
             initialImages = params.initialImages,
-            initialIndex = params.initialIndex
+            initialIndex = params.initialIndex,
         )
     }
 }
 
 data class ImagePreviewViewModelParams(
-    val initialImages: List<ImageInfo>,
+    val initialImages: List<Image>,
     val imageProvider: ImageProvider? = null,
     val initialIndex: Int = 0,
 )

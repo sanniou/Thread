@@ -4,6 +4,7 @@ import ai.saniou.corecommon.utils.toRelativeTimeString
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.thread.data.source.nmb.remote.dto.IBaseThread
 import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
+import ai.saniou.thread.domain.model.forum.Image
 import ai.saniou.thread.domain.model.forum.Topic as Post
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -34,7 +35,7 @@ import androidx.compose.ui.unit.dp
 fun ForumThreadCard(
     thread: IBaseThread,
     onClick: () -> Unit,
-    onImageClick: ((String, String) -> Unit)? = null,
+    onImageClick: ((Image) -> Unit)? = null,
     onUserClick: ((String) -> Unit)? = null,
 ) {
     ForumThreadCard(
@@ -52,7 +53,7 @@ fun ForumThreadCard(
 fun ForumThreadCard(
     thread: Post,
     onClick: () -> Unit,
-    onImageClick: ((String, String) -> Unit)? = null,
+    onImageClick: ((Image) -> Unit)? = null,
     onUserClick: ((String) -> Unit)? = null,
 ) {
     ElevatedCard(
@@ -105,9 +106,9 @@ fun ForumThreadCard(
             }
 
             // Title (Only if meaningful)
-            if (thread.title.isNullOrBlank() && thread.title != "无标题") {
+            if (!thread.title.isNullOrBlank() && thread.title != "无标题") {
                 Text(
-                    text = thread.title,
+                    text = thread.title!!,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -117,10 +118,9 @@ fun ForumThreadCard(
             // Content
             ThreadBody(
                 content = thread.content,
-                img = thread.img,
-                ext = thread.ext,
+                images = thread.images,
                 maxLines = 6,
-                onImageClick = { img, ext -> onImageClick?.invoke(img, ext) }
+                onImageClick = { img -> onImageClick?.invoke(img) }
             )
 
             // Footer: Forum Name & Stats
@@ -131,7 +131,7 @@ fun ForumThreadCard(
                 // Source & Forum Name Badge
                 val sourceText =
                     if (thread.sourceName.isNotBlank()) "${thread.sourceName.uppercase()} · " else ""
-                val footerText = "$sourceText${thread.forumName}"
+                val footerText = "$sourceText${thread.channelName}"
 
                 if (footerText.isNotBlank()) {
                     Surface(
@@ -164,7 +164,7 @@ fun ForumThreadCard(
                         modifier = Modifier.size(Dimens.icon_size_small)
                     )
                     Text(
-                        text = thread.replyCount.toString(),
+                        text = thread.commentCount.toString(),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -172,11 +172,11 @@ fun ForumThreadCard(
             }
 
             // Recent Replies
-            if (!thread.replies.isNullOrEmpty()) {
-                RecentReplies(thread.replies!!)
-                if ((thread.remainReplies ?: 0) > 0) {
+            if (thread.comments.isNotEmpty()) {
+                RecentReplies(thread.comments)
+                if ((thread.remainingCount ?: 0) > 0) {
                     Text(
-                        text = "还有 ${thread.remainReplies} 条回复...",
+                        text = "还有 ${thread.remainingCount} 条回复...",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(

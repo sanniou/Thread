@@ -1,35 +1,35 @@
 package ai.saniou.forum.workflow.thread
 
-import ai.saniou.coreui.widgets.PullToRefreshWrapper
+import ai.saniou.corecommon.utils.toRelativeTimeString
+import ai.saniou.coreui.composition.LocalSourceId
 import ai.saniou.coreui.state.AppError
 import ai.saniou.coreui.state.DefaultError
-import ai.saniou.coreui.composition.LocalSourceId
+import ai.saniou.coreui.theme.Dimens
+import ai.saniou.coreui.widgets.PullToRefreshWrapper
 import ai.saniou.coreui.widgets.SaniouTopAppBar
 import ai.saniou.coreui.widgets.ShimmerContainer
 import ai.saniou.coreui.widgets.VerticalSpacerSmall
 import ai.saniou.forum.di.nmbdi
+import ai.saniou.forum.ui.components.Badge
 import ai.saniou.forum.ui.components.LoadEndIndicator
 import ai.saniou.forum.ui.components.LoadingFailedIndicator
 import ai.saniou.forum.ui.components.LoadingIndicator
 import ai.saniou.forum.ui.components.PageJumpDialog
 import ai.saniou.forum.ui.components.ReferenceSheet
 import ai.saniou.forum.ui.components.SkeletonReplyItem
-import ai.saniou.forum.ui.components.Badge
 import ai.saniou.forum.ui.components.ThreadAuthor
 import ai.saniou.forum.ui.components.ThreadBody
-import ai.saniou.forum.workflow.image.ImageInfo
 import ai.saniou.forum.workflow.image.ImagePreviewPage
 import ai.saniou.forum.workflow.image.ImagePreviewViewModelParams
 import ai.saniou.forum.workflow.image.ThreadImageProvider
 import ai.saniou.forum.workflow.post.PostPage
-import ai.saniou.forum.workflow.user.UserDetailPage
 import ai.saniou.forum.workflow.reference.ReferenceContract
 import ai.saniou.forum.workflow.reference.ReferenceViewModel
 import ai.saniou.forum.workflow.thread.ThreadContract.Effect
 import ai.saniou.forum.workflow.thread.ThreadContract.Event
 import ai.saniou.forum.workflow.thread.ThreadContract.State
-import ai.saniou.thread.domain.model.forum.Topic as Post
-import ai.saniou.thread.domain.model.forum.Comment as ThreadReply
+import ai.saniou.forum.workflow.user.UserDetailPage
+import ai.saniou.thread.domain.model.forum.Image
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -39,7 +39,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -51,7 +50,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ContentCopy
@@ -68,7 +66,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import ai.saniou.coreui.theme.Dimens
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.FloatingActionButton
@@ -81,7 +78,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -114,9 +110,10 @@ import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
-import org.kodein.di.compose.LocalDI
 import org.kodein.di.direct
 import org.kodein.di.instance
+import ai.saniou.thread.domain.model.forum.Comment as ThreadReply
+import ai.saniou.thread.domain.model.forum.Topic as Post
 
 data class ThreadPage(
     val threadId: String,
@@ -295,7 +292,7 @@ data class ThreadPage(
                 onCopy = { viewModel.onEvent(Event.CopyContent(it)) },
                 onBookmarkThread = { viewModel.onEvent(Event.BookmarkThread(it)) },
                 onBookmarkReply = { viewModel.onEvent(Event.BookmarkReply(it)) },
-                onBookmarkImage = { url, ext -> viewModel.onEvent(Event.BookmarkImage(url, ext)) },
+                onBookmarkImage = { image -> viewModel.onEvent(Event.BookmarkImage(image)) },
                 onUserClick = { userHash -> navigator.push(UserDetailPage(userHash)) }
             )
         }
@@ -343,12 +340,12 @@ private fun ThreadContentRouter(
     onRefresh: () -> Unit,
     onTogglePoOnly: () -> Unit,
     onRefClick: (Long) -> Unit,
-    onImageClick: (Int, List<ImageInfo>) -> Unit,
+    onImageClick: (Int, List<Image>) -> Unit,
     onUpdateLastReadId: (String) -> Unit,
     onCopy: (String) -> Unit,
     onBookmarkThread: (Post) -> Unit,
     onBookmarkReply: (ThreadReply) -> Unit,
-    onBookmarkImage: (String, String) -> Unit,
+    onBookmarkImage: (Image) -> Unit,
     onUserClick: (String) -> Unit,
 ) {
     Box(modifier = modifier) {
@@ -510,26 +507,26 @@ fun ThreadSuccessContent(
     onReplyClicked: (String) -> Unit,
     onTogglePoOnly: () -> Unit,
     onRefClick: (Long) -> Unit,
-    onImageClick: (Int, List<ImageInfo>) -> Unit,
+    onImageClick: (Int, List<Image>) -> Unit,
     onUpdateLastReadId: (String) -> Unit,
     onCopy: (String) -> Unit,
     onBookmarkThread: (Post) -> Unit,
     onBookmarkReply: (ThreadReply) -> Unit,
-    onBookmarkImage: (String, String) -> Unit,
+    onBookmarkImage: (Image) -> Unit,
     onUserClick: (String) -> Unit,
 ) {
     val replies = state.replies.collectAsLazyPagingItems()
     val allImages by remember(state.thread, replies.itemSnapshotList) {
         derivedStateOf {
-            val imageList = mutableListOf<ImageInfo>()
+            val imageList = mutableListOf<Image>()
             state.thread?.let { post ->
-                if (!post.img.isNullOrBlank()) {
-                    imageList.add(ImageInfo(post.img!!, post.ext ?: ""))
+                post.images.forEach { image ->
+                    imageList.add(image)
                 }
             }
             replies.itemSnapshotList.items.forEach { reply ->
-                if (reply.img.isNotBlank()) {
-                    imageList.add(ImageInfo(reply.img, reply.ext))
+                reply.images.forEach { image ->
+                    imageList.add(image)
                 }
             }
             imageList
@@ -539,10 +536,10 @@ fun ThreadSuccessContent(
     // Auto-scroll to last read position
     var hasScrolledToLastRead by remember { mutableStateOf(false) }
 
-    LaunchedEffect(replies.itemCount, state.lastReadReplyId) {
-        if (!hasScrolledToLastRead && state.lastReadReplyId.isNotBlank()) {
+    LaunchedEffect(replies.itemCount, state.lastReadCommentId) {
+        if (!hasScrolledToLastRead && state.lastReadCommentId.isNullOrBlank().not()) {
             val lastReadItemIndex =
-                replies.itemSnapshotList.indexOfFirst { it?.id == state.lastReadReplyId }
+                replies.itemSnapshotList.indexOfFirst { it?.id == state.lastReadCommentId }
 
             if (lastReadItemIndex != -1) {
                 // 主题帖占用了第一个位置，所以回复的索引需要+1
@@ -575,11 +572,10 @@ fun ThreadSuccessContent(
             onReplyClicked = onReplyClicked,
             onTogglePoOnly = onTogglePoOnly,
             onRefClick = onRefClick,
-            onImageClick = { imgPath, _ ->
-                val initialIndex = allImages.indexOfFirst { it.imgPath == imgPath }
+            onImageClick = { image ->
+                val initialIndex = allImages.indexOfFirst { it == image }
                     .coerceAtLeast(0)
                 onImageClick(initialIndex, allImages)
-
             },
             onRefresh = onRefresh,
             onCopy = onCopy,
@@ -599,12 +595,12 @@ private fun ThreadList(
     onReplyClicked: (String) -> Unit,
     onTogglePoOnly: () -> Unit,
     onRefClick: (Long) -> Unit,
-    onImageClick: (String, String) -> Unit,
+    onImageClick: (Image) -> Unit,
     onRefresh: () -> Unit,
     onCopy: (String) -> Unit,
     onBookmarkThread: (Post) -> Unit,
     onBookmarkReply: (ThreadReply) -> Unit,
-    onBookmarkImage: (String, String) -> Unit,
+    onBookmarkImage: (Image) -> Unit,
     onUserClick: (String) -> Unit,
 ) {
     val replies = state.replies.collectAsLazyPagingItems()
@@ -649,7 +645,7 @@ private fun ThreadList(
         stickyHeader {
             state.thread?.let {
                 ThreadToolbar(
-                    replyCount = it.replyCount.toString(),
+                    replyCount = it.commentCount.toString(),
                     isPoOnly = state.isPoOnlyMode,
                     onTogglePoOnly = onTogglePoOnly
                 )
@@ -661,7 +657,7 @@ private fun ThreadList(
             replies[replyIndex]?.let { reply ->
                 ThreadReply(
                     reply = reply,
-                    poUserHash = state.thread?.userHash ?: "",
+                    poUserHash = state.thread?.author?.id ?: "",
                     onReplyClicked = onReplyClicked,
                     refClick = onRefClick,
                     onImageClick = onImageClick,
@@ -813,10 +809,10 @@ private fun ThreadToolbar(
 fun ThreadMainPost(
     thread: Post,
     refClick: (Long) -> Unit,
-    onImageClick: (String, String) -> Unit,
+    onImageClick: (Image) -> Unit,
     onCopy: () -> Unit,
     onBookmark: () -> Unit,
-    onBookmarkImage: (String, String) -> Unit,
+    onBookmarkImage: (Image) -> Unit,
     onUserClick: (String) -> Unit,
 ) {
     val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
@@ -834,9 +830,8 @@ fun ThreadMainPost(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             ThreadAuthor(
-                userName = thread.userHash,
-                showName = thread.name,
-                threadTime = thread.now,
+                author = thread.author,
+                threadTime = thread.createdAt.toRelativeTimeString(),
                 isPo = true,
                 onClick = onUserClick,
                 badges = {
@@ -878,13 +873,17 @@ fun ThreadMainPost(
         Spacer(modifier = Modifier.height(Dimens.padding_medium))
 
         // 标题
-        if (thread.title.isNotBlank() && thread.title != "无标题") {
+        if (!thread.title.isNullOrBlank() && thread.title != "无标题") {
             Text(
-                text = thread.title,
+                text = thread.title!!,
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.padding(bottom = Dimens.padding_medium, start = Dimens.padding_standard, end = Dimens.padding_standard)
+                modifier = Modifier.padding(
+                    bottom = Dimens.padding_medium,
+                    start = Dimens.padding_standard,
+                    end = Dimens.padding_standard
+                )
             )
         }
 
@@ -899,11 +898,10 @@ fun ThreadMainPost(
         ) {
             ThreadBody(
                 content = thread.content,
-                img = thread.img,
-                ext = thread.ext,
+                images = thread.images,
                 onReferenceClick = refClick,
                 onImageClick = onImageClick,
-                onImageLongClick = onBookmarkImage
+                onImageLongClick = { image -> onBookmarkImage(image) }
             )
         }
 
@@ -986,14 +984,14 @@ fun ThreadReply(
     poUserHash: String,
     onReplyClicked: (String) -> Unit,
     refClick: (Long) -> Unit,
-    onImageClick: (String, String) -> Unit,
+    onImageClick: (Image) -> Unit,
     onCopy: () -> Unit,
     onBookmark: () -> Unit,
-    onBookmarkImage: (String, String) -> Unit,
+    onBookmarkImage: (Image) -> Unit,
     onUserClick: (String) -> Unit,
 ) {
-    val isPo = remember(reply.userHash) {
-        reply.userHash == poUserHash
+    val isPo = remember(reply.author.id) {
+        reply.author.id == poUserHash
     }
     var showMenu by remember { mutableStateOf(false) }
 
@@ -1018,13 +1016,12 @@ fun ThreadReply(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             ThreadAuthor(
-                userName = reply.userHash,
-                showName = reply.name,
-                threadTime = reply.now,
+                author = reply.author,
+                threadTime = reply.createdAt.toRelativeTimeString(),
                 isPo = isPo,
                 onClick = onUserClick,
                 badges = {
-                    if (reply.admin == 1L) {
+                    if (reply.isAdmin) {
                         Badge(
                             text = "ADMIN",
                             containerColor = MaterialTheme.colorScheme.errorContainer,
@@ -1043,10 +1040,10 @@ fun ThreadReply(
             )
         }
 
-        if (reply.title.isNotBlank() && reply.title != "无标题") {
+        if (reply.title.isNullOrBlank().not() && reply.title != "无标题") {
             Spacer(modifier = Modifier.height(Dimens.padding_small))
             Text(
-                text = reply.title,
+                text = reply.title!!,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
@@ -1054,14 +1051,13 @@ fun ThreadReply(
         }
 
         Spacer(modifier = Modifier.height(Dimens.padding_small))
-        
+
         ThreadBody(
             content = reply.content,
-            img = reply.img,
-            ext = reply.ext,
+            images = reply.images,
             onReferenceClick = refClick,
             onImageClick = onImageClick,
-            onImageLongClick = onBookmarkImage
+            onImageLongClick = { image -> onBookmarkImage(image) }
         )
 
         DropdownMenu(

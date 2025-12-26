@@ -47,7 +47,6 @@ import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -69,7 +68,6 @@ import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import ai.saniou.coreui.composition.LocalSourceId
 import cafe.adriel.voyager.core.model.rememberScreenModel
-import cafe.adriel.voyager.kodein.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.flow.collectLatest
@@ -103,7 +101,7 @@ data class TrendPage(
                     }
 
                     is Effect.NavigateToThread -> {
-                        navigator.push(ThreadPage(effect.threadId))
+                        navigator.push(ThreadPage(effect.topicId))
                     }
 
                     is Effect.ShowInfoDialog -> {
@@ -241,10 +239,10 @@ data class TrendPage(
                             verticalArrangement = Arrangement.spacedBy(8.dp),
                             modifier = Modifier.fillMaxSize()
                         ) {
-                            items(state.items, key = { it.threadId }) { item ->
+                            items(state.items, key = { it.topicId }) { item ->
                                 TrendItemCard(
                                     item = item,
-                                    onClick = { viewModel.onEvent(Event.OnTrendItemClick(item.threadId)) }
+                                    onClick = { viewModel.onEvent(Event.OnTrendItemClick(item.topicId)) }
                                 )
                             }
                         }
@@ -294,7 +292,7 @@ data class TrendPage(
                     ) {
                         SuggestionChip(
                             onClick = {},
-                            label = { Text(item.forum) },
+                            label = { Text(item.channel) },
                             colors = SuggestionChipDefaults.suggestionChipColors(
                                 containerColor = MaterialTheme.colorScheme.secondaryContainer,
                                 labelColor = MaterialTheme.colorScheme.onSecondaryContainer
@@ -304,7 +302,7 @@ data class TrendPage(
                         )
 
                         Text(
-                            text = "No.${item.threadId}",
+                            text = "No.${item.topicId}",
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.outline
                         )

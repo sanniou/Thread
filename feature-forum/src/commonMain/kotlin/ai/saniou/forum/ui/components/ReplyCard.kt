@@ -48,7 +48,7 @@ private fun ReplyItem(reply: ThreadReply) {
             horizontalArrangement = Arrangement.spacedBy(Dimens.padding_tiny)
         ) {
             Text(
-                text = reply.userHash,
+                text = reply.author.id,
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurfaceVariant

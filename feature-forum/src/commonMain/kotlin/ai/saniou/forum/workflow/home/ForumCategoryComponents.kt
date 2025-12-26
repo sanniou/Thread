@@ -54,11 +54,14 @@ fun AnimatedSourceSelector(
     sources: List<Source>,
     currentSourceId: String,
     onSourceSelected: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     LazyRow(
         modifier = modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(horizontal = Dimens.padding_medium, vertical = Dimens.padding_small),
+        contentPadding = PaddingValues(
+            horizontal = Dimens.padding_medium,
+            vertical = Dimens.padding_small
+        ),
         horizontalArrangement = Arrangement.spacedBy(Dimens.padding_small)
     ) {
         items(sources) { source ->
@@ -75,7 +78,7 @@ fun AnimatedSourceSelector(
 private fun SourceChip(
     source: Source,
     isSelected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     val backgroundColor by animateColorAsState(
         targetValue = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -89,7 +92,10 @@ private fun SourceChip(
         onClick = onClick,
         shape = CircleShape,
         color = backgroundColor,
-        border = if (isSelected) null else androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+        border = if (isSelected) null else androidx.compose.foundation.BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+        )
     ) {
         Box(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
@@ -115,7 +121,7 @@ fun StylizedForumItem(
     isFavorite: Boolean,
     onForumClick: () -> Unit,
     onFavoriteToggle: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val backgroundColor = if (isSelected)
         MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.7f)
@@ -143,7 +149,7 @@ fun StylizedForumItem(
         Column(modifier = Modifier.weight(1f)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = if (forum.showName.isNullOrBlank()) forum.name else forum.showName!!,
+                    text = if (forum.displayName.isNullOrBlank()) forum.name else forum.displayName!!,
                     style = MaterialTheme.typography.titleSmall,
                     color = contentColor,
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold
@@ -166,14 +172,14 @@ fun StylizedForumItem(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.padding(top = 2.dp)
             ) {
-                if (forum.threadCount != null) {
-                    MetadataBadge(text = "${forum.threadCount} 串")
+                if (forum.topicCount != null) {
+                    MetadataBadge(text = "${forum.topicCount} 串")
                 }
-                
+
                 // Clean msg
-                val cleanMsg = forum.msg.replace(Regex("<[^>]*>"), "").trim()
+                val cleanMsg = forum.description.replace(Regex("<[^>]*>"), "").trim()
                 if (cleanMsg.isNotBlank()) {
-                     Text(
+                    Text(
                         text = cleanMsg,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
@@ -191,8 +197,12 @@ fun StylizedForumItem(
         ) {
             Icon(
                 imageVector = if (isFavorite) Icons.Default.Star else Icons.Outlined.StarBorder,
-                contentDescription = if (isFavorite) stringResource(Res.string.forum_favorite_remove) else stringResource(Res.string.forum_favorite_add),
-                tint = if (isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                contentDescription = if (isFavorite) stringResource(Res.string.forum_favorite_remove) else stringResource(
+                    Res.string.forum_favorite_add
+                ),
+                tint = if (isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(
+                    alpha = 0.5f
+                ),
                 modifier = Modifier.size(20.dp)
             )
         }
@@ -221,7 +231,7 @@ private fun MetadataBadge(text: String) {
 @Composable
 fun GlassmorphicDrawerContainer(
     modifier: Modifier = Modifier,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     Box(modifier = modifier) {
         // Blur effect layer (Simulated with semi-transparent surface for now as Blur is expensive/platform dependent)
@@ -230,7 +240,7 @@ fun GlassmorphicDrawerContainer(
                 .matchParentSize()
                 .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.85f))
         )
-        
+
         // Content
         content()
     }

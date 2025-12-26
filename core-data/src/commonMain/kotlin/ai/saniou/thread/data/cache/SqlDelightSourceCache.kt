@@ -128,7 +128,7 @@ class SqlDelightSourceCache(
         }
     }
 
-    override suspend fun updateThreadLastReadReplyId(sourceId: String, threadId: String, replyId: Long) {
+    override suspend fun updateThreadLastReadReplyId(sourceId: String, threadId: String, replyId: String) {
         withContext(Dispatchers.IO) {
             topicQueries.updateTopicLastReadCommentId(replyId, sourceId, threadId)
         }

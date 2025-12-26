@@ -1,6 +1,7 @@
 package ai.saniou.forum.workflow.thread
 
 import ai.saniou.coreui.state.AppError
+import ai.saniou.thread.domain.model.forum.Image
 import ai.saniou.thread.domain.model.forum.Topic as Post
 import ai.saniou.thread.domain.model.forum.Comment as ThreadReply
 import app.cash.paging.PagingData
@@ -33,9 +34,9 @@ interface ThreadContract {
         val totalPages: Int = 1,
         val isSubscribed: Boolean = false,
         val forumName: String = "",
-        val lastReadReplyId: String = "",
+        val lastReadCommentId: String? = null,
         val isPoOnlyMode: Boolean = false,
-        val isTogglingSubscription: Boolean = false
+        val isTogglingSubscription: Boolean = false,
     )
 
     /**
@@ -105,10 +106,9 @@ interface ThreadContract {
 
         /**
          * 收藏图片
-         * @param url 图片地址
-         * @param ext 图片扩展名
+         * @param image 图片
          */
-        data class BookmarkImage(val url: String, val ext: String) : Event
+        data class BookmarkImage(val image: Image) : Event
     }
 
     /**

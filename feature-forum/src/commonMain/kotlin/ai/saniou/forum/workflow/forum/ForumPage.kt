@@ -2,32 +2,22 @@ package ai.saniou.forum.workflow.forum
 
 import ai.saniou.coreui.composition.LocalSourceId
 import ai.saniou.coreui.widgets.RichText
-import ai.saniou.coreui.widgets.SaniouLargeTopAppBar
-import ai.saniou.coreui.widgets.SaniouTopAppBar
 import ai.saniou.forum.di.nmbdi
 import ai.saniou.forum.workflow.home.ListThreadPage
-import ai.saniou.forum.workflow.image.ImageInfo
 import ai.saniou.forum.workflow.image.ImagePreviewPage
 import ai.saniou.forum.workflow.image.ImagePreviewViewModelParams
 import ai.saniou.forum.workflow.post.PostPage
 import ai.saniou.forum.workflow.thread.ThreadPage
 import ai.saniou.forum.workflow.user.UserDetailPage
-import ai.saniou.thread.domain.model.forum.Channel as Forum
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
 import ai.saniou.forum.workflow.user.UserPage
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
@@ -162,7 +152,7 @@ data class ForumPage(
                             if (scrollBehavior.state.collapsedFraction < 0.5f && state.forumDetail != null) {
                                 val detail = state.forumDetail!!
                                 val subtitle = buildString {
-                                    if (detail.threadCount != null) append("${detail.threadCount} 串")
+                                    if (detail.topicCount != null) append("${detail.topicCount} 串")
                                     if (detail.interval != null) append(" · ${detail.interval}s")
                                 }
                                 if (subtitle.isNotBlank()) {
@@ -215,8 +205,8 @@ data class ForumPage(
             Column(modifier = Modifier.padding(innerPadding)) {
                 // Integrated Forum Info (Collapsible/Expandable could be better, but static for now is cleaner than dialog)
                 state.forumDetail?.let { detail ->
-                    if (detail.msg.isNotBlank()) {
-                        ForumRulesCard(msg = detail.msg)
+                    if (detail.description.isNotBlank()) {
+                        ForumRulesCard(msg = detail.description)
                     }
                 }
 
@@ -224,12 +214,11 @@ data class ForumPage(
                     state = lazyListState,
                     threadFlow = viewModel.threads,
                     onThreadClicked = { threadId -> navigator.push(ThreadPage(threadId)) },
-                    onImageClick = { _, imgPath, ext ->
-                        val imageInfo = ImageInfo(imgPath, ext)
+                    onImageClick = { _, image ->
                         navigator.push(
                             ImagePreviewPage(
                                 ImagePreviewViewModelParams(
-                                    initialImages = listOf(imageInfo),
+                                    initialImages = listOf(image),
                                 )
                             )
                         )

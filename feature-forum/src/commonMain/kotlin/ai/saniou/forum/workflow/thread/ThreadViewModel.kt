@@ -15,6 +15,7 @@ import ai.saniou.thread.domain.usecase.subscription.ToggleSubscriptionUseCase
 import ai.saniou.thread.domain.usecase.thread.GetThreadDetailUseCase
 import ai.saniou.thread.domain.usecase.thread.GetThreadRepliesPagingUseCase
 import ai.saniou.thread.data.manager.CdnManager
+import ai.saniou.thread.domain.model.forum.Image
 import ai.saniou.thread.domain.usecase.thread.UpdateThreadLastAccessTimeUseCase
 import ai.saniou.thread.domain.usecase.thread.UpdateThreadLastReadReplyIdUseCase
 import app.cash.paging.PagingData
@@ -109,7 +110,7 @@ class ThreadViewModel(
             is Event.CopyContent -> copyContent(event.content)
             is Event.BookmarkThread -> bookmarkThread(event.thread)
             is Event.BookmarkReply -> bookmarkReply(event.reply)
-            is Event.BookmarkImage -> bookmarkImage(event.url, event.ext)
+            is Event.BookmarkImage -> bookmarkImage(event.image)
         }
     }
 
@@ -125,7 +126,11 @@ class ThreadViewModel(
     private fun updateLastAccessTime() {
         val tid = threadId.toLongOrNull() ?: return
         screenModelScope.launch {
-            updateThreadLastAccessTimeUseCase(sourceId, tid.toString(), Clock.System.now().epochSeconds)
+            updateThreadLastAccessTimeUseCase(
+                sourceId,
+                tid.toString(),
+                Clock.System.now().epochSeconds
+            )
         }
     }
 
@@ -141,7 +146,7 @@ class ThreadViewModel(
             _state.update { it.copy(isLoading = true, error = null) }
             getThreadDetailUseCase(sourceId, threadId, forceRefresh)
                 .flatMapLatest { detail ->
-                    getForumNameUseCase(sourceId, detail.fid.toString()).map { forumName ->
+                    getForumNameUseCase(sourceId, detail.channelId).map { forumName ->
                         detail to (forumName ?: "")
                     }
                 }
@@ -155,13 +160,13 @@ class ThreadViewModel(
                 .collectLatest { (detail, forumName) ->
                     val thread = detail
                     val totalPages =
-                        (thread.replyCount / 19) + if (thread.replyCount % 19 > 0) 1 else 0
+                        (thread.commentCount / 19) + if (thread.commentCount % 19 > 0) 1 else 0
 
                     _state.update {
                         it.copy(
                             isLoading = false,
                             thread = thread,
-                            lastReadReplyId = detail.lastReadReplyId,
+                            lastReadCommentId = detail.lastViewedCommentId,
                             totalPages = totalPages.toInt().coerceAtLeast(1),
                             forumName = forumName
                         )
@@ -249,9 +254,9 @@ class ThreadViewModel(
         }
     }
 
-    private fun bookmarkImage(url: String, ext: String) {
+    private fun bookmarkImage(image: Image) {
         screenModelScope.launch {
-            val fullUrl = cdnManager.buildImageUrl(url, ext, isThumb = false)
+            val fullUrl = cdnManager.buildImageUrl(image.originalUrl, "", isThumb = false)
             val id = "nmb.Image.${fullUrl.hashCode()}"
             addBookmarkUseCase(
                 Bookmark.Image(

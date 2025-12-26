@@ -4,13 +4,17 @@ import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.BlankLinePolicy
 import ai.saniou.coreui.widgets.ClickablePattern
 import ai.saniou.coreui.widgets.RichText
-import ai.saniou.thread.data.source.nmb.remote.dto.IThreadBody
+import ai.saniou.thread.domain.model.forum.Image
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -25,36 +29,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 
-@Composable
-fun ThreadBody(
-    body: IThreadBody,
-    maxLines: Int = Int.MAX_VALUE,
-    onReferenceClick: ((Long) -> Unit)? = null,
-    onImageClick: (String, String) -> Unit,
-    onImageLongClick: ((String, String) -> Unit)? = null,
-) {
-    ThreadBody(
-        content = body.content,
-        img = body.img,
-        ext = body.ext,
-        maxLines = maxLines,
-        onReferenceClick = onReferenceClick,
-        onImageClick = onImageClick,
-        onImageLongClick = onImageLongClick
-    )
-}
-
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun ThreadBody(
     content: String,
-    img: String?,
-    ext: String?,
+    images: List<Image> = emptyList(),
     maxLines: Int = Int.MAX_VALUE,
     onReferenceClick: ((Long) -> Unit)? = null,
-    onImageClick: (String, String) -> Unit,
-    onImageLongClick: ((String, String) -> Unit)? = null,
+    onImageClick: (Image) -> Unit,
+    onImageLongClick: ((Image) -> Unit)? = null,
 ) {
     val uriHandler = LocalUriHandler.current
     val clickablePatterns = remember(onReferenceClick) {
@@ -78,42 +63,49 @@ fun ThreadBody(
     }
 
     Column {
-        RichText(
-            text = content,
-            maxLines = maxLines,
-            overflow = TextOverflow.Ellipsis,
-            style = MaterialTheme.typography.bodyMedium,
-            clickablePatterns = clickablePatterns,
-            blankLinePolicy = BlankLinePolicy.COLLAPSE
-        )
+        if (content.isNotBlank()) {
+            RichText(
+                text = content,
+                maxLines = maxLines,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.bodyMedium,
+                clickablePatterns = clickablePatterns,
+                blankLinePolicy = BlankLinePolicy.COLLAPSE
+            )
+        }
 
-        if (!(img.isNullOrEmpty()) && !(ext.isNullOrEmpty())) {
+        if (images.isNotEmpty()) {
             Spacer(modifier = Modifier.height(Dimens.padding_small))
-            Box {
-                var showImageMenu by remember { mutableStateOf(false) }
-                NmbImage(
-                    imgPath = img,
-                    ext = ext,
-                    isThumb = true,
-                    contentDescription = "帖子图片",
-                    modifier = Modifier
-                        .height(Dimens.image_height_medium)
-                        .wrapContentWidth(Alignment.Start)
-                        .clip(MaterialTheme.shapes.small)
-                        .combinedClickable(
-                            onClick = { onImageClick(img, ext) },
-                            onLongClick = {
-                                if (onImageLongClick != null) {
-                                    onImageLongClick(img, ext)
-                                } else {
-                                    showImageMenu = true
-                                }
-                            }
-                        ),
-                    contentScale = ContentScale.FillHeight,
-                )
-                if (onImageLongClick == null) { // Only show internal menu if no external handler provided
-                    // Ideally we should pass the bookmark action into ThreadBody, but for now let's rely on external handler
+            FlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp),
+                verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)
+            ) {
+                images.forEach { image ->
+                    Box {
+                        var showImageMenu by remember { mutableStateOf(false) }
+                        NmbImage(
+                            imgPath = image.thumbnailUrl,
+                            ext = "",
+                            isThumb = true,
+                            contentDescription = "帖子图片",
+                            modifier = Modifier
+                                .height(Dimens.image_height_medium)
+                                .wrapContentWidth(Alignment.Start)
+                                .clip(MaterialTheme.shapes.small)
+                                .combinedClickable(
+                                    onClick = { onImageClick(image) },
+                                    onLongClick = {
+                                        if (onImageLongClick != null) {
+                                            onImageLongClick(image)
+                                        } else {
+                                            showImageMenu = true
+                                        }
+                                    }
+                                ),
+                            contentScale = ContentScale.FillHeight,
+                        )
+                    }
                 }
             }
         }

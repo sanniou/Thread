@@ -1,13 +1,12 @@
 package ai.saniou.forum.workflow.trend
 
+import ai.saniou.corecommon.utils.toRelativeTimeString
 import ai.saniou.coreui.state.toAppError
 import ai.saniou.forum.workflow.trend.TrendContract.Effect
 import ai.saniou.forum.workflow.trend.TrendContract.Event
 import ai.saniou.forum.workflow.trend.TrendContract.State
 import ai.saniou.thread.domain.repository.SettingsRepository
 import ai.saniou.thread.domain.repository.SourceRepository
-import ai.saniou.thread.domain.repository.getValue
-import ai.saniou.thread.domain.repository.saveValue
 import ai.saniou.thread.domain.usecase.misc.GetTrendUseCase
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
@@ -68,7 +67,7 @@ class TrendViewModel(
             }
             is Event.OnTrendItemClick -> {
                 screenModelScope.launch {
-                    _effect.send(Effect.NavigateToThread(event.threadId))
+                    _effect.send(Effect.NavigateToThread(event.topicId))
                 }
             }
             Event.OnInfoClick -> {
@@ -92,7 +91,7 @@ class TrendViewModel(
                     _state.update {
                         it.copy(
                             isLoading = false,
-                            trendDate = trendDate,
+                            trendDate = trendDate.toRelativeTimeString(),
                             items = items.map { item -> item.toUI() },
                             dayOffset = correctedDayOffset ?: it.dayOffset
                         )

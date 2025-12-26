@@ -1,5 +1,6 @@
 package ai.saniou.forum.ui.components
 
+import ai.saniou.corecommon.utils.toRelativeTimeString
 import ai.saniou.thread.domain.model.forum.Comment as ThreadReply
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -61,7 +62,7 @@ fun ReferenceSheet(
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
 
-    ) {
+        ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -155,11 +156,10 @@ fun ReferenceSheet(
                                 .verticalScroll(rememberScrollState()) // Allow scrolling if content is long
                         ) {
                             ThreadAuthor(
-                                userName = reply.userHash,
-                                showName = reply.name,
-                                threadTime = reply.now,
+                                author = reply.author,
+                                threadTime = reply.createdAt.toRelativeTimeString(),
                                 badges = {
-                                    if (reply.admin == 1L) {
+                                    if (reply.isAdmin) {
                                         Badge(
                                             text = "ADMIN",
                                             containerColor = MaterialTheme.colorScheme.errorContainer,
@@ -171,15 +171,14 @@ fun ReferenceSheet(
                             Spacer(modifier = Modifier.height(12.dp))
                             ThreadBody(
                                 content = reply.content,
-                                img = reply.img,
-                                ext = reply.ext,
-                                onImageClick = { _, _ -> },
+                                images = reply.images,
+                                onImageClick = { _ -> },
                                 onReferenceClick = null // Disable nested reference clicks in popup for simplicity
                             )
-                            if (reply.threadId.isNotBlank() && reply.threadId != "0") {
+                            if (reply.topicId.isNotBlank() && reply.topicId != "0") {
                                 Spacer(modifier = Modifier.height(16.dp))
                                 Button(
-                                    onClick = { onJumpToThread(reply.threadId) },
+                                    onClick = { onJumpToThread(reply.topicId) },
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
                                     Text("跳转到原串")

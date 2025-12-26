@@ -1,8 +1,10 @@
 package ai.saniou.forum.workflow.image
 
+import ai.saniou.thread.domain.model.forum.Image
+
 interface ImagePreviewContract {
     data class State(
-        val images: List<ImageInfo> = emptyList(),
+        val images: List<Image> = emptyList(),
         val initialIndex: Int = 0,
         val isLoading: Boolean = false,
         val error: String? = null,

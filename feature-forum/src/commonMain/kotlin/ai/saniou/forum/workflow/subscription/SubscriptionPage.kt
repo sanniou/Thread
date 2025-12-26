@@ -11,10 +11,10 @@ import ai.saniou.forum.ui.components.LoadEndIndicator
 import ai.saniou.forum.ui.components.LoadingFailedIndicator
 import ai.saniou.forum.ui.components.LoadingIndicator
 import ai.saniou.forum.ui.components.ThreadListSkeleton
-import ai.saniou.forum.workflow.image.ImageInfo
 import ai.saniou.forum.workflow.image.ImagePreviewPage
 import ai.saniou.forum.workflow.image.ImagePreviewViewModelParams
 import ai.saniou.forum.workflow.subscription.SubscriptionContract.Event
+import ai.saniou.thread.domain.model.forum.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -174,12 +174,11 @@ data class SubscriptionPage(
                         state = state,
                         onEvent = viewModel::onEvent,
                         onThreadClicked = onThreadClicked,
-                        onImageClick = { _, imgPath, ext ->
-                            val imageInfo = ImageInfo(imgPath, ext)
+                        onImageClick = { _, img ->
                             navigator.push(
                                 ImagePreviewPage(
                                     ImagePreviewViewModelParams(
-                                        initialImages = listOf(imageInfo),
+                                        initialImages = listOf(img),
                                     ),
                                 )
                             )
@@ -206,7 +205,7 @@ private fun SubscriptionContent(
     state: SubscriptionContract.State,
     onEvent: (Event) -> Unit,
     onThreadClicked: (Long) -> Unit,
-    onImageClick: (Long, String, String) -> Unit,
+    onImageClick: (Long, Image) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val feeds = state.feeds.collectAsLazyPagingItems()
@@ -248,7 +247,7 @@ private fun SubscriptionContent(
                         ForumThreadCard(
                             thread = feed,
                             onClick = { onThreadClicked(feed.id.toLong()) },
-                            onImageClick = { img, ext -> onImageClick(feed.id.toLong(), img, ext) },
+                            onImageClick = { img -> onImageClick(feed.id.toLong(), img) },
                         )
                         if (feed.isLocal) {
                             Icon(

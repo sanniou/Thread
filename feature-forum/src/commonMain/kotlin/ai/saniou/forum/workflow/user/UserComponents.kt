@@ -1,5 +1,6 @@
 package ai.saniou.forum.workflow.user
 
+import ai.saniou.corecommon.utils.toRelativeTimeString
 import ai.saniou.thread.domain.model.forum.Cookie
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.clickable
@@ -57,7 +58,7 @@ fun CookieListContent(
     onDelete: (Cookie) -> Unit,
     onSortFinished: (List<Cookie>) -> Unit,
     listState: LazyListState,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     var localCookies by remember(cookies) { mutableStateOf(cookies) }
 
@@ -127,7 +128,7 @@ fun CookieItem(
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = formatEpochSeconds(cookie.createdAt),
+                text = cookie.createdAt.toRelativeTimeString(),
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.align(Alignment.End),
                 color = MaterialTheme.colorScheme.outline
@@ -139,7 +140,7 @@ fun CookieItem(
 @Serializable
 private data class CookieJson(
     val cookie: String,
-    val name: String? = null
+    val name: String? = null,
 )
 
 @Composable
@@ -218,18 +219,18 @@ fun UserGuideCard(onOpenUri: () -> Unit, modifier: Modifier = Modifier) {
 
 @OptIn(ExperimentalTime::class)
 private fun formatEpochSeconds(epochSeconds: Long): String {
-   return try {
-       val instant = Instant.fromEpochSeconds(epochSeconds)
-       val localDateTime = instant.toLocalDateTime(TimeZone.currentSystemDefault())
-       val year = localDateTime.year
-       val month = localDateTime.monthNumber.toString().padStart(2, '0')
-       val day = localDateTime.dayOfMonth.toString().padStart(2, '0')
-       val hour = localDateTime.hour.toString().padStart(2, '0')
-       val minute = localDateTime.minute.toString().padStart(2, '0')
-       "$year-$month-$day $hour:$minute"
-   } catch (e: Exception) {
-       "Invalid Date"
-   }
+    return try {
+        val instant = Instant.fromEpochSeconds(epochSeconds)
+        val localDateTime = instant.toLocalDateTime(TimeZone.currentSystemDefault())
+        val year = localDateTime.year
+        val month = localDateTime.monthNumber.toString().padStart(2, '0')
+        val day = localDateTime.dayOfMonth.toString().padStart(2, '0')
+        val hour = localDateTime.hour.toString().padStart(2, '0')
+        val minute = localDateTime.minute.toString().padStart(2, '0')
+        "$year-$month-$day $hour:$minute"
+    } catch (e: Exception) {
+        "Invalid Date"
+    }
 }
 
 @Composable

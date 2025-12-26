@@ -120,7 +120,7 @@ class AcfunSource(
                         isHidden = false,
                         isLocal = false,
                         channelId = data.channel?.id?.toString() ?: "0",
-                        lastReadCommentId = "",
+                        lastViewedCommentId = "",
                     )
                     Result.success(post)
                 } else {

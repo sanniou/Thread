@@ -70,7 +70,6 @@ data class ImagePreviewPage(
                 di.direct.instance(arg = params)
             }
         val uiState by viewModel.state.collectAsState()
-        val cdnManager by di.instance<CdnManager>()
 
         val pagerState = rememberPagerState(
             initialPage = uiState.initialIndex,
@@ -98,9 +97,7 @@ data class ImagePreviewPage(
             } else {
                 null
             }
-        val thumbnailUrl = currentImageInfo?.let {
-            cdnManager.buildImageUrl(it.imgPath, it.ext, true)
-        }
+        val thumbnailUrl = currentImageInfo?.thumbnailUrl
 
         if (thumbnailUrl != null) {
             PhotoPagerBackground(thumbnailUrl, photoPaletteState)
@@ -118,18 +115,14 @@ data class ImagePreviewPage(
                     state = pagerState,
                     modifier = Modifier.fillMaxSize(),
                     key = { index ->
-                        if (index < uiState.images.size) uiState.images[index].imgPath + uiState.images[index].ext else index
+                        if (index < uiState.images.size) uiState.images[index].originalUrl else index
                     }
                 ) { page ->
                     if (page < uiState.images.size) {
-                        val imageInfo = uiState.images[page]
-                        val imageUrl =
-                            cdnManager.buildImageUrl(imageInfo.imgPath, imageInfo.ext, false)
-                        val thumbUrl =
-                            cdnManager.buildImageUrl(imageInfo.imgPath, imageInfo.ext, true)
+                        val image = uiState.images[page]
                         ZoomAsyncImage(
-                            uri = imageUrl,
-                            thumbnailUrl = thumbUrl,
+                            uri = image.originalUrl,
+                            thumbnailUrl = image.thumbnailUrl,
                             contentDescription = "预览图片",
                             photoPalette = photoPaletteState.value,
                             showTools = isHudVisible,
@@ -162,7 +155,6 @@ private fun ImagePreviewHud(
     val navigator = LocalNavigator.currentOrThrow
     val imageSaver = rememberImageSaver()
     val coroutineScope = rememberCoroutineScope()
-    val cdnManager by nmbdi.instance<CdnManager>()
 
     Box(modifier = Modifier.fillMaxSize()) {
         // Top Toolbar
@@ -221,10 +213,8 @@ private fun ImagePreviewHud(
             IconButton(
                 onClick = {
                     coroutineScope.launch {
-                        val imageInfo = uiState.images[pagerState.currentPage]
-                        val imageUrl =
-                            cdnManager.buildImageUrl(imageInfo.imgPath, imageInfo.ext, false)
-                        imageSaver.save(imageUrl)
+                        val image = uiState.images[pagerState.currentPage]
+                        imageSaver.save(image.originalUrl)
                     }
                 },
                 colors = IconButtonDefaults.iconButtonColors(

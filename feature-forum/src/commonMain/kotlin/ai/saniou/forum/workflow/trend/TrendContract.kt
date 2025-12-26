@@ -17,10 +17,10 @@ interface TrendContract {
     data class TrendItem(
         val rank: String,      // 排名，如 "01"
         val trendNum: String,  // 趋势值，如 "Trend 34"
-        val forum: String,     // 版块，如 "[综合版1]"
+        val channel: String,     // 版块，如 "[综合版1]"
         val isNew: Boolean,    // 是否是 New
-        val threadId: Long,    // 串 ID
-        val content: String    // 内容预览
+        val topicId: String,    // 串 ID
+        val content: String,    // 内容预览
     )
 
     /**
@@ -37,14 +37,14 @@ interface TrendContract {
         val items: List<TrendItem> = emptyList(),
         val dayOffset: Int = 0, // 0 = 今天, 1 = 昨天, etc.
         val rawThread: Thread? = null, // 保留原始数据以备不时之需
-        val currentSource: SourceInfo = SourceInfo("nmb", "A岛", true) // 当前数据源信息
+        val currentSource: SourceInfo = SourceInfo("nmb", "A岛", true), // 当前数据源信息
     )
 
     @Serializable
     data class SourceInfo(
         val id: String,
         val name: String,
-        val supportsHistory: Boolean
+        val supportsHistory: Boolean,
     )
 
     /**
@@ -59,7 +59,7 @@ interface TrendContract {
         /**
          * 点击趋势条目
          */
-        data class OnTrendItemClick(val threadId: Long) : Event
+        data class OnTrendItemClick(val topicId: String) : Event
 
         /**
          * 点击信息按钮（显示源地址）
@@ -87,7 +87,7 @@ interface TrendContract {
      */
     sealed interface Effect {
         data class ShowSnackbar(val message: String) : Effect
-        data class NavigateToThread(val threadId: Long) : Effect
+        data class NavigateToThread(val topicId: String) : Effect
         data class ShowInfoDialog(val url: String) : Effect
     }
 }
@@ -95,8 +95,8 @@ interface TrendContract {
 fun Trend.toUI() = TrendContract.TrendItem(
     rank = rank,
     trendNum = trendNum,
-    forum = forum,
+    channel = channel,
     isNew = isNew,
-    threadId = threadId,
+    topicId = topicId,
     content = contentPreview
 )

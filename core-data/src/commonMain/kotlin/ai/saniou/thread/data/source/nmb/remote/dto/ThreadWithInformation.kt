@@ -1,5 +1,9 @@
 package ai.saniou.thread.data.source.nmb.remote.dto
 
+import ai.saniou.thread.domain.model.forum.Author
+import ai.saniou.thread.domain.model.forum.Image
+import ai.saniou.thread.domain.model.forum.Topic
+import io.ktor.http.HttpMethod.Companion.Post
 import ai.saniou.thread.db.table.forum.GetTopicsInChannelOffset as GetThreadsInForumOffset
 import ai.saniou.thread.db.table.forum.SearchTopics as SearchThreads
 import ai.saniou.thread.db.table.forum.Topic as Thread
@@ -74,9 +78,9 @@ fun SearchThreads.toThreadWithInformation(query: ThreadReplyQueries? = null) =
             it.toThreadReply()
         } ?: emptyList(),
         remainingCount = remainingCount,
-        lastKey = lastKey,
-        last_access_time = last_access_time,
-        last_read_reply_id = last_read_comment_id,
+        lastKey = latestCommentId?.toLong(),
+        last_access_time = lastVisitedAt,
+        last_read_reply_id = lastVisitedAt,
     )
 
 fun GetThreadsInForumOffset.toThreadWithInformation(query: ThreadReplyQueries? = null) =
@@ -98,7 +102,9 @@ fun GetThreadsInForumOffset.toThreadWithInformation(query: ThreadReplyQueries? =
             it.toThreadReply()
         } ?: emptyList(),
         remainingCount = remainingCount,
-        lastKey = lastKey,
-        last_access_time = last_access_time,
-        last_read_reply_id = last_read_comment_id,
+        lastKey = latestCommentId?.toLong(),
+        last_access_time = lastVisitedAt,
+        last_read_reply_id = lastVisitedAt,
     )
+
+

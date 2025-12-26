@@ -144,7 +144,7 @@ fun IBaseThread.toDomain(): Post {
         isHidden = hide > 0,
         isLocal = false,
         // fixme  后续处理 lastReadCommentId 和 comments
-        lastReadCommentId = null,
+        lastViewedCommentId = null,
         comments = emptyList(),
         remainingCount = null
     )

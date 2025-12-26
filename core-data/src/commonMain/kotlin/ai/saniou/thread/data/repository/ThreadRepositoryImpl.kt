@@ -101,9 +101,9 @@ class ThreadRepositoryImpl(
 
     override suspend fun updateThreadLastReadReplyId(threadId: String, replyId: String) {
         // FIXME: Need sourceId. Assuming "nmb" for now or fetch from existing thread context.
-        val sourceId = "nmb" 
+        val sourceId = "nmb"
         withContext(Dispatchers.IO) {
-             cache.updateThreadLastReadReplyId(sourceId, threadId, replyId.toLongOrNull() ?: 0L)
+             cache.updateThreadLastReadReplyId(sourceId, threadId, replyId)
         }
     }
 }

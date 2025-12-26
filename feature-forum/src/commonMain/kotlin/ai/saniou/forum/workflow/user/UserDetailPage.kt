@@ -7,7 +7,6 @@ import ai.saniou.forum.ui.components.LoadEndIndicator
 import ai.saniou.forum.ui.components.LoadingFailedIndicator
 import ai.saniou.forum.ui.components.LoadingIndicator
 import ai.saniou.forum.ui.components.ThreadListSkeleton
-import ai.saniou.forum.workflow.image.ImageInfo
 import ai.saniou.forum.workflow.image.ImagePreviewPage
 import ai.saniou.forum.workflow.image.ImagePreviewViewModelParams
 import ai.saniou.forum.workflow.thread.ThreadPage
@@ -145,11 +144,11 @@ data class UserDetailPage(
                                         ForumThreadCard(
                                             thread = thread,
                                             onClick = { navigator.push(ThreadPage(threadId = thread.id)) },
-                                            onImageClick = { img, ext ->
+                                            onImageClick = { img ->
                                                 navigator.push(
                                                     ImagePreviewPage(
                                                         ImagePreviewViewModelParams(
-                                                            initialImages = listOf(ImageInfo(img, ext)),
+                                                            initialImages = listOf(img),
                                                         )
                                                     )
                                                 )
@@ -203,7 +202,7 @@ data class UserDetailPage(
                                     val reply = replies[index]
                                     if (reply != null) {
                                         Column {
-                                            if (reply.title.isNotBlank() && reply.title != "无标题") {
+                                            if (reply.title.isNullOrBlank().not() && reply.title != "无标题") {
                                                 Text(
                                                     text = "回复串: ${reply.title}",
                                                     style = MaterialTheme.typography.labelSmall,
@@ -212,7 +211,7 @@ data class UserDetailPage(
                                                 )
                                             } else {
                                                 Text(
-                                                    text = "回复串: No.${reply.threadId}",
+                                                    text = "回复串: No.${reply.topicId}",
                                                     style = MaterialTheme.typography.labelSmall,
                                                     color = MaterialTheme.colorScheme.primary,
                                                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
@@ -220,23 +219,22 @@ data class UserDetailPage(
                                             }
 
                                             ThreadReply(
-                                                reply = reply.toDomain(),
+                                                reply = reply,
                                                 poUserHash = "",
-                                                onReplyClicked = { navigator.push(ThreadPage(threadId = reply.threadId)) },
-                                                refClick = { navigator.push(ThreadPage(threadId = reply.threadId)) }, // 简化处理，暂时跳转到主串
-                                                onImageClick = { img, ext ->
+                                                onReplyClicked = { navigator.push(ThreadPage(threadId = reply.topicId)) },
+                                                refClick = { navigator.push(ThreadPage(threadId = reply.topicId)) }, // 简化处理，暂时跳转到主串
+                                                onImageClick = { img ->
                                                     navigator.push(
                                                         ImagePreviewPage(
                                                             ImagePreviewViewModelParams(
-                                                                initialImages = listOf(ImageInfo(img, ext)),
+                                                                initialImages = listOf(img)),
                                                             )
-                                                        )
                                                     )
                                                 },
                                                 onCopy = {},
                                                 onBookmark = {},
                                                 onUserClick = { userHash -> navigator.push(UserDetailPage(userHash)) },
-                                                onBookmarkImage = { _, _ -> }
+                                                onBookmarkImage = { _ -> }
                                             )
                                         }
                                         HorizontalDivider(

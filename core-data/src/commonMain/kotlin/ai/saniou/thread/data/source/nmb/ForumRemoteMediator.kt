@@ -47,7 +47,7 @@ class ForumRemoteMediator(
                     id = forum.id.toString(),
                     sourceId = sourceId,
                     remainingCount = forum.remainingCount, // remainReplies -> remainingCount
-                    lastKey = forum.replies.lastOrNull()?.id ?: forum.id
+                    latestCommentId = (forum.replies.lastOrNull()?.id ?: forum.id).toString()
                 )
                 forum.toTableReply(sourceId)
                     .forEach(db.commentQueries::upsertComment)

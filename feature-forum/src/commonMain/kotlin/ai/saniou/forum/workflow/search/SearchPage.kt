@@ -16,6 +16,8 @@ import ai.saniou.forum.workflow.search.SearchContract.Event
 import ai.saniou.forum.workflow.search.SearchContract.SearchType
 import ai.saniou.forum.workflow.thread.ThreadPage
 import ai.saniou.forum.workflow.user.UserDetailPage
+import ai.saniou.thread.domain.model.forum.Comment
+import ai.saniou.thread.domain.model.forum.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -94,7 +96,13 @@ data class SearchPage(
                                 onClick = { viewModel.onEvent(Event.TypeChanged(type)) },
                                 label = { Text(type.title) },
                                 leadingIcon = if (state.searchType == type) {
-                                    { Icon(Icons.Default.Search, null, modifier = Modifier.size(16.dp)) }
+                                    {
+                                        Icon(
+                                            Icons.Default.Search,
+                                            null,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
                                 } else null
                             )
                         }
@@ -121,11 +129,10 @@ data class SearchPage(
                         ThreadResultList(
                             viewModel = viewModel,
                             onThreadClick = { navigator.push(ThreadPage(it)) },
-                            onImageClick = { threadId, img, ext ->
-                                val imageInfo = ai.saniou.forum.workflow.image.ImageInfo(img, ext)
+                            onImageClick = { threadId, img ->
                                 ImagePreviewPage(
                                     ImagePreviewViewModelParams(
-                                        initialImages = listOf(imageInfo),
+                                        initialImages = listOf(img),
                                     ),
                                 )
                             },
@@ -135,11 +142,10 @@ data class SearchPage(
                         ReplyResultList(
                             viewModel = viewModel,
                             onThreadClick = { navigator.push(ThreadPage(it)) },
-                            onImageClick = { threadId, img, ext ->
-                                val imageInfo = ai.saniou.forum.workflow.image.ImageInfo(img, ext)
+                            onImageClick = { threadId, img ->
                                 ImagePreviewPage(
                                     ImagePreviewViewModelParams(
-                                        initialImages = listOf(imageInfo),
+                                        initialImages = listOf(img),
                                     ),
                                 )
                             }
@@ -154,10 +160,11 @@ data class SearchPage(
     private fun ThreadResultList(
         viewModel: SearchViewModel,
         onThreadClick: (Long) -> Unit,
-        onImageClick: (Long, String, String) -> Unit,
-        onUserClick: (String) -> Unit
+        onImageClick: (Long, Image) -> Unit,
+        onUserClick: (String) -> Unit,
     ) {
-        val threads = viewModel.state.collectAsStateWithLifecycle().value.threadPagingData.collectAsLazyPagingItems()
+        val threads =
+            viewModel.state.collectAsStateWithLifecycle().value.threadPagingData.collectAsLazyPagingItems()
 
         LazyColumn(
             contentPadding = PaddingValues(16.dp),
@@ -168,7 +175,7 @@ data class SearchPage(
                 ForumThreadCard(
                     thread = thread,
                     onClick = { onThreadClick(thread.id) },
-                    onImageClick = { img, ext -> onImageClick(thread.id, img, ext) },
+                    onImageClick = { img -> onImageClick(thread.id, img) },
                     onUserClick = onUserClick
                 )
             }
@@ -190,10 +197,11 @@ data class SearchPage(
     @Composable
     private fun ReplyResultList(
         viewModel: SearchViewModel,
-        onThreadClick: (Long) -> Unit,
-        onImageClick: (Long, String, String) -> Unit
+        onThreadClick: (String) -> Unit,
+        onImageClick: (String, Image) -> Unit,
     ) {
-        val replies = viewModel.state.collectAsStateWithLifecycle().value.replyPagingData.collectAsLazyPagingItems()
+        val replies =
+            viewModel.state.collectAsStateWithLifecycle().value.replyPagingData.collectAsLazyPagingItems()
 
         LazyColumn(
             contentPadding = PaddingValues(16.dp),
@@ -203,8 +211,8 @@ data class SearchPage(
                 val reply = replies[index] ?: return@items
                 SearchReplyCard(
                     reply = reply,
-                    onClick = { onThreadClick(reply.threadId) },
-                    onImageClick = { img, ext -> onImageClick(reply.threadId, img, ext) }
+                    onClick = { onThreadClick(reply.topicId) },
+                    onImageClick = { img -> onImageClick(reply.topicId, img) }
                 )
             }
 
@@ -225,9 +233,9 @@ data class SearchPage(
 
 @Composable
 fun SearchReplyCard(
-    reply: ThreadReply,
+    reply: Comment,
     onClick: () -> Unit,
-    onImageClick: (String, String) -> Unit
+    onImageClick: (Image) -> Unit,
 ) {
     ElevatedCard(
         modifier = Modifier
@@ -243,7 +251,7 @@ fun SearchReplyCard(
                 horizontalArrangement = Arrangement.spacedBy(Dimens.padding_small)
             ) {
                 Text(
-                    text = reply.userHash,
+                    text = reply.author.id,
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -255,15 +263,15 @@ fun SearchReplyCard(
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 Text(
-                    text = ">> No.${reply.threadId}",
+                    text = ">> No.${reply.topicId}",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.primary
                 )
             }
 
-            if (reply.title.isNotBlank()) {
+            if (reply.title.isNullOrBlank().not()) {
                 Text(
-                    text = reply.title,
+                    text = reply.title!!,
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold
                 )

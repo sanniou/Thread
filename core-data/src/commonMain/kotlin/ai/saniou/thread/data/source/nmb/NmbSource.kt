@@ -159,9 +159,7 @@ class NmbSource(
         } else {
             getShowfPager(fidLong, DataPolicy.NETWORK_ELSE_CACHE, initialPage)
         }
-        return pagerFlow.map { pagingData ->
-            pagingData.map { it.toDomain() }
-        }
+        return pagerFlow
     }
 
     override suspend fun getThreadDetail(threadId: String, page: Int): Result<Post> {
@@ -210,26 +208,40 @@ class NmbSource(
         fid: Long,
         policy: DataPolicy,
         initialPage: Int = 1,
-    ): Flow<PagingData<ThreadWithInformation>> {
+    ): Flow<PagingData<Post>> {
         return createPager(
             fid = fid,
             policy = policy,
             initialPage = initialPage,
-            fetcher = { page -> nmbXdApi.timeline(fid.toLong(), page.toLong()) }
-        ).flow.map { pagingData -> pagingData.map { it.toThreadWithInformation(db.commentQueries) } }
+            fetcher = { page -> nmbXdApi.timeline(fid, page.toLong()) }
+        ).flow.map { pagingData ->
+            pagingData.map {
+                it.toDomain(
+                    db.commentQueries,
+                    db.imageQueries
+                )
+            }
+        }
     }
 
     fun getShowfPager(
         fid: Long,
         policy: DataPolicy,
         initialPage: Int = 1,
-    ): Flow<PagingData<ThreadWithInformation>> {
+    ): Flow<PagingData<Post>> {
         return createPager(
             fid = fid,
             policy = policy,
             initialPage = initialPage,
             fetcher = { page -> nmbXdApi.showf(fid, page.toLong()) }
-        ).flow.map { pagingData -> pagingData.map { it.toThreadWithInformation(db.commentQueries) } }
+        ).flow.map { pagingData ->
+            pagingData.map {
+                it.toDomain(
+                    db.commentQueries,
+                    db.imageQueries
+                )
+            }
+        }
     }
 
     @OptIn(ExperimentalPagingApi::class)
@@ -327,7 +339,7 @@ class NmbSource(
         db.topicQueries.updateTopicLastAccessTime(time, id, threadId.toString())
     }
 
-    suspend fun updateThreadLastReadReplyId(threadId: Long, replyId: Long) {
+    suspend fun updateThreadLastReadReplyId(threadId: Long, replyId: String) {
         db.topicQueries.updateTopicLastReadCommentId(replyId, id, threadId.toString())
     }
 
