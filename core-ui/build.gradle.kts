@@ -84,6 +84,8 @@ kotlin {
 //            implementation(libs.kmpalette.extensions.network)
 //            implementation(libs.kmpalette.extensions.file)
             implementation(libs.cash.paging.compose.common)
+//            api("com.saralapps:composemultiplatformwebview:0.1.2")
+//            api("io.github.kevinnzou:compose-webview-multiplatform:2.0.3")
         }
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)

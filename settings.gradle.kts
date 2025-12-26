@@ -12,6 +12,8 @@ pluginManagement {
         }
         mavenCentral()
         gradlePluginPortal()
+        // Desktop target has to add this repo
+        maven("https://jogamp.org/deployment/maven")
     }
 }
 
@@ -25,6 +27,8 @@ dependencyResolutionManagement {
             }
         }
         mavenCentral()
+        // Desktop target has to add this repo
+        maven("https://jogamp.org/deployment/maven")
     }
 }
 

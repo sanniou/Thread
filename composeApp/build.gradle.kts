@@ -51,6 +51,7 @@ kotlin {
             implementation(project(":core-data"))
             implementation(project(":core-domain"))
             implementation(project(":core-common"))
+            implementation(project(":core-network"))
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material3)
@@ -64,9 +65,17 @@ kotlin {
             implementation(project(":feature-forum"))
             implementation(project(":feature-reader"))
         }
+        val webviewVersion = "2.0.3"
+        androidMain.dependencies {
+            implementation("io.github.kevinnzou:compose-webview-multiplatform:$webviewVersion")
+        }
+        iosMain.dependencies {
+            implementation("io.github.kevinnzou:compose-webview-multiplatform:$webviewVersion")
+        }
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutinesSwing)
+            implementation("io.github.kevinnzou:compose-webview-multiplatform:$webviewVersion")
         }
     }
 }
@@ -110,6 +119,24 @@ compose.desktop {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "ai.saniou.thread"
             packageVersion = "1.0.0"
+        }
+
+        buildTypes.release.proguard {
+            configurationFiles.from("compose-desktop.pro")
+        }
+    }
+}
+
+
+afterEvaluate {
+    tasks.withType<JavaExec> {
+        jvmArgs("--add-opens", "java.desktop/sun.awt=ALL-UNNAMED")
+        jvmArgs("--add-opens", "java.desktop/java.awt.peer=ALL-UNNAMED")
+
+        if (System.getProperty("os.name").contains("Mac")) {
+            jvmArgs("--add-opens", "java.desktop/sun.awt=ALL-UNNAMED")
+            jvmArgs("--add-opens", "java.desktop/sun.lwawt=ALL-UNNAMED")
+            jvmArgs("--add-opens", "java.desktop/sun.lwawt.macosx=ALL-UNNAMED")
         }
     }
 }

@@ -84,6 +84,7 @@
 | **`core-data`** | 数据实现 (API/DB) | `src/commonMain/kotlin/ai/saniou/thread/data/repository/` |
 | **`core-ui`** | 通用 UI 组件 & 主题 | `src/commonMain/kotlin/ai/saniou/coreui/` |
 | **`core-common`** | 工具类 (Time, Log) | `src/commonMain/kotlin/ai/saniou/corecommon/` |
+| **`core-network`** | network | `src/commonMain/kotlin/ai/saniou/network/` |
 | **`feature-forum`** | 论坛业务 UI | `src/commonMain/kotlin/ai/saniou/thread/feature/forum/` |
 | **`feature-feed`** | 社交流业务 UI | `src/commonMain/kotlin/ai/saniou/thread/feature/feed/` |
 | **`feature-reader`** | 阅读器业务 UI | `src/commonMain/kotlin/ai/saniou/thread/feature/reader/` |
@@ -107,6 +108,7 @@
 - database-reader: `core-data/src/commonMain/sqldelight/ai/saniou/thread/db/table/reader`
 - mapper: `core-data/src/commonMain/kotlin/ai/saniou/thread/data/mapper/`
 - [DateParser.kt](../../core-common/src/commonMain/kotlin/ai/saniou/corecommon/utils/DateParser.kt)
+- [SaniouKtorfit.kt](../../core-network/src/commonMain/kotlin/ai/saniou/thread/network/SaniouKtorfit.kt)
 
 
 ## 5. 最佳实践检查清单

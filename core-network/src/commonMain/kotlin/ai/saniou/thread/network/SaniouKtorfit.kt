@@ -22,6 +22,7 @@ import kotlinx.serialization.json.Json
 fun SaniouKtorfit(
     baseUrl: String,
     cookieProvider: CookieProvider? = null,
+    challengeHandler: ChallengeHandler? = null,
     clientConfig: HttpClientConfig<*>.() -> Unit = {}
 ): Ktorfit = ktorfit {
     baseUrl(baseUrl)
@@ -29,6 +30,11 @@ fun SaniouKtorfit(
         HttpClient(CIO) {
             install(DynamicCookiePlugin) {
                 this.cookieProvider = cookieProvider
+            }
+            if (challengeHandler != null) {
+                install(CloudflareProtectionPlugin) {
+                    this.challengeHandler = challengeHandler
+                }
             }
             install(ContentEncoding) {
                 mode = ContentEncodingConfig.Mode.All

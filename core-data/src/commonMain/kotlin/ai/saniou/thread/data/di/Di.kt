@@ -2,6 +2,7 @@ package ai.saniou.thread.data.di
 import ai.saniou.thread.data.database.DriverFactory
 import ai.saniou.thread.data.database.createDatabase
 import ai.saniou.thread.data.manager.CdnManager
+import ai.saniou.thread.data.manager.CookieManager
 import ai.saniou.thread.data.repository.BookmarkRepositoryImpl
 import ai.saniou.thread.data.repository.FavoriteRepositoryImpl
 import ai.saniou.thread.data.repository.SourceRepositoryImpl
@@ -59,6 +60,7 @@ import ai.saniou.thread.domain.repository.ReaderRepository
 import ai.saniou.thread.domain.repository.UserRepository
 import ai.saniou.thread.domain.usecase.reader.GetArticleCountsUseCase
 import ai.saniou.thread.domain.usecase.subscription.GenerateRandomSubscriptionIdUseCase
+import ai.saniou.thread.network.ChallengeHandler
 import ai.saniou.thread.network.CookieProvider
 import ai.saniou.thread.network.SaniouKtorfit
 import de.jensklingenberg.ktorfit.Ktorfit
@@ -68,6 +70,7 @@ import org.kodein.di.bind
 import org.kodein.di.bindConstant
 import org.kodein.di.bindSingleton
 import org.kodein.di.instance
+import org.kodein.di.instanceOrNull
 import org.kodein.di.singleton
 
 val dataModule = DI.Module("dataModule") {
@@ -80,7 +83,16 @@ val dataModule = DI.Module("dataModule") {
     }
 
     bindSingleton<DiscourseApi> {
-        val ktorfit: Ktorfit = instance(arg = instance<String>("discourseBaseUrl"))
+        val baseUrl = instance<String>("discourseBaseUrl")
+        val cookieManager = instance<CookieManager>()
+        // ChallengeHandler should be provided by the app module
+        val challengeHandler = instanceOrNull<ChallengeHandler>()
+
+        val ktorfit = SaniouKtorfit(
+            baseUrl = baseUrl,
+            cookieProvider = cookieManager,
+            challengeHandler = challengeHandler
+        )
         ktorfit.createDiscourseApi()
     }
     bindConstant<String>(tag = "acfunBaseUrl") { "https://api-new.acfunchina.com/" }
@@ -164,6 +176,8 @@ val dataModule = DI.Module("dataModule") {
     }
 
     bindSingleton<CookieProvider> { NmbCookieProvider(instance()) }
+    // Cookie Manager (for Discourse/CF)
+    bindSingleton<CookieManager> { CookieManager() }
     // CDN管理器
     bindSingleton<CdnManager> { CdnManager(instance()) }
     // 数据库
