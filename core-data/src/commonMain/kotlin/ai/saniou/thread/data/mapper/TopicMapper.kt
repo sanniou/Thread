@@ -15,7 +15,7 @@ import kotlin.time.Instant
 
 fun GetTopicsInChannelOffset.toDomain(
     query: CommentQueries? = null,
-    imageQueries: ImageQueries?,
+    imageQueries: ImageQueries? = null,
 ): Topic {
     val author = Author(
         id = userHash,
@@ -54,39 +54,44 @@ fun GetTopicsInChannelOffset.toDomain(
     )
 }
 
-fun EntityTopic.toDomain(imageQueries: ImageQueries): Topic {
+fun EntityTopic.toDomain(
+    query: CommentQueries? = null,
+    imageQueries: ImageQueries? = null,
+): Topic {
     val author = Author(
-        id = userHash ?: "",
-        name = authorName ?: "",
-        sourceName = sourceId ?: "nmb"
+        id = userHash,
+        name = authorName,
+        sourceName = sourceId
     )
 
-    val images = imageQueries.getImagesByParent(
+    val images = imageQueries?.getImagesByParent(
         sourceId = sourceId,
         parentId = id,
         parentType = ImageType.Topic
-    ).executeAsList().map { it.toDomain() }
+    )?.executeAsList()?.map { it.toDomain() }
+        ?: emptyList()
 
     return Topic(
         id = id,
-        sourceName = sourceId ?: "nmb",
+        sourceName = sourceId,
         sourceUrl = "https://nmb.ai/thread/$id", // TODO: Move URL generation to Source logic
         title = title,
-        content = content ?: "",
+        content = content,
         author = author,
         createdAt = Instant.fromEpochMilliseconds(createdAt),
         channelId = channelId,
         channelName = "", // DB Topic table usually doesn't store channel name, need Join or lookup
         commentCount = commentCount,
         images = images,
-        isSage = (sage ?: 0) > 0,
-        isAdmin = (admin ?: 0) > 0,
-        isHidden = (hide ?: 0) > 0,
+        isSage = sage > 0,
+        isAdmin = admin > 0,
+        isHidden = hide > 0,
         isLocal = false,
-        // fixme  后续处理 lastReadCommentId 和 comments
         lastViewedCommentId = null,
-        comments = emptyList(),
-        remainingCount = null // DB doesn't store remaining count in EntityTopic, only in TopicInformation. This mapper handles EntityTopic.
+        comments = query?.getLastFiveComments(sourceId, id)?.executeAsList()?.map {
+            it.toDomain()
+        } ?: emptyList(),
+        remainingCount = null
     )
 }
 

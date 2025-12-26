@@ -622,7 +622,7 @@ class NmbSource(
         }
     }
 
-    fun getUserThreadsPager(userHash: String): Flow<PagingData<ThreadWithInformation>> {
+    fun getUserThreadsPager(userHash: String): Flow<PagingData<Post>> {
         return Pager(
             config = PagingConfig(pageSize = 20),
             pagingSourceFactory = {
@@ -636,7 +636,7 @@ class NmbSource(
                 )
             }
         ).flow.map { pagingData ->
-            pagingData.map { it.toThreadWithInformation(db.commentQueries) }
+            pagingData.map { it.toDomain(db.commentQueries,db.imageQueries) }
         }
     }
 

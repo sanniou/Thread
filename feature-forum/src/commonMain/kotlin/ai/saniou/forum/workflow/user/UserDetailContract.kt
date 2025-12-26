@@ -1,17 +1,16 @@
 package ai.saniou.forum.workflow.user
 
-import ai.saniou.thread.data.source.nmb.remote.dto.ThreadReply
-import ai.saniou.thread.data.source.nmb.remote.dto.ThreadWithInformation
 import ai.saniou.thread.domain.model.forum.Comment
+import ai.saniou.thread.domain.model.forum.Topic
 import app.cash.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 
 interface UserDetailContract {
     data class State(
         val userHash: String,
-        val threads: Flow<PagingData<ThreadWithInformation>>? = null,
-        val replies: Flow<PagingData<Comment>>? = null,
-        val currentTab: Tab = Tab.Threads
+        val topics: Flow<PagingData<Topic>>? = null,
+        val comments: Flow<PagingData<Comment>>? = null,
+        val currentTab: Tab = Tab.Topics
     )
 
     sealed interface Event {
@@ -24,7 +23,7 @@ interface UserDetailContract {
     }
 
     enum class Tab {
-        Threads,
-        Replies
+        Topics,
+        Comments
     }
 }

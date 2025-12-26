@@ -6,7 +6,7 @@ import ai.saniou.coreui.state.PagingStateLayout
 import ai.saniou.coreui.widgets.PullToRefreshWrapper
 import ai.saniou.coreui.widgets.SaniouTopAppBar
 import ai.saniou.forum.di.nmbdi
-import ai.saniou.forum.ui.components.ForumThreadCard
+import ai.saniou.forum.ui.components.TopicCard
 import ai.saniou.forum.ui.components.LoadEndIndicator
 import ai.saniou.forum.ui.components.LoadingFailedIndicator
 import ai.saniou.forum.ui.components.LoadingIndicator
@@ -244,8 +244,8 @@ private fun SubscriptionContent(
                             )
                         }
                     ) {
-                        ForumThreadCard(
-                            thread = feed,
+                        TopicCard(
+                            topic = feed,
                             onClick = { onThreadClicked(feed.id.toLong()) },
                             onImageClick = { img -> onImageClick(feed.id.toLong(), img) },
                         )

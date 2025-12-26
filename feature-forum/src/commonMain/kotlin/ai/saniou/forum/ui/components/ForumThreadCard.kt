@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ChatBubbleOutline
 import androidx.compose.material3.CardDefaults
@@ -26,19 +25,17 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 
 
 @Composable
-fun ForumThreadCard(
+fun TopicCard(
     thread: IBaseThread,
     onClick: () -> Unit,
     onImageClick: ((Image) -> Unit)? = null,
     onUserClick: ((String) -> Unit)? = null,
 ) {
-    ForumThreadCard(
+    TopicCard(
         thread.toDomain(),
         onClick,
         onImageClick,
@@ -50,8 +47,8 @@ fun ForumThreadCard(
  * 串内容卡片，遵循 MD3 设计风格
  */
 @Composable
-fun ForumThreadCard(
-    thread: Post,
+fun TopicCard(
+    topic: Post,
     onClick: () -> Unit,
     onImageClick: ((Image) -> Unit)? = null,
     onUserClick: ((String) -> Unit)? = null,
@@ -76,8 +73,8 @@ fun ForumThreadCard(
                 verticalAlignment = Alignment.Top
             ) {
                 ThreadAuthor(
-                    author = thread.author,
-                    threadTime = thread.createdAt.toRelativeTimeString(),
+                    author = topic.author,
+                    threadTime = topic.createdAt.toRelativeTimeString(),
                     isPo = false,
                     onClick = onUserClick,
                     modifier = Modifier.weight(1f)
@@ -88,14 +85,14 @@ fun ForumThreadCard(
                     horizontalArrangement = Arrangement.spacedBy(Dimens.padding_tiny),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if (thread.isAdmin) {
+                    if (topic.isAdmin) {
                         Badge(
                             text = "ADMIN",
                             containerColor = MaterialTheme.colorScheme.errorContainer,
                             contentColor = MaterialTheme.colorScheme.onErrorContainer
                         )
                     }
-                    if (thread.isSage) {
+                    if (topic.isSage) {
                         Badge(
                             text = "SAGE",
                             containerColor = MaterialTheme.colorScheme.secondaryContainer,
@@ -106,9 +103,9 @@ fun ForumThreadCard(
             }
 
             // Title (Only if meaningful)
-            if (!thread.title.isNullOrBlank() && thread.title != "无标题") {
+            if (!topic.title.isNullOrBlank() && topic.title != "无标题") {
                 Text(
-                    text = thread.title!!,
+                    text = topic.title!!,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -117,8 +114,8 @@ fun ForumThreadCard(
 
             // Content
             ThreadBody(
-                content = thread.content,
-                images = thread.images,
+                content = topic.content,
+                images = topic.images,
                 maxLines = 6,
                 onImageClick = { img -> onImageClick?.invoke(img) }
             )
@@ -130,8 +127,8 @@ fun ForumThreadCard(
             ) {
                 // Source & Forum Name Badge
                 val sourceText =
-                    if (thread.sourceName.isNotBlank()) "${thread.sourceName.uppercase()} · " else ""
-                val footerText = "$sourceText${thread.channelName}"
+                    if (topic.sourceName.isNotBlank()) "${topic.sourceName.uppercase()} · " else ""
+                val footerText = "$sourceText${topic.channelName}"
 
                 if (footerText.isNotBlank()) {
                     Surface(
@@ -164,7 +161,7 @@ fun ForumThreadCard(
                         modifier = Modifier.size(Dimens.icon_size_small)
                     )
                     Text(
-                        text = thread.commentCount.toString(),
+                        text = topic.commentCount.toString(),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -172,11 +169,11 @@ fun ForumThreadCard(
             }
 
             // Recent Replies
-            if (thread.comments.isNotEmpty()) {
-                RecentReplies(thread.comments)
-                if ((thread.remainingCount ?: 0) > 0) {
+            if (topic.comments.isNotEmpty()) {
+                RecentReplies(topic.comments)
+                if ((topic.remainingCount ?: 0) > 0) {
                     Text(
-                        text = "还有 ${thread.remainingCount} 条回复...",
+                        text = "还有 ${topic.remainingCount} 条回复...",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(

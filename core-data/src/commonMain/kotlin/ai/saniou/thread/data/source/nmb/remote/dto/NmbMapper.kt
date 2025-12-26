@@ -26,7 +26,7 @@ fun TimeLine.toDomain(): DomainChannel = DomainChannel(
     description = notice,
     groupId = "-1",
     groupName = "TimeLine",
-    topicCount = maxPage?.let { it * 20 }, // Approximate thread count
+    topicCount = maxPage * 20, // Approximate thread count
     autoDelete = null,
 )
 
@@ -54,33 +54,14 @@ private fun createAuthor(userHash: String?, name: String?): Author {
     )
 }
 
-fun Image.toTable(sourceId: String, parentId: String, parentType: ImageType, sortOrder: Int): EntityImage {
-    return EntityImage(
-        id = originalUrl, // Use URL as ID for now
-        sourceId = sourceId,
-        parentId = parentId,
-        parentType = parentType,
-        originalUrl = originalUrl,
-        thumbnailUrl = thumbnailUrl,
-        name = name,
-        extension = extension,
-        width = width?.toLong(),
-        height = height?.toLong(),
-        sortOrder = sortOrder.toLong()
-    )
-}
-
 @OptIn(ExperimentalTime::class)
 fun SelectSubscriptionTopic.toDomain(imageQueries: ImageQueries? = null): Topic {
-    val images = if (imageQueries != null) {
-        imageQueries.getImagesByParent(
-            sourceId = "nmb",
-            parentId = id,
-            parentType = ImageType.Topic
-        ).executeAsList().map { it.toDomain() }
-    } else {
-        emptyList()
-    }
+    val images = imageQueries?.getImagesByParent(
+        sourceId = "nmb",
+        parentId = id,
+        parentType = ImageType.Topic
+    )?.executeAsList()?.map { it.toDomain() }
+        ?: emptyList()
 
     return Topic(
         id = id,

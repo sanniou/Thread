@@ -32,7 +32,7 @@ class TopicRepositoryImpl(
 
     override fun getTopicDetail(sourceId: String, id: String, forceRefresh: Boolean): Flow<Post> {
         return cache.observeThread(sourceId, id)
-            .mapNotNull { it?.toDomain(db.imageQueries) }
+            .mapNotNull { it?.toDomain(db.commentQueries, db.imageQueries) }
             .onStart {
                 val source = sourceMap[sourceId]
                 if (source != null) {
@@ -103,7 +103,7 @@ class TopicRepositoryImpl(
         // FIXME: Need sourceId. Assuming "nmb" for now or fetch from existing thread context.
         val sourceId = "nmb"
         withContext(Dispatchers.IO) {
-             cache.updateTopicLastReadCommentId(sourceId, threadId, replyId)
+            cache.updateTopicLastReadCommentId(sourceId, threadId, replyId)
         }
     }
 }

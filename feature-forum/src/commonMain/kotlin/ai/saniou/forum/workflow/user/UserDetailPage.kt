@@ -2,7 +2,7 @@ package ai.saniou.forum.workflow.user
 
 import ai.saniou.coreui.widgets.SaniouTopAppBar
 import ai.saniou.forum.di.nmbdi
-import ai.saniou.forum.ui.components.ForumThreadCard
+import ai.saniou.forum.ui.components.TopicCard
 import ai.saniou.forum.ui.components.LoadEndIndicator
 import ai.saniou.forum.ui.components.LoadingFailedIndicator
 import ai.saniou.forum.ui.components.LoadingIndicator
@@ -11,7 +11,6 @@ import ai.saniou.forum.workflow.image.ImagePreviewPage
 import ai.saniou.forum.workflow.image.ImagePreviewViewModelParams
 import ai.saniou.forum.workflow.thread.ThreadPage
 import ai.saniou.forum.workflow.thread.ThreadReply
-import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,19 +23,16 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -114,8 +110,8 @@ data class UserDetailPage(
                                 text = {
                                     Text(
                                         text = when (tab) {
-                                            UserDetailContract.Tab.Threads -> "串"
-                                            UserDetailContract.Tab.Replies -> "回复"
+                                            UserDetailContract.Tab.Topics -> "串"
+                                            UserDetailContract.Tab.Comments -> "回复"
                                         }
                                     )
                                 }
@@ -130,20 +126,20 @@ data class UserDetailPage(
                 modifier = Modifier.padding(paddingValues).fillMaxSize()
             ) { page ->
                 when (UserDetailContract.Tab.entries[page]) {
-                    UserDetailContract.Tab.Threads -> {
-                        state.threads?.let { flow ->
-                            val threads = flow.collectAsLazyPagingItems()
+                    UserDetailContract.Tab.Topics -> {
+                        state.topics?.let { flow ->
+                            val topics = flow.collectAsLazyPagingItems()
                             LazyColumn(
                                 contentPadding = PaddingValues(16.dp),
                                 verticalArrangement = Arrangement.spacedBy(8.dp),
                                 modifier = Modifier.fillMaxSize()
                             ) {
-                                items(threads.itemCount) { index ->
-                                    val thread = threads[index]
-                                    if (thread != null) {
-                                        ForumThreadCard(
-                                            thread = thread,
-                                            onClick = { navigator.push(ThreadPage(threadId = thread.id)) },
+                                items(topics.itemCount) { index ->
+                                    val topic = topics[index]
+                                    if (topic != null) {
+                                        TopicCard(
+                                            topic = topic,
+                                            onClick = { navigator.push(ThreadPage(threadId = topic.id)) },
                                             onImageClick = { img ->
                                                 navigator.push(
                                                     ImagePreviewPage(
@@ -157,14 +153,14 @@ data class UserDetailPage(
                                     }
                                 }
 
-                                when (threads.loadState.refresh) {
+                                when (topics.loadState.refresh) {
                                     is LoadStateLoading -> item { ThreadListSkeleton() }
                                     is LoadStateError -> item {
                                         Box(
                                             modifier = Modifier.fillMaxWidth().padding(32.dp),
                                             contentAlignment = Alignment.Center
                                         ) {
-                                            Button(onClick = { threads.retry() }) {
+                                            Button(onClick = { topics.retry() }) {
                                                 Text("重试")
                                             }
                                         }
@@ -173,17 +169,17 @@ data class UserDetailPage(
                                     else -> {}
                                 }
 
-                                when (threads.loadState.append) {
+                                when (topics.loadState.append) {
                                     is LoadStateLoading -> item { LoadingIndicator() }
                                     is LoadStateError -> item { LoadingFailedIndicator() }
                                     else -> {
-                                        if (threads.loadState.append.endOfPaginationReached && threads.itemCount > 0) {
+                                        if (topics.loadState.append.endOfPaginationReached && topics.itemCount > 0) {
                                             item { LoadEndIndicator() }
                                         }
                                     }
                                 }
 
-                                if (threads.loadState.refresh !is LoadStateLoading && threads.itemCount == 0) {
+                                if (topics.loadState.refresh !is LoadStateLoading && topics.itemCount == 0) {
                                     item {
                                         EmptyContent(message = "该用户还没有发布过串")
                                     }
@@ -192,8 +188,8 @@ data class UserDetailPage(
                         }
                     }
 
-                    UserDetailContract.Tab.Replies -> {
-                        state.replies?.let { flow ->
+                    UserDetailContract.Tab.Comments -> {
+                        state.comments?.let { flow ->
                             val replies = flow.collectAsLazyPagingItems()
                             LazyColumn(
                                 modifier = Modifier.fillMaxSize()

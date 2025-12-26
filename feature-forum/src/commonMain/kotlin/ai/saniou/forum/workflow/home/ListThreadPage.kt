@@ -3,13 +3,11 @@ package ai.saniou.forum.workflow.home
 import ai.saniou.coreui.state.PagingStateLayout
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.PullToRefreshWrapper
-import ai.saniou.forum.ui.components.ForumThreadCard
+import ai.saniou.forum.ui.components.TopicCard
 import ai.saniou.forum.ui.components.LoadEndIndicator
 import ai.saniou.forum.ui.components.LoadingFailedIndicator
 import ai.saniou.forum.ui.components.LoadingIndicator
 import ai.saniou.forum.ui.components.ThreadListSkeleton
-import ai.saniou.thread.data.source.nmb.remote.dto.ThreadWithInformation
-import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
 import ai.saniou.thread.domain.model.forum.Image
 import ai.saniou.thread.domain.model.forum.Topic as Post
 import androidx.compose.foundation.layout.Arrangement
@@ -38,9 +36,7 @@ import app.cash.paging.LoadStateError
 import app.cash.paging.LoadStateLoading
 import app.cash.paging.PagingData
 import app.cash.paging.compose.collectAsLazyPagingItems
-import app.cash.paging.map
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 
 @Composable
 fun ListThreadPage(
@@ -84,8 +80,8 @@ fun ListThreadPage(
             ) {
                 items(threads.itemCount) { index ->
                     val feed = threads[index] ?: return@items
-                    ForumThreadCard(
-                        thread = feed,
+                    TopicCard(
+                        topic = feed,
                         onClick = { onThreadClicked(feed.id.toLong()) },
                         onImageClick = { img -> onImageClick(feed.id.toLong(), img) },
                         onUserClick = onUserClick

@@ -34,8 +34,8 @@ class UserDetailViewModel(
         val replies = nmbRepository.getUserRepliesPager(userHash)
         _state.update {
             it.copy(
-                threads = threads,
-                replies = replies
+                topics = threads,
+                comments = replies
             )
         }
     }
