@@ -138,9 +138,9 @@ class DiscourseSource(
                 isAdmin = false,
                 isHidden = false,
                 isLocal = false,
-                lastViewedCommentId = "", // lastReadReplyId -> lastReadCommentId
-                comments = emptyList(), // replies -> comments
-                remainingCount = null // remainReplies -> remainingCount
+                lastViewedCommentId = "", 
+                comments = emptyList(), 
+                remainingCount = null 
             )
             Result.success(post)
         } catch (e: Exception) {
@@ -218,8 +218,8 @@ internal fun DiscourseTopic.toPost(usersMap: Map<Long, DiscourseUser>): Post {
         isAdmin = pinned || closed,
         isHidden = !visible,
         isLocal = false,
-        lastViewedCommentId = "", // lastReadReplyId -> lastReadCommentId
-        comments = emptyList(), // replies -> comments
-        remainingCount = null, // remainReplies -> remainingCount
+        lastViewedCommentId = "", 
+        comments = emptyList(), 
+        remainingCount = null, 
     )
 }

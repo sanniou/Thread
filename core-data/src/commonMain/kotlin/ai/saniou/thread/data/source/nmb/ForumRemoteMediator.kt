@@ -6,6 +6,8 @@ import ai.saniou.thread.data.source.nmb.remote.dto.Forum
 import ai.saniou.thread.data.source.nmb.remote.dto.RemoteKeyType
 import ai.saniou.thread.data.source.nmb.remote.dto.toTable
 import ai.saniou.thread.data.source.nmb.remote.dto.toTableReply
+import ai.saniou.thread.data.manager.CdnManager
+import ai.saniou.thread.domain.model.forum.ImageType
 import ai.saniou.thread.network.SaniouResponse
 import ai.saniou.thread.data.paging.DataPolicy
 import ai.saniou.thread.data.paging.DefaultRemoteKeyStrategy
@@ -23,6 +25,7 @@ class ForumRemoteMediator(
     private val db: Database,
     private val dataPolicy: DataPolicy,
     private val initialPage: Int,
+    private val cdnManager: CdnManager,
     private val fetcher: suspend (page: Int) -> SaniouResponse<List<Forum>>,
 ) : RemoteMediator<Int, GetThreadsInForumOffset>() {
 
@@ -43,14 +46,50 @@ class ForumRemoteMediator(
             }
             forums.forEach { forum ->
                 db.topicQueries.upsertTopic(forum.toTable(sourceId, page.toLong()))
+                // Save Topic Image
+                saveNmbImage(
+                    db = db,
+                    cdnManager = cdnManager,
+                    sourceId = sourceId,
+                    parentId = forum.id.toString(),
+                    parentType = ImageType.Topic,
+                    img = forum.img,
+                    ext = forum.ext
+                )
+
                 db.topicQueries.upsertTopicInformation(
                     id = forum.id.toString(),
                     sourceId = sourceId,
-                    remainingCount = forum.remainingCount, // remainReplies -> remainingCount
+                    remainingCount = forum.remainingCount,
                     latestCommentId = (forum.replies.lastOrNull()?.id ?: forum.id).toString()
                 )
-                forum.toTableReply(sourceId)
-                    .forEach(db.commentQueries::upsertComment)
+                
+                forum.replies.forEach { reply ->
+                    // Since forum.toTableReply maps internal replies, we should do it manually to access original reply object for images
+                    // Or iterate forum.toTableReply for saving, but iterate forum.replies for images.
+                    // Let's stick to using the list of replies from the forum object.
+                    // Wait, Forum.toTableReply() maps `this.replies`.
+                    // We can reuse the mapping logic if we iterate manually.
+                    
+                    // Re-implementing reply saving loop to include image saving
+                    db.commentQueries.upsertComment(
+                        reply.toTableReply(
+                            sourceId = sourceId,
+                            threadId = forum.id,
+                            page = Long.MIN_VALUE // As per original Forum.toTableReply logic
+                        )
+                    )
+                    
+                    saveNmbImage(
+                        db = db,
+                        cdnManager = cdnManager,
+                        sourceId = sourceId,
+                        parentId = reply.id.toString(),
+                        parentType = ImageType.Comment,
+                        img = reply.img,
+                        ext = reply.ext
+                    )
+                }
             }
         },
         endOfPaginationReached = { it.isEmpty() },

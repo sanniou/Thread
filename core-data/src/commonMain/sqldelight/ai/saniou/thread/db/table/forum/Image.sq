@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS Image (
     thumbnailUrl TEXT,
     name TEXT,
     extension TEXT,
+    path TEXT, -- 相对路径，用于容灾
     width INTEGER,
     height INTEGER,
     sortOrder INTEGER NOT NULL DEFAULT 0,
@@ -22,7 +23,7 @@ CREATE INDEX IF NOT EXISTS idx_image_parent ON Image(sourceId, parentId, parentT
 -- 插入或更新图片
 upsertImage:
 INSERT OR REPLACE INTO Image (
-    id, sourceId, parentId, parentType, originalUrl, thumbnailUrl, name, extension, width, height, sortOrder
+    id, sourceId, parentId, parentType, originalUrl, thumbnailUrl, name, extension, path, width, height, sortOrder
 ) VALUES ?;
 
 -- 获取指定 Parent 的所有图片

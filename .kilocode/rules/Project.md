@@ -120,3 +120,51 @@
 - 为了兼容不同系统，ID 应该使用String，在针对不同 API 时，再进行转换
 - UI 细节：随着不同源的加入，应该丰富各种UI细节。。
 - 目标是打造一个全 source 支持的，风格化，细节丰富的设计感优秀页面
+
+## 6. 2025年12月 重构交接文档 (Handoff Note)
+
+### 6.1 Domain 层重构 (Domain Refactoring)
+为了支持多源聚合（Multi-Source），我们对 `feature-forum` 相关的领域模型进行了标准化重构。
+
+- **`Topic` (原 Post)**: 代表一个讨论串/主题。
+    - `remainComments` 重命名为 `remainingCount`，消除歧义。
+    - `replyCount` 重命名为 `commentCount`。
+    - 移除 `img`/`ext` 字段，改为 `images: List<Image>`，支持多图。
+    - `title` 改为 `String?`，适配无标题内容（如微博）。
+    - 包含 `comments: List<Comment>` 字段，用于预览或详情页数据。
+
+- **`Comment` (原 ThreadReply)**: 代表主题下的评论/回复。
+    - 移除 `img`/`ext`，改为 `images: List<Image>`。
+    - `userHash` 替换为 `author: Author` 对象。
+
+- **`Image`**: 新增图片模型。
+    - `originalUrl`: 原图链接（对于 NMB 可能是相对路径，需在 UI 层/VM 层解析）。
+    - `thumbnailUrl`: 缩略图链接。
+    - `width`/`height`: 图片尺寸（可选）。
+
+- **`Author`**: 作者模型。
+    - 新增 `sourceName`: 用于区分不同源的同名/同ID用户。
+
+### 6.2 Data 层变更 (Data Layer Changes)
+- **SQLDelight**:
+    - `Topic` 和 `Comment` 表已更新以匹配 Domain 模型。
+    - `Topic` 表新增 `remainingCount` (原 remainReplies 迁移至 `TopicInformation` 表)。
+    - 图片数据不再直接存储在 `Topic`/`Comment` 表的 `img` 字段，而是（建议）迁移至独立的 `Image` 表（虽目前为了兼容性，Mapper 中仍有部分逻辑处理相对路径，但方向是独立化）。
+
+- **Mapper**:
+    - `TopicMapper` 和 `NmbMapper` 已更新，负责将 DB/API 数据映射为新的 Domain 模型。
+    - **注意**: 对于 NMB 源，Mapper 目前可能仍将相对路径（如 `image/123.jpg`）放入 `originalUrl`。
+
+### 6.3 图片处理策略 (Image Handling Strategy)
+- **原则**: UI 组件 (`ThreadBody`, `ImagePreviewPage`) 应当尽量 "愚蠢"，只负责渲染完整的 URL。
+- **URL 解析**:
+    - **View Model / Page Controller 层**: 负责将 Domain 中的相对路径（如 NMB 的 `originalUrl`）解析为绝对 URL。
+    - **`CdnManager`**: 核心数据层组件，用于解析 NMB 的相对路径。
+    - **实践**:
+        - `ImagePreviewViewModel`: 注入 `CdnManager`，在加载图片列表时，将 `Image` 对象中的 URL 解析为绝对路径。
+        - `ThreadPage`: 在传递初始图片列表给预览页时，使用 `CdnManager` 解析。
+        - `ThreadBody`: 使用 `NmbImage` 组件（该组件内部暂仍保留了 `CdnManager` 逻辑以支持旧有逻辑，但未来应逐步移除，改由传入完整 URL）。
+
+### 6.4 待办/注意事项 (TODOs & Caveats)
+- **UI 组件迁移**: `ForumThreadCard`, `ThreadBody`, `ThreadPage` 已适配新模型。其他 Feature 模块若有引用需检查。
+- **多源扩展**: 新增数据源（如 Reddit）时，应直接在 Mapper 层生成绝对 URL，无需修改 UI 层的解析逻辑。

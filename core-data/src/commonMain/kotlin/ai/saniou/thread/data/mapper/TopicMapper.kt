@@ -98,6 +98,7 @@ fun ai.saniou.thread.db.table.forum.Image.toDomain(): Image {
         extension = extension,
         width = width?.toInt(),
         height = height?.toInt()
+        // path is not exposed to domain yet, but available in DB if needed
     )
 }
 

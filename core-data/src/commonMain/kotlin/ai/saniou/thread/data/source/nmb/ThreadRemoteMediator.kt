@@ -7,8 +7,10 @@ import ai.saniou.thread.data.source.nmb.remote.dto.RemoteKeyType
 import ai.saniou.thread.data.source.nmb.remote.dto.Thread
 import ai.saniou.thread.data.source.nmb.remote.dto.toTable
 import ai.saniou.thread.data.source.nmb.remote.dto.toTableReply
+import ai.saniou.thread.data.manager.CdnManager
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.db.table.forum.Comment as ThreadReply
+import ai.saniou.thread.domain.model.forum.ImageType
 import ai.saniou.thread.network.SaniouResponse
 import app.cash.paging.ExperimentalPagingApi
 import app.cash.paging.LoadType
@@ -24,6 +26,7 @@ class ThreadRemoteMediator(
     private val dataPolicy: DataPolicy,
     private val initialPage: Int,
     private val isPoOnly: Boolean = false,
+    private val cdnManager: CdnManager,
     private val fetcher: suspend (page: Int) -> SaniouResponse<Thread>,
 ) : RemoteMediator<Int, ThreadReply>() {
 
@@ -53,9 +56,35 @@ class ThreadRemoteMediator(
             // Use upsertThreadNoPage to avoid overwriting the 'page' field (which represents Forum Page)
             // with the Reply Page number, unless it's a new insertion.
             db.topicQueries.upsertTopicNoPage(threadDetail.toTable(sourceId, storagePage))
-            threadDetail.toTableReply(sourceId, storagePage)
+            
+            // Save Topic Image
+            saveNmbImage(
+                db = db,
+                cdnManager = cdnManager,
+                sourceId = sourceId,
+                parentId = threadDetail.id.toString(),
+                parentType = ImageType.Topic,
+                img = threadDetail.img,
+                ext = threadDetail.ext
+            )
+
+            threadDetail.replies
                 .filter { it.userHash != "Tips" } // 过滤广告
-                .forEach(db.commentQueries::upsertComment)
+                .forEach { reply ->
+                    db.commentQueries.upsertComment(
+                        reply.toTableReply(sourceId, threadDetail.id, storagePage)
+                    )
+                    // Save Reply Image
+                    saveNmbImage(
+                        db = db,
+                        cdnManager = cdnManager,
+                        sourceId = sourceId,
+                        parentId = reply.id.toString(),
+                        parentType = ImageType.Comment,
+                        img = reply.img,
+                        ext = reply.ext
+                    )
+                }
         },
         endOfPaginationReached = { threadDetail ->
             // 过滤广告后判断是否为空

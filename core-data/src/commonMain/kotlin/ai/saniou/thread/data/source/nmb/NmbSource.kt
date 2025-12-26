@@ -14,8 +14,10 @@ import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
 import ai.saniou.thread.data.source.nmb.remote.dto.toTable
 import ai.saniou.thread.data.source.nmb.remote.dto.toTableReply
 import ai.saniou.thread.data.source.nmb.remote.dto.toThreadWithInformation
+import ai.saniou.thread.data.manager.CdnManager
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.db.table.Cookie
+import ai.saniou.thread.db.table.forum.Image
 import ai.saniou.thread.domain.model.forum.ImageType
 import ai.saniou.thread.domain.repository.SettingsRepository
 import ai.saniou.thread.domain.repository.Source
@@ -49,6 +51,7 @@ class NmbSource(
     private val nmbXdApi: NmbXdApi,
     private val db: Database,
     private val settingsRepository: SettingsRepository,
+    private val cdnManager: CdnManager,
 ) : Source {
     override val id: String = "nmb"
     override val name: String = "A岛"
@@ -263,6 +266,7 @@ class NmbSource(
                 dataPolicy = policy,
                 initialPage = initialPage,
                 isPoOnly = isPoOnly,
+                cdnManager = cdnManager,
                 fetcher = { page ->
                     if (isPoOnly) {
                         nmbXdApi.po(threadId, page.toLong())
@@ -448,6 +452,7 @@ class NmbSource(
                 db = db,
                 dataPolicy = policy,
                 initialPage = initialPage,
+                cdnManager = cdnManager,
                 fetcher = fetcher
             ),
             pagingSourceFactory = {
@@ -475,22 +480,35 @@ class NmbSource(
                     db.topicQueries.transaction {
                         db.topicQueries.upsertTopic(thread.toTable(id, page = page.toLong()))
                         // 保存 Topic 图片
-                        thread.toDomain().images.forEachIndexed { index, image ->
-                            db.imageQueries.upsertImage(
-                                image.toTable(id, thread.id.toString(), ImageType.Topic, index)
+                        saveNmbImage(
+                            db = db,
+                            cdnManager = cdnManager,
+                            sourceId = id,
+                            parentId = thread.id.toString(),
+                            parentType = ImageType.Topic,
+                            img = thread.img,
+                            ext = thread.ext
+                        )
+
+                        thread.replies.forEach { reply ->
+                            db.commentQueries.upsertComment(
+                                reply.toTableReply(
+                                    sourceId = id,
+                                    threadId = thread.id,
+                                    page = page.toLong()
+                                )
+                            )
+                            // 保存 Comment 图片
+                            saveNmbImage(
+                                db = db,
+                                cdnManager = cdnManager,
+                                sourceId = id,
+                                parentId = reply.id.toString(),
+                                parentType = ImageType.Comment,
+                                img = reply.img,
+                                ext = reply.ext
                             )
                         }
-
-                        thread.toTableReply(id, page.toLong())
-                            .forEach { reply ->
-                                db.commentQueries.upsertComment(reply)
-                                // 保存 Comment 图片
-                                reply.toDomain().images.forEachIndexed { index, image ->
-                                    db.imageQueries.upsertImage(
-                                        image.toTable(id, reply.id, ImageType.Comment, index)
-                                    )
-                                }
-                            }
                     }
                     Result.success(thread.replies)
                 }
@@ -513,27 +531,35 @@ class NmbSource(
                     db.topicQueries.transaction {
                         db.topicQueries.upsertTopic(thread.toTable(id, page = page.toLong()))
                         // 保存 Topic 图片
-                        thread.toDomain().images.forEachIndexed { index, image ->
-                            db.imageQueries.upsertImage(
-                                image.toTable(id, thread.id.toString(), ImageType.Topic, index)
+                        saveNmbImage(
+                            db = db,
+                            cdnManager = cdnManager,
+                            sourceId = id,
+                            parentId = thread.id.toString(),
+                            parentType = ImageType.Topic,
+                            img = thread.img,
+                            ext = thread.ext
+                        )
+
+                        thread.replies.forEach { reply ->
+                            db.commentQueries.upsertComment(
+                                reply.toTableReply(
+                                    sourceId = id,
+                                    threadId = thread.id,
+                                    page = page.toLong()
+                                )
+                            )
+                            // 保存 Comment 图片
+                            saveNmbImage(
+                                db = db,
+                                cdnManager = cdnManager,
+                                sourceId = id,
+                                parentId = reply.id.toString(),
+                                parentType = ImageType.Comment,
+                                img = reply.img,
+                                ext = reply.ext
                             )
                         }
-
-                        thread.toTableReply(id, page.toLong())
-                            .forEach { reply ->
-                                db.commentQueries.upsertComment(reply)
-                                // 保存 Comment 图片
-                                reply.toDomain().images.forEachIndexed { index, image ->
-                                    db.imageQueries.upsertImage(
-                                        image.toTable(
-                                            id,
-                                            reply.id.toString(),
-                                            ImageType.Comment,
-                                            index
-                                        )
-                                    )
-                                }
-                            }
                     }
                     Result.success(thread)
                 }
@@ -630,5 +656,37 @@ class NmbSource(
         ).flow.map { pagingData ->
             pagingData.map { it.toDomain(db.imageQueries) }
         }
+    }
+}
+
+internal fun saveNmbImage(
+    db: Database,
+    cdnManager: CdnManager,
+    sourceId: String,
+    parentId: String,
+    parentType: ImageType,
+    img: String?,
+    ext: String?,
+) {
+    if (!img.isNullOrEmpty() && !ext.isNullOrEmpty()) {
+        val originalUrl = cdnManager.buildImageUrl(img, ext, false)
+        val thumbUrl = cdnManager.buildImageUrl(img, ext, true)
+        val path = "$img$ext"
+        db.imageQueries.upsertImage(
+            Image(
+                id = path, // Using relative path as ID
+                sourceId = sourceId,
+                parentId = parentId,
+                parentType = parentType,
+                originalUrl = originalUrl,
+                thumbnailUrl = thumbUrl,
+                name = null,
+                extension = ext,
+                path = path,
+                width = null,
+                height = null,
+                sortOrder = 0
+            )
+        )
     }
 }
