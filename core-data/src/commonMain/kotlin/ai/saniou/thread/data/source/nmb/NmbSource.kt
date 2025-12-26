@@ -360,7 +360,7 @@ class NmbSource(
             sourceId = id,
             topicId = thread.id.toString(),
             page = 1L,
-            subscriptionTime = Clock.System.now().epochSeconds,
+            subscriptionTime = Clock.System.now().toEpochMilliseconds(),
             isLocal = 1L
         )
     }
@@ -375,7 +375,7 @@ class NmbSource(
 
     @OptIn(ExperimentalTime::class)
     suspend fun insertCookie(alias: String, cookie: String) {
-        val now = Clock.System.now().epochSeconds
+        val now = Clock.System.now().toEpochMilliseconds()
         val count =
             db.cookieQueries.countCookies().asFlow().mapToList(Dispatchers.Default).first().size
         db.cookieQueries.insertCookie(
@@ -582,7 +582,7 @@ class NmbSource(
         return db.commentQueries.getCommentByTopicIdAndDate(
             sourceId = id,
             topicId = threadId.toString(),
-            createdAt = datePattern.toTime().epochSeconds
+            createdAt = datePattern.toTime().toEpochMilliseconds()
         ).executeAsOneOrNull()?.toDomain(db.imageQueries)
     }
 

@@ -91,7 +91,7 @@ class SubscriptionRepositoryImpl(
                     sourceId = "nmb",
                     topicId = subscriptionId,
                     page = 1L,
-                    subscriptionTime = Clock.System.now().epochSeconds,
+                    subscriptionTime = Clock.System.now().toEpochMilliseconds(),
                     isLocal = 1L
                 )
             } else {
@@ -130,7 +130,7 @@ class SubscriptionRepositoryImpl(
     @OptIn(ExperimentalTime::class)
     override suspend fun addSubscriptionKey(key: String) {
         withContext(Dispatchers.IO) {
-            db.subscriptionKeyQueries.insertSubscriptionKey(key, Clock.System.now().epochSeconds)
+            db.subscriptionKeyQueries.insertSubscriptionKey(key, Clock.System.now().toEpochMilliseconds())
             setActiveSubscriptionKey(key)
         }
     }

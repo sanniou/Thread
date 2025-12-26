@@ -54,7 +54,7 @@ fun ThreadReply.toTableReply(sourceId: String, threadId: Long, page: Long = Long
         userHash = this.userHash,
         admin = this.admin,
         title = this.title,
-        createdAt = now.toTime().epochSeconds,
+        createdAt = now.toTime().toEpochMilliseconds(),
         content = this.content,
         // img/ext removed, need to save to Image table
         authorName = this.name,
@@ -110,7 +110,7 @@ fun Thread.toTable(sourceId: String, page: Long) = TableTopic(
     sourceId = sourceId,
     channelId = fid.toString(),
     commentCount = replyCount,
-    createdAt = now.toTime().epochSeconds,
+    createdAt = now.toTime().toEpochMilliseconds(),
     userHash = userHash,
     authorName = name,
     title = title,

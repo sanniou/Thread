@@ -35,17 +35,17 @@ class NoticeRepositoryImpl(
 
     override suspend fun fetchAndCacheNotice() {
         val lastFetchTime = settingsRepository.getValue<Long>(KEY_LAST_FETCH_TIME) ?: 0
-        if (Clock.System.now().epochSeconds - lastFetchTime > 1.days.inWholeSeconds) {
+        if (Clock.System.now().toEpochMilliseconds() - lastFetchTime > 1.days.inWholeMilliseconds) {
             val response = api.notice()
             when (response) {
                 is SaniouResponse.Success -> {
                     db.noticeQueries.insertNotice(
                         id = response.data.content.hashCode().toString(),
                         content = response.data.content,
-                        date = Clock.System.now().epochSeconds,
+                        date = Clock.System.now().toEpochMilliseconds(),
                         enable = if (response.data.enable) 1 else 0,
                     )
-                    settingsRepository.saveValue(KEY_LAST_FETCH_TIME, Clock.System.now().epochSeconds)
+                    settingsRepository.saveValue(KEY_LAST_FETCH_TIME, Clock.System.now().toEpochMilliseconds())
                 }
 
                 is SaniouResponse.Error ->

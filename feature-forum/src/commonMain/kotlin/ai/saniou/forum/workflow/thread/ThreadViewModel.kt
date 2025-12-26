@@ -129,7 +129,7 @@ class ThreadViewModel(
             updateTopicLastAccessTimeUseCase(
                 sourceId,
                 tid.toString(),
-                Clock.System.now().epochSeconds
+                Clock.System.now().toEpochMilliseconds()
             )
         }
     }

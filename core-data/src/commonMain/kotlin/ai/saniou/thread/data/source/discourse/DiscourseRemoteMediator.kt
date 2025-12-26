@@ -115,7 +115,7 @@ private fun DiscourseTopic.toThreadEntity(
         // Image handled separately, set empty for now
         // img = imageUrl ?: "",
         // ext = "",
-        createdAt = createdAt.toTime().epochSeconds,
+        createdAt = createdAt.toTime().toEpochMilliseconds(),
         userHash = user?.username ?: "Unknown",
         authorName = user?.name ?: user?.username ?: "Anonymous",
         title = title,

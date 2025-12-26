@@ -82,7 +82,7 @@ class ReferenceRepositoryImpl(
             userHash = userHash,
             admin = if (isAdmin) 1L else 0L,
             title = title,
-            createdAt = now.toTime().epochSeconds,
+            createdAt = now.toTime().toEpochMilliseconds(),
             content = content,
             // img/ext removed
             authorName = name,

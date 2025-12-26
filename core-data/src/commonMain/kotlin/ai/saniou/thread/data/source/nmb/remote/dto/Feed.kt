@@ -1,7 +1,6 @@
 package ai.saniou.thread.data.source.nmb.remote.dto
 
 import ai.saniou.corecommon.utils.toTime
-import ai.saniou.thread.db.table.forum.SelectSubscriptionTopic
 import ai.saniou.thread.db.table.forum.Topic as Thread
 import ai.saniou.thread.domain.model.forum.Topic as Post
 import ai.saniou.thread.domain.model.forum.Author
@@ -48,30 +47,6 @@ data class Feed(
     val isLocal: Boolean = false,
 ) : IBaseThread
 
-
-fun SelectSubscriptionTopic.toFeed() = Feed(
-    id = id.toLong(),
-    fid = channelId.toLong(),
-    replyCount = commentCount ?: 0,
-    img = "",
-    ext = "",
-    title = title ?: "",
-    content = content ?: "",
-    admin = admin ?: 0,
-    hide = hide ?: 0,
-    now = createdAt.toString(),
-    userHash = userHash ?: "",
-    name = authorName ?: "",
-    sage = sage ?: 0,
-    userId = "",
-    recentReplies = "[]",
-    category = "",
-    fileId = "",
-    email = "",
-    status = "",
-    po = "",
-    isLocal = isLocal == 1L
-)
 
 fun Feed.toTable(sourceId: String, page: Long) = Thread(
     id = id.toString(),

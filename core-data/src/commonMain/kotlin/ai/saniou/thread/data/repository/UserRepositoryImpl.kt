@@ -21,7 +21,7 @@ class UserRepositoryImpl(
     }
 
     override suspend fun addCookie(name: String, value: String) {
-        val now = Clock.System.now().epochSeconds
+        val now = Clock.System.now().toEpochMilliseconds()
         val count =
             db.cookieQueries.countCookies().asFlow().mapToList(Dispatchers.Default).first().size
         db.cookieQueries.insertCookie(
