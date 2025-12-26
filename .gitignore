@@ -11,6 +11,8 @@ captures
 .externalNativeBuild
 .cxx
 *.xcodeproj/*
+/composeApp/kcef-bundle/
+/composeApp/cache/
 !*.xcodeproj/project.pbxproj
 !*.xcodeproj/xcshareddata/
 !*.xcodeproj/project.xcworkspace/
