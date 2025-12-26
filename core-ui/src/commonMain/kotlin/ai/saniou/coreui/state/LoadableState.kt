@@ -1,8 +1,7 @@
 package ai.saniou.coreui.state
 
-import ai.saniou.coreui.widgets.MBErrorPage
-import ai.saniou.coreui.widgets.MBErrorPageType
-import ai.saniou.coreui.widgets.MBPageLoadingIndicator
+import ai.saniou.coreui.widgets.SaniouErrorPage
+import ai.saniou.coreui.widgets.SaniouPageLoadingIndicator
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -64,25 +63,28 @@ fun DefaultLoading() {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(risWhite())
+            .background(Color.Unspecified)
     ) {
-        MBPageLoadingIndicator(
+        SaniouPageLoadingIndicator(
             Modifier.align(Alignment.Center)
         )
     }
 }
 
-fun risWhite() = Color.Unspecified
-
 @Composable
 fun DefaultError(error: AppError? = null, onRetryClick: () -> Unit) {
-    MBErrorPage(
-        type = error?.type ?: MBErrorPageType.NETWORK,
-        onRetryClick = {
-            onRetryClick()
-        },
-        title = error?.message ?: ""
-    )
+    if (error != null) {
+        SaniouErrorPage(
+            error = error,
+            onRetryClick = onRetryClick
+        )
+    } else {
+        // Fallback for when error is null but we need to show something
+        SaniouErrorPage(
+            error = AppError(message = "未知错误"),
+            onRetryClick = onRetryClick
+        )
+    }
 }
 
 /**

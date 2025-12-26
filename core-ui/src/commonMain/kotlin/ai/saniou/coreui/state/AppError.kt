@@ -1,6 +1,13 @@
 package ai.saniou.coreui.state
 
-import ai.saniou.coreui.widgets.MBErrorPageType
+/**
+ * 错误类型枚举
+ */
+enum class AppErrorType {
+    NETWORK,
+    SERVER,
+    UNKNOWN
+}
 
 /**
  * 统一的应用错误模型
@@ -12,7 +19,7 @@ import ai.saniou.coreui.widgets.MBErrorPageType
  * @property onRetry 重试回调
  */
 data class AppError(
-    val type: MBErrorPageType,
+    val type: AppErrorType = AppErrorType.UNKNOWN,
     val message: String,
     val throwable: Throwable? = null,
     val onRetry: (() -> Unit)? = null
@@ -22,8 +29,8 @@ data class AppError(
  * 将 Throwable 转换为 AppError
  *
  * 这里可以根据具体的异常类型进行映射，例如：
- * - IOException -> MBErrorPageType.NETWORK
- * - HttpException -> MBErrorPageType.SERVER
+ * - IOException -> AppErrorType.NETWORK
+ * - HttpException -> AppErrorType.SERVER
  */
 fun Throwable.toAppError(onRetry: (() -> Unit)? = null): AppError {
     // TODO: 根据实际使用的网络库（如 Ktor/Retrofit）添加具体的异常判断
@@ -36,14 +43,14 @@ fun Throwable.toAppError(onRetry: (() -> Unit)? = null): AppError {
 
     return if (isNetworkError) {
         AppError(
-            type = MBErrorPageType.NETWORK,
+            type = AppErrorType.NETWORK,
             message = "网络连接失败，请检查您的网络设置",
             throwable = this,
             onRetry = onRetry
         )
     } else {
         AppError(
-            type = MBErrorPageType.SERVER,
+            type = AppErrorType.SERVER,
             message = this.message ?: "服务器繁忙，请稍后再试",
             throwable = this,
             onRetry = onRetry

@@ -1,8 +1,8 @@
 package ai.saniou.forum.workflow.init
 
 import ai.saniou.coreui.state.StateLayout
-import ai.saniou.coreui.widgets.MBNormalButton
-import ai.saniou.coreui.widgets.MBToolbar
+import ai.saniou.coreui.widgets.SaniouButton
+import ai.saniou.coreui.widgets.SaniouTopAppBar
 import ai.saniou.forum.di.nmbdi
 import ai.saniou.forum.workflow.init.SourceInitContract.Event
 import ai.saniou.forum.workflow.init.SourceInitContract.State
@@ -55,7 +55,7 @@ data class SourceInitScreen(
 
         Scaffold(
             topBar = {
-                MBToolbar(title = "初始化 ${state.sourceName}")
+                SaniouTopAppBar(title = "初始化 ${state.sourceName}")
             }
         ) { paddingValues ->
             StateLayout(
@@ -82,7 +82,7 @@ data class SourceInitScreen(
 
                         else -> {
                             Text("未知的源: $sourceId")
-                            MBNormalButton(
+                            SaniouButton(
                                 text = "跳过初始化",
                                 onClick = { viewModel.onEvent(Event.CompleteInitialization) },
                                 modifier = Modifier.fillMaxWidth()
@@ -136,7 +136,7 @@ private fun NmbInitContent(
 
     Spacer(modifier = Modifier.height(24.dp))
 
-    MBNormalButton(
+    SaniouButton(
         text = "完成初始化",
         onClick = { onEvent(Event.CompleteInitialization) },
         modifier = Modifier.fillMaxWidth()
@@ -174,7 +174,7 @@ private fun DiscourseInitContent(
 
     Spacer(modifier = Modifier.height(24.dp))
 
-    MBNormalButton(
+    SaniouButton(
         text = "完成初始化",
         onClick = { onEvent(Event.CompleteInitialization) },
         modifier = Modifier.fillMaxWidth()

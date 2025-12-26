@@ -2,7 +2,7 @@ package ai.saniou.forum.workflow.home
 
 import ai.saniou.coreui.state.StateLayout
 import ai.saniou.coreui.theme.Dimens
-import ai.saniou.coreui.widgets.MBToolbar
+import ai.saniou.coreui.widgets.SaniouTopAppBar
 import ai.saniou.forum.workflow.forum.ForumPage
 import ai.saniou.forum.workflow.home.ForumCategoryContract.Event
 import ai.saniou.thread.domain.model.forum.Channel as Forum
@@ -47,10 +47,13 @@ object ForumListPage : Screen {
 
         Scaffold(
             topBar = {
-                MBToolbar(
+                SaniouTopAppBar(
                     title = "论坛列表",
-//                    navIcon = Icons.AutoMirrored.Filled.ArrowBack,
-//                    onNavClick = { navigator.pop() }
+                    // navigationIcon = {
+                    //    IconButton(onClick = { navigator.pop() }) {
+                    //        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    //    }
+                    // }
                 )
             }
         ) { padding ->

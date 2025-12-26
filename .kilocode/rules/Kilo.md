@@ -35,6 +35,7 @@
 *   **路径敏感**：涉及文件操作时，始终确认文件路径的准确性。
 
 ## 4. 输出结构 (Output Structure)
+强制交付检查 (Pre-Completion Check)：在调用 attempt_completion 之前，必须显式检查是否包含符合 Kilo.md 第 4 节要求的 markdown 总结块
 每一次任务完成后，**必须**另起一段进行格式如下的总结：
 
 ```markdown
