@@ -40,7 +40,7 @@ fun main() = application {
     addTempDirectoryRemovalHook()
     val windowState = rememberWindowState(
         position = WindowPosition(Alignment.Center),
-        size = DpSize(480.dp, 768.dp),
+        size = DpSize(920.dp, 768.dp),
     )
     CupcakeTheme {
         Window(

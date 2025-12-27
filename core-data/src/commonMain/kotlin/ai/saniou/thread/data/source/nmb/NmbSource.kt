@@ -41,6 +41,10 @@ import kotlinx.coroutines.flow.map
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
 import kotlin.time.ExperimentalTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.daysUntil
+import kotlinx.datetime.plus
 import kotlin.time.Instant
 import ai.saniou.thread.db.table.forum.GetTopicsInChannelOffset as GetThreadsInForumOffset
 import ai.saniou.thread.domain.model.forum.Channel as DomainForum
@@ -387,20 +391,32 @@ class NmbSource(
         )
     }
 
-    suspend fun getTrendAnchor(): Triple<Int, String, String>? {
+    data class TrendAnchor(
+        val page: Int,
+        val start: String,
+        val end: String,
+        val count: Int
+    )
+
+    suspend fun getTrendAnchor(): TrendAnchor? {
         return db.keyValueQueries.getKeyValue("trend_anchor")
             .executeAsOneOrNull()
             ?.content
             ?.split("|")
             ?.let {
-                if (it.size == 3) {
-                    Triple(it[0].toInt(), it[1], it[2])
+                if (it.size >= 3) {
+                    val page = it[0].toInt()
+                    val start = it[1]
+                    val end = it[2]
+                    // 兼容旧数据，默认 19 (满页)
+                    val count = if (it.size >= 4) it[3].toInt() else 19
+                    TrendAnchor(page, start, end, count)
                 } else null
             }
     }
 
-    suspend fun setTrendAnchor(page: Int, startNow: String, endNow: String) {
-        db.keyValueQueries.insertKeyValue("trend_anchor", "$page|$startNow|$endNow")
+    suspend fun setTrendAnchor(page: Int, startNow: String, endNow: String, count: Int) {
+        db.keyValueQueries.insertKeyValue("trend_anchor", "$page|$startNow|$endNow|$count")
     }
 
     /**
@@ -571,6 +587,150 @@ class NmbSource(
         }
     }
 
+    /**
+     * 根据日期获取 Trend 回复
+     * @param targetDate 目标日期
+     * @return 目标日期的第一个回复（通常是当天的 Trend 发布内容）
+     */
+    suspend fun getTrendReplyByDate(targetDate: kotlinx.datetime.LocalDate): Result<ThreadReply?> {
+        val anchor = getTrendAnchor()
+        var predictedPage: Int? = null
+
+        // 1. 尝试通过 Anchor 预测页面
+        if (anchor != null) {
+            try {
+                val (cachedPage, cachedStart, cachedEnd, cachedCount) = anchor
+                val startDate =
+                    ai.saniou.corecommon.utils.DateParser.parseDateFromNowString(cachedStart)
+                val endDate =
+                    ai.saniou.corecommon.utils.DateParser.parseDateFromNowString(cachedEnd)
+
+                if (startDate != null && endDate != null) {
+                    if (targetDate in startDate..endDate) {
+                        predictedPage = cachedPage
+                    } else if (targetDate > endDate) {
+                        // 目标日期 > 缓存结束日期 (需要往后翻)
+                        // 如果缓存页已经不满 19 条，说明是最后一页，且数据还没生成
+                        if (cachedCount < 19) {
+                            return Result.success(null)
+                        }
+
+                        // 往后找，按每天 1 条估算
+                        val daysNeeded = endDate.daysUntil(targetDate)
+                        // 缓存页已经有的天数 (近似)
+                        val countOnPage = startDate.daysUntil(endDate) + 1
+                        val remainingSlots = 19 - countOnPage
+
+                        if (daysNeeded <= remainingSlots) {
+                            predictedPage = cachedPage
+                        } else {
+                            val remainingDays = daysNeeded - remainingSlots
+                            val additionalPages = (remainingDays - 1) / 19 + 1
+                            predictedPage = cachedPage + additionalPages
+                        }
+                    } else { // targetDate < startDate
+                        // 往前找
+                        val daysDiff = targetDate.daysUntil(startDate)
+                        val pageOffset = (daysDiff - 1) / 19 + 1
+                        predictedPage = cachedPage - pageOffset
+                    }
+                }
+            } catch (e: Exception) {
+                // 预测失败，回退
+            }
+        }
+
+        // 2. 如果没有预测或预测页面无效，计算最后一页
+        var currentPage = predictedPage ?: 0
+
+        if (currentPage <= 0) {
+            // 获取第一页以拿到总页数
+            val firstPageThread = getTrendThread(page = 1).getOrElse { return Result.failure(it) }
+            val replyCount = firstPageThread.replyCount
+            val lastPage = ((replyCount - 1) / 19) + 1
+            currentPage = lastPage.toInt()
+        }
+
+        // 3. 验证并精确查找 (无循环重试，仅做一次邻近跳转)
+        val threadResult = getTrendThread(currentPage)
+        val thread = threadResult.getOrElse { return Result.failure(it) }
+        val replies = thread.replies
+
+        // 空页异常处理
+        if (replies.isEmpty()) {
+            return Result.success(null)
+        }
+
+        // 解析当前页时间范围
+        val firstReplyDate =
+            ai.saniou.corecommon.utils.DateParser.parseDateFromNowString(replies.first().now)
+        val lastReplyDate =
+            ai.saniou.corecommon.utils.DateParser.parseDateFromNowString(replies.last().now)
+
+        if (firstReplyDate == null || lastReplyDate == null) {
+            return Result.failure(IllegalStateException("Date parsing failed for page $currentPage"))
+        }
+
+        // 更新 Anchor
+        setTrendAnchor(currentPage, replies.first().now, replies.last().now, replies.size)
+
+        // 检查是否命中当前页
+        val targetReply = replies.find {
+            ai.saniou.corecommon.utils.DateParser.parseDateFromNowString(it.now) == targetDate
+        }
+        if (targetReply != null) {
+            return Result.success(targetReply)
+        }
+
+        // 没命中，判断是向前还是向后
+        if (targetDate > lastReplyDate) {
+            // 目标日期在当前页之后
+            if (replies.size < 19) {
+                // 当前页未满，说明没有更新的数据了
+                return Result.success(null)
+            }
+            // 尝试下一页
+            val nextPage = currentPage + 1
+            val nextThread = getTrendThread(nextPage).getOrElse { return Result.failure(it) }
+            val nextReplies = nextThread.replies
+
+            if (nextReplies.isNotEmpty()) {
+                setTrendAnchor(
+                    nextPage,
+                    nextReplies.first().now,
+                    nextReplies.last().now,
+                    nextReplies.size
+                )
+                val found = nextReplies.find {
+                    ai.saniou.corecommon.utils.DateParser.parseDateFromNowString(it.now) == targetDate
+                }
+                return Result.success(found)
+            }
+        } else if (targetDate < firstReplyDate) {
+            // 目标日期在当前页之前
+            if (currentPage > 1) {
+                val prevPage = currentPage - 1
+                val prevThread = getTrendThread(prevPage).getOrElse { return Result.failure(it) }
+                val prevReplies = prevThread.replies
+
+                if (prevReplies.isNotEmpty()) {
+                    setTrendAnchor(
+                        prevPage,
+                        prevReplies.first().now,
+                        prevReplies.last().now,
+                        prevReplies.size
+                    )
+                    val found = prevReplies.find {
+                        ai.saniou.corecommon.utils.DateParser.parseDateFromNowString(it.now) == targetDate
+                    }
+                    return Result.success(found)
+                }
+            }
+        }
+
+        return Result.success(null)
+    }
+
     suspend fun getLocalLatestReply(threadId: Long): DomainComment? {
         return db.commentQueries.getLastFiveComments(id, threadId.toString())
             .executeAsList()
@@ -578,11 +738,15 @@ class NmbSource(
             ?.toDomain(db.imageQueries)
     }
 
-    suspend fun getLocalReplyByDate(threadId: Long, datePattern: String): DomainComment? {
-        return db.commentQueries.getCommentByTopicIdAndDate(
+    suspend fun getLocalReplyByDate(threadId: Long, targetDate: kotlinx.datetime.LocalDate): DomainComment? {
+        val startOfDay = targetDate.atStartOfDayIn(TimeZone.currentSystemDefault()).toEpochMilliseconds()
+        val endOfDay = targetDate.plus(1, kotlinx.datetime.DateTimeUnit.DAY).atStartOfDayIn(TimeZone.currentSystemDefault()).toEpochMilliseconds()
+
+        return db.commentQueries.getCommentByTopicIdAndDateRange(
             sourceId = id,
             topicId = threadId.toString(),
-            createdAt = datePattern.toTime().toEpochMilliseconds()
+            start = startOfDay,
+            end = endOfDay
         ).executeAsOneOrNull()?.toDomain(db.imageQueries)
     }
 
