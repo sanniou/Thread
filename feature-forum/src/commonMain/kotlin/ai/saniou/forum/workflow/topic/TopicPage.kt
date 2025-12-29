@@ -100,9 +100,9 @@ data class TopicPage(
         val fabNestedScrollConnection = remember {
             object : NestedScrollConnection {
                 override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-                    if (available.y < -5f) {
+                    if (available.y < -15f) {
                         expandedFab = false
-                    } else if (available.y > 5f) {
+                    } else if (available.y > 15f) {
                         expandedFab = true
                     }
                     return Offset.Zero
@@ -241,6 +241,7 @@ data class TopicPage(
                     },
                     onUserClick = { userHash -> navigator.push(UserDetailPage(userHash)) },
                     modifier = Modifier.weight(1f),
+                    showChannelBadge = false,
                     headerContent = {
                         // Integrated Forum Info
                         val detailState = state.forumDetail

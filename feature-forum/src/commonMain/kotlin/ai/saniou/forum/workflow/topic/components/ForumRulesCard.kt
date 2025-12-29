@@ -10,7 +10,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -34,39 +40,52 @@ fun ForumRulesCard(
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
-    val isLongText = remember(msg) { msg.length > 50 }
+    val isLongText = remember(msg) { msg.length > 60 }
 
-    Surface(
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+            contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+        ),
+        shape = MaterialTheme.shapes.medium,
         modifier = modifier
             .fillMaxWidth()
+            .padding(horizontal = Dimens.padding_medium, vertical = Dimens.padding_small)
             .animateContentSize()
             .clickable(enabled = isLongText) { expanded = !expanded }
     ) {
-        Column(
-            modifier = Modifier.padding(
-                horizontal = Dimens.padding_standard,
-                vertical = Dimens.padding_small
-            )
+        Row(
+            modifier = Modifier.padding(Dimens.padding_medium),
+            verticalAlignment = Alignment.Top
         ) {
-            RichText(
-                text = msg,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = if (expanded) Int.MAX_VALUE else 2,
-                overflow = TextOverflow.Ellipsis
+            Icon(
+                imageVector = Icons.Outlined.Info,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp).padding(top = 2.dp),
+                tint = MaterialTheme.colorScheme.onTertiaryContainer
             )
-            
-            if (isLongText) {
-                Icon(
-                    imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                    contentDescription = if (expanded) stringResource(Res.string.category_collapse) else stringResource(Res.string.category_expand),
-                    modifier = Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .size(16.dp)
-                        .padding(top = 4.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+            Spacer(modifier = Modifier.width(Dimens.padding_small))
+            Column {
+                RichText(
+                    text = msg,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer,
+                    maxLines = if (expanded) Int.MAX_VALUE else 3,
+                    overflow = TextOverflow.Ellipsis
                 )
+                if (isLongText) {
+                    Icon(
+                        imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                        contentDescription = if (expanded) stringResource(Res.string.category_collapse) else stringResource(
+                            Res.string.category_expand
+                        ),
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally)
+                            .padding(top = 4.dp)
+                            .size(20.dp),
+                        tint = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f)
+                    )
+                }
             }
         }
     }

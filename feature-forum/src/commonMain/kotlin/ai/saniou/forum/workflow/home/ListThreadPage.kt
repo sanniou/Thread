@@ -47,6 +47,7 @@ fun ListThreadPage(
     modifier: Modifier = Modifier,
     state: LazyListState = rememberLazyListState(),
     headerContent: (@Composable () -> Unit)? = null,
+    showChannelBadge: Boolean = true,
 ) {
     val threads = threadFlow.collectAsLazyPagingItems()
 
@@ -91,7 +92,8 @@ fun ListThreadPage(
                         topic = feed,
                         onClick = { onThreadClicked(feed.id.toLong()) },
                         onImageClick = { img -> onImageClick(feed.id.toLong(), img) },
-                        onUserClick = onUserClick
+                        onUserClick = onUserClick,
+                        showChannelBadge = showChannelBadge
                     )
                 }
 

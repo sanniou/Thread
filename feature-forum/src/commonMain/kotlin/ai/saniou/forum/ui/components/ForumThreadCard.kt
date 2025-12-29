@@ -34,12 +34,14 @@ fun TopicCard(
     onClick: () -> Unit,
     onImageClick: ((Image) -> Unit)? = null,
     onUserClick: ((String) -> Unit)? = null,
+    showChannelBadge: Boolean = true,
 ) {
     TopicCard(
         thread.toDomain(),
         onClick,
         onImageClick,
-        onUserClick
+        onUserClick,
+        showChannelBadge
     )
 }
 
@@ -52,6 +54,7 @@ fun TopicCard(
     onClick: () -> Unit,
     onImageClick: ((Image) -> Unit)? = null,
     onUserClick: ((String) -> Unit)? = null,
+    showChannelBadge: Boolean = true,
 ) {
     ElevatedCard(
         modifier = Modifier
@@ -126,24 +129,26 @@ fun TopicCard(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 // Source & Forum Name Badge
-                val sourceText =
-                    if (topic.sourceName.isNotBlank()) "${topic.sourceName.uppercase()} · " else ""
-                val footerText = "$sourceText${topic.channelName}"
+                if (showChannelBadge) {
+                    val sourceText =
+                        if (topic.sourceName.isNotBlank()) "${topic.sourceName.uppercase()} · " else ""
+                    val footerText = "$sourceText${topic.channelName}"
 
-                if (footerText.isNotBlank()) {
-                    Surface(
-                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                        shape = MaterialTheme.shapes.extraSmall,
-                    ) {
-                        Text(
-                            text = footerText,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(
-                                horizontal = Dimens.padding_small,
-                                vertical = Dimens.padding_tiny
+                    if (footerText.isNotBlank()) {
+                        Surface(
+                            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            shape = MaterialTheme.shapes.extraSmall,
+                        ) {
+                            Text(
+                                text = footerText,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(
+                                    horizontal = Dimens.padding_small,
+                                    vertical = Dimens.padding_tiny
+                                )
                             )
-                        )
+                        }
                     }
                 }
 
