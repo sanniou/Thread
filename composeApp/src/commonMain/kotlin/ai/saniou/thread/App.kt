@@ -78,7 +78,7 @@ fun App() {
                     },
                     onChallengeSuccess = { cookies ->
                         scope.launch {
-                            challengeHandler.onChallengeResult(true, cookies)
+                            challengeHandler.onChallengeResult(challengeRequest!!.sourceId, true, cookies)
                             challengeRequest?.onResult?.invoke(true)
                             challengeRequest = null
                         }

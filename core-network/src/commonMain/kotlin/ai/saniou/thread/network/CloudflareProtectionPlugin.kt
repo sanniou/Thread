@@ -16,7 +16,8 @@ import kotlinx.coroutines.sync.withLock
  * and triggers a challenge handling process (e.g., via WebView).
  */
 class CloudflareProtectionPlugin(
-    private val challengeHandler: ChallengeHandler
+    private val challengeHandler: ChallengeHandler,
+    private val sourceId: String
 ) {
     // Used to prevent multiple concurrent challenge requests.
     // If multiple requests fail with 403 simultaneously, only one should trigger the UI.
@@ -27,6 +28,7 @@ class CloudflareProtectionPlugin(
 
     class Config {
         var challengeHandler: ChallengeHandler? = null
+        var sourceId: String = ""
     }
 
     companion object : HttpClientPlugin<Config, CloudflareProtectionPlugin> {
@@ -36,7 +38,10 @@ class CloudflareProtectionPlugin(
             val config = Config().apply(block)
             val handler = config.challengeHandler
                 ?: throw IllegalArgumentException("ChallengeHandler must be provided")
-            return CloudflareProtectionPlugin(handler)
+            if (config.sourceId.isEmpty()) {
+                throw IllegalArgumentException("sourceId must be provided")
+            }
+            return CloudflareProtectionPlugin(handler, config.sourceId)
         }
 
         override fun install(plugin: CloudflareProtectionPlugin, scope: HttpClient) {
@@ -57,10 +62,10 @@ class CloudflareProtectionPlugin(
                     val success = plugin.mutex.withLock {
                          // Double check inside lock?
                          // In a more complex scenario, we might check if cookies were updated recently.
-                         // For now, we always ask the handler. The handler (UI) can decide to skip 
+                         // For now, we always ask the handler. The handler (UI) can decide to skip
                          // if it thinks it's already valid, but usually 403 means invalid.
                          
-                         plugin.challengeHandler.handleChallenge(request.url.toString())
+                         plugin.challengeHandler.handleChallenge(plugin.sourceId, request.url.toString())
                     }
 
                     if (success) {

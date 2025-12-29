@@ -2,7 +2,6 @@ package ai.saniou.thread.data.di
 import ai.saniou.thread.data.database.DriverFactory
 import ai.saniou.thread.data.database.createDatabase
 import ai.saniou.thread.data.manager.CdnManager
-import ai.saniou.thread.data.manager.CookieManager
 import ai.saniou.thread.data.repository.BookmarkRepositoryImpl
 import ai.saniou.thread.data.repository.FavoriteRepositoryImpl
 import ai.saniou.thread.data.repository.SourceRepositoryImpl
@@ -61,8 +60,12 @@ import ai.saniou.thread.domain.repository.UserRepository
 import ai.saniou.thread.domain.usecase.reader.GetArticleCountsUseCase
 import ai.saniou.thread.domain.usecase.subscription.GenerateRandomSubscriptionIdUseCase
 import ai.saniou.thread.network.ChallengeHandler
+import ai.saniou.thread.network.CloudflareProtectionPlugin
 import ai.saniou.thread.network.CookieProvider
 import ai.saniou.thread.network.SaniouKtorfit
+import ai.saniou.thread.network.cookie.CookieStore
+import ai.saniou.thread.data.network.SettingsCookieStore
+import ai.saniou.thread.network.cookie.SourceCookieProvider
 import de.jensklingenberg.ktorfit.Ktorfit
 import io.ktor.client.HttpClient
 import org.kodein.di.DI
@@ -84,15 +87,23 @@ val dataModule = DI.Module("dataModule") {
 
     bindSingleton<DiscourseApi> {
         val baseUrl = instance<String>("discourseBaseUrl")
-        val cookieManager = instance<CookieManager>()
         // ChallengeHandler should be provided by the app module
         val challengeHandler = instanceOrNull<ChallengeHandler>()
+        val cookieStore = instance<CookieStore>()
+        val sourceId = "discourse"
 
         val ktorfit = SaniouKtorfit(
             baseUrl = baseUrl,
-            cookieProvider = cookieManager,
-            challengeHandler = challengeHandler
-        )
+            cookieProvider = SourceCookieProvider(sourceId, cookieStore)
+        ) {
+            // Manually install CloudflareProtectionPlugin with sourceId if challengeHandler exists
+            if (challengeHandler != null) {
+                install(CloudflareProtectionPlugin) {
+                    this.challengeHandler = challengeHandler
+                    this.sourceId = sourceId
+                }
+            }
+        }
         ktorfit.createDiscourseApi()
     }
     bindConstant<String>(tag = "acfunBaseUrl") { "https://api-new.acfunchina.com/" }
@@ -176,8 +187,8 @@ val dataModule = DI.Module("dataModule") {
     }
 
     bindSingleton<CookieProvider> { NmbCookieProvider(instance()) }
-    // Cookie Manager (for Discourse/CF)
-    bindSingleton<CookieManager> { CookieManager() }
+    // Cookie Store (for Discourse/CF)
+    bindSingleton<CookieStore> { SettingsCookieStore(instance()) }
     // CDN管理器
     bindSingleton<CdnManager> { CdnManager(instance()) }
     // 数据库
