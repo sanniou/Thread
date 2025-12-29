@@ -1,5 +1,7 @@
 package ai.saniou.forum.workflow.topic
 
+import ai.saniou.coreui.state.UiStateWrapper
+import ai.saniou.coreui.state.toAppError
 import ai.saniou.forum.workflow.topic.TopicContract.Effect
 import ai.saniou.forum.workflow.topic.TopicContract.Event
 import ai.saniou.forum.workflow.topic.TopicContract.State
@@ -18,8 +20,11 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -58,9 +63,14 @@ class TopicViewModel(
             )
         }.cachedIn(screenModelScope)
 
+    private val forumDetailFlow = getChannelDetailUseCase(sourceId, forumId)
+        .map { UiStateWrapper.Success(it) as UiStateWrapper<ai.saniou.thread.domain.model.forum.Channel> }
+        .onStart { emit(UiStateWrapper.Loading) }
+        .catch { emit(UiStateWrapper.Error(it.toAppError())) }
+
     val state: StateFlow<State> = combine(
         getChannelNameUseCase(sourceId, forumId),
-        getChannelDetailUseCase(sourceId, forumId),
+        forumDetailFlow,
         showInfoDialog
     ) { forumName, forumDetail, showDialog ->
         State(

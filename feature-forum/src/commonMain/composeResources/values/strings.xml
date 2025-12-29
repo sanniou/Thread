@@ -26,6 +26,15 @@
     <string name="jump_to_top">回顶</string>
     <string name="jump_to_page">跳转至</string>
 
+    <!-- TopicPage -->
+    <string name="topic_page_post">发帖</string>
+    <string name="topic_page_menu">菜单</string>
+    <string name="topic_page_back">返回</string>
+    <string name="topic_page_user_center">用户中心</string>
+    <string name="topic_page_expand">展开</string>
+    <string name="topic_page_thread_count">%1$s 串</string>
+    <string name="topic_page_interval">· %1$ss</string>
+
     <!-- ForumCategoryPage -->
     <string name="drawer_subscribe">订阅</string>
     <string name="drawer_bookmark">收藏</string>

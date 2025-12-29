@@ -1,5 +1,6 @@
 package ai.saniou.forum.workflow.topic
 
+import ai.saniou.coreui.state.UiStateWrapper
 import ai.saniou.thread.domain.model.forum.Channel
 import ai.saniou.thread.domain.model.forum.Topic
 import app.cash.paging.PagingData
@@ -20,7 +21,7 @@ interface TopicContract {
      */
     data class State(
         val forumName: String = "",
-        val forumDetail: Channel? = null,
+        val forumDetail: UiStateWrapper<Channel> = UiStateWrapper.Loading,
         val threads: Flow<PagingData<Topic>> = emptyFlow(),
         val showInfoDialog: Boolean = false
     )

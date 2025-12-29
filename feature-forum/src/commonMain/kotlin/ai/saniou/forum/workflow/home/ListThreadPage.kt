@@ -46,6 +46,7 @@ fun ListThreadPage(
     onUserClick: (String) -> Unit,
     modifier: Modifier = Modifier,
     state: LazyListState = rememberLazyListState(),
+    headerContent: (@Composable () -> Unit)? = null,
 ) {
     val threads = threadFlow.collectAsLazyPagingItems()
 
@@ -78,6 +79,12 @@ fun ListThreadPage(
                 ),
                 verticalArrangement = Arrangement.spacedBy(Dimens.padding_medium)
             ) {
+                if (headerContent != null) {
+                    item {
+                        headerContent()
+                    }
+                }
+
                 items(threads.itemCount) { index ->
                     val feed = threads[index] ?: return@items
                     TopicCard(
