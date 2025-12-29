@@ -102,18 +102,9 @@ val dataModule = DI.Module("dataModule") {
             baseUrl = baseUrl
         ) {
             installCookieAuth { cookieStore.getCookie(sourceId) }
-//            install(io.ktor.client.plugins.DefaultRequest) {
-//                header("User-Api-Key", "a48c37459a9f9d429223ac0ceb6b9b2")
-//                header(
-//                    "User-Agent",
-//                    "Mozilla/5.0 (X11; Linux x86_64; rv:121.0) Gecko/20100101 Firefox/121.0"
-//                )
-//                header("Accept", "application/json, text/plain, */*")
-//                header("Accept-Language", "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7")
-//                header("Accept-Encoding", "gzip, deflate")
-//                header("Connection", "keep-alive")
-//                header("Referer", "https://linux.do/")
-//            }
+            install(io.ktor.client.plugins.DefaultRequest) {
+                header("User-Api-Key", "eebd35d4ca8e9c948cd8188f6ff9b440")
+            }
 
             // Manually install CloudflareProtectionPlugin with sourceId if challengeHandler exists
             if (challengeHandler != null) {
