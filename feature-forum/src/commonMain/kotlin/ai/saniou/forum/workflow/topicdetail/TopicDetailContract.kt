@@ -1,23 +1,23 @@
-package ai.saniou.forum.workflow.thread
+package ai.saniou.forum.workflow.topicdetail
 
 import ai.saniou.coreui.state.AppError
 import ai.saniou.thread.domain.model.forum.Image
-import ai.saniou.thread.domain.model.forum.Topic as Post
-import ai.saniou.thread.domain.model.forum.Comment as ThreadReply
+import ai.saniou.thread.domain.model.forum.Topic
+import ai.saniou.thread.domain.model.forum.Comment
 import app.cash.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 
 /**
- * 定义 Thread 功能模块的 UI 状态和事件
+ * 定义 TopicDetail 功能模块的 UI 状态和事件
  */
-interface ThreadContract {
+interface TopicDetailContract {
     /**
      * UI 状态，承载页面的所有数据和状态
      *
      * @property isLoading 是否正在加载主内容
      * @property error 全局错误信息
-     * @property thread 帖子主楼内容
+     * @property topic 帖子主楼内容
      * @property replies 回复列表的分页数据流
      * @property currentPage 当前页码
      * @property totalPages 总页数
@@ -29,8 +29,8 @@ interface ThreadContract {
     data class State(
         val isLoading: Boolean = true,
         val error: AppError? = null,
-        val thread: Post? = null,
-        val replies: Flow<PagingData<ThreadReply>> = emptyFlow(),
+        val topic: Topic? = null,
+        val replies: Flow<PagingData<Comment>> = emptyFlow(),
         val totalPages: Int = 1,
         val isSubscribed: Boolean = false,
         val forumName: String = "",
@@ -94,15 +94,15 @@ interface ThreadContract {
 
         /**
          * 收藏主楼
-         * @param thread 帖子
+         * @param topic 帖子
          */
-        data class BookmarkThread(val thread: Post) : Event
+        data class BookmarkTopic(val topic: Topic) : Event
 
         /**
          * 收藏回复
          * @param reply 回复
          */
-        data class BookmarkReply(val reply: ThreadReply) : Event
+        data class BookmarkReply(val reply: Comment) : Event
 
         /**
          * 收藏图片

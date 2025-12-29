@@ -1,9 +1,9 @@
-package ai.saniou.forum.workflow.thread
+package ai.saniou.forum.workflow.topicdetail
 
 import ai.saniou.coreui.state.toAppError
-import ai.saniou.forum.workflow.thread.ThreadContract.Effect
-import ai.saniou.forum.workflow.thread.ThreadContract.Event
-import ai.saniou.forum.workflow.thread.ThreadContract.State
+import ai.saniou.forum.workflow.topicdetail.TopicDetailContract.Effect
+import ai.saniou.forum.workflow.topicdetail.TopicDetailContract.Event
+import ai.saniou.forum.workflow.topicdetail.TopicDetailContract.State
 import ai.saniou.thread.domain.model.bookmark.Bookmark
 import ai.saniou.thread.domain.model.forum.Topic as Post
 import ai.saniou.thread.domain.model.forum.Comment as ThreadReply
@@ -37,14 +37,14 @@ import kotlinx.coroutines.launch
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
-data class ThreadViewModelParams(
+data class TopicDetailViewModelParams(
     val sourceId: String,
-    val threadId: String,
+    val topicId: String,
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class ThreadViewModel(
-    params: ThreadViewModelParams,
+class TopicDetailViewModel(
+    params: TopicDetailViewModelParams,
     private val getTopicDetailUseCase: GetTopicDetailUseCase,
     private val getTopicCommentsPagingUseCase: GetTopicCommentsPagingUseCase,
     private val toggleSubscriptionUseCase: ToggleSubscriptionUseCase,
@@ -58,7 +58,7 @@ class ThreadViewModel(
 ) : ScreenModel {
 
     private val sourceId = params.sourceId
-    private val threadId = params.threadId
+    private val threadId = params.topicId
 
     private data class LoadRequest(
         val threadId: String,
@@ -108,7 +108,7 @@ class ThreadViewModel(
             is Event.ShowImagePreview -> showImagePreview()
             Event.LoadMoreImages -> {}
             is Event.CopyContent -> copyContent(event.content)
-            is Event.BookmarkThread -> bookmarkThread(event.thread)
+            is Event.BookmarkTopic -> bookmarkThread(event.topic)
             is Event.BookmarkReply -> bookmarkReply(event.reply)
             is Event.BookmarkImage -> bookmarkImage(event.image)
         }
@@ -165,7 +165,7 @@ class ThreadViewModel(
                     _state.update {
                         it.copy(
                             isLoading = false,
-                            thread = thread,
+                            topic = thread,
                             lastReadCommentId = detail.lastViewedCommentId,
                             totalPages = totalPages.toInt().coerceAtLeast(1),
                             forumName = forumName
@@ -186,7 +186,7 @@ class ThreadViewModel(
 
     private fun toggleSubscription() {
         if (state.value.isTogglingSubscription) return
-        val thread = state.value.thread ?: return
+        val thread = state.value.topic ?: return
 
         _state.update { it.copy(isTogglingSubscription = true) }
 

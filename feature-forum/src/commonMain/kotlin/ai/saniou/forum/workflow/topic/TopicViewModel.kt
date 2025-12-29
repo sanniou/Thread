@@ -1,8 +1,8 @@
-package ai.saniou.forum.workflow.forum
+package ai.saniou.forum.workflow.topic
 
-import ai.saniou.forum.workflow.forum.ForumContract.Effect
-import ai.saniou.forum.workflow.forum.ForumContract.Event
-import ai.saniou.forum.workflow.forum.ForumContract.State
+import ai.saniou.forum.workflow.topic.TopicContract.Effect
+import ai.saniou.forum.workflow.topic.TopicContract.Event
+import ai.saniou.forum.workflow.topic.TopicContract.State
 import ai.saniou.thread.data.paging.DataPolicy
 import ai.saniou.thread.domain.model.forum.Topic as Post
 import ai.saniou.thread.domain.usecase.channel.GetChannelDetailUseCase
@@ -26,7 +26,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class ForumViewModel(
+class TopicViewModel(
     getChannelTopicsPagingUseCase: GetChannelTopicsPagingUseCase,
     getChannelDetailUseCase: GetChannelDetailUseCase,
     getChannelNameUseCase: GetChannelNameUseCase,

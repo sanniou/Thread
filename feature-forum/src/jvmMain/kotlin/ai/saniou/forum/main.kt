@@ -2,7 +2,7 @@ package ai.saniou.forum
 
 import ai.saniou.coreui.theme.CupcakeTheme
 import ai.saniou.forum.di.nmbdi
-import ai.saniou.forum.workflow.home.ForumCategoryPage
+import ai.saniou.forum.workflow.home.ChannelPage
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -31,7 +31,7 @@ fun main() = application {
         ) {
             withDI(nmbdi) {
                 Navigator(
-                    screen = ForumCategoryPage(),
+                    screen = ChannelPage(),
                     disposeBehavior = NavigatorDisposeBehavior(disposeSteps = false),
                 )
             }

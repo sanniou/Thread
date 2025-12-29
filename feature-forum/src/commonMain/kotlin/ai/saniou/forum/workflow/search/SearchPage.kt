@@ -13,7 +13,7 @@ import ai.saniou.forum.workflow.image.ImagePreviewPage
 import ai.saniou.forum.workflow.image.ImagePreviewViewModelParams
 import ai.saniou.forum.workflow.search.SearchContract.Event
 import ai.saniou.forum.workflow.search.SearchContract.SearchType
-import ai.saniou.forum.workflow.thread.ThreadPage
+import ai.saniou.forum.workflow.topicdetail.TopicDetailPage
 import ai.saniou.forum.workflow.user.UserDetailPage
 import ai.saniou.thread.domain.model.forum.Comment
 import ai.saniou.thread.domain.model.forum.Image
@@ -121,7 +121,7 @@ data class SearchPage(
                     if (state.searchType == SearchType.THREAD) {
                         ThreadResultList(
                             viewModel = viewModel,
-                            onThreadClick = { navigator.push(ThreadPage(it)) },
+                            onThreadClick = { navigator.push(TopicDetailPage(it)) },
                             onImageClick = { threadId, img ->
                                 ImagePreviewPage(
                                     ImagePreviewViewModelParams(
@@ -134,7 +134,7 @@ data class SearchPage(
                     } else {
                         ReplyResultList(
                             viewModel = viewModel,
-                            onThreadClick = { navigator.push(ThreadPage(it)) },
+                            onThreadClick = { navigator.push(TopicDetailPage(it)) },
                             onImageClick = { threadId, img ->
                                 ImagePreviewPage(
                                     ImagePreviewViewModelParams(

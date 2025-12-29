@@ -6,15 +6,14 @@ import ai.saniou.coreui.widgets.DrawerHeader
 import ai.saniou.coreui.widgets.RichText
 import ai.saniou.forum.di.nmbdi
 import ai.saniou.forum.workflow.bookmark.BookmarkPage
-import ai.saniou.forum.workflow.forum.ForumPage
+import ai.saniou.forum.workflow.topic.TopicPage
 import ai.saniou.forum.workflow.history.HistoryPage
-import ai.saniou.forum.workflow.home.ForumCategoryContract.Event
-import ai.saniou.forum.workflow.home.ForumCategoryContract.ForumCategoryUiState
-import ai.saniou.forum.workflow.home.ForumCategoryContract.ForumGroupUiState
+import ai.saniou.forum.workflow.home.ChannelContract.Event
+import ai.saniou.forum.workflow.home.ChannelContract.ChannelCategoryUiState
 import ai.saniou.forum.workflow.init.SourceInitScreen
 import ai.saniou.forum.workflow.search.SearchPage
 import ai.saniou.forum.workflow.subscription.SubscriptionPage
-import ai.saniou.forum.workflow.thread.ThreadPage
+import ai.saniou.forum.workflow.topicdetail.TopicDetailPage
 import ai.saniou.forum.workflow.trend.TrendPage
 import ai.saniou.thread.domain.model.forum.Notice
 import androidx.compose.animation.AnimatedVisibility
@@ -46,7 +45,6 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.Button
@@ -94,14 +92,14 @@ import thread.feature_forum.generated.resources.drawer_history
 import thread.feature_forum.generated.resources.drawer_search
 import thread.feature_forum.generated.resources.drawer_subscribe
 
-data class ForumCategoryPage(
+data class ChannelPage(
     val di: DI = nmbdi,
     val drawerState: DrawerState? = null,
 ) : Screen {
 
     @Composable
     override fun Content() {
-        val viewModel: ForumCategoryViewModel = rememberScreenModel()
+        val viewModel: ChannelViewModel = rememberScreenModel()
         val state by viewModel.state.collectAsStateWithLifecycle()
 
         val greetImageViewModel: GreetImageViewModel = rememberScreenModel()
@@ -177,10 +175,10 @@ data class ForumCategoryPage(
 
     @Composable
     private fun MainContent(
-        state: ForumCategoryContract.ForumCategoryUiState,
+        state: ChannelContract.ChannelUiState,
         onMenuClick: () -> Unit
     ) {
-        val viewModel: ForumCategoryViewModel = rememberScreenModel()
+        val viewModel: ChannelViewModel = rememberScreenModel()
 
         if (!state.isCurrentSourceInitialized) {
             SourceInitScreen(
@@ -200,8 +198,8 @@ data class ForumCategoryPage(
                 )
             }
 
-            state.currentForum?.let { forum ->
-                ForumPage(
+            state.currentChannel?.let { forum ->
+                TopicPage(
                     sourceId = state.currentSourceId,
                     forumId = forum.id,
                     fgroupId = forum.groupId,
@@ -229,8 +227,8 @@ data class ForumCategoryPage(
     @Composable
     private fun ForumDrawerContent(
         greetImageUrl: String?,
-        state: ForumCategoryContract.ForumCategoryUiState,
-        viewModel: ForumCategoryViewModel,
+        state: ChannelContract.ChannelUiState,
+        viewModel: ChannelViewModel,
         navigator: Navigator,
         onCloseDrawer: () -> Unit,
         snackbarHostState: SnackbarHostState
@@ -300,13 +298,13 @@ data class ForumCategoryPage(
                                             exit = shrinkVertically() + fadeOut()
                                         ) {
                                             Column {
-                                                group.forums.forEach { forum ->
+                                                group.channels.forEach { forum ->
                                                     StylizedForumItem(
                                                         forum = forum,
-                                                        isSelected = state.currentForum?.id == forum.id,
-                                                        isFavorite = state.favoriteForumIds.contains(forum.id),
+                                                        isSelected = state.currentChannel?.id == forum.id,
+                                                        isFavorite = state.favoriteChannelIds.contains(forum.id),
                                                         onForumClick = {
-                                                            viewModel.onEvent(Event.SelectForum(forum))
+                                                            viewModel.onEvent(Event.SelectChannel(forum))
                                                             onCloseDrawer()
                                                         },
                                                         onFavoriteToggle = {
@@ -333,18 +331,18 @@ data class ForumCategoryPage(
     @OptIn(ExperimentalLayoutApi::class)
     @Composable
     private fun DrawerFunctionGrid(
-        state: ForumCategoryContract.ForumCategoryUiState,
+        state: ChannelContract.ChannelUiState,
         navigator: Navigator,
-        viewModel: ForumCategoryViewModel,
+        viewModel: ChannelViewModel,
         onCloseDrawer: () -> Unit
     ) {
         val items = listOf(
-            DrawerItemData("综合趋势", Icons.Default.Home, state.currentForum == null) {
+            DrawerItemData("综合趋势", Icons.Default.Home, state.currentChannel == null) {
                 viewModel.onEvent(Event.SelectHome)
                 onCloseDrawer()
             },
             DrawerItemData(stringResource(Res.string.drawer_subscribe), Icons.Default.Favorite, false) {
-                navigator.push(SubscriptionPage { threadId -> navigator.push(ThreadPage(threadId)) })
+                navigator.push(SubscriptionPage { threadId -> navigator.push(TopicDetailPage(threadId)) })
                 onCloseDrawer()
             },
             DrawerItemData(stringResource(Res.string.drawer_bookmark), Icons.Default.Star, false) {
@@ -433,7 +431,7 @@ data class ForumCategoryPage(
 
     @Composable
     private fun CategoryHeader(
-        group: ForumGroupUiState,
+        group: ChannelCategoryUiState,
         isExpanded: Boolean,
         onToggle: () -> Unit,
     ) {

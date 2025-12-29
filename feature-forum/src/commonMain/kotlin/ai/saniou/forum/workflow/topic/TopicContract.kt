@@ -1,7 +1,7 @@
-package ai.saniou.forum.workflow.forum
+package ai.saniou.forum.workflow.topic
 
-import ai.saniou.thread.domain.model.forum.Channel as Forum
-import ai.saniou.thread.domain.model.forum.Topic as Post
+import ai.saniou.thread.domain.model.forum.Channel
+import ai.saniou.thread.domain.model.forum.Topic
 import app.cash.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.emptyFlow
 /**
  * 定义 Forum 功能模块的 UI 状态和事件
  */
-interface ForumContract {
+interface TopicContract {
     /**
      * UI 状态，承载页面的所有数据和状态
      *
@@ -20,8 +20,8 @@ interface ForumContract {
      */
     data class State(
         val forumName: String = "",
-        val forumDetail: Forum? = null,
-        val threads: Flow<PagingData<Post>> = emptyFlow(),
+        val forumDetail: Channel? = null,
+        val threads: Flow<PagingData<Topic>> = emptyFlow(),
         val showInfoDialog: Boolean = false
     )
 

@@ -9,8 +9,8 @@ import ai.saniou.forum.ui.components.LoadingIndicator
 import ai.saniou.forum.ui.components.ThreadListSkeleton
 import ai.saniou.forum.workflow.image.ImagePreviewPage
 import ai.saniou.forum.workflow.image.ImagePreviewViewModelParams
-import ai.saniou.forum.workflow.thread.ThreadPage
-import ai.saniou.forum.workflow.thread.ThreadReply
+import ai.saniou.forum.workflow.topicdetail.TopicDetailPage
+import ai.saniou.forum.workflow.topicdetail.ThreadReply
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -139,7 +139,7 @@ data class UserDetailPage(
                                     if (topic != null) {
                                         TopicCard(
                                             topic = topic,
-                                            onClick = { navigator.push(ThreadPage(threadId = topic.id)) },
+                                            onClick = { navigator.push(TopicDetailPage(threadId = topic.id)) },
                                             onImageClick = { img ->
                                                 navigator.push(
                                                     ImagePreviewPage(
@@ -217,8 +217,8 @@ data class UserDetailPage(
                                             ThreadReply(
                                                 reply = reply,
                                                 poUserHash = "",
-                                                onReplyClicked = { navigator.push(ThreadPage(threadId = reply.topicId)) },
-                                                refClick = { navigator.push(ThreadPage(threadId = reply.topicId)) }, // 简化处理，暂时跳转到主串
+                                                onReplyClicked = { navigator.push(TopicDetailPage(threadId = reply.topicId)) },
+                                                refClick = { navigator.push(TopicDetailPage(threadId = reply.topicId)) }, // 简化处理，暂时跳转到主串
                                                 onImageClick = { img ->
                                                     navigator.push(
                                                         ImagePreviewPage(

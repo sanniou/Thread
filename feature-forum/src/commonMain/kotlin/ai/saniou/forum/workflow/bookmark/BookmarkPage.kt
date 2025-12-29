@@ -2,7 +2,7 @@ package ai.saniou.forum.workflow.bookmark
 
 import ai.saniou.coreui.widgets.NetworkImage
 import ai.saniou.coreui.widgets.SaniouTopAppBar
-import ai.saniou.forum.workflow.thread.ThreadPage
+import ai.saniou.forum.workflow.topicdetail.TopicDetailPage
 import ai.saniou.thread.domain.model.bookmark.Bookmark
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -94,7 +94,7 @@ object BookmarkPage : Screen {
                         if (bookmark != null) {
                             BookmarkItem(bookmark = bookmark, onBookmarkClick = {
                                 when (it) {
-                                    is Bookmark.Quote -> navigator.push(ThreadPage(it.sourceId.toLong()))
+                                    is Bookmark.Quote -> navigator.push(TopicDetailPage(it.sourceId.toLong()))
                                     else -> {
                                         // 其他类型的点击事件
                                     }

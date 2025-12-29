@@ -3,9 +3,9 @@ package ai.saniou.forum.workflow.home
 import ai.saniou.coreui.state.UiStateWrapper
 import ai.saniou.coreui.state.toAppError
 import ai.saniou.forum.initializer.AppInitializer
-import ai.saniou.forum.workflow.home.ForumCategoryContract.Event
-import ai.saniou.forum.workflow.home.ForumCategoryContract.ForumCategoryUiState
-import ai.saniou.forum.workflow.home.ForumCategoryContract.ForumGroupUiState
+import ai.saniou.forum.workflow.home.ChannelContract.Event
+import ai.saniou.forum.workflow.home.ChannelContract.ChannelUiState
+import ai.saniou.forum.workflow.home.ChannelContract.ChannelCategoryUiState
 import ai.saniou.thread.domain.model.forum.Channel as Forum
 import ai.saniou.thread.domain.repository.ChannelRepository
 import ai.saniou.thread.domain.usecase.channel.GetFavoriteChannelsUseCase
@@ -28,7 +28,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class ForumCategoryViewModel(
+class ChannelViewModel(
     private val getChannelsUseCase: GetChannelsUseCase,
     private val getFavoriteChannelsUseCase: GetFavoriteChannelsUseCase,
     private val toggleFavoriteUseCase: ToggleFavoriteUseCase,
@@ -40,7 +40,7 @@ class ForumCategoryViewModel(
     private val getAvailableSourcesUseCase: GetAvailableSourcesUseCase,
 ) : ScreenModel {
 
-    private val _state = MutableStateFlow(ForumCategoryUiState())
+    private val _state = MutableStateFlow(ChannelUiState())
     val state = _state.asStateFlow()
 
     private var initCheckJob: Job? = null
@@ -80,10 +80,10 @@ class ForumCategoryViewModel(
     fun onEvent(event: Event) {
         when (event) {
             Event.LoadCategories -> loadCategories()
-            is Event.SelectForum -> selectForum(event.forum)
+            is Event.SelectChannel -> selectForum(event.channel)
             Event.SelectHome -> selectHome()
             is Event.ToggleCategory -> toggleCategory(event.groupId)
-            is Event.ToggleFavorite -> toggleFavorite(event.forum)
+            is Event.ToggleFavorite -> toggleFavorite(event.channel)
             Event.ToastShown -> onToastShown()
             Event.MarkNoticeRead -> markNoticeAsRead()
             is Event.SelectSource -> selectSource(event.sourceId)
@@ -145,10 +145,10 @@ class ForumCategoryViewModel(
                 }
             }.collect { result ->
                 result.onSuccess { (forums, favorites) ->
-                    val favoriteGroup = ForumGroupUiState(
+                    val favoriteGroup = ChannelCategoryUiState(
                         id = "-2", // Special ID for favorites
                         name = "收藏",
-                        forums = favorites
+                        channels = favorites
                     )
 
                     val forumGroups = forums
@@ -156,10 +156,10 @@ class ForumCategoryViewModel(
                         .mapNotNull { (groupName, forumList) ->
                             if (groupName.isBlank()) return@mapNotNull null
                             val firstForum = forumList.first()
-                            ForumGroupUiState(
+                            ChannelCategoryUiState(
                                 id = firstForum.groupId,
                                 name = groupName,
-                                forums = forumList
+                                channels = forumList
                             )
                         }
 
@@ -176,8 +176,8 @@ class ForumCategoryViewModel(
                         it.copy(
                             categoriesState = UiStateWrapper.Success(combined),
                             expandedGroupId = if (isInitialLoad) lastOpenedForumObj?.groupId else it.expandedGroupId,
-                            currentForum = if (isInitialLoad) lastOpenedForumObj else it.currentForum,
-                            favoriteForumIds = favoriteIds
+                            currentChannel = if (isInitialLoad) lastOpenedForumObj else it.currentChannel,
+                            favoriteChannelIds = favoriteIds
                         )
                     }
                 }.onFailure { e ->
@@ -207,16 +207,16 @@ class ForumCategoryViewModel(
         screenModelScope.launch {
             channelRepository.saveLastOpenedChannel(forum)
         }
-        _state.update { it.copy(currentForum = forum) }
+        _state.update { it.copy(currentChannel = forum) }
     }
 
     private fun selectHome() {
-        _state.update { it.copy(currentForum = null) }
+        _state.update { it.copy(currentChannel = null) }
     }
 
     private fun toggleFavorite(forum: Forum) {
         screenModelScope.launch {
-            val isCurrentlyFavorite = state.value.favoriteForumIds.contains(forum.id)
+            val isCurrentlyFavorite = state.value.favoriteChannelIds.contains(forum.id)
             toggleFavoriteUseCase(state.value.currentSourceId, forum)
             val message =
                 if (isCurrentlyFavorite) "已取消收藏 ${forum.name}" else "已收藏 ${forum.name}"

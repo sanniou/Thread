@@ -7,7 +7,7 @@ import ai.saniou.coreui.widgets.DrawerMenuItem
 import ai.saniou.coreui.widgets.DrawerMenuRow
 import ai.saniou.forum.di.coreCommon
 import ai.saniou.forum.di.nmbFeatureModule
-import ai.saniou.forum.workflow.home.ForumCategoryPage
+import ai.saniou.forum.workflow.home.ChannelPage
 import ai.saniou.forum.workflow.image.nmbImagePreviewModule
 import ai.saniou.reader.di.readerModule
 import ai.saniou.reader.workflow.reader.ReaderPage
@@ -57,11 +57,11 @@ fun App() {
         val settingsRepository: SettingsRepository by di.instance()
         val currentSource by settingsRepository.observeValue<String>("current_source_id")
             .collectAsState(initial = "nmb")
-        
+
         val challengeHandler: UiChallengeHandler by di.instance()
         var challengeRequest by remember { mutableStateOf<UiChallengeHandler.ChallengeRequest?>(null) }
         val scope = rememberCoroutineScope()
-        
+
         LaunchedEffect(Unit) {
             challengeHandler.challengeEvents.collect {
                 challengeRequest = it
@@ -126,7 +126,7 @@ fun App() {
 object ForumRoute : Screen {
     @Composable
     override fun Content() {
-        ForumCategoryPage().Content()
+        ChannelPage().Content()
     }
 }
 

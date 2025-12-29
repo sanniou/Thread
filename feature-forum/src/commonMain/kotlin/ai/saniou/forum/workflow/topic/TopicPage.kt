@@ -1,4 +1,4 @@
-package ai.saniou.forum.workflow.forum
+package ai.saniou.forum.workflow.topic
 
 import ai.saniou.coreui.composition.LocalForumSourceId
 import ai.saniou.coreui.widgets.RichText
@@ -9,7 +9,7 @@ import ai.saniou.forum.workflow.home.SubCategoryBoxItem
 import ai.saniou.forum.workflow.image.ImagePreviewPage
 import ai.saniou.forum.workflow.image.ImagePreviewViewModelParams
 import ai.saniou.forum.workflow.post.PostPage
-import ai.saniou.forum.workflow.thread.ThreadPage
+import ai.saniou.forum.workflow.topicdetail.TopicDetailPage
 import ai.saniou.forum.workflow.user.UserDetailPage
 import ai.saniou.forum.workflow.user.UserPage
 import androidx.compose.foundation.clickable
@@ -64,7 +64,7 @@ import org.kodein.di.DI
 import org.kodein.di.direct
 import org.kodein.di.instance
 
-data class ForumPage(
+data class TopicPage(
     val di: DI = nmbdi,
     val sourceId: String? = null, // Optional for backward compatibility, but should be provided
     val forumId: String,
@@ -88,7 +88,7 @@ data class ForumPage(
         // Fallback to LocalSourceId if sourceId is not provided (legacy behavior)
         val actualSourceId = sourceId ?: LocalForumSourceId.current
 
-        val viewModel: ForumViewModel = rememberScreenModel(tag = "${actualSourceId}_${fgroupId}_${forumId}") {
+        val viewModel: TopicViewModel = rememberScreenModel(tag = "${actualSourceId}_${fgroupId}_${forumId}") {
             di.direct.instance(arg = Triple(actualSourceId, forumId, fgroupId))
         }
         val state by viewModel.state.collectAsStateWithLifecycle()
@@ -121,7 +121,7 @@ data class ForumPage(
         LaunchedEffect(Unit) {
             viewModel.effect.collect { effect ->
                 when (effect) {
-                    ForumContract.Effect.ScrollToTop -> lazyListState.animateScrollToItem(0)
+                    TopicContract.Effect.ScrollToTop -> lazyListState.animateScrollToItem(0)
                 }
             }
         }
@@ -228,7 +228,7 @@ data class ForumPage(
                                         forum = child,
                                         onClick = {
                                             navigator.push(
-                                                ForumPage(
+                                                TopicPage(
                                                     sourceId = actualSourceId,
                                                     forumId = child.id,
                                                     fgroupId = child.groupId
@@ -248,7 +248,7 @@ data class ForumPage(
                                         isFavorite = false, // TODO: Check favorite status
                                         onForumClick = {
                                             navigator.push(
-                                                ForumPage(
+                                                TopicPage(
                                                     sourceId = actualSourceId,
                                                     forumId = child.id,
                                                     fgroupId = child.groupId
@@ -268,7 +268,7 @@ data class ForumPage(
                 ListThreadPage(
                     state = lazyListState,
                     threadFlow = viewModel.threads,
-                    onThreadClicked = { threadId -> navigator.push(ThreadPage(threadId)) },
+                    onThreadClicked = { threadId -> navigator.push(TopicDetailPage(threadId)) },
                     onImageClick = { _, image ->
                         navigator.push(
                             ImagePreviewPage(

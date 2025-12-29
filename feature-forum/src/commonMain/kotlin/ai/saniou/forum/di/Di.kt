@@ -2,9 +2,9 @@ package ai.saniou.forum.di
 
 import ai.saniou.forum.initializer.AppInitializer
 import ai.saniou.forum.workflow.bookmark.BookmarkViewModel
-import ai.saniou.forum.workflow.forum.ForumViewModel
+import ai.saniou.forum.workflow.topic.TopicViewModel
 import ai.saniou.forum.workflow.history.HistoryViewModel
-import ai.saniou.forum.workflow.home.ForumCategoryViewModel
+import ai.saniou.forum.workflow.home.ChannelViewModel
 import ai.saniou.forum.workflow.home.GreetImageViewModel
 import ai.saniou.forum.workflow.image.nmbImagePreviewModule
 import ai.saniou.forum.workflow.init.SourceInitViewModel
@@ -12,8 +12,8 @@ import ai.saniou.forum.workflow.post.PostViewModel
 import ai.saniou.forum.workflow.reference.ReferenceViewModel
 import ai.saniou.forum.workflow.search.SearchViewModel
 import ai.saniou.forum.workflow.subscription.SubscriptionViewModel
-import ai.saniou.forum.workflow.thread.ThreadViewModel
-import ai.saniou.forum.workflow.thread.ThreadViewModelParams
+import ai.saniou.forum.workflow.topicdetail.TopicDetailViewModel
+import ai.saniou.forum.workflow.topicdetail.TopicDetailViewModelParams
 import ai.saniou.forum.workflow.trend.TrendViewModel
 import ai.saniou.forum.workflow.user.UserDetailViewModel
 import ai.saniou.forum.workflow.user.UserViewModel
@@ -27,7 +27,6 @@ import org.kodein.di.bindMultiton
 import org.kodein.di.bindProvider
 import org.kodein.di.bindSingleton
 import org.kodein.di.instance
-import org.kodein.di.instanceOrNull
 
 val coreCommon by DI.Module {
 
@@ -54,8 +53,8 @@ val nmbFeatureModule = DI.Module("nmbFeatureModule") {
     bindProvider<GreetImageViewModel> { GreetImageViewModel(instance()) }
 
     // 论坛分类相关
-    bindProvider<ForumCategoryViewModel> {
-        ForumCategoryViewModel(
+    bindProvider<ChannelViewModel> {
+        ChannelViewModel(
             instance(),
             instance(),
             instance(),
@@ -69,9 +68,9 @@ val nmbFeatureModule = DI.Module("nmbFeatureModule") {
     }
 
     // 论坛相关
-    bindFactory<Pair<Long, Long>, ForumViewModel> { params ->
+    bindFactory<Pair<Long, Long>, TopicViewModel> { params ->
         // Compatibility for old factory
-        ForumViewModel(
+        TopicViewModel(
             instance(),
             instance(),
             instance(),
@@ -82,8 +81,8 @@ val nmbFeatureModule = DI.Module("nmbFeatureModule") {
     }
 
     // New factory supporting SourceId
-    bindFactory<Triple<String, String, String>, ForumViewModel> { params ->
-        ForumViewModel(
+    bindFactory<Triple<String, String, String>, TopicViewModel> { params ->
+        TopicViewModel(
             instance(),
             instance(),
             instance(),
@@ -94,8 +93,8 @@ val nmbFeatureModule = DI.Module("nmbFeatureModule") {
     }
 
     // 帖子相关
-    bindFactory<ThreadViewModelParams, ThreadViewModel> { params ->
-        ThreadViewModel(
+    bindFactory<TopicDetailViewModelParams, TopicDetailViewModel> { params ->
+        TopicDetailViewModel(
             params = params,
             instance(),
             instance(),

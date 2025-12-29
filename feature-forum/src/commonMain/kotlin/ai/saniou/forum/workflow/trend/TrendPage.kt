@@ -9,7 +9,7 @@ import ai.saniou.coreui.widgets.SaniouTopAppBar
 import ai.saniou.coreui.widgets.VerticalSpacerSmall
 import ai.saniou.forum.di.nmbdi
 import ai.saniou.forum.ui.components.LoadingIndicator
-import ai.saniou.forum.workflow.thread.ThreadPage
+import ai.saniou.forum.workflow.topicdetail.TopicDetailPage
 import ai.saniou.forum.workflow.trend.TrendContract.Effect
 import ai.saniou.forum.workflow.trend.TrendContract.Event
 import ai.saniou.forum.workflow.trend.TrendContract.TrendItem
@@ -101,7 +101,7 @@ data class TrendPage(
                     }
 
                     is Effect.NavigateToThread -> {
-                        navigator.push(ThreadPage(effect.topicId))
+                        navigator.push(TopicDetailPage(effect.topicId))
                     }
 
                     is Effect.ShowInfoDialog -> {
@@ -136,7 +136,7 @@ data class TrendPage(
                                 },
                                 modifier = Modifier.clickable {
                                     showSourceDialog = false
-                                    navigator.push(ThreadPage(sourceId))
+                                    navigator.push(TopicDetailPage(sourceId))
                                 }
                             )
                         } else {
@@ -148,7 +148,7 @@ data class TrendPage(
                     TextButton(
                         onClick = {
                             if (sourceId != null) {
-                                navigator.push(ThreadPage(sourceId))
+                                navigator.push(TopicDetailPage(sourceId))
                             }
                             showSourceDialog = false
                         }

@@ -1,7 +1,7 @@
 package ai.saniou.forum.workflow.home
 
 import ai.saniou.forum.workflow.subscription.SubscriptionPage
-import ai.saniou.forum.workflow.thread.ThreadPage
+import ai.saniou.forum.workflow.topicdetail.TopicDetailPage
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -67,7 +67,7 @@ class SubscriptionPaneScreen : Screen {
                     },
                     detailPane = {
                         // val isDetailVisible = navigator.scaffoldValue[ListDetailPaneScaffoldRole.Detail] == PaneAdaptedValue.Expanded
-                        threadId?.let { ThreadPage(it).Content() }
+                        threadId?.let { TopicDetailPage(it).Content() }
                     },
                     paneExpansionState = paneExpansionState,
                     paneExpansionDragHandle = { state ->

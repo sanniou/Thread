@@ -3,8 +3,8 @@ package ai.saniou.forum.workflow.home
 import ai.saniou.coreui.state.StateLayout
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.SaniouTopAppBar
-import ai.saniou.forum.workflow.forum.ForumPage
-import ai.saniou.forum.workflow.home.ForumCategoryContract.Event
+import ai.saniou.forum.workflow.topic.TopicPage
+import ai.saniou.forum.workflow.home.ChannelContract.Event
 import ai.saniou.thread.domain.model.forum.Channel as Forum
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -41,7 +41,7 @@ object ForumListPage : Screen {
 
     @Composable
     override fun Content() {
-        val viewModel: ForumCategoryViewModel = rememberScreenModel()
+        val viewModel: ChannelViewModel = rememberScreenModel()
         val state by viewModel.state.collectAsStateWithLifecycle()
         val navigator = LocalNavigator.currentOrThrow
 
@@ -74,10 +74,10 @@ object ForumListPage : Screen {
                             contentPadding = PaddingValues(horizontal = Dimens.padding_large),
                             horizontalArrangement = Arrangement.spacedBy(Dimens.padding_small)
                         ) {
-                            items(forumGroups.flatMap { it.forums }.take(5)) { forum ->
+                            items(forumGroups.flatMap { it.channels }.take(5)) { forum ->
                                 ForumChip(forum = forum) {
                                     navigator.push(
-                                        ForumPage(
+                                        TopicPage(
                                             forumId = forum.id.toLong(),
                                             fgroupId = forum.groupId.toLong()
                                         )
@@ -91,14 +91,14 @@ object ForumListPage : Screen {
                     item {
                         Spacer(modifier = Modifier.height(Dimens.padding_large))
                         val favoriteForums =
-                            forumGroups.find { it.name == "收藏" }?.forums ?: emptyList()
+                            forumGroups.find { it.name == "收藏" }?.channels ?: emptyList()
                         if (favoriteForums.isNotEmpty()) {
                             SectionTitle("收藏")
                             ForumGrid(
                                 forums = favoriteForums,
                                 onForumClick = {
                                     navigator.push(
-                                        ForumPage(
+                                        TopicPage(
                                             forumId = it.id.toLong(),
                                             fgroupId = it.groupId.toLong()
                                         )
@@ -114,10 +114,10 @@ object ForumListPage : Screen {
                             Spacer(modifier = Modifier.height(Dimens.padding_large))
                             SectionTitle(category.name)
                             ForumGrid(
-                                forums = category.forums,
+                                forums = category.channels,
                                 onForumClick = {
                                     navigator.push(
-                                        ForumPage(
+                                        TopicPage(
                                             forumId = it.id.toLong(),
                                             fgroupId = it.groupId.toLong()
                                         )

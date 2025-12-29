@@ -1,4 +1,4 @@
-package ai.saniou.forum.workflow.thread
+package ai.saniou.forum.workflow.topicdetail
 
 import ai.saniou.corecommon.utils.toRelativeTimeString
 import ai.saniou.coreui.composition.LocalForumSourceId
@@ -25,9 +25,9 @@ import ai.saniou.forum.workflow.image.ThreadImageProvider
 import ai.saniou.forum.workflow.post.PostPage
 import ai.saniou.forum.workflow.reference.ReferenceContract
 import ai.saniou.forum.workflow.reference.ReferenceViewModel
-import ai.saniou.forum.workflow.thread.ThreadContract.Effect
-import ai.saniou.forum.workflow.thread.ThreadContract.Event
-import ai.saniou.forum.workflow.thread.ThreadContract.State
+import ai.saniou.forum.workflow.topicdetail.TopicDetailContract.Effect
+import ai.saniou.forum.workflow.topicdetail.TopicDetailContract.Event
+import ai.saniou.forum.workflow.topicdetail.TopicDetailContract.State
 import ai.saniou.forum.workflow.user.UserDetailPage
 import ai.saniou.thread.domain.model.forum.Image
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -115,7 +115,7 @@ import org.kodein.di.instance
 import ai.saniou.thread.domain.model.forum.Comment as ThreadReply
 import ai.saniou.thread.domain.model.forum.Topic as Post
 
-data class ThreadPage(
+data class TopicDetailPage(
     val threadId: String,
 ) : Screen {
 
@@ -132,8 +132,8 @@ data class ThreadPage(
         val clipboardManager = LocalClipboardManager.current
         val sourceId = LocalForumSourceId.current
 
-        val viewModel: ThreadViewModel = rememberScreenModel(tag = "$sourceId:$threadId") {
-            nmbdi.direct.instance(arg = ThreadViewModelParams(sourceId, threadId))
+        val viewModel: TopicDetailViewModel = rememberScreenModel(tag = "$sourceId:$threadId") {
+            nmbdi.direct.instance(arg = TopicDetailViewModelParams(sourceId, threadId))
         }
         val state by viewModel.state.collectAsState()
 
@@ -178,7 +178,7 @@ data class ThreadPage(
             topBar = {
                 SaniouTopAppBar(
                     title = {
-                        if (state.thread != null) {
+                        if (state.topic != null) {
                             Text(
                                 text = state.forumName,
                                 style = MaterialTheme.typography.titleLarge,
@@ -200,7 +200,7 @@ data class ThreadPage(
                     },
                     onNavigationClick = { navigator.pop() },
                     actions = {
-                        if (state.thread != null) {
+                        if (state.topic != null) {
                             IconButton(onClick = { viewModel.onEvent(Event.Refresh) }) {
                                 Icon(Icons.Default.Refresh, contentDescription = "刷新")
                             }
@@ -246,10 +246,10 @@ data class ThreadPage(
             },
             snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
             floatingActionButton = {
-                if (state.thread != null) {
+                if (state.topic != null) {
                     FloatingActionButton(
                         onClick = {
-                            state.thread?.let {
+                            state.topic?.let {
                                 navigator.push(PostPage(resto = it.id.toInt()))
                             }
                         }
@@ -290,7 +290,7 @@ data class ThreadPage(
                 },
                 onUpdateLastReadId = { id -> viewModel.onEvent(Event.UpdateLastReadReplyId(id)) },
                 onCopy = { viewModel.onEvent(Event.CopyContent(it)) },
-                onBookmarkThread = { viewModel.onEvent(Event.BookmarkThread(it)) },
+                onBookmarkThread = { viewModel.onEvent(Event.BookmarkTopic(it)) },
                 onBookmarkReply = { viewModel.onEvent(Event.BookmarkReply(it)) },
                 onBookmarkImage = { image -> viewModel.onEvent(Event.BookmarkImage(image)) },
                 onUserClick = { userHash -> navigator.push(UserDetailPage(userHash)) }
@@ -321,7 +321,7 @@ data class ThreadPage(
                 onJumpToThread = { threadId ->
                     showReferencePopup = false
                     referenceViewModel.onEvent(ReferenceContract.Event.Clear)
-                    navigator.push(ThreadPage(threadId = threadId))
+                    navigator.push(TopicDetailPage(threadId = threadId))
                 }
             )
         }
@@ -516,10 +516,10 @@ fun ThreadSuccessContent(
     onUserClick: (String) -> Unit,
 ) {
     val replies = state.replies.collectAsLazyPagingItems()
-    val allImages by remember(state.thread, replies.itemSnapshotList) {
+    val allImages by remember(state.topic, replies.itemSnapshotList) {
         derivedStateOf {
             val imageList = mutableListOf<Image>()
-            state.thread?.let { post ->
+            state.topic?.let { post ->
                 post.images.forEach { image ->
                     imageList.add(image)
                 }
@@ -624,7 +624,7 @@ private fun ThreadList(
 
         // 主帖
         item {
-            state.thread?.let { thread ->
+            state.topic?.let { thread ->
                 ThreadMainPost(
                     thread = thread,
                     refClick = onRefClick,
@@ -643,7 +643,7 @@ private fun ThreadList(
 
         // 工具栏
         stickyHeader {
-            state.thread?.let {
+            state.topic?.let {
                 ThreadToolbar(
                     replyCount = it.commentCount.toString(),
                     isPoOnly = state.isPoOnlyMode,
@@ -657,7 +657,7 @@ private fun ThreadList(
             replies[replyIndex]?.let { reply ->
                 ThreadReply(
                     reply = reply,
-                    poUserHash = state.thread?.author?.id ?: "",
+                    poUserHash = state.topic?.author?.id ?: "",
                     onReplyClicked = onReplyClicked,
                     refClick = onRefClick,
                     onImageClick = onImageClick,
@@ -678,7 +678,7 @@ private fun ThreadList(
         item {
             when {
                 replies.loadState.refresh is LoadStateLoading && replies.itemCount == 0 -> {
-                    if (state.thread == null) {
+                    if (state.topic == null) {
                         ThreadShimmer()
                     } else {
                         ThreadReplyShimmer()

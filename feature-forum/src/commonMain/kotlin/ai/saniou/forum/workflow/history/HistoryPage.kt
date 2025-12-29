@@ -4,7 +4,7 @@ import ai.saniou.coreui.widgets.SaniouTopAppBar
 import ai.saniou.forum.workflow.home.ListThreadPage
 import ai.saniou.forum.workflow.image.ImagePreviewPage
 import ai.saniou.forum.workflow.image.ImagePreviewViewModelParams
-import ai.saniou.forum.workflow.thread.ThreadPage
+import ai.saniou.forum.workflow.topicdetail.TopicDetailPage
 import ai.saniou.forum.workflow.user.UserDetailPage
 import ai.saniou.thread.domain.model.history.HistoryPost
 import androidx.compose.foundation.layout.padding
@@ -101,7 +101,7 @@ class HistoryPage : Screen {
                         .filter { it is HistoryPost }
                         .map { (it as HistoryPost).post }
                 },
-                onThreadClicked = { navigator.push(ThreadPage(it)) },
+                onThreadClicked = { navigator.push(TopicDetailPage(it)) },
                 onImageClick = { _, img ->
                     navigator.push(
                         ImagePreviewPage(

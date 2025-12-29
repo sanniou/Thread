@@ -1,25 +1,26 @@
 package ai.saniou.forum.workflow.home
 
 import ai.saniou.coreui.state.UiStateWrapper
-import ai.saniou.thread.domain.model.forum.Channel as Forum
+import ai.saniou.thread.domain.model.forum.Channel
+import ai.saniou.thread.domain.model.forum.Notice
 import ai.saniou.thread.domain.repository.Source
 
 /**
- * 定义 ForumCategory 功能模块的 UI 状态和事件
+ * 定义 Channel 功能模块的 UI 状态和事件
  */
-interface ForumCategoryContract {
+interface ChannelContract {
 
     /**
      * 用于UI显示的板块分组
      *
-     * @param id 分组的唯一ID (来自 Forum.groupId)
-     * @param name 分组的名称 (来自 Forum.groupName)
-     * @param forums 该分组下的板块列表
+     * @param id 分组的唯一ID (来自 Channel.groupId)
+     * @param name 分组的名称 (来自 Channel.groupName)
+     * @param channels 该分组下的板块列表
      */
-    data class ForumGroupUiState(
+    data class ChannelCategoryUiState(
         val id: String,
         val name: String,
-        val forums: List<Forum>
+        val channels: List<Channel>
     )
 
     /**
@@ -27,18 +28,18 @@ interface ForumCategoryContract {
      *
      * @property categoriesState 板块列表状态 (Loading/Success/Error)
      * @property expandedGroupId 当前展开的分组 ID
-     * @property currentForum 当前选中的板块
-     * @property favoriteForumIds 收藏的板块ID集合
+     * @property currentChannel 当前选中的板块
+     * @property favoriteChannelIds 收藏的板块ID集合
      * @property toastMessage 提示信息
      * @property currentSourceId 当前选中的数据源
      */
-    data class ForumCategoryUiState(
-        val categoriesState: UiStateWrapper<List<ForumGroupUiState>> = UiStateWrapper.Loading,
+    data class ChannelUiState(
+        val categoriesState: UiStateWrapper<List<ChannelCategoryUiState>> = UiStateWrapper.Loading,
         val expandedGroupId: String? = null,
-        val currentForum: Forum? = null,
-        val favoriteForumIds: Set<String> = emptySet(),
+        val currentChannel: Channel? = null,
+        val favoriteChannelIds: Set<String> = emptySet(),
         val toastMessage: String? = null,
-        val notice: ai.saniou.thread.domain.model.forum.Notice? = null,
+        val notice: Notice? = null,
         val currentSourceId: String = "",
         val availableSources: List<Source> = emptyList(),
         val isCurrentSourceInitialized: Boolean = true
@@ -61,9 +62,9 @@ interface ForumCategoryContract {
 
         /**
          * 选中一个板块
-         * @param forum 选中的板块
+         * @param channel 选中的板块
          */
-        data class SelectForum(val forum: Forum) : Event
+        data class SelectChannel(val channel: Channel) : Event
 
         /**
          * 选中主页 (Dashboard)
@@ -72,9 +73,9 @@ interface ForumCategoryContract {
 
         /**
          * 切换一个板块的收藏状态
-         * @param forum 要切换的板块
+         * @param channel 要切换的板块
          */
-        data class ToggleFavorite(val forum: Forum) : Event
+        data class ToggleFavorite(val channel: Channel) : Event
 
         /**
          * 提示信息已显示
