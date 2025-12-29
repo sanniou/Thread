@@ -22,15 +22,11 @@ import kotlinx.serialization.json.Json
 
 fun SaniouKtorfit(
     baseUrl: String,
-    cookieProvider: CookieProvider? = null,
     clientConfig: HttpClientConfig<*>.() -> Unit = {}
 ): Ktorfit = ktorfit {
     baseUrl(baseUrl)
     httpClient(
         HttpClient(CIO) {
-            install(DynamicCookiePlugin) {
-                this.cookieProvider = cookieProvider
-            }
             install(ContentEncoding) {
                 mode = ContentEncodingConfig.Mode.All
                 gzip()

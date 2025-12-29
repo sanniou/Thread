@@ -61,11 +61,10 @@ import ai.saniou.thread.domain.usecase.reader.GetArticleCountsUseCase
 import ai.saniou.thread.domain.usecase.subscription.GenerateRandomSubscriptionIdUseCase
 import ai.saniou.thread.network.ChallengeHandler
 import ai.saniou.thread.network.CloudflareProtectionPlugin
-import ai.saniou.thread.network.CookieProvider
 import ai.saniou.thread.network.SaniouKtorfit
 import ai.saniou.thread.network.cookie.CookieStore
 import ai.saniou.thread.data.network.SettingsCookieStore
-import ai.saniou.thread.network.cookie.SourceCookieProvider
+import ai.saniou.thread.network.installCookieAuth
 import de.jensklingenberg.ktorfit.Ktorfit
 import io.ktor.client.HttpClient
 import org.kodein.di.DI
@@ -81,7 +80,12 @@ val dataModule = DI.Module("dataModule") {
 //    bindConstant<String>(tag = "discourseBaseUrl") { "https://meta.discourse.org/" }
     bindConstant<String>(tag = "discourseBaseUrl") { "https://linux.do/" }
     bindSingleton<NmbXdApi> {
-        val ktorfit: Ktorfit = instance(arg = instance<String>("nmbBaseUrl"))
+        val nmbCookieProvider = instance<NmbCookieProvider>()
+        val ktorfit = SaniouKtorfit(
+            baseUrl = instance<String>("nmbBaseUrl")
+        ) {
+            installCookieAuth { nmbCookieProvider.getCookieValue() }
+        }
         ktorfit.createNmbXdApi()
     }
 
@@ -93,9 +97,10 @@ val dataModule = DI.Module("dataModule") {
         val sourceId = "discourse"
 
         val ktorfit = SaniouKtorfit(
-            baseUrl = baseUrl,
-            cookieProvider = SourceCookieProvider(sourceId, cookieStore)
+            baseUrl = baseUrl
         ) {
+            installCookieAuth { cookieStore.getCookie(sourceId) }
+            
             // Manually install CloudflareProtectionPlugin with sourceId if challengeHandler exists
             if (challengeHandler != null) {
                 install(CloudflareProtectionPlugin) {
@@ -111,8 +116,7 @@ val dataModule = DI.Module("dataModule") {
     bindSingleton<AcfunApi> {
         val tokenManager = instance<AcfunTokenManager>()
         val ktorfit = SaniouKtorfit(
-            baseUrl = instance("acfunBaseUrl"),
-            cookieProvider = null
+            baseUrl = instance("acfunBaseUrl")
         ) {
             install(AcfunHeaderPlugin) {
                 this.tokenManager = tokenManager
@@ -186,7 +190,7 @@ val dataModule = DI.Module("dataModule") {
         SyncRepositoryImpl(providers)
     }
 
-    bindSingleton<CookieProvider> { NmbCookieProvider(instance()) }
+    bindSingleton { NmbCookieProvider(instance()) }
     // Cookie Store (for Discourse/CF)
     bindSingleton<CookieStore> { SettingsCookieStore(instance()) }
     // CDN管理器
