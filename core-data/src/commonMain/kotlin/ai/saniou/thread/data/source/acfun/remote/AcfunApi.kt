@@ -26,7 +26,7 @@ import de.jensklingenberg.ktorfit.http.Query
  * 域名说明:
  * - 登录: id.app.acfun.cn
  * - 核心业务: api-new.app.acfun.cn
- * - 评论/搜索/番剧: api-new.acfunchina.com (需配合特定 appVersion)
+ * - 评论/搜索/番剧: api-ipv6.app.acfun.cn (需配合特定 appVersion)
  */
 interface AcfunApi {
 
@@ -74,7 +74,7 @@ interface AcfunApi {
     /**
      * 检查是否已签到
      */
-    @POST("https://api-new.acfunchina.com/rest/app/user/hasSignedIn")
+    @POST("https://api-ipv6.app.acfun.cn/rest/app/user/hasSignedIn")
     @FormUrlEncoded
     suspend fun hasSignedIn(
         @Field("access_token") accessToken: String
@@ -83,7 +83,7 @@ interface AcfunApi {
     /**
      * 执行签到
      */
-    @POST("https://api-new.acfunchina.com/rest/app/user/signIn")
+    @POST("https://api-ipv6.app.acfun.cn/rest/app/user/signIn")
     @FormUrlEncoded
     suspend fun signIn(
         @Field("access_token") accessToken: String
@@ -96,7 +96,7 @@ interface AcfunApi {
     /**
      * 获取当前登录用户的个人信息
      */
-    @GET("https://api-new.acfunchina.com/rest/app/user/personalInfo")
+    @GET("https://api-ipv6.app.acfun.cn/rest/app/user/personalInfo")
     suspend fun getPersonalInfo(): SaniouResponse<Any> // TODO: 定义 UserInfo
 
     /**
@@ -180,7 +180,7 @@ interface AcfunApi {
     /**
      * 获取文章热门榜
      */
-    @GET("https://api-new.acfunchina.com/rest/app/rank/channel")
+    @GET("https://api-ipv6.app.acfun.cn/rest/app/rank/channel")
     suspend fun getArticleHotRank(
         @Query("rankPeriod") rankPeriod: String = "THREE_DAYS",
         @Query("channelId") channelId: Int = 63
@@ -238,12 +238,12 @@ interface AcfunApi {
     /**
      * 获取评论列表
      *
-     * 注意: 需使用 api-new.acfunchina.com 域名和特定 appVersion
+     * 注意: 需使用 api-ipv6.app.acfun.cn 域名和特定 appVersion
      *
      * @param sourceType 1: 文章, 2: 番剧, 3: 视频, 4: 动态
      * @param showHotComments 首页传 1，翻页传 0
      */
-    @GET("https://api-new.acfunchina.com/rest/app/comment/list")
+    @GET("https://api-ipv6.app.acfun.cn/rest/app/comment/list")
     @Headers("appVersion: 6.31.1.1026")
     suspend fun getCommentList(
         @Query("sourceId") sourceId: Long,
@@ -256,9 +256,9 @@ interface AcfunApi {
     /**
      * 获取子评论 (楼中楼)
      *
-     * 注意: 需使用 api-new.acfunchina.com 域名和特定 appVersion
+     * 注意: 需使用 api-ipv6.app.acfun.cn 域名和特定 appVersion
      */
-    @GET("https://api-new.acfunchina.com/rest/app/comment/sublist")
+    @GET("https://api-ipv6.app.acfun.cn/rest/app/comment/sublist")
     @Headers("appVersion: 6.31.1.1026")
     suspend fun getSubCommentList(
         @Query("sourceId") sourceId: Long,
@@ -355,7 +355,7 @@ interface AcfunApi {
      * 番剧首页
      * 注意: appVersion 需为 6.39.0.1095
      */
-    @POST("https://api-new.acfunchina.com/rest/app/speedTheater")
+    @POST("https://api-ipv6.app.acfun.cn/rest/app/speedTheater")
     @Headers("appVersion: 6.39.0.1095")
     @FormUrlEncoded
     suspend fun getBangumiMainPage(
@@ -365,7 +365,7 @@ interface AcfunApi {
     /**
      * 番剧详情
      */
-    @POST("https://api-new.acfunchina.com/rest/app/new-bangumi/detail")
+    @POST("https://api-ipv6.app.acfun.cn/rest/app/new-bangumi/detail")
     @FormUrlEncoded
     suspend fun getBangumiDetail(
         @Field("bangumiId") bangumiId: Long
@@ -374,7 +374,7 @@ interface AcfunApi {
     /**
      * 番剧剧集列表
      */
-    @POST("https://api-new.acfunchina.com/rest/app/new-bangumi/itemList")
+    @POST("https://api-ipv6.app.acfun.cn/rest/app/new-bangumi/itemList")
     @FormUrlEncoded
     suspend fun getBangumiItemList(
         @Field("bangumiId") bangumiId: Long,
@@ -408,14 +408,14 @@ interface AcfunApi {
     /**
      * 搜索推荐
      */
-    @GET("https://api-new.acfunchina.com/rest/app/search/recommend")
+    @GET("https://api-ipv6.app.acfun.cn/rest/app/search/recommend")
     @Headers("appVersion: 6.31.1.1026")
     suspend fun getSearchRecommend(): SaniouResponse<Any>
 
     /**
      * 综合搜索
      */
-    @GET("https://api-new.acfunchina.com/rest/app/search/complex")
+    @GET("https://api-ipv6.app.acfun.cn/rest/app/search/complex")
     suspend fun searchComplex(
         @Query("keyword") keyword: String,
         @Query("pCursor") pCursor: String,
