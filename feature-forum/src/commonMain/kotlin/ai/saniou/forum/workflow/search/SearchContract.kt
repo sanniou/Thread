@@ -1,7 +1,5 @@
 package ai.saniou.forum.workflow.search
 
-import ai.saniou.thread.data.source.nmb.remote.dto.ThreadReply
-import ai.saniou.thread.data.source.nmb.remote.dto.ThreadWithInformation
 import ai.saniou.thread.domain.model.forum.Comment
 import ai.saniou.thread.domain.model.forum.Topic
 import app.cash.paging.PagingData

@@ -1,31 +1,29 @@
 package ai.saniou.thread.data.source.discourse
 
+import ai.saniou.thread.data.cache.SourceCache
+import ai.saniou.thread.data.mapper.toDomain
+import ai.saniou.thread.data.mapper.toEntity
+import ai.saniou.thread.data.paging.DataPolicy
 import ai.saniou.thread.data.source.discourse.remote.DiscourseApi
 import ai.saniou.thread.data.source.discourse.remote.dto.DiscourseCategory
 import ai.saniou.thread.data.source.discourse.remote.dto.DiscourseTopic
 import ai.saniou.thread.data.source.discourse.remote.dto.DiscourseUser
-import ai.saniou.thread.data.mapper.toDomain
-import ai.saniou.thread.data.mapper.toEntity
-import ai.saniou.thread.domain.model.forum.Channel as Forum
-import ai.saniou.thread.domain.model.forum.Topic as Post
-import ai.saniou.thread.domain.model.forum.Comment as ThreadReply
+import ai.saniou.thread.db.Database
 import ai.saniou.thread.domain.model.forum.Author
+import ai.saniou.thread.domain.repository.SettingsRepository
+import ai.saniou.thread.domain.repository.Source
+import ai.saniou.thread.domain.repository.observeValue
+import app.cash.paging.ExperimentalPagingApi
 import app.cash.paging.Pager
 import app.cash.paging.PagingConfig
-import app.cash.paging.ExperimentalPagingApi
 import app.cash.paging.PagingData
 import app.cash.paging.map
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlin.time.Instant
-import ai.saniou.thread.domain.repository.Source
-import ai.saniou.thread.data.cache.SourceCache
-import ai.saniou.thread.data.paging.DataPolicy
-import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
-import ai.saniou.thread.data.source.nmb.remote.dto.toThreadWithInformation
-import ai.saniou.thread.db.Database
-import ai.saniou.thread.domain.repository.SettingsRepository
-import ai.saniou.thread.domain.repository.observeValue
+import ai.saniou.thread.domain.model.forum.Channel as Forum
+import ai.saniou.thread.domain.model.forum.Comment as ThreadReply
+import ai.saniou.thread.domain.model.forum.Topic as Post
 
 class DiscourseSource(
     private val api: DiscourseApi,
