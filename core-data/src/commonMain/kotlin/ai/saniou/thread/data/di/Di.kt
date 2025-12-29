@@ -1,4 +1,5 @@
 package ai.saniou.thread.data.di
+
 import ai.saniou.thread.data.database.DriverFactory
 import ai.saniou.thread.data.database.createDatabase
 import ai.saniou.thread.data.manager.CdnManager
@@ -67,6 +68,7 @@ import ai.saniou.thread.data.network.SettingsCookieStore
 import ai.saniou.thread.network.installCookieAuth
 import de.jensklingenberg.ktorfit.Ktorfit
 import io.ktor.client.HttpClient
+import io.ktor.client.request.header
 import org.kodein.di.DI
 import org.kodein.di.bind
 import org.kodein.di.bindConstant
@@ -100,7 +102,19 @@ val dataModule = DI.Module("dataModule") {
             baseUrl = baseUrl
         ) {
             installCookieAuth { cookieStore.getCookie(sourceId) }
-            
+            install(io.ktor.client.plugins.DefaultRequest) {
+                header("User-Api-Key", "a48c37459a9f9d429223ac0ceb6b9b2")
+                header(
+                    "User-Agent",
+                    "Mozilla/5.0 (X11; Linux x86_64; rv:121.0) Gecko/20100101 Firefox/121.0"
+                )
+                header("Accept", "application/json, text/plain, */*")
+                header("Accept-Language", "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7")
+                header("Accept-Encoding", "gzip, deflate")
+                header("Connection", "keep-alive")
+                header("Referer", "https://linux.do/")
+            }
+
             // Manually install CloudflareProtectionPlugin with sourceId if challengeHandler exists
             if (challengeHandler != null) {
                 install(CloudflareProtectionPlugin) {
@@ -130,8 +144,15 @@ val dataModule = DI.Module("dataModule") {
 
     // source and repository
     bindSingleton<NmbSource> { NmbSource(instance(), instance(), instance(), instance()) }
-    bindSingleton<DiscourseSource> { DiscourseSource(instance(), instance(), instance(), instance()) }
-    bindSingleton<AcfunSource> { AcfunSource(instance(),instance()) }
+    bindSingleton<DiscourseSource> {
+        DiscourseSource(
+            instance(),
+            instance(),
+            instance(),
+            instance()
+        )
+    }
+    bindSingleton<AcfunSource> { AcfunSource(instance(), instance()) }
 
     bind<Source>(tag = "nmb") with singleton { instance<NmbSource>() }
     bind<Source>(tag = "nga") with singleton { NgaSource() }
@@ -156,13 +177,24 @@ val dataModule = DI.Module("dataModule") {
     bind<BookmarkRepository>() with singleton { BookmarkRepositoryImpl(instance()) }
     bind<TagRepository>() with singleton { TagRepositoryImpl(instance()) }
     bind<FavoriteRepository>() with singleton { FavoriteRepositoryImpl(instance()) }
-    bind<SubscriptionRepository>() with singleton { SubscriptionRepositoryImpl(instance(), instance()) }
+    bind<SubscriptionRepository>() with singleton {
+        SubscriptionRepositoryImpl(
+            instance(),
+            instance()
+        )
+    }
     bind<UserRepository>() with singleton { UserRepositoryImpl(instance()) }
     bind<SettingsRepository>() with singleton { SettingsRepositoryImpl(instance()) }
-    bind<NoticeRepository>() with singleton { NoticeRepositoryImpl(instance(), instance(), instance()) }
+    bind<NoticeRepository>() with singleton {
+        NoticeRepositoryImpl(
+            instance(),
+            instance(),
+            instance()
+        )
+    }
     bind<HistoryRepository>() with singleton { HistoryRepositoryImpl(instance()) }
     bind<PostRepository>() with singleton { PostRepositoryImpl(instance()) }
-    bind<TrendRepository>() with singleton { TrendRepositoryImpl(instance(),instance()) }
+    bind<TrendRepository>() with singleton { TrendRepositoryImpl(instance(), instance()) }
     bind<ReferenceRepository>() with singleton { ReferenceRepositoryImpl(instance(), instance()) }
     bind<TopicRepository>() with singleton {
         TopicRepositoryImpl(
@@ -208,5 +240,9 @@ val dataModule = DI.Module("dataModule") {
         ReaderRepositoryImpl(instance(), instance(), instance())
     }
     bind<GetArticleCountsUseCase>() with singleton { GetArticleCountsUseCase(instance()) }
-    bind<GenerateRandomSubscriptionIdUseCase>() with singleton { GenerateRandomSubscriptionIdUseCase(instance()) }
+    bind<GenerateRandomSubscriptionIdUseCase>() with singleton {
+        GenerateRandomSubscriptionIdUseCase(
+            instance()
+        )
+    }
 }

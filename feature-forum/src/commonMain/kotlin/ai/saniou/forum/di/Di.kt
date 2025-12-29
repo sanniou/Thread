@@ -32,7 +32,7 @@ import org.kodein.di.instanceOrNull
 val coreCommon by DI.Module {
 
     bindMultiton<String, Ktorfit> { baseUrl ->
-        SaniouKtorfit(baseUrl, instanceOrNull())
+        SaniouKtorfit(baseUrl)
     }
 
 //    bindSingleton<Ktorfit> {

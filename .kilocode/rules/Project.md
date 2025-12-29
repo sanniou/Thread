@@ -171,3 +171,6 @@
 ### 6.4 待办/注意事项 (TODOs & Caveats)
 - **UI 组件迁移**: `ForumThreadCard`, `ThreadBody`, `ThreadPage` 已适配新模型。其他 Feature 模块若有引用需检查。
 - **多源扩展**: 新增数据源（如 Reddit）时，应直接在 Mapper 层生成绝对 URL，无需修改 UI 层的解析逻辑。
+
+**中文沟通**：所有交流,注释使用中文，但在代码中的变量命名、Commit Message 保持英文。
+**中文沟通**：所有交流,注释使用中文，但在代码中的变量命名、Commit Message 保持英文。
