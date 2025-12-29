@@ -9,7 +9,7 @@ import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.model.forum.Comment
 import ai.saniou.thread.domain.model.forum.Author
 import ai.saniou.thread.domain.model.forum.Image
-import ai.saniou.thread.domain.model.forum.Channel as DomainChannel
+import ai.saniou.thread.domain.model.forum.Channel
 import ai.saniou.thread.data.mapper.toDomain
 import ai.saniou.thread.db.table.forum.ImageQueries
 import ai.saniou.thread.domain.model.forum.ImageType
@@ -17,17 +17,33 @@ import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 import ai.saniou.thread.db.table.forum.Image as EntityImage
 
-fun TimeLine.toDomain(): DomainChannel = DomainChannel(
+fun TimeLine.toDomain(): Channel = Channel(
     id = id.toString(),
     name = name,
     sourceName = "nmb",
     tag = "timeline",
     displayName = displayName,
     description = notice,
+    descriptionText = null,
     groupId = "-1",
     groupName = "TimeLine",
     topicCount = maxPage * 20, // Approximate thread count
+    postCount = null,
     autoDelete = null,
+    interval = null,
+    safeMode = null,
+    parentId = null,
+    color = null,
+    textColor = null,
+    icon = null,
+    emoji = null,
+    styleType = null,
+    listViewStyle = null,
+    logoUrl = null,
+    bannerUrl = null,
+    slug = null,
+    canCreateTopic = null,
+    sort = null
 )
 
 // Helper to create single Image list
@@ -142,7 +158,7 @@ fun GetTopic.toDomain(imageQueries: ImageQueries? = null): Topic {
 }
 
 @OptIn(ExperimentalTime::class)
-fun ai.saniou.thread.data.source.nmb.remote.dto.Thread.toDomain(): Topic = Topic(
+fun Thread.toDomain(): Topic = Topic(
     id = id.toString(),
     sourceName = "nmb",
     sourceUrl = "https://nmb.ai/thread/$id",
@@ -189,7 +205,7 @@ fun EntityComment.toDomain(imageQueries: ImageQueries? = null): Comment {
 }
 
 @OptIn(ExperimentalTime::class)
-fun ai.saniou.thread.data.source.nmb.remote.dto.ThreadReply.toDomain(): Comment =
+fun ThreadReply.toDomain(): Comment =
     Comment(
         id = id.toString(),
         topicId = threadId.toString(),

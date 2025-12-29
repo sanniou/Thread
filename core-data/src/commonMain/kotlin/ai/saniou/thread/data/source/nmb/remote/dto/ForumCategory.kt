@@ -1,6 +1,6 @@
 package ai.saniou.thread.data.source.nmb.remote.dto
 
-import ai.saniou.thread.db.table.forum.Channel as Forum
+import ai.saniou.thread.db.table.forum.Channel
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonNames
@@ -42,7 +42,7 @@ data class ForumDetail(
     val status: String? = null, //原版 API 文档所述：始终为 n
 )
 
-fun ai.saniou.thread.db.table.forum.ChannelCategory.toForumCategory(forums: List<Forum>) =
+fun ai.saniou.thread.db.table.forum.ChannelCategory.toForumCategory(forums: List<Channel>) =
     ForumCategory(
         id = id.toLong(),
         sort = sort,
@@ -51,7 +51,7 @@ fun ai.saniou.thread.db.table.forum.ChannelCategory.toForumCategory(forums: List
         forums = forums.map { it.toForumDetail() }
     )
 
-fun Forum.toForumDetail() = ForumDetail(
+fun Channel.toForumDetail() = ForumDetail(
     id = id.toLong(),
     fGroup = fGroup.toLong(),
     sort = sort,
@@ -75,7 +75,7 @@ fun ForumCategory.toTable() = ai.saniou.thread.db.table.forum.ChannelCategory(
     status = status
 )
 
-fun ForumDetail.toTable() = Forum(
+fun ForumDetail.toTable() = Channel(
     id = id.toString(),
     sourceId = "nmb",
     fGroup = fGroup.toString(),
@@ -83,11 +83,24 @@ fun ForumDetail.toTable() = Forum(
     name = name,
     displayName = showName,
     description = msg,
+    descriptionText = null,
     interval = interval,
     safeMode = safeMode,
     autoDelete = autoDelete,
     topicCount = threadCount,
+    postCount = null,
     permissionLevel = permissionLevel,
     forumFuseId = forumFuseId,
     status = status,
+    parentId = null,
+    color = null,
+    textColor = null,
+    icon = null,
+    emoji = null,
+    styleType = null,
+    listViewStyle = null,
+    logoUrl = null,
+    bannerUrl = null,
+    slug = null,
+    canCreateTopic = null
 )

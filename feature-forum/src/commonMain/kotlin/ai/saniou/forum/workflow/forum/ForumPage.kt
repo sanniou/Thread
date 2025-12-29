@@ -4,6 +4,8 @@ import ai.saniou.coreui.composition.LocalForumSourceId
 import ai.saniou.coreui.widgets.RichText
 import ai.saniou.forum.di.nmbdi
 import ai.saniou.forum.workflow.home.ListThreadPage
+import ai.saniou.forum.workflow.home.StylizedForumItem
+import ai.saniou.forum.workflow.home.SubCategoryBoxItem
 import ai.saniou.forum.workflow.image.ImagePreviewPage
 import ai.saniou.forum.workflow.image.ImagePreviewViewModelParams
 import ai.saniou.forum.workflow.post.PostPage
@@ -12,7 +14,9 @@ import ai.saniou.forum.workflow.user.UserDetailPage
 import ai.saniou.forum.workflow.user.UserPage
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -207,6 +211,57 @@ data class ForumPage(
                 state.forumDetail?.let { detail ->
                     if (detail.description.isNotBlank()) {
                         ForumRulesCard(msg = detail.description)
+                    }
+
+                    // Render Sub-forums
+                    if (detail.children.isNotEmpty()) {
+                        if (detail.listViewStyle == "boxes") {
+                            FlowRow(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                detail.children.forEach { child ->
+                                    SubCategoryBoxItem(
+                                        forum = child,
+                                        onClick = {
+                                            navigator.push(
+                                                ForumPage(
+                                                    sourceId = actualSourceId,
+                                                    forumId = child.id,
+                                                    fgroupId = child.groupId
+                                                )
+                                            )
+                                        }
+                                    )
+                                }
+                            }
+                        } else {
+                            // Default list style
+                            Column(modifier = Modifier.padding(horizontal = 8.dp)) {
+                                detail.children.forEach { child ->
+                                    StylizedForumItem(
+                                        forum = child,
+                                        isSelected = false,
+                                        isFavorite = false, // TODO: Check favorite status
+                                        onForumClick = {
+                                            navigator.push(
+                                                ForumPage(
+                                                    sourceId = actualSourceId,
+                                                    forumId = child.id,
+                                                    fgroupId = child.groupId
+                                                )
+                                            )
+                                        },
+                                        onFavoriteToggle = {
+                                            // TODO: Implement favorite toggle
+                                        }
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
 

@@ -136,8 +136,37 @@ class SqlDelightSourceCache(
 
     override suspend fun getForums(sourceId: String): List<Channel> {
         return withContext(Dispatchers.IO) {
-            channelQueries.getChannelsBySource(sourceId).executeAsList()
+            val allChannels = channelQueries.getChannelsBySource(sourceId).executeAsList()
+            sortChannels(allChannels)
         }
+    }
+
+    private fun sortChannels(channels: List<Channel>): List<Channel> {
+        // Group by parentId to build a tree
+        val childrenMap = channels.filter { it.parentId != null }
+            .groupBy { it.parentId }
+        
+        // Find roots (channels with no parent or parent not in list)
+        // Note: Some channels might have a parentId that doesn't exist in the current list
+        // (e.g. if we only synced a subset), treat them as roots if parent is missing.
+        val allIds = channels.map { it.id }.toSet()
+        val roots = channels.filter { it.parentId == null || it.parentId !in allIds }
+            .sortedBy { it.sort } // Assuming 'sort' column is populated, else maybe sort by name?
+
+        val result = mutableListOf<Channel>()
+        
+        fun traverse(channel: Channel) {
+            result.add(channel)
+            childrenMap[channel.id]?.sortedBy { it.sort }?.forEach { child ->
+                traverse(child)
+            }
+        }
+
+        roots.forEach { root ->
+            traverse(root)
+        }
+
+        return result
     }
 
     override suspend fun saveForums(forums: List<Channel>) {

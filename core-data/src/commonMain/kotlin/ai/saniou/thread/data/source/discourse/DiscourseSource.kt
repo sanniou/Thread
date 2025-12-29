@@ -1,11 +1,12 @@
 package ai.saniou.thread.data.source.discourse
 
 import ai.saniou.thread.data.cache.SourceCache
+import ai.saniou.thread.data.mapper.flatten
 import ai.saniou.thread.data.mapper.toDomain
+import ai.saniou.thread.data.mapper.toDomainTree
 import ai.saniou.thread.data.mapper.toEntity
 import ai.saniou.thread.data.paging.DataPolicy
 import ai.saniou.thread.data.source.discourse.remote.DiscourseApi
-import ai.saniou.thread.data.source.discourse.remote.dto.DiscourseCategory
 import ai.saniou.thread.data.source.discourse.remote.dto.DiscourseTopic
 import ai.saniou.thread.data.source.discourse.remote.dto.DiscourseUser
 import ai.saniou.thread.db.Database
@@ -42,10 +43,11 @@ class DiscourseSource(
         return try {
             // 1. Try to fetch from network
             val response = api.getCategories()
-            val forums = response.categoryList.categories.map { it.toForum() }
+            val forums = response.categoryList.categories.map { it.toDomainTree(id) }
 
-            // 2. Save to cache
-            cache.saveForums(forums.map { it.toEntity() })
+            // 2. Save to cache (flatten first)
+            val flatForums = forums.flatMap { it.flatten() }
+            cache.saveForums(flatForums.map { it.toEntity() })
 
             Result.success(forums)
         } catch (e: Exception) {
@@ -53,7 +55,9 @@ class DiscourseSource(
             try {
                 val cachedForums = cache.getForums(id).map { it.toDomain() }
                 if (cachedForums.isNotEmpty()) {
-                    Result.success(cachedForums)
+                    // Rebuild tree from flat list
+                    val treeForums = buildChannelTree(cachedForums)
+                    Result.success(treeForums)
                 } else {
                     Result.failure(e)
                 }
@@ -62,6 +66,31 @@ class DiscourseSource(
                 Result.failure(e)
             }
         }
+    }
+
+    private fun buildChannelTree(flatChannels: List<Forum>): List<Forum> {
+        val channelMap = flatChannels.associateBy { it.id }
+        val rootChannels = mutableListOf<Forum>()
+
+        // First pass: identify roots and prepare children lists
+        val childrenMap = mutableMapOf<String, MutableList<Forum>>()
+        
+        flatChannels.forEach { channel ->
+            val parentId = channel.parentId
+            if (parentId == null || !channelMap.containsKey(parentId)) {
+                rootChannels.add(channel)
+            } else {
+                childrenMap.getOrPut(parentId) { mutableListOf() }.add(channel)
+            }
+        }
+
+        // Recursive function to build tree
+        fun buildTree(channel: Forum): Forum {
+            val children = childrenMap[channel.id]?.map { buildTree(it) }?.sortedBy { it.sort } ?: emptyList()
+            return channel.copy(children = children)
+        }
+
+        return rootChannels.map { buildTree(it) }.sortedBy { it.sort }
     }
 
     override suspend fun getPosts(forumId: String, page: Int): Result<List<Post>> {
@@ -165,59 +194,42 @@ class DiscourseSource(
     }
 }
 
-private fun DiscourseCategory.toForum(): Forum {
-    return Forum(
-        id = id.toString(),
-        name = name,
-        displayName = name, // showName -> displayName
-        description = descriptionText ?: description ?: "", // msg -> description
-        groupId = parentCategoryId?.toString() ?: "0",
-        groupName = "Discourse", // Could map parent category name if we fetch it
-        sourceName = "discourse",
-        tag = null,
-        topicCount = topicCount.toLong(), // threadCount -> topicCount
-        autoDelete = null,
-        interval = null,
-        safeMode = if (readRestricted) "restricted" else "public"
-    )
+internal fun DiscourseTopic.toPost(usersMap: Map<Long, DiscourseUser>): Post {
+// 假设 topic 的第一个 poster 是楼主
+val originalPosterId =
+    posters?.firstOrNull { it.description.contains("Original Poster") }?.userId
+        ?: posters?.firstOrNull()?.userId
+val user = originalPosterId?.let { usersMap[it] }
+
+val postCreatedAt = try {
+    Instant.parse(createdAt)
+} catch (e: Exception) {
+    Instant.fromEpochMilliseconds(0)
 }
 
-internal fun DiscourseTopic.toPost(usersMap: Map<Long, DiscourseUser>): Post {
-    // 假设 topic 的第一个 poster 是楼主
-    val originalPosterId =
-        posters.firstOrNull { it.description.contains("Original Poster") }?.userId
-            ?: posters.firstOrNull()?.userId
-    val user = originalPosterId?.let { usersMap[it] }
-
-    val postCreatedAt = try {
-        Instant.parse(createdAt)
-    } catch (e: Exception) {
-        Instant.fromEpochMilliseconds(0)
-    }
-
-    return Post(
-        id = id.toString(),
-        channelId = categoryId.toString(), // fid -> channelId
-        commentCount = replyCount.toLong(), // replyCount -> commentCount
-        images = imageUrl?.let {
-            listOf(ai.saniou.thread.domain.model.forum.Image(originalUrl = it, thumbnailUrl = it))
-        } ?: emptyList(), // img/ext -> images
-        title = title,
-        content = excerpt ?: fancyTitle,
-        createdAt = kotlin.time.Instant.fromEpochMilliseconds(postCreatedAt.toEpochMilliseconds()), // now -> createdAt
-        sourceName = "discourse",
-        sourceUrl = "https://meta.discourse.org/t/$slug/$id",
-        author = Author(
-            id = user?.username ?: "Unknown",
-            name = user?.name ?: user?.username ?: "Anonymous"
-        ),
-        channelName = "Discourse", // forumName -> channelName
-        isSage = false,
-        isAdmin = pinned || closed,
-        isHidden = !visible,
-        isLocal = false,
-        lastViewedCommentId = "",
-        comments = emptyList(),
-        remainingCount = null,
-    )
+return Post(
+    id = id.toString(),
+    channelId = categoryId?.toString() ?: "0", // fid -> channelId
+    commentCount = replyCount.toLong(), // replyCount -> commentCount
+    images = imageUrl?.let {
+        listOf(ai.saniou.thread.domain.model.forum.Image(originalUrl = it, thumbnailUrl = it))
+    } ?: emptyList(), // img/ext -> images
+    title = title,
+    content = excerpt ?: fancyTitle,
+    createdAt = kotlin.time.Instant.fromEpochMilliseconds(postCreatedAt.toEpochMilliseconds()), // now -> createdAt
+    sourceName = "discourse",
+    sourceUrl = "https://meta.discourse.org/t/$slug/$id",
+    author = Author(
+        id = user?.username ?: "Unknown",
+        name = user?.name ?: user?.username ?: "Anonymous"
+    ),
+    channelName = "Discourse", // forumName -> channelName
+    isSage = false,
+    isAdmin = pinned || closed,
+    isHidden = !visible,
+    isLocal = false,
+    lastViewedCommentId = "",
+    comments = emptyList(),
+    remainingCount = null,
+)
 }

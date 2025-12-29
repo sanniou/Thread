@@ -7,13 +7,26 @@ CREATE TABLE IF NOT EXISTS Channel (
     name TEXT NOT NULL,
     displayName TEXT, -- 原 showName
     description TEXT NOT NULL, -- 原 msg
+    descriptionText TEXT, -- 纯文本描述
     interval INTEGER,
     safeMode TEXT,
     autoDelete INTEGER,
     topicCount INTEGER, -- 原 threadCount
+    postCount INTEGER, -- 帖子/回复总数
     permissionLevel TEXT,
     forumFuseId TEXT,
     status TEXT,
+    parentId TEXT,
+    color TEXT,
+    textColor TEXT,
+    icon TEXT,
+    emoji TEXT,
+    styleType TEXT, -- 样式类型 (如 icon)
+    listViewStyle TEXT, -- 子列表样式 (如 boxes)
+    logoUrl TEXT,
+    bannerUrl TEXT,
+    slug TEXT,
+    canCreateTopic INTEGER,
     PRIMARY KEY (sourceId, id)
 );
 
@@ -34,7 +47,8 @@ CREATE INDEX IF NOT EXISTS idx_channel_category_id ON ChannelCategory(sourceId, 
 -- 插入 Channel 数据
 insertChannel:
 INSERT OR REPLACE INTO Channel (
-    id, sourceId, fGroup, sort, name, displayName, description, interval, safeMode, autoDelete, topicCount, permissionLevel, forumFuseId,  status
+    id, sourceId, fGroup, sort, name, displayName, description, descriptionText, interval, safeMode, autoDelete, topicCount, postCount, permissionLevel, forumFuseId,  status,
+    parentId, color, textColor, icon, emoji, styleType, listViewStyle, logoUrl, bannerUrl, slug, canCreateTopic
 ) VALUES ?;
 
 -- 插入 ChannelCategory 数据
@@ -51,13 +65,26 @@ UPDATE Channel SET
     name = ?,
     displayName = ?,
     description = ?,
+    descriptionText = ?,
     interval = ?,
     safeMode = ?,
     autoDelete = ?,
     topicCount = ?,
+    postCount = ?,
     permissionLevel = ?,
     forumFuseId = ?,
-    status = ?
+    status = ?,
+    parentId = ?,
+    color = ?,
+    textColor = ?,
+    icon = ?,
+    emoji = ?,
+    styleType = ?,
+    listViewStyle = ?,
+    logoUrl = ?,
+    bannerUrl = ?,
+    slug = ?,
+    canCreateTopic = ?
 WHERE sourceId = ? AND id = ?;
 
 -- 更新 ChannelCategory 数据
@@ -99,6 +126,10 @@ SELECT * FROM Channel WHERE sourceId = :sourceId AND id = :id;
 -- 获取指定 ChannelCategory 的所有子 Channel 数据 (原 getGroupForum)
 getChannelsByCategory:
 SELECT * FROM Channel WHERE sourceId = :sourceId AND fGroup = :groupId;
+
+-- 获取指定 Parent 的所有子 Channel 数据
+getChannelsByParent:
+SELECT * FROM Channel WHERE sourceId = :sourceId AND parentId = :parentId;
 
 -- 查询指定 ChannelCategory 数据
 getChannelCategory:
