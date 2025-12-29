@@ -13,8 +13,8 @@ import ai.saniou.thread.data.source.nmb.remote.dto.ThreadWithInformation
 import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
 import ai.saniou.thread.data.source.nmb.remote.dto.toTable
 import ai.saniou.thread.data.source.nmb.remote.dto.toTableReply
-import ai.saniou.thread.data.source.nmb.remote.dto.toThreadWithInformation
 import ai.saniou.thread.data.manager.CdnManager
+import ai.saniou.thread.data.source.nmb.remote.dto.toThreadWithInformation
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.db.table.Cookie
 import ai.saniou.thread.db.table.forum.Image
@@ -395,7 +395,7 @@ class NmbSource(
         val page: Int,
         val start: String,
         val end: String,
-        val count: Int
+        val count: Int,
     )
 
     suspend fun getTrendAnchor(): TrendAnchor? {
@@ -738,9 +738,14 @@ class NmbSource(
             ?.toDomain(db.imageQueries)
     }
 
-    suspend fun getLocalReplyByDate(threadId: Long, targetDate: kotlinx.datetime.LocalDate): DomainComment? {
-        val startOfDay = targetDate.atStartOfDayIn(TimeZone.currentSystemDefault()).toEpochMilliseconds()
-        val endOfDay = targetDate.plus(1, kotlinx.datetime.DateTimeUnit.DAY).atStartOfDayIn(TimeZone.currentSystemDefault()).toEpochMilliseconds()
+    suspend fun getLocalReplyByDate(
+        threadId: Long,
+        targetDate: kotlinx.datetime.LocalDate,
+    ): DomainComment? {
+        val startOfDay =
+            targetDate.atStartOfDayIn(TimeZone.currentSystemDefault()).toEpochMilliseconds()
+        val endOfDay = targetDate.plus(1, kotlinx.datetime.DateTimeUnit.DAY)
+            .atStartOfDayIn(TimeZone.currentSystemDefault()).toEpochMilliseconds()
 
         return db.commentQueries.getCommentByTopicIdAndDateRange(
             sourceId = id,
@@ -750,7 +755,7 @@ class NmbSource(
         ).executeAsOneOrNull()?.toDomain(db.imageQueries)
     }
 
-    fun searchThreadsPager(query: String): Flow<PagingData<ThreadWithInformation>> {
+    fun searchThreadsPager(query: String): Flow<PagingData<Post>> {
         return Pager(
             config = PagingConfig(pageSize = 20),
             pagingSourceFactory = {
@@ -764,7 +769,7 @@ class NmbSource(
                 )
             }
         ).flow.map { pagingData ->
-            pagingData.map { it.toThreadWithInformation(db.commentQueries) }
+            pagingData.map { it.toDomain(db.commentQueries, db.imageQueries) }
         }
     }
 
@@ -800,7 +805,7 @@ class NmbSource(
                 )
             }
         ).flow.map { pagingData ->
-            pagingData.map { it.toDomain(db.commentQueries,db.imageQueries) }
+            pagingData.map { it.toDomain(db.commentQueries, db.imageQueries) }
         }
     }
 

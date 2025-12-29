@@ -106,7 +106,7 @@ class DiscourseSource(
                 cache.getForumThreadsPagingSource(id, forumId)
             }
         ).flow.map { pagingData ->
-            pagingData.map { it.toThreadWithInformation(db.commentQueries).toDomain() }
+            pagingData.map { it.toDomain(db.commentQueries, db.imageQueries) }
         }
     }
 
@@ -138,9 +138,9 @@ class DiscourseSource(
                 isAdmin = false,
                 isHidden = false,
                 isLocal = false,
-                lastViewedCommentId = "", 
-                comments = emptyList(), 
-                remainingCount = null 
+                lastViewedCommentId = "",
+                comments = emptyList(),
+                remainingCount = null
             )
             Result.success(post)
         } catch (e: Exception) {
@@ -218,8 +218,8 @@ internal fun DiscourseTopic.toPost(usersMap: Map<Long, DiscourseUser>): Post {
         isAdmin = pinned || closed,
         isHidden = !visible,
         isLocal = false,
-        lastViewedCommentId = "", 
-        comments = emptyList(), 
-        remainingCount = null, 
+        lastViewedCommentId = "",
+        comments = emptyList(),
+        remainingCount = null,
     )
 }

@@ -152,8 +152,8 @@ data class SearchPage(
     @Composable
     private fun ThreadResultList(
         viewModel: SearchViewModel,
-        onThreadClick: (Long) -> Unit,
-        onImageClick: (Long, Image) -> Unit,
+        onThreadClick: (String) -> Unit,
+        onImageClick: (String, Image) -> Unit,
         onUserClick: (String) -> Unit,
     ) {
         val threads =
@@ -166,7 +166,7 @@ data class SearchPage(
             items(threads.itemCount) { index ->
                 val thread = threads[index] ?: return@items
                 TopicCard(
-                    thread = thread,
+                    topic = thread,
                     onClick = { onThreadClick(thread.id) },
                     onImageClick = { img -> onImageClick(thread.id, img) },
                     onUserClick = onUserClick

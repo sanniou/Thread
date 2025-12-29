@@ -102,7 +102,7 @@ fun GetThreadsInForumOffset.toThreadWithInformation(query: ThreadReplyQueries? =
             it.toThreadReply()
         } ?: emptyList(),
         remainingCount = remainingCount,
-        lastKey = latestCommentId?.toLong(),
+        lastKey = latestCommentId?.toLongOrNull(),
         last_access_time = lastVisitedAt,
         last_read_reply_id = lastVisitedAt,
     )
