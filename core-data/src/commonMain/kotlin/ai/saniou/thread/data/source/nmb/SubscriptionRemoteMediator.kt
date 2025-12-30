@@ -41,7 +41,8 @@ class SubscriptionRemoteMediator(
             }
 
             feedDetail.forEach { feed ->
-                db.topicQueries.upsertTopicNoPage(feed.toTable("nmb", Long.MAX_VALUE))
+                val topic = feed.toTable("nmb", Long.MAX_VALUE)
+                db.topicQueries.upsertTopicNoPage(topic)
 
                 db.subscriptionQueries.insertSubscription(
                     subscriptionKey = subscriptionKey,

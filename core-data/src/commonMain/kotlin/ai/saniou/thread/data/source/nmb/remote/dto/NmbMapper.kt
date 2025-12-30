@@ -96,7 +96,9 @@ fun SelectSubscriptionTopic.toDomain(imageQueries: ImageQueries? = null): Topic 
         isHidden = (hide ?: 0) > 0,
         isLocal = isLocal == 1L,
         comments = emptyList(),
-        remainingCount = null
+        remainingCount = null,
+        summary = null,
+        lastViewedCommentId = null
     )
 }
 
@@ -153,6 +155,7 @@ fun GetTopic.toDomain(imageQueries: ImageQueries? = null): Topic {
         isHidden = (hide ?: 0) > 0,
         isLocal = true,
         comments = emptyList(), // GetTopic doesn't join with comments
+        summary = null,
         remainingCount = null
     )
 }
@@ -175,6 +178,7 @@ fun Thread.toDomain(): Topic = Topic(
     isHidden = hide > 0,
     isLocal = false,
     comments = replies.map { it.toDomain() },
+    summary = null,
     remainingCount = (replyCount - replies.size).coerceAtLeast(0).toLong()
 )
 

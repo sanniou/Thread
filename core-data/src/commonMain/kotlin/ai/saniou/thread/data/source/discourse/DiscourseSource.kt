@@ -29,7 +29,9 @@ import kotlin.time.Duration.Companion.days
 import kotlin.time.Instant
 import ai.saniou.thread.domain.model.forum.Channel
 import ai.saniou.thread.domain.model.forum.Comment
+import ai.saniou.thread.domain.model.forum.Image
 import ai.saniou.thread.domain.model.forum.Topic
+import kotlinx.coroutines.flow.flowOf
 
 class DiscourseSource(
     private val api: DiscourseApi,
@@ -45,7 +47,7 @@ class DiscourseSource(
             .map { it == true }
 
     override fun observeChannels(): Flow<List<Channel>> {
-        return cache.observeForums(id).map { forums ->
+        return cache.observeChannels(id).map { forums ->
             if (forums.isNotEmpty()) {
                 buildChannelTree(forums.map { it.toDomain() })
             } else {
@@ -74,7 +76,7 @@ class DiscourseSource(
 
                     // 2. Save to cache (flatten first)
                     val flatForums = forums.flatMap { it.flatten() }
-                    cache.saveForums(flatForums.map { it.toEntity() })
+                    cache.saveChannels(flatForums.map { it.toEntity() })
 
                     CacheStrategy.updateLastFetchTime(
                         db = db,
@@ -84,6 +86,7 @@ class DiscourseSource(
 
                     Result.success(Unit)
                 }
+
                 is SaniouResult.Error -> {
                     Result.failure(response.ex)
                 }
@@ -111,13 +114,14 @@ class DiscourseSource(
 
         // Recursive function to build tree
         fun buildTree(channel: Channel): Channel {
-            val children = childrenMap[channel.id]?.map { buildTree(it) }?.sortedBy { it.sort } ?: emptyList()
+            val children =
+                childrenMap[channel.id]?.map { buildTree(it) }?.sortedBy { it.sort } ?: emptyList()
             return channel.copy(children = children)
         }
 
         return rootChannels.map {
             // Discourse 没有 category ，这里硬编码
-            buildTree(it.copy(groupName="Discourse"))
+            buildTree(it.copy(groupName = "Discourse"))
         }.sortedBy { it.sort }
     }
 
@@ -140,7 +144,7 @@ class DiscourseSource(
                 db = db,
             ),
             pagingSourceFactory = {
-                cache.getForumThreadsPagingSource(id, channelId)
+                cache.getChannelTopicPagingSource(id, channelId)
             }
         ).flow.map { pagingData ->
             pagingData.map { it.toDomain(db.commentQueries, db.imageQueries) }
@@ -163,7 +167,7 @@ class DiscourseSource(
                         channelId = response.categoryId.toString(), // fid -> channelId
                         commentCount = response.replyCount.toLong(), // replyCount -> commentCount
                         images = emptyList(), // TODO: parse images
-                        createdAt = kotlin.time.Instant.fromEpochMilliseconds(createdAt.toEpochMilliseconds()),
+                        createdAt = Instant.fromEpochMilliseconds(createdAt.toEpochMilliseconds()),
                         title = response.title,
                         content = firstPost?.cooked ?: "", // Use full content
                         sourceName = "discourse",
@@ -179,17 +183,34 @@ class DiscourseSource(
                         isLocal = false,
                         lastViewedCommentId = "",
                         comments = emptyList(),
-                        remainingCount = null
+                        remainingCount = null,
+                        summary = null
                     )
 
                     // Update cache/DB
-                    // TODO: Implement proper caching for thread details similar to NmbSource
+                    db.topicQueries.transaction {
+                        // Upsert Topic
+                        val entity = post.toEntity(page)
+                        db.topicQueries.upsertTopic(entity)
+
+                        // Upsert Comments (including Post #1 as floor 1)
+                        response.postStream.posts.forEach { discoursePost ->
+                            db.commentQueries.upsertComment(
+                                discoursePost.toComment(
+                                    sourceId = id,
+                                    threadId = response.id.toString(),
+                                    page = page
+                                )
+                            )
+                        }
+                    }
 
                     Result.success(post)
                 } catch (e: Exception) {
                     Result.failure(e)
                 }
             }
+
             is SaniouResult.Error -> {
                 Result.failure(result.ex)
             }
@@ -214,7 +235,7 @@ class DiscourseSource(
                 fetcher = { page -> api.getTopic(threadId, page) }
             ),
             pagingSourceFactory = {
-                cache.getThreadRepliesPagingSource(id, threadId)
+                cache.getTopicCommentsPagingSource(id, threadId)
             }
         ).flow.map { pagingData ->
             pagingData.map { it.toDomain(db.imageQueries) }
@@ -224,46 +245,47 @@ class DiscourseSource(
     override fun getChannel(channelId: String): Flow<Channel?> {
         // TODO: Implement proper forum detail fetching or caching
         // For now, return null as we don't persist forums locally yet
-        return kotlinx.coroutines.flow.flowOf(null)
+        return flowOf(null)
     }
 }
 
 internal fun DiscourseTopic.toPost(usersMap: Map<Long, DiscourseUser>): Topic {
 // 假设 topic 的第一个 poster 是楼主
-val originalPosterId =
-    posters?.firstOrNull { it.description.contains("Original Poster") }?.userId
-        ?: posters?.firstOrNull()?.userId
-val user = originalPosterId?.let { usersMap[it] }
+    val originalPosterId =
+        posters?.firstOrNull { it.description.contains("Original Poster") }?.userId
+            ?: posters?.firstOrNull()?.userId
+    val user = originalPosterId?.let { usersMap[it] }
 
-val postCreatedAt = try {
-    Instant.parse(createdAt)
-} catch (e: Exception) {
-    Instant.fromEpochMilliseconds(0)
-}
+    val postCreatedAt = try {
+        Instant.parse(createdAt)
+    } catch (e: Exception) {
+        Instant.fromEpochMilliseconds(0)
+    }
 
-return Topic(
-    id = id.toString(),
-    channelId = categoryId?.toString() ?: "0", // fid -> channelId
-    commentCount = replyCount.toLong(), // replyCount -> commentCount
-    images = imageUrl?.let {
-        listOf(ai.saniou.thread.domain.model.forum.Image(originalUrl = it, thumbnailUrl = it))
-    } ?: emptyList(), // img/ext -> images
-    title = title,
-    content = excerpt ?: fancyTitle,
-    createdAt = kotlin.time.Instant.fromEpochMilliseconds(postCreatedAt.toEpochMilliseconds()), // now -> createdAt
-    sourceName = "discourse",
-    sourceUrl = "https://meta.discourse.org/t/$slug/$id",
-    author = Author(
-        id = user?.username ?: "Unknown",
-        name = user?.name ?: user?.username ?: "Anonymous"
-    ),
-    channelName = "Discourse", // forumName -> channelName
-    isSage = false,
-    isAdmin = pinned || closed,
-    isHidden = !visible,
-    isLocal = false,
-    lastViewedCommentId = "",
-    comments = emptyList(),
-    remainingCount = null,
-)
+    return Topic(
+        id = id.toString(),
+        channelId = categoryId?.toString() ?: "0", // fid -> channelId
+        commentCount = replyCount.toLong(), // replyCount -> commentCount
+        images = imageUrl?.let {
+            listOf(Image(originalUrl = it, thumbnailUrl = it))
+        } ?: emptyList(), // img/ext -> images
+        title = title,
+        content = excerpt ?: fancyTitle,
+        createdAt = Instant.fromEpochMilliseconds(postCreatedAt.toEpochMilliseconds()), // now -> createdAt
+        sourceName = "discourse",
+        sourceUrl = "https://meta.discourse.org/t/$slug/$id",
+        author = Author(
+            id = user?.username ?: "Unknown",
+            name = user?.name ?: user?.username ?: "Anonymous"
+        ),
+        channelName = "Discourse", // forumName -> channelName
+        isSage = false,
+        isAdmin = pinned || closed,
+        isHidden = !visible,
+        isLocal = false,
+        lastViewedCommentId = "",
+        comments = emptyList(),
+        summary = null,
+        remainingCount = null,
+    )
 }

@@ -31,6 +31,7 @@ data class Topic(
 
     val title: String?,
     val content: String,
+    val summary: String?,
 
     val author: Author,
 

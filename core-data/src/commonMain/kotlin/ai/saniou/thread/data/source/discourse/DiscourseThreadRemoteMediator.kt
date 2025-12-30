@@ -39,8 +39,14 @@ class DiscourseThreadRemoteMediator(
         ),
         fetcher = { page -> fetcher(page) },
         saver = { topic, page, _ ->
-            // Save Topic if needed (simplified for now, focus on replies)
-            // TODO: Upsert topic details
+            // Update Topic Content (cooked HTML) and reply count
+            val firstPost = topic.postStream.posts.firstOrNull { it.postNumber == 1 }
+            db.topicQueries.updateTopicContent(
+                commentCount = topic.replyCount.toLong(),
+                value = firstPost?.cooked,
+                sourceId = sourceId,
+                id = topic.id.toString()
+            )
 
             topic.postStream.posts.forEach { post ->
                 db.commentQueries.upsertComment(post.toComment(sourceId, topic.id.toString(), page))

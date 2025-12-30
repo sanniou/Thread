@@ -7,6 +7,7 @@ import ai.saniou.thread.data.source.nmb.remote.dto.RemoteKeyType
 import ai.saniou.thread.data.source.nmb.remote.dto.Thread
 import ai.saniou.thread.data.source.nmb.remote.dto.toTable
 import ai.saniou.thread.data.source.nmb.remote.dto.toTableReply
+import ai.saniou.thread.data.source.nmb.remote.dto.toCommentEntity
 import ai.saniou.thread.data.manager.CdnManager
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.db.table.forum.Comment
@@ -55,7 +56,8 @@ class ThreadRemoteMediator(
             val storagePage = page.toStoragePage()
             // Use upsertThreadNoPage to avoid overwriting the 'page' field (which represents Forum Page)
             // with the Reply Page number, unless it's a new insertion.
-            db.topicQueries.upsertTopicNoPage(threadDetail.toTable(sourceId, storagePage))
+            val topic = threadDetail.toTable(sourceId, storagePage)
+            db.topicQueries.upsertTopicNoPage(topic)
 
             // Save Topic Image
             saveNmbImage(
@@ -64,6 +66,20 @@ class ThreadRemoteMediator(
                 sourceId = sourceId,
                 parentId = threadDetail.id.toString(),
                 parentType = ImageType.Topic,
+                img = threadDetail.img,
+                ext = threadDetail.ext
+            )
+
+            // 将 Thread (主楼) 作为 Comment 存入
+            db.commentQueries.upsertComment(
+                threadDetail.toCommentEntity(sourceId = sourceId)
+            )
+            saveNmbImage(
+                db = db,
+                cdnManager = cdnManager,
+                sourceId = sourceId,
+                parentId = threadDetail.id.toString(),
+                parentType = ImageType.Comment,
                 img = threadDetail.img,
                 ext = threadDetail.ext
             )

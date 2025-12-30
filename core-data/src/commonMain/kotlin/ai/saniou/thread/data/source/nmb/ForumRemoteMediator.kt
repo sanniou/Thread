@@ -45,7 +45,8 @@ class ForumRemoteMediator(
                 db.topicQueries.deleteTopicsByChannelAndPage(sourceId, fid, page.toLong())
             }
             forums.forEach { forum ->
-                db.topicQueries.upsertTopic(forum.toTable(sourceId, page.toLong()))
+                val topic = forum.toTable(sourceId, page.toLong())
+                db.topicQueries.upsertTopic(topic)
                 // Save Topic Image
                 saveNmbImage(
                     db = db,

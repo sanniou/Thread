@@ -31,12 +31,12 @@ class TopicRepositoryImpl(
     private val sourceMap by lazy { sources.associateBy { it.id } }
 
     override fun getTopicDetail(sourceId: String, id: String, forceRefresh: Boolean): Flow<Topic> {
-        return cache.observeThread(sourceId, id)
+        return cache.observeTopic(sourceId, id)
             .mapNotNull { it?.toDomain(db.commentQueries, db.imageQueries) }
             .onStart {
                 val source = sourceMap[sourceId]
                 if (source != null) {
-                    val currentCache = cache.observeThread(sourceId, id).firstOrNull()
+                    val currentCache = cache.observeTopic(sourceId, id).firstOrNull()
                     if (currentCache == null || forceRefresh) {
                         val result = source.getTopicDetail(id, 1)
                         result.onSuccess { post ->
@@ -44,7 +44,7 @@ class TopicRepositoryImpl(
                             // Ideally source should save to DB directly or cache.saveThread should handle images.
                             // NmbSource.getThreadDetail currently doesn't save to DB.
                             // Let's assume cache.saveThread handles basic info, but images need separate handling or source should do it.
-                            cache.saveThread(post.toEntity())
+                            cache.saveTopic(post.toEntity())
                         }
                     }
                 }

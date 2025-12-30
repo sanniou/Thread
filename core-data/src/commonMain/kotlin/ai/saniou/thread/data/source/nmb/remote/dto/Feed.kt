@@ -58,6 +58,7 @@ fun Feed.toTable(sourceId: String, page: Long) = EntityTopic(
     authorName = name,
     title = title,
     content = content,
+    summary = content, // NMB feed provides full content
     sage = sage,
     admin = admin,
     hide = hide,
@@ -108,6 +109,7 @@ fun IBaseThread.toDomain(): Topic {
         sourceUrl = "https://nmb.ai/thread/$id",
         title = title,
         content = content,
+        summary = content,
         author = author,
         createdAt = now.toTime(),
         channelId = fid.toString(), // channelId

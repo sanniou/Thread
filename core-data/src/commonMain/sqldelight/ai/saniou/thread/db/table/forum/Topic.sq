@@ -19,7 +19,8 @@ CREATE TABLE IF NOT EXISTS Topic (
     userHash TEXT NOT NULL,
     authorName TEXT NOT NULL,
     title TEXT, -- 可为空
-    content TEXT NOT NULL,
+    content TEXT, -- 详情页 HTML 内容，可能为空 (列表页不返回)
+    summary TEXT, -- 列表页摘要，可能为空
     sage INTEGER NOT NULL,
     admin INTEGER NOT NULL,
     hide INTEGER NOT NULL,
@@ -35,7 +36,7 @@ CREATE INDEX IF NOT EXISTS idx_topic_channel_id ON Topic(sourceId, channelId);
 -- 插入 Topic 数据 (无 Page)
 upsertTopicNoPage:
 INSERT INTO Topic (
-    id, sourceId, channelId, commentCount, createdAt, userHash, authorName, title, content, sage, admin, hide, page
+    id, sourceId, channelId, commentCount, createdAt, userHash, authorName, title, content, summary, sage, admin, hide, page
 ) VALUES ?
 ON CONFLICT (sourceId, id) DO UPDATE SET
     commentCount = excluded.commentCount,
@@ -43,16 +44,30 @@ ON CONFLICT (sourceId, id) DO UPDATE SET
     userHash = excluded.userHash,
     authorName = excluded.authorName,
     title = COALESCE(excluded.title, Topic.title),
-    content = excluded.content,
+    content = COALESCE(excluded.content, Topic.content), -- 只有当新 content 非空时才更新
+    summary = COALESCE(excluded.summary, Topic.summary),
     sage = excluded.sage,
     admin = excluded.admin,
     hide = excluded.hide;
 
 -- 插入 Topic 数据
 upsertTopic:
-INSERT OR REPLACE INTO Topic (
-    id, sourceId, channelId, commentCount, createdAt, userHash, authorName, title, content, sage, admin, hide, page
-) VALUES ?;
+INSERT INTO Topic (
+    id, sourceId, channelId, commentCount, createdAt, userHash, authorName, title, content, summary, sage, admin, hide, page
+) VALUES ?
+ON CONFLICT (sourceId, id) DO UPDATE SET
+    channelId = excluded.channelId,
+    commentCount = excluded.commentCount,
+    createdAt = excluded.createdAt,
+    userHash = excluded.userHash,
+    authorName = excluded.authorName,
+    title = COALESCE(excluded.title, Topic.title),
+    content = COALESCE(excluded.content, Topic.content), -- 只有当新 content 非空时才更新
+    summary = COALESCE(excluded.summary, Topic.summary),
+    sage = excluded.sage,
+    admin = excluded.admin,
+    hide = excluded.hide,
+    page = excluded.page;
 
 -- 插入或更新 TopicInformation 数据
 upsertTopicInformation:
@@ -87,9 +102,17 @@ UPDATE Topic SET
     authorName = ?,
     title = ?,
     content = ?,
+    summary = ?,
     sage = ?,
     admin = ?,
     hide = ?
+WHERE sourceId = ? AND id = ?;
+
+-- 仅更新 Topic 详情内容 (用于 Discourse 详情页刷新)
+updateTopicContent:
+UPDATE Topic SET
+    commentCount = ?,
+    content = COALESCE(?, content)
 WHERE sourceId = ? AND id = ?;
 
 -- 删除 TopicInformation 数据

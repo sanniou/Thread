@@ -10,6 +10,7 @@ import ai.saniou.thread.data.source.nmb.remote.dto.RemoteKeyType
 import ai.saniou.thread.data.source.nmb.remote.dto.Reply
 import ai.saniou.thread.data.source.nmb.remote.dto.Thread
 import ai.saniou.thread.data.source.nmb.remote.dto.ThreadReply
+import ai.saniou.thread.data.source.nmb.remote.dto.toCommentEntity
 import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
 import ai.saniou.thread.data.source.nmb.remote.dto.toTable
 import ai.saniou.thread.data.source.nmb.remote.dto.toTableReply
@@ -175,8 +176,53 @@ class NmbSource(
             val response = nmbXdApi.thread(tid, page.toLong())
             if (response is SaniouResult.Success) {
                 val thread = response.data
-                // Use default emptyList for images from remote since we don't have ImageQueries here for remote data yet
-                // Or map remote images if available in DTO
+                db.topicQueries.transaction {
+                    val topic = thread.toTable(id, page = page.toLong())
+                    db.topicQueries.upsertTopic(topic)
+                    // Save Topic Image
+                    saveNmbImage(
+                        db = db,
+                        cdnManager = cdnManager,
+                        sourceId = id,
+                        parentId = thread.id.toString(),
+                        parentType = ImageType.Topic,
+                        img = thread.img,
+                        ext = thread.ext
+                    )
+
+                    // Save Topic as Comment (Floor 1)
+                    db.commentQueries.upsertComment(
+                        thread.toCommentEntity(sourceId = id)
+                    )
+                    saveNmbImage(
+                        db = db,
+                        cdnManager = cdnManager,
+                        sourceId = id,
+                        parentId = thread.id.toString(),
+                        parentType = ImageType.Comment,
+                        img = thread.img,
+                        ext = thread.ext
+                    )
+
+                    thread.replies.forEach { reply ->
+                        db.commentQueries.upsertComment(
+                            reply.toTableReply(
+                                sourceId = id,
+                                threadId = thread.id,
+                                page = page.toLong()
+                            )
+                        )
+                        saveNmbImage(
+                            db = db,
+                            cdnManager = cdnManager,
+                            sourceId = id,
+                            parentId = reply.id.toString(),
+                            parentType = ImageType.Comment,
+                            img = reply.img,
+                            ext = reply.ext
+                        )
+                    }
+                }
                 Result.success(thread.toDomain())
             } else {
                 Result.failure((response as SaniouResult.Error).ex)
@@ -492,7 +538,8 @@ class NmbSource(
                     val thread = response.data
                     // 更新数据库
                     db.topicQueries.transaction {
-                        db.topicQueries.upsertTopic(thread.toTable(id, page = page.toLong()))
+                        val topic = thread.toTable(id, page = page.toLong())
+                        db.topicQueries.upsertTopic(topic)
                         // 保存 Topic 图片
                         saveNmbImage(
                             db = db,
@@ -500,6 +547,21 @@ class NmbSource(
                             sourceId = id,
                             parentId = thread.id.toString(),
                             parentType = ImageType.Topic,
+                            img = thread.img,
+                            ext = thread.ext
+                        )
+
+                        // 将 Thread (主楼) 作为 Comment 存入
+                        db.commentQueries.upsertComment(
+                            thread.toCommentEntity(sourceId = id)
+                        )
+                        // 保存 Comment 图片 (为主楼图片再存一份，关联到 commentId)
+                        saveNmbImage(
+                            db = db,
+                            cdnManager = cdnManager,
+                            sourceId = id,
+                            parentId = thread.id.toString(),
+                            parentType = ImageType.Comment,
                             img = thread.img,
                             ext = thread.ext
                         )
@@ -543,7 +605,8 @@ class NmbSource(
                     val thread = response.data
                     // 保存到数据库
                     db.topicQueries.transaction {
-                        db.topicQueries.upsertTopic(thread.toTable(id, page = page.toLong()))
+                        val topic = thread.toTable(id, page = page.toLong())
+                        db.topicQueries.upsertTopic(topic)
                         // 保存 Topic 图片
                         saveNmbImage(
                             db = db,
@@ -551,6 +614,21 @@ class NmbSource(
                             sourceId = id,
                             parentId = thread.id.toString(),
                             parentType = ImageType.Topic,
+                            img = thread.img,
+                            ext = thread.ext
+                        )
+
+                        // 将 Thread (主楼) 作为 Comment 存入
+                        db.commentQueries.upsertComment(
+                            thread.toCommentEntity(sourceId = id)
+                        )
+                        // 保存 Comment 图片
+                        saveNmbImage(
+                            db = db,
+                            cdnManager = cdnManager,
+                            sourceId = id,
+                            parentId = thread.id.toString(),
+                            parentType = ImageType.Comment,
                             img = thread.img,
                             ext = thread.ext
                         )

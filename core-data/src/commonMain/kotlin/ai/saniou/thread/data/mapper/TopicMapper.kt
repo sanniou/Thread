@@ -37,7 +37,8 @@ fun SearchTopics.toDomain(
         sourceName = sourceId,
         sourceUrl = "https://nmb.ai/thread/$id", // TODO: Move URL generation to Source logic
         title = title,
-        content = content,
+        content = content ?: summary ?: "", // If content is null, fallback to summary, then empty
+        summary = summary,
         author = author,
         createdAt = Instant.fromEpochMilliseconds(createdAt),
         channelId = channelId,
@@ -78,7 +79,8 @@ fun GetTopicsInChannelOffset.toDomain(
         sourceName = sourceId,
         sourceUrl = "https://nmb.ai/thread/$id", // TODO: Move URL generation to Source logic
         title = title,
-        content = content,
+        content = content ?: summary ?: "",
+        summary = summary,
         author = author,
         createdAt = Instant.fromEpochMilliseconds(createdAt),
         channelId = channelId,
@@ -119,7 +121,8 @@ fun EntityTopic.toDomain(
         sourceName = sourceId,
         sourceUrl = "https://nmb.ai/thread/$id", // TODO: Move URL generation to Source logic
         title = title,
-        content = content,
+        content = content ?: summary ?: "",
+        summary = summary,
         author = author,
         createdAt = Instant.fromEpochMilliseconds(createdAt),
         channelId = channelId,
@@ -161,6 +164,7 @@ fun Topic.toEntity(page: Int = 1): EntityTopic {
         authorName = author.name,
         title = title,
         content = content,
+        summary = summary,
         sage = if (isSage) 1 else 0,
         admin = if (isAdmin) 1 else 0,
         hide = if (isHidden) 1 else 0,

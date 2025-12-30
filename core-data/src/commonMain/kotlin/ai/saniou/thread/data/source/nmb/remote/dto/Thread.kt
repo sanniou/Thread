@@ -85,26 +85,6 @@ fun Comment.toThreadReply() = ThreadReply(
     threadId = topicId.toLongOrNull() ?: 0L,
 )
 
-fun Topic.toThread(query: CommentQueries? = null) = Thread(
-    id = id.toLongOrNull() ?: 0L,
-    fid = channelId.toLongOrNull() ?: 0L,
-    replyCount = commentCount,
-    img = "", // Image handled separately
-    ext = "",
-    now = createdAt.toString(),
-    userHash = userHash,
-    name = authorName,
-    title = title ?: "",
-    content = content,
-    sage = sage,
-    admin = admin,
-    hide = hide,
-    replies = query?.getLastFiveComments(sourceId, id)?.executeAsList()?.map {
-        it.toThreadReply()
-    } ?: emptyList()
-)
-
-
 fun Thread.toTable(sourceId: String, page: Long) = Topic(
     id = id.toString(),
     sourceId = sourceId,
@@ -115,8 +95,24 @@ fun Thread.toTable(sourceId: String, page: Long) = Topic(
     authorName = name,
     title = title,
     content = content,
+    summary = content, // NMB detail provides full content
     sage = sage,
     admin = admin,
     hide = hide,
     page = page,
+)
+
+fun Thread.toCommentEntity(sourceId: String) = Comment(
+    id = id.toString(),
+    sourceId = sourceId,
+    topicId = id.toString(),
+    page = 1L,
+    userHash = userHash,
+    admin = admin,
+    title = title,
+    createdAt = now.toTime().toEpochMilliseconds(),
+    content = content,
+    authorName = name,
+    floor = 1,
+    replyToId = null
 )

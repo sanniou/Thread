@@ -72,6 +72,7 @@ fun Forum.toTable(sourceId: String, page: Long) = Topic(
     authorName = this.name,
     title = this.title,
     content = this.content,
+    summary = this.content, // NMB list provides full content
     sage = this.sage,
     admin = this.admin,
     hide = this.hide,

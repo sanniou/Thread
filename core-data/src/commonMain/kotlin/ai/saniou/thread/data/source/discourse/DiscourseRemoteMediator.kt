@@ -113,7 +113,8 @@ private fun DiscourseTopic.toThreadEntity(
         userHash = user?.username ?: "Unknown",
         authorName = user?.name ?: user?.username ?: "Anonymous",
         title = title,
-        content = excerpt ?: fancyTitle,
+        content = null, // LIST API does NOT return cooked content, set NULL to avoid overwriting existing cache
+        summary = excerpt ?: fancyTitle,
         sage = 0,
         admin = if (pinned || closed) 1 else 0,
         hide = if (!visible) 1 else 0,

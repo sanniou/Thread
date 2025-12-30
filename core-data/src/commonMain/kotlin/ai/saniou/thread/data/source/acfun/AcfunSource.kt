@@ -120,6 +120,7 @@ class AcfunSource(
                         isHidden = false,
                         isLocal = false,
                         channelId = data.channel?.id?.toString() ?: "0",
+                        summary = null,
                         lastViewedCommentId = "",
                     )
                     Result.success(post)
