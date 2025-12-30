@@ -1,6 +1,6 @@
 package ai.saniou.thread.domain.repository
 
-import ai.saniou.thread.domain.model.forum.Comment as ThreadReply
+import ai.saniou.thread.domain.model.forum.Comment
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -14,5 +14,5 @@ interface ReferenceRepository {
      * @param id 引用ID
      * @return 包含引用内容的 Flow
      */
-    fun getReference(id: Long): Flow<ThreadReply>
+    fun getReference(id: Long): Flow<Comment>
 }

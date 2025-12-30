@@ -9,7 +9,7 @@ import ai.saniou.thread.data.source.nmb.remote.dto.toTable
 import ai.saniou.thread.data.source.nmb.remote.dto.toTableReply
 import ai.saniou.thread.data.manager.CdnManager
 import ai.saniou.thread.db.Database
-import ai.saniou.thread.db.table.forum.Comment as ThreadReply
+import ai.saniou.thread.db.table.forum.Comment
 import ai.saniou.thread.domain.model.forum.ImageType
 import ai.saniou.thread.network.SaniouResult
 import app.cash.paging.ExperimentalPagingApi
@@ -28,7 +28,7 @@ class ThreadRemoteMediator(
     private val isPoOnly: Boolean = false,
     private val cdnManager: CdnManager,
     private val fetcher: suspend (page: Int) -> SaniouResult<Thread>,
-) : RemoteMediator<Int, ThreadReply>() {
+) : RemoteMediator<Int, Comment>() {
 
     // When isPoOnly is true, we store pages as negative numbers to distinguish from normal pages
     // page 1 -> -1
@@ -40,7 +40,7 @@ class ThreadRemoteMediator(
         return if (isPoOnly) -this.toLong() else this.toLong()
     }
 
-    private val delegate = GenericRemoteMediator<Int, ThreadReply, Thread>(
+    private val delegate = GenericRemoteMediator<Int, Comment, Thread>(
         db = db,
         dataPolicy = dataPolicy,
         initialKey = initialPage,
@@ -111,7 +111,7 @@ class ThreadRemoteMediator(
 
     override suspend fun load(
         loadType: LoadType,
-        state: PagingState<Int, ThreadReply>
+        state: PagingState<Int, Comment>
     ): RemoteMediatorMediatorResult {
         return delegate.load(loadType, state)
     }

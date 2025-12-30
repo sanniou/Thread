@@ -4,7 +4,7 @@ import ai.saniou.corecommon.utils.toRelativeTimeString
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.BlankLinePolicy
 import ai.saniou.coreui.widgets.RichText
-import ai.saniou.thread.domain.model.forum.Comment as ThreadReply
+import ai.saniou.thread.domain.model.forum.Comment
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -22,7 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 
 @Composable
-fun RecentReplies(replies: List<ThreadReply>) {
+fun RecentReplies(replies: List<Comment>) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -39,7 +39,7 @@ fun RecentReplies(replies: List<ThreadReply>) {
 
 
 @Composable
-private fun ReplyItem(reply: ThreadReply) {
+private fun ReplyItem(reply: Comment) {
     Column(
         verticalArrangement = Arrangement.spacedBy(Dimens.padding_tiny)
     ) {

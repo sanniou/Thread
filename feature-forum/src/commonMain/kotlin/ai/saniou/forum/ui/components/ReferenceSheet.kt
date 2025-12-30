@@ -1,7 +1,7 @@
 package ai.saniou.forum.ui.components
 
 import ai.saniou.corecommon.utils.toRelativeTimeString
-import ai.saniou.thread.domain.model.forum.Comment as ThreadReply
+import ai.saniou.thread.domain.model.forum.Comment
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -48,7 +48,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun ReferenceSheet(
     refId: Long,
-    reply: ThreadReply?,
+    reply: Comment?,
     isLoading: Boolean,
     error: String?,
     onDismiss: () -> Unit,

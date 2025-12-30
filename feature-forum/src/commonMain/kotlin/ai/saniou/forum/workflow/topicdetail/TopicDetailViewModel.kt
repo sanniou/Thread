@@ -5,8 +5,8 @@ import ai.saniou.forum.workflow.topicdetail.TopicDetailContract.Effect
 import ai.saniou.forum.workflow.topicdetail.TopicDetailContract.Event
 import ai.saniou.forum.workflow.topicdetail.TopicDetailContract.State
 import ai.saniou.thread.domain.model.bookmark.Bookmark
-import ai.saniou.thread.domain.model.forum.Topic as Post
-import ai.saniou.thread.domain.model.forum.Comment as ThreadReply
+import ai.saniou.thread.domain.model.forum.Topic
+import ai.saniou.thread.domain.model.forum.Comment
 import ai.saniou.thread.domain.usecase.bookmark.AddBookmarkUseCase
 import ai.saniou.thread.domain.usecase.channel.GetChannelNameUseCase
 import ai.saniou.thread.domain.usecase.subscription.GetActiveSubscriptionKeyUseCase
@@ -74,7 +74,7 @@ class TopicDetailViewModel(
 
     private val loadRequest = MutableStateFlow(LoadRequest(threadId = threadId))
 
-    val replies: Flow<PagingData<ThreadReply>> =
+    val replies: Flow<PagingData<Comment>> =
         loadRequest.flatMapLatest { request ->
             getTopicCommentsPagingUseCase(
                 sourceId = sourceId,
@@ -222,7 +222,7 @@ class TopicDetailViewModel(
         }
     }
 
-    private fun bookmarkThread(thread: Post) {
+    private fun bookmarkThread(thread: Topic) {
         screenModelScope.launch {
             addBookmarkUseCase(
                 Bookmark.Quote(
@@ -238,7 +238,7 @@ class TopicDetailViewModel(
         }
     }
 
-    private fun bookmarkReply(reply: ThreadReply) {
+    private fun bookmarkReply(reply: Comment) {
         screenModelScope.launch {
             addBookmarkUseCase(
                 Bookmark.Quote(

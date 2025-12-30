@@ -1,8 +1,8 @@
 package ai.saniou.thread.data.source.nmb.remote.dto
 
 import ai.saniou.corecommon.utils.toTime
-import ai.saniou.thread.db.table.forum.Topic as Thread
-import ai.saniou.thread.db.table.forum.Comment as ThreadReply
+import ai.saniou.thread.db.table.forum.Topic
+import ai.saniou.thread.db.table.forum.Comment
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonNames
@@ -62,7 +62,7 @@ data class Reply(
 ) : IBaseAuthor
 
 
-fun Forum.toTable(sourceId: String, page: Long) = Thread(
+fun Forum.toTable(sourceId: String, page: Long) = Topic(
     id = this.id.toString(),
     sourceId = sourceId,
     channelId = this.fid.toString(),
@@ -79,7 +79,7 @@ fun Forum.toTable(sourceId: String, page: Long) = Thread(
 )
 
 fun Forum.toTableReply(sourceId: String) = this.replies.map { reply ->
-    ThreadReply(
+    Comment(
         id = reply.id.toString(),
         sourceId = sourceId,
         authorName = reply.name,

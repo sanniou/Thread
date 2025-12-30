@@ -1,11 +1,10 @@
 package ai.saniou.thread.data.repository
 
-import ai.saniou.thread.db.Database
+import ai.saniou.corecommon.utils.toTime
 import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
 import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
-import ai.saniou.thread.data.source.nmb.remote.dto.toTable
-import ai.saniou.corecommon.utils.toTime
-import ai.saniou.thread.domain.model.forum.Comment as ThreadReply
+import ai.saniou.thread.db.Database
+import ai.saniou.thread.domain.model.forum.Comment
 import ai.saniou.thread.domain.repository.ReferenceRepository
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToOneOrNull
@@ -21,7 +20,7 @@ class ReferenceRepositoryImpl(
     private val db: Database,
 ) : ReferenceRepository {
 
-    override fun getReference(id: Long): Flow<ThreadReply> =
+    override fun getReference(id: Long): Flow<Comment> =
         db.commentQueries.getCommentById("nmb", id.toString())
             .asFlow()
             .mapToOneOrNull(Dispatchers.IO)

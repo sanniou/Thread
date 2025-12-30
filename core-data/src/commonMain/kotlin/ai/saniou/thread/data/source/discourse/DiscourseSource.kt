@@ -11,6 +11,7 @@ import ai.saniou.thread.data.source.discourse.remote.DiscourseApi
 import ai.saniou.thread.data.source.discourse.remote.dto.DiscourseTopic
 import ai.saniou.thread.data.source.discourse.remote.dto.DiscourseUser
 import ai.saniou.thread.data.source.nmb.remote.dto.RemoteKeyType
+import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.domain.model.forum.Author
 import ai.saniou.thread.domain.repository.SettingsRepository
@@ -195,6 +196,7 @@ class DiscourseSource(
         }
     }
 
+    @OptIn(ExperimentalPagingApi::class)
     override fun getThreadRepliesPager(
         threadId: String,
         initialPage: Int,
@@ -203,8 +205,20 @@ class DiscourseSource(
         return Pager(
             config = PagingConfig(pageSize = 20),
             initialKey = initialPage,
-            pagingSourceFactory = { DiscourseThreadPagingSource(api, threadId) }
-        ).flow
+            remoteMediator = DiscourseThreadRemoteMediator(
+                sourceId = id,
+                topicId = threadId,
+                db = db,
+                dataPolicy = DataPolicy.NETWORK_ELSE_CACHE,
+                initialPage = initialPage,
+                fetcher = { page -> api.getTopic(threadId, page) }
+            ),
+            pagingSourceFactory = {
+                cache.getThreadRepliesPagingSource(id, threadId)
+            }
+        ).flow.map { pagingData ->
+            pagingData.map { it.toDomain(db.imageQueries) }
+        }
     }
 
     override fun getForum(forumId: String): Flow<Channel?> {

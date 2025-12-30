@@ -180,15 +180,12 @@ fun Thread.toDomain(): Topic = Topic(
 
 @OptIn(ExperimentalTime::class)
 fun EntityComment.toDomain(imageQueries: ImageQueries? = null): Comment {
-    val images = if (imageQueries != null) {
-        imageQueries.getImagesByParent(
-            sourceId = sourceId,
-            parentId = id,
-            parentType = ImageType.Comment
-        ).executeAsList().map { it.toDomain() }
-    } else {
-        emptyList()
-    }
+    val images = imageQueries?.getImagesByParent(
+        sourceId = sourceId,
+        parentId = id,
+        parentType = ImageType.Comment
+    )?.executeAsList()?.map { it.toDomain() }
+        ?: emptyList()
 
     return Comment(
         id = id,

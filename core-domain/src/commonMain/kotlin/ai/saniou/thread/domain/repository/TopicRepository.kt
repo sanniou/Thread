@@ -1,8 +1,8 @@
 package ai.saniou.thread.domain.repository
 
 import ai.saniou.thread.domain.model.forum.Image
-import ai.saniou.thread.domain.model.forum.Topic as Post
-import ai.saniou.thread.domain.model.forum.Comment as ThreadReply
+import ai.saniou.thread.domain.model.forum.Topic
+import ai.saniou.thread.domain.model.forum.Comment
 import app.cash.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 
@@ -19,7 +19,7 @@ interface TopicRepository {
      * @param forceRefresh 是否强制从网络刷新
      * @return 包含帖子详情的 Flow
      */
-    fun getTopicDetail(sourceId: String, id: String, forceRefresh: Boolean = false): Flow<Post>
+    fun getTopicDetail(sourceId: String, id: String, forceRefresh: Boolean = false): Flow<Topic>
 
     /**
      * 获取帖子回复的分页数据
@@ -35,7 +35,7 @@ interface TopicRepository {
         threadId: String,
         isPoOnly: Boolean,
         initialPage: Int = 1
-    ): Flow<PagingData<ThreadReply>>
+    ): Flow<PagingData<Comment>>
 
     /**
      * 获取帖子中的所有图片
@@ -52,7 +52,7 @@ interface TopicRepository {
      * @param isPoOnly 是否只看PO主
      * @return 包含帖子回复列表的 Flow
      */
-    fun getTopicComments(threadId: Long, isPoOnly: Boolean): Flow<List<ThreadReply>>
+    fun getTopicComments(threadId: Long, isPoOnly: Boolean): Flow<List<Comment>>
 
     /**
      * 更新帖子最后已读的回复ID

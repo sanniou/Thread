@@ -1,11 +1,11 @@
 package ai.saniou.forum.workflow.reference
 
-import ai.saniou.thread.domain.model.forum.Comment as ThreadReply
+import ai.saniou.thread.domain.model.forum.Comment
 
 interface ReferenceContract {
     data class State(
         val isLoading: Boolean = false,
-        val reply: ThreadReply? = null,
+        val reply: Comment? = null,
         val error: String? = null
     )
 

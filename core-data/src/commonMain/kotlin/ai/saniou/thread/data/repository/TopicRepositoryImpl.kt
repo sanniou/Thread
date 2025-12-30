@@ -5,8 +5,8 @@ import ai.saniou.thread.data.mapper.toDomain
 import ai.saniou.thread.data.mapper.toEntity
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.domain.model.forum.Image
-import ai.saniou.thread.domain.model.forum.Topic as Post
-import ai.saniou.thread.domain.model.forum.Comment as ThreadReply
+import ai.saniou.thread.domain.model.forum.Topic
+import ai.saniou.thread.domain.model.forum.Comment
 import ai.saniou.thread.domain.repository.Source
 import ai.saniou.thread.domain.repository.TopicRepository
 import ai.saniou.thread.domain.model.forum.ImageType
@@ -30,7 +30,7 @@ class TopicRepositoryImpl(
 
     private val sourceMap by lazy { sources.associateBy { it.id } }
 
-    override fun getTopicDetail(sourceId: String, id: String, forceRefresh: Boolean): Flow<Post> {
+    override fun getTopicDetail(sourceId: String, id: String, forceRefresh: Boolean): Flow<Topic> {
         return cache.observeThread(sourceId, id)
             .mapNotNull { it?.toDomain(db.commentQueries, db.imageQueries) }
             .onStart {
@@ -57,7 +57,7 @@ class TopicRepositoryImpl(
         threadId: String,
         isPoOnly: Boolean,
         initialPage: Int,
-    ): Flow<PagingData<ThreadReply>> {
+    ): Flow<PagingData<Comment>> {
         val source = sourceMap[sourceId]
         return source?.getThreadRepliesPager(threadId, initialPage, isPoOnly)
             ?: kotlinx.coroutines.flow.flowOf(PagingData.empty())
@@ -94,7 +94,7 @@ class TopicRepositoryImpl(
     override fun getTopicComments(
         threadId: Long,
         isPoOnly: Boolean,
-    ): Flow<List<ThreadReply>> {
+    ): Flow<List<Comment>> {
         TODO("Not yet implemented")
     }
 

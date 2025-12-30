@@ -113,8 +113,8 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import org.kodein.di.direct
 import org.kodein.di.instance
-import ai.saniou.thread.domain.model.forum.Comment as ThreadReply
-import ai.saniou.thread.domain.model.forum.Topic as Post
+import ai.saniou.thread.domain.model.forum.Comment
+import ai.saniou.thread.domain.model.forum.Topic
 
 data class TopicDetailPage(
     val threadId: String,
@@ -343,8 +343,8 @@ private fun ThreadContentRouter(
     onImageClick: (Int, List<Image>) -> Unit,
     onUpdateLastReadId: (String) -> Unit,
     onCopy: (String) -> Unit,
-    onBookmarkThread: (Post) -> Unit,
-    onBookmarkReply: (ThreadReply) -> Unit,
+    onBookmarkThread: (Topic) -> Unit,
+    onBookmarkReply: (Comment) -> Unit,
     onBookmarkImage: (Image) -> Unit,
     onUserClick: (String) -> Unit,
 ) {
@@ -510,8 +510,8 @@ fun ThreadSuccessContent(
     onImageClick: (Int, List<Image>) -> Unit,
     onUpdateLastReadId: (String) -> Unit,
     onCopy: (String) -> Unit,
-    onBookmarkThread: (Post) -> Unit,
-    onBookmarkReply: (ThreadReply) -> Unit,
+    onBookmarkThread: (Topic) -> Unit,
+    onBookmarkReply: (Comment) -> Unit,
     onBookmarkImage: (Image) -> Unit,
     onUserClick: (String) -> Unit,
 ) {
@@ -598,8 +598,8 @@ private fun ThreadList(
     onImageClick: (Image) -> Unit,
     onRefresh: () -> Unit,
     onCopy: (String) -> Unit,
-    onBookmarkThread: (Post) -> Unit,
-    onBookmarkReply: (ThreadReply) -> Unit,
+    onBookmarkThread: (Topic) -> Unit,
+    onBookmarkReply: (Comment) -> Unit,
     onBookmarkImage: (Image) -> Unit,
     onUserClick: (String) -> Unit,
 ) {
@@ -803,7 +803,7 @@ private fun ThreadToolbar(
 
 @Composable
 fun ThreadMainPost(
-    thread: Post,
+    thread: Topic,
     refClick: (Long) -> Unit,
     onImageClick: (Image) -> Unit,
     onCopy: () -> Unit,
@@ -986,7 +986,7 @@ fun ThreadMainPost(
 
 @Composable
 fun ThreadReply(
-    reply: ThreadReply,
+    reply: Comment,
     poUserHash: String,
     onReplyClicked: (String) -> Unit,
     refClick: (Long) -> Unit,

@@ -5,8 +5,8 @@ import ai.saniou.thread.db.table.forum.CommentQueries
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonNames
-import ai.saniou.thread.db.table.forum.Comment as TableComment
-import ai.saniou.thread.db.table.forum.Topic as TableTopic
+import ai.saniou.thread.db.table.forum.Comment
+import ai.saniou.thread.db.table.forum.Topic
 
 @Serializable
 @OptIn(ExperimentalSerializationApi::class)
@@ -48,7 +48,7 @@ data class ThreadReply(
 ) : IBaseAuthor, IThreadBody
 
 fun ThreadReply.toTableReply(sourceId: String, threadId: Long, page: Long = Long.MIN_VALUE) =
-    TableComment(
+    Comment(
         id = this.id.toString(),
         sourceId = sourceId,
         userHash = this.userHash,
@@ -72,7 +72,7 @@ fun Thread.toTableReply(sourceId: String, page: Long) = this.replies.mapIndexed 
     )
 }
 
-fun TableComment.toThreadReply() = ThreadReply(
+fun Comment.toThreadReply() = ThreadReply(
     id = id.toLongOrNull() ?: 0L,
     userHash = userHash,
     admin = admin,
@@ -85,7 +85,7 @@ fun TableComment.toThreadReply() = ThreadReply(
     threadId = topicId.toLongOrNull() ?: 0L,
 )
 
-fun TableTopic.toThread(query: CommentQueries? = null) = Thread(
+fun Topic.toThread(query: CommentQueries? = null) = Thread(
     id = id.toLongOrNull() ?: 0L,
     fid = channelId.toLongOrNull() ?: 0L,
     replyCount = commentCount,
@@ -105,7 +105,7 @@ fun TableTopic.toThread(query: CommentQueries? = null) = Thread(
 )
 
 
-fun Thread.toTable(sourceId: String, page: Long) = TableTopic(
+fun Thread.toTable(sourceId: String, page: Long) = Topic(
     id = id.toString(),
     sourceId = sourceId,
     channelId = fid.toString(),
