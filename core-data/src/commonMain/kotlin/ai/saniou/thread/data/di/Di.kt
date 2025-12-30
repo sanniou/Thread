@@ -79,8 +79,8 @@ import org.kodein.di.singleton
 
 val dataModule = DI.Module("dataModule") {
     bindConstant<String>(tag = "nmbBaseUrl") { "https://api.nmb.best/api/" }
-//    bindConstant<String>(tag = "discourseBaseUrl") { "https://meta.discourse.org/" }
-    bindConstant<String>(tag = "discourseBaseUrl") { "https://linux.do/" }
+    bindConstant<String>(tag = "metaDiscourseBaseUrl") { "https://meta.discourse.org/" }
+    bindConstant<String>(tag = "linuxDodiscourseBaseUrl") { "https://linux.do/" }
     bindSingleton<NmbXdApi> {
         val nmbCookieProvider = instance<NmbCookieProvider>()
         val ktorfit = SaniouKtorfit(
@@ -92,11 +92,11 @@ val dataModule = DI.Module("dataModule") {
     }
 
     bindSingleton<DiscourseApi> {
-        val baseUrl = instance<String>("discourseBaseUrl")
+        val baseUrl = instance<String>("linuxDoDiscourseBaseUrl")
         // ChallengeHandler should be provided by the app module
         val challengeHandler = instanceOrNull<ChallengeHandler>()
         val cookieStore = instance<CookieStore>()
-        val sourceId = "discourse"
+        val sourceId = "linuxDo"
 
         val ktorfit = SaniouKtorfit(
             baseUrl = baseUrl

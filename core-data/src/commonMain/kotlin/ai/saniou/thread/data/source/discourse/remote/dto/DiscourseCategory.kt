@@ -4,21 +4,6 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class DiscourseCategoriesResponse(
-    @SerialName("category_list")
-    val categoryList: DiscourseCategoryList
-)
-
-@Serializable
-data class DiscourseCategoryList(
-    @SerialName("can_create_category")
-    val canCreateCategory: Boolean,
-    @SerialName("can_create_topic")
-    val canCreateTopic: Boolean,
-    val categories: List<DiscourseCategory>
-)
-
-@Serializable
 data class DiscourseCategory(
     val id: Long,
     val name: String,
@@ -99,68 +84,5 @@ data class DiscourseCategory(
     val uploadedBackgroundDark: DiscourseImage? = null,
     val topics: List<DiscourseCategoryTopic>? = null,
     @SerialName("subcategory_list")
-    val subcategoryList: List<DiscourseCategory>? = null
-)
-
-@Serializable
-data class DiscourseCategoryTopic(
-    @SerialName("fancy_title")
-    val fancyTitle: String,
-    val id: Long,
-    val title: String,
-    val slug: String,
-    @SerialName("posts_count")
-    val postsCount: Int,
-    @SerialName("reply_count")
-    val replyCount: Int,
-    @SerialName("highest_post_number")
-    val highestPostNumber: Int,
-    @SerialName("image_url")
-    val imageUrl: String? = null,
-    @SerialName("created_at")
-    val createdAt: String,
-    @SerialName("last_posted_at")
-    val lastPostedAt: String,
-    val bumped: Boolean,
-    @SerialName("bumped_at")
-    val bumpedAt: String,
-    val archetype: String,
-    val unseen: Boolean,
-    val pinned: Boolean,
-    val unpinned: Boolean? = null,
-    val visible: Boolean,
-    val closed: Boolean,
-    val archived: Boolean,
-    val bookmarked: Boolean? = null,
-    val liked: Boolean? = null,
-    val thumbnails: List<DiscourseImage>? = null,
-    @SerialName("has_accepted_answer")
-    val hasAcceptedAnswer: Boolean,
-    @SerialName("can_have_answer")
-    val canHaveAnswer: Boolean? = null,
-    @SerialName("last_poster")
-    val lastPoster: DiscourseLastPoster? = null
-)
-
-@Serializable
-data class DiscourseLastPoster(
-    val id: Long,
-    val username: String,
-    val name: String?,
-    @SerialName("avatar_template")
-    val avatarTemplate: String,
-    @SerialName("animated_avatar")
-    val animatedAvatar: String? = null
-)
-
-@Serializable
-data class DiscourseImage(
-    val id: Long? = null,
-    @SerialName("max_width")
-    val maxWidth: Int? = null,
-    @SerialName("max_height")
-    val maxHeight: Int? = null,
-    val width: Int,
-    val height: Int,
-    val url: String
+    val subcategoryList: List<DiscourseCategory>? = null,
 )

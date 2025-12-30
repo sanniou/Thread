@@ -4,8 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class DiscourseLatestPostsResponse(
-    val users: List<DiscourseUser>,
-    @SerialName("topic_list")
-    val topicList: DiscourseTopicList,
+data class DiscourseCategoriesResponse(
+    @SerialName("category_list")
+    val categoryList: DiscourseCategoryList,
 )
