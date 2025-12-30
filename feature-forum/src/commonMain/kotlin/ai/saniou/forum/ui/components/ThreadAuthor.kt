@@ -83,10 +83,10 @@ fun ThreadAuthor(
             }
         }
 
-        Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(Dimens.padding_tiny)
+                horizontalArrangement = Arrangement.spacedBy(Dimens.padding_small)
             ) {
                 Text(
                     text = author.id,
@@ -95,15 +95,11 @@ fun ThreadAuthor(
                     color = MaterialTheme.colorScheme.onSurface
                 )
 
-                if (isPo) {
-                    PoTag(isPo = true)
-                }
-
                 if (author.name.isNotBlank() && author.name != "无名氏") {
                     Text(
                         text = author.name,
                         style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.secondary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -114,10 +110,14 @@ fun ThreadAuthor(
             ) {
                 Text(
                     text = threadTime,
-                    style = MaterialTheme.typography.labelSmall,
+                    style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.outline
                 )
-                
+
+                if (isPo) {
+                    PoTag(isPo = true)
+                }
+
                 badges?.invoke()
             }
         }

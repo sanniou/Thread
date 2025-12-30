@@ -1,5 +1,7 @@
 package ai.saniou.forum.ui.components
 
+import ai.saniou.coreui.theme.Dimens
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -8,7 +10,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
@@ -19,15 +23,16 @@ fun PoTag(isPo: Boolean) {
     if (isPo) {
         val holidayEmoji = remember { getHolidayEmoji() }
         Surface(
-            shape = RoundedCornerShape(4.dp),
-            color = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.onPrimary
+            shape = RoundedCornerShape(Dimens.corner_radius_small),
+            color = MaterialTheme.colorScheme.primaryContainer,
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
         ) {
             Text(
                 text = holidayEmoji ?: "PO",
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
             )
         }
     }

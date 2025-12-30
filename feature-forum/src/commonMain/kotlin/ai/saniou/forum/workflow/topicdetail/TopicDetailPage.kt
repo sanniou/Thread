@@ -60,7 +60,10 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Reply
+import androidx.compose.material.icons.outlined.BookmarkBorder
+import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
@@ -115,6 +118,7 @@ import org.kodein.di.direct
 import org.kodein.di.instance
 import ai.saniou.thread.domain.model.forum.Comment
 import ai.saniou.thread.domain.model.forum.Topic
+import androidx.compose.foundation.clickable
 
 data class TopicDetailPage(
     val threadId: String,
@@ -634,8 +638,10 @@ private fun ThreadList(
                     onBookmarkImage = onBookmarkImage,
                     onUserClick = onUserClick
                 )
-                // 使用 Spacer 代替 Divider，增加呼吸感
-                Spacer(modifier = Modifier.height(Dimens.padding_small))
+                HorizontalDivider(
+                    thickness = 0.5.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)
+                )
             }
         }
 
@@ -664,8 +670,10 @@ private fun ThreadList(
                     onBookmarkImage = onBookmarkImage,
                     onUserClick = onUserClick
                 )
-                // 移除分割线，使用间距区分
-                Spacer(modifier = Modifier.height(Dimens.padding_small))
+                HorizontalDivider(
+                    thickness = 0.5.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)
+                )
             } ?: ShimmerContainer { SkeletonReplyItem(it) }
         }
 
@@ -741,56 +749,47 @@ private fun ThreadToolbar(
     onTogglePoOnly: () -> Unit,
 ) {
     Surface(
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f), // 增加一点透明度
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
         tonalElevation = 0.dp,
-        shadowElevation = 1.dp,
         modifier = Modifier.fillMaxWidth()
     ) {
         Column {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = Dimens.padding_standard, vertical = Dimens.padding_medium),
+                    .padding(horizontal = Dimens.padding_standard, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = "全部回复",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = " $replyCount",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                        modifier = Modifier.padding(start = 4.dp)
-                    )
-                }
+                Text(
+                    text = "全部回复 ($replyCount)",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
 
                 FilterChip(
                     selected = isPoOnly,
                     onClick = onTogglePoOnly,
-                    label = { Text("只看PO", style = MaterialTheme.typography.labelMedium) },
+                    label = { Text("只看PO", style = MaterialTheme.typography.labelSmall) },
                     leadingIcon = if (isPoOnly) {
                         {
                             Icon(
                                 Icons.Default.Check,
                                 contentDescription = null,
-                                modifier = Modifier.size(16.dp)
+                                modifier = Modifier.size(14.dp)
                             )
                         }
                     } else null,
                     colors = FilterChipDefaults.filterChipColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.5f),
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.3f),
                         labelColor = MaterialTheme.colorScheme.onSurface,
                         selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                         selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
                     ),
                     border = null,
                     shape = CircleShape,
-                    modifier = Modifier.height(32.dp)
+                    modifier = Modifier.height(28.dp)
                 )
             }
             HorizontalDivider(
@@ -839,22 +838,22 @@ fun ThreadMainPost(
                             if (thread.sourceName.isNotBlank()) {
                                 Badge(
                                     text = thread.sourceName.uppercase(),
-                                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                    contentColor = MaterialTheme.colorScheme.onPrimary
                                 )
                             }
                             if (thread.isAdmin) {
                                 Badge(
                                     text = "ADMIN",
-                                    containerColor = MaterialTheme.colorScheme.errorContainer,
-                                    contentColor = MaterialTheme.colorScheme.onErrorContainer
+                                    containerColor = MaterialTheme.colorScheme.error,
+                                    contentColor = MaterialTheme.colorScheme.onError
                                 )
                             }
                             if (thread.isSage) {
                                 Badge(
                                     text = "SAGE",
-                                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                                    containerColor = MaterialTheme.colorScheme.secondary,
+                                    contentColor = MaterialTheme.colorScheme.onSecondary
                                 )
                             }
                         }
@@ -862,24 +861,25 @@ fun ThreadMainPost(
                     modifier = Modifier.weight(1f)
                 )
 
-                // 楼层号移到这里，使用更淡的颜色
+                // 楼层号
                 Text(
                     text = "#${thread.id}",
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
-                    modifier = Modifier.padding(start = Dimens.padding_small, top = 4.dp)
+                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                    modifier = Modifier.padding(start = Dimens.padding_small, top = 2.dp)
                 )
             }
 
-            Spacer(modifier = Modifier.height(Dimens.padding_large))
+            Spacer(modifier = Modifier.height(Dimens.padding_medium))
 
             // 标题
             if (!thread.title.isNullOrBlank() && thread.title != "无标题") {
                 Text(
                     text = thread.title!!,
                     style = MaterialTheme.typography.titleLarge.copy(
-                        fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold,
-                        letterSpacing = 0.5.sp
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                        letterSpacing = 0.sp,
+                        fontSize = 20.sp
                     ),
                     color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(
@@ -908,40 +908,64 @@ fun ThreadMainPost(
                 )
             }
 
-            Spacer(modifier = Modifier.height(Dimens.padding_large))
+            Spacer(modifier = Modifier.height(Dimens.padding_medium))
 
-            // 底部操作栏 - 优化版
+            // 底部操作栏 - Modern Style
             Row(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = Dimens.padding_standard),
-                horizontalArrangement = Arrangement.End,
+                horizontalArrangement = Arrangement.SpaceBetween, // 分散对齐
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // 使用 AssistChip 风格的按钮，或者纯图标但增加间距
-                IconButton(onClick = { onCopy() }) {
+                // Reply Button
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.clickable { /* Reply logic */ }
+                        .padding(8.dp)
+                ) {
                     Icon(
-                        imageVector = Icons.Default.ContentCopy,
+                        imageVector = Icons.Default.Reply,
+                        contentDescription = "回复",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+
+                // Copy Button
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.clickable { onCopy() }
+                        .padding(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.ContentCopy,
                         contentDescription = "复制",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(20.dp)
                     )
                 }
 
-                Spacer(modifier = Modifier.width(8.dp))
-
-                IconButton(onClick = { onBookmark() }) {
+                // Bookmark Button
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.clickable { onBookmark() }
+                        .padding(8.dp)
+                ) {
                     Icon(
-                        imageVector = Icons.Default.BookmarkBorder,
+                        imageVector = Icons.Outlined.BookmarkBorder,
                         contentDescription = "收藏",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(20.dp)
                     )
                 }
 
-                Spacer(modifier = Modifier.width(8.dp))
-
-                IconButton(onClick = { showMenu = true }) {
+                // Share Button (Visual Only for now)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.clickable { showMenu = true }
+                        .padding(8.dp)
+                ) {
                     Icon(
-                        imageVector = Icons.Default.MoreVert,
+                        imageVector = Icons.Outlined.Share,
                         contentDescription = "更多",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(20.dp)
@@ -1020,9 +1044,10 @@ fun ThreadReply(
                 )
                 .padding(horizontal = Dimens.padding_standard, vertical = Dimens.padding_medium)
         ) {
+            // Meta Row
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.Top,
+                verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 ThreadAuthor(
@@ -1034,8 +1059,8 @@ fun ThreadReply(
                         if (reply.isAdmin) {
                             Badge(
                                 text = "ADMIN",
-                                containerColor = MaterialTheme.colorScheme.errorContainer,
-                                contentColor = MaterialTheme.colorScheme.onErrorContainer
+                                containerColor = MaterialTheme.colorScheme.error,
+                                contentColor = MaterialTheme.colorScheme.onError
                             )
                         }
                     },
@@ -1050,18 +1075,20 @@ fun ThreadReply(
                 )
             }
 
+            Spacer(modifier = Modifier.height(Dimens.padding_small))
+
+            // Optional Title
             if (reply.title.isNullOrBlank().not() && reply.title != "无标题") {
-                Spacer(modifier = Modifier.height(Dimens.padding_medium))
                 Text(
                     text = reply.title!!,
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleSmall,
                     fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(bottom = Dimens.padding_small)
                 )
             }
 
-            Spacer(modifier = Modifier.height(Dimens.padding_medium))
-
+            // Content
             ThreadBody(
                 content = reply.content,
                 images = reply.images,
@@ -1069,6 +1096,9 @@ fun ThreadReply(
                 onImageClick = onImageClick,
                 onImageLongClick = { image -> onBookmarkImage(image) }
             )
+
+            // Minimal Footer for Reply (Optional, e.g. like/reply icons)
+            // Currently kept clean as per "compact feed" style
 
             DropdownMenu(
                 expanded = showMenu,
