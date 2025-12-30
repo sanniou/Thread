@@ -1,8 +1,8 @@
 package ai.saniou.thread.network;
 
-sealed class SaniouResponse<T> {
-    data class Success<T>(val data: T) : SaniouResponse<T>()
-    class Error(val ex: Throwable) : SaniouResponse<Nothing>()
+sealed class SaniouResult<T> {
+    data class Success<T>(val data: T) : SaniouResult<T>()
+    class Error(val ex: Throwable) : SaniouResult<Nothing>()
 
     companion object {
         fun <T> success(data: T) = Success(data)

@@ -13,7 +13,7 @@ import ai.saniou.thread.data.source.nmb.remote.dto.RemoteKeyType
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.db.table.forum.GetTopicsInChannelOffset as GetThreadsInForumOffset
 import ai.saniou.thread.db.table.forum.Topic as Thread
-import ai.saniou.thread.network.SaniouResponse
+import ai.saniou.thread.network.SaniouResult
 import app.cash.paging.ExperimentalPagingApi
 import app.cash.paging.LoadType
 import app.cash.paging.PagingState
@@ -43,15 +43,10 @@ class DiscourseRemoteMediator(
                 itemIdExtractor = { it.channelId }
             ),
             fetcher = { page ->
-                try {
-                    val response = if (fid == "latest") {
-                        api.getLatestTopics(page)
-                    } else {
-                        api.getCategoryTopics(fid, page)
-                    }
-                    SaniouResponse.Success(response)
-                } catch (e: Exception) {
-                    throw e
+                if (fid == "latest") {
+                    api.getLatestTopics(page)
+                } else {
+                    api.getCategoryTopics(fid, page)
                 }
             },
             saver = { response, page, loadType ->

@@ -1,6 +1,6 @@
 package ai.saniou.thread.domain.usecase.post
 
-import ai.saniou.thread.domain.model.forum.Channel as Forum
+import ai.saniou.thread.domain.model.forum.Channel
 import ai.saniou.thread.domain.repository.FavoriteRepository
 
 /**
@@ -9,7 +9,7 @@ import ai.saniou.thread.domain.repository.FavoriteRepository
 class ToggleFavoriteUseCase(
     private val favoriteRepository: FavoriteRepository
 ) {
-    suspend operator fun invoke(sourceId: String, forum: Forum) {
+    suspend operator fun invoke(sourceId: String, forum: Channel) {
         favoriteRepository.toggleFavorite(sourceId, forum)
     }
 }

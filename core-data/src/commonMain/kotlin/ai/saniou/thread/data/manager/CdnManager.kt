@@ -1,7 +1,7 @@
 package ai.saniou.thread.data.manager
 
 import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
-import ai.saniou.thread.network.SaniouResponse
+import ai.saniou.thread.network.SaniouResult
 import ai.saniou.thread.data.source.nmb.remote.dto.CdnPath
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -39,7 +39,7 @@ class CdnManager(private val nmbXdApi: NmbXdApi) {
 
         return try {
             when (val response = nmbXdApi.getCdnPath()) {
-                is SaniouResponse.Success -> {
+                is SaniouResult.Success -> {
                     val cdnPaths = response.data
                     if (cdnPaths.isNotEmpty()) {
                         _availableCdnPaths.value = cdnPaths

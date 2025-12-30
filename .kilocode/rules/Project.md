@@ -70,6 +70,8 @@
         -   **Loading**: 显示全屏加载动画。
         -   **Error**: 将 `LoadStateError` 转换为 `AppError` 并显示错误页。
         -   **Empty**: 当 `itemCount == 0` 时处理空状态（可通过 `empty` 参数自定义）。
+5.  **SaniouResult**:
+    - 所有 API 返回Response必须定义为 SaniouResult<T> ，会将结果包装成SaniouResult.Success/Failed 等状态
 
 ### 2.4 UI 开发工作流
 1.  **分析**: 在写代码前，先分析 UI 需求，提取可复用的组件放入 `core-ui`。
@@ -82,6 +84,27 @@
 - **设计模式**: 使用组合（Delegate）模式，而非继承。
 - **职责**: 统一处理分页状态机、事务管理、LoadType 分发和 RemoteKeys 更新。
 - **使用方式**: 在具体的 Mediator 中实例化 `GenericRemoteMediator` 并委托 `load` 方法。
+
+### 2.6 数据源交互规范 (Source Interaction Rules)
+为了确保响应式架构的一致性，所有 `Source` 实现必须遵循以下交互模式：
+
+1.  **SSOT (Single Source of Truth)**:
+    -   **原则**: 数据库 (DB) 是唯一的真实数据源。
+    -   **读取**: UI/Domain 层永远只观察 DB 的数据流 (`Flow`)，不直接等待网络请求结果。
+    -   **写入**: 网络请求成功后，只负责将数据写入 DB，不直接返回数据给调用者。
+
+2.  **接口分离**:
+    -   **`observeXxx(): Flow<T>`**: 纯观察方法。直接返回 DB 查询的 Flow。**严禁**在此方法中触发网络请求。
+    -   **`fetchXxx(): Result<Unit>`**: 纯副作用方法。执行 "Check Cache -> Network Request -> Write DB" 流程。返回操作成功/失败，不返回数据。
+
+3.  **缓存策略 (Cache Strategy)**:
+    -   使用 `CacheStrategy` 工具类统一处理缓存过期逻辑。
+    -   **Network-First**: 优先请求网络，失败则不更新 DB（UI 继续显示旧数据或 Error 状态）。
+    -   **Stale-While-Revalidate**: UI 先显示 DB 中的旧数据，后台静默刷新。
+
+4.  **API 错误处理**:
+    -   API 层返回 `SaniouResult<T>`，作为防腐层隔离网络异常。
+    -   Source 层将 `SaniouResult.Error` 转换为 `Result.failure` 或抛出异常，由 ViewModel 统一处理。
 
 ## 3. 模块地图 (Module Map)
 

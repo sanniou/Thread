@@ -11,7 +11,7 @@ import ai.saniou.thread.data.manager.CdnManager
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.db.table.forum.Comment as ThreadReply
 import ai.saniou.thread.domain.model.forum.ImageType
-import ai.saniou.thread.network.SaniouResponse
+import ai.saniou.thread.network.SaniouResult
 import app.cash.paging.ExperimentalPagingApi
 import app.cash.paging.LoadType
 import app.cash.paging.PagingState
@@ -27,7 +27,7 @@ class ThreadRemoteMediator(
     private val initialPage: Int,
     private val isPoOnly: Boolean = false,
     private val cdnManager: CdnManager,
-    private val fetcher: suspend (page: Int) -> SaniouResponse<Thread>,
+    private val fetcher: suspend (page: Int) -> SaniouResult<Thread>,
 ) : RemoteMediator<Int, ThreadReply>() {
 
     // When isPoOnly is true, we store pages as negative numbers to distinguish from normal pages
@@ -56,7 +56,7 @@ class ThreadRemoteMediator(
             // Use upsertThreadNoPage to avoid overwriting the 'page' field (which represents Forum Page)
             // with the Reply Page number, unless it's a new insertion.
             db.topicQueries.upsertTopicNoPage(threadDetail.toTable(sourceId, storagePage))
-            
+
             // Save Topic Image
             saveNmbImage(
                 db = db,

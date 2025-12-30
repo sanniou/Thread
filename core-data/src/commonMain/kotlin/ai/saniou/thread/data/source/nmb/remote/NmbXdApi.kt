@@ -1,6 +1,6 @@
 package ai.saniou.thread.data.source.nmb.remote;
 
-import ai.saniou.thread.network.SaniouResponse
+import ai.saniou.thread.network.SaniouResult
 import ai.saniou.thread.data.source.nmb.remote.dto.CdnPath
 import ai.saniou.thread.data.source.nmb.remote.dto.CookieListResponse
 import ai.saniou.thread.data.source.nmb.remote.dto.Feed
@@ -32,7 +32,7 @@ interface NmbXdApi {
      * 获取图片 CDN 地址
      */
     @GET("getCDNPath")
-    suspend fun getCdnPath(): SaniouResponse<List<CdnPath>>
+    suspend fun getCdnPath(): SaniouResult<List<CdnPath>>
 
     /**
      * 获取备用 API 链接的接口的路径
@@ -49,13 +49,13 @@ interface NmbXdApi {
      *
      */
     @GET("getForumList")
-    suspend fun getForumList(): SaniouResponse<List<ForumCategory>>
+    suspend fun getForumList(): SaniouResult<List<ForumCategory>>
 
     /**
      * 时间线列表
      */
     @GET("getTimelineList")
-    suspend fun getTimelineList(): SaniouResponse<List<TimeLine>>
+    suspend fun getTimelineList(): SaniouResult<List<TimeLine>>
 
     /**
      * 查看版面
@@ -69,7 +69,7 @@ interface NmbXdApi {
     suspend fun showf(
         @Query("id") id: Long,//版面 ID
         @Query("page") page: Long,//页数，默认为 1
-    ): SaniouResponse<List<Forum>>
+    ): SaniouResult<List<Forum>>
 
     /**
      * 查看时间线
@@ -82,7 +82,7 @@ interface NmbXdApi {
     suspend fun timeline(
         @Query("id") id: Long,//版面 ID
         @Query("page") page: Long,//页数，默认为 1
-    ): SaniouResponse<List<Forum>>
+    ): SaniouResult<List<Forum>>
 
     /**
      * 查看串
@@ -93,7 +93,7 @@ interface NmbXdApi {
     suspend fun thread(
         @Query("id") id: Long,//串 ID
         @Query("page") page: Long,//页数，默认为 1
-    ): SaniouResponse<Thread>
+    ): SaniouResult<Thread>
 
     /**
      * 查看串（只看 PO）
@@ -104,7 +104,7 @@ interface NmbXdApi {
     suspend fun po(
         @Query("id") id: Long,//串 ID
         @Query("page") page: Long,//页数，默认为 1
-    ): SaniouResponse<Thread>
+    ): SaniouResult<Thread>
 
     /**
      * 获取最新趋势 (Trend)
@@ -116,7 +116,7 @@ interface NmbXdApi {
     suspend fun getTrendThread(
         @Query("id") id: Long = 50248044,
         @Query("page") page: Long
-    ): SaniouResponse<Thread>
+    ): SaniouResult<Thread>
 
     /**
      * 查看引用
@@ -126,7 +126,7 @@ interface NmbXdApi {
     @GET("ref")
     suspend fun ref(
         @Query("id") id: Long,//串 ID
-    ): SaniouResponse<NmbReference>
+    ): SaniouResult<NmbReference>
 
     /**
      * 查看引用 (HTML)
@@ -215,7 +215,7 @@ interface NmbXdApi {
     suspend fun feed(
         @Query("uuid") uuid: String,//订阅 UUID
         @Query("page") page: Long,//页数，默认为 1
-    ): SaniouResponse<List<Feed>>
+    ): SaniouResult<List<Feed>>
 
     /**
      * 添加订阅
@@ -248,14 +248,14 @@ interface NmbXdApi {
      * 只能在发串/回复后的大约 3 秒内从这个 API 查到数据，否则会返回 []。
      */
     @GET("https://www.nmbxd1.com/Api/getLastPost")
-    suspend fun getLastPost(): SaniouResponse<LastPost>
+    suspend fun getLastPost(): SaniouResult<LastPost>
 
     /**
      * 查看匿名版公告
      */
 
     @GET("https://nmb.ovear.info/nmb-notice.json")
-    suspend fun notice(): SaniouResponse<NmbNotice>
+    suspend fun notice(): SaniouResult<NmbNotice>
 
     /**
      * 随机封面图

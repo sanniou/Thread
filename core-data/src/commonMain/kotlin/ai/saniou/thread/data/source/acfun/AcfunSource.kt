@@ -2,14 +2,14 @@ package ai.saniou.thread.data.source.acfun
 
 import ai.saniou.thread.data.source.acfun.remote.AcfunApi
 import ai.saniou.thread.data.source.acfun.remote.AcfunTokenManager
-import ai.saniou.thread.domain.model.forum.Channel as Forum
-import ai.saniou.thread.domain.model.forum.Topic as Post
-import ai.saniou.thread.domain.model.forum.Comment as ThreadReply
+import ai.saniou.thread.domain.model.forum.Channel
+import ai.saniou.thread.domain.model.forum.Topic
+import ai.saniou.thread.domain.model.forum.Comment
 import ai.saniou.thread.domain.model.forum.Trend
 import ai.saniou.thread.domain.model.forum.TrendResult
 import ai.saniou.thread.domain.repository.Source
 import ai.saniou.thread.domain.repository.SourceCapabilities
-import ai.saniou.thread.network.SaniouResponse
+import ai.saniou.thread.network.SaniouResult
 import ai.saniou.thread.domain.model.forum.Author
 import app.cash.paging.Pager
 import app.cash.paging.PagingConfig
@@ -46,7 +46,7 @@ class AcfunSource(
         acfunTokenManager.loadTokens()
         if (acfunTokenManager.getToken() == null) {
             when (val response = acfunApi.visitorLogin()) {
-                is SaniouResponse.Success -> {
+                is SaniouResult.Success -> {
                     val data = response.data
                     if (data.result == 0 && data.acSecurity != null && data.userId != null && data.serviceToken != null) {
                         val cookie = acfunTokenManager.buildVisitorCookie(
@@ -63,7 +63,7 @@ class AcfunSource(
                     }
                 }
 
-                is SaniouResponse.Error -> {
+                is SaniouResult.Error -> {
                     // Handle initialization error silently or log it
                 }
             }
@@ -77,33 +77,33 @@ class AcfunSource(
         supportsPagination = false
     )
 
-    override suspend fun getForums(): Result<List<Forum>> {
-        // TODO: Implement getForums
-        return Result.success(emptyList())
+    override fun observeChannels(): Flow<List<Channel>> {
+        return kotlinx.coroutines.flow.flowOf(emptyList())
     }
 
-    override suspend fun getPosts(forumId: String, page: Int): Result<List<Post>> {
-        // TODO: Implement getPosts
-        return Result.success(emptyList())
+    override suspend fun fetchChannels(): Result<Unit> {
+        // TODO: Implement fetchChannels
+        return Result.success(Unit)
     }
+
 
     override fun getThreadsPager(
         forumId: String,
         isTimeline: Boolean,
         initialPage: Int
-    ): Flow<PagingData<Post>> {
+    ): Flow<PagingData<Topic>> {
         return flowOf(PagingData.empty())
     }
 
-    override suspend fun getThreadDetail(threadId: String, page: Int): Result<Post> {
+    override suspend fun getThreadDetail(threadId: String, page: Int): Result<Topic> {
         val articleId =
             threadId.toLongOrNull() ?: return Result.failure(IllegalArgumentException("Invalid threadId"))
 
         return when (val response = acfunApi.getArticleInfo(articleId)) {
-            is SaniouResponse.Success -> {
+            is SaniouResult.Success -> {
                 val data = response.data
                 if (data.result == 0) {
-                    val post = Post(
+                    val post = Topic(
                         id = data.articleId?.toString() ?: threadId.toString(),
                         sourceName = "acfun",
                         sourceUrl = "https://www.acfun.cn/a/ac${data.articleId}",
@@ -128,7 +128,7 @@ class AcfunSource(
                 }
             }
 
-            is SaniouResponse.Error -> Result.failure(response.ex)
+            is SaniouResult.Error -> Result.failure(response.ex)
         }
     }
 
@@ -136,12 +136,12 @@ class AcfunSource(
         threadId: String,
         initialPage: Int,
         isPoOnly: Boolean
-    ): Flow<PagingData<ThreadReply>> {
+    ): Flow<PagingData<Comment>> {
         return Pager(
             config = PagingConfig(pageSize = 20),
             pagingSourceFactory = {
-                object : PagingSource<String, ThreadReply>() {
-                    override suspend fun load(params: LoadParams<String>): LoadResult<String, ThreadReply> {
+                object : PagingSource<String, Comment>() {
+                    override suspend fun load(params: LoadParams<String>): LoadResult<String, Comment> {
                         val pcursor = params.key ?: "0"
                         val sourceId = threadId.toLongOrNull()
                             ?: return LoadResult.Error(IllegalArgumentException("Invalid threadId"))
@@ -153,13 +153,13 @@ class AcfunSource(
                             20,
                             if (pcursor == "0") 1 else 0
                         )) { // sourceType 1 for article
-                            is SaniouResponse.Success -> {
+                            is SaniouResult.Success -> {
                                 val list = response.data.rootComments ?: emptyList()
                                 val nextKey =
                                     if (response.data.pcursor == "nomore" || list.isEmpty()) null else response.data.pcursor
 
                                 val replies = list.map { comment ->
-                                    ThreadReply(
+                                    Comment(
                                         id = comment.commentId.toString(),
                                         content = comment.content ?: "",
                                         author = Author(
@@ -179,11 +179,11 @@ class AcfunSource(
                                 LoadResult.Page(data = replies, prevKey = null, nextKey = nextKey)
                             }
 
-                            is SaniouResponse.Error -> LoadResult.Error(response.ex)
+                            is SaniouResult.Error -> LoadResult.Error(response.ex)
                         }
                     }
 
-                    override fun getRefreshKey(state: PagingState<String, ThreadReply>): String? {
+                    override fun getRefreshKey(state: PagingState<String, Comment>): String? {
                         return null
                     }
                 }
@@ -191,7 +191,7 @@ class AcfunSource(
         ).flow
     }
 
-    override fun getForum(forumId: String): Flow<Forum?> {
+    override fun getForum(forumId: String): Flow<Channel?> {
         return flowOf(null)
     }
 
@@ -201,7 +201,7 @@ class AcfunSource(
         }
         return try {
             when (val response = acfunApi.getArticleHotRank()) {
-                is SaniouResponse.Success -> {
+                is SaniouResult.Success -> {
                     val rankList = response.data.rankList
                     val trends = rankList.mapIndexed { index, item ->
                         Trend(
@@ -219,7 +219,7 @@ class AcfunSource(
                     )
                     Result.success(trendResult)
                 }
-                is SaniouResponse.Error -> {
+                is SaniouResult.Error -> {
                     Result.failure(response.ex)
                 }
             }

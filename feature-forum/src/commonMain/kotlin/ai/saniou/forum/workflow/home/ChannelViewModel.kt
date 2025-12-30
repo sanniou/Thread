@@ -6,7 +6,7 @@ import ai.saniou.forum.initializer.AppInitializer
 import ai.saniou.forum.workflow.home.ChannelContract.Event
 import ai.saniou.forum.workflow.home.ChannelContract.ChannelUiState
 import ai.saniou.forum.workflow.home.ChannelContract.ChannelCategoryUiState
-import ai.saniou.thread.domain.model.forum.Channel as Forum
+import ai.saniou.thread.domain.model.forum.Channel
 import ai.saniou.thread.domain.repository.ChannelRepository
 import ai.saniou.thread.domain.usecase.channel.GetFavoriteChannelsUseCase
 import ai.saniou.thread.domain.usecase.channel.GetChannelsUseCase
@@ -53,8 +53,11 @@ class ChannelViewModel(
     private fun loadSources() {
         screenModelScope.launch {
             val sources = getAvailableSourcesUseCase()
-            val lastSourceId = settingsRepository.getValue("current_source_id") ?: sources.first().id
-            val initialSourceId = if (sources.any { it.id == lastSourceId }) lastSourceId else sources.firstOrNull()?.id ?: "nmb"
+            val lastSourceId =
+                settingsRepository.getValue("current_source_id") ?: sources.first().id
+            val initialSourceId =
+                if (sources.any { it.id == lastSourceId }) lastSourceId else sources.firstOrNull()?.id
+                    ?: "nmb"
 
             _state.update {
                 it.copy(
@@ -126,66 +129,75 @@ class ChannelViewModel(
             // TODO: Replace with a UseCase
             val lastOpenedForum = channelRepository.getLastOpenedChannel()
             // 如果最后打开的板块不是当前源的，则不选中
-            val lastOpenedForumId = if (lastOpenedForum?.sourceName == state.value.currentSourceId) lastOpenedForum.id else null
+            val lastOpenedForumId =
+                if (lastOpenedForum?.sourceName == state.value.currentSourceId) lastOpenedForum.id else null
             val currentSourceId = state.value.currentSourceId
 
             // Use Dispatchers.IO for database/network calls
-            val forumsFlow = flow { emit(getChannelsUseCase(currentSourceId)) }
+            val forumsFlow = getChannelsUseCase(currentSourceId)
             val favoritesFlow = getFavoriteChannelsUseCase(currentSourceId)
 
-            forumsFlow.combine(favoritesFlow) { forumsResult, favorites ->
-                forumsResult.map { forums ->
-                    Pair(forums, favorites)
-                }
+            // Trigger fetch
+            launch {
+                channelRepository.fetchChannels(currentSourceId)
+                    .onFailure { e ->
+                        // Only show error if we don't have data yet? Or maybe show a toast?
+                        // For now, we rely on the flow to show data if available.
+                        // If flow is empty and fetch fails, we might want to show error state.
+                        if (_state.value.categoriesState is UiStateWrapper.Loading) {
+                            _state.update {
+                                it.copy(
+                                    categoriesState = UiStateWrapper.Error(e.toAppError { loadCategories() })
+                                )
+                            }
+                        }
+                    }
+            }
+
+            forumsFlow.combine(favoritesFlow) { forums, favorites ->
+                Pair(forums, favorites)
             }.catch { e ->
                 _state.update {
                     it.copy(
                         categoriesState = UiStateWrapper.Error(e.toAppError { loadCategories() })
                     )
                 }
-            }.collect { result ->
-                result.onSuccess { (forums, favorites) ->
-                    val favoriteGroup = ChannelCategoryUiState(
-                        id = "-2", // Special ID for favorites
-                        name = "收藏",
-                        channels = favorites
+            }.collect { (forums, favorites) ->
+                val favoriteGroup = ChannelCategoryUiState(
+                    id = "-2", // Special ID for favorites
+                    name = "收藏",
+                    channels = favorites
+                )
+
+                val forumGroups = forums
+                    .groupBy { it.groupName }
+                    .mapNotNull { (groupName, forumList) ->
+                        if (groupName.isBlank()) return@mapNotNull null
+                        val firstForum = forumList.first()
+                        ChannelCategoryUiState(
+                            id = firstForum.groupId,
+                            name = groupName,
+                            channels = forumList
+                        )
+                    }
+
+                val combined = listOf(favoriteGroup) + forumGroups
+                val favoriteIds = favorites.map { it.id }.toSet()
+
+                _state.update {
+                    val isInitialLoad =
+                        it.categoriesState is UiStateWrapper.Loading || it.categoriesState is UiStateWrapper.Error
+                    val allForums = forums + favorites
+                    // 找到最后打开的板块对象，确保它在当前列表中
+                    val lastOpenedForumObj =
+                        if (isInitialLoad) allForums.find { f -> f.id == lastOpenedForumId } else null
+
+                    it.copy(
+                        categoriesState = UiStateWrapper.Success(combined),
+                        expandedGroupId = if (isInitialLoad) lastOpenedForumObj?.groupId else it.expandedGroupId,
+                        currentChannel = if (isInitialLoad) lastOpenedForumObj else it.currentChannel,
+                        favoriteChannelIds = favoriteIds
                     )
-
-                    val forumGroups = forums
-                        .groupBy { it.groupName }
-                        .mapNotNull { (groupName, forumList) ->
-                            if (groupName.isBlank()) return@mapNotNull null
-                            val firstForum = forumList.first()
-                            ChannelCategoryUiState(
-                                id = firstForum.groupId,
-                                name = groupName,
-                                channels = forumList
-                            )
-                        }
-
-                    val combined = listOf(favoriteGroup) + forumGroups
-                    val favoriteIds = favorites.map { it.id }.toSet()
-
-                    _state.update {
-                        val isInitialLoad = it.categoriesState is UiStateWrapper.Loading || it.categoriesState is UiStateWrapper.Error
-                        val allForums = forums + favorites
-                        // 找到最后打开的板块对象，确保它在当前列表中
-                        val lastOpenedForumObj =
-                            if (isInitialLoad) allForums.find { f -> f.id == lastOpenedForumId } else null
-
-                        it.copy(
-                            categoriesState = UiStateWrapper.Success(combined),
-                            expandedGroupId = if (isInitialLoad) lastOpenedForumObj?.groupId else it.expandedGroupId,
-                            currentChannel = if (isInitialLoad) lastOpenedForumObj else it.currentChannel,
-                            favoriteChannelIds = favoriteIds
-                        )
-                    }
-                }.onFailure { e ->
-                    _state.update {
-                        it.copy(
-                            categoriesState = UiStateWrapper.Error(e.toAppError { loadCategories() })
-                        )
-                    }
                 }
             }
         }
@@ -203,7 +215,7 @@ class ChannelViewModel(
         }
     }
 
-    private fun selectForum(forum: Forum) {
+    private fun selectForum(forum: Channel) {
         screenModelScope.launch {
             channelRepository.saveLastOpenedChannel(forum)
         }
@@ -214,7 +226,7 @@ class ChannelViewModel(
         _state.update { it.copy(currentChannel = null) }
     }
 
-    private fun toggleFavorite(forum: Forum) {
+    private fun toggleFavorite(forum: Channel) {
         screenModelScope.launch {
             val isCurrentlyFavorite = state.value.favoriteChannelIds.contains(forum.id)
             toggleFavoriteUseCase(state.value.currentSourceId, forum)

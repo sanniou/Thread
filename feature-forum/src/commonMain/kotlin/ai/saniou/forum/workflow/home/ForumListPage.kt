@@ -5,7 +5,7 @@ import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.SaniouTopAppBar
 import ai.saniou.forum.workflow.topic.TopicPage
 import ai.saniou.forum.workflow.home.ChannelContract.Event
-import ai.saniou.thread.domain.model.forum.Channel as Forum
+import ai.saniou.thread.domain.model.forum.Channel
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -145,7 +145,7 @@ object ForumListPage : Screen {
     }
 
     @Composable
-    private fun ForumChip(forum: Forum, onClick: () -> Unit) {
+    private fun ForumChip(forum: Channel, onClick: () -> Unit) {
         Card(
             modifier = Modifier.clickable(onClick = onClick),
             shape = MaterialTheme.shapes.small,
@@ -167,7 +167,7 @@ object ForumListPage : Screen {
 
     @OptIn(ExperimentalLayoutApi::class)
     @Composable
-    private fun ForumGrid(forums: List<Forum>, onForumClick: (Forum) -> Unit) {
+    private fun ForumGrid(forums: List<Channel>, onForumClick: (Channel) -> Unit) {
         FlowRow(
             modifier = Modifier.padding(horizontal = Dimens.padding_large),
             horizontalArrangement = Arrangement.spacedBy(Dimens.padding_small),
@@ -180,7 +180,7 @@ object ForumListPage : Screen {
     }
 
     @Composable
-    private fun ForumGridItem(forum: Forum, onClick: () -> Unit) {
+    private fun ForumGridItem(forum: Channel, onClick: () -> Unit) {
         Card(
             modifier = Modifier.clickable(onClick = onClick),
             shape = MaterialTheme.shapes.medium,

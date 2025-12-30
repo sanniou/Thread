@@ -8,7 +8,7 @@ import ai.saniou.thread.domain.repository.NoticeRepository
 import ai.saniou.thread.domain.repository.SettingsRepository
 import ai.saniou.thread.domain.repository.getValue
 import ai.saniou.thread.domain.repository.saveValue
-import ai.saniou.thread.network.SaniouResponse
+import ai.saniou.thread.network.SaniouResult
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToOneOrNull
 import kotlinx.coroutines.Dispatchers
@@ -38,7 +38,7 @@ class NoticeRepositoryImpl(
         if (Clock.System.now().toEpochMilliseconds() - lastFetchTime > 1.days.inWholeMilliseconds) {
             val response = api.notice()
             when (response) {
-                is SaniouResponse.Success -> {
+                is SaniouResult.Success -> {
                     db.noticeQueries.insertNotice(
                         id = response.data.content.hashCode().toString(),
                         content = response.data.content,
@@ -48,7 +48,7 @@ class NoticeRepositoryImpl(
                     settingsRepository.saveValue(KEY_LAST_FETCH_TIME, Clock.System.now().toEpochMilliseconds())
                 }
 
-                is SaniouResponse.Error ->
+                is SaniouResult.Error ->
                     throw response.ex
             }
         }

@@ -1,7 +1,7 @@
 package ai.saniou.thread.data.paging
 
 import ai.saniou.thread.db.Database
-import ai.saniou.thread.network.SaniouResponse
+import ai.saniou.thread.network.SaniouResult
 import app.cash.paging.ExperimentalPagingApi
 import app.cash.paging.LoadType
 import app.cash.paging.PagingState
@@ -37,7 +37,7 @@ class GenericRemoteMediator<Key : Any, Value : Any, ResponseType : Any>(
     private val dataPolicy: DataPolicy,
     private val initialKey: Key,
     private val remoteKeyStrategy: RemoteKeyStrategy<Key, Value>,
-    private val fetcher: suspend (key: Key) -> SaniouResponse<ResponseType>,
+    private val fetcher: suspend (key: Key) -> SaniouResult<ResponseType>,
     private val saver: (ResponseType, Key, LoadType) -> Unit,
     private val endOfPaginationReached: (ResponseType) -> Boolean,
     private val cacheChecker: (suspend (Key) -> Boolean)? = null,
@@ -85,7 +85,7 @@ class GenericRemoteMediator<Key : Any, Value : Any, ResponseType : Any>(
         }
 
         return when (val result = fetcher(key)) {
-            is SaniouResponse.Success -> {
+            is SaniouResult.Success -> {
                 val responseData = result.data
                 val endOfPagination = endOfPaginationReached(responseData)
 
@@ -100,7 +100,7 @@ class GenericRemoteMediator<Key : Any, Value : Any, ResponseType : Any>(
 
                 RemoteMediatorMediatorResultSuccess(endOfPaginationReached = endOfPagination)
             }
-            is SaniouResponse.Error -> {
+            is SaniouResult.Error -> {
                 if (dataPolicy == DataPolicy.NETWORK_ELSE_CACHE) {
                     RemoteMediatorMediatorResultSuccess(endOfPaginationReached = true)
                 } else {

@@ -3,7 +3,7 @@ package ai.saniou.thread.data.repository
 import ai.saniou.thread.data.mapper.toDomain
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.data.source.nmb.remote.dto.FavoriteChannelType
-import ai.saniou.thread.domain.model.forum.Channel as Forum
+import ai.saniou.thread.domain.model.forum.Channel
 import ai.saniou.thread.domain.repository.FavoriteRepository
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
@@ -18,7 +18,7 @@ class FavoriteRepositoryImpl(
     private val db: Database
 ) : FavoriteRepository {
 
-    override fun getFavoriteChannels(sourceId: String): Flow<List<Forum>> {
+    override fun getFavoriteChannels(sourceId: String): Flow<List<Channel>> {
         return db.favoriteChannelQueries.getAllFavoriteChannel(sourceId)
             .asFlow()
             .mapToList(Dispatchers.IO)
@@ -26,7 +26,7 @@ class FavoriteRepositoryImpl(
     }
 
     @OptIn(ExperimentalTime::class)
-    override suspend fun toggleFavorite(sourceId: String, forum: Forum) {
+    override suspend fun toggleFavorite(sourceId: String, forum: Channel) {
         if (db.favoriteChannelQueries.countFavoriteChannel(sourceId, forum.id).executeAsOne() < 1L) {
             db.favoriteChannelQueries.insertFavoriteChannel(
                 id = forum.id,

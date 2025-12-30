@@ -50,9 +50,9 @@ fun main() = application {
             undecorated = true,
             state = windowState
         ) {
-            KcefWrapper {
+//            KcefWrapper {
                 App()
-            }
+//            }
         }
     }
 }

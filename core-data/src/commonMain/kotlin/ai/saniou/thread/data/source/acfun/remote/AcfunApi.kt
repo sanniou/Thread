@@ -4,12 +4,11 @@ import ai.saniou.thread.data.source.acfun.remote.dto.AcfunArticleResponse
 import ai.saniou.thread.data.source.acfun.remote.dto.AcfunCommentListResponse
 import ai.saniou.thread.data.source.acfun.remote.dto.AcfunRankResponse
 import ai.saniou.thread.data.source.acfun.remote.dto.AcfunVisitorLoginResponse
-import ai.saniou.thread.network.SaniouResponse
+import ai.saniou.thread.network.SaniouResult
 import de.jensklingenberg.ktorfit.http.Body
 import de.jensklingenberg.ktorfit.http.Field
 import de.jensklingenberg.ktorfit.http.FormUrlEncoded
 import de.jensklingenberg.ktorfit.http.GET
-import de.jensklingenberg.ktorfit.http.Header
 import de.jensklingenberg.ktorfit.http.Headers
 import de.jensklingenberg.ktorfit.http.POST
 import de.jensklingenberg.ktorfit.http.Query
@@ -43,7 +42,7 @@ interface AcfunApi {
     @FormUrlEncoded
     suspend fun visitorLogin(
         @Field("sid") sid: String = "acfun.api.visitor"
-    ): SaniouResponse<AcfunVisitorLoginResponse>
+    ): SaniouResult<AcfunVisitorLoginResponse>
 
     /**
      * 账号登录
@@ -57,7 +56,7 @@ interface AcfunApi {
     suspend fun login(
         @Field("username") user: String,
         @Field("password") psw: String
-    ): SaniouResponse<Any> // TODO: 定义 LoginResponse
+    ): SaniouResult<Any> // TODO: 定义 LoginResponse
 
     /**
      * 获取中台 Token (Midground Token)
@@ -69,7 +68,7 @@ interface AcfunApi {
     @FormUrlEncoded
     suspend fun getToken(
         @Field("sid") sid: String = "acfun.midground.api"
-    ): SaniouResponse<Any> // TODO: 定义 TokenResponse
+    ): SaniouResult<Any> // TODO: 定义 TokenResponse
 
     /**
      * 检查是否已签到
@@ -78,7 +77,7 @@ interface AcfunApi {
     @FormUrlEncoded
     suspend fun hasSignedIn(
         @Field("access_token") accessToken: String
-    ): SaniouResponse<Any> // TODO: 定义 HasSignedInResponse
+    ): SaniouResult<Any> // TODO: 定义 HasSignedInResponse
 
     /**
      * 执行签到
@@ -87,7 +86,7 @@ interface AcfunApi {
     @FormUrlEncoded
     suspend fun signIn(
         @Field("access_token") accessToken: String
-    ): SaniouResponse<Any>
+    ): SaniouResult<Any>
 
     // ============================================================================================
     // 用户信息 (User Profile)
@@ -97,7 +96,7 @@ interface AcfunApi {
      * 获取当前登录用户的个人信息
      */
     @GET("https://api-ipv6.app.acfun.cn/rest/app/user/personalInfo")
-    suspend fun getPersonalInfo(): SaniouResponse<Any> // TODO: 定义 UserInfo
+    suspend fun getPersonalInfo(): SaniouResult<Any> // TODO: 定义 UserInfo
 
     /**
      * 获取指定用户信息
@@ -105,7 +104,7 @@ interface AcfunApi {
     @GET("https://api-new.app.acfun.cn/rest/app/user/userInfo")
     suspend fun getUserInfo(
         @Query("userId") userId: Long
-    ): SaniouResponse<Any>
+    ): SaniouResult<Any>
 
     /**
      * 检查是否关注了指定用户
@@ -113,7 +112,7 @@ interface AcfunApi {
     @GET("https://api-new.app.acfun.cn/rest/app/relation/isFollowing")
     suspend fun isFollowing(
         @Query("toUserIds") toUserIds: Long
-    ): SaniouResponse<Any>
+    ): SaniouResult<Any>
 
     /**
      * 关注/取消关注用户
@@ -127,7 +126,7 @@ interface AcfunApi {
         @Field("action") action: Int,
         @Field("toUserId") toUserId: Long,
         @Field("groupId") groupId: Int = 0
-    ): SaniouResponse<Any>
+    ): SaniouResult<Any>
 
     /**
      * 获取运营位列表 (Operation List)
@@ -137,7 +136,7 @@ interface AcfunApi {
     suspend fun getOperationList(
         @Field("pcursor") pcursor: String = "",
         @Field("limit") limit: Int = 10
-    ): SaniouResponse<Any>
+    ): SaniouResult<Any>
 
     /**
      * 获取用户动态列表
@@ -147,7 +146,7 @@ interface AcfunApi {
         @Query("userId") userId: Long,
         @Query("pcursor") pcursor: String,
         @Query("count") count: Int = 10
-    ): SaniouResponse<Any>
+    ): SaniouResult<Any>
 
     /**
      * 获取用户投稿资源 (视频/文章)
@@ -165,7 +164,7 @@ interface AcfunApi {
         @Field("count") count: Int = 10,
         @Field("sortType") sortType: Int = 3,
         @Field("status") status: Int = 1
-    ): SaniouResponse<Any>
+    ): SaniouResult<Any>
 
     // ============================================================================================
     // 内容获取 (Content: Video, Article, Channel)
@@ -175,7 +174,7 @@ interface AcfunApi {
      * 获取频道排行列表
      */
     @GET("https://api-new.app.acfun.cn/rest/app/rank/getChannelList")
-    suspend fun getRankChannelList(): SaniouResponse<Any>
+    suspend fun getRankChannelList(): SaniouResult<Any>
 
     /**
      * 获取文章热门榜
@@ -184,7 +183,7 @@ interface AcfunApi {
     suspend fun getArticleHotRank(
         @Query("rankPeriod") rankPeriod: String = "THREE_DAYS",
         @Query("channelId") channelId: Int = 63
-    ): SaniouResponse<AcfunRankResponse>
+    ): SaniouResult<AcfunRankResponse>
 
     /**
      * 获取视频播放信息 (核心接口)
@@ -200,7 +199,7 @@ interface AcfunApi {
         @Query("resourceId") resourceId: Long,
         @Query("resourceType") resourceType: Int,
         @Query("mkey") mkey: String = "AAHewK3eIAAyMjA2MDMyMjQAAhAAMEP1uwSG3TvhYAAAAO5fOOpIdKsH2h4IGsF6BlVwnGQA6_eLEvGiajzUp4_YthxOPC-hxcOpTk0SPSrxyhbdkmIwsXnF9PgS5ly8eQyjuXlcS7VpWG0QlK0HakVDamteMHNHIui0A8V4tmELqQ%3D%3D"
-    ): SaniouResponse<Any>
+    ): SaniouResult<Any>
 
     /**
      * 获取文章详情
@@ -208,7 +207,7 @@ interface AcfunApi {
     @GET("https://api-new.app.acfun.cn/rest/app/article/info")
     suspend fun getArticleInfo(
         @Query("articleId") articleId: Long
-    ): SaniouResponse<AcfunArticleResponse>
+    ): SaniouResult<AcfunArticleResponse>
 
     /**
      * 获取推荐视频列表 (相关推荐)
@@ -219,7 +218,7 @@ interface AcfunApi {
         @Query("resourceType") resourceType: Int,
         @Query("count") count: Int,
         @Query("appMode") appMode: String = "0"
-    ): SaniouResponse<Any>
+    ): SaniouResult<Any>
 
     /**
      * 上报播放内容
@@ -229,7 +228,7 @@ interface AcfunApi {
     @Headers("Content-Type: application/x-protobuf")
     suspend fun reportPlayContent(
         @Body body: ByteArray
-    ): SaniouResponse<Any>
+    ): SaniouResult<Any>
 
     // ============================================================================================
     // 评论与互动 (Comments & Interaction)
@@ -251,7 +250,7 @@ interface AcfunApi {
         @Query("pcursor") pcursor: String,
         @Query("count") count: Int = 20,
         @Query("showHotComments") showHotComments: Int
-    ): SaniouResponse<AcfunCommentListResponse>
+    ): SaniouResult<AcfunCommentListResponse>
 
     /**
      * 获取子评论 (楼中楼)
@@ -266,7 +265,7 @@ interface AcfunApi {
         @Query("rootCommentId") rootCommentId: Long,
         @Query("pcursor") pcursor: String,
         @Query("count") count: Int = 20
-    ): SaniouResponse<Any>
+    ): SaniouResult<Any>
 
     /**
      * 获取 PC 端评论列表 (备用)
@@ -279,7 +278,7 @@ interface AcfunApi {
         @Query("t") t: Long,
         @Query("showHotComments") showHotComments: Int = 1,
         @Query("supportZtEmot") supportZtEmot: Boolean = true
-    ): SaniouResponse<Any>
+    ): SaniouResult<Any>
 
     /**
      * 发送评论
@@ -295,7 +294,7 @@ interface AcfunApi {
         @Field("access_token") accessToken: String,
         @Field("replyToCommentId") replyToCommentId: Long? = null,
         @Field("syncToMoment") syncToMoment: Int = 0
-    ): SaniouResponse<Any>
+    ): SaniouResult<Any>
 
     /**
      * 点赞/取消点赞评论
@@ -306,7 +305,7 @@ interface AcfunApi {
         @Field("sourceId") sourceId: Long,
         @Field("sourceType") sourceType: Int,
         @Field("commentId") commentId: Long
-    ): SaniouResponse<Any>
+    ): SaniouResult<Any>
 
     @POST("https://api-new.app.acfun.cn/rest/app/comment/unlike")
     @FormUrlEncoded
@@ -314,7 +313,7 @@ interface AcfunApi {
         @Field("sourceId") sourceId: Long,
         @Field("sourceType") sourceType: Int,
         @Field("commentId") commentId: Long
-    ): SaniouResponse<Any>
+    ): SaniouResult<Any>
 
     /**
      * 收藏资源
@@ -324,7 +323,7 @@ interface AcfunApi {
     suspend fun addFavorite(
         @Field("resourceId") resourceId: Long,
         @Field("resourceType") resourceType: Int
-    ): SaniouResponse<Any>
+    ): SaniouResult<Any>
 
     /**
      * 取消收藏
@@ -334,7 +333,7 @@ interface AcfunApi {
     suspend fun removeFavorite(
         @Field("resourceIds") resourceIds: Long, // 注意参数名是复数
         @Field("resourceType") resourceType: Int
-    ): SaniouResponse<Any>
+    ): SaniouResult<Any>
 
     /**
      * 投蕉
@@ -345,7 +344,7 @@ interface AcfunApi {
         @Field("resourceId") resourceId: Long,
         @Field("resourceType") resourceType: Int,
         @Field("count") count: Int
-    ): SaniouResponse<Any>
+    ): SaniouResult<Any>
 
     // ============================================================================================
     // 番剧 (Bangumi)
@@ -360,7 +359,7 @@ interface AcfunApi {
     @FormUrlEncoded
     suspend fun getBangumiMainPage(
         @Field("appMode") appMode: String = "0"
-    ): SaniouResponse<Any>
+    ): SaniouResult<Any>
 
     /**
      * 番剧详情
@@ -369,7 +368,7 @@ interface AcfunApi {
     @FormUrlEncoded
     suspend fun getBangumiDetail(
         @Field("bangumiId") bangumiId: Long
-    ): SaniouResponse<Any>
+    ): SaniouResult<Any>
 
     /**
      * 番剧剧集列表
@@ -380,7 +379,7 @@ interface AcfunApi {
         @Field("bangumiId") bangumiId: Long,
         @Field("pageNo") pageNo: Int = 1,
         @Field("pageSize") pageSize: Int = 1000
-    ): SaniouResponse<Any>
+    ): SaniouResult<Any>
 
     /**
      * 追番 (收藏番剧)
@@ -391,7 +390,7 @@ interface AcfunApi {
         @Query("count") count: Int,
         @Query("access_token") accessToken: String,
         @Query("appMode") appMode: String = "0"
-    ): SaniouResponse<Any>
+    ): SaniouResult<Any>
 
     /**
      * 检查资源类型
@@ -399,7 +398,7 @@ interface AcfunApi {
     @GET("https://api-new.app.acfun.cn/rest/app/resource/type")
     suspend fun checkResourceType(
         @Query("resourceCode") acId: String
-    ): SaniouResponse<Any>
+    ): SaniouResult<Any>
 
     // ============================================================================================
     // 搜索与工具 (Search & Utils)
@@ -410,7 +409,7 @@ interface AcfunApi {
      */
     @GET("https://api-ipv6.app.acfun.cn/rest/app/search/recommend")
     @Headers("appVersion: 6.31.1.1026")
-    suspend fun getSearchRecommend(): SaniouResponse<Any>
+    suspend fun getSearchRecommend(): SaniouResult<Any>
 
     /**
      * 综合搜索
@@ -421,7 +420,7 @@ interface AcfunApi {
         @Query("pCursor") pCursor: String,
         @Query("requestId") requestId: String = "",
         @Query("mkey") mkey: String = "AAHewK3eIAAyMjA2MDMyMjQAAhAAMEP1uwSG3TvhYAAAAO5fOOpIdKsH2h4IGsF6BlVwnGQA6_eLEvGiajzUp4_YthxOPC-hxcOpTk0SPSrxyhbdkmIwsXnF9PgS5ly8eQyjuXlcS7VpWG0QlK0HakVDamteMHNHIui0A8V4tmELqQ%3D%3D"
-    ): SaniouResponse<Any>
+    ): SaniouResult<Any>
 
     /**
      * 获取通知列表
@@ -434,7 +433,7 @@ interface AcfunApi {
         @Query("type") type: Int,
         @Query("pCursor") pCursor: String,
         @Query("appMode") appMode: String = "0"
-    ): SaniouResponse<Any>
+    ): SaniouResult<Any>
 
     /**
      * 获取未读消息数量 (Clock)
@@ -442,7 +441,7 @@ interface AcfunApi {
     @GET("https://api-new.app.acfun.cn/rest/app/clock/r")
     suspend fun getUnreadCount(
         @Query("access_token") accessToken: String
-    ): SaniouResponse<Any>
+    ): SaniouResult<Any>
 
     // ============================================================================================
     // 收藏与历史 (Favorites & History)
@@ -456,7 +455,7 @@ interface AcfunApi {
     suspend fun getFavoriteVideoList(
         @Field("cursor") cursor: String,
         @Field("count") count: Int
-    ): SaniouResponse<Any>
+    ): SaniouResult<Any>
 
     /**
      * 收藏的文章列表
@@ -466,7 +465,7 @@ interface AcfunApi {
     suspend fun getFavoriteArticleList(
         @Field("cursor") cursor: String,
         @Field("count") count: Int
-    ): SaniouResponse<Any>
+    ): SaniouResult<Any>
 
     /**
      * 收藏的合集列表
@@ -476,7 +475,7 @@ interface AcfunApi {
     suspend fun getFavoriteAlbumList(
         @Field("cursor") cursor: String,
         @Field("count") count: Int
-    ): SaniouResponse<Any>
+    ): SaniouResult<Any>
 
     /**
      * 历史记录列表
@@ -488,7 +487,7 @@ interface AcfunApi {
     suspend fun getHistoryList(
         @Field("pcursor") pcursor: String,
         @Field("resourceTypes") resourceTypes: List<Int>
-    ): SaniouResponse<Any>
+    ): SaniouResult<Any>
 
     /**
      * 删除历史记录
@@ -497,7 +496,7 @@ interface AcfunApi {
     @FormUrlEncoded
     suspend fun deleteHistory(
         @Field("comboIds") comboIds: String
-    ): SaniouResponse<Any>
+    ): SaniouResult<Any>
 
     /**
      * 添加稍后再看
@@ -507,7 +506,7 @@ interface AcfunApi {
     suspend fun addWaiting(
         @Field("resourceId") resourceId: Long,
         @Field("resourceType") resourceType: Int
-    ): SaniouResponse<Any>
+    ): SaniouResult<Any>
 
     /**
      * 稍后再看列表
@@ -517,7 +516,7 @@ interface AcfunApi {
     suspend fun getWaitingList(
         @Field("pcursor") pcursor: String,
         @Field("count") count: Int
-    ): SaniouResponse<Any>
+    ): SaniouResult<Any>
 
     /**
      * 取消稍后再看
@@ -527,5 +526,5 @@ interface AcfunApi {
     suspend fun cancelWaiting(
         @Field("resourceIds") resourceIds: String,
         @Field("resourceType") resourceType: Int
-    ): SaniouResponse<Any>
+    ): SaniouResult<Any>
 }

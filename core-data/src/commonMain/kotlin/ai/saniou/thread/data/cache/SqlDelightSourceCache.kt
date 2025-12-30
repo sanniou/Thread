@@ -7,6 +7,7 @@ import ai.saniou.thread.db.table.forum.Topic
 import ai.saniou.thread.db.table.forum.Comment
 import app.cash.paging.PagingSource
 import app.cash.sqldelight.coroutines.asFlow
+import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOneOrNull
 import app.cash.sqldelight.paging3.QueryPagingSource
 import kotlinx.coroutines.Dispatchers
@@ -139,6 +140,13 @@ class SqlDelightSourceCache(
             val allChannels = channelQueries.getChannelsBySource(sourceId).executeAsList()
             sortChannels(allChannels)
         }
+    }
+
+    override fun observeForums(sourceId: String): Flow<List<Channel>> {
+        return channelQueries.getChannelsBySource(sourceId)
+            .asFlow()
+            .mapToList(Dispatchers.IO)
+            .map { sortChannels(it) }
     }
 
     private fun sortChannels(channels: List<Channel>): List<Channel> {

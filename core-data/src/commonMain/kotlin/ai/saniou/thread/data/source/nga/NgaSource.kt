@@ -1,9 +1,9 @@
 package ai.saniou.thread.data.source.nga
 
-import ai.saniou.thread.domain.model.forum.Channel as Forum
-import ai.saniou.thread.domain.model.forum.Topic as Post
+import ai.saniou.thread.domain.model.forum.Channel
+import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.repository.Source
-import ai.saniou.thread.domain.model.forum.Comment as ThreadReply
+import ai.saniou.thread.domain.model.forum.Comment
 import app.cash.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
@@ -19,25 +19,23 @@ class NgaSource : Source {
 
     override val isInitialized: Flow<Boolean> = flowOf(true)
 
-    override suspend fun getForums(): Result<List<Forum>> {
-        // 骨架实现，返回空列表
-        return Result.success(emptyList())
+    override fun observeChannels(): Flow<List<Channel>> {
+        return kotlinx.coroutines.flow.flowOf(emptyList())
     }
 
-    override suspend fun getPosts(forumId: String, page: Int): Result<List<Post>> {
-        // 骨架实现，返回空列表
-        return Result.success(emptyList())
+    override suspend fun fetchChannels(): Result<Unit> {
+        return Result.success(Unit)
     }
 
     override fun getThreadsPager(
         forumId: String,
         isTimeline: Boolean,
         initialPage: Int,
-    ): Flow<PagingData<Post>> {
+    ): Flow<PagingData<Topic>> {
         return flowOf(PagingData.empty())
     }
 
-    override suspend fun getThreadDetail(threadId: String, page: Int): Result<Post> {
+    override suspend fun getThreadDetail(threadId: String, page: Int): Result<Topic> {
         return Result.failure(NotImplementedError("NGA source not implemented"))
     }
 
@@ -45,11 +43,11 @@ class NgaSource : Source {
         threadId: String,
         initialPage: Int,
         isPoOnly: Boolean,
-    ): Flow<PagingData<ThreadReply>> {
+    ): Flow<PagingData<Comment>> {
         return flowOf(PagingData.empty())
     }
 
-    override fun getForum(forumId: String): Flow<Forum?> {
+    override fun getForum(forumId: String): Flow<Channel?> {
         TODO("Not yet implemented")
     }
 }

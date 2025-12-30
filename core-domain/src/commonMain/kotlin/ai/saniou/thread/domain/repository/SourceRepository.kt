@@ -1,8 +1,8 @@
 package ai.saniou.thread.domain.repository
 
-import ai.saniou.thread.domain.model.forum.Channel as Forum
-import ai.saniou.thread.domain.model.forum.Topic as Post
-import ai.saniou.thread.domain.model.forum.Comment as ThreadReply
+import ai.saniou.thread.domain.model.forum.Channel
+import ai.saniou.thread.domain.model.forum.Topic
+import ai.saniou.thread.domain.model.forum.Comment
 import ai.saniou.thread.domain.model.forum.TrendResult
 import app.cash.paging.PagingData
 import kotlinx.coroutines.flow.Flow
@@ -32,16 +32,14 @@ interface Source {
     val capabilities: SourceCapabilities get() = SourceCapabilities()
 
     /**
-     * 获取所有板块
+     * 观察所有板块
      */
-    suspend fun getForums(): Result<List<Forum>>
+    fun observeChannels(): Flow<List<Channel>>
 
     /**
-     * 获取指定板块的帖子列表
-     * @param forumId 板块ID
-     * @param page 页码
+     * 刷新板块数据
      */
-    suspend fun getPosts(forumId: String, page: Int): Result<List<Post>>
+    suspend fun fetchChannels(): Result<Unit>
 
     /**
      * 获取板块帖子分页数据
@@ -50,20 +48,20 @@ interface Source {
         forumId: String,
         isTimeline: Boolean,
         initialPage: Int = 1,
-    ): Flow<PagingData<Post>>
+    ): Flow<PagingData<Topic>>
 
-    suspend fun getThreadDetail(threadId: String, page: Int): Result<Post>
+    suspend fun getThreadDetail(threadId: String, page: Int): Result<Topic>
 
     fun getThreadRepliesPager(
         threadId: String,
         initialPage: Int,
         isPoOnly: Boolean = false,
-    ): Flow<PagingData<ThreadReply>>
+    ): Flow<PagingData<Comment>>
 
     /**
      * 获取板块详情
      */
-    fun getForum(forumId: String): Flow<Forum?>
+    fun getForum(forumId: String): Flow<Channel?>
 
     /**
      * 获取热门榜单
@@ -83,24 +81,10 @@ data class SourceCapabilities(
  */
 interface SourceRepository {
     /**
-     * 从指定的信息源获取板块列表
-     * @param sourceId 信息源ID
-     */
-    suspend fun getChannels(sourceId: String): Result<List<Forum>>
-
-    /**
-     * 从指定信息源的板块获取帖子列表
-     * @param sourceId 信息源ID
-     * @param forumId 板块ID
-     * @param page 页码
-     */
-    suspend fun getPosts(sourceId: String, forumId: String, page: Int): Result<List<Post>>
-
-    /**
      * 获取聚合的信息流
      * @param page 页码
      */
-    suspend fun getAggregatedFeed(page: Int): Result<List<Post>>
+    suspend fun getAggregatedFeed(page: Int): Result<List<Topic>>
 
     /**
      * 获取所有可用的信息源

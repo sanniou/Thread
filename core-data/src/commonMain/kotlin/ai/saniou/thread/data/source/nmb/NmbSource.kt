@@ -20,7 +20,8 @@ import ai.saniou.thread.domain.repository.SettingsRepository
 import ai.saniou.thread.domain.repository.Source
 import ai.saniou.thread.domain.repository.SourceCapabilities
 import ai.saniou.thread.domain.repository.observeValue
-import ai.saniou.thread.network.SaniouResponse
+import ai.saniou.thread.network.SaniouResult
+import ai.saniou.thread.data.cache.CacheStrategy
 import app.cash.paging.ExperimentalPagingApi
 import app.cash.paging.Pager
 import app.cash.paging.PagingConfig
@@ -67,58 +68,57 @@ class NmbSource(
         settingsRepository.observeValue<Boolean>("nmb_initialized")
             .map { it == true }
 
-    @OptIn(ExperimentalTime::class)
-    override suspend fun getForums(): Result<List<DomainForum>> {
-        // 1. Check cache policy
-        val now = Clock.System.now()
-        val lastQueryTime =
-            db.remoteKeyQueries.getRemoteKeyById(
-                RemoteKeyType.FORUM_CATEGORY,
-                RemoteKeyType.FORUM_CATEGORY.name
-            ).executeAsOneOrNull()?.updateAt ?: 0L
+    override fun observeChannels(): Flow<List<DomainForum>> {
+        val forumsFlow = db.channelQueries.getChannelsBySource(id).asFlow().mapToList(Dispatchers.Default)
+        val timelinesFlow = db.timeLineQueries.getAllTimeLines().asFlow().mapToList(Dispatchers.Default)
+        val categoriesFlow = db.channelQueries.getChannelCategoriesBySource(id).asFlow().mapToList(Dispatchers.Default)
 
-        val lastUpdateInstant = Instant.fromEpochMilliseconds(lastQueryTime)
-        val needUpdate = now - lastUpdateInstant >= 1.days
-
-        // 2. If cache is outdated, fetch from remote and update database
-        if (needUpdate) {
-            val remoteResult = fetchAndStoreRemoteForums()
-            if (remoteResult.isFailure) {
-                return Result.failure(remoteResult.exceptionOrNull()!!)
+        return kotlinx.coroutines.flow.combine(forumsFlow, timelinesFlow, categoriesFlow) { forumsFromDb, timelines, categoriesList ->
+            val categories = categoriesList.associateBy { it.id }
+            val forums = forumsFromDb.map { forum ->
+                forum.toDomain().copy(
+                    groupName = categories[forum.fGroup]?.name ?: "未知分类"
+                )
             }
-            db.remoteKeyQueries.insertKey(
-                type = RemoteKeyType.FORUM_CATEGORY,
-                id = RemoteKeyType.FORUM_CATEGORY.name,
-                nextKey = null,
-                currKey = Long.MIN_VALUE,
-                prevKey = null,
-                updateAt = now.toEpochMilliseconds(),
-            )
+            buildList {
+                addAll(forums)
+                addAll(timelines.map { it.toDomain() })
+            }
+        }
+    }
+
+    @OptIn(ExperimentalTime::class)
+    override suspend fun fetchChannels(): Result<Unit> {
+        // 1. Check cache policy
+        val needUpdate = CacheStrategy.shouldFetch(
+            db = db,
+            keyType = RemoteKeyType.FORUM_CATEGORY,
+            keyId = RemoteKeyType.FORUM_CATEGORY.name,
+            expiration = 1.days
+        )
+
+        if (!needUpdate) {
+            return Result.success(Unit)
         }
 
-        // 3. Query from database and return
-        val forumsFromDb = db.channelQueries.getChannelsBySource(id).executeAsList()
-        val timelines = db.timeLineQueries.getAllTimeLines().executeAsList()
-        val categories =
-            db.channelQueries.getChannelCategoriesBySource(id).executeAsList().associateBy { it.id }
-
-        val forums = forumsFromDb.map { forum ->
-            forum.toDomain().copy(
-                groupName = categories[forum.fGroup]?.name ?: "未知分类"
-            )
+        // 2. Fetch from remote and update database
+        val remoteResult = fetchAndStoreRemoteForums()
+        if (remoteResult.isFailure) {
+            return Result.failure(remoteResult.exceptionOrNull()!!)
         }
-
-        val combined = buildList {
-            addAll(forums)
-            addAll(timelines.map { it.toDomain() })
-        }
-        return Result.success(combined)
+        
+        CacheStrategy.updateLastFetchTime(
+            db = db,
+            keyType = RemoteKeyType.FORUM_CATEGORY,
+            keyId = RemoteKeyType.FORUM_CATEGORY.name
+        )
+        return Result.success(Unit)
     }
 
     private suspend fun fetchAndStoreRemoteForums(): Result<Unit> {
         // Fetch forums
         when (val forumListResponse = nmbXdApi.getForumList()) {
-            is SaniouResponse.Success -> {
+            is SaniouResult.Success -> {
                 val forumCategories = forumListResponse.data.map { category ->
                     category.copy(forums = category.forums.filter { it.id > 0 })
                 }
@@ -130,25 +130,20 @@ class NmbSource(
                 }
             }
 
-            is SaniouResponse.Error -> return Result.failure(forumListResponse.ex)
+            is SaniouResult.Error -> return Result.failure(forumListResponse.ex)
         }
 
         // Fetch timelines
         when (val timelineListResponse = nmbXdApi.getTimelineList()) {
-            is SaniouResponse.Success -> {
+            is SaniouResult.Success -> {
                 timelineListResponse.data.forEach { timeLine ->
                     db.timeLineQueries.insertTimeLine(timeLine.toTable())
                 }
             }
 
-            is SaniouResponse.Error -> return Result.failure(timelineListResponse.ex)
+            is SaniouResult.Error -> return Result.failure(timelineListResponse.ex)
         }
         return Result.success(Unit)
-    }
-
-
-    override suspend fun getPosts(forumId: String, page: Int): Result<List<Post>> {
-        TODO("Not yet implemented")
     }
 
     override fun getThreadsPager(
@@ -172,13 +167,13 @@ class NmbSource(
                 ?: return Result.failure(IllegalArgumentException("Invalid NMB thread ID"))
 
             val response = nmbXdApi.thread(tid, page.toLong())
-            if (response is SaniouResponse.Success) {
+            if (response is SaniouResult.Success) {
                 val thread = response.data
                 // Use default emptyList for images from remote since we don't have ImageQueries here for remote data yet
                 // Or map remote images if available in DTO
                 Result.success(thread.toDomain())
             } else {
-                Result.failure((response as SaniouResponse.Error).ex)
+                Result.failure((response as SaniouResult.Error).ex)
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -422,7 +417,7 @@ class NmbSource(
     suspend fun getReference(refId: Long): Reply? {
         return try {
             val response = nmbXdApi.ref(refId)
-            if (response is SaniouResponse.Success) {
+            if (response is SaniouResult.Success) {
                 val reference = response.data
                 // 将 NmbReference 转换为 Reply
                 Reply(
@@ -453,7 +448,7 @@ class NmbSource(
         fid: Long,
         policy: DataPolicy,
         initialPage: Int,
-        fetcher: suspend (page: Int) -> SaniouResponse<List<Forum>>,
+        fetcher: suspend (page: Int) -> SaniouResult<List<Forum>>,
     ): Pager<Int, GetThreadsInForumOffset> {
         val pageSize = 20
         return Pager(
@@ -487,7 +482,7 @@ class NmbSource(
     ): Result<List<ThreadReply>> {
         return try {
             when (val response = nmbXdApi.thread(threadId, page.toLong())) {
-                is SaniouResponse.Success -> {
+                is SaniouResult.Success -> {
                     val thread = response.data
                     // 更新数据库
                     db.topicQueries.transaction {
@@ -526,7 +521,7 @@ class NmbSource(
                     Result.success(thread.replies)
                 }
 
-                is SaniouResponse.Error -> {
+                is SaniouResult.Error -> {
                     Result.failure(response.ex)
                 }
             }
@@ -538,7 +533,7 @@ class NmbSource(
     suspend fun getTrendThread(page: Int): Result<Thread> {
         return try {
             when (val response = nmbXdApi.getTrendThread(page = page.toLong())) {
-                is SaniouResponse.Success -> {
+                is SaniouResult.Success -> {
                     val thread = response.data
                     // 保存到数据库
                     db.topicQueries.transaction {
@@ -577,7 +572,7 @@ class NmbSource(
                     Result.success(thread)
                 }
 
-                is SaniouResponse.Error -> Result.failure(response.ex)
+                is SaniouResult.Error -> Result.failure(response.ex)
             }
         } catch (e: Exception) {
             Result.failure(e)

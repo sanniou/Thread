@@ -74,6 +74,11 @@ interface SourceCache {
     suspend fun getForums(sourceId: String): List<Channel>
 
     /**
+     * 观察指定来源的所有板块
+     */
+    fun observeForums(sourceId: String): Flow<List<Channel>>
+
+    /**
      * 批量保存板块
      */
     suspend fun saveForums(forums: List<Channel>)

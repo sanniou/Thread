@@ -1,5 +1,6 @@
 package ai.saniou.thread.data.source.discourse
 
+import ai.saniou.thread.data.cache.CacheStrategy
 import ai.saniou.thread.data.cache.SourceCache
 import ai.saniou.thread.data.mapper.flatten
 import ai.saniou.thread.data.mapper.toDomain
@@ -9,11 +10,13 @@ import ai.saniou.thread.data.paging.DataPolicy
 import ai.saniou.thread.data.source.discourse.remote.DiscourseApi
 import ai.saniou.thread.data.source.discourse.remote.dto.DiscourseTopic
 import ai.saniou.thread.data.source.discourse.remote.dto.DiscourseUser
+import ai.saniou.thread.data.source.nmb.remote.dto.RemoteKeyType
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.domain.model.forum.Author
 import ai.saniou.thread.domain.repository.SettingsRepository
 import ai.saniou.thread.domain.repository.Source
 import ai.saniou.thread.domain.repository.observeValue
+import ai.saniou.thread.network.SaniouResult
 import app.cash.paging.ExperimentalPagingApi
 import app.cash.paging.Pager
 import app.cash.paging.PagingConfig
@@ -21,10 +24,11 @@ import app.cash.paging.PagingData
 import app.cash.paging.map
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlin.time.Duration.Companion.days
 import kotlin.time.Instant
-import ai.saniou.thread.domain.model.forum.Channel as Forum
-import ai.saniou.thread.domain.model.forum.Comment as ThreadReply
-import ai.saniou.thread.domain.model.forum.Topic as Post
+import ai.saniou.thread.domain.model.forum.Channel
+import ai.saniou.thread.domain.model.forum.Comment
+import ai.saniou.thread.domain.model.forum.Topic
 
 class DiscourseSource(
     private val api: DiscourseApi,
@@ -39,42 +43,62 @@ class DiscourseSource(
         settingsRepository.observeValue<Boolean>("discourse_initialized")
             .map { it == true }
 
-    override suspend fun getForums(): Result<List<Forum>> {
-        return try {
-            // 1. Try to fetch from network
-            val response = api.getCategories()
-            val forums = response.categoryList.categories.map { it.toDomainTree(id) }
-
-            // 2. Save to cache (flatten first)
-            val flatForums = forums.flatMap { it.flatten() }
-            cache.saveForums(flatForums.map { it.toEntity() })
-
-            Result.success(forums)
-        } catch (e: Exception) {
-            // 3. Fallback to cache if network fails
-            try {
-                val cachedForums = cache.getForums(id).map { it.toDomain() }
-                if (cachedForums.isNotEmpty()) {
-                    // Rebuild tree from flat list
-                    val treeForums = buildChannelTree(cachedForums)
-                    Result.success(treeForums)
-                } else {
-                    Result.failure(e)
-                }
-            } catch (cacheError: Exception) {
-                // If cache also fails, return original error
-                Result.failure(e)
+    override fun observeChannels(): Flow<List<Channel>> {
+        return cache.observeForums(id).map { forums ->
+            if (forums.isNotEmpty()) {
+                buildChannelTree(forums.map { it.toDomain() })
+            } else {
+                emptyList()
             }
         }
     }
 
-    private fun buildChannelTree(flatChannels: List<Forum>): List<Forum> {
+    override suspend fun fetchChannels(): Result<Unit> {
+        val needUpdate = CacheStrategy.shouldFetch(
+            db = db,
+            keyType = RemoteKeyType.FORUM_CATEGORY,
+            keyId = "${id}_forums",
+            expiration = 1.days
+        )
+
+        if (!needUpdate) {
+            return Result.success(Unit)
+        }
+
+        return try {
+            // 1. Try to fetch from network
+            when (val response = api.getCategories()) {
+                is SaniouResult.Success -> {
+                    val forums = response.data.categoryList.categories.map { it.toDomainTree(id) }
+
+                    // 2. Save to cache (flatten first)
+                    val flatForums = forums.flatMap { it.flatten() }
+                    cache.saveForums(flatForums.map { it.toEntity() })
+
+                    CacheStrategy.updateLastFetchTime(
+                        db = db,
+                        keyType = RemoteKeyType.FORUM_CATEGORY,
+                        keyId = "${id}_forums"
+                    )
+
+                    Result.success(Unit)
+                }
+                is SaniouResult.Error -> {
+                    Result.failure(response.ex)
+                }
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    private fun buildChannelTree(flatChannels: List<Channel>): List<Channel> {
         val channelMap = flatChannels.associateBy { it.id }
-        val rootChannels = mutableListOf<Forum>()
+        val rootChannels = mutableListOf<Channel>()
 
         // First pass: identify roots and prepare children lists
-        val childrenMap = mutableMapOf<String, MutableList<Forum>>()
-        
+        val childrenMap = mutableMapOf<String, MutableList<Channel>>()
+
         flatChannels.forEach { channel ->
             val parentId = channel.parentId
             if (parentId == null || !channelMap.containsKey(parentId)) {
@@ -85,30 +109,15 @@ class DiscourseSource(
         }
 
         // Recursive function to build tree
-        fun buildTree(channel: Forum): Forum {
+        fun buildTree(channel: Channel): Channel {
             val children = childrenMap[channel.id]?.map { buildTree(it) }?.sortedBy { it.sort } ?: emptyList()
             return channel.copy(children = children)
         }
 
-        return rootChannels.map { buildTree(it) }.sortedBy { it.sort }
-    }
-
-    override suspend fun getPosts(forumId: String, page: Int): Result<List<Post>> {
-        return try {
-            val response = if (forumId == "latest") {
-                api.getLatestTopics(page)
-            } else {
-                api.getCategoryTopics(forumId, page)
-            }
-            val usersMap = response.users.associateBy { it.id }
-
-            val posts = response.topicList.topics.map { topic ->
-                topic.toPost(usersMap)
-            }
-            Result.success(posts)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+        return rootChannels.map {
+            // Discourse 没有 category ，这里硬编码
+            buildTree(it.copy(groupName="Discourse"))
+        }.sortedBy { it.sort }
     }
 
     @OptIn(ExperimentalPagingApi::class)
@@ -116,7 +125,7 @@ class DiscourseSource(
         forumId: String,
         isTimeline: Boolean,
         initialPage: Int,
-    ): Flow<PagingData<Post>> {
+    ): Flow<PagingData<Topic>> {
         return Pager(
             config = PagingConfig(pageSize = 30),
             initialKey = initialPage,
@@ -137,41 +146,52 @@ class DiscourseSource(
         }
     }
 
-    override suspend fun getThreadDetail(threadId: String, page: Int): Result<Post> {
-        return try {
-            val response = api.getTopic(threadId, page)
-            val firstPost = response.postStream.posts.firstOrNull()
-            val createdAt = try {
-                Instant.parse(firstPost?.createdAt ?: "")
-            } catch (e: Exception) {
-                Instant.fromEpochMilliseconds(0)
+    override suspend fun getThreadDetail(threadId: String, page: Int): Result<Topic> {
+        return when (val result = api.getTopic(threadId, page)) {
+            is SaniouResult.Success -> {
+                try {
+                    val response = result.data
+                    val firstPost = response.postStream.posts.firstOrNull()
+                    val createdAt = try {
+                        Instant.parse(firstPost?.createdAt ?: "")
+                    } catch (e: Exception) {
+                        Instant.fromEpochMilliseconds(0)
+                    }
+                    val post = Topic(
+                        id = response.id.toString(),
+                        channelId = response.categoryId.toString(), // fid -> channelId
+                        commentCount = response.replyCount.toLong(), // replyCount -> commentCount
+                        images = emptyList(), // TODO: parse images
+                        createdAt = kotlin.time.Instant.fromEpochMilliseconds(createdAt.toEpochMilliseconds()),
+                        title = response.title,
+                        content = firstPost?.cooked ?: "", // Use full content
+                        sourceName = "discourse",
+                        sourceUrl = "https://meta.discourse.org/t/${response.id}",
+                        author = Author(
+                            id = firstPost?.username ?: "",
+                            name = firstPost?.name ?: firstPost?.username ?: "Anonymous"
+                        ), // author -> Author object
+                        channelName = "Discourse", // forumName -> channelName
+                        isSage = false,
+                        isAdmin = false,
+                        isHidden = false,
+                        isLocal = false,
+                        lastViewedCommentId = "",
+                        comments = emptyList(),
+                        remainingCount = null
+                    )
+
+                    // Update cache/DB
+                    // TODO: Implement proper caching for thread details similar to NmbSource
+
+                    Result.success(post)
+                } catch (e: Exception) {
+                    Result.failure(e)
+                }
             }
-            val post = Post(
-                id = response.id.toString(),
-                channelId = response.categoryId.toString(), // fid -> channelId
-                commentCount = response.replyCount.toLong(), // replyCount -> commentCount
-                images = emptyList(), // TODO: parse images
-                createdAt = kotlin.time.Instant.fromEpochMilliseconds(createdAt.toEpochMilliseconds()),
-                title = response.title,
-                content = firstPost?.cooked ?: "", // Use full content
-                sourceName = "discourse",
-                sourceUrl = "https://meta.discourse.org/t/${response.id}",
-                author = Author(
-                    id = firstPost?.username ?: "",
-                    name = firstPost?.name ?: firstPost?.username ?: "Anonymous"
-                ), // author -> Author object
-                channelName = "Discourse", // forumName -> channelName
-                isSage = false,
-                isAdmin = false,
-                isHidden = false,
-                isLocal = false,
-                lastViewedCommentId = "",
-                comments = emptyList(),
-                remainingCount = null
-            )
-            Result.success(post)
-        } catch (e: Exception) {
-            Result.failure(e)
+            is SaniouResult.Error -> {
+                Result.failure(result.ex)
+            }
         }
     }
 
@@ -179,7 +199,7 @@ class DiscourseSource(
         threadId: String,
         initialPage: Int,
         isPoOnly: Boolean,
-    ): Flow<PagingData<ThreadReply>> {
+    ): Flow<PagingData<Comment>> {
         return Pager(
             config = PagingConfig(pageSize = 20),
             initialKey = initialPage,
@@ -187,14 +207,14 @@ class DiscourseSource(
         ).flow
     }
 
-    override fun getForum(forumId: String): Flow<Forum?> {
+    override fun getForum(forumId: String): Flow<Channel?> {
         // TODO: Implement proper forum detail fetching or caching
         // For now, return null as we don't persist forums locally yet
         return kotlinx.coroutines.flow.flowOf(null)
     }
 }
 
-internal fun DiscourseTopic.toPost(usersMap: Map<Long, DiscourseUser>): Post {
+internal fun DiscourseTopic.toPost(usersMap: Map<Long, DiscourseUser>): Topic {
 // 假设 topic 的第一个 poster 是楼主
 val originalPosterId =
     posters?.firstOrNull { it.description.contains("Original Poster") }?.userId
@@ -207,7 +227,7 @@ val postCreatedAt = try {
     Instant.fromEpochMilliseconds(0)
 }
 
-return Post(
+return Topic(
     id = id.toString(),
     channelId = categoryId?.toString() ?: "0", // fid -> channelId
     commentCount = replyCount.toLong(), // replyCount -> commentCount

@@ -1,7 +1,7 @@
 package ai.saniou.forum.workflow.home
 
 import ai.saniou.coreui.theme.Dimens
-import ai.saniou.thread.domain.model.forum.Channel as Forum
+import ai.saniou.thread.domain.model.forum.Channel
 import ai.saniou.thread.domain.repository.Source
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
@@ -129,11 +129,11 @@ private fun SourceChip(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun StylizedForumItem(
-    forum: Forum,
+    forum: Channel,
     isSelected: Boolean,
     isFavorite: Boolean,
-    onForumClick: (Forum) -> Unit,
-    onFavoriteToggle: (Forum) -> Unit,
+    onForumClick: (Channel) -> Unit,
+    onFavoriteToggle: (Channel) -> Unit,
     modifier: Modifier = Modifier,
     indentLevel: Int = 0
 ) {
@@ -275,7 +275,7 @@ fun StylizedForumItem(
 
 @Composable
 fun SubCategoryBoxItem(
-    forum: Forum,
+    forum: Channel,
     onClick: () -> Unit
 ) {
     Surface(
@@ -305,7 +305,7 @@ fun SubCategoryBoxItem(
                     overflow = TextOverflow.Ellipsis
                 )
             }
-            
+
             if (forum.topicCount != null) {
                 Text(
                     text = "${forum.topicCount} 串",

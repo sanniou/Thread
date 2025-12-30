@@ -16,13 +16,13 @@ class SaniouResponseConverterFactory : Converter.Factory {
         ktorfit: Ktorfit,
     ): Converter.SuspendResponseConverter<HttpResponse, *>? {
         return when (typeData.typeInfo.type) {
-            SaniouResponse::class -> object :
+            SaniouResult::class -> object :
                 Converter.SuspendResponseConverter<HttpResponse, Any> {
                 override suspend fun convert(result: KtorfitResult): Any {
                     return when (result) {
                         is KtorfitResult.Success -> {
                             return try {
-                                SaniouResponse.success(
+                                SaniouResult.success(
                                     result.response.body<Any>(
                                         typeData.typeArgs.first().typeInfo
                                     )
@@ -32,18 +32,18 @@ class SaniouResponseConverterFactory : Converter.Factory {
                                 try {
                                     val message = result.response.bodyAsChannel().toByteArray()
                                         .decodeUnicodeEscapes()
-                                    return SaniouResponse.error(
+                                    return SaniouResult.error(
                                         RuntimeException(message.split(":").last().trim())
                                     )
                                 } catch (ex: Throwable) {
                                     // do nothing
                                 }
-                                SaniouResponse.error(ex)
+                                SaniouResult.error(ex)
                             }
                         }
 
                         is KtorfitResult.Failure -> {
-                            SaniouResponse.error(result.throwable)
+                            SaniouResult.error(result.throwable)
                         }
                     }
                 }

@@ -1,8 +1,8 @@
 package ai.saniou.thread.data.repository
 
 import ai.saniou.thread.db.Database
-import ai.saniou.thread.domain.model.forum.Channel as Forum
-import ai.saniou.thread.domain.model.forum.Topic as Post
+import ai.saniou.thread.domain.model.forum.Channel
+import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.repository.ChannelRepository
 import app.cash.paging.PagingData
 import kotlinx.coroutines.Dispatchers
@@ -20,12 +20,24 @@ class ChannelRepositoryImpl(
 
     private val sourceMap by lazy { sources.associateBy { it.id } }
 
+    override fun getChannels(sourceId: String): Flow<List<Channel>> {
+        val source = sourceMap[sourceId]
+            ?: return kotlinx.coroutines.flow.flowOf(emptyList())
+        return source.observeChannels()
+    }
+
+    override suspend fun fetchChannels(sourceId: String): Result<Unit> {
+        val source = sourceMap[sourceId]
+            ?: return Result.failure(IllegalArgumentException("Source not found: $sourceId"))
+        return source.fetchChannels()
+    }
+
     override fun getChannelTopicsPaging(
         sourceId: String,
         fid: String,
         isTimeline: Boolean,
         initialPage: Int,
-    ): Flow<PagingData<Post>> {
+    ): Flow<PagingData<Topic>> {
         val source = sourceMap[sourceId]
         return source?.getThreadsPager(fid, isTimeline, initialPage)
             ?: kotlinx.coroutines.flow.flowOf(PagingData.empty())
@@ -36,12 +48,12 @@ class ChannelRepositoryImpl(
         return source.getForum(fid).map { it?.name }
     }
 
-    override fun getChannelDetail(sourceId: String, fid: String): Flow<Forum?> {
+    override fun getChannelDetail(sourceId: String, fid: String): Flow<Channel?> {
         val source = sourceMap[sourceId] ?: return kotlinx.coroutines.flow.flowOf(null)
         return source.getForum(fid)
     }
 
-    override suspend fun saveLastOpenedChannel(forum: Forum?) {
+    override suspend fun saveLastOpenedChannel(forum: Channel?) {
         withContext(Dispatchers.IO) {
             if (forum != null) {
                 db.keyValueQueries.insertKeyValue("last_opened_forum_id", forum.id)
@@ -53,7 +65,7 @@ class ChannelRepositoryImpl(
         }
     }
 
-    override suspend fun getLastOpenedChannel(): Forum? {
+    override suspend fun getLastOpenedChannel(): Channel? {
         return withContext(Dispatchers.IO) {
             val fid = db.keyValueQueries.getKeyValue("last_opened_forum_id").executeAsOneOrNull()?.content
             val sourceId =
