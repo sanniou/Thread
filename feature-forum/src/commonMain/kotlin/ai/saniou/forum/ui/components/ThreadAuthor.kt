@@ -42,7 +42,18 @@ fun ThreadAuthor(
         // 头像占位，根据 Hash 生成颜色
         val avatarColor = remember(author.id) {
             val hash = author.id.hashCode()
-            Color(hash).copy(alpha = 1f)
+            // 使用 HSL 模式生成更和谐的颜色，避免过于刺眼或暗淡的颜色
+            // 这里简单模拟：确保饱和度和亮度在一定范围内
+            val r = (hash and 0xFF0000 shr 16) / 255f
+            val g = (hash and 0x00FF00 shr 8) / 255f
+            val b = (hash and 0x0000FF) / 255f
+            // 简单的混合算法，偏向柔和色调
+            Color(
+                red = (r + 0.5f) / 1.5f,
+                green = (g + 0.5f) / 1.5f,
+                blue = (b + 0.5f) / 1.5f,
+                alpha = 1f
+            )
         }
 
         Box(
@@ -66,19 +77,20 @@ fun ThreadAuthor(
                 Text(
                     text = author.id.take(1).uppercase(),
                     style = MaterialTheme.typography.titleMedium,
-                    color = Color.White
+                    color = Color.White.copy(alpha = 0.9f),
+                    fontWeight = FontWeight.Bold
                 )
             }
         }
 
-        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(Dimens.padding_small)
+                horizontalArrangement = Arrangement.spacedBy(Dimens.padding_tiny)
             ) {
                 Text(
                     text = author.id,
-                    style = MaterialTheme.typography.titleSmall,
+                    style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -94,15 +106,20 @@ fun ThreadAuthor(
                         color = MaterialTheme.colorScheme.secondary
                     )
                 }
-
-                badges?.invoke()
             }
 
-            Text(
-                text = threadTime,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.outline
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Dimens.padding_small)
+            ) {
+                Text(
+                    text = threadTime,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.outline
+                )
+                
+                badges?.invoke()
+            }
         }
     }
 }

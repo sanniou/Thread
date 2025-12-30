@@ -75,39 +75,13 @@ fun ThreadBody(
         }
 
         if (images.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(Dimens.padding_small))
-            FlowRow(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp),
-                verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)
-            ) {
-                images.forEach { image ->
-                    Box {
-                        var showImageMenu by remember { mutableStateOf(false) }
-                        NmbImage(
-                            imgPath = image.thumbnailUrl,
-                            ext = "",
-                            isThumb = true,
-                            contentDescription = "帖子图片",
-                            modifier = Modifier
-                                .height(Dimens.image_height_medium)
-                                .wrapContentWidth(Alignment.Start)
-                                .clip(MaterialTheme.shapes.small)
-                                .combinedClickable(
-                                    onClick = { onImageClick(image) },
-                                    onLongClick = {
-                                        if (onImageLongClick != null) {
-                                            onImageLongClick(image)
-                                        } else {
-                                            showImageMenu = true
-                                        }
-                                    }
-                                ),
-                            contentScale = ContentScale.FillHeight,
-                        )
-                    }
-                }
-            }
+            Spacer(modifier = Modifier.height(Dimens.padding_medium))
+            NmbImageGrid(
+                images = images,
+                onImageClick = onImageClick,
+                onImageLongClick = onImageLongClick,
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
 }

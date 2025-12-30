@@ -98,6 +98,7 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import app.cash.paging.LoadStateError
 import app.cash.paging.LoadStateLoading
 import app.cash.paging.compose.collectAsLazyPagingItems
@@ -149,7 +150,6 @@ data class TopicDetailPage(
         // Scroll Behavior for TopAppBar
         val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
-        // 处理副作用
         // 处理副作用
         LaunchedEffect(Unit) {
             var snackbarJob: Job? = null
@@ -634,10 +634,8 @@ private fun ThreadList(
                     onBookmarkImage = onBookmarkImage,
                     onUserClick = onUserClick
                 )
-                HorizontalDivider(
-                    thickness = 8.dp,
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                )
+                // 使用 Spacer 代替 Divider，增加呼吸感
+                Spacer(modifier = Modifier.height(Dimens.padding_small))
             }
         }
 
@@ -666,11 +664,8 @@ private fun ThreadList(
                     onBookmarkImage = onBookmarkImage,
                     onUserClick = onUserClick
                 )
-                HorizontalDivider(
-                    thickness = 0.5.dp,
-                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                )
+                // 移除分割线，使用间距区分
+                Spacer(modifier = Modifier.height(Dimens.padding_small))
             } ?: ShimmerContainer { SkeletonReplyItem(it) }
         }
 
@@ -746,15 +741,16 @@ private fun ThreadToolbar(
     onTogglePoOnly: () -> Unit,
 ) {
     Surface(
-        color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 3.dp,
-        shadowElevation = 2.dp
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f), // 增加一点透明度
+        tonalElevation = 0.dp,
+        shadowElevation = 1.dp,
+        modifier = Modifier.fillMaxWidth()
     ) {
         Column {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = Dimens.padding_standard, vertical = Dimens.padding_small),
+                    .padding(horizontal = Dimens.padding_standard, vertical = Dimens.padding_medium),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
@@ -766,16 +762,17 @@ private fun ThreadToolbar(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = " ($replyCount)",
+                        text = " $replyCount",
                         style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                        modifier = Modifier.padding(start = 4.dp)
                     )
                 }
 
                 FilterChip(
                     selected = isPoOnly,
                     onClick = onTogglePoOnly,
-                    label = { Text("只看PO") },
+                    label = { Text("只看PO", style = MaterialTheme.typography.labelMedium) },
                     leadingIcon = if (isPoOnly) {
                         {
                             Icon(
@@ -786,20 +783,19 @@ private fun ThreadToolbar(
                         }
                     } else null,
                     colors = FilterChipDefaults.filterChipColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerHighest.copy(
-                            alpha = 0.3f
-                        ),
-                        labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.5f),
+                        labelColor = MaterialTheme.colorScheme.onSurface,
                         selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                         selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
                     ),
                     border = null,
-                    shape = CircleShape
+                    shape = CircleShape,
+                    modifier = Modifier.height(32.dp)
                 )
             }
             HorizontalDivider(
-                thickness = 1.dp,
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                thickness = 0.5.dp,
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)
             )
         }
     }
@@ -817,162 +813,172 @@ fun ThreadMainPost(
 ) {
     val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
     var showMenu by remember { mutableStateOf(false) }
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surface)
-            .padding(vertical = Dimens.padding_standard),
+
+    Surface(
+        color = MaterialTheme.colorScheme.surface,
+        modifier = Modifier.fillMaxWidth()
     ) {
-        // 头部信息
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = Dimens.padding_standard),
-            verticalAlignment = Alignment.Top,
-            horizontalArrangement = Arrangement.SpaceBetween
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = Dimens.padding_standard),
         ) {
-            ThreadAuthor(
-                author = thread.author,
-                threadTime = thread.createdAt.toRelativeTimeString(),
-                isPo = true,
-                onClick = onUserClick,
-                badges = {
-                    Row(horizontalArrangement = Arrangement.spacedBy(Dimens.padding_tiny)) {
-                        if (thread.sourceName.isNotBlank()) {
-                            Badge(
-                                text = thread.sourceName.uppercase(),
-                                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
+            // 头部信息
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = Dimens.padding_standard),
+                verticalAlignment = Alignment.Top,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                ThreadAuthor(
+                    author = thread.author,
+                    threadTime = thread.createdAt.toRelativeTimeString(),
+                    isPo = true,
+                    onClick = onUserClick,
+                    badges = {
+                        Row(horizontalArrangement = Arrangement.spacedBy(Dimens.padding_tiny)) {
+                            if (thread.sourceName.isNotBlank()) {
+                                Badge(
+                                    text = thread.sourceName.uppercase(),
+                                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
+                            if (thread.isAdmin) {
+                                Badge(
+                                    text = "ADMIN",
+                                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                                    contentColor = MaterialTheme.colorScheme.onErrorContainer
+                                )
+                            }
+                            if (thread.isSage) {
+                                Badge(
+                                    text = "SAGE",
+                                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                                )
+                            }
                         }
-                        if (thread.isAdmin) {
-                            Badge(
-                                text = "ADMIN",
-                                containerColor = MaterialTheme.colorScheme.errorContainer,
-                                contentColor = MaterialTheme.colorScheme.onErrorContainer
-                            )
-                        }
-                        if (thread.isSage) {
-                            Badge(
-                                text = "SAGE",
-                                containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                            )
-                        }
-                    }
-                },
-                modifier = Modifier.weight(1f)
-            )
-
-            Text(
-                text = "No.${thread.id}",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.outline,
-                modifier = Modifier.padding(start = Dimens.padding_small, top = 2.dp)
-            )
-        }
-
-        Spacer(modifier = Modifier.height(Dimens.padding_medium))
-
-        // 标题
-        if (!thread.title.isNullOrBlank() && thread.title != "无标题") {
-            Text(
-                text = thread.title!!,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.padding(
-                    bottom = Dimens.padding_medium,
-                    start = Dimens.padding_standard,
-                    end = Dimens.padding_standard
+                    },
+                    modifier = Modifier.weight(1f)
                 )
-            )
-        }
 
-        // 正文
-        Box(
-            modifier = Modifier.fillMaxWidth()
-                .combinedClickable(
-                    onClick = { /* No-op, allow inner clicks */ },
-                    onLongClick = { showMenu = true }
-                )
-                .padding(horizontal = Dimens.padding_standard)
-        ) {
-            ThreadBody(
-                content = thread.content,
-                images = thread.images,
-                onReferenceClick = refClick,
-                onImageClick = onImageClick,
-                onImageLongClick = { image -> onBookmarkImage(image) }
-            )
-        }
-
-        Spacer(modifier = Modifier.height(Dimens.padding_standard))
-
-        // 底部操作栏
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = Dimens.padding_small),
-            horizontalArrangement = Arrangement.End,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // 复制
-            IconButton(onClick = { onCopy() }) {
-                Icon(
-                    imageVector = Icons.Default.ContentCopy,
-                    contentDescription = "复制",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(Dimens.icon_size_medium)
+                // 楼层号移到这里，使用更淡的颜色
+                Text(
+                    text = "#${thread.id}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                    modifier = Modifier.padding(start = Dimens.padding_small, top = 4.dp)
                 )
             }
 
-            // 收藏
-            IconButton(onClick = { onBookmark() }) {
-                Icon(
-                    imageVector = Icons.Default.BookmarkBorder,
-                    contentDescription = "收藏",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(Dimens.icon_size_medium)
+            Spacer(modifier = Modifier.height(Dimens.padding_large))
+
+            // 标题
+            if (!thread.title.isNullOrBlank() && thread.title != "无标题") {
+                Text(
+                    text = thread.title!!,
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold,
+                        letterSpacing = 0.5.sp
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(
+                        bottom = Dimens.padding_medium,
+                        start = Dimens.padding_standard,
+                        end = Dimens.padding_standard
+                    )
                 )
             }
 
-            // 更多
-            IconButton(onClick = { showMenu = true }) {
-                Icon(
-                    imageVector = Icons.Default.MoreVert,
-                    contentDescription = "更多",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(Dimens.icon_size_medium)
+            // 正文
+            Box(
+                modifier = Modifier.fillMaxWidth()
+                    .combinedClickable(
+                        onClick = { /* No-op, allow inner clicks */ },
+                        onLongClick = { showMenu = true }
+                    )
+                    .padding(horizontal = Dimens.padding_standard)
+            ) {
+                ThreadBody(
+                    content = thread.content,
+                    images = thread.images,
+                    onReferenceClick = refClick,
+                    onImageClick = onImageClick,
+                    onImageLongClick = { image -> onBookmarkImage(image) }
                 )
             }
-        }
 
-        DropdownMenu(
-            expanded = showMenu,
-            onDismissRequest = { showMenu = false }
-        ) {
-            DropdownMenuItem(
-                text = { Text("复制内容") },
-                leadingIcon = { Icon(Icons.Filled.ContentCopy, null) },
-                onClick = {
-                    onCopy()
-                    showMenu = false
+            Spacer(modifier = Modifier.height(Dimens.padding_large))
+
+            // 底部操作栏 - 优化版
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = Dimens.padding_standard),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // 使用 AssistChip 风格的按钮，或者纯图标但增加间距
+                IconButton(onClick = { onCopy() }) {
+                    Icon(
+                        imageVector = Icons.Default.ContentCopy,
+                        contentDescription = "复制",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(20.dp)
+                    )
                 }
-            )
-            DropdownMenuItem(
-                text = { Text("收藏串") },
-                leadingIcon = { Icon(Icons.Filled.BookmarkBorder, null) },
-                onClick = {
-                    onBookmark()
-                    showMenu = false
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                IconButton(onClick = { onBookmark() }) {
+                    Icon(
+                        imageVector = Icons.Default.BookmarkBorder,
+                        contentDescription = "收藏",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(20.dp)
+                    )
                 }
-            )
-            if (thread.sourceUrl.isNotBlank()) {
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                IconButton(onClick = { showMenu = true }) {
+                    Icon(
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = "更多",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+
+            DropdownMenu(
+                expanded = showMenu,
+                onDismissRequest = { showMenu = false }
+            ) {
                 DropdownMenuItem(
-                    text = { Text("打开原链接") },
-                    leadingIcon = { Icon(Icons.Default.OpenInNew, null) },
+                    text = { Text("复制内容") },
+                    leadingIcon = { Icon(Icons.Filled.ContentCopy, null) },
                     onClick = {
-                        uriHandler.openUri(thread.sourceUrl)
+                        onCopy()
                         showMenu = false
                     }
                 )
+                DropdownMenuItem(
+                    text = { Text("收藏串") },
+                    leadingIcon = { Icon(Icons.Filled.BookmarkBorder, null) },
+                    onClick = {
+                        onBookmark()
+                        showMenu = false
+                    }
+                )
+                if (thread.sourceUrl.isNotBlank()) {
+                    DropdownMenuItem(
+                        text = { Text("打开原链接") },
+                        leadingIcon = { Icon(Icons.Default.OpenInNew, null) },
+                        onClick = {
+                            uriHandler.openUri(thread.sourceUrl)
+                            showMenu = false
+                        }
+                    )
+                }
             }
         }
     }
@@ -998,96 +1004,101 @@ fun ThreadReply(
     // Haptic feedback
     val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .combinedClickable(
-                onClick = { onReplyClicked(reply.id) },
-                onLongClick = {
-                    haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-                    showMenu = true
-                }
-            )
-            .padding(horizontal = Dimens.padding_standard, vertical = Dimens.padding_medium)
+    Surface(
+        color = MaterialTheme.colorScheme.surface,
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.Top,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            ThreadAuthor(
-                author = reply.author,
-                threadTime = reply.createdAt.toRelativeTimeString(),
-                isPo = isPo,
-                onClick = onUserClick,
-                badges = {
-                    if (reply.isAdmin) {
-                        Badge(
-                            text = "ADMIN",
-                            containerColor = MaterialTheme.colorScheme.errorContainer,
-                            contentColor = MaterialTheme.colorScheme.onErrorContainer
-                        )
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .combinedClickable(
+                    onClick = { onReplyClicked(reply.id) },
+                    onLongClick = {
+                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                        showMenu = true
                     }
-                },
-                modifier = Modifier.weight(1f)
-            )
-
-            Text(
-                text = "No.${reply.id}",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.outline,
-                modifier = Modifier.padding(start = Dimens.padding_small, top = 2.dp)
-            )
-        }
-
-        if (reply.title.isNullOrBlank().not() && reply.title != "无标题") {
-            Spacer(modifier = Modifier.height(Dimens.padding_small))
-            Text(
-                text = reply.title!!,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-        }
-
-        Spacer(modifier = Modifier.height(Dimens.padding_small))
-
-        ThreadBody(
-            content = reply.content,
-            images = reply.images,
-            onReferenceClick = refClick,
-            onImageClick = onImageClick,
-            onImageLongClick = { image -> onBookmarkImage(image) }
-        )
-
-        DropdownMenu(
-            expanded = showMenu,
-            onDismissRequest = { showMenu = false }
+                )
+                .padding(horizontal = Dimens.padding_standard, vertical = Dimens.padding_medium)
         ) {
-            DropdownMenuItem(
-                text = { Text("回复") },
-                leadingIcon = { Icon(Icons.Filled.Reply, null) },
-                onClick = {
-                    onReplyClicked(reply.id)
-                    showMenu = false
-                }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Top,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                ThreadAuthor(
+                    author = reply.author,
+                    threadTime = reply.createdAt.toRelativeTimeString(),
+                    isPo = isPo,
+                    onClick = onUserClick,
+                    badges = {
+                        if (reply.isAdmin) {
+                            Badge(
+                                text = "ADMIN",
+                                containerColor = MaterialTheme.colorScheme.errorContainer,
+                                contentColor = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                        }
+                    },
+                    modifier = Modifier.weight(1f)
+                )
+
+                Text(
+                    text = "#${reply.id}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                    modifier = Modifier.padding(start = Dimens.padding_small, top = 4.dp)
+                )
+            }
+
+            if (reply.title.isNullOrBlank().not() && reply.title != "无标题") {
+                Spacer(modifier = Modifier.height(Dimens.padding_medium))
+                Text(
+                    text = reply.title!!,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+
+            Spacer(modifier = Modifier.height(Dimens.padding_medium))
+
+            ThreadBody(
+                content = reply.content,
+                images = reply.images,
+                onReferenceClick = refClick,
+                onImageClick = onImageClick,
+                onImageLongClick = { image -> onBookmarkImage(image) }
             )
-            DropdownMenuItem(
-                text = { Text("复制内容") },
-                leadingIcon = { Icon(Icons.Filled.ContentCopy, null) },
-                onClick = {
-                    onCopy()
-                    showMenu = false
-                }
-            )
-            DropdownMenuItem(
-                text = { Text("收藏回复") },
-                leadingIcon = { Icon(Icons.Filled.BookmarkBorder, null) },
-                onClick = {
-                    onBookmark()
-                    showMenu = false
-                }
-            )
+
+            DropdownMenu(
+                expanded = showMenu,
+                onDismissRequest = { showMenu = false }
+            ) {
+                DropdownMenuItem(
+                    text = { Text("回复") },
+                    leadingIcon = { Icon(Icons.Filled.Reply, null) },
+                    onClick = {
+                        onReplyClicked(reply.id)
+                        showMenu = false
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text("复制内容") },
+                    leadingIcon = { Icon(Icons.Filled.ContentCopy, null) },
+                    onClick = {
+                        onCopy()
+                        showMenu = false
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text("收藏回复") },
+                    leadingIcon = { Icon(Icons.Filled.BookmarkBorder, null) },
+                    onClick = {
+                        onBookmark()
+                        showMenu = false
+                    }
+                )
+            }
         }
     }
 }

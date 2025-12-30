@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun Badge(
@@ -20,16 +21,16 @@ fun Badge(
     shape: androidx.compose.ui.graphics.Shape = RoundedCornerShape(4.dp)
 ) {
     Surface(
-        color = containerColor,
+        color = containerColor.copy(alpha = 0.9f), // 轻微透明度增加层次感
         shape = shape,
         modifier = modifier
     ) {
         Text(
             text = text,
-            style = MaterialTheme.typography.labelSmall,
+            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
             fontWeight = FontWeight.Bold,
             color = contentColor,
-            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp) // 增加水平内边距
         )
     }
 }
