@@ -2,7 +2,7 @@ package ai.saniou.forum.workflow.topicdetail
 
 import ai.saniou.coreui.state.AppError
 import ai.saniou.thread.domain.model.forum.Image
-import ai.saniou.thread.domain.model.forum.Topic
+import ai.saniou.thread.domain.model.forum.TopicMetadata
 import ai.saniou.thread.domain.model.forum.Comment
 import app.cash.paging.PagingData
 import kotlinx.coroutines.flow.Flow
@@ -17,7 +17,7 @@ interface TopicDetailContract {
      *
      * @property isLoading 是否正在加载主内容
      * @property error 全局错误信息
-     * @property topic 帖子主楼内容
+     * @property metadata 帖子元数据
      * @property replies 回复列表的分页数据流
      * @property currentPage 当前页码
      * @property totalPages 总页数
@@ -29,7 +29,7 @@ interface TopicDetailContract {
     data class State(
         val isLoading: Boolean = true,
         val error: AppError? = null,
-        val topic: Topic? = null,
+        val metadata: TopicMetadata? = null,
         val replies: Flow<PagingData<Comment>> = emptyFlow(),
         val totalPages: Int = 1,
         val isSubscribed: Boolean = false,
@@ -94,9 +94,9 @@ interface TopicDetailContract {
 
         /**
          * 收藏主楼
-         * @param topic 帖子
+         * @param metadata 帖子元数据
          */
-        data class BookmarkTopic(val topic: Topic) : Event
+        data class BookmarkTopic(val metadata: TopicMetadata) : Event
 
         /**
          * 收藏回复

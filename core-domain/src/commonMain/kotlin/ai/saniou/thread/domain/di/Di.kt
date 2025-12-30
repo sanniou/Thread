@@ -43,6 +43,7 @@ import ai.saniou.thread.domain.usecase.reader.AddFeedSourceUseCase
 import ai.saniou.thread.domain.usecase.reader.GetArticlesUseCase
 import ai.saniou.thread.domain.usecase.reader.DeleteFeedSourceUseCase
 import ai.saniou.thread.domain.usecase.reader.*
+import ai.saniou.thread.domain.usecase.thread.GetTopicMetadataUseCase
 import ai.saniou.thread.domain.usecase.user.UpdateCookieSortUseCase
 import org.kodein.di.DI
 import org.kodein.di.bindProvider
@@ -76,6 +77,7 @@ val domainModule = DI.Module("domainModule") {
 
     // Thread
     bindProvider { GetTopicDetailUseCase(instance()) }
+    bindProvider { GetTopicMetadataUseCase(instance()) }
     bindProvider { GetTopicCommentsUseCase(instance()) }
     bindProvider { GetTopicCommentsPagingUseCase(instance()) }
     bindProvider { GetTopicImagesUseCase(instance()) }

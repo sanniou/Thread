@@ -3,6 +3,7 @@ package ai.saniou.thread.domain.repository
 import ai.saniou.thread.domain.model.forum.Image
 import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.model.forum.Comment
+import ai.saniou.thread.domain.model.forum.TopicMetadata
 import app.cash.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 
@@ -20,6 +21,16 @@ interface TopicRepository {
      * @return 包含帖子详情的 Flow
      */
     fun getTopicDetail(sourceId: String, id: String, forceRefresh: Boolean = false): Flow<Topic>
+
+    /**
+     * 获取帖子元数据
+     *
+     * @param sourceId 来源ID
+     * @param id 帖子ID
+     * @param forceRefresh 是否强制从网络刷新
+     * @return 包含帖子元数据的 Flow
+     */
+    fun getTopicMetadata(sourceId: String, id: String, forceRefresh: Boolean = false): Flow<TopicMetadata>
 
     /**
      * 获取帖子回复的分页数据

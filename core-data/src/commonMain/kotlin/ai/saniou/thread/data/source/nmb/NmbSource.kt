@@ -3,6 +3,7 @@ package ai.saniou.thread.data.source.nmb
 import ai.saniou.thread.data.cache.CacheStrategy
 import ai.saniou.thread.data.manager.CdnManager
 import ai.saniou.thread.data.mapper.toDomain
+import ai.saniou.thread.data.mapper.toMetadata
 import ai.saniou.thread.data.paging.DataPolicy
 import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
 import ai.saniou.thread.data.source.nmb.remote.dto.Forum
@@ -22,6 +23,7 @@ import ai.saniou.thread.domain.model.forum.Channel
 import ai.saniou.thread.domain.model.forum.Comment
 import ai.saniou.thread.domain.model.forum.ImageType
 import ai.saniou.thread.domain.model.forum.Topic
+import ai.saniou.thread.domain.model.forum.TopicMetadata
 import ai.saniou.thread.domain.repository.SettingsRepository
 import ai.saniou.thread.domain.repository.Source
 import ai.saniou.thread.domain.repository.SourceCapabilities
@@ -230,6 +232,10 @@ class NmbSource(
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+     suspend fun getTopicMetadata(threadId: String, page: Int): Result<TopicMetadata> {
+        return getTopicDetail(threadId, page).map { it.toMetadata() }
     }
 
     override fun getTopicCommentsPager(

@@ -30,6 +30,7 @@ import ai.saniou.forum.workflow.topicdetail.TopicDetailContract.Event
 import ai.saniou.forum.workflow.topicdetail.TopicDetailContract.State
 import ai.saniou.forum.workflow.user.UserDetailPage
 import ai.saniou.thread.domain.model.forum.Image
+import ai.saniou.thread.domain.model.forum.TopicMetadata
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -45,6 +46,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
@@ -60,8 +62,6 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Reply
-import androidx.compose.material.icons.outlined.BookmarkBorder
-import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.Button
@@ -101,7 +101,6 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import app.cash.paging.LoadStateError
 import app.cash.paging.LoadStateLoading
 import app.cash.paging.compose.collectAsLazyPagingItems
@@ -119,6 +118,11 @@ import org.kodein.di.instance
 import ai.saniou.thread.domain.model.forum.Comment
 import ai.saniou.thread.domain.model.forum.Topic
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.material.icons.outlined.BookmarkBorder
+import androidx.compose.material.icons.outlined.ContentCopy
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 
 data class TopicDetailPage(
     val threadId: String,
@@ -182,7 +186,7 @@ data class TopicDetailPage(
             topBar = {
                 SaniouTopAppBar(
                     title = {
-                        if (state.topic != null) {
+                        if (state.metadata != null) {
                             Text(
                                 text = state.forumName,
                                 style = MaterialTheme.typography.titleLarge,
@@ -204,7 +208,7 @@ data class TopicDetailPage(
                     },
                     onNavigationClick = { navigator.pop() },
                     actions = {
-                        if (state.topic != null) {
+                        if (state.metadata != null) {
                             IconButton(onClick = { viewModel.onEvent(Event.Refresh) }) {
                                 Icon(Icons.Default.Refresh, contentDescription = "刷新")
                             }
@@ -250,10 +254,10 @@ data class TopicDetailPage(
             },
             snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
             floatingActionButton = {
-                if (state.topic != null) {
+                if (state.metadata != null) {
                     FloatingActionButton(
                         onClick = {
-                            state.topic?.let {
+                            state.metadata?.let {
                                 navigator.push(PostPage(resto = it.id.toInt()))
                             }
                         }
@@ -294,8 +298,7 @@ data class TopicDetailPage(
                 },
                 onUpdateLastReadId = { id -> viewModel.onEvent(Event.UpdateLastReadReplyId(id)) },
                 onCopy = { viewModel.onEvent(Event.CopyContent(it)) },
-                onBookmarkThread = { viewModel.onEvent(Event.BookmarkTopic(it)) },
-                onBookmarkReply = { viewModel.onEvent(Event.BookmarkReply(it)) },
+                onBookmark = { viewModel.onEvent(Event.BookmarkReply(it)) },
                 onBookmarkImage = { image -> viewModel.onEvent(Event.BookmarkImage(image)) },
                 onUserClick = { userHash -> navigator.push(UserDetailPage(userHash)) }
             )
@@ -347,8 +350,7 @@ private fun ThreadContentRouter(
     onImageClick: (Int, List<Image>) -> Unit,
     onUpdateLastReadId: (String) -> Unit,
     onCopy: (String) -> Unit,
-    onBookmarkThread: (Topic) -> Unit,
-    onBookmarkReply: (Comment) -> Unit,
+    onBookmark: (Comment) -> Unit,
     onBookmarkImage: (Image) -> Unit,
     onUserClick: (String) -> Unit,
 ) {
@@ -369,8 +371,7 @@ private fun ThreadContentRouter(
                 onImageClick = onImageClick,
                 onUpdateLastReadId = onUpdateLastReadId,
                 onCopy = onCopy,
-                onBookmarkThread = onBookmarkThread,
-                onBookmarkReply = onBookmarkReply,
+                onBookmark = onBookmark,
                 onBookmarkImage = onBookmarkImage,
                 onUserClick = onUserClick
             )
@@ -514,26 +515,14 @@ fun ThreadSuccessContent(
     onImageClick: (Int, List<Image>) -> Unit,
     onUpdateLastReadId: (String) -> Unit,
     onCopy: (String) -> Unit,
-    onBookmarkThread: (Topic) -> Unit,
-    onBookmarkReply: (Comment) -> Unit,
+    onBookmark: (Comment) -> Unit,
     onBookmarkImage: (Image) -> Unit,
     onUserClick: (String) -> Unit,
 ) {
     val replies = state.replies.collectAsLazyPagingItems()
-    val allImages by remember(state.topic, replies.itemSnapshotList) {
+    val allImages by remember(replies.itemSnapshotList) {
         derivedStateOf {
-            val imageList = mutableListOf<Image>()
-            state.topic?.let { post ->
-                post.images.forEach { image ->
-                    imageList.add(image)
-                }
-            }
-            replies.itemSnapshotList.items.forEach { reply ->
-                reply.images.forEach { image ->
-                    imageList.add(image)
-                }
-            }
-            imageList
+            replies.itemSnapshotList.items.flatMap { it?.images ?: emptyList() }
         }
     }
 
@@ -546,8 +535,7 @@ fun ThreadSuccessContent(
                 replies.itemSnapshotList.indexOfFirst { it?.id == state.lastReadCommentId }
 
             if (lastReadItemIndex != -1) {
-                // 主题帖占用了第一个位置，所以回复的索引需要+1
-                lazyListState.scrollToItem(lastReadItemIndex + 1)
+                lazyListState.scrollToItem(lastReadItemIndex)
                 hasScrolledToLastRead = true
             }
         }
@@ -583,10 +571,11 @@ fun ThreadSuccessContent(
             },
             onRefresh = onRefresh,
             onCopy = onCopy,
-            onBookmarkThread = onBookmarkThread,
-            onBookmarkReply = onBookmarkReply,
+//            onBookmarkThread = onBookmarkThread,
+//            onBookmarkReply = onBookmarkReply,
             onBookmarkImage = onBookmarkImage,
-            onUserClick = onUserClick
+            onUserClick = onUserClick,
+            onBookmark = onBookmark
         )
     }
 }
@@ -602,8 +591,7 @@ private fun ThreadList(
     onImageClick: (Image) -> Unit,
     onRefresh: () -> Unit,
     onCopy: (String) -> Unit,
-    onBookmarkThread: (Topic) -> Unit,
-    onBookmarkReply: (Comment) -> Unit,
+    onBookmark: (Comment) -> Unit,
     onBookmarkImage: (Image) -> Unit,
     onUserClick: (String) -> Unit,
 ) {
@@ -611,43 +599,39 @@ private fun ThreadList(
     LazyColumn(
         state = lazyListState,
         modifier = Modifier,
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 80.dp),
-        verticalArrangement = Arrangement.spacedBy(0.dp)
+        contentPadding = PaddingValues(bottom = 80.dp),
+        verticalArrangement = Arrangement.spacedBy(Dimens.padding_small)
     ) {
-        // PREPEND 加载状态
-        if (replies.loadState.prepend is LoadStateLoading) {
-            item {
-                LoadingIndicator()
-            }
-        }
-        if (replies.loadState.prepend is LoadStateError) {
-            item {
-                LoadingFailedIndicator()
-            }
-        }
-
-        // 主帖
+        // Header
         item {
-            state.topic?.let { thread ->
-                ThreadMainPost(
-                    thread = thread,
-                    refClick = onRefClick,
+            state.metadata?.let {
+                TopicHeader(metadata = it, onUserClick = onUserClick)
+            } ?: Box(modifier = Modifier.height(100.dp)) // Placeholder for header
+        }
+
+        // Main Content
+        item {
+            val mainComment = if(replies.itemCount>0) {  replies.peek(0) } else null
+            if (mainComment != null) {
+                MainCommentCard(
+                    comment = mainComment,
+                    onRefClick = onRefClick,
                     onImageClick = onImageClick,
-                    onCopy = { onCopy(thread.content) },
-                    onBookmark = { onBookmarkThread(thread) },
+                    onCopy = { onCopy(mainComment.content) },
+                    onBookmark = { onBookmark(mainComment) },
                     onBookmarkImage = onBookmarkImage,
-                    onUserClick = onUserClick
+                    onShare = { /* TODO */ }
                 )
-                HorizontalDivider(
-                    thickness = 0.5.dp,
-                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)
-                )
+            } else {
+                // Shimmer for main content
+                // You can create a specific shimmer for MainCommentCard
+                Box(modifier = Modifier.height(200.dp).fillMaxWidth().background(MaterialTheme.colorScheme.surfaceVariant))
             }
         }
 
-        // 工具栏
+        // Toolbar
         stickyHeader {
-            state.topic?.let {
+            state.metadata?.let {
                 ThreadToolbar(
                     replyCount = it.commentCount.toString(),
                     isPoOnly = state.isPoOnlyMode,
@@ -656,51 +640,49 @@ private fun ThreadList(
             }
         }
 
-        // 回复列表
-        items(replies.itemCount) { replyIndex ->
-            replies[replyIndex]?.let { reply ->
-                ThreadReply(
-                    reply = reply,
-                    poUserHash = state.topic?.author?.id ?: "",
-                    onReplyClicked = onReplyClicked,
-                    refClick = onRefClick,
+        // Replies
+        items((replies.itemCount - 1).coerceAtLeast(0)) { index ->
+            val reply = replies[index + 1]
+            if (reply != null) {
+                CommentItem(
+                    comment = reply,
+                    poUserHash = state.metadata?.author?.id ?: "",
+                    onReplyClick = onReplyClicked,
+                    onRefClick = onRefClick,
                     onImageClick = onImageClick,
-                    onCopy = { onCopy(reply.content) },
-                    onBookmark = { onBookmarkReply(reply) },
-                    onBookmarkImage = onBookmarkImage,
-                    onUserClick = onUserClick
+                    onLongClick = { /* TODO: Show context menu */ }
                 )
                 HorizontalDivider(
                     thickness = 0.5.dp,
                     color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)
                 )
-            } ?: ShimmerContainer { SkeletonReplyItem(it) }
+            } else {
+                ShimmerContainer { SkeletonReplyItem(it) }
+            }
         }
 
-        // Paging 加载状态
+        // Paging state footer
         item {
             when {
                 replies.loadState.refresh is LoadStateLoading && replies.itemCount == 0 -> {
-                    if (state.topic == null) {
-                        ThreadShimmer()
+                    ThreadShimmer()
+                }
+                replies.loadState.append is LoadStateLoading -> {
+                    LoadingIndicator()
+                }
+                replies.loadState.refresh is LoadStateError -> {
+                    // Full screen error is handled by the router
+                }
+                replies.loadState.append is LoadStateError -> {
+                    LoadingFailedIndicator()
+                }
+                replies.loadState.append.endOfPaginationReached -> {
+                    if (replies.itemCount > 1) { // Show only if there are replies
+                        LoadEndIndicator(onClick = { replies.refresh() })
                     } else {
-                        ThreadReplyShimmer()
+                        EmptyReplyContent(onRefresh = { replies.refresh() })
                     }
                 }
-
-                replies.loadState.refresh is LoadStateError -> {
-                    // 错误状态已在顶层处理
-                }
-
-                replies.loadState.append is LoadStateError -> LoadingFailedIndicator()
-                replies.loadState.append is LoadStateLoading -> LoadingIndicator()
-                replies.loadState.append.endOfPaginationReached && replies.itemCount == 0 -> {
-                    EmptyReplyContent(onRefresh)
-                }
-
-                replies.loadState.append.endOfPaginationReached -> LoadEndIndicator(
-                    onClick = { replies.refresh() }
-                )
             }
         }
     }
@@ -764,7 +746,7 @@ private fun ThreadToolbar(
                 Text(
                     text = "全部回复 ($replyCount)",
                     style = MaterialTheme.typography.titleSmall,
-                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                    fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
 

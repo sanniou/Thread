@@ -4,8 +4,10 @@ import ai.saniou.thread.data.cache.SourceCache
 import ai.saniou.thread.data.mapper.toDomain
 import ai.saniou.thread.data.mapper.toEntity
 import ai.saniou.thread.db.Database
+import ai.saniou.thread.data.mapper.toMetadata
 import ai.saniou.thread.domain.model.forum.Image
 import ai.saniou.thread.domain.model.forum.Topic
+import ai.saniou.thread.domain.model.forum.TopicMetadata
 import ai.saniou.thread.domain.model.forum.Comment
 import ai.saniou.thread.domain.repository.Source
 import ai.saniou.thread.domain.repository.TopicRepository
@@ -44,6 +46,24 @@ class TopicRepositoryImpl(
                             // Ideally source should save to DB directly or cache.saveThread should handle images.
                             // NmbSource.getThreadDetail currently doesn't save to DB.
                             // Let's assume cache.saveThread handles basic info, but images need separate handling or source should do it.
+                            cache.saveTopic(post.toEntity())
+                        }
+                    }
+                }
+            }
+            .flowOn(Dispatchers.IO)
+    }
+
+    override fun getTopicMetadata(sourceId: String, id: String, forceRefresh: Boolean): Flow<TopicMetadata> {
+        return cache.observeTopic(sourceId, id)
+            .mapNotNull { it?.toMetadata(db.commentQueries, db.imageQueries) }
+            .onStart {
+                val source = sourceMap[sourceId]
+                if (source != null) {
+                    val currentCache = cache.observeTopic(sourceId, id).firstOrNull()
+                    if (currentCache == null || forceRefresh) {
+                        val result = source.getTopicDetail(id, 1)
+                        result.onSuccess { post ->
                             cache.saveTopic(post.toEntity())
                         }
                     }

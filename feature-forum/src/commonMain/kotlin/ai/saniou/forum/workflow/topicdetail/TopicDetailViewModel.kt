@@ -5,14 +5,14 @@ import ai.saniou.forum.workflow.topicdetail.TopicDetailContract.Effect
 import ai.saniou.forum.workflow.topicdetail.TopicDetailContract.Event
 import ai.saniou.forum.workflow.topicdetail.TopicDetailContract.State
 import ai.saniou.thread.domain.model.bookmark.Bookmark
-import ai.saniou.thread.domain.model.forum.Topic
+import ai.saniou.thread.domain.model.forum.TopicMetadata
 import ai.saniou.thread.domain.model.forum.Comment
 import ai.saniou.thread.domain.usecase.bookmark.AddBookmarkUseCase
 import ai.saniou.thread.domain.usecase.channel.GetChannelNameUseCase
 import ai.saniou.thread.domain.usecase.subscription.GetActiveSubscriptionKeyUseCase
 import ai.saniou.thread.domain.usecase.subscription.IsSubscribedUseCase
 import ai.saniou.thread.domain.usecase.subscription.ToggleSubscriptionUseCase
-import ai.saniou.thread.domain.usecase.thread.GetTopicDetailUseCase
+import ai.saniou.thread.domain.usecase.thread.GetTopicMetadataUseCase
 import ai.saniou.thread.domain.usecase.thread.GetTopicCommentsPagingUseCase
 import ai.saniou.thread.data.manager.CdnManager
 import ai.saniou.thread.domain.model.forum.Image
@@ -45,7 +45,7 @@ data class TopicDetailViewModelParams(
 @OptIn(ExperimentalCoroutinesApi::class)
 class TopicDetailViewModel(
     params: TopicDetailViewModelParams,
-    private val getTopicDetailUseCase: GetTopicDetailUseCase,
+    private val getTopicMetadataUseCase: GetTopicMetadataUseCase,
     private val getTopicCommentsPagingUseCase: GetTopicCommentsPagingUseCase,
     private val toggleSubscriptionUseCase: ToggleSubscriptionUseCase,
     private val addBookmarkUseCase: AddBookmarkUseCase,
@@ -85,7 +85,7 @@ class TopicDetailViewModel(
         }.cachedIn(screenModelScope)
 
     init {
-        observeThreadDetails()
+        observeTopicMetadata()
         updateLastAccessTime()
         _state.update { it.copy(replies = replies) }
 
@@ -108,7 +108,7 @@ class TopicDetailViewModel(
             is Event.ShowImagePreview -> showImagePreview()
             Event.LoadMoreImages -> {}
             is Event.CopyContent -> copyContent(event.content)
-            is Event.BookmarkTopic -> bookmarkThread(event.topic)
+            is Event.BookmarkTopic -> bookmarkThread(event.metadata)
             is Event.BookmarkReply -> bookmarkReply(event.reply)
             is Event.BookmarkImage -> bookmarkImage(event.image)
         }
@@ -119,7 +119,7 @@ class TopicDetailViewModel(
         // 这里我们通过重新请求第一页来间接触发 RemoteMediator 的 REFRESH
         loadRequest.update { it.copy(page = 1) }
         // 同时，也需要一个机制来强制刷新主楼信息
-        observeThreadDetails(forceRefresh = true)
+        observeTopicMetadata(forceRefresh = true)
     }
 
     @OptIn(ExperimentalTime::class)
@@ -141,32 +141,31 @@ class TopicDetailViewModel(
         }
     }
 
-    private fun observeThreadDetails(forceRefresh: Boolean = false) {
+    private fun observeTopicMetadata(forceRefresh: Boolean = false) {
         screenModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
-            getTopicDetailUseCase(sourceId, threadId, forceRefresh)
-                .flatMapLatest { detail ->
-                    getChannelNameUseCase(sourceId, detail.channelId).map { forumName ->
-                        detail to (forumName ?: "")
+            getTopicMetadataUseCase(sourceId, threadId, forceRefresh)
+                .flatMapLatest { metadata ->
+                    getChannelNameUseCase(sourceId, metadata.channelId).map { forumName ->
+                        metadata to (forumName ?: "")
                     }
                 }
                 .catch { e ->
                     _state.update {
                         it.copy(
                             isLoading = false,
-                            error = e.toAppError { observeThreadDetails(forceRefresh = true) })
+                            error = e.toAppError { observeTopicMetadata(forceRefresh = true) })
                     }
                 }
-                .collectLatest { (detail, forumName) ->
-                    val thread = detail
+                .collectLatest { (metadata, forumName) ->
                     val totalPages =
-                        (thread.commentCount / 19) + if (thread.commentCount % 19 > 0) 1 else 0
+                        (metadata.commentCount / 19) + if (metadata.commentCount % 19 > 0) 1 else 0
 
                     _state.update {
                         it.copy(
                             isLoading = false,
-                            topic = thread,
-                            lastReadCommentId = detail.lastViewedCommentId,
+                            metadata = metadata,
+                            lastReadCommentId = metadata.lastViewedCommentId,
                             totalPages = totalPages.toInt().coerceAtLeast(1),
                             forumName = forumName
                         )
@@ -186,7 +185,7 @@ class TopicDetailViewModel(
 
     private fun toggleSubscription() {
         if (state.value.isTogglingSubscription) return
-        val thread = state.value.topic ?: return
+        val metadata = state.value.metadata ?: return
 
         _state.update { it.copy(isTogglingSubscription = true) }
 
@@ -194,7 +193,7 @@ class TopicDetailViewModel(
         screenModelScope.launch {
             val subscriptionKey =
                 getActiveSubscriptionKeyUseCase() ?: throw IllegalStateException("未设置订阅ID")
-            toggleSubscriptionUseCase(subscriptionKey, thread.id.toString(), currentSubscribed)
+            toggleSubscriptionUseCase(subscriptionKey, metadata.id, currentSubscribed)
                 .onSuccess { resultMessage ->
                     // UI state will be updated by the database flow
                     _state.update { it.copy(isTogglingSubscription = false) }
@@ -222,19 +221,12 @@ class TopicDetailViewModel(
         }
     }
 
-    private fun bookmarkThread(thread: Topic) {
+    private fun bookmarkThread(metadata: TopicMetadata) {
         screenModelScope.launch {
-            addBookmarkUseCase(
-                Bookmark.Quote(
-                    id = "nmb.Thread.${thread.id}",
-                    createdAt = Clock.System.now(),
-                    tags = listOf(),
-                    content = thread.content,
-                    sourceId = thread.id,
-                    sourceType = "nmb.Thread"
-                )
-            )
-            _effect.send(Effect.ShowSnackbar("主楼已收藏"))
+            // Cannot bookmark a thread without its content.
+            // This action should be disabled or get content from somewhere else.
+            // For now, we just show a message.
+            _effect.send(Effect.ShowSnackbar("无法收藏：缺少主楼内容"))
         }
     }
 
