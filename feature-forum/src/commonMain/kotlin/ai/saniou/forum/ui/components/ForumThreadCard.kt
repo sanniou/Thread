@@ -5,7 +5,7 @@ import ai.saniou.coreui.theme.Dimens
 import ai.saniou.thread.data.source.nmb.remote.dto.IBaseThread
 import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
 import ai.saniou.thread.domain.model.forum.Image
-import ai.saniou.thread.domain.model.forum.Topic as Post
+import ai.saniou.thread.domain.model.forum.Topic
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -50,7 +50,7 @@ fun TopicCard(
  */
 @Composable
 fun TopicCard(
-    topic: Post,
+    topic: Topic,
     onClick: () -> Unit,
     onImageClick: ((Image) -> Unit)? = null,
     onUserClick: ((String) -> Unit)? = null,

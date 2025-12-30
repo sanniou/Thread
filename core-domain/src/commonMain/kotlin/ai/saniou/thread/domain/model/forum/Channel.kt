@@ -1,7 +1,7 @@
 package ai.saniou.thread.domain.model.forum
 
 /**
- * 频道/板块模型 (原 Forum)
+ * 频道/板块模型
  *
  * @param id 唯一ID
  * @param name 名称
@@ -49,6 +49,6 @@ data class Channel(
     val logoUrl: String? = null,
     val bannerUrl: String? = null,
     val slug: String? = null,
-     val canCreateTopic: Boolean? = null,
-    val children: List<Channel> = emptyList()
+    val canCreateTopic: Boolean? = null,
+    val children: List<Channel> = emptyList(),
 )

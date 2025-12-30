@@ -1,8 +1,8 @@
 package ai.saniou.thread.domain.repository
 
 import ai.saniou.thread.domain.model.forum.Channel
-import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.model.forum.Comment
+import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.model.forum.TrendResult
 import app.cash.paging.PagingData
 import kotlinx.coroutines.flow.Flow
@@ -44,15 +44,15 @@ interface Source {
     /**
      * 获取板块帖子分页数据
      */
-    fun getThreadsPager(
-        forumId: String,
+    fun getTopicsPager(
+        channelId: String,
         isTimeline: Boolean,
         initialPage: Int = 1,
     ): Flow<PagingData<Topic>>
 
-    suspend fun getThreadDetail(threadId: String, page: Int): Result<Topic>
+    suspend fun getTopicDetail(threadId: String, page: Int): Result<Topic>
 
-    fun getThreadRepliesPager(
+    fun getTopicCommentsPager(
         threadId: String,
         initialPage: Int,
         isPoOnly: Boolean = false,
@@ -61,7 +61,7 @@ interface Source {
     /**
      * 获取板块详情
      */
-    fun getForum(forumId: String): Flow<Channel?>
+    fun getChannel(channelId: String): Flow<Channel?>
 
     /**
      * 获取热门榜单
@@ -73,7 +73,7 @@ interface Source {
 data class SourceCapabilities(
     val supportsTrend: Boolean = false,
     val supportsTrendHistory: Boolean = false,
-    val supportsPagination: Boolean = true
+    val supportsPagination: Boolean = true,
 )
 
 /**

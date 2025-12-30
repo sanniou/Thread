@@ -87,15 +87,15 @@ class AcfunSource(
     }
 
 
-    override fun getThreadsPager(
-        forumId: String,
+    override fun getTopicsPager(
+        channelId: String,
         isTimeline: Boolean,
         initialPage: Int
     ): Flow<PagingData<Topic>> {
         return flowOf(PagingData.empty())
     }
 
-    override suspend fun getThreadDetail(threadId: String, page: Int): Result<Topic> {
+    override suspend fun getTopicDetail(threadId: String, page: Int): Result<Topic> {
         val articleId =
             threadId.toLongOrNull() ?: return Result.failure(IllegalArgumentException("Invalid threadId"))
 
@@ -132,7 +132,7 @@ class AcfunSource(
         }
     }
 
-    override fun getThreadRepliesPager(
+    override fun getTopicCommentsPager(
         threadId: String,
         initialPage: Int,
         isPoOnly: Boolean
@@ -191,7 +191,7 @@ class AcfunSource(
         ).flow
     }
 
-    override fun getForum(forumId: String): Flow<Channel?> {
+    override fun getChannel(channelId: String): Flow<Channel?> {
         return flowOf(null)
     }
 

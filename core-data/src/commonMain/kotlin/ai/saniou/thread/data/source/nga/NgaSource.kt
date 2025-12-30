@@ -27,19 +27,19 @@ class NgaSource : Source {
         return Result.success(Unit)
     }
 
-    override fun getThreadsPager(
-        forumId: String,
+    override fun getTopicsPager(
+        channelId: String,
         isTimeline: Boolean,
         initialPage: Int,
     ): Flow<PagingData<Topic>> {
         return flowOf(PagingData.empty())
     }
 
-    override suspend fun getThreadDetail(threadId: String, page: Int): Result<Topic> {
+    override suspend fun getTopicDetail(threadId: String, page: Int): Result<Topic> {
         return Result.failure(NotImplementedError("NGA source not implemented"))
     }
 
-    override fun getThreadRepliesPager(
+    override fun getTopicCommentsPager(
         threadId: String,
         initialPage: Int,
         isPoOnly: Boolean,
@@ -47,7 +47,7 @@ class NgaSource : Source {
         return flowOf(PagingData.empty())
     }
 
-    override fun getForum(forumId: String): Flow<Channel?> {
+    override fun getChannel(channelId: String): Flow<Channel?> {
         TODO("Not yet implemented")
     }
 }

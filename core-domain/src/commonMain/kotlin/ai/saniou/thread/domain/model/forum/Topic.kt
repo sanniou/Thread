@@ -6,7 +6,7 @@ import kotlin.time.Instant
  * 话题/主题模型 (原 Post)
  *
  * @param id 话题唯一ID
- * @param channelId 所属频道ID (原 forumId)
+ * @param channelId 所属频道ID
  * @param channelName 所属频道名称
  * @param title 标题
  * @param content 内容

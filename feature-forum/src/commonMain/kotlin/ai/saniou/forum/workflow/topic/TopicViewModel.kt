@@ -6,7 +6,7 @@ import ai.saniou.forum.workflow.topic.TopicContract.Effect
 import ai.saniou.forum.workflow.topic.TopicContract.Event
 import ai.saniou.forum.workflow.topic.TopicContract.State
 import ai.saniou.thread.data.paging.DataPolicy
-import ai.saniou.thread.domain.model.forum.Topic as Post
+import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.usecase.channel.GetChannelDetailUseCase
 import ai.saniou.thread.domain.usecase.channel.GetChannelNameUseCase
 import ai.saniou.thread.domain.usecase.channel.GetChannelTopicsPagingUseCase
@@ -53,7 +53,7 @@ class TopicViewModel(
     private val loadParams = MutableStateFlow(LoadRequest(fid = forumId, fgroup = fgroupId))
     private val showInfoDialog = MutableStateFlow(false)
 
-    val threads: Flow<PagingData<Post>> =
+    val topics: Flow<PagingData<Topic>> =
         loadParams.flatMapLatest { request ->
             getChannelTopicsPagingUseCase(
                 sourceId = sourceId,
@@ -74,12 +74,12 @@ class TopicViewModel(
         showInfoDialog
     ) { forumName, forumDetail, showDialog ->
         State(
-            forumName = forumName ?: "",
-            forumDetail = forumDetail,
-            threads = threads,
+            channelName = forumName ?: "",
+            channelDetail = forumDetail,
+            topics = topics,
             showInfoDialog = showDialog
         )
-    }.stateIn(screenModelScope, SharingStarted.WhileSubscribed(5000), State(threads = threads))
+    }.stateIn(screenModelScope, SharingStarted.WhileSubscribed(5000), State(topics = topics))
 
 
     fun onEvent(event: Event) {

@@ -6,6 +6,7 @@ import ai.saniou.forum.workflow.image.ImagePreviewPage
 import ai.saniou.forum.workflow.image.ImagePreviewViewModelParams
 import ai.saniou.forum.workflow.topicdetail.TopicDetailPage
 import ai.saniou.forum.workflow.user.UserDetailPage
+import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.model.history.HistoryPost
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -22,7 +23,6 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.flow.map
 import org.kodein.di.compose.localDI
 import org.kodein.di.instance
-import ai.saniou.thread.domain.model.forum.Topic as Post
 
 class HistoryPage : Screen {
     @OptIn(ExperimentalMaterial3Api::class)
@@ -48,7 +48,7 @@ class HistoryPage : Screen {
             // In the future, we should have a unified list component.
             val postFlow = viewModel.historyItems.map { pagingData ->
                 pagingData.map {
-                    (if (it is HistoryPost) it.post else null) as Post
+                    (if (it is HistoryPost) it.post else null) as Topic
                 }
             }
 

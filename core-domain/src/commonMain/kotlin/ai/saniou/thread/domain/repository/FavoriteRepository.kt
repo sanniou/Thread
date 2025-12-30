@@ -16,14 +16,14 @@ interface FavoriteRepository {
     /**
      * 切换一个板块的收藏状态
      * @param sourceId 信息源ID
-     * @param forum 要切换的板块
+     * @param channel 要切换的板块
      */
-    suspend fun toggleFavorite(sourceId: String, forum: Channel)
+    suspend fun toggleFavorite(sourceId: String, channel: Channel)
 
     /**
      * 检查一个板块是否被收藏
      * @param sourceId 信息源ID
-     * @param forumId 板块ID
+     * @param channel 板块ID
      */
-    fun isFavorite(sourceId: String, forumId: String): Flow<Boolean>
+    fun isFavorite(sourceId: String, channel: String): Flow<Boolean>
 }

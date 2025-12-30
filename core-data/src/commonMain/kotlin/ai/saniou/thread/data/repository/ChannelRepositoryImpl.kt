@@ -39,25 +39,25 @@ class ChannelRepositoryImpl(
         initialPage: Int,
     ): Flow<PagingData<Topic>> {
         val source = sourceMap[sourceId]
-        return source?.getThreadsPager(fid, isTimeline, initialPage)
+        return source?.getTopicsPager(fid, isTimeline, initialPage)
             ?: kotlinx.coroutines.flow.flowOf(PagingData.empty())
     }
 
     override fun getChannelName(sourceId: String, fid: String): Flow<String?> {
         val source = sourceMap[sourceId] ?: return kotlinx.coroutines.flow.flowOf(null)
-        return source.getForum(fid).map { it?.name }
+        return source.getChannel(fid).map { it?.name }
     }
 
     override fun getChannelDetail(sourceId: String, fid: String): Flow<Channel?> {
         val source = sourceMap[sourceId] ?: return kotlinx.coroutines.flow.flowOf(null)
-        return source.getForum(fid)
+        return source.getChannel(fid)
     }
 
-    override suspend fun saveLastOpenedChannel(forum: Channel?) {
+    override suspend fun saveLastOpenedChannel(channel: Channel?) {
         withContext(Dispatchers.IO) {
-            if (forum != null) {
-                db.keyValueQueries.insertKeyValue("last_opened_forum_id", forum.id)
-                db.keyValueQueries.insertKeyValue("last_opened_forum_source", forum.sourceName)
+            if (channel != null) {
+                db.keyValueQueries.insertKeyValue("last_opened_forum_id", channel.id)
+                db.keyValueQueries.insertKeyValue("last_opened_forum_source", channel.sourceName)
             } else {
                 db.keyValueQueries.deleteKeyValue("last_opened_forum_id")
                 db.keyValueQueries.deleteKeyValue("last_opened_forum_source")
@@ -80,7 +80,7 @@ class ChannelRepositoryImpl(
                 // 尝试从 Source 获取
                 if (source != null) {
                     try {
-                        source.getForum(fid).firstOrNull()
+                        source.getChannel(fid).firstOrNull()
                     } catch (e: Exception) {
                         null
                     }

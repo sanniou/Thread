@@ -16,13 +16,13 @@ interface TopicContract {
      *
      * @property isLoading 是否正在加载
      * @property error 错误信息
-     * @property forumName 板块名称
-     * @property threads 帖子列表的分页数据流
+     * @property channelName 板块名称
+     * @property topics 帖子列表的分页数据流
      */
     data class State(
-        val forumName: String = "",
-        val forumDetail: UiStateWrapper<Channel> = UiStateWrapper.Loading,
-        val threads: Flow<PagingData<Topic>> = emptyFlow(),
+        val channelName: String = "",
+        val channelDetail: UiStateWrapper<Channel> = UiStateWrapper.Loading,
+        val topics: Flow<PagingData<Topic>> = emptyFlow(),
         val showInfoDialog: Boolean = false
     )
 

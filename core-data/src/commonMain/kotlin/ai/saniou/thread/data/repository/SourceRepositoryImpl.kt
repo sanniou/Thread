@@ -1,9 +1,8 @@
 package ai.saniou.thread.data.repository
 
-import ai.saniou.thread.domain.model.forum.Channel as Channel
-import ai.saniou.thread.domain.model.forum.Topic as Topic
-import ai.saniou.thread.domain.repository.SourceRepository
+import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.repository.Source
+import ai.saniou.thread.domain.repository.SourceRepository
 import kotlinx.coroutines.coroutineScope
 import kotlin.time.ExperimentalTime
 

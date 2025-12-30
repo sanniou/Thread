@@ -57,9 +57,9 @@ interface ChannelRepository {
 
     /**
      * 保存最后打开的板块
-     * @param forum 要保存的板块，如果为null则清除记录
+     * @param channel 要保存的板块，如果为null则清除记录
      */
-    suspend fun saveLastOpenedChannel(forum: Channel?)
+    suspend fun saveLastOpenedChannel(channel: Channel?)
 
     /**
      * 获取最后打开的板块

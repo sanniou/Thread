@@ -1,5 +1,6 @@
 package ai.saniou.thread.data.source.nmb
 
+import ai.saniou.thread.data.cache.CacheStrategy
 import ai.saniou.thread.data.manager.CdnManager
 import ai.saniou.thread.data.mapper.toDomain
 import ai.saniou.thread.data.paging.DataPolicy
@@ -14,14 +15,17 @@ import ai.saniou.thread.data.source.nmb.remote.dto.toTable
 import ai.saniou.thread.data.source.nmb.remote.dto.toTableReply
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.db.table.Cookie
+import ai.saniou.thread.db.table.forum.GetTopicsInChannelOffset
 import ai.saniou.thread.db.table.forum.Image
+import ai.saniou.thread.domain.model.forum.Channel
+import ai.saniou.thread.domain.model.forum.Comment
 import ai.saniou.thread.domain.model.forum.ImageType
+import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.repository.SettingsRepository
 import ai.saniou.thread.domain.repository.Source
 import ai.saniou.thread.domain.repository.SourceCapabilities
 import ai.saniou.thread.domain.repository.observeValue
 import ai.saniou.thread.network.SaniouResult
-import ai.saniou.thread.data.cache.CacheStrategy
 import app.cash.paging.ExperimentalPagingApi
 import app.cash.paging.Pager
 import app.cash.paging.PagingConfig
@@ -43,11 +47,6 @@ import kotlinx.datetime.plus
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
 import kotlin.time.ExperimentalTime
-import kotlin.time.Instant
-import ai.saniou.thread.db.table.forum.GetTopicsInChannelOffset as GetThreadsInForumOffset
-import ai.saniou.thread.domain.model.forum.Channel as DomainForum
-import ai.saniou.thread.domain.model.forum.Comment as DomainComment
-import ai.saniou.thread.domain.model.forum.Topic as Post
 
 class NmbSource(
     private val nmbXdApi: NmbXdApi,
@@ -68,20 +67,27 @@ class NmbSource(
         settingsRepository.observeValue<Boolean>("nmb_initialized")
             .map { it == true }
 
-    override fun observeChannels(): Flow<List<DomainForum>> {
-        val forumsFlow = db.channelQueries.getChannelsBySource(id).asFlow().mapToList(Dispatchers.Default)
-        val timelinesFlow = db.timeLineQueries.getAllTimeLines().asFlow().mapToList(Dispatchers.Default)
-        val categoriesFlow = db.channelQueries.getChannelCategoriesBySource(id).asFlow().mapToList(Dispatchers.Default)
+    override fun observeChannels(): Flow<List<Channel>> {
+        val channelFlow =
+            db.channelQueries.getChannelsBySource(id).asFlow().mapToList(Dispatchers.Default)
+        val timelinesFlow =
+            db.timeLineQueries.getAllTimeLines().asFlow().mapToList(Dispatchers.Default)
+        val categoriesFlow = db.channelQueries.getChannelCategoriesBySource(id).asFlow()
+            .mapToList(Dispatchers.Default)
 
-        return kotlinx.coroutines.flow.combine(forumsFlow, timelinesFlow, categoriesFlow) { forumsFromDb, timelines, categoriesList ->
+        return kotlinx.coroutines.flow.combine(
+            channelFlow,
+            timelinesFlow,
+            categoriesFlow
+        ) { channelFromDb, timelines, categoriesList ->
             val categories = categoriesList.associateBy { it.id }
-            val forums = forumsFromDb.map { forum ->
-                forum.toDomain().copy(
-                    groupName = categories[forum.fGroup]?.name ?: "未知分类"
+            val channels = channelFromDb.map { channel ->
+                channel.toDomain().copy(
+                    groupName = categories[channel.fGroup]?.name ?: "未知分类"
                 )
             }
             buildList {
-                addAll(forums)
+                addAll(channels)
                 addAll(timelines.map { it.toDomain() })
             }
         }
@@ -106,7 +112,7 @@ class NmbSource(
         if (remoteResult.isFailure) {
             return Result.failure(remoteResult.exceptionOrNull()!!)
         }
-        
+
         CacheStrategy.updateLastFetchTime(
             db = db,
             keyType = RemoteKeyType.FORUM_CATEGORY,
@@ -146,13 +152,13 @@ class NmbSource(
         return Result.success(Unit)
     }
 
-    override fun getThreadsPager(
-        forumId: String,
+    override fun getTopicsPager(
+        channelId: String,
         isTimeline: Boolean,
         initialPage: Int,
-    ): Flow<PagingData<Post>> {
+    ): Flow<PagingData<Topic>> {
         val fidLong =
-            forumId.toLongOrNull() ?: return kotlinx.coroutines.flow.flowOf(PagingData.empty())
+            channelId.toLongOrNull() ?: return kotlinx.coroutines.flow.flowOf(PagingData.empty())
         val pagerFlow = if (isTimeline) {
             getTimelinePager(fidLong, DataPolicy.NETWORK_ELSE_CACHE, initialPage)
         } else {
@@ -161,7 +167,7 @@ class NmbSource(
         return pagerFlow
     }
 
-    override suspend fun getThreadDetail(threadId: String, page: Int): Result<Post> {
+    override suspend fun getTopicDetail(threadId: String, page: Int): Result<Topic> {
         return try {
             val tid = threadId.toLongOrNull()
                 ?: return Result.failure(IllegalArgumentException("Invalid NMB thread ID"))
@@ -180,11 +186,11 @@ class NmbSource(
         }
     }
 
-    override fun getThreadRepliesPager(
+    override fun getTopicCommentsPager(
         threadId: String,
         initialPage: Int,
         isPoOnly: Boolean,
-    ): Flow<PagingData<DomainComment>> {
+    ): Flow<PagingData<Comment>> {
         val tid =
             threadId.toLongOrNull() ?: return kotlinx.coroutines.flow.flowOf(PagingData.empty())
         return getThreadRepliesPager(
@@ -196,8 +202,8 @@ class NmbSource(
         )
     }
 
-    override fun getForum(forumId: String): Flow<DomainForum?> {
-        return db.channelQueries.getChannel(id = forumId, sourceId = id)
+    override fun getChannel(channelId: String): Flow<Channel?> {
+        return db.channelQueries.getChannel(id = channelId, sourceId = id)
             .asFlow()
             .mapToOneOrNull(Dispatchers.Default)
             .map { it?.toDomain() }
@@ -207,7 +213,7 @@ class NmbSource(
         fid: Long,
         policy: DataPolicy,
         initialPage: Int = 1,
-    ): Flow<PagingData<Post>> {
+    ): Flow<PagingData<Topic>> {
         return createPager(
             fid = fid,
             policy = policy,
@@ -227,7 +233,7 @@ class NmbSource(
         fid: Long,
         policy: DataPolicy,
         initialPage: Int = 1,
-    ): Flow<PagingData<Post>> {
+    ): Flow<PagingData<Topic>> {
         return createPager(
             fid = fid,
             policy = policy,
@@ -250,7 +256,7 @@ class NmbSource(
         policy: DataPolicy,
         initialPage: Int = 1,
         isPoOnly: Boolean = false,
-    ): Flow<PagingData<DomainComment>> {
+    ): Flow<PagingData<Comment>> {
         val pageSize = 19
         return Pager(
             config = PagingConfig(pageSize = pageSize), // 每页19个回复
@@ -449,7 +455,7 @@ class NmbSource(
         policy: DataPolicy,
         initialPage: Int,
         fetcher: suspend (page: Int) -> SaniouResult<List<Forum>>,
-    ): Pager<Int, GetThreadsInForumOffset> {
+    ): Pager<Int, GetTopicsInChannelOffset> {
         val pageSize = 20
         return Pager(
             config = PagingConfig(pageSize = pageSize),
@@ -723,7 +729,7 @@ class NmbSource(
         return Result.success(null)
     }
 
-    suspend fun getLocalLatestReply(threadId: Long): DomainComment? {
+    suspend fun getLocalLatestReply(threadId: Long): Comment? {
         return db.commentQueries.getLastFiveComments(id, threadId.toString())
             .executeAsList()
             .maxByOrNull { it.id.toLong() }
@@ -733,7 +739,7 @@ class NmbSource(
     suspend fun getLocalReplyByDate(
         threadId: Long,
         targetDate: kotlinx.datetime.LocalDate,
-    ): DomainComment? {
+    ): Comment? {
         val startOfDay =
             targetDate.atStartOfDayIn(TimeZone.currentSystemDefault()).toEpochMilliseconds()
         val endOfDay = targetDate.plus(1, kotlinx.datetime.DateTimeUnit.DAY)
@@ -747,7 +753,7 @@ class NmbSource(
         ).executeAsOneOrNull()?.toDomain(db.imageQueries)
     }
 
-    fun searchThreadsPager(query: String): Flow<PagingData<Post>> {
+    fun searchTopicsPager(query: String): Flow<PagingData<Topic>> {
         return Pager(
             config = PagingConfig(pageSize = 20),
             pagingSourceFactory = {
@@ -765,7 +771,7 @@ class NmbSource(
         }
     }
 
-    fun searchRepliesPager(query: String): Flow<PagingData<DomainComment>> {
+    fun searchCommentsPager(query: String): Flow<PagingData<Comment>> {
         return Pager(
             config = PagingConfig(pageSize = 20),
             pagingSourceFactory = {
@@ -783,7 +789,7 @@ class NmbSource(
         }
     }
 
-    fun getUserThreadsPager(userHash: String): Flow<PagingData<Post>> {
+    fun getUserTopicsPager(userHash: String): Flow<PagingData<Topic>> {
         return Pager(
             config = PagingConfig(pageSize = 20),
             pagingSourceFactory = {
@@ -801,7 +807,7 @@ class NmbSource(
         }
     }
 
-    fun getUserRepliesPager(userHash: String): Flow<PagingData<DomainComment>> {
+    fun getUserCommentsPager(userHash: String): Flow<PagingData<Comment>> {
         return Pager(
             config = PagingConfig(pageSize = 20),
             pagingSourceFactory = {

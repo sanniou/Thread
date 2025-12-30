@@ -90,7 +90,7 @@ data class TopicPage(
             di.direct.instance(arg = Triple(actualSourceId, forumId, fgroupId))
         }
         val state by viewModel.state.collectAsStateWithLifecycle()
-        val threads = viewModel.threads.collectAsLazyPagingItems()
+        val threads = viewModel.topics.collectAsLazyPagingItems()
 
         // Use LargeTopAppBar for better design
         val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
@@ -133,7 +133,7 @@ data class TopicPage(
                     title = {
                         Column {
                             Text(
-                                text = state.forumName,
+                                text = state.channelName,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
                                 modifier = Modifier.pointerInput(Unit) {
@@ -151,8 +151,8 @@ data class TopicPage(
                                 }
                             )
                             // Show subtitle only when expanded
-                            if (scrollBehavior.state.collapsedFraction < 0.5f && state.forumDetail is ai.saniou.coreui.state.UiStateWrapper.Success) {
-                                val detail = (state.forumDetail as ai.saniou.coreui.state.UiStateWrapper.Success).value
+                            if (scrollBehavior.state.collapsedFraction < 0.5f && state.channelDetail is ai.saniou.coreui.state.UiStateWrapper.Success) {
+                                val detail = (state.channelDetail as ai.saniou.coreui.state.UiStateWrapper.Success).value
                                 if (detail != null) {
                                     val subtitle = buildString {
                                         if (detail.topicCount != null) append(
@@ -215,7 +215,7 @@ data class TopicPage(
                         navigator.push(
                             PostPage(
                                 fid = forumId.toInt(),
-                                forumName = state.forumName
+                                forumName = state.channelName
                             )
                         )
                     },
@@ -228,7 +228,7 @@ data class TopicPage(
             Column(modifier = Modifier.padding(innerPadding)) {
                 ListThreadPage(
                     state = lazyListState,
-                    threadFlow = viewModel.threads,
+                    threadFlow = viewModel.topics,
                     onThreadClicked = { threadId -> navigator.push(TopicDetailPage(threadId)) },
                     onImageClick = { _, image ->
                         navigator.push(
@@ -244,7 +244,7 @@ data class TopicPage(
                     showChannelBadge = false,
                     headerContent = {
                         // Integrated Forum Info
-                        val detailState = state.forumDetail
+                        val detailState = state.channelDetail
                         if (detailState is ai.saniou.coreui.state.UiStateWrapper.Success) {
                             val detail = detailState.value
                             if (detail != null) {

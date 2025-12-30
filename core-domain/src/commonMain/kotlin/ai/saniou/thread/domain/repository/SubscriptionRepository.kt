@@ -1,9 +1,8 @@
 package ai.saniou.thread.domain.repository
 
-import ai.saniou.thread.domain.model.forum.Topic as Post
 import app.cash.paging.PagingData
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.StateFlow
+import ai.saniou.thread.domain.model.forum.Topic
 
 /**
  * 订阅仓库接口，定义了订阅功能的标准契约。
@@ -26,7 +25,7 @@ interface SubscriptionRepository {
      * @param subscriptionKey 订阅的唯一标识。
      * @return 一个包含帖子分页数据的 Flow。
      */
-    fun getSubscriptionFeed(subscriptionKey: String): Flow<PagingData<Post>>
+    fun getSubscriptionFeed(subscriptionKey: String): Flow<PagingData<Topic>>
 
     /**
      * 切换帖子的订阅状态。
@@ -36,7 +35,11 @@ interface SubscriptionRepository {
      * @param isSubscribed 当前是否已订阅。
      * @return 操作结果。
      */
-    suspend fun toggleSubscription(subscriptionKey: String, subscriptionId: String, isSubscribed: Boolean): Result<String>
+    suspend fun toggleSubscription(
+        subscriptionKey: String,
+        subscriptionId: String,
+        isSubscribed: Boolean,
+    ): Result<String>
 
     /**
      * 检查指定帖子是否已被订阅。

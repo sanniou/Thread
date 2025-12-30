@@ -30,8 +30,8 @@ class UserDetailViewModel(
     }
 
     private fun loadData() {
-        val threads = nmbRepository.getUserThreadsPager(userHash)
-        val replies = nmbRepository.getUserRepliesPager(userHash)
+        val threads = nmbRepository.getUserTopicsPager(userHash)
+        val replies = nmbRepository.getUserCommentsPager(userHash)
         _state.update {
             it.copy(
                 topics = threads,

@@ -71,11 +71,11 @@ class SearchViewModel(
 
         val currentState = _state.value
         if (currentState.searchType == SearchType.THREAD) {
-            val pager = repository.searchThreadsPager(query)
+            val pager = repository.searchTopicsPager(query)
                 .cachedIn(screenModelScope)
             _state.update { it.copy(threadPagingData = pager) }
         } else {
-            val pager = repository.searchRepliesPager(query)
+            val pager = repository.searchCommentsPager(query)
                 .cachedIn(screenModelScope)
             _state.update { it.copy(replyPagingData = pager) }
         }

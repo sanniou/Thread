@@ -9,7 +9,7 @@ import ai.saniou.thread.domain.repository.FavoriteRepository
 class ToggleFavoriteUseCase(
     private val favoriteRepository: FavoriteRepository
 ) {
-    suspend operator fun invoke(sourceId: String, forum: Channel) {
-        favoriteRepository.toggleFavorite(sourceId, forum)
+    suspend operator fun invoke(sourceId: String, channel: Channel) {
+        favoriteRepository.toggleFavorite(sourceId, channel)
     }
 }

@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.Flow
 class IsFavoriteUseCase(
     private val favoriteRepository: FavoriteRepository
 ) {
-    operator fun invoke(sourceId: String, forumId: String): Flow<Boolean> {
-        return favoriteRepository.isFavorite(sourceId, forumId)
+    operator fun invoke(sourceId: String, channelId: String): Flow<Boolean> {
+        return favoriteRepository.isFavorite(sourceId, channelId)
     }
 }

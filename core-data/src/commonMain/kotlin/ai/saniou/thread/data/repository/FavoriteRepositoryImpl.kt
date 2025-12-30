@@ -26,21 +26,21 @@ class FavoriteRepositoryImpl(
     }
 
     @OptIn(ExperimentalTime::class)
-    override suspend fun toggleFavorite(sourceId: String, forum: Channel) {
-        if (db.favoriteChannelQueries.countFavoriteChannel(sourceId, forum.id).executeAsOne() < 1L) {
+    override suspend fun toggleFavorite(sourceId: String, channel: Channel) {
+        if (db.favoriteChannelQueries.countFavoriteChannel(sourceId, channel.id).executeAsOne() < 1L) {
             db.favoriteChannelQueries.insertFavoriteChannel(
-                id = forum.id,
+                id = channel.id,
                 sourceId = sourceId,
                 favoriteTime = Clock.System.now().toEpochMilliseconds(),
-                type = if (forum.tag == "timeline") FavoriteChannelType.TIMELINE else FavoriteChannelType.CHANNEL
+                type = if (channel.tag == "timeline") FavoriteChannelType.TIMELINE else FavoriteChannelType.CHANNEL
             )
         } else {
-            db.favoriteChannelQueries.deleteFavoriteChannel(sourceId, forum.id)
+            db.favoriteChannelQueries.deleteFavoriteChannel(sourceId, channel.id)
         }
     }
 
-    override fun isFavorite(sourceId: String, forumId: String): Flow<Boolean> {
-        return db.favoriteChannelQueries.getFavoriteChannel(sourceId, forumId)
+    override fun isFavorite(sourceId: String, channel: String): Flow<Boolean> {
+        return db.favoriteChannelQueries.getFavoriteChannel(sourceId, channel)
             .asFlow()
             .mapToList(Dispatchers.IO)
             .map { it.isNotEmpty() }

@@ -38,7 +38,7 @@ class TopicRepositoryImpl(
                 if (source != null) {
                     val currentCache = cache.observeThread(sourceId, id).firstOrNull()
                     if (currentCache == null || forceRefresh) {
-                        val result = source.getThreadDetail(id, 1)
+                        val result = source.getTopicDetail(id, 1)
                         result.onSuccess { post ->
                             // Convert back to entity for saving (warning: images might be lost if toEntity doesn't handle them or cache.saveThread doesn't save images)
                             // Ideally source should save to DB directly or cache.saveThread should handle images.
@@ -59,7 +59,7 @@ class TopicRepositoryImpl(
         initialPage: Int,
     ): Flow<PagingData<Comment>> {
         val source = sourceMap[sourceId]
-        return source?.getThreadRepliesPager(threadId, initialPage, isPoOnly)
+        return source?.getTopicCommentsPager(threadId, initialPage, isPoOnly)
             ?: kotlinx.coroutines.flow.flowOf(PagingData.empty())
     }
 

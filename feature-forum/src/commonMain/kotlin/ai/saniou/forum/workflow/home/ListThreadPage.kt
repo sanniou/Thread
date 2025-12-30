@@ -3,13 +3,13 @@ package ai.saniou.forum.workflow.home
 import ai.saniou.coreui.state.PagingStateLayout
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.PullToRefreshWrapper
-import ai.saniou.forum.ui.components.TopicCard
 import ai.saniou.forum.ui.components.LoadEndIndicator
 import ai.saniou.forum.ui.components.LoadingFailedIndicator
 import ai.saniou.forum.ui.components.LoadingIndicator
 import ai.saniou.forum.ui.components.ThreadListSkeleton
+import ai.saniou.forum.ui.components.TopicCard
 import ai.saniou.thread.domain.model.forum.Image
-import ai.saniou.thread.domain.model.forum.Topic as Post
+import ai.saniou.thread.domain.model.forum.Topic
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -40,7 +40,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Composable
 fun ListThreadPage(
-    threadFlow: Flow<PagingData<Post>>,
+    threadFlow: Flow<PagingData<Topic>>,
     onThreadClicked: (Long) -> Unit,
     onImageClick: (Long, Image) -> Unit,
     onUserClick: (String) -> Unit,

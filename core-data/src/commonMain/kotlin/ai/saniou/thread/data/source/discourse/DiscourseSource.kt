@@ -122,8 +122,8 @@ class DiscourseSource(
     }
 
     @OptIn(ExperimentalPagingApi::class)
-    override fun getThreadsPager(
-        forumId: String,
+    override fun getTopicsPager(
+        channelId: String,
         isTimeline: Boolean,
         initialPage: Int,
     ): Flow<PagingData<Topic>> {
@@ -132,7 +132,7 @@ class DiscourseSource(
             initialKey = initialPage,
             remoteMediator = DiscourseRemoteMediator(
                 sourceId = id,
-                fid = forumId,
+                fid = channelId,
                 api = api,
                 cache = cache,
                 initialPage = initialPage,
@@ -140,14 +140,14 @@ class DiscourseSource(
                 db = db,
             ),
             pagingSourceFactory = {
-                cache.getForumThreadsPagingSource(id, forumId)
+                cache.getForumThreadsPagingSource(id, channelId)
             }
         ).flow.map { pagingData ->
             pagingData.map { it.toDomain(db.commentQueries, db.imageQueries) }
         }
     }
 
-    override suspend fun getThreadDetail(threadId: String, page: Int): Result<Topic> {
+    override suspend fun getTopicDetail(threadId: String, page: Int): Result<Topic> {
         return when (val result = api.getTopic(threadId, page)) {
             is SaniouResult.Success -> {
                 try {
@@ -197,7 +197,7 @@ class DiscourseSource(
     }
 
     @OptIn(ExperimentalPagingApi::class)
-    override fun getThreadRepliesPager(
+    override fun getTopicCommentsPager(
         threadId: String,
         initialPage: Int,
         isPoOnly: Boolean,
@@ -221,7 +221,7 @@ class DiscourseSource(
         }
     }
 
-    override fun getForum(forumId: String): Flow<Channel?> {
+    override fun getChannel(channelId: String): Flow<Channel?> {
         // TODO: Implement proper forum detail fetching or caching
         // For now, return null as we don't persist forums locally yet
         return kotlinx.coroutines.flow.flowOf(null)

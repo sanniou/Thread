@@ -11,9 +11,8 @@ import ai.saniou.thread.data.source.discourse.remote.dto.DiscourseTopic
 import ai.saniou.thread.data.source.discourse.remote.dto.DiscourseUser
 import ai.saniou.thread.data.source.nmb.remote.dto.RemoteKeyType
 import ai.saniou.thread.db.Database
-import ai.saniou.thread.db.table.forum.GetTopicsInChannelOffset as GetThreadsInForumOffset
-import ai.saniou.thread.db.table.forum.Topic as Thread
-import ai.saniou.thread.network.SaniouResult
+import ai.saniou.thread.db.table.forum.GetTopicsInChannelOffset
+import ai.saniou.thread.db.table.forum.Topic
 import app.cash.paging.ExperimentalPagingApi
 import app.cash.paging.LoadType
 import app.cash.paging.PagingState
@@ -29,10 +28,10 @@ class DiscourseRemoteMediator(
     private val db: Database,
     private val dataPolicy: DataPolicy,
     private val initialPage: Int = 0,
-) : RemoteMediator<Int, GetThreadsInForumOffset>() {
+) : RemoteMediator<Int, GetTopicsInChannelOffset>() {
 
     private val delegate =
-        GenericRemoteMediator<Int, GetThreadsInForumOffset, DiscourseLatestPostsResponse>(
+        GenericRemoteMediator<Int, GetTopicsInChannelOffset, DiscourseLatestPostsResponse>(
             db = db,
             dataPolicy = dataPolicy,
             initialKey = initialPage,
@@ -86,7 +85,7 @@ class DiscourseRemoteMediator(
 
     override suspend fun load(
         loadType: LoadType,
-        state: PagingState<Int, GetThreadsInForumOffset>,
+        state: PagingState<Int, GetTopicsInChannelOffset>,
     ): RemoteMediatorMediatorResult {
         return delegate.load(loadType, state)
     }
@@ -96,13 +95,13 @@ private fun DiscourseTopic.toThreadEntity(
     sourceId: String,
     usersMap: Map<Long, DiscourseUser>,
     page: Long,
-): Thread {
+): Topic {
     val originalPosterId =
         posters.firstOrNull { it.description.contains("Original Poster") }?.userId
             ?: posters.firstOrNull()?.userId
     val user = originalPosterId?.let { usersMap[it] }
 
-    return Thread(
+    return Topic(
         id = id.toString(),
         sourceId = sourceId,
         channelId = categoryId.toString(),

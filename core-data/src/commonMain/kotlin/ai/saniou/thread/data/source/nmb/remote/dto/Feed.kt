@@ -1,10 +1,9 @@
 package ai.saniou.thread.data.source.nmb.remote.dto
 
 import ai.saniou.corecommon.utils.toTime
-import ai.saniou.thread.db.table.forum.Topic as Thread
-import ai.saniou.thread.domain.model.forum.Topic as Post
 import ai.saniou.thread.domain.model.forum.Author
 import ai.saniou.thread.domain.model.forum.Image
+import ai.saniou.thread.domain.model.forum.Topic
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
@@ -12,6 +11,7 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonNames
 import kotlin.time.ExperimentalTime
+import ai.saniou.thread.db.table.forum.Topic as EntityTopic
 
 /**
  * Feed DTO
@@ -48,7 +48,7 @@ data class Feed(
 ) : IBaseThread
 
 
-fun Feed.toTable(sourceId: String, page: Long) = Thread(
+fun Feed.toTable(sourceId: String, page: Long) = EntityTopic(
     id = id.toString(),
     sourceId = sourceId,
     channelId = fid.toString(),
@@ -84,7 +84,7 @@ fun Feed.nowToEpochMilliseconds(): Long {
 }
 
 @OptIn(ExperimentalTime::class)
-fun IBaseThread.toDomain(): Post {
+fun IBaseThread.toDomain(): Topic {
     val author = Author(
         id = userHash,
         name = name,
@@ -102,7 +102,7 @@ fun IBaseThread.toDomain(): Post {
         emptyList()
     }
 
-    return Post(
+    return Topic(
         id = id.toString(),
         sourceName = "nmb",
         sourceUrl = "https://nmb.ai/thread/$id",
@@ -150,5 +150,5 @@ interface IThreadBody {
 
 interface IBaseThreadReply {
     val replies: List<ThreadReply>
-     val remainingCount: Long? // Remove or rename if needed, Post interface doesn't enforce it directly here
+    val remainingCount: Long? // Remove or rename if needed, Post interface doesn't enforce it directly here
 }
