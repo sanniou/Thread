@@ -1,18 +1,25 @@
 package ai.saniou.forum.workflow.topic
 
 import ai.saniou.coreui.composition.LocalForumSourceId
+import ai.saniou.coreui.state.UiStateWrapper
+import ai.saniou.coreui.widgets.RichText
 import ai.saniou.forum.di.nmbdi
 import ai.saniou.forum.workflow.home.ListThreadPage
 import ai.saniou.forum.workflow.image.ImagePreviewPage
 import ai.saniou.forum.workflow.image.ImagePreviewViewModelParams
 import ai.saniou.forum.workflow.post.PostPage
-import ai.saniou.forum.workflow.topic.components.ForumRulesCard
 import ai.saniou.forum.workflow.topic.components.SubForumList
 import ai.saniou.forum.workflow.topicdetail.TopicDetailPage
 import ai.saniou.forum.workflow.user.UserDetailPage
 import ai.saniou.forum.workflow.user.UserPage
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
@@ -20,7 +27,7 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.outlined.Info
+import androidx.compose.foundation.layout.height
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
@@ -44,6 +51,7 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.cash.paging.compose.collectAsLazyPagingItems
 import cafe.adriel.voyager.core.model.rememberScreenModel
@@ -87,14 +95,16 @@ data class TopicPage(
         // Fallback to LocalSourceId if sourceId is not provided (legacy behavior)
         val actualSourceId = sourceId ?: LocalForumSourceId.current
 
-        val viewModel: TopicViewModel = rememberScreenModel(tag = "${actualSourceId}_${fgroupId}_${forumId}") {
-            di.direct.instance(arg = Triple(actualSourceId, forumId, fgroupId))
-        }
+        val viewModel: TopicViewModel =
+            rememberScreenModel(tag = "${actualSourceId}_${fgroupId}_${forumId}") {
+                di.direct.instance(arg = Triple(actualSourceId, forumId, fgroupId))
+            }
         val state by viewModel.state.collectAsStateWithLifecycle()
         val threads = viewModel.topics.collectAsLazyPagingItems()
 
         // Use LargeTopAppBar for better design
-        val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+        val scrollBehavior =
+            TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
         val lazyListState = rememberLazyListState()
         val coroutineScope = rememberCoroutineScope()
         var expandedFab by remember { mutableStateOf(true) }
@@ -125,24 +135,6 @@ data class TopicPage(
             }
         }
 
-        // Info Dialog Logic
-        var showForumInfo by remember { mutableStateOf(false) }
-        if (showForumInfo && state.channelDetail is ai.saniou.coreui.state.UiStateWrapper.Success) {
-            val detail = (state.channelDetail as ai.saniou.coreui.state.UiStateWrapper.Success).value
-            if (detail != null && detail.description.isNotBlank()) {
-                androidx.compose.material3.AlertDialog(
-                    onDismissRequest = { showForumInfo = false },
-                    title = { Text(text = "版规") },
-                    text = { ai.saniou.coreui.widgets.RichText(text = detail.description) },
-                    confirmButton = {
-                        androidx.compose.material3.TextButton(onClick = { showForumInfo = false }) {
-                            Text("关闭")
-                        }
-                    }
-                )
-            }
-        }
-
         Scaffold(
             modifier = Modifier
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
@@ -151,6 +143,7 @@ data class TopicPage(
                 ai.saniou.coreui.widgets.SaniouLargeTopAppBar(
                     title = {
                         Column {
+                            // Title
                             Text(
                                 text = state.channelName,
                                 maxLines = 1,
@@ -169,30 +162,56 @@ data class TopicPage(
                                     )
                                 }
                             )
-                            // Show subtitle only when expanded
-                            if (scrollBehavior.state.collapsedFraction < 0.5f && state.channelDetail is ai.saniou.coreui.state.UiStateWrapper.Success) {
-                                val detail = (state.channelDetail as ai.saniou.coreui.state.UiStateWrapper.Success).value
+
+                            // Animated visibility for extended content to prevent jumpiness
+                            val showExtendedContent = scrollBehavior.state.collapsedFraction < 0.5f
+                            val channelDetail = state.channelDetail
+
+                            AnimatedVisibility(
+                                visible = showExtendedContent && channelDetail is UiStateWrapper.Success,
+                                enter = fadeIn() + expandVertically(),
+                                exit = fadeOut() + shrinkVertically()
+                            ) {
+                                val detail = (channelDetail as? UiStateWrapper.Success)?.value
                                 if (detail != null) {
-                                    val subtitle = buildString {
-                                        if (detail.topicCount != null) append(
-                                            stringResource(
-                                                Res.string.topic_page_thread_count,
-                                                detail.topicCount!!
+                                    Column {
+                                        // Rules Section (Collapsible in Title Area)
+                                        if (detail.description.isNotBlank()) {
+                                            Spacer(modifier = Modifier.height(8.dp))
+                                            RichText(
+                                                text = detail.description,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                maxLines = 3, // Reduced max lines to stabilize height
+                                                overflow = TextOverflow.Ellipsis
                                             )
-                                        )
-                                        if (detail.interval != null) append(
-                                            stringResource(
-                                                Res.string.topic_page_interval,
-                                                detail.interval!!
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                        }
+
+                                        // Metadata Section
+                                        val subtitle = buildString {
+                                            if (detail.topicCount != null) append(
+                                                stringResource(
+                                                    Res.string.topic_page_thread_count,
+                                                    detail.topicCount!!
+                                                )
                                             )
-                                        )
-                                    }
-                                    if (subtitle.isNotBlank()) {
-                                        Text(
-                                            text = subtitle,
-                                            style = MaterialTheme.typography.labelMedium,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
+                                            if (detail.interval != null) append(
+                                                stringResource(
+                                                    Res.string.topic_page_interval,
+                                                    detail.interval!!
+                                                )
+                                            )
+                                        }
+                                        if (subtitle.isNotBlank()) {
+                                            Text(
+                                                text = subtitle,
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                                                    alpha = 0.7f
+                                                )
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -216,16 +235,6 @@ data class TopicPage(
                         }
                     },
                     actions = {
-                        // Info Button
-                        val detailState = state.channelDetail
-                        if (detailState is ai.saniou.coreui.state.UiStateWrapper.Success && detailState.value?.description?.isNotBlank() == true) {
-                            IconButton(onClick = { showForumInfo = true }) {
-                                Icon(
-                                    Icons.Outlined.Info,
-                                    contentDescription = "版规"
-                                )
-                            }
-                        }
                         IconButton(onClick = {
                             navigator.push(UserPage())
                         }) {
