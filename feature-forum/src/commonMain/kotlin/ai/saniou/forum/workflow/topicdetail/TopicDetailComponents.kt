@@ -26,17 +26,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.filled.Reply
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -49,36 +45,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
-@Composable
-fun TopicHeader(
-    metadata: TopicMetadata,
-    onUserClick: (String) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    // Kept for compatibility if needed, but ThreadMainPost now handles most header info.
-    // This could be used for a collapsed state or separate metadata view.
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(Dimens.padding_standard)
-    ) {
-        if (!metadata.title.isNullOrBlank() && metadata.title != "无标题") {
-            Text(
-                text = metadata.title!!,
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(Dimens.padding_small))
-        }
-    }
-}
 
 @Composable
 fun ThreadMainPost(
@@ -98,19 +69,38 @@ fun ThreadMainPost(
     Surface(
         modifier = modifier.fillMaxWidth(),
         color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 1.dp, // Subtle elevation for main post
-        shadowElevation = 1.dp
+        tonalElevation = 0.dp, // Flat design for modern look
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = Dimens.padding_large), // More vertical breathing room
+                .padding(top = Dimens.padding_large, bottom = Dimens.padding_medium),
         ) {
-            // Header: Author & Meta
+            // 1. Title Area (If present) - Prominent and bold
+            val displayTitle = metadata.title ?: comment.title
+            if (!displayTitle.isNullOrBlank() && displayTitle != "无标题") {
+                Text(
+                    text = displayTitle,
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 0.sp,
+                        lineHeight = 32.sp
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(
+                        start = Dimens.padding_standard,
+                        end = Dimens.padding_standard,
+                        bottom = Dimens.padding_medium
+                    )
+                )
+            }
+
+            // 2. Author & Meta Info Row
             Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = Dimens.padding_standard),
-                verticalAlignment = Alignment.Top,
-                horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = Dimens.padding_standard),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 ThreadAuthor(
                     author = metadata.author,
@@ -118,14 +108,19 @@ fun ThreadMainPost(
                     isPo = true,
                     onClick = onUserClick,
                     badges = {
-                        Row(horizontalArrangement = Arrangement.spacedBy(Dimens.padding_tiny)) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(Dimens.padding_tiny),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // Source Badge
                             if (metadata.sourceName.isNotBlank()) {
                                 Badge(
                                     text = metadata.sourceName.uppercase(),
-                                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                    containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
+                            // Status Badges
                             if (metadata.isAdmin) {
                                 Badge(
                                     text = "ADMIN",
@@ -145,44 +140,23 @@ fun ThreadMainPost(
                     modifier = Modifier.weight(1f)
                 )
 
-                // ID / Floor
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        text = "#${metadata.id}",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.outline,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                // ID Display - Subtle
+                 Text(
+                    text = "#${metadata.id}",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.outline,
+                    modifier = Modifier.padding(start = 8.dp)
+                )
             }
 
             Spacer(modifier = Modifier.height(Dimens.padding_medium))
 
-            // Title (Large & Bold)
-            val displayTitle = metadata.title ?: comment.title
-            if (!displayTitle.isNullOrBlank() && displayTitle != "无标题") {
-                Text(
-                    text = displayTitle,
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = (-0.5).sp,
-                        lineHeight = 28.sp
-                    ),
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(
-                        bottom = Dimens.padding_medium,
-                        start = Dimens.padding_standard,
-                        end = Dimens.padding_standard
-                    )
-                )
-            }
-
-            // Content Body
+            // 3. Content Body
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .combinedClickable(
-                        onClick = { /* No-op, allow inner clicks */ },
+                        onClick = { /* Allow inner clicks */ },
                         onLongClick = { showMenu = true }
                     )
                     .padding(horizontal = Dimens.padding_standard)
@@ -198,48 +172,35 @@ fun ThreadMainPost(
 
             Spacer(modifier = Modifier.height(Dimens.padding_large))
 
-            // Action Bar (Styled)
-            HorizontalDivider(
-                modifier = Modifier.padding(horizontal = Dimens.padding_standard),
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-            )
+            // 4. Action Bar
+            // Using a cleaner, icon-focused design
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = Dimens.padding_small)
                     .padding(horizontal = Dimens.padding_small),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Using weight to distribute touch targets evenly
-                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                    ActionButton(
-                        icon = Icons.Default.Reply,
-                        text = "回复",
-                        onClick = { /* TODO */ }
-                    )
-                }
-                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                    ActionButton(
-                        icon = Icons.Outlined.ContentCopy,
-                        text = "复制",
-                        onClick = onCopy
-                    )
-                }
-                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                    ActionButton(
-                        icon = Icons.Outlined.BookmarkBorder,
-                        text = "收藏",
-                        onClick = onBookmark
-                    )
-                }
-                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                    ActionButton(
-                        icon = Icons.Outlined.Share,
-                        text = "分享",
-                        onClick = { showMenu = true }
-                    )
-                }
+                 ActionButton(
+                    icon = Icons.Default.Reply,
+                    text = "回复",
+                    onClick = { /* TODO */ }
+                )
+                ActionButton(
+                    icon = Icons.Outlined.ContentCopy,
+                    text = "复制",
+                    onClick = onCopy
+                )
+                ActionButton(
+                    icon = Icons.Outlined.BookmarkBorder,
+                    text = "收藏",
+                    onClick = onBookmark
+                )
+                ActionButton(
+                    icon = Icons.Outlined.Share,
+                    text = "分享",
+                    onClick = { showMenu = true }
+                )
             }
 
             // Dropdown Menu
@@ -247,7 +208,7 @@ fun ThreadMainPost(
                 expanded = showMenu,
                 onDismissRequest = { showMenu = false }
             ) {
-                DropdownMenuItem(
+                 DropdownMenuItem(
                     text = { Text("复制内容") },
                     leadingIcon = { Icon(Icons.Filled.ContentCopy, null) },
                     onClick = {
@@ -298,120 +259,115 @@ fun ThreadReply(
     var showMenu by remember { mutableStateOf(false) }
     val haptic = LocalHapticFeedback.current
 
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surface)
+            .combinedClickable(
+                onClick = { onReplyClicked(reply.id) },
+                onLongClick = {
+                    haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                    showMenu = true
+                }
+            )
+            .padding(
+                horizontal = Dimens.padding_standard,
+                vertical = Dimens.padding_medium
+            )
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .combinedClickable(
-                    onClick = { onReplyClicked(reply.id) },
-                    onLongClick = {
-                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-                        showMenu = true
-                    }
-                )
-                .padding(
-                    start = Dimens.padding_standard,
-                    end = Dimens.padding_standard,
-                    top = Dimens.padding_medium,
-                    bottom = Dimens.padding_medium
-                )
+        // Header: Author + Time + Floor/ID
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            // Header Row
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                ThreadAuthor(
-                    author = reply.author,
-                    threadTime = reply.createdAt.toRelativeTimeString(),
-                    isPo = isPo,
-                    onClick = onUserClick,
-                    badges = {
-                        if (reply.isAdmin) {
-                            Badge(
-                                text = "ADMIN",
-                                containerColor = MaterialTheme.colorScheme.error,
-                                contentColor = MaterialTheme.colorScheme.onError
-                            )
-                        }
-                    },
-                    modifier = Modifier.weight(1f)
-                )
+            ThreadAuthor(
+                author = reply.author,
+                threadTime = reply.createdAt.toRelativeTimeString(),
+                isPo = isPo,
+                onClick = onUserClick,
+                badges = {
+                    if (reply.isAdmin) {
+                        Badge(
+                            text = "ADMIN",
+                            containerColor = MaterialTheme.colorScheme.error,
+                            contentColor = MaterialTheme.colorScheme.onError
+                        )
+                    }
+                },
+                modifier = Modifier.weight(1f)
+            )
 
-                // Floor Indicator & ID
-                Column(horizontalAlignment = Alignment.End) {
+            Column(horizontalAlignment = Alignment.End) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     reply.floor?.let { floor ->
                         Text(
                             text = "#$floor",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold
                         )
+                        Spacer(modifier = Modifier.width(4.dp))
                     }
-                    Text(
-                        text = "ID:${reply.id}",
-                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
-                    )
                 }
-            }
-
-            Spacer(modifier = Modifier.height(Dimens.padding_small))
-
-            // Optional Title
-            if (!reply.title.isNullOrBlank() && reply.title != "无标题") {
                 Text(
-                    text = reply.title!!,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(bottom = Dimens.padding_small)
+                     text = "ID:${reply.id}",
+                     style = MaterialTheme.typography.bodySmall.copy(fontSize = 10.sp),
+                     color = MaterialTheme.colorScheme.outline.copy(alpha = 0.6f)
                 )
             }
+        }
 
-            // Content
-            ThreadBody(
-                content = reply.content,
-                images = reply.images,
-                onReferenceClick = refClick,
-                onImageClick = onImageClick,
-                onImageLongClick = { image -> onBookmarkImage(image) }
+        // Optional Title (for replies)
+        if (!reply.title.isNullOrBlank() && reply.title != "无标题") {
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = reply.title!!,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
             )
+        }
 
-            // Menu
-            DropdownMenu(
-                expanded = showMenu,
-                onDismissRequest = { showMenu = false }
-            ) {
-                DropdownMenuItem(
-                    text = { Text("回复") },
-                    leadingIcon = { Icon(Icons.Filled.Reply, null) },
-                    onClick = {
-                        onReplyClicked(reply.id)
-                        showMenu = false
-                    }
-                )
-                DropdownMenuItem(
-                    text = { Text("复制内容") },
-                    leadingIcon = { Icon(Icons.Filled.ContentCopy, null) },
-                    onClick = {
-                        onCopy()
-                        showMenu = false
-                    }
-                )
-                DropdownMenuItem(
-                    text = { Text("收藏回复") },
-                    leadingIcon = { Icon(Icons.Filled.BookmarkBorder, null) },
-                    onClick = {
-                        onBookmark()
-                        showMenu = false
-                    }
-                )
-            }
+        Spacer(modifier = Modifier.height(Dimens.padding_small))
+
+        // Content
+        ThreadBody(
+            content = reply.content,
+            images = reply.images,
+            onReferenceClick = refClick,
+            onImageClick = onImageClick,
+            onImageLongClick = { image -> onBookmarkImage(image) }
+        )
+
+        // Menu
+        DropdownMenu(
+            expanded = showMenu,
+            onDismissRequest = { showMenu = false }
+        ) {
+             DropdownMenuItem(
+                text = { Text("回复") },
+                leadingIcon = { Icon(Icons.Filled.Reply, null) },
+                onClick = {
+                    onReplyClicked(reply.id)
+                    showMenu = false
+                }
+            )
+            DropdownMenuItem(
+                text = { Text("复制内容") },
+                leadingIcon = { Icon(Icons.Filled.ContentCopy, null) },
+                onClick = {
+                    onCopy()
+                    showMenu = false
+                }
+            )
+            DropdownMenuItem(
+                text = { Text("收藏回复") },
+                leadingIcon = { Icon(Icons.Filled.BookmarkBorder, null) },
+                onClick = {
+                    onBookmark()
+                    showMenu = false
+                }
+            )
         }
     }
 }
@@ -422,12 +378,13 @@ private fun ActionButton(
     text: String,
     onClick: () -> Unit
 ) {
+    // A more subtle button style, pill shape or text button
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
-            .clip(RoundedCornerShape(Dimens.corner_radius_small))
+            .clip(RoundedCornerShape(50)) // Fully rounded for modern feel
             .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 8.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
         Icon(
             imageVector = icon,
@@ -435,7 +392,9 @@ private fun ActionButton(
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(20.dp)
         )
-        Spacer(modifier = Modifier.width(6.dp))
+        // Optionally hide text on very small screens or make it an icon-only button if needed
+        // For now, keep text but make it small
+        Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = text,
             style = MaterialTheme.typography.labelMedium,

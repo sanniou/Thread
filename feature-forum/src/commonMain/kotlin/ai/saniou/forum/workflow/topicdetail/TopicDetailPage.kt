@@ -570,8 +570,6 @@ fun ThreadSuccessContent(
             },
             onRefresh = onRefresh,
             onCopy = onCopy,
-//            onBookmarkThread = onBookmarkThread,
-//            onBookmarkReply = onBookmarkReply,
             onBookmarkImage = onBookmarkImage,
             onUserClick = onUserClick,
             onBookmark = onBookmark
@@ -601,13 +599,6 @@ private fun ThreadList(
         contentPadding = PaddingValues(bottom = 80.dp),
         verticalArrangement = Arrangement.spacedBy(Dimens.padding_small)
     ) {
-        // Header
-        item {
-            state.metadata?.let {
-                TopicHeader(metadata = it, onUserClick = onUserClick)
-            } ?: Box(modifier = Modifier.height(100.dp)) // Placeholder for header
-        }
-
         // Main Content
         item {
             val mainComment = if (replies.itemCount > 0) {
@@ -737,52 +728,46 @@ private fun ThreadToolbar(
     onTogglePoOnly: () -> Unit,
 ) {
     Surface(
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
-        tonalElevation = 0.dp,
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.98f),
+        shadowElevation = 2.dp,
         modifier = Modifier.fillMaxWidth()
     ) {
-        Column {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = Dimens.padding_standard, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = "全部回复 ($replyCount)",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = Dimens.padding_standard, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = "全部回复 ($replyCount)",
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
 
-                FilterChip(
-                    selected = isPoOnly,
-                    onClick = onTogglePoOnly,
-                    label = { Text("只看PO", style = MaterialTheme.typography.labelSmall) },
-                    leadingIcon = if (isPoOnly) {
-                        {
-                            Icon(
-                                Icons.Default.Check,
-                                contentDescription = null,
-                                modifier = Modifier.size(14.dp)
-                            )
-                        }
-                    } else null,
-                    colors = FilterChipDefaults.filterChipColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.3f),
-                        labelColor = MaterialTheme.colorScheme.onSurface,
-                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                        selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
-                    ),
-                    border = null,
-                    shape = CircleShape,
-                    modifier = Modifier.height(28.dp)
-                )
-            }
-            HorizontalDivider(
-                thickness = 0.5.dp,
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)
+            FilterChip(
+                selected = isPoOnly,
+                onClick = onTogglePoOnly,
+                label = { Text("只看PO") },
+                leadingIcon = if (isPoOnly) {
+                    {
+                        Icon(
+                            Icons.Default.Check,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                } else null,
+                colors = FilterChipDefaults.filterChipColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                    selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                ),
+                border = null,
+                shape = CircleShape,
+                modifier = Modifier.height(32.dp)
             )
         }
     }
