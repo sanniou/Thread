@@ -93,12 +93,58 @@ private fun SkeletonThreadItem(brush: Brush) {
 @Composable
 fun SkeletonReplyItem(brush: Brush) {
     Column(modifier = Modifier.padding(Dimens.padding_standard, Dimens.padding_medium)) {
-        // 回复者信息
-        SkeletonAuthor(brush)
+        // Header Row: Author + Time + Floor/ID
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Author + Time
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Dimens.padding_medium),
+                modifier = Modifier.weight(1f)
+            ) {
+                // Avatar
+                Box(
+                    modifier = Modifier
+                        .size(Dimens.avatar_size_medium)
+                        .clip(CircleShape)
+                        .background(brush)
+                )
+
+                // User Info
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    SkeletonLine(
+                        modifier = Modifier.width(80.dp),
+                        height = 14.dp,
+                        brush = brush
+                    )
+                    SkeletonLine(
+                        modifier = Modifier.width(60.dp),
+                        height = 12.dp,
+                        brush = brush
+                    )
+                }
+            }
+
+            // Floor/ID Placeholder
+            Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                SkeletonLine(
+                    modifier = Modifier.width(30.dp),
+                    height = 12.dp,
+                    brush = brush
+                )
+                 SkeletonLine(
+                    modifier = Modifier.width(50.dp),
+                    height = 10.dp,
+                    brush = brush
+                )
+            }
+        }
 
         Spacer(modifier = Modifier.height(Dimens.padding_medium))
 
-        // 回复内容
+        // Content
         SkeletonLine(modifier = Modifier.fillMaxWidth(), brush = brush)
         Spacer(modifier = Modifier.height(Dimens.padding_tiny))
         SkeletonLine(modifier = Modifier.fillMaxWidth(0.8f), brush = brush)
@@ -111,7 +157,7 @@ fun SkeletonReplyItem(brush: Brush) {
 internal fun SkeletonAuthor(brush: Brush) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(Dimens.padding_medium)
+        horizontalArrangement = Arrangement.spacedBy(Dimens.padding_medium)
     ) {
         // 头像占位
         Box(

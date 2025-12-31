@@ -58,7 +58,8 @@ fun ThreadBody(
                 overflow = TextOverflow.Ellipsis,
                 style = MaterialTheme.typography.bodyMedium.copy(
                     lineHeight = 24.sp,
-                    letterSpacing = 0.5.sp
+                    letterSpacing = 0.2.sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f)
                 ),
                 clickablePatterns = clickablePatterns,
                 blankLinePolicy = BlankLinePolicy.COLLAPSE
