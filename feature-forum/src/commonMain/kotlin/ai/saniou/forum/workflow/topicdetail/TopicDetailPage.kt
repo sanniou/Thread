@@ -116,7 +116,6 @@ import kotlinx.coroutines.launch
 import org.kodein.di.direct
 import org.kodein.di.instance
 import ai.saniou.thread.domain.model.forum.Comment
-import ai.saniou.thread.domain.model.forum.Topic
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material.icons.outlined.BookmarkBorder
@@ -611,21 +610,25 @@ private fun ThreadList(
 
         // Main Content
         item {
-            val mainComment = if(replies.itemCount>0) {  replies.peek(0) } else null
-            if (mainComment != null) {
-                MainCommentCard(
+            val mainComment = if (replies.itemCount > 0) {
+                replies.peek(0)
+            } else null
+            val metadata = state.metadata
+
+            if (mainComment != null && metadata != null) {
+                ThreadMainPost(
+                    metadata = metadata,
                     comment = mainComment,
-                    onRefClick = onRefClick,
+                    refClick = onRefClick,
                     onImageClick = onImageClick,
                     onCopy = { onCopy(mainComment.content) },
                     onBookmark = { onBookmark(mainComment) },
                     onBookmarkImage = onBookmarkImage,
-                    onShare = { /* TODO */ }
+                    onUserClick = onUserClick
                 )
             } else {
                 // Shimmer for main content
-                // You can create a specific shimmer for MainCommentCard
-                Box(modifier = Modifier.height(200.dp).fillMaxWidth().background(MaterialTheme.colorScheme.surfaceVariant))
+                ThreadShimmer()
             }
         }
 
@@ -644,13 +647,16 @@ private fun ThreadList(
         items((replies.itemCount - 1).coerceAtLeast(0)) { index ->
             val reply = replies[index + 1]
             if (reply != null) {
-                CommentItem(
-                    comment = reply,
+                ThreadReply(
+                    reply = reply,
                     poUserHash = state.metadata?.author?.id ?: "",
-                    onReplyClick = onReplyClicked,
-                    onRefClick = onRefClick,
+                    onReplyClicked = onReplyClicked,
+                    refClick = onRefClick,
                     onImageClick = onImageClick,
-                    onLongClick = { /* TODO: Show context menu */ }
+                    onCopy = { onCopy(reply.content) },
+                    onBookmark = { onBookmark(reply) },
+                    onBookmarkImage = onBookmarkImage,
+                    onUserClick = onUserClick
                 )
                 HorizontalDivider(
                     thickness = 0.5.dp,
@@ -782,335 +788,3 @@ private fun ThreadToolbar(
     }
 }
 
-@Composable
-fun ThreadMainPost(
-    thread: Topic,
-    refClick: (Long) -> Unit,
-    onImageClick: (Image) -> Unit,
-    onCopy: () -> Unit,
-    onBookmark: () -> Unit,
-    onBookmarkImage: (Image) -> Unit,
-    onUserClick: (String) -> Unit,
-) {
-    val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
-    var showMenu by remember { mutableStateOf(false) }
-
-    Surface(
-        color = MaterialTheme.colorScheme.surface,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = Dimens.padding_standard),
-        ) {
-            // 头部信息
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = Dimens.padding_standard),
-                verticalAlignment = Alignment.Top,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                ThreadAuthor(
-                    author = thread.author,
-                    threadTime = thread.createdAt.toRelativeTimeString(),
-                    isPo = true,
-                    onClick = onUserClick,
-                    badges = {
-                        Row(horizontalArrangement = Arrangement.spacedBy(Dimens.padding_tiny)) {
-                            if (thread.sourceName.isNotBlank()) {
-                                Badge(
-                                    text = thread.sourceName.uppercase(),
-                                    containerColor = MaterialTheme.colorScheme.primary,
-                                    contentColor = MaterialTheme.colorScheme.onPrimary
-                                )
-                            }
-                            if (thread.isAdmin) {
-                                Badge(
-                                    text = "ADMIN",
-                                    containerColor = MaterialTheme.colorScheme.error,
-                                    contentColor = MaterialTheme.colorScheme.onError
-                                )
-                            }
-                            if (thread.isSage) {
-                                Badge(
-                                    text = "SAGE",
-                                    containerColor = MaterialTheme.colorScheme.secondary,
-                                    contentColor = MaterialTheme.colorScheme.onSecondary
-                                )
-                            }
-                        }
-                    },
-                    modifier = Modifier.weight(1f)
-                )
-
-                // 楼层号
-                Text(
-                    text = "#${thread.id}",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
-                    modifier = Modifier.padding(start = Dimens.padding_small, top = 2.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(Dimens.padding_medium))
-
-            // 标题
-            if (!thread.title.isNullOrBlank() && thread.title != "无标题") {
-                Text(
-                    text = thread.title!!,
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                        letterSpacing = 0.sp,
-                        fontSize = 20.sp
-                    ),
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(
-                        bottom = Dimens.padding_medium,
-                        start = Dimens.padding_standard,
-                        end = Dimens.padding_standard
-                    )
-                )
-            }
-
-            // 正文
-            Box(
-                modifier = Modifier.fillMaxWidth()
-                    .combinedClickable(
-                        onClick = { /* No-op, allow inner clicks */ },
-                        onLongClick = { showMenu = true }
-                    )
-                    .padding(horizontal = Dimens.padding_standard)
-            ) {
-                ThreadBody(
-                    content = thread.content,
-                    images = thread.images,
-                    onReferenceClick = refClick,
-                    onImageClick = onImageClick,
-                    onImageLongClick = { image -> onBookmarkImage(image) }
-                )
-            }
-
-            Spacer(modifier = Modifier.height(Dimens.padding_medium))
-
-            // 底部操作栏 - Modern Style
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = Dimens.padding_standard),
-                horizontalArrangement = Arrangement.SpaceBetween, // 分散对齐
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Reply Button
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.clickable { /* Reply logic */ }
-                        .padding(8.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Reply,
-                        contentDescription = "回复",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-
-                // Copy Button
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.clickable { onCopy() }
-                        .padding(8.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.ContentCopy,
-                        contentDescription = "复制",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-
-                // Bookmark Button
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.clickable { onBookmark() }
-                        .padding(8.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.BookmarkBorder,
-                        contentDescription = "收藏",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-
-                // Share Button (Visual Only for now)
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.clickable { showMenu = true }
-                        .padding(8.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Share,
-                        contentDescription = "更多",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-            }
-
-            DropdownMenu(
-                expanded = showMenu,
-                onDismissRequest = { showMenu = false }
-            ) {
-                DropdownMenuItem(
-                    text = { Text("复制内容") },
-                    leadingIcon = { Icon(Icons.Filled.ContentCopy, null) },
-                    onClick = {
-                        onCopy()
-                        showMenu = false
-                    }
-                )
-                DropdownMenuItem(
-                    text = { Text("收藏串") },
-                    leadingIcon = { Icon(Icons.Filled.BookmarkBorder, null) },
-                    onClick = {
-                        onBookmark()
-                        showMenu = false
-                    }
-                )
-                if (thread.sourceUrl.isNotBlank()) {
-                    DropdownMenuItem(
-                        text = { Text("打开原链接") },
-                        leadingIcon = { Icon(Icons.Default.OpenInNew, null) },
-                        onClick = {
-                            uriHandler.openUri(thread.sourceUrl)
-                            showMenu = false
-                        }
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun ThreadReply(
-    reply: Comment,
-    poUserHash: String,
-    onReplyClicked: (String) -> Unit,
-    refClick: (Long) -> Unit,
-    onImageClick: (Image) -> Unit,
-    onCopy: () -> Unit,
-    onBookmark: () -> Unit,
-    onBookmarkImage: (Image) -> Unit,
-    onUserClick: (String) -> Unit,
-) {
-    val isPo = remember(reply.author.id) {
-        reply.author.id == poUserHash
-    }
-    var showMenu by remember { mutableStateOf(false) }
-
-    // Haptic feedback
-    val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
-
-    Surface(
-        color = MaterialTheme.colorScheme.surface,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .combinedClickable(
-                    onClick = { onReplyClicked(reply.id) },
-                    onLongClick = {
-                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-                        showMenu = true
-                    }
-                )
-                .padding(horizontal = Dimens.padding_standard, vertical = Dimens.padding_medium)
-        ) {
-            // Meta Row
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                ThreadAuthor(
-                    author = reply.author,
-                    threadTime = reply.createdAt.toRelativeTimeString(),
-                    isPo = isPo,
-                    onClick = onUserClick,
-                    badges = {
-                        if (reply.isAdmin) {
-                            Badge(
-                                text = "ADMIN",
-                                containerColor = MaterialTheme.colorScheme.error,
-                                contentColor = MaterialTheme.colorScheme.onError
-                            )
-                        }
-                    },
-                    modifier = Modifier.weight(1f)
-                )
-
-                Text(
-                    text = "#${reply.id}",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
-                    modifier = Modifier.padding(start = Dimens.padding_small, top = 4.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(Dimens.padding_small))
-
-            // Optional Title
-            if (reply.title.isNullOrBlank().not() && reply.title != "无标题") {
-                Text(
-                    text = reply.title!!,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(bottom = Dimens.padding_small)
-                )
-            }
-
-            // Content
-            ThreadBody(
-                content = reply.content,
-                images = reply.images,
-                onReferenceClick = refClick,
-                onImageClick = onImageClick,
-                onImageLongClick = { image -> onBookmarkImage(image) }
-            )
-
-            // Minimal Footer for Reply (Optional, e.g. like/reply icons)
-            // Currently kept clean as per "compact feed" style
-
-            DropdownMenu(
-                expanded = showMenu,
-                onDismissRequest = { showMenu = false }
-            ) {
-                DropdownMenuItem(
-                    text = { Text("回复") },
-                    leadingIcon = { Icon(Icons.Filled.Reply, null) },
-                    onClick = {
-                        onReplyClicked(reply.id)
-                        showMenu = false
-                    }
-                )
-                DropdownMenuItem(
-                    text = { Text("复制内容") },
-                    leadingIcon = { Icon(Icons.Filled.ContentCopy, null) },
-                    onClick = {
-                        onCopy()
-                        showMenu = false
-                    }
-                )
-                DropdownMenuItem(
-                    text = { Text("收藏回复") },
-                    leadingIcon = { Icon(Icons.Filled.BookmarkBorder, null) },
-                    onClick = {
-                        onBookmark()
-                        showMenu = false
-                    }
-                )
-            }
-        }
-    }
-}

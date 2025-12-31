@@ -12,17 +12,46 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.OpenInNew
+import androidx.compose.material.icons.filled.Reply
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material3.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -33,62 +62,215 @@ fun TopicHeader(
     onUserClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // Kept for compatibility if needed, but ThreadMainPost now handles most header info.
+    // This could be used for a collapsed state or separate metadata view.
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(
-                start = Dimens.padding_standard,
-                end = Dimens.padding_standard,
-                top = Dimens.padding_medium,
-                bottom = Dimens.padding_large
-            )
+            .padding(Dimens.padding_standard)
     ) {
-        // Title
         if (!metadata.title.isNullOrBlank() && metadata.title != "无标题") {
             Text(
                 text = metadata.title!!,
-                style = MaterialTheme.typography.headlineSmall.copy(
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 0.sp
-                ),
-                color = MaterialTheme.colorScheme.onSurface
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
             )
-            Spacer(modifier = Modifier.height(Dimens.padding_medium))
+            Spacer(modifier = Modifier.height(Dimens.padding_small))
         }
+    }
+}
 
-        // Author and Badges
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+@Composable
+fun ThreadMainPost(
+    metadata: TopicMetadata,
+    comment: Comment,
+    refClick: (Long) -> Unit,
+    onImageClick: (Image) -> Unit,
+    onCopy: () -> Unit,
+    onBookmark: () -> Unit,
+    onBookmarkImage: (Image) -> Unit,
+    onUserClick: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val uriHandler = LocalUriHandler.current
+    var showMenu by remember { mutableStateOf(false) }
+
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.surface,
+        tonalElevation = 1.dp, // Subtle elevation for main post
+        shadowElevation = 1.dp
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = Dimens.padding_large), // More vertical breathing room
         ) {
-            ThreadAuthor(
-                author = metadata.author,
-                threadTime = metadata.createdAt.toRelativeTimeString(),
-                isPo = true,
-                onClick = onUserClick,
-                modifier = Modifier.weight(1f)
+            // Header: Author & Meta
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = Dimens.padding_standard),
+                verticalAlignment = Alignment.Top,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                ThreadAuthor(
+                    author = metadata.author,
+                    threadTime = metadata.createdAt.toRelativeTimeString(),
+                    isPo = true,
+                    onClick = onUserClick,
+                    badges = {
+                        Row(horizontalArrangement = Arrangement.spacedBy(Dimens.padding_tiny)) {
+                            if (metadata.sourceName.isNotBlank()) {
+                                Badge(
+                                    text = metadata.sourceName.uppercase(),
+                                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
+                            if (metadata.isAdmin) {
+                                Badge(
+                                    text = "ADMIN",
+                                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                                    contentColor = MaterialTheme.colorScheme.onErrorContainer
+                                )
+                            }
+                            if (metadata.isSage) {
+                                Badge(
+                                    text = "SAGE",
+                                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                                )
+                            }
+                        }
+                    },
+                    modifier = Modifier.weight(1f)
+                )
+
+                // ID / Floor
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = "#${metadata.id}",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.outline,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(Dimens.padding_medium))
+
+            // Title (Large & Bold)
+            val displayTitle = metadata.title ?: comment.title
+            if (!displayTitle.isNullOrBlank() && displayTitle != "无标题") {
+                Text(
+                    text = displayTitle,
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = (-0.5).sp,
+                        lineHeight = 28.sp
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(
+                        bottom = Dimens.padding_medium,
+                        start = Dimens.padding_standard,
+                        end = Dimens.padding_standard
+                    )
+                )
+            }
+
+            // Content Body
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .combinedClickable(
+                        onClick = { /* No-op, allow inner clicks */ },
+                        onLongClick = { showMenu = true }
+                    )
+                    .padding(horizontal = Dimens.padding_standard)
+            ) {
+                ThreadBody(
+                    content = comment.content,
+                    images = comment.images,
+                    onReferenceClick = refClick,
+                    onImageClick = onImageClick,
+                    onImageLongClick = { image -> onBookmarkImage(image) }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(Dimens.padding_large))
+
+            // Action Bar (Styled)
+            HorizontalDivider(
+                modifier = Modifier.padding(horizontal = Dimens.padding_standard),
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
             )
-            Row(horizontalArrangement = Arrangement.spacedBy(Dimens.padding_tiny)) {
-                if (metadata.sourceName.isNotBlank()) {
-                    Badge(
-                        text = metadata.sourceName.uppercase(),
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = Dimens.padding_small)
+                    .padding(horizontal = Dimens.padding_small),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Using weight to distribute touch targets evenly
+                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                    ActionButton(
+                        icon = Icons.Default.Reply,
+                        text = "回复",
+                        onClick = { /* TODO */ }
                     )
                 }
-                if (metadata.isAdmin) {
-                    Badge(
-                        text = "ADMIN",
-                        containerColor = MaterialTheme.colorScheme.error,
-                        contentColor = MaterialTheme.colorScheme.onError
+                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                    ActionButton(
+                        icon = Icons.Outlined.ContentCopy,
+                        text = "复制",
+                        onClick = onCopy
                     )
                 }
-                if (metadata.isSage) {
-                    Badge(
-                        text = "SAGE",
-                        containerColor = MaterialTheme.colorScheme.secondary,
-                        contentColor = MaterialTheme.colorScheme.onSecondary
+                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                    ActionButton(
+                        icon = Icons.Outlined.BookmarkBorder,
+                        text = "收藏",
+                        onClick = onBookmark
+                    )
+                }
+                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                    ActionButton(
+                        icon = Icons.Outlined.Share,
+                        text = "分享",
+                        onClick = { showMenu = true }
+                    )
+                }
+            }
+
+            // Dropdown Menu
+            DropdownMenu(
+                expanded = showMenu,
+                onDismissRequest = { showMenu = false }
+            ) {
+                DropdownMenuItem(
+                    text = { Text("复制内容") },
+                    leadingIcon = { Icon(Icons.Filled.ContentCopy, null) },
+                    onClick = {
+                        onCopy()
+                        showMenu = false
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text("收藏串") },
+                    leadingIcon = { Icon(Icons.Filled.BookmarkBorder, null) },
+                    onClick = {
+                        onBookmark()
+                        showMenu = false
+                    }
+                )
+                if (metadata.sourceUrl.isNotBlank()) {
+                    DropdownMenuItem(
+                        text = { Text("打开原链接") },
+                        leadingIcon = { Icon(Icons.Default.OpenInNew, null) },
+                        onClick = {
+                            uriHandler.openUri(metadata.sourceUrl)
+                            showMenu = false
+                        }
                     )
                 }
             }
@@ -96,48 +278,139 @@ fun TopicHeader(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun MainCommentCard(
-    comment: Comment,
-    onRefClick: (Long) -> Unit,
+fun ThreadReply(
+    reply: Comment,
+    poUserHash: String,
+    onReplyClicked: (String) -> Unit,
+    refClick: (Long) -> Unit,
     onImageClick: (Image) -> Unit,
     onCopy: () -> Unit,
     onBookmark: () -> Unit,
     onBookmarkImage: (Image) -> Unit,
-    onShare: () -> Unit,
+    onUserClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = Dimens.padding_small), // Add slight horizontal padding for card effect
-        shape = RoundedCornerShape(Dimens.corner_radius_large),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer
-        )
+    val isPo = remember(reply.author.id, poUserHash) {
+        reply.author.id == poUserHash
+    }
+    var showMenu by remember { mutableStateOf(false) }
+    val haptic = LocalHapticFeedback.current
+
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.surface
     ) {
         Column(
-            modifier = Modifier.padding(Dimens.padding_standard)
+            modifier = Modifier
+                .fillMaxWidth()
+                .combinedClickable(
+                    onClick = { onReplyClicked(reply.id) },
+                    onLongClick = {
+                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                        showMenu = true
+                    }
+                )
+                .padding(
+                    start = Dimens.padding_standard,
+                    end = Dimens.padding_standard,
+                    top = Dimens.padding_medium,
+                    bottom = Dimens.padding_medium
+                )
         ) {
-            ThreadBody(
-                content = comment.content,
-                images = comment.images,
-                onReferenceClick = onRefClick,
-                onImageClick = onImageClick,
-                onImageLongClick = onBookmarkImage
-            )
-
-            Spacer(modifier = Modifier.height(Dimens.padding_large))
-
-            // Action Bar
+            // Header Row
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceAround,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                ActionButton(icon = Icons.Outlined.ContentCopy, text = "复制", onClick = onCopy)
-                ActionButton(icon = Icons.Outlined.BookmarkBorder, text = "收藏", onClick = onBookmark)
-                ActionButton(icon = Icons.Outlined.Share, text = "分享", onClick = onShare)
+                ThreadAuthor(
+                    author = reply.author,
+                    threadTime = reply.createdAt.toRelativeTimeString(),
+                    isPo = isPo,
+                    onClick = onUserClick,
+                    badges = {
+                        if (reply.isAdmin) {
+                            Badge(
+                                text = "ADMIN",
+                                containerColor = MaterialTheme.colorScheme.error,
+                                contentColor = MaterialTheme.colorScheme.onError
+                            )
+                        }
+                    },
+                    modifier = Modifier.weight(1f)
+                )
+
+                // Floor Indicator & ID
+                Column(horizontalAlignment = Alignment.End) {
+                    reply.floor?.let { floor ->
+                        Text(
+                            text = "#$floor",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                        )
+                    }
+                    Text(
+                        text = "ID:${reply.id}",
+                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(Dimens.padding_small))
+
+            // Optional Title
+            if (!reply.title.isNullOrBlank() && reply.title != "无标题") {
+                Text(
+                    text = reply.title!!,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(bottom = Dimens.padding_small)
+                )
+            }
+
+            // Content
+            ThreadBody(
+                content = reply.content,
+                images = reply.images,
+                onReferenceClick = refClick,
+                onImageClick = onImageClick,
+                onImageLongClick = { image -> onBookmarkImage(image) }
+            )
+
+            // Menu
+            DropdownMenu(
+                expanded = showMenu,
+                onDismissRequest = { showMenu = false }
+            ) {
+                DropdownMenuItem(
+                    text = { Text("回复") },
+                    leadingIcon = { Icon(Icons.Filled.Reply, null) },
+                    onClick = {
+                        onReplyClicked(reply.id)
+                        showMenu = false
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text("复制内容") },
+                    leadingIcon = { Icon(Icons.Filled.ContentCopy, null) },
+                    onClick = {
+                        onCopy()
+                        showMenu = false
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text("收藏回复") },
+                    leadingIcon = { Icon(Icons.Filled.BookmarkBorder, null) },
+                    onClick = {
+                        onBookmark()
+                        showMenu = false
+                    }
+                )
             }
         }
     }
@@ -152,9 +425,9 @@ private fun ActionButton(
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
-            .clip(RoundedCornerShape(50))
+            .clip(RoundedCornerShape(Dimens.corner_radius_small))
             .clickable(onClick = onClick)
-            .padding(horizontal = Dimens.padding_medium, vertical = Dimens.padding_small)
+            .padding(horizontal = 12.dp, vertical = 8.dp)
     ) {
         Icon(
             imageVector = icon,
@@ -162,74 +435,12 @@ private fun ActionButton(
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(20.dp)
         )
-        Spacer(modifier = Modifier.width(Dimens.padding_tiny))
+        Spacer(modifier = Modifier.width(6.dp))
         Text(
             text = text,
             style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontWeight = FontWeight.Medium
         )
-    }
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-fun CommentItem(
-    comment: Comment,
-    poUserHash: String,
-    onReplyClick: (String) -> Unit,
-    onRefClick: (Long) -> Unit,
-    onImageClick: (Image) -> Unit,
-    onLongClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val isPo = comment.author.id == poUserHash
-    Surface(
-        modifier = modifier
-            .fillMaxWidth()
-            .combinedClickable(
-                onClick = { onReplyClick(comment.id) },
-                onLongClick = onLongClick
-            )
-            .padding(horizontal = Dimens.padding_standard, vertical = Dimens.padding_medium)
-    ) {
-        Column {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                ThreadAuthor(
-                    author = comment.author,
-                    threadTime = comment.createdAt.toRelativeTimeString(),
-                    isPo = isPo,
-                    onClick = { /* TODO: Navigate to user detail */ },
-                    badges = {
-                        if (comment.isAdmin) {
-                            Badge(
-                                text = "ADMIN",
-                                containerColor = MaterialTheme.colorScheme.error,
-                                contentColor = MaterialTheme.colorScheme.onError
-                            )
-                        }
-                    },
-                    modifier = Modifier.weight(1f)
-                )
-                Text(
-                    text = "#${comment.id}",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(Dimens.padding_small))
-
-            ThreadBody(
-                content = comment.content,
-                images = comment.images,
-                onReferenceClick = onRefClick,
-                onImageClick = onImageClick,
-                onImageLongClick = { /* Long click on image in reply is not handled here */ }
-            )
-        }
     }
 }
