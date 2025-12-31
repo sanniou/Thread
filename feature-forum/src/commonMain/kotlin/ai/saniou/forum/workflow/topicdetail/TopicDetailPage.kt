@@ -6,6 +6,7 @@ import ai.saniou.coreui.state.AppError
 import ai.saniou.coreui.state.DefaultError
 import ai.saniou.coreui.state.toAppError
 import ai.saniou.coreui.theme.Dimens
+import ai.saniou.coreui.widgets.ErrorBanner
 import ai.saniou.coreui.widgets.PullToRefreshWrapper
 import ai.saniou.coreui.widgets.SaniouTopAppBar
 import ai.saniou.coreui.widgets.ShimmerContainer
@@ -557,11 +558,34 @@ fun ThreadSuccessContent(
             }
     }
 
-    PullToRefreshWrapper(onRefreshTrigger = { replies.refresh() }) {
-        ThreadList(
-            state = state,
-            lazyListState = lazyListState,
-            onReplyClicked = onReplyClicked,
+    // 错误提示状态
+    var showErrorBanner by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
+
+    // 监听刷新错误 (当有数据时)
+    val refreshState = replies.loadState.refresh
+    LaunchedEffect(refreshState) {
+        if (refreshState is LoadStateError && replies.itemCount > 0) {
+            val error = refreshState.error.toAppError { }
+            errorMessage = error.message
+            showErrorBanner = true
+        } else if (refreshState !is LoadStateError) {
+            showErrorBanner = false
+        }
+    }
+
+    Column {
+        ErrorBanner(
+            visible = showErrorBanner,
+            message = "刷新失败: $errorMessage - 点击重试",
+            onClick = { replies.retry() }
+        )
+
+        PullToRefreshWrapper(onRefreshTrigger = { replies.refresh() }) {
+            ThreadList(
+                state = state,
+                lazyListState = lazyListState,
+                onReplyClicked = onReplyClicked,
             onTogglePoOnly = onTogglePoOnly,
             onRefClick = onRefClick,
             onImageClick = { image ->
@@ -573,8 +597,9 @@ fun ThreadSuccessContent(
             onCopy = onCopy,
             onBookmarkImage = onBookmarkImage,
             onUserClick = onUserClick,
-            onBookmark = onBookmark
-        )
+                onBookmark = onBookmark
+            )
+        }
     }
 }
 
