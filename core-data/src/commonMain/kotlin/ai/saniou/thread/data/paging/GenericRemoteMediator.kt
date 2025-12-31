@@ -101,11 +101,7 @@ class GenericRemoteMediator<Key : Any, Value : Any, ResponseType : Any>(
                 RemoteMediatorMediatorResultSuccess(endOfPaginationReached = endOfPagination)
             }
             is SaniouResult.Error -> {
-                if (dataPolicy == DataPolicy.NETWORK_ELSE_CACHE) {
-                    RemoteMediatorMediatorResultSuccess(endOfPaginationReached = true)
-                } else {
-                    RemoteMediatorMediatorResultError(result.ex)
-                }
+                RemoteMediatorMediatorResultError(result.ex)
             }
         }
     }

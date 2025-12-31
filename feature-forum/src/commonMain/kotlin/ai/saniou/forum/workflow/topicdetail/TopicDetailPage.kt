@@ -4,6 +4,7 @@ import ai.saniou.corecommon.utils.toRelativeTimeString
 import ai.saniou.coreui.composition.LocalForumSourceId
 import ai.saniou.coreui.state.AppError
 import ai.saniou.coreui.state.DefaultError
+import ai.saniou.coreui.state.toAppError
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.PullToRefreshWrapper
 import ai.saniou.coreui.widgets.SaniouTopAppBar
@@ -593,6 +594,17 @@ private fun ThreadList(
     onUserClick: (String) -> Unit,
 ) {
     val replies = state.replies.collectAsLazyPagingItems()
+
+    // 处理初始加载失败的情况 (空列表且刷新失败)
+    val refreshState = replies.loadState.refresh
+    if (replies.itemCount == 0 && refreshState is LoadStateError) {
+        ThreadErrorContent(
+            error = refreshState.error.toAppError { replies.retry() },
+            onRetry = { replies.retry() }
+        )
+        return
+    }
+
     LazyColumn(
         state = lazyListState,
         modifier = Modifier,
@@ -668,7 +680,8 @@ private fun ThreadList(
                     LoadingIndicator()
                 }
                 replies.loadState.refresh is LoadStateError -> {
-                    // Full screen error is handled by the router
+                    // Refresh error with items is handled by checking itemCount above,
+                    // or could show a footer/snackbar here if desired.
                 }
                 replies.loadState.append is LoadStateError -> {
                     LoadingFailedIndicator()
