@@ -63,7 +63,7 @@ enum class BlankLinePolicy {
  * - 链接: `<a href="https://example.com">link</a>`
  * - 换行: `<br>`
  * - 隐藏内容/黑条: `[h]content[/h]`，点击可切换显示/隐藏状态
- * - 自定义引用匹配: 通过 `referencePattern` 实现对特定模式（如 `>>No.12345`）的点击支持
+ * - 自定义引用匹配: 通过 `referencePattern` 实现对特定模式（如 `>>No.12345 or /t/50000001 or >>12345`）的点击支持
  * - 空白行处理: 通过 `blankLinePolicy` 控制空白行的显示
  */
 @Composable
@@ -306,15 +306,18 @@ private fun applyClickableAnnotations(
             .filter { (it.item as? LinkAnnotation.Clickable)?.tag == TAG_URL }
             .map { it.start until it.end }
 
+        // 跟踪已被占用的范围（包括现有的 URL 和新匹配到的模式），防止重叠
+        val occupiedRanges = existingUrlRanges.toMutableList()
+
         clickablePatterns.forEach { pattern ->
             pattern.regex.findAll(styledText.text).forEach { matchResult ->
                 val range = matchResult.range
 
                 // 检查：
                 // 1. 不在隐藏的 spoiler 中
-                // 2. 不与现有的 URL 重叠
+                // 2. 不与已被占用的范围重叠
                 val isHidden = hiddenRanges.any { it.overlaps(range) }
-                val isOverlapping = existingUrlRanges.any { it.overlaps(range) }
+                val isOverlapping = occupiedRanges.any { it.overlaps(range) }
 
                 if (!isHidden && !isOverlapping) {
                     val clickableText = matchResult.groupValues.getOrNull(1) ?: matchResult.value
@@ -335,6 +338,7 @@ private fun applyClickableAnnotations(
                         start = range.first,
                         end = range.last + 1
                     )
+                    occupiedRanges.add(range)
                 }
             }
         }

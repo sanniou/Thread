@@ -2,8 +2,8 @@ package ai.saniou.forum.workflow.topic
 
 import ai.saniou.coreui.composition.LocalForumSourceId
 import ai.saniou.coreui.state.UiStateWrapper
-import ai.saniou.coreui.widgets.RichText
 import ai.saniou.forum.di.nmbdi
+import ai.saniou.forum.ui.components.ForumRichText
 import ai.saniou.forum.workflow.home.ListThreadPage
 import ai.saniou.forum.workflow.image.ImagePreviewPage
 import ai.saniou.forum.workflow.image.ImagePreviewViewModelParams
@@ -178,12 +178,16 @@ data class TopicPage(
                                         // Rules Section (Collapsible in Title Area)
                                         if (detail.description.isNotBlank()) {
                                             Spacer(modifier = Modifier.height(8.dp))
-                                            RichText(
+                                            ForumRichText(
                                                 text = detail.description,
                                                 style = MaterialTheme.typography.bodyMedium,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                                 maxLines = 3, // Reduced max lines to stabilize height
-                                                overflow = TextOverflow.Ellipsis
+                                                overflow = TextOverflow.Ellipsis,
+                                                sourceId = actualSourceId,
+                                                onThreadClick = { threadId ->
+                                                    navigator.push(TopicDetailPage(threadId))
+                                                }
                                             )
                                             Spacer(modifier = Modifier.height(4.dp))
                                         }

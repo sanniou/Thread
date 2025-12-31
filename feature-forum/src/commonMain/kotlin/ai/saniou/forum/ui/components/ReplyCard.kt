@@ -3,7 +3,6 @@ package ai.saniou.forum.ui.components
 import ai.saniou.corecommon.utils.toRelativeTimeString
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.BlankLinePolicy
-import ai.saniou.coreui.widgets.RichText
 import ai.saniou.thread.domain.model.forum.Comment
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -11,7 +10,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -59,7 +57,7 @@ private fun ReplyItem(reply: Comment) {
                 color = MaterialTheme.colorScheme.outline
             )
         }
-        RichText(
+        ForumRichText(
             text = reply.content,
             style = MaterialTheme.typography.bodyMedium,
             maxLines = 3,
