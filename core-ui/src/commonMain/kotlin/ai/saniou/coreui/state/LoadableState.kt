@@ -73,18 +73,10 @@ fun DefaultLoading() {
 
 @Composable
 fun DefaultError(error: AppError? = null, onRetryClick: () -> Unit) {
-    if (error != null) {
-        SaniouErrorPage(
-            error = error,
-            onRetryClick = onRetryClick
-        )
-    } else {
-        // Fallback for when error is null but we need to show something
-        SaniouErrorPage(
-            error = AppError(message = "未知错误"),
-            onRetryClick = onRetryClick
-        )
-    }
+    SaniouErrorPage(
+        error = error ?: AppError(message = "未知错误"),
+        onRetryClick = onRetryClick
+    )
 }
 
 /**

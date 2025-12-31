@@ -47,18 +47,14 @@ fun <T : Any> PagingStateLayout(
                 }
             }
 
-            items.itemCount == 0 -> {
+            // Empty State Handling
+            // Only show empty state if not loading and itemCount is 0
+            items.itemCount == 0 && refreshState !is LoadStateLoading -> {
                 if (empty != null) {
                     empty()
                 } else {
-                    // 默认不显示空视图，或者可以提供一个默认的 EmptyView
-                    // 这里暂时什么都不显示，或者显示内容（内容可能会处理空列表）
-                    // 考虑到 Paging 通常会有空列表的情况，如果 content 内部能处理空列表最好
-                    // 但 PagingStateLayout 的目的是处理加载和错误，空状态也是一种状态
-                    // 如果提供了 empty，则显示 empty，否则显示 content（也许 content 是一个 EmptyView?）
-                    // 更好的做法：如果 itemCount == 0 且 refresh 是 NotLoading，则确实是空数据
-                    // 很多时候空数据也需要显示一个提示
-                    // 让我们留给调用者决定，如果 empty 不为空则显示，否则 content
+                    // Default Empty State can be added here if needed, or fallback to content
+                    // For now, keeping it flexible as per previous logic, but ensuring we don't flash empty during initial load
                     content(items)
                 }
             }

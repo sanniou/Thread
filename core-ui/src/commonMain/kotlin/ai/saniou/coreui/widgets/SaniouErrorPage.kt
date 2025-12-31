@@ -1,7 +1,9 @@
 package ai.saniou.coreui.widgets
 
 import ai.saniou.coreui.state.AppError
+import ai.saniou.coreui.state.AppErrorType
 import ai.saniou.coreui.theme.Dimens
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,8 +14,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.SignalWifiConnectedNoInternet4
+import androidx.compose.material.icons.filled.WarningAmber
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -22,6 +26,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
@@ -29,8 +34,12 @@ import thread.core_ui.generated.resources.Res
 import thread.core_ui.generated.resources.core_ui_no_internet_retry
 
 /**
- * 通用的错误页面
- * 用于展示全屏错误信息，并提供重试操作
+ * 通用的错误页面 (Empty State / Error State)
+ *
+ * 风格化重构：
+ * 1. 增加图标容器背景，提升视觉层级。
+ * 2. 优化文案排版，增加副标题支持。
+ * 3. 按钮样式统一为 Pill shape。
  */
 @Composable
 fun SaniouErrorPage(
@@ -40,6 +49,8 @@ fun SaniouErrorPage(
     onNavBack: (() -> Unit)? = null,
     title: String? = null
 ) {
+    val isNetworkError = error.type == AppErrorType.NETWORK
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
@@ -63,40 +74,49 @@ fun SaniouErrorPage(
                 verticalArrangement = Arrangement.Center,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                // 图标
-                Icon(
-                    imageVector = Icons.Default.Warning, // 暂时使用通用图标，后续可替换为更精美的插画
-                    contentDescription = null,
-                    modifier = Modifier.size(64.dp),
-                    tint = MaterialTheme.colorScheme.error
-                )
+                // 图标容器
+                Box(
+                    modifier = Modifier
+                        .size(120.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = if (isNetworkError) Icons.Default.SignalWifiConnectedNoInternet4 else Icons.Default.WarningAmber,
+                        contentDescription = null,
+                        modifier = Modifier.size(64.dp),
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                }
 
-                Spacer(modifier = Modifier.height(Dimens.padding_large))
+                Spacer(modifier = Modifier.height(Dimens.padding_extra_large))
 
-                // 错误信息
+                // 错误信息 (Title)
                 Text(
-                    text = error.message,
-                    style = MaterialTheme.typography.titleMedium,
+                    text = if (isNetworkError) "网络连接失败" else "出错了",
+                    style = MaterialTheme.typography.titleLarge,
                     textAlign = TextAlign.Center,
                     color = MaterialTheme.colorScheme.onSurface
                 )
 
-                Spacer(modifier = Modifier.height(Dimens.padding_medium))
+                Spacer(modifier = Modifier.height(Dimens.padding_small))
 
-                // 辅助说明（可选）
-//                Text(
-//                    text = "请检查网络连接或稍后重试",
-//                    style = MaterialTheme.typography.bodyMedium,
-//                    textAlign = TextAlign.Center,
-//                    color = MaterialTheme.colorScheme.onSurfaceVariant
-//                )
+                // 详细信息 (Body)
+                Text(
+                    text = error.message,
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.fillMaxWidth(0.8f)
+                )
 
-                Spacer(modifier = Modifier.height(Dimens.padding_extra_large))
+                Spacer(modifier = Modifier.height(48.dp))
 
                 // 重试按钮
                 SaniouButton(
                     onClick = onRetryClick,
-                    modifier = Modifier.fillMaxWidth(0.6f)
+                    modifier = Modifier.fillMaxWidth(0.5f)
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.Refresh,
