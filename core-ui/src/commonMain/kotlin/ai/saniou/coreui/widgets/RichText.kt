@@ -78,6 +78,7 @@ fun RichText(
     blankLinePolicy: BlankLinePolicy = BlankLinePolicy.KEEP,
     color: Color = Color.Unspecified,
     spoilerBackgroundColor: Color = MaterialTheme.colorScheme.primary,
+    disableSpoilerProcessing: Boolean = false,
 ) {
     val linkColor = MaterialTheme.colorScheme.primary
     val uriHandler = LocalUriHandler.current
@@ -86,9 +87,14 @@ fun RichText(
     val revealedSpoilers = remember { mutableStateListOf<Int>() }
 
     // 预处理：将 [h] 转换为 <spoiler> 标签
-    val processedText = remember(text) {
-        text.replace(Regex("\\[h]", RegexOption.IGNORE_CASE), "<spoiler>")
-            .replace(Regex("\\[/h]", RegexOption.IGNORE_CASE), "</spoiler>")
+    // 如果 disableSpoilerProcessing 为 true，则假设外部已经处理过了（例如通过 SmartRichText 插件）
+    val processedText = remember(text, disableSpoilerProcessing) {
+        if (disableSpoilerProcessing) {
+            text
+        } else {
+            text.replace(Regex("\\[h]", RegexOption.IGNORE_CASE), "<spoiler>")
+                .replace(Regex("\\[/h]", RegexOption.IGNORE_CASE), "</spoiler>")
+        }
     }
 
     val annotatedString = remember(
