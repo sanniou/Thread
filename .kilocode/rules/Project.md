@@ -106,6 +106,22 @@
     -   API 层返回 `SaniouResult<T>`，作为防腐层隔离网络异常。
     -   Source 层将 `SaniouResult.Error` 转换为 `Result.failure` 或抛出异常，由 ViewModel 统一处理。
 
+### 2.7 富文本渲染 (Rich Text Rendering)
+核心 UI 组件库提供了分层的富文本处理能力，请根据业务场景选择：
+
+1.  **`SmartRichText` (插件化富文本)**:
+    -   **位置**: `core-ui/src/commonMain/kotlin/ai/saniou/coreui/richtext/SmartRichText.kt`
+    -   **场景**: 需要处理特定业务格式（如 `[h]` 剧透标签、`>>123` 引用、`#tag` 话题）的场景。
+    -   **规则**: 严禁在 UI 层手动编写正则替换。必须实现 `RichTextPlugin` 接口（定义 `transform` 和 `getPatterns`），并通过 `Strategy` 模式按需加载。
+
+2.  **`RichText` (底层渲染器)**:
+    -   **位置**: `core-ui/src/commonMain/kotlin/ai/saniou/coreui/widgets/RichText.kt`
+    -   **场景**: 仅展示标准 HTML 文本，无特殊业务逻辑的通用场景（如关于页、错误提示）。
+
+3.  **`ForumRichText` (论坛专用封装)**:
+    -   **位置**: `feature-forum/src/commonMain/kotlin/ai/saniou/forum/ui/components/ForumRichText.kt`
+    -   **场景**: 论坛帖子正文、回复、板块简介。内置了 NMB 等源的引用解析策略。
+
 ## 3. 模块地图 (Module Map)
 
 | 模块 | 职责 | 关键路径示例 |
@@ -150,11 +166,9 @@
 - [ ] **Caching**: 所有 `Source` 实现必须具备缓存能力，特别是对于配置类数据（如板块列表），应实现"网络优先，缓存兜底"或"缓存优先，过期更新"策略。
 - [ ] **Comments**: 复杂逻辑必须写中文注释解释 "Why"。
 - [ ] **Utils**: 涉及特定格式字符串解析（如日期、特定文本结构）时，优先考虑封装为独立的 Utils 类或扩展函数，避免在业务逻辑中散落硬编码。
-- 为了兼容不同系统，ID 应该使用String，在针对不同 API 时，再进行转换
-- UI 细节：随着不同源的加入，应该丰富各种UI细节。。
-- 目标是打造一个全 source 支持的，风格化，细节丰富的设计感优秀页面
-- 开始编码前请先思考：本次用到了哪些公共资源和组件，是否有必要下沉到 core 模块
-- 商业级交付标准:UIXUI、设计、架构
+- [ ] **RichText**: 严禁硬编码正则解析业务文本。对于特定源的文本格式（如 `>>No.123`），必须实现 `RichTextPlugin`。
+- [ ] **ID Type**: 为了兼容不同系统，Domain 层 ID 统一使用 `String`，在 Data 层针对不同 API 进行转换。
+- [ ] **Refactoring**: 开始编码前请先思考：本次用到了哪些公共资源和组件，是否有必要下沉到 core 模块。
 
-**中文沟通**：所有交流,注释使用中文，但在代码中的变量命名、Commit Message 保持英文。
+- 商业级交付标准:UIXUI、设计、架构。
 **中文沟通**：所有交流,注释使用中文，但在代码中的变量命名、Commit Message 保持英文。
