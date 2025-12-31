@@ -28,7 +28,8 @@ class SaniouResponseConverterFactory : Converter.Factory {
                                     )
                                 )
                             } catch (ex: Throwable) {
-                                // eg: {"success":false,"error":"必须登入领取饼干后才可以访问"}
+                                // nmb eg: {"success":false,"error":"必须登入领取饼干后才可以访问"}
+                                // discrouse : {"errors":["您执行此操作的次数过多。请等待 15 秒后再试。"],"error_type":"rate_limit","extras":{"wait_seconds":15,"time_left":"15 秒"}}
                                 try {
                                     val message = result.response.bodyAsChannel().toByteArray()
                                         .decodeUnicodeEscapes()

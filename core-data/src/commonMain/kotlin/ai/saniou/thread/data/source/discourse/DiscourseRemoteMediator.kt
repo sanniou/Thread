@@ -50,18 +50,18 @@ class DiscourseRemoteMediator(
             },
             saver = { response, page, loadType ->
                 val usersMap = response.users.associateBy { it.id }
-                val topics = response.topicList.topics
-                val threads = topics.map { topic ->
-                    topic.toThreadEntity(sourceId, usersMap, page.toLong())
+                val discourseTopics = response.topicList.topics
+                val topics = discourseTopics.map { topic ->
+                    topic.toTopicEntity(sourceId, usersMap, page.toLong())
                 }
 
                 if (loadType == LoadType.REFRESH) {
                     db.topicQueries.deleteTopicsByChannelAndPage(sourceId, fid, page.toLong())
                 }
-                threads.forEach { thread ->
-                    db.topicQueries.upsertTopic(thread)
+                topics.forEach { topic ->
+                    db.topicQueries.upsertTopic(topic)
                     db.topicQueries.upsertTopicInformation(
-                        id = thread.id,
+                        id = topic.id,
                         sourceId = sourceId,
                         remainingCount = 0,
                         latestCommentId = "" // Placeholder
@@ -91,7 +91,7 @@ class DiscourseRemoteMediator(
     }
 }
 
-private fun DiscourseTopic.toThreadEntity(
+private fun DiscourseTopic.toTopicEntity(
     sourceId: String,
     usersMap: Map<Long, DiscourseUser>,
     page: Long,
