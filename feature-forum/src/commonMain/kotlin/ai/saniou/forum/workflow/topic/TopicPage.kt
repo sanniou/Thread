@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
@@ -124,6 +125,24 @@ data class TopicPage(
             }
         }
 
+        // Info Dialog Logic
+        var showForumInfo by remember { mutableStateOf(false) }
+        if (showForumInfo && state.channelDetail is ai.saniou.coreui.state.UiStateWrapper.Success) {
+            val detail = (state.channelDetail as ai.saniou.coreui.state.UiStateWrapper.Success).value
+            if (detail != null && detail.description.isNotBlank()) {
+                androidx.compose.material3.AlertDialog(
+                    onDismissRequest = { showForumInfo = false },
+                    title = { Text(text = "版规") },
+                    text = { ai.saniou.coreui.widgets.RichText(text = detail.description) },
+                    confirmButton = {
+                        androidx.compose.material3.TextButton(onClick = { showForumInfo = false }) {
+                            Text("关闭")
+                        }
+                    }
+                )
+            }
+        }
+
         Scaffold(
             modifier = Modifier
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
@@ -197,6 +216,16 @@ data class TopicPage(
                         }
                     },
                     actions = {
+                        // Info Button
+                        val detailState = state.channelDetail
+                        if (detailState is ai.saniou.coreui.state.UiStateWrapper.Success && detailState.value?.description?.isNotBlank() == true) {
+                            IconButton(onClick = { showForumInfo = true }) {
+                                Icon(
+                                    Icons.Outlined.Info,
+                                    contentDescription = "版规"
+                                )
+                            }
+                        }
                         IconButton(onClick = {
                             navigator.push(UserPage())
                         }) {
@@ -248,9 +277,7 @@ data class TopicPage(
                         if (detailState is ai.saniou.coreui.state.UiStateWrapper.Success) {
                             val detail = detailState.value
                             if (detail != null) {
-                                if (detail.description.isNotBlank()) {
-                                    ForumRulesCard(msg = detail.description)
-                                }
+                                // Forum Rules now moved to TopBar Action
 
                                 // Render Sub-forums
                                 if (detail.children.isNotEmpty()) {

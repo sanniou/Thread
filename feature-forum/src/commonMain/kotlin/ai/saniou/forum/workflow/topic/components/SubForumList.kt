@@ -33,60 +33,32 @@ fun SubForumList(
 ) {
     if (subForums.isEmpty()) return
 
-    var isExpanded by remember { mutableStateOf(false) }
-    val showExpandButton = subForums.size > 8
-    val displayItems = if (isExpanded || !showExpandButton) subForums else subForums.take(8)
-
     Column(modifier = modifier.fillMaxWidth()) {
-        // Header
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = Dimens.padding_medium, vertical = Dimens.padding_small),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = "子板块",
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary
-            )
-            if (showExpandButton) {
-                TextButton(onClick = { isExpanded = !isExpanded }) {
-                    Text(text = if (isExpanded) "收起" else "查看更多")
-                }
-            }
-        }
+        Text(
+            text = "SUB-CHANNELS",
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(start = Dimens.padding_standard, top = Dimens.padding_medium, bottom = Dimens.padding_small)
+        )
 
-        if (listViewStyle == "boxes") {
-            FlowRow(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = Dimens.padding_medium, vertical = Dimens.padding_small),
-                horizontalArrangement = Arrangement.spacedBy(Dimens.padding_small),
-                verticalArrangement = Arrangement.spacedBy(Dimens.padding_small)
-            ) {
-                displayItems.forEach { child ->
-                    SubCategoryBoxItem(
-                        forum = child,
-                        onClick = { onForumClick(child) }
-                    )
-                }
-            }
-        } else {
-            // Default list style
-            Column(modifier = Modifier.padding(horizontal = Dimens.padding_small)) {
-                displayItems.forEach { child ->
-                    StylizedForumItem(
-                        forum = child,
-                        isSelected = false,
-                        isFavorite = false, // TODO: Check favorite status
-                        onForumClick = onForumClick,
-                        onFavoriteToggle = {
-                            // TODO: Implement favorite toggle
-                        }
-                    )
-                }
+        // Horizontal Scrolling Chip Group style for better space efficiency
+        androidx.compose.foundation.lazy.LazyRow(
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = Dimens.padding_standard),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items(subForums.size) { index ->
+                val child = subForums[index]
+                androidx.compose.material3.FilterChip(
+                    selected = false,
+                    onClick = { onForumClick(child) },
+                    label = { Text(child.name) },
+                    colors = androidx.compose.material3.FilterChipDefaults.filterChipColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        labelColor = MaterialTheme.colorScheme.onSurface
+                    ),
+                    border = null
+                )
             }
         }
     }

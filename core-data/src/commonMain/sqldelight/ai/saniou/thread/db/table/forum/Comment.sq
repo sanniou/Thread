@@ -72,7 +72,7 @@ SELECT * FROM Comment WHERE sourceId = :sourceId AND id = :id;
 
 -- 获取指定 topicId 的最后五条回复
 getLastFiveComments:
-SELECT * FROM Comment WHERE sourceId = :sourceId AND topicId = :topicId AND floor != 1 RDER BY id DESC LIMIT 5;
+SELECT * FROM Comment WHERE sourceId = :sourceId AND topicId = :topicId AND (floor != 1 || floor ISNULL ) ORDER BY id DESC LIMIT 5;
 
 -- 统计有效的 Comment 数量
 countValidComments:

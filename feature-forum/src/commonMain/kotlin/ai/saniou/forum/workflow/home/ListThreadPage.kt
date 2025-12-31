@@ -64,8 +64,8 @@ fun ListThreadPage(
                     contentAlignment = Alignment.Center
                 ) {
                     StateContent(
-                        imageVector = Icons.Outlined.Star,
-                        message = "这里什么都没有\n试着换个板块看看吧"
+                        imageVector = Icons.Outlined.Star, // Could be replaced with a more specific illustration in future
+                        message = "这里空空如也\n\n试着探索其他板块，\n或成为第一个发帖的人吧！"
                     )
                 }
             }

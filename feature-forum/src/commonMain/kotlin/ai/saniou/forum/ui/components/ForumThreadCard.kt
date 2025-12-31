@@ -26,6 +26,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 
 
 @Composable
@@ -46,7 +47,8 @@ fun TopicCard(
 }
 
 /**
- * 串内容卡片，遵循 MD3 设计风格
+ * 串内容卡片，遵循 Modern Reddit-style Card 设计风格
+ * 侧重信息密度与清晰的视觉层级
  */
 @Composable
 fun TopicCard(
@@ -63,129 +65,143 @@ fun TopicCard(
         shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.elevatedCardColors(
             containerColor = MaterialTheme.colorScheme.surface
-        )
+        ),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
     ) {
         Column(
             modifier = Modifier.padding(Dimens.padding_standard),
-            verticalArrangement = Arrangement.spacedBy(Dimens.padding_medium)
+            verticalArrangement = Arrangement.spacedBy(Dimens.padding_small) // Reduced spacing for density
         ) {
-            // Header: Author & Badges
+            // Header: Source/Channel + User + Time (Metadata Row)
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Dimens.padding_small)
             ) {
-                ThreadAuthor(
-                    author = topic.author,
-                    threadTime = topic.createdAt.toRelativeTimeString(),
-                    isPo = false,
-                    onClick = onUserClick,
-                    modifier = Modifier.weight(1f)
+                // Channel Avatar/Icon placeholder (Optional, can be added later)
+                // For now, using Channel Name as the primary anchor
+                if (showChannelBadge) {
+                    val channelText = if (topic.sourceName.isNotBlank()) "${topic.sourceName} · ${topic.channelName}" else topic.channelName
+                    Text(
+                        text = channelText,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "·",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.outline
+                    )
+                }
+
+                // Author Info (Clickable)
+                Text(
+                    text = topic.author.name.takeIf { it.isNotBlank() && it != "无名氏" } ?: topic.author.id,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.outline,
+                    modifier = Modifier.clickable(enabled = onUserClick != null) { onUserClick?.invoke(topic.author.id) }
                 )
 
-                // Badges (Admin, Sage)
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(Dimens.padding_tiny),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    if (topic.isAdmin) {
-                        Badge(
-                            text = "ADMIN",
-                            containerColor = MaterialTheme.colorScheme.errorContainer,
-                            contentColor = MaterialTheme.colorScheme.onErrorContainer
-                        )
-                    }
-                    if (topic.isSage) {
-                        Badge(
-                            text = "SAGE",
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                        )
-                    }
+                Text(
+                    text = "· ${topic.createdAt.toRelativeTimeString()}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.outline
+                )
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                // Badges (Right Aligned)
+                if (topic.isAdmin) {
+                    Badge(
+                        text = "ADMIN",
+                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                        contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                        modifier = Modifier.padding(start = 4.dp)
+                    )
+                }
+                if (topic.isSage) {
+                    Badge(
+                        text = "SAGE",
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                        modifier = Modifier.padding(start = 4.dp)
+                    )
                 }
             }
 
-            // Title (Only if meaningful)
+            // Title (Bold, Larger) - If exists
             if (!topic.title.isNullOrBlank() && topic.title != "无标题") {
                 Text(
                     text = topic.title!!,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(bottom = 4.dp)
                 )
             }
 
-            // Content
+            // Body Content (Limited lines)
             ThreadBody(
                 content = topic.content,
                 images = topic.images,
-                maxLines = 6,
+                maxLines = 8, // Slightly more context
                 onImageClick = { img -> onImageClick?.invoke(img) }
             )
 
-            // Footer: Forum Name & Stats
+            // Footer: Action Bar (Reply Count, Share, etc.)
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth().padding(top = Dimens.padding_small)
             ) {
-                // Source & Forum Name Badge
-                if (showChannelBadge) {
-                    val sourceText =
-                        if (topic.sourceName.isNotBlank()) "${topic.sourceName.uppercase()} · " else ""
-                    val footerText = "$sourceText${topic.channelName}"
-
-                    if (footerText.isNotBlank()) {
-                        Surface(
-                            color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                            shape = MaterialTheme.shapes.extraSmall,
-                        ) {
-                            Text(
-                                text = footerText,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(
-                                    horizontal = Dimens.padding_small,
-                                    vertical = Dimens.padding_tiny
-                                )
-                            )
-                        }
+                // Reply Action Pill
+                Surface(
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    shape = MaterialTheme.shapes.extraLarge,
+                    modifier = Modifier.clickable { /* Trigger quick reply or just open detail */ }
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.ChatBubbleOutline,
+                            contentDescription = "Replies",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Text(
+                            text = "${topic.commentCount} 回复",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
 
-                Spacer(modifier = Modifier.weight(1f))
-
-                // Reply Count
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(Dimens.padding_tiny)
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.ChatBubbleOutline,
-                        contentDescription = "Replies",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(Dimens.icon_size_small)
-                    )
-                    Text(
-                        text = topic.commentCount.toString(),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+                // Add Share/More actions here if needed in future
             }
 
-            // Recent Replies
+            // Recent Replies (Simplified)
             if (topic.comments.isNotEmpty()) {
-                RecentReplies(topic.comments)
-                if ((topic.remainingCount ?: 0) > 0) {
-                    Text(
-                        text = "还有 ${topic.remainingCount} 条回复...",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(
-                            start = Dimens.padding_small,
-                            top = Dimens.padding_tiny
-                        )
-                    )
+                Surface(
+                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                    color = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.5f),
+                    shape = MaterialTheme.shapes.small
+                ) {
+                    Column(modifier = Modifier.padding(8.dp)) {
+                         RecentReplies(topic.comments.take(2)) // Limit to 2 recent replies for card view
+                        if ((topic.remainingCount ?: 0) > 0) {
+                            Text(
+                                text = "查看其余 ${topic.remainingCount} 条回复...",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Medium,
+                                modifier = Modifier.padding(top = 4.dp).clickable { onClick() }
+                            )
+                        }
+                    }
                 }
             }
         }
