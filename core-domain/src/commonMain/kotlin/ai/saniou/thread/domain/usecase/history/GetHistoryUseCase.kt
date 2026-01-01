@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 class GetHistoryUseCase(
     private val historyRepository: HistoryRepository
 ) {
-    operator fun invoke(): Flow<PagingData<HistoryItem>> {
-        return historyRepository.getHistory()
+    operator fun invoke(typeFilter: String? = null): Flow<PagingData<HistoryItem>> {
+        return historyRepository.getHistory(typeFilter)
     }
 }

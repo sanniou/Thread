@@ -18,10 +18,14 @@ import ai.saniou.thread.domain.repository.SettingsRepository
 import ai.saniou.thread.domain.repository.observeValue
 import ai.saniou.thread.feature.cellularautomaton.CellularAutomatonScreen
 import ai.saniou.thread.feature.challenge.CloudflareVerificationDialog
+import ai.saniou.thread.feature.bookmark.BookmarkPage
 import ai.saniou.thread.feature.challenge.UiChallengeHandler
+import ai.saniou.thread.feature.history.HistoryPage
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.Games
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.RssFeed
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -104,6 +108,14 @@ fun App() {
                                 Icons.Default.Games,
                                 "元胞自动机"
                             ) { navigator.replaceAll(CellularAutomatonRoute) },
+                            DrawerMenuItem(
+                                Icons.Default.Bookmark,
+                                "收藏夹"
+                            ) { navigator.push(BookmarkPage) },
+                            DrawerMenuItem(
+                                Icons.Default.History,
+                                "浏览历史"
+                            ) { navigator.push(HistoryPage()) },
                         )
                     )
                 }

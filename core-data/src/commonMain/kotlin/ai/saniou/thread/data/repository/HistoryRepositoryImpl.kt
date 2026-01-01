@@ -23,16 +23,27 @@ class HistoryRepositoryImpl(
     private val db: Database,
 ) : HistoryRepository {
 
-    override fun getHistory(): Flow<PagingData<HistoryItem>> {
+    override fun getHistory(typeFilter: String?): Flow<PagingData<HistoryItem>> {
         return Pager(
             config = PagingConfig(pageSize = 20),
             pagingSourceFactory = {
-                QueryPagingSource(
-                    transacter = db.historyQueries,
-                    context = Dispatchers.Default,
-                    countQuery = db.historyQueries.countAllHistory(),
-                    queryProvider = db.historyQueries::getAllHistoryIds
-                )
+                if (typeFilter != null) {
+                    QueryPagingSource(
+                        transacter = db.historyQueries,
+                        context = Dispatchers.Default,
+                        countQuery = db.historyQueries.countHistoryByType(typeFilter),
+                        queryProvider = { limit, offset ->
+                            db.historyQueries.getHistoryIdsByType(typeFilter, limit, offset)
+                        }
+                    )
+                } else {
+                    QueryPagingSource(
+                        transacter = db.historyQueries,
+                        context = Dispatchers.Default,
+                        countQuery = db.historyQueries.countAllHistory(),
+                        queryProvider = db.historyQueries::getAllHistoryIds
+                    )
+                }
             }
         ).flow.map { pagingData ->
             pagingData.map { history ->

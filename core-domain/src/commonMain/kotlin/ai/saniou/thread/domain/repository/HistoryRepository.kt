@@ -5,7 +5,7 @@ import app.cash.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 
 interface HistoryRepository {
-    fun getHistory(): Flow<PagingData<HistoryItem>>
+    fun getHistory(typeFilter: String? = null): Flow<PagingData<HistoryItem>>
     suspend fun addToHistory(item: HistoryItem)
     suspend fun clearHistory()
 }

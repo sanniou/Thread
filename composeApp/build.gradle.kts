@@ -42,6 +42,9 @@ kotlin {
 //    }
 
     sourceSets {
+        sourceSets.all {
+            languageSettings.optIn("kotlin.time.ExperimentalTime")
+        }
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
@@ -64,6 +67,7 @@ kotlin {
             implementation(libs.voyager.navigator)
             implementation(project(":feature-forum"))
             implementation(project(":feature-reader"))
+            implementation(libs.cash.paging.compose.common)
         }
         val webviewVersion = "2.0.3"
         androidMain.dependencies {

@@ -61,3 +61,13 @@ LIMIT :limit OFFSET :offset;
 
 countAllHistory:
 SELECT count(*) FROM History;
+
+getHistoryIdsByType:
+SELECT id, type, itemId, sourceId, accessTime
+FROM History
+WHERE type = :type
+ORDER BY accessTime DESC
+LIMIT :limit OFFSET :offset;
+
+countHistoryByType:
+SELECT count(*) FROM History WHERE type = :type;

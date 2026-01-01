@@ -61,7 +61,7 @@ val domainModule = DI.Module("domainModule") {
     bindProvider { MarkArticleAsReadUseCase(instance()) }
     bindProvider { RefreshFeedSourceUseCase(instance()) }
     bindProvider { RefreshAllFeedsUseCase(instance()) }
-    bindProvider { ToggleArticleBookmarkUseCase(instance()) }
+    bindProvider { ToggleArticleBookmarkUseCase(instance(), instance()) }
     bindProvider { GetFeedSourceUseCase(instance()) }
 
     // Feed

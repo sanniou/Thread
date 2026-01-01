@@ -57,6 +57,7 @@ kotlin {
             implementation(project(":core-data"))
             implementation(project(":core-domain"))
             implementation(project(":core-network"))
+            implementation(project(":feature-reader"))
             implementation(libs.ktor.serialization.kotlinx.json)
             implementation(libs.ktor.client.serialization)
             implementation(libs.ktor.client.content.negotiation)

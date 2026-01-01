@@ -1,6 +1,7 @@
 package ai.saniou.coreui.state
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,17 +26,21 @@ fun <T : Any> PagingStateLayout(
     items: LazyPagingItems<T>,
     modifier: Modifier = Modifier,
     onRetry: () -> Unit = { items.retry() },
-    loading: @Composable (() -> Unit)? = null,
-    error: @Composable ((AppError) -> Unit)? = null,
-    empty: @Composable (() -> Unit)? = null,
+    loading: @Composable (BoxScope.() -> Unit)? = null,
+    error: @Composable (BoxScope.(AppError) -> Unit)? = null,
+    empty: @Composable (BoxScope.() -> Unit)? = null,
     content: @Composable (LazyPagingItems<T>) -> Unit
 ) {
     Box(modifier = modifier) {
         val refreshState = items.loadState.refresh
-        
+
         when {
             refreshState is LoadStateLoading -> {
-                loading?.invoke() ?: DefaultLoading()
+                if (loading != null) {
+                    loading()
+                } else {
+                    DefaultLoading()
+                }
             }
 
             refreshState is LoadStateError -> {

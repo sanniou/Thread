@@ -5,14 +5,12 @@ import ai.saniou.coreui.state.StateLayout
 import ai.saniou.coreui.widgets.DrawerHeader
 import ai.saniou.coreui.widgets.RichText
 import ai.saniou.forum.di.nmbdi
-import ai.saniou.forum.workflow.bookmark.BookmarkPage
-import ai.saniou.forum.workflow.topic.TopicPage
-import ai.saniou.forum.workflow.history.HistoryPage
-import ai.saniou.forum.workflow.home.ChannelContract.Event
 import ai.saniou.forum.workflow.home.ChannelContract.ChannelCategoryUiState
+import ai.saniou.forum.workflow.home.ChannelContract.Event
 import ai.saniou.forum.workflow.init.SourceInitScreen
 import ai.saniou.forum.workflow.search.SearchPage
 import ai.saniou.forum.workflow.subscription.SubscriptionPage
+import ai.saniou.forum.workflow.topic.TopicPage
 import ai.saniou.forum.workflow.topicdetail.TopicDetailPage
 import ai.saniou.forum.workflow.trend.TrendPage
 import ai.saniou.thread.domain.model.forum.Notice
@@ -40,16 +38,14 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.DrawerState
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -87,8 +83,6 @@ import org.kodein.di.DI
 import thread.feature_forum.generated.resources.Res
 import thread.feature_forum.generated.resources.category_collapse
 import thread.feature_forum.generated.resources.category_expand
-import thread.feature_forum.generated.resources.drawer_bookmark
-import thread.feature_forum.generated.resources.drawer_history
 import thread.feature_forum.generated.resources.drawer_search
 import thread.feature_forum.generated.resources.drawer_subscribe
 
@@ -345,14 +339,6 @@ data class ChannelPage(
                 navigator.push(SubscriptionPage { threadId -> navigator.push(TopicDetailPage(threadId)) })
                 onCloseDrawer()
             },
-            DrawerItemData(stringResource(Res.string.drawer_bookmark), Icons.Default.Star, false) {
-                navigator.push(BookmarkPage)
-                onCloseDrawer()
-            },
-            DrawerItemData(stringResource(Res.string.drawer_history), Icons.Default.DateRange, false) {
-                navigator.push(HistoryPage())
-                onCloseDrawer()
-            },
             DrawerItemData(stringResource(Res.string.drawer_search), Icons.Default.Search, false) {
                 navigator.push(SearchPage())
                 onCloseDrawer()
@@ -452,7 +438,9 @@ data class ChannelPage(
             Spacer(modifier = Modifier.weight(1f))
             Icon(
                 imageVector = if (isExpanded) Icons.Default.KeyboardArrowDown else Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = if (isExpanded) stringResource(Res.string.category_collapse) else stringResource(Res.string.category_expand),
+                contentDescription = if (isExpanded) stringResource(Res.string.category_collapse) else stringResource(
+                    Res.string.category_expand
+                ),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }

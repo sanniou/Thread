@@ -1,12 +1,17 @@
 package ai.saniou.thread.di
 
+import ai.saniou.thread.feature.bookmark.BookmarkViewModel
 import ai.saniou.thread.feature.challenge.UiChallengeHandler
+import ai.saniou.thread.feature.history.HistoryViewModel
 import ai.saniou.thread.network.ChallengeHandler
 import org.kodein.di.DI
+import org.kodein.di.bindProvider
 import org.kodein.di.bindSingleton
 import org.kodein.di.instance
 
 val appModule = DI.Module("appModule") {
     bindSingleton<UiChallengeHandler> { UiChallengeHandler(instance()) }
     bindSingleton<ChallengeHandler> { instance<UiChallengeHandler>() }
+    bindProvider { HistoryViewModel(instance()) }
+    bindProvider { BookmarkViewModel(instance(), instance(), instance()) }
 }

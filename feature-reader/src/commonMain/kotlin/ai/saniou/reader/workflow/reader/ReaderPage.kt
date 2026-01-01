@@ -6,7 +6,7 @@ import ai.saniou.coreui.state.PagingStateLayout
 import ai.saniou.coreui.state.toAppError
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.AppDrawerItem
-import ai.saniou.coreui.widgets.RichText
+import ai.saniou.coreui.widgets.ArticleItem
 import ai.saniou.reader.workflow.articledetail.ArticleDetailPage
 import ai.saniou.thread.domain.model.reader.Article
 import ai.saniou.thread.domain.model.reader.FeedSource
@@ -192,7 +192,7 @@ private fun ReaderScaffold(
             PagingStateLayout(
                 items = articles,
                 modifier = Modifier.weight(1f).fillMaxSize(),
-                loading = { CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally)) },
+                loading = { CircularProgressIndicator(modifier = Modifier.align(Alignment.Center)) },
                 empty = {
                     EmptyState(
                         isSearchActive = state.searchQuery.isNotEmpty(),
@@ -446,78 +446,6 @@ fun FeedSourceItem(
     )
 }
 
-@Composable
-fun ArticleItem(article: Article, sourceName: String, onClick: () -> Unit) {
-    // 优化：更清晰的已读/未读状态
-    val isRead = article.isRead
-    val titleColor =
-        if (isRead) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f) else MaterialTheme.colorScheme.onSurface
-    val fontWeight = if (isRead) FontWeight.Normal else FontWeight.SemiBold
-
-    ListItem(
-        modifier = Modifier.clickable(onClick = onClick),
-        headlineContent = {
-            Text(
-                text = article.title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = fontWeight,
-                color = titleColor,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-        },
-        supportingContent = {
-            Column {
-                Spacer(modifier = Modifier.height(4.dp))
-                if (article.content.isNotBlank()) {
-                    RichText(
-                        text = article.content,
-                        style = MaterialTheme.typography.bodyMedium,
-                        maxLines = 2,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = sourceName,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    if (!article.author.isNullOrBlank()) {
-                        Text(" · ", style = MaterialTheme.typography.labelSmall)
-                        Text(
-                            text = article.author!!,
-                            style = MaterialTheme.typography.labelSmall,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f, fill = false)
-                        )
-                    }
-                    Spacer(modifier = Modifier.weight(1f))
-                    Text(
-                        text = article.publishDate.toRelativeTimeString(),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.outline
-                    )
-                }
-            }
-        },
-        leadingContent = {
-            // 可选：添加文章的缩略图或者已读指示器
-            // 这里我们用一个小圆点表示未读状态，更加精致
-            if (!isRead) {
-                Icon(
-                    Icons.Default.Circle,
-                    contentDescription = "未读",
-                    modifier = Modifier.size(8.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            }
-        }
-    )
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

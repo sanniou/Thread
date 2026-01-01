@@ -1,9 +1,7 @@
 package ai.saniou.forum.di
 
 import ai.saniou.forum.initializer.AppInitializer
-import ai.saniou.forum.workflow.bookmark.BookmarkViewModel
 import ai.saniou.forum.workflow.topic.TopicViewModel
-import ai.saniou.forum.workflow.history.HistoryViewModel
 import ai.saniou.forum.workflow.home.ChannelViewModel
 import ai.saniou.forum.workflow.home.GreetImageViewModel
 import ai.saniou.forum.workflow.image.nmbImagePreviewModule
@@ -123,10 +121,6 @@ val nmbFeatureModule = DI.Module("nmbFeatureModule") {
 
     // 订阅相关
     bindProvider { SubscriptionViewModel(instance(), instance(), instance(), instance(), instance(), instance()) }
-
-    // 历史相关
-    bindProvider { HistoryViewModel(instance()) }
-
     // 搜索相关
     bindProvider { SearchViewModel(instance()) }
     bindFactory<String, UserDetailViewModel> { userHash ->
@@ -135,10 +129,6 @@ val nmbFeatureModule = DI.Module("nmbFeatureModule") {
             instance()
         )
     }
-
-    // 收藏相关
-    bindProvider { BookmarkViewModel(instance(), instance(), instance()) }
-
 
     bindFactory<String, TrendViewModel> { sourceId ->
         TrendViewModel(sourceId, instance(), instance(), instance())
