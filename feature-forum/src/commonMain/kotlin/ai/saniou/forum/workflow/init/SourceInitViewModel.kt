@@ -45,8 +45,8 @@ class SourceInitViewModel(
             when (sourceId) {
                 "nmb" -> {
                     val key = subscriptionRepository.getActiveSubscriptionKey()
-                    val cookies = nmbSource.getSortedCookies()
-                    val firstCookie = cookies.firstOrNull()?.cookie ?: ""
+                    val accounts = nmbSource.getSortedAccounts()
+                    val firstCookie = accounts.firstOrNull()?.value ?: ""
                     _state.update {
                         it.copy(
                             nmbSubscriptionKey = key ?: "",
@@ -100,7 +100,7 @@ class SourceInitViewModel(
                         subscriptionRepository.addSubscriptionKey(key)
 
                         if (state.value.nmbCookie.isNotBlank()) {
-                            nmbSource.insertCookie("Default", state.value.nmbCookie)
+                            nmbSource.insertAccount("Default", state.value.nmbCookie)
                         }
 
                         settingsRepository.saveValue("nmb_initialized", true)

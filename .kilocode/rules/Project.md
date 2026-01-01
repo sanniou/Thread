@@ -157,6 +157,54 @@
 - [DateParser.kt](../../core-common/src/commonMain/kotlin/ai/saniou/corecommon/utils/DateParser.kt)
 - [SaniouKtorfit.kt](../../core-network/src/commonMain/kotlin/ai/saniou/thread/network/SaniouKtorfit.kt)
 
+### 4.1 数据库资源映射 (Database Map)
+**统一账户与配置 (core-data)**:
+- **`Cookie`**: 统一账户表 (Unified Account Table). 存储所有来源 (Tieba, NMB, Discourse) 的登录凭证与用户信息.
+    - Path: `core-data/src/commonMain/sqldelight/ai/saniou/thread/db/table/Cookie.sq`
+    - Key Fields: `id`, `source_id`, `cookie`, `uid`, `extra_data` (JSON).
+
+- **`Bookmark`**: 跨模块收藏夹.
+    - Path: `core-data/src/commonMain/sqldelight/ai/saniou/thread/db/table/Bookmark.sq`
+    - Types: `TEXT`, `QUOTE`, `LINK`, `IMAGE`, `MEDIA`.
+
+**论坛模块 (feature-forum)**:
+- **`History`**: 浏览历史.
+    - Path: `core-data/src/commonMain/sqldelight/ai/saniou/thread/db/table/History.sq`
+    - Key Fields: `id`, `sourceId`, `parentId` (Topic ID), `parentType`.
+
+- **`Notice`**: 通知/消息.
+    - Path: `core-data/src/commonMain/sqldelight/ai/saniou/thread/db/table/Notice.sq`
+    - Key Fields: `id`, `sourceId`, `type`, `isRead`.
+
+- **`RemoteKey`**: 分页与缓存管理.
+    - Path: `core-data/src/commonMain/sqldelight/ai/saniou/thread/db/table/RemoteKey.sq`
+    - Key Fields: `id`, `type`, `nextKey`, `lastUpdated`.
+
+**论坛模块 (feature-forum)**:
+- **`Channel`**: 板块/贴吧/频道信息 (原 Forum).
+    - Path: `core-data/src/commonMain/sqldelight/ai/saniou/thread/db/table/forum/Channel.sq`
+    - Key Fields: `sourceId`, `id`, `name`, `description`, `fGroup`.
+
+- **`Topic`**: 帖子/主题 (原 Thread).
+    - Path: `core-data/src/commonMain/sqldelight/ai/saniou/thread/db/table/forum/Topic.sq`
+    - Key Fields: `sourceId`, `id`, `title`, `content`.
+
+- **`Comment`**: 回复/楼层 (原 Post/Reply).
+    - Path: `core-data/src/commonMain/sqldelight/ai/saniou/thread/db/table/forum/Comment.sq`
+    - Key Fields: `sourceId`, `id`, `topicId`, `content`.
+
+- **`Subscription`**: 订阅/关注.
+    - Path: `core-data/src/commonMain/sqldelight/ai/saniou/thread/db/table/forum/Subscription.sq`
+    - Key Fields: `subscriptionKey`, `sourceId`, `topicId`.
+
+**阅读器模块 (feature-reader)**:
+- **`FeedSourceEntity`**: RSS/Atom 订阅源.
+    - Path: `core-data/src/commonMain/sqldelight/ai/saniou/thread/db/table/reader/FeedSource.sq`
+    - Key Fields: `id`, `url`, `title`.
+
+- **`ArticleEntity`**: RSS/Atom 文章.
+    - Path: `core-data/src/commonMain/sqldelight/ai/saniou/thread/db/table/reader/Article.sq`
+    - Key Fields: `id`, `feedSourceId`, `title`, `content`.
 
 ## 5. 最佳实践检查清单
 - [ ] **KISS**: 即使是复杂功能，API 设计也应保持简单。

@@ -1,6 +1,7 @@
 package ai.saniou.thread.network
 
 import de.jensklingenberg.ktorfit.Ktorfit
+import de.jensklingenberg.ktorfit.converter.FlowConverterFactory
 import de.jensklingenberg.ktorfit.ktorfit
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
@@ -29,7 +30,7 @@ fun SaniouKtorfit(
             install(ContentEncoding) {
                 mode = ContentEncodingConfig.Mode.All
                 gzip()
-                deflate()
+//                deflate()
             }
 
             install(ContentNegotiation) {
@@ -38,10 +39,11 @@ fun SaniouKtorfit(
                     isLenient = true
                     ignoreUnknownKeys = true
                 })
+                register(ContentType.Application.ProtoBuf, WireContentConverter())
             }
             install(DefaultRequest) {
                 header(HttpHeaders.ContentType, ContentType.Application.Json)
-                userAgent(NetworkConstants.USER_AGENT)
+//                userAgent(NetworkConstants.USER_AGENT)
             }
             install(Logging) {
                 format = LoggingFormat.OkHttp
@@ -57,6 +59,8 @@ fun SaniouKtorfit(
         }
     )
     converterFactories(
-        SaniouResponseConverterFactory()
+        FlowConverterFactory(),
+        SaniouResponseConverterFactory(),
+        WireConverterFactory()
     )
 }

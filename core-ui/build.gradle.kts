@@ -32,10 +32,10 @@ kotlin {
 
     jvm()
 
-    js {
-        browser()
-        binaries.executable()
-    }
+//    js {
+//        browser()
+//        binaries.executable()
+//    }
 
 //    @OptIn(ExperimentalWasmDsl::class)
 //    wasmJs {
@@ -87,7 +87,7 @@ kotlin {
 //            implementation(libs.kmpalette.extensions.file)
             implementation(libs.cash.paging.compose.common)
 //            api("com.saralapps:composemultiplatformwebview:0.1.2")
-//            api("io.github.kevinnzou:compose-webview-multiplatform:2.0.3")
+            api("io.github.kevinnzou:compose-webview-multiplatform:2.0.3")
         }
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)

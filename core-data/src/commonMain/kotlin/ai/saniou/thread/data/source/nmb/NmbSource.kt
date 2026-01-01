@@ -16,7 +16,7 @@ import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
 import ai.saniou.thread.data.source.nmb.remote.dto.toTable
 import ai.saniou.thread.data.source.nmb.remote.dto.toTableReply
 import ai.saniou.thread.db.Database
-import ai.saniou.thread.db.table.Cookie
+import ai.saniou.thread.domain.model.forum.Account
 import ai.saniou.thread.db.table.forum.GetTopicsInChannelOffset
 import ai.saniou.thread.db.table.forum.Image
 import ai.saniou.thread.domain.model.forum.Channel
@@ -423,19 +423,25 @@ class NmbSource(
         db.subscriptionQueries.deleteSubscription(subscriptionKey, id, threadId.toString())
     }
 
-    suspend fun getSortedCookies(): List<Cookie> {
-        return db.cookieQueries.getSortedCookies().asFlow().mapToList(Dispatchers.Default).first()
+    suspend fun getSortedAccounts(): List<Account> {
+        return db.accountQueries.getSortedAccounts().asFlow().mapToList(Dispatchers.Default).first().toDomain()
     }
 
     @OptIn(ExperimentalTime::class)
-    suspend fun insertCookie(alias: String, cookie: String) {
+    suspend fun insertAccount(alias: String, cookie: String) {
         val now = Clock.System.now().toEpochMilliseconds()
         val count =
-            db.cookieQueries.countCookies().asFlow().mapToList(Dispatchers.Default).first().size
-        db.cookieQueries.insertCookie(
-            cookie = cookie,
+            db.accountQueries.countAccounts().asFlow().mapToList(Dispatchers.Default).first().size
+        db.accountQueries.insertAccount(
+            id = cookie,
+            source_id = "nmb",
+            account = cookie,
+            uid = null,
             alias = alias,
+            avatar = null,
+            extra_data = null,
             sort = count.toLong(),
+            is_current = 0L,
             createdAt = now,
             lastUsedAt = now
         )

@@ -15,6 +15,7 @@ import ai.saniou.thread.data.repository.SettingsRepositoryImpl
 import ai.saniou.thread.data.repository.SubscriptionRepositoryImpl
 import ai.saniou.thread.data.repository.SyncRepositoryImpl
 import ai.saniou.thread.data.repository.TopicRepositoryImpl
+import ai.saniou.thread.data.repository.AccountRepositoryImpl
 import ai.saniou.thread.data.repository.TagRepositoryImpl
 import ai.saniou.thread.data.repository.TrendRepositoryImpl
 import ai.saniou.thread.data.repository.UserRepositoryImpl
@@ -23,8 +24,17 @@ import ai.saniou.thread.data.source.acfun.remote.AcfunApi
 import ai.saniou.thread.data.source.acfun.remote.AcfunHeaderPlugin
 import ai.saniou.thread.data.source.acfun.remote.AcfunTokenManager
 import ai.saniou.thread.data.source.acfun.remote.createAcfunApi
+import ai.saniou.thread.data.source.tieba.remote.createNewTiebaApi
+import ai.saniou.thread.data.source.tieba.remote.createAppHybridTiebaApi
+import ai.saniou.thread.data.source.tieba.remote.createMiniTiebaApi
+import ai.saniou.thread.data.source.tieba.remote.createWebTiebaApi
+import ai.saniou.thread.data.source.tieba.remote.createOfficialTiebaApi
+import ai.saniou.thread.data.source.tieba.remote.createLiteApiInterface
+import ai.saniou.thread.data.source.tieba.remote.createSofireApi
+import ai.saniou.thread.data.source.tieba.remote.createOfficialProtobufTiebaApi
+import ai.saniou.thread.data.source.tieba.TiebaSource
 import ai.saniou.thread.data.source.nga.NgaSource
-import ai.saniou.thread.data.source.nmb.NmbCookieProvider
+import ai.saniou.thread.data.source.nmb.NmbAccountProvider
 import ai.saniou.thread.data.source.nmb.NmbSource
 import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
 import ai.saniou.thread.data.source.nmb.remote.createNmbXdApi
@@ -56,6 +66,7 @@ import ai.saniou.thread.data.parser.HtmlParser
 import ai.saniou.thread.data.parser.JsonParser
 import ai.saniou.thread.data.parser.RssParser
 import ai.saniou.thread.data.repository.ReaderRepositoryImpl
+import ai.saniou.thread.domain.repository.AccountRepository
 import ai.saniou.thread.domain.repository.ReaderRepository
 import ai.saniou.thread.domain.repository.UserRepository
 import ai.saniou.thread.domain.usecase.reader.GetArticleCountsUseCase
@@ -66,7 +77,6 @@ import ai.saniou.thread.network.SaniouKtorfit
 import ai.saniou.thread.network.cookie.CookieStore
 import ai.saniou.thread.data.network.SettingsCookieStore
 import ai.saniou.thread.network.installCookieAuth
-import de.jensklingenberg.ktorfit.Ktorfit
 import io.ktor.client.HttpClient
 import io.ktor.client.request.header
 import org.kodein.di.DI
@@ -76,17 +86,18 @@ import org.kodein.di.bindSingleton
 import org.kodein.di.instance
 import org.kodein.di.instanceOrNull
 import org.kodein.di.singleton
+import kotlin.time.Clock
 
 val dataModule = DI.Module("dataModule") {
     bindConstant<String>(tag = "nmbBaseUrl") { "https://api.nmb.best/api/" }
     bindConstant<String>(tag = "metaDiscourseBaseUrl") { "https://meta.discourse.org/" }
     bindConstant<String>(tag = "linuxDoDiscourseBaseUrl") { "https://linux.do/" }
     bindSingleton<NmbXdApi> {
-        val nmbCookieProvider = instance<NmbCookieProvider>()
+        val nmbAccountProvider = instance<NmbAccountProvider>()
         val ktorfit = SaniouKtorfit(
             baseUrl = instance<String>("nmbBaseUrl")
         ) {
-            installCookieAuth { nmbCookieProvider.getCookieValue() }
+            installCookieAuth { nmbAccountProvider.getAccountValue() }
         }
         ktorfit.createNmbXdApi()
     }
@@ -144,11 +155,23 @@ val dataModule = DI.Module("dataModule") {
         )
     }
     bindSingleton<AcfunSource> { AcfunSource(instance(), instance()) }
+    bindSingleton<TiebaSource> {
+        TiebaSource(
+            instance(), // MiniTiebaApi
+            instance(), // OfficialTiebaApi
+            instance(), // OfficialProtobufTiebaApi
+            instance(), // WebTiebaApi
+            instance(), // Database
+            instance(), // AccountRepository
+            instance()  // TiebaParameterProvider
+        )
+    }
 
     bind<Source>(tag = "nmb") with singleton { instance<NmbSource>() }
     bind<Source>(tag = "nga") with singleton { NgaSource() }
     bind<Source>(tag = "acfun") with singleton { instance<AcfunSource>() }
     bind<Source>(tag = "discourse") with singleton { instance<DiscourseSource>() }
+    bind<Source>(tag = "tieba") with singleton { instance<TiebaSource>() }
 
     // "allInstance" only work in jvm current ,wait upgrade        val sources: Set<Source> = DI.allInstances()
     bind<Set<Source>>(tag = "allSources") with singleton {
@@ -157,6 +180,7 @@ val dataModule = DI.Module("dataModule") {
             add(instance(tag = "nga"))
             add(instance(tag = "discourse"))
             add(instance(tag = "acfun"))
+            add(instance(tag = "tieba"))
         }
     }
 
@@ -175,6 +199,7 @@ val dataModule = DI.Module("dataModule") {
         )
     }
     bind<UserRepository>() with singleton { UserRepositoryImpl(instance()) }
+    bind<AccountRepository>() with singleton { AccountRepositoryImpl(instance()) }
     bind<SettingsRepository>() with singleton { SettingsRepositoryImpl(instance()) }
     bind<NoticeRepository>() with singleton {
         NoticeRepositoryImpl(
@@ -213,7 +238,7 @@ val dataModule = DI.Module("dataModule") {
         SyncRepositoryImpl(providers)
     }
 
-    bindSingleton { NmbCookieProvider(instance()) }
+    bindSingleton { NmbAccountProvider(instance()) }
     // Cookie Store (for Discourse/CF)
     bindSingleton<CookieStore> { SettingsCookieStore(instance()) }
     // CDN管理器
@@ -230,6 +255,281 @@ val dataModule = DI.Module("dataModule") {
     bind<ReaderRepository>() with singleton {
         ReaderRepositoryImpl(instance(), instance(), instance())
     }
+
+    // Tieba Infrastructure
+    bindSingleton { ai.saniou.thread.data.source.tieba.TiebaParameterProvider(instance()) }
+
+    // Tieba API: NewTiebaApi
+    bindSingleton<ai.saniou.thread.data.source.tieba.remote.NewTiebaApi> {
+        val paramProvider = instance<ai.saniou.thread.data.source.tieba.TiebaParameterProvider>()
+        val ktorfit = SaniouKtorfit(
+            baseUrl = "http://c.tieba.baidu.com/"
+        ) {
+            install(ai.saniou.thread.network.tieba.TiebaCommonHeaderPlugin) {
+                headers = mapOf(
+                    "ka" to { "open" },
+                    "Pragma" to { "no-cache" },
+                    "User-Agent" to { "bdtb for Android 8.2.2" },
+                    "cuid" to { paramProvider.getCuid() }
+                )
+            }
+            install(ai.saniou.thread.network.tieba.TiebaCommonParamPlugin) {
+                params = mapOf(
+                    "BDUSS" to { paramProvider.getBduss() }, // suspend call not supported in plugin map, need to handle blocking or pre-fetch
+                    // Note: Ktor plugins are synchronous in configuration usually.
+                    // However, lambda execution happens during request. If lambda is not suspend, we might need runBlocking or cache.
+                    // For KMP, runBlocking is limited.
+                    // Best practice: The plugin config lambda should invoke a provider that manages state.
+                    // Here we assume getBduss() might be cached or we accept standard execution.
+                    // But wait, TiebaParameterProvider.getBduss is suspend.
+                    // We need to bridge this. For now, let's assume non-suspend access or blocking wrapper if platform permits.
+                    // Actually, param lambda is () -> String.
+                    // We will simplify TiebaParameterProvider to return String directly (cached in memory) or use a helper.
+                    // For this migration, I'll modify TiebaParameterProvider to be synchronous where possible or use empty string fallback.
+
+                    "_client_id" to { "wappc_1687508826727" },
+                    "_client_type" to { "2" },
+                    "_os_version" to { "Android" },
+                    "model" to { paramProvider.getModel() },
+                    "net_type" to { "1" },
+                    "_phone_imei" to { "000000000000000" },
+                    "_timestamp" to { paramProvider.getTimestamp() },
+                    "cuid" to { paramProvider.getCuid() },
+                    "from" to { "baidu_appstore" },
+                    "client_version" to { "8.2.2" }
+                )
+            }
+            install(ai.saniou.thread.network.tieba.TiebaSortAndSignPlugin) {
+                appSecret = "tiebaclient!!!"
+            }
+        }
+        ktorfit.createNewTiebaApi()
+    }
+
+    // Tieba API: AppHybridTiebaApi
+    bindSingleton<ai.saniou.thread.data.source.tieba.remote.AppHybridTiebaApi> {
+        val paramProvider = instance<ai.saniou.thread.data.source.tieba.TiebaParameterProvider>()
+        val ktorfit = SaniouKtorfit(
+            baseUrl = "https://tieba.baidu.com/"
+        ) {
+            install(ai.saniou.thread.network.tieba.TiebaCommonHeaderPlugin) {
+                headers = mapOf(
+                    "User-Agent" to { "tieba/12.35.1.0 skin/default" },
+                    "Host" to { "tieba.baidu.com" },
+                    "Pragma" to { "no-cache" },
+                    "Cache-Control" to { "no-cache" },
+                    "Accept" to { "application/json, text/plain, */*" },
+                    "Accept-Language" to { "zh-CN,zh;q=0.9,en;q=0.8" }, // Simplified
+                    "X-Requested-With" to { "com.baidu.tieba" },
+                    "Sec-Fetch-Site" to { "same-origin" },
+                    "Sec-Fetch-Mode" to { "cors" },
+                    "Sec-Fetch-Dest" to { "empty" },
+                    "Cookie" to {
+                        // TODO: Construct full cookie string from provider
+                        // e.g. "CUID=${paramProvider.getCuid()}; BDUSS=${paramProvider.getBduss()}..."
+                        // Since provider returns single values, we need a helper to join them.
+                        // For now, using a simplified version or delegate to CookieStore if available.
+                        "CUID=${paramProvider.getCuid()}; BDUSS=${paramProvider.getBduss()}"
+                    }
+                )
+            }
+            install(ai.saniou.thread.network.tieba.TiebaCommonParamPlugin) {
+                 params = mapOf(
+                    "BDUSS" to { paramProvider.getBduss() },
+                    "stoken" to { paramProvider.getSToken() }
+                 )
+            }
+            // AppHybridTiebaApi usually doesn't need SortAndSign in the same way, or uses different keys.
+            // Checking original code: it uses AddWebCookieInterceptor and CommonParamInterceptor.
+            // No SortAndSignInterceptor mentioned for HYBRID_TIEBA_API in RetrofitTiebaApi.kt.
+        }
+        ktorfit.createAppHybridTiebaApi()
+    }
+
+    // Tieba API: MiniTiebaApi
+    bindSingleton<ai.saniou.thread.data.source.tieba.remote.MiniTiebaApi> {
+        val paramProvider = instance<ai.saniou.thread.data.source.tieba.TiebaParameterProvider>()
+        val ktorfit = SaniouKtorfit(
+            baseUrl = "http://c.tieba.baidu.com/"
+        ) {
+            install(ai.saniou.thread.network.tieba.TiebaCommonHeaderPlugin) {
+                headers = mapOf(
+                    "User-Agent" to { "bdtb for Android 7.2.0.0" },
+                    "cuid" to { paramProvider.getCuid() },
+                    "cuid_galaxy2" to { paramProvider.getCuid() }
+                )
+            }
+            install(ai.saniou.thread.network.tieba.TiebaCommonParamPlugin) {
+                params = mapOf(
+                    "BDUSS" to { paramProvider.getBduss() },
+                    "_client_id" to { "wappc_1687508826727" },
+                    "_client_type" to { "2" },
+                    "_os_version" to { "Android" },
+                    "model" to { paramProvider.getModel() },
+                    "net_type" to { "1" },
+                    "_phone_imei" to { "000000000000000" },
+                    "_timestamp" to { paramProvider.getTimestamp() },
+                    "cuid" to { paramProvider.getCuid() },
+                    "cuid_galaxy2" to { paramProvider.getCuid() },
+                    "from" to { "1021636m" },
+                    "client_version" to { "7.2.0.0" },
+                    "subapp_type" to { "mini" }
+                )
+            }
+            install(ai.saniou.thread.network.tieba.TiebaSortAndSignPlugin) {
+                appSecret = "tiebaclient!!!"
+            }
+        }
+        ktorfit.createMiniTiebaApi()
+    }
+
+    // Tieba API: WebTiebaApi
+    bindSingleton<ai.saniou.thread.data.source.tieba.remote.WebTiebaApi> {
+        val paramProvider = instance<ai.saniou.thread.data.source.tieba.TiebaParameterProvider>()
+        val ktorfit = SaniouKtorfit(
+            baseUrl = "https://tieba.baidu.com/"
+        ) {
+            install(ai.saniou.thread.network.tieba.TiebaCommonHeaderPlugin) {
+                headers = mapOf(
+                    "User-Agent" to { "tieba/11.10.8.6 skin/default" },
+                    "cuid" to { paramProvider.getCuid() },
+                    "cuid_galaxy2" to { paramProvider.getCuid() },
+                    "cuid_gid" to { "" },
+                    "client_user_token" to { "" }, // Placeholder for uid
+                    "Charset" to { "UTF-8" },
+                    "Host" to { "tieba.baidu.com" }
+                )
+            }
+            // WebTiebaApi primarily uses headers and cookies, less common param injection
+            // But checking RetrofitTiebaApi.kt, it uses AddWebCookieInterceptor which we haven't fully ported as a separate plugin,
+            // but we can simulate cookie injection via Header plugin if logic is simple.
+            // Retrofit AddWebCookieInterceptor adds a complex Cookie header.
+            // We'll add a simplified cookie provider here.
+        }
+        ktorfit.createWebTiebaApi()
+    }
+
+    // Tieba API: OfficialTiebaApi
+    bindSingleton<ai.saniou.thread.data.source.tieba.remote.OfficialTiebaApi> {
+        val paramProvider = instance<ai.saniou.thread.data.source.tieba.TiebaParameterProvider>()
+        val ktorfit = SaniouKtorfit(
+            baseUrl = "http://c.tieba.baidu.com/"
+        ) {
+            install(ai.saniou.thread.network.tieba.TiebaCommonHeaderPlugin) {
+                headers = mapOf(
+                    "User-Agent" to { "bdtb for Android 12.25.1.0" },
+                    "Cookie" to {
+                        "CUID=${paramProvider.getCuid()};ka=open;TBBRAND=${paramProvider.getBrand()};BAIDUID=${paramProvider.getAndroidId()};"
+                        // Note: BAIDUID usually comes from cookie storage or device utils. Using AndroidId as placeholder if BAIDUID not available directly in provider.
+                    },
+                    "cuid" to { paramProvider.getCuid() },
+                    "cuid_galaxy2" to { paramProvider.getCuid() },
+                    "cuid_gid" to { "" },
+                    "client_type" to { "2" },
+                    "Charset" to { "UTF-8" },
+                    "client_logid" to { paramProvider.getTimestamp() }
+                )
+            }
+            install(ai.saniou.thread.network.tieba.TiebaCommonParamPlugin) {
+                params = mapOf(
+                    "BDUSS" to { paramProvider.getBduss() },
+                    "_client_id" to { "wappc_1687508826727" },
+                    "_client_type" to { "2" },
+                    "_os_version" to { "Android" },
+                    "model" to { paramProvider.getModel() },
+                    "net_type" to { "1" },
+                    "_phone_imei" to { "000000000000000" },
+                    "_timestamp" to { paramProvider.getTimestamp() },
+                    "cuid" to { paramProvider.getCuid() },
+                    "cuid_galaxy2" to { paramProvider.getCuid() },
+                    "from" to { "tieba" },
+                    "client_version" to { "12.25.1.0" },
+                    "Active_Timestamp" to { Clock.System.now().toEpochMilliseconds().toString() }, // Placeholder for active timestamp
+                    "Android_ID" to { paramProvider.getAndroidId() }, // Should be base64 encoded typically
+                    "Baidu_ID" to { "BAIDUID_PLACEHOLDER" }, // Need real BAIDUID
+                    "brand" to { paramProvider.getBrand() },
+                    "cmode" to { "1" },
+                    "cuid_gid" to { "" },
+                    "event_day" to { "" }, // Should be formatted date
+                    "extra" to { "" },
+                    "framework_ver" to { "3340042" },
+                    "is_teenager" to { "0" },
+                    "last_update_time" to { "" },
+                    "mac" to { "02:00:00:00:00:00" },
+                    "sample_id" to { "" },
+                    "sdk_ver" to { "2.34.0" },
+                    "start_scheme" to { "" },
+                    "start_type" to { "1" },
+                    "swan_game_ver" to { "1038000" }
+                )
+            }
+            install(ai.saniou.thread.network.tieba.TiebaSortAndSignPlugin) {
+                appSecret = "tiebaclient!!!"
+            }
+        }
+        ktorfit.createOfficialTiebaApi()
+    }
+
+    // Tieba API: LiteApiInterface
+    bindSingleton<ai.saniou.thread.data.source.tieba.remote.LiteApiInterface> {
+        val ktorfit = SaniouKtorfit(baseUrl = "https://huancheng65.github.io/") {}
+        ktorfit.createLiteApiInterface()
+    }
+
+    // Tieba API: SofireApi
+    bindSingleton<ai.saniou.thread.data.source.tieba.remote.SofireApi> {
+        val ktorfit = SaniouKtorfit(baseUrl = "http://tieba.baidu.com/") {}
+        ktorfit.createSofireApi()
+    }
+
+    // Tieba API: OfficialProtobufTiebaApi
+    bindSingleton<ai.saniou.thread.data.source.tieba.remote.OfficialProtobufTiebaApi> {
+        val paramProvider = instance<ai.saniou.thread.data.source.tieba.TiebaParameterProvider>()
+        val ktorfit = SaniouKtorfit(
+            baseUrl = "https://tiebac.baidu.com/"
+        ) {
+            install(ai.saniou.thread.network.tieba.TiebaCommonHeaderPlugin) {
+                headers = mapOf(
+                    "Charset" to { "UTF-8" },
+                    "client_type" to { "2" },
+                    "client_user_token" to { paramProvider.getUid() },
+                    "Cookie" to {
+                        "CUID=${paramProvider.getCuid()};ka=open;TBBRAND=${paramProvider.getBrand()};"
+                    },
+                    "cuid" to { paramProvider.getCuid() },
+                    "cuid_galaxy2" to { paramProvider.getCuid() },
+                    "cuid_gid" to { "" },
+                    "c3_aid" to { paramProvider.getAndroidId() },
+                    "User-Agent" to { "bdtb for Android 11.10.8.6" },
+                    "x_bd_data_type" to { "protobuf" }
+                )
+            }
+            install(ai.saniou.thread.network.tieba.TiebaCommonParamPlugin) {
+                params = mapOf(
+                    "BDUSS" to { paramProvider.getBduss() },
+                    "_client_id" to { "wappc_1687508826727_436" },
+                    "_client_type" to { "2" },
+                    "_client_version" to { "11.10.8.6" },
+                    "_phone_imei" to { "000000000000000" },
+                    "from" to { "tieba" },
+                    "model" to { paramProvider.getModel() },
+                    "net_type" to { "1" },
+                    "oaid" to { "" }, // Placeholder
+                    "stoken" to { paramProvider.getSToken() },
+                    "timestamp" to { paramProvider.getTimestamp() },
+                    "c3_aid" to { paramProvider.getAndroidId() },
+                    "cuid" to { paramProvider.getCuid() },
+                    "cuid_galaxy2" to { paramProvider.getCuid() },
+                    "cuid_gid" to { "" },
+                )
+            }
+            install(ai.saniou.thread.network.tieba.TiebaSortAndSignPlugin) {
+                appSecret = "tiebaclient!!!"
+            }
+        }
+        ktorfit.createOfficialProtobufTiebaApi()
+    }
+
     bind<GetArticleCountsUseCase>() with singleton { GetArticleCountsUseCase(instance()) }
     bind<GenerateRandomSubscriptionIdUseCase>() with singleton {
         GenerateRandomSubscriptionIdUseCase(

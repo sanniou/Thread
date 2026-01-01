@@ -6,6 +6,7 @@ import ai.saniou.forum.workflow.home.ChannelViewModel
 import ai.saniou.forum.workflow.home.GreetImageViewModel
 import ai.saniou.forum.workflow.image.nmbImagePreviewModule
 import ai.saniou.forum.workflow.init.SourceInitViewModel
+import ai.saniou.forum.workflow.login.TiebaLoginViewModel
 import ai.saniou.forum.workflow.post.PostViewModel
 import ai.saniou.forum.workflow.reference.ReferenceViewModel
 import ai.saniou.forum.workflow.search.SearchViewModel
@@ -142,6 +143,9 @@ val nmbFeatureModule = DI.Module("nmbFeatureModule") {
             nmbSource = instance()
         )
     }
+
+    // Tieba Login
+    bindProvider { TiebaLoginViewModel(instance()) }
 }
 
 val nmbdi = DI {

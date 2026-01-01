@@ -36,15 +36,15 @@ import ai.saniou.thread.domain.usecase.thread.GetTopicCommentsPagingUseCase
 import ai.saniou.thread.domain.usecase.thread.GetTopicCommentsUseCase
 import ai.saniou.thread.domain.usecase.thread.UpdateTopicLastAccessTimeUseCase
 import ai.saniou.thread.domain.usecase.thread.UpdateTopicLastReadCommentIdUseCase
-import ai.saniou.thread.domain.usecase.user.AddCookieUseCase
-import ai.saniou.thread.domain.usecase.user.DeleteCookieUseCase
-import ai.saniou.thread.domain.usecase.user.GetUserProfileUseCase
+import ai.saniou.thread.domain.usecase.user.AddAccountUseCase
+import ai.saniou.thread.domain.usecase.user.DeleteAccountUseCase
+import ai.saniou.thread.domain.usecase.user.GetAccountsUseCase
 import ai.saniou.thread.domain.usecase.reader.AddFeedSourceUseCase
 import ai.saniou.thread.domain.usecase.reader.GetArticlesUseCase
 import ai.saniou.thread.domain.usecase.reader.DeleteFeedSourceUseCase
 import ai.saniou.thread.domain.usecase.reader.*
 import ai.saniou.thread.domain.usecase.thread.GetTopicMetadataUseCase
-import ai.saniou.thread.domain.usecase.user.UpdateCookieSortUseCase
+import ai.saniou.thread.domain.usecase.user.UpdateAccountSortUseCase
 import org.kodein.di.DI
 import org.kodein.di.bindProvider
 import org.kodein.di.instance
@@ -106,10 +106,10 @@ val domainModule = DI.Module("domainModule") {
     bindProvider { ObserveActiveSubscriptionKeyUseCase(instance()) }
 
     // User
-    bindProvider { GetUserProfileUseCase(instance()) }
-    bindProvider { AddCookieUseCase(instance()) }
-    bindProvider { DeleteCookieUseCase(instance()) }
-    bindProvider { UpdateCookieSortUseCase(instance()) }
+    bindProvider { GetAccountsUseCase(instance()) }
+    bindProvider { AddAccountUseCase(instance()) }
+    bindProvider { DeleteAccountUseCase(instance()) }
+    bindProvider { UpdateAccountSortUseCase(instance()) }
 
     // Notice
     bindProvider { GetNoticeUseCase(instance()) }

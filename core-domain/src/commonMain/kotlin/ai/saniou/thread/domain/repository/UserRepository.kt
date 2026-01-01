@@ -1,10 +1,10 @@
 package ai.saniou.thread.domain.repository
 
-import ai.saniou.thread.domain.model.forum.Cookie
+import ai.saniou.thread.domain.model.forum.Account
 
 interface UserRepository {
-    suspend fun getCookiesList(): List<Cookie>
-    suspend fun addCookie(name: String, value: String)
-    suspend fun deleteCookie(cookie: Cookie)
-    suspend fun updateCookieSort(cookies: List<Cookie>)
+    suspend fun getAccountsList(): List<Account>
+    suspend fun addAccount(name: String, value: String)
+    suspend fun deleteAccount(account: Account)
+    suspend fun updateAccountSort(accounts: List<Account>)
 }

@@ -1,0 +1,86 @@
+-- 创建 Account 表 (Unified Account Table)
+CREATE TABLE IF NOT EXISTS Account (
+    id TEXT NOT NULL PRIMARY KEY,
+    source_id TEXT NOT NULL, -- 来源标识: 'tieba', 'nmb', 'discourse'
+    account TEXT NOT NULL, -- 核心凭证 (Tieba: BDUSS, NMB: userhash)
+    uid TEXT, -- 用户ID (Tieba uid)
+    alias TEXT, -- 用户名/昵称
+    avatar TEXT, -- 头像 URL
+    extra_data TEXT, -- JSON, 存储 STOKEN, TBS, etc.
+    sort INTEGER NOT NULL DEFAULT 0,
+    is_current INTEGER NOT NULL DEFAULT 0, -- 是否为该来源的当前选中账号
+    createdAt INTEGER NOT NULL,
+    lastUsedAt INTEGER NOT NULL
+);
+
+-- 创建 Account 索引
+CREATE INDEX IF NOT EXISTS Account_alias_index ON Account (alias);
+CREATE INDEX IF NOT EXISTS Account_sort_index ON Account (sort);
+CREATE INDEX IF NOT EXISTS Account_lastUsedAt_index ON Account (lastUsedAt);
+CREATE INDEX IF NOT EXISTS Account_createdAt_index ON Account (createdAt);
+CREATE INDEX IF NOT EXISTS Account_source_id_index ON Account (source_id);
+CREATE INDEX IF NOT EXISTS Account_is_current_index ON Account (is_current);
+
+-- 插入 Account 数据
+insertAccount:
+INSERT OR REPLACE INTO Account (
+    id, source_id, account, uid, alias, avatar, extra_data, sort, is_current, createdAt, lastUsedAt
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+-- 更新 Account 数据
+updateAccount:
+UPDATE Account SET
+    account = ?,
+    uid = ?,
+    alias = ?,
+    avatar = ?,
+    extra_data = ?,
+    sort = ?,
+    lastUsedAt = ?
+WHERE id = ?;
+
+-- 删除 Account 数据
+deleteAccount:
+DELETE FROM Account WHERE id = ?;
+
+deleteAccountByValue:
+DELETE FROM Account WHERE account = ?;
+
+-- 查询所有 Account 数据
+selectAll:
+SELECT * FROM Account;
+
+-- 查询指定 Account 数据
+getAccountById:
+SELECT * FROM Account WHERE id = ?;
+
+getAccountByValue:
+SELECT * FROM Account WHERE account = ? LIMIT 1;
+
+-- 查询所有 Account 数据按排序字段排序
+getSortedAccounts:
+SELECT * FROM Account ORDER BY sort ASC;
+
+getAccountsBySource:
+SELECT * FROM Account WHERE source_id = ? ORDER BY sort ASC;
+
+getCurrentAccount:
+SELECT * FROM Account WHERE source_id = ? AND is_current = 1 LIMIT 1;
+
+-- Set all accounts of a source to not current
+clearCurrentAccount:
+UPDATE Account SET is_current = 0 WHERE source_id = ?;
+
+-- Set specific account as current
+setCurrentAccount:
+UPDATE Account SET is_current = 1 WHERE id = ?;
+
+-- 查询所有 Account 数据按最后使用时间排序
+getLastUsedAccounts:
+SELECT * FROM Account ORDER BY lastUsedAt DESC;
+
+countAccounts:
+SELECT * FROM Account;
+
+updateAccountSort:
+UPDATE Account SET sort = ? WHERE id = ?;

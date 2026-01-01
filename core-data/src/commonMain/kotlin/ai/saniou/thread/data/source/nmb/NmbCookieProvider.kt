@@ -6,11 +6,11 @@ import app.cash.sqldelight.coroutines.mapToList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 
-class NmbCookieProvider(
+class NmbAccountProvider(
     private val database: Database
 ) {
-    suspend fun getCookieValue(): String? {
-        val cookie = database.cookieQueries.getSortedCookies().asFlow().mapToList(Dispatchers.Default).first().firstOrNull()?.cookie
+    suspend fun getAccountValue(): String? {
+        val cookie = database.accountQueries.getSortedAccounts().asFlow().mapToList(Dispatchers.Default).first().firstOrNull()?.account
         return cookie?.let { "userhash=$it" }
     }
 }

@@ -1,13 +1,13 @@
 package ai.saniou.forum.workflow.user
 
-import ai.saniou.thread.domain.model.forum.Cookie
+import ai.saniou.thread.domain.model.forum.Account
 import ai.saniou.forum.workflow.user.UserContract.Effect
 import ai.saniou.forum.workflow.user.UserContract.Event
 import ai.saniou.forum.workflow.user.UserContract.State
-import ai.saniou.thread.domain.usecase.user.AddCookieUseCase
-import ai.saniou.thread.domain.usecase.user.DeleteCookieUseCase
-import ai.saniou.thread.domain.usecase.user.GetUserProfileUseCase
-import ai.saniou.thread.domain.usecase.user.UpdateCookieSortUseCase
+import ai.saniou.thread.domain.usecase.user.AddAccountUseCase
+import ai.saniou.thread.domain.usecase.user.DeleteAccountUseCase
+import ai.saniou.thread.domain.usecase.user.GetAccountsUseCase
+import ai.saniou.thread.domain.usecase.user.UpdateAccountSortUseCase
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.channels.Channel
@@ -18,10 +18,10 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class UserViewModel(
-    private val getUserProfileUseCase: GetUserProfileUseCase,
-    private val addCookieUseCase: AddCookieUseCase,
-    private val deleteCookieUseCase: DeleteCookieUseCase,
-    private val updateCookieSortUseCase: UpdateCookieSortUseCase
+    private val getAccountsUseCase: GetAccountsUseCase,
+    private val addAccountUseCase: AddAccountUseCase,
+    private val deleteAccountUseCase: DeleteAccountUseCase,
+    private val updateAccountSortUseCase: UpdateAccountSortUseCase
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(State())
@@ -38,8 +38,8 @@ class UserViewModel(
         when (event) {
             is Event.LoadCookies -> loadCookies()
             is Event.AddCookie -> addCookie(event.name, event.value)
-            is Event.DeleteCookie -> deleteCookie(event.cookie)
-            is Event.UpdateCookieOrder -> updateCookieOrder(event.cookies)
+            is Event.DeleteCookie -> deleteCookie(event.account)
+            is Event.UpdateCookieOrder -> updateCookieOrder(event.accounts)
         }
     }
 
@@ -47,7 +47,7 @@ class UserViewModel(
         screenModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
             try {
-                val cookies = getUserProfileUseCase()
+                val cookies = getAccountsUseCase()
                 _state.update { it.copy(isLoading = false, cookies = cookies) }
             } catch (e: Exception) {
                 _state.update {
@@ -63,7 +63,7 @@ class UserViewModel(
     private fun addCookie(name: String, value: String) {
         screenModelScope.launch {
             try {
-                addCookieUseCase(name, value)
+                addAccountUseCase(name, value)
                 loadCookies() // 重新加载以获取包含新 cookie 的完整列表
             } catch (e: Exception) {
                 _effect.send(Effect.ShowError("添加饼干失败: ${e.message}"))
@@ -71,12 +71,12 @@ class UserViewModel(
         }
     }
 
-    private fun deleteCookie(cookie: Cookie) {
+    private fun deleteCookie(account: Account) {
         screenModelScope.launch {
             try {
-                deleteCookieUseCase(cookie)
+                deleteAccountUseCase(account)
                 _state.update {
-                    it.copy(cookies = it.cookies.filterNot { c -> c.value == cookie.value })
+                    it.copy(cookies = it.cookies.filterNot { c -> c.value == account.value })
                 }
             } catch (e: Exception) {
                 _effect.send(Effect.ShowError("删除饼干失败: ${e.message}"))
@@ -84,10 +84,10 @@ class UserViewModel(
         }
     }
 
-    private fun updateCookieOrder(newList: List<Cookie>) {
+    private fun updateCookieOrder(newList: List<Account>) {
         _state.update { it.copy(cookies = newList) }
         screenModelScope.launch {
-            updateCookieSortUseCase(newList)
+            updateAccountSortUseCase(newList)
         }
     }
 }

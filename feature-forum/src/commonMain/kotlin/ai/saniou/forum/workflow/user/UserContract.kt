@@ -1,6 +1,6 @@
 package ai.saniou.forum.workflow.user
 
-import ai.saniou.thread.domain.model.forum.Cookie
+import ai.saniou.thread.domain.model.forum.Account
 
 /**
  * 定义用户中心页面的状态、事件和副作用
@@ -14,7 +14,7 @@ interface UserContract {
      */
     data class State(
         val isLoading: Boolean = true,
-        val cookies: List<Cookie> = emptyList(),
+        val cookies: List<Account> = emptyList(),
         val error: String? = null,
     )
 
@@ -36,15 +36,15 @@ interface UserContract {
 
         /**
          * 删除一个饼干
-         * @param cookie 要删除的饼干
+         * @param account 要删除的饼干
          */
-        data class DeleteCookie(val cookie: Cookie) : Event
+        data class DeleteCookie(val account: Account) : Event
 
         /**
          * 更新饼干排序
-         * @param cookies 排序后的饼干列表
+         * @param accounts 排序后的饼干列表
          */
-        data class UpdateCookieOrder(val cookies: List<Cookie>) : Event
+        data class UpdateCookieOrder(val accounts: List<Account>) : Event
     }
 
     /**

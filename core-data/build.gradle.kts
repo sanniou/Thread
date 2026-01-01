@@ -7,6 +7,11 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.ktorfit)
     alias(libs.plugins.sqldelight)
+    alias(libs.plugins.wire)
+}
+
+wire {
+    kotlin {}
 }
 
 kotlin {
@@ -51,6 +56,7 @@ kotlin {
 
             implementation(libs.ksoup)
             implementation(libs.xmlutil.serialization)
+            api(libs.wire.runtime)
         }
         androidMain.dependencies {
             implementation(libs.sqldelight.android.driver)

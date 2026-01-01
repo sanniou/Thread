@@ -2,6 +2,7 @@ package ai.saniou.forum.workflow.user
 
 import ai.saniou.coreui.widgets.SaniouTopAppBar
 import ai.saniou.forum.di.nmbdi
+import ai.saniou.forum.workflow.login.TiebaLoginScreen
 import ai.saniou.forum.workflow.user.UserContract.Event
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Box
@@ -89,8 +90,15 @@ data class UserPage(
             },
             floatingActionButton = {
                 AnimatedVisibility(visible = isFabVisible) {
-                    FloatingActionButton(onClick = { showAddCookieDialog = true }) {
-                        Icon(Icons.Default.Add, contentDescription = "添加饼干")
+                    // Temporarily using different actions for debug/dev
+                    // Long term this should be a proper menu or check source type
+                    FloatingActionButton(onClick = {
+                        // If it's Tieba source, go to login screen
+                        // For now, let's just add a way to invoke login screen
+                        navigator.push(TiebaLoginScreen())
+                        // Original behavior: showAddCookieDialog = true
+                    }) {
+                        Icon(Icons.Default.Add, contentDescription = "登录/添加账号")
                     }
                 }
             }

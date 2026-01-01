@@ -1,8 +1,8 @@
 package ai.saniou.thread.data.repository
 
-import ai.saniou.thread.db.Database
-import ai.saniou.thread.db.table.Cookie
 import ai.saniou.thread.data.mapper.toDomain
+import ai.saniou.thread.db.Database
+import ai.saniou.thread.domain.model.forum.Account
 import ai.saniou.thread.domain.repository.UserRepository
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
@@ -10,46 +10,52 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
-import ai.saniou.thread.domain.model.forum.Cookie as DomainCookie
+import ai.saniou.thread.db.table.Account as TableAccount
 
 @OptIn(ExperimentalTime::class)
 class UserRepositoryImpl(
     private val db: Database,
 ) : UserRepository {
-    override suspend fun getCookiesList(): List<DomainCookie> {
-        return getSortedCookies().toDomain()
+    override suspend fun getAccountsList(): List<Account> {
+        return getSortedAccounts().toDomain()
     }
 
-    override suspend fun addCookie(name: String, value: String) {
+    override suspend fun addAccount(name: String, value: String) {
         val now = Clock.System.now().toEpochMilliseconds()
         val count =
-            db.cookieQueries.countCookies().asFlow().mapToList(Dispatchers.Default).first().size
-        db.cookieQueries.insertCookie(
-            cookie = value,
+            db.accountQueries.countAccounts().asFlow().mapToList(Dispatchers.Default).first().size
+        db.accountQueries.insertAccount(
+            id = value, // Use cookie string as ID for NMB compatibility
+            source_id = "nmb",
+            account = value,
+            uid = null,
             alias = name,
+            avatar = null,
+            extra_data = null,
             sort = count.toLong(),
+            is_current = 0L,
             createdAt = now,
             lastUsedAt = now
         )
     }
 
-    override suspend fun deleteCookie(cookie: DomainCookie) {
-        db.cookieQueries.deleteCookie(cookie.value)
+    override suspend fun deleteAccount(account: Account) {
+        db.accountQueries.deleteAccount(account.id)
     }
 
-    override suspend fun updateCookieSort(cookies: List<DomainCookie>) {
-        db.cookieQueries.transaction {
-            cookies.forEachIndexed { index, cookie ->
-                db.cookieQueries.updateCookieSort(index.toLong(), cookie.value)
+    override suspend fun updateAccountSort(accounts: List<Account>) {
+        db.accountQueries.transaction {
+            accounts.forEachIndexed { index, account ->
+                db.accountQueries.updateAccountSort(index.toLong(), account.id)
             }
         }
     }
 
-    private suspend fun getSortedCookies(): List<Cookie> {
-        return db.cookieQueries.getSortedCookies().asFlow().mapToList(Dispatchers.Default).first()
+    private suspend fun getSortedAccounts(): List<TableAccount> {
+        return db.accountQueries.getSortedAccounts().asFlow().mapToList(Dispatchers.Default).first()
     }
 
-    suspend fun getCookieValue(): String? {
-        return getSortedCookies().firstOrNull()?.cookie
+    suspend fun getAccountValue(): String? {
+        return getSortedAccounts().firstOrNull()?.account
     }
 }

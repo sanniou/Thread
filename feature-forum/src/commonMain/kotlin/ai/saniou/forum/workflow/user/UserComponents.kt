@@ -1,7 +1,7 @@
 package ai.saniou.forum.workflow.user
 
 import ai.saniou.corecommon.utils.toRelativeTimeString
-import ai.saniou.thread.domain.model.forum.Cookie
+import ai.saniou.thread.domain.model.forum.Account
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -54,9 +54,9 @@ import kotlin.time.ExperimentalTime
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun CookieListContent(
-    cookies: List<Cookie>,
-    onDelete: (Cookie) -> Unit,
-    onSortFinished: (List<Cookie>) -> Unit,
+    cookies: List<Account>,
+    onDelete: (Account) -> Unit,
+    onSortFinished: (List<Account>) -> Unit,
     listState: LazyListState,
     modifier: Modifier = Modifier,
 ) {
@@ -94,7 +94,7 @@ fun CookieListContent(
 
 @Composable
 fun CookieItem(
-    cookie: Cookie,
+    cookie: Account,
     onDelete: () -> Unit,
     isDragging: Boolean,
     modifier: Modifier = Modifier,

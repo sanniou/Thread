@@ -37,11 +37,16 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(libs.ktorfit.lib)
+            api(libs.ktorfit.converters.call)
+            api(libs.ktorfit.converters.flow)
+            api(libs.ktorfit.converters.response)
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.serialization.kotlinx.json)
             implementation(libs.ktor.client.logging)
             implementation(libs.ktor.client.encoding)
+            api(libs.wire.runtime)
+            implementation(project(":core-common"))
         }
         androidMain.dependencies {
             implementation(libs.ktor.client.okhttp)

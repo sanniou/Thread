@@ -34,7 +34,7 @@ actual class ImageSaverImpl(
         when (val result = sketch.execute(request)) {
             is DownloadResult.Success -> {
                 val values = ContentValues().apply {
-                    put(MediaStore.Images.Media.DISPLAY_NAME, "saniou_${System.currentTimeMillis()}.jpg")
+                    put(MediaStore.Images.Media.DISPLAY_NAME, "saniou_${Clock.System.now().toEpochMilliseconds()}.jpg")
                     put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                         put(MediaStore.Images.Media.IS_PENDING, 1)

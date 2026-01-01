@@ -17,7 +17,7 @@ junit = "4.13.2"
 kotlin = "2.2.21"
 kotlinx-coroutines = "1.10.2"
 kodeinDi = "7.30.0"
-ktorfit = "2.6.5"
+ktorfit = "2.7.1"
 kottage = "1.9.0"
 ktor = "3.3.2"
 navigationCompose = "2.8.0-alpha10"
@@ -39,6 +39,7 @@ reorderable = "3.0.0"
 kmpalette = "3.1.0"
 ksoup = "0.2.0"
 xmlutil = "0.91.3"
+wire = "5.4.0"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -75,6 +76,9 @@ ktor-client-curl = { module = "io.ktor:ktor-client-curl", version.ref = "ktor" }
 ktor-server-content-negotiation = { module = "io.ktor:ktor-server-content-negotiation", version.ref = "ktor" }
 ktorfit-lib = { module = "de.jensklingenberg.ktorfit:ktorfit-lib", version.ref = "ktorfit" }
 ktorfit-ksp = { module = "de.jensklingenberg.ktorfit:ktorfit-ksp", version.ref = "ktorfit" }
+ktorfit-converters-call = { module = "de.jensklingenberg.ktorfit:ktorfit-converters-call", version.ref = "ktorfit" }
+ktorfit-converters-flow = { module = "de.jensklingenberg.ktorfit:ktorfit-converters-flow", version.ref = "ktorfit" }
+ktorfit-converters-response = { module = "de.jensklingenberg.ktorfit:ktorfit-converters-response", version.ref = "ktorfit" }
 navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 paging-runtime = { module = "androidx.paging:paging-runtime", version.ref = "pagingRuntime" }
 paging-common = { module = "androidx.paging:paging-common", version.ref = "pagingRuntime" }
@@ -141,6 +145,7 @@ kmpalette-extensions-file = { module = "com.kmpalette:extensions-file", version.
 
 ksoup = { module = "com.fleeksoft.ksoup:ksoup", version.ref = "ksoup" }
 xmlutil-serialization = { module = "io.github.pdvrieze.xmlutil:serialization", version.ref = "xmlutil" }
+wire-runtime = { module = "com.squareup.wire:wire-runtime", version.ref = "wire" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
@@ -154,3 +159,4 @@ ktorfit = { id = "de.jensklingenberg.ktorfit", version.ref = "ktorfit" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 sqldelight = { id = "app.cash.sqldelight", version.ref = "sqlDelight" }
 room = { id = "androidx.room", version.ref = "room" }
+wire = { id = "com.squareup.wire", version.ref = "wire" }
