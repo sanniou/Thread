@@ -23,7 +23,7 @@ object TiebaApiConstants {
     const val FORCE_PARAM = "Force-Param"
     const val FORCE_PARAM_QUERY = "1"
     const val NO_COMMON_PARAMS = "No-Common-Params"
-    
+
     const val SIGN = "sign"
     const val CLIENT_VERSION = "client_version"
 }
@@ -41,8 +41,8 @@ val TiebaCommonHeaderPlugin = createClientPlugin("TiebaCommonHeaderPlugin", ::Ti
         headers.forEach { (key, valueProvider) ->
             if (!request.headers.contains(key)) {
                 val value = valueProvider()
-                if (!value.isNullOrEmpty()) {
-                    request.headers.append(key, value)
+                if (value != null) {
+                    request.headers[key] = value
                 }
             }
         }
@@ -60,7 +60,7 @@ val TiebaCommonParamPlugin = createClientPlugin("TiebaCommonParamPlugin", ::Tieb
         if (request.headers.contains(TiebaApiConstants.NO_COMMON_PARAMS)) {
             request.headers.remove(TiebaApiConstants.NO_COMMON_PARAMS)
         }
-        
+
         val forceQuery = request.headers[TiebaApiConstants.FORCE_PARAM] == TiebaApiConstants.FORCE_PARAM_QUERY
         if (request.headers.contains(TiebaApiConstants.FORCE_PARAM)) {
             request.headers.remove(TiebaApiConstants.FORCE_PARAM)
@@ -83,12 +83,12 @@ val TiebaCommonParamPlugin = createClientPlugin("TiebaCommonParamPlugin", ::Tieb
         if (content is FormDataContent) {
             val oldParams = content.formData
             val newParamsBuilder = ParametersBuilder()
-            
+
             // Copy old params
             oldParams.forEach { key, values ->
                 newParamsBuilder.appendAll(key, values)
             }
-            
+
             // Add new params
             params.forEach { (key, valueProvider) ->
                 if (!oldParams.contains(key) && !noCommonParams.contains(key)) {
@@ -98,47 +98,47 @@ val TiebaCommonParamPlugin = createClientPlugin("TiebaCommonParamPlugin", ::Tieb
                     }
                 }
             }
-            
+
             return@transformRequestBody FormDataContent(newParamsBuilder.build())
         }
 
         // Handle Multipart Body (simplified, assuming we can rebuild it)
         if (content is MultiPartFormDataContent) {
-             // Handling Multipart is complex because we need to read parts. 
-             // Ktor's MultiPartFormDataContent doesn't easily expose parts list for modification without reading stream.
-             // For now, we skip Multipart modification in this plugin or need a more complex approach.
-             // Given Tieba usage, FormUrlEncoded is most common for params.
-             // Retrofit implementation adds parts.
-             
-             // TODO: Implement Multipart support if needed.
+            // Handling Multipart is complex because we need to read parts.
+            // Ktor's MultiPartFormDataContent doesn't easily expose parts list for modification without reading stream.
+            // For now, we skip Multipart modification in this plugin or need a more complex approach.
+            // Given Tieba usage, FormUrlEncoded is most common for params.
+            // Retrofit implementation adds parts.
+
+            // TODO: Implement Multipart support if needed.
         }
-        
+
         // If body is empty/null but method is POST, we might want to create a form body?
         // But transformRequestBody receives the content. If content is null (EmptyContent), we can return a new one.
         // However, Ktor might not trigger transformRequestBody for EmptyContent in some versions or configurations.
         // Checking request.body directly in onRequest might be better for empty bodies.
-        
+
         null
     }
-    
+
     onRequest { request, content ->
-         // Handle empty body for POST to add common params as Form
-         if (request.method == HttpMethod.Post && request.bodyType == null && content is io.ktor.client.utils.EmptyContent) {
-             val noCommonParams = request.headers[TiebaApiConstants.NO_COMMON_PARAMS]?.split(",") ?: emptyList()
-             
-             val newParamsBuilder = ParametersBuilder()
-             params.forEach { (key, valueProvider) ->
-                 if (!noCommonParams.contains(key)) {
-                     val value = valueProvider()
-                     if (!value.isNullOrEmpty()) {
-                         newParamsBuilder.append(key, value)
-                     }
-                 }
-             }
-             if (!newParamsBuilder.isEmpty()) {
+        // Handle empty body for POST to add common params as Form
+        if (request.method == HttpMethod.Post && request.bodyType == null && content is io.ktor.client.utils.EmptyContent) {
+            val noCommonParams = request.headers[TiebaApiConstants.NO_COMMON_PARAMS]?.split(",") ?: emptyList()
+
+            val newParamsBuilder = ParametersBuilder()
+            params.forEach { (key, valueProvider) ->
+                if (!noCommonParams.contains(key)) {
+                    val value = valueProvider()
+                    if (!value.isNullOrEmpty()) {
+                        newParamsBuilder.append(key, value)
+                    }
+                }
+            }
+            if (!newParamsBuilder.isEmpty()) {
                 request.setBody(FormDataContent(newParamsBuilder.build()))
-             }
-         }
+            }
+        }
     }
 }
 
@@ -149,19 +149,19 @@ val TiebaSortAndSignPlugin = createClientPlugin("TiebaSortAndSignPlugin", ::Tieb
         // Sign logic
         // Case 1: Query contains BDUSS but no sign -> Sign Query
         if (request.url.parameters.contains("BDUSS") && !request.url.parameters.contains(TiebaApiConstants.SIGN)) {
-             val sortedQuery = request.url.parameters.entries()
-                 .flatMap { (k, v) -> v.map { k to it } }
-                 .sortedBy { it.first }
-                 .joinToString("") { "${it.first}=${it.second}" }
-             
-             // Note: Retrofit implementation uses decoded query for calculation? 
-             // "url.query!!.split('&')" suggests raw query.
-             // But here we construct from parameters.
-             // Let's follow the standard: name=value
-             
-             val sign = (sortedQuery + appSecret).toMD5()
-             request.url.parameters.append(TiebaApiConstants.SIGN, sign)
-             return@transformRequestBody null
+            val sortedQuery = request.url.parameters.entries()
+                .flatMap { (k, v) -> v.map { k to it } }
+                .sortedBy { it.first }
+                .joinToString("") { "${it.first}=${it.second}" }
+
+            // Note: Retrofit implementation uses decoded query for calculation?
+            // "url.query!!.split('&')" suggests raw query.
+            // But here we construct from parameters.
+            // Let's follow the standard: name=value
+
+            val sign = (sortedQuery + appSecret).toMD5()
+            request.url.parameters.append(TiebaApiConstants.SIGN, sign)
+            return@transformRequestBody null
         }
 
         // Case 2: Form Body
@@ -172,9 +172,9 @@ val TiebaSortAndSignPlugin = createClientPlugin("TiebaSortAndSignPlugin", ::Tieb
                     .flatMap { (k, v) -> v.map { k to it } }
                     .sortedBy { it.first }
                     .joinToString("") { "${it.first}=${it.second}" }
-                
+
                 val sign = (sortedRaw + appSecret).toMD5()
-                
+
                 val newParams = ParametersBuilder().apply {
                     appendAll(params)
                     append(TiebaApiConstants.SIGN, sign)
@@ -182,7 +182,7 @@ val TiebaSortAndSignPlugin = createClientPlugin("TiebaSortAndSignPlugin", ::Tieb
                 return@transformRequestBody FormDataContent(newParams.build())
             }
         }
-        
+
         null
     }
 }

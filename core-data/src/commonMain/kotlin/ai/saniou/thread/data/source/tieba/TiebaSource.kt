@@ -34,7 +34,8 @@ import kotlinx.coroutines.flow.map
 class TiebaSource(
     private val miniTiebaApi: MiniTiebaApi,
     private val officialTiebaApi: OfficialTiebaApi,
-    private val officialProtobufTiebaApi: OfficialProtobufTiebaApi,
+    private val officialProtobufTiebaApiV11: OfficialProtobufTiebaApi,
+    private val officialProtobufTiebaApiV12: OfficialProtobufTiebaApi,
     private val webTiebaApi: WebTiebaApi,
     private val database: Database,
     private val accountRepository: AccountRepository,
@@ -69,7 +70,7 @@ class TiebaSource(
             parameterProvider = tiebaParameterProvider
         )
 
-        val response = officialProtobufTiebaApi.forumRecommendFlow(body).first()
+        val response = officialProtobufTiebaApiV11.forumRecommendFlow(body).first()
 
         if (response.error?.error_code != 0) {
             throw Exception("Failed to fetch channels: ${response.error?.error_msg} (Code: ${response.error?.error_code})")
@@ -117,7 +118,7 @@ class TiebaSource(
             config = PagingConfig(pageSize = 20),
             pagingSourceFactory = {
                 TiebaTopicPagingSource(
-                    officialProtobufTiebaApi,
+                    officialProtobufTiebaApiV12, // Using V12 for Topics as default, or V11? Retrofit uses V12 for FrsPage
                     database,
                     channelId,
                     tiebaParameterProvider
@@ -150,7 +151,7 @@ class TiebaSource(
             parameterProvider = tiebaParameterProvider
         )
 
-        val response = officialProtobufTiebaApi.pbPageFlow(body).first()
+        val response = officialProtobufTiebaApiV12.pbPageFlow(body).first()
 
         if (response.error?.error_code != 0) {
              throw Exception("Failed to fetch topic detail: ${response.error?.error_msg} (Code: ${response.error?.error_code})")
@@ -164,16 +165,16 @@ class TiebaSource(
         isPoOnly: Boolean
     ): Flow<PagingData<Comment>> {
          return Pager(
-            config = PagingConfig(pageSize = 30),
-            pagingSourceFactory = {
-                TiebaCommentPagingSource(
-                    officialProtobufTiebaApi,
-                    threadId,
-                    isPoOnly,
-                    tiebaParameterProvider
-                )
-            }
-        ).flow
+             config = PagingConfig(pageSize = 30),
+             pagingSourceFactory = {
+                 TiebaCommentPagingSource(
+                     officialProtobufTiebaApiV12,
+                     threadId,
+                     isPoOnly,
+                     tiebaParameterProvider
+                 )
+             }
+         ).flow
     }
 
     override fun getChannel(channelId: String): Flow<Channel?> {

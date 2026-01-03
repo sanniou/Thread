@@ -159,7 +159,8 @@ val dataModule = DI.Module("dataModule") {
         TiebaSource(
             instance(), // MiniTiebaApi
             instance(), // OfficialTiebaApi
-            instance(), // OfficialProtobufTiebaApi
+            instance(tag = "V11"), // OfficialProtobufTiebaApi V11
+            instance(tag = "V12"), // OfficialProtobufTiebaApi V12
             instance(), // WebTiebaApi
             instance(), // Database
             instance(), // AccountRepository
@@ -482,9 +483,63 @@ val dataModule = DI.Module("dataModule") {
         ktorfit.createSofireApi()
     }
 
-    // Tieba API: OfficialProtobufTiebaApi
-    bindSingleton<ai.saniou.thread.data.source.tieba.remote.OfficialProtobufTiebaApi> {
+    // Tieba API: OfficialProtobufTiebaApi (V11)
+    bindSingleton<ai.saniou.thread.data.source.tieba.remote.OfficialProtobufTiebaApi>(tag = "V11") {
         val paramProvider = instance<ai.saniou.thread.data.source.tieba.TiebaParameterProvider>()
+        val version = ai.saniou.thread.data.source.tieba.remote.ClientVersion.TIEBA_V11
+
+        val ktorfit = SaniouKtorfit(
+            baseUrl = "https://tiebac.baidu.com/"
+        ) {
+            install(ai.saniou.thread.network.tieba.TiebaCommonHeaderPlugin) {
+                headers = mapOf(
+                    "Charset" to { "UTF-8" },
+                    "client_type" to { "2" },
+                    "client_user_token" to { paramProvider.getUid() },
+                    "cookie" to {
+                        "CUID=${paramProvider.getCuid()};ka=open;TBBRAND=${paramProvider.getBrand()};"
+                    },
+                    "cuid" to { paramProvider.getCuid() },
+                    "cuid_galaxy2" to { paramProvider.getCuid() },
+                    "cuid_gid" to { "" },
+                    "Accept" to { "" },
+                    "Accept-Charset" to { "" },
+                    "c3_aid" to { paramProvider.getAndroidId() },
+                    "User-Agent" to { "bdtb for Android ${version.version}" },
+                    "x_bd_data_type" to { "protobuf" }
+                )
+            }
+            install(ai.saniou.thread.network.tieba.TiebaCommonParamPlugin) {
+                params = mapOf(
+                    "BDUSS" to { paramProvider.getBduss() },
+                    "_client_id" to { paramProvider.getClientId() },
+                    "_client_type" to { "2" },
+                    "_client_version" to { version.version },
+                    "_phone_imei" to { "000000000000000" },
+                    "from" to { "tieba" },
+                    "model" to { paramProvider.getModel() },
+                    "net_type" to { "1" },
+                    "oaid" to { paramProvider.getOaid() },
+                    "stoken" to { paramProvider.getSToken() },
+                    "timestamp" to { paramProvider.getTimestamp() },
+                    "c3_aid" to { paramProvider.getAndroidId() },
+                    "cuid" to { paramProvider.getCuid() },
+                    "cuid_galaxy2" to { paramProvider.getCuid() },
+                    "cuid_gid" to { "" },
+                )
+            }
+            install(ai.saniou.thread.network.tieba.TiebaSortAndSignPlugin) {
+                appSecret = "tiebaclient!!!"
+            }
+        }
+        ktorfit.createOfficialProtobufTiebaApi()
+    }
+
+    // Tieba API: OfficialProtobufTiebaApi (V12)
+    bindSingleton<ai.saniou.thread.data.source.tieba.remote.OfficialProtobufTiebaApi>(tag = "V12") {
+        val paramProvider = instance<ai.saniou.thread.data.source.tieba.TiebaParameterProvider>()
+        val version = ai.saniou.thread.data.source.tieba.remote.ClientVersion.TIEBA_V12
+
         val ktorfit = SaniouKtorfit(
             baseUrl = "https://tiebac.baidu.com/"
         ) {
@@ -494,27 +549,27 @@ val dataModule = DI.Module("dataModule") {
                     "client_type" to { "2" },
                     "client_user_token" to { paramProvider.getUid() },
                     "Cookie" to {
-                        "CUID=${paramProvider.getCuid()};ka=open;TBBRAND=${paramProvider.getBrand()};"
+                        "ka=open;CUID=${paramProvider.getCuid()};TBBRAND=${paramProvider.getBrand()};"
                     },
                     "cuid" to { paramProvider.getCuid() },
                     "cuid_galaxy2" to { paramProvider.getCuid() },
                     "cuid_gid" to { "" },
                     "c3_aid" to { paramProvider.getAndroidId() },
-                    "User-Agent" to { "bdtb for Android 11.10.8.6" },
+                    "User-Agent" to { "tieba/${version.version}" },
                     "x_bd_data_type" to { "protobuf" }
                 )
             }
+            // V12 usually relies on protobuf content, but plugin is here for query/form fallback
             install(ai.saniou.thread.network.tieba.TiebaCommonParamPlugin) {
                 params = mapOf(
                     "BDUSS" to { paramProvider.getBduss() },
-                    "_client_id" to { "wappc_1687508826727_436" },
+                    "_client_id" to { paramProvider.getClientId() },
                     "_client_type" to { "2" },
-                    "_client_version" to { "11.10.8.6" },
+                    "_client_version" to { version.version },
                     "_phone_imei" to { "000000000000000" },
                     "from" to { "tieba" },
                     "model" to { paramProvider.getModel() },
                     "net_type" to { "1" },
-                    "oaid" to { "" }, // Placeholder
                     "stoken" to { paramProvider.getSToken() },
                     "timestamp" to { paramProvider.getTimestamp() },
                     "c3_aid" to { paramProvider.getAndroidId() },
