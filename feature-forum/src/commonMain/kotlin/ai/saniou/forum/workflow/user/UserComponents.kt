@@ -1,6 +1,8 @@
 package ai.saniou.forum.workflow.user
 
 import ai.saniou.corecommon.utils.toRelativeTimeString
+import ai.saniou.coreui.composition.LocalForumSourceId
+import ai.saniou.thread.data.source.tieba.TiebaMapper
 import ai.saniou.thread.domain.model.forum.Account
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.clickable
@@ -202,18 +204,22 @@ fun AddCookieDialog(
 
 @Composable
 fun UserGuideCard(onOpenUri: () -> Unit, modifier: Modifier = Modifier) {
-    Card(modifier = modifier.fillMaxWidth()) {
-        ListItem(
-            modifier = Modifier.clickable(onClick = onOpenUri),
-            headlineContent = { Text("如何获取饼干？") },
-            supportingContent = { Text("在网页端登录后，请访问指定页面获取。") },
-            leadingContent = {
-                Icon(
-                    imageVector = Icons.Default.Info,
-                    contentDescription = "信息"
-                )
-            }
-        )
+    val sourceId = LocalForumSourceId.current
+
+    if (sourceId != TiebaMapper.SOURCE_ID) {
+        Card(modifier = modifier.fillMaxWidth()) {
+            ListItem(
+                modifier = Modifier.clickable(onClick = onOpenUri),
+                headlineContent = { Text("如何获取饼干？") },
+                supportingContent = { Text("在网页端登录后，请访问指定页面获取。") },
+                leadingContent = {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = "信息"
+                    )
+                }
+            )
+        }
     }
 }
 

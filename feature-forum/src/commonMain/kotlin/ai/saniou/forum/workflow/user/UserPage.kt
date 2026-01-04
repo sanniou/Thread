@@ -1,9 +1,11 @@
 package ai.saniou.forum.workflow.user
 
 import ai.saniou.coreui.widgets.SaniouTopAppBar
+import ai.saniou.coreui.composition.LocalForumSourceId
 import ai.saniou.forum.di.nmbdi
 import ai.saniou.forum.workflow.login.TiebaLoginScreen
 import ai.saniou.forum.workflow.user.UserContract.Event
+import ai.saniou.thread.data.source.tieba.TiebaMapper
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -58,6 +60,7 @@ data class UserPage(
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
+        val sourceId = LocalForumSourceId.current
         val userViewModel: UserViewModel = rememberScreenModel()
         val state by userViewModel.state.collectAsStateWithLifecycle()
         var showAddCookieDialog by remember { mutableStateOf(false) }
@@ -93,10 +96,11 @@ data class UserPage(
                     // Temporarily using different actions for debug/dev
                     // Long term this should be a proper menu or check source type
                     FloatingActionButton(onClick = {
-                        // If it's Tieba source, go to login screen
-                        // For now, let's just add a way to invoke login screen
-                        navigator.push(TiebaLoginScreen())
-                        // Original behavior: showAddCookieDialog = true
+                        if (sourceId == TiebaMapper.SOURCE_ID) {
+                            navigator.push(TiebaLoginScreen())
+                        } else {
+                            showAddCookieDialog = true
+                        }
                     }) {
                         Icon(Icons.Default.Add, contentDescription = "登录/添加账号")
                     }

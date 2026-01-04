@@ -44,6 +44,7 @@ import ai.saniou.thread.domain.usecase.reader.GetArticlesUseCase
 import ai.saniou.thread.domain.usecase.reader.DeleteFeedSourceUseCase
 import ai.saniou.thread.domain.usecase.reader.*
 import ai.saniou.thread.domain.usecase.thread.GetTopicMetadataUseCase
+import ai.saniou.thread.domain.usecase.user.LoginTiebaUseCase
 import ai.saniou.thread.domain.usecase.user.UpdateAccountSortUseCase
 import org.kodein.di.DI
 import org.kodein.di.bindProvider
@@ -110,6 +111,7 @@ val domainModule = DI.Module("domainModule") {
     bindProvider { AddAccountUseCase(instance()) }
     bindProvider { DeleteAccountUseCase(instance()) }
     bindProvider { UpdateAccountSortUseCase(instance()) }
+    bindProvider { LoginTiebaUseCase(instance()) }
 
     // Notice
     bindProvider { GetNoticeUseCase(instance()) }
