@@ -13,7 +13,8 @@ fun EntityChannel.toDomain(channelQueries: ChannelQueries): Channel {
         description = description,
         descriptionText = descriptionText,
         groupId = fGroup,
-        groupName = channelQueries.getChannelCategory(sourceId, fGroup).executeAsOne().name,
+        groupName = channelQueries.getChannelCategory(sourceId, fGroup).executeAsOneOrNull()?.name
+            ?: fGroup,
         sourceName = sourceId,
         sort = sort,
         tag = null, // Not in DB
