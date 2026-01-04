@@ -494,42 +494,16 @@ val dataModule = DI.Module("dataModule") {
             install(ai.saniou.thread.network.tieba.TiebaCommonHeaderPlugin) {
                 headers = mapOf(
                     "Charset" to { "UTF-8" },
-                    "client_type" to { "2" },
-                    "client_user_token" to { paramProvider.getUid() },
                     "cookie" to {
                         "CUID=${paramProvider.getCuid()};ka=open;TBBRAND=${paramProvider.getBrand()};"
                     },
                     "cuid" to { paramProvider.getCuid() },
                     "cuid_galaxy2" to { paramProvider.getCuid() },
                     "cuid_gid" to { "" },
-                    "Accept" to { "" },
-                    "Accept-Charset" to { "" },
                     "c3_aid" to { paramProvider.getAndroidId() },
                     "User-Agent" to { "bdtb for Android ${version.version}" },
                     "x_bd_data_type" to { "protobuf" }
                 )
-            }
-            install(ai.saniou.thread.network.tieba.TiebaCommonParamPlugin) {
-                params = mapOf(
-                    "BDUSS" to { paramProvider.getBduss() },
-                    "_client_id" to { paramProvider.getClientId() },
-                    "_client_type" to { "2" },
-                    "_client_version" to { version.version },
-                    "_phone_imei" to { "000000000000000" },
-                    "from" to { "tieba" },
-                    "model" to { paramProvider.getModel() },
-                    "net_type" to { "1" },
-                    "oaid" to { paramProvider.getOaid() },
-                    "stoken" to { paramProvider.getSToken() },
-                    "timestamp" to { paramProvider.getTimestamp() },
-                    "c3_aid" to { paramProvider.getAndroidId() },
-                    "cuid" to { paramProvider.getCuid() },
-                    "cuid_galaxy2" to { paramProvider.getCuid() },
-                    "cuid_gid" to { "" },
-                )
-            }
-            install(ai.saniou.thread.network.tieba.TiebaSortAndSignPlugin) {
-                appSecret = "tiebaclient!!!"
             }
         }
         ktorfit.createOfficialProtobufTiebaApi()
@@ -546,8 +520,6 @@ val dataModule = DI.Module("dataModule") {
             install(ai.saniou.thread.network.tieba.TiebaCommonHeaderPlugin) {
                 headers = mapOf(
                     "Charset" to { "UTF-8" },
-                    "client_type" to { "2" },
-                    "client_user_token" to { paramProvider.getUid() },
                     "Cookie" to {
                         "ka=open;CUID=${paramProvider.getCuid()};TBBRAND=${paramProvider.getBrand()};"
                     },
@@ -558,28 +530,6 @@ val dataModule = DI.Module("dataModule") {
                     "User-Agent" to { "tieba/${version.version}" },
                     "x_bd_data_type" to { "protobuf" }
                 )
-            }
-            // V12 usually relies on protobuf content, but plugin is here for query/form fallback
-            install(ai.saniou.thread.network.tieba.TiebaCommonParamPlugin) {
-                params = mapOf(
-                    "BDUSS" to { paramProvider.getBduss() },
-                    "_client_id" to { paramProvider.getClientId() },
-                    "_client_type" to { "2" },
-                    "_client_version" to { version.version },
-                    "_phone_imei" to { "000000000000000" },
-                    "from" to { "tieba" },
-                    "model" to { paramProvider.getModel() },
-                    "net_type" to { "1" },
-                    "stoken" to { paramProvider.getSToken() },
-                    "timestamp" to { paramProvider.getTimestamp() },
-                    "c3_aid" to { paramProvider.getAndroidId() },
-                    "cuid" to { paramProvider.getCuid() },
-                    "cuid_galaxy2" to { paramProvider.getCuid() },
-                    "cuid_gid" to { "" },
-                )
-            }
-            install(ai.saniou.thread.network.tieba.TiebaSortAndSignPlugin) {
-                appSecret = "tiebaclient!!!"
             }
         }
         ktorfit.createOfficialProtobufTiebaApi()

@@ -8,9 +8,10 @@ import com.huanchengfly.tieba.post.api.models.protos.CommonRequest
 import com.huanchengfly.tieba.post.api.models.protos.frsPage.AdParam
 import com.squareup.wire.Message
 import io.ktor.client.request.forms.MultiPartFormDataContent
-import io.ktor.client.request.forms.formData
 import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
+import io.ktor.http.content.PartData
+import io.ktor.utils.io.ByteReadChannel
 import kotlin.time.Clock
 
 object TiebaProtoBuilder {
@@ -33,15 +34,9 @@ object TiebaProtoBuilder {
         params.add("_client_id" to parameterProvider.getClientId())
         params.add("_client_type" to "2")
         params.add("_client_version" to clientVersion.version)
-        params.add("_phone_imei" to "000000000000000") // TODO: Get IMEI
+        params.add("_phone_imei" to "000000000000000")
 
-        // Specific params per version logic
-        if (clientVersion == ClientVersion.TIEBA_V11) {
-             params.add("c3_aid" to parameterProvider.getAndroidId())
-        } else {
-             // V12 logic
-             params.add("c3_aid" to parameterProvider.getAndroidId())
-        }
+        params.add("c3_aid" to parameterProvider.getAndroidId())
 
         params.add("cuid" to parameterProvider.getCuid())
         params.add("cuid_galaxy2" to parameterProvider.getCuid())
@@ -58,28 +53,28 @@ object TiebaProtoBuilder {
 
         params.add("timestamp" to parameterProvider.getTimestamp())
 
-        // Note: StParams are NOT added for Multipart Requests in Retrofit implementation (only for FormBody/Query).
-        // Removing StParamUtils call to match success request.
-
         // Calculate sign
         val sortedString = params.sortedBy { it.first }.joinToString("") { "${it.first}=${it.second}" }
         val sign = (sortedString + "tiebaclient!!!").toMD5()
         params.add("sign" to sign)
 
-        return MultiPartFormDataContent(
-            formData {
-                params.forEach { (key, value) ->
-                    append(key, value)
+        val parts = params.map { (key, value) ->
+            PartData.FormItem(
+                value = value,
+                dispose = {},
+                partHeaders = Headers.build {
+                    append(HttpHeaders.ContentDisposition, "form-data; name=\"$key\"")
                 }
-
-                // Add the protobuf data as a file part named "data"
-                val encodedData = data.encode()
-                append("data", encodedData, Headers.build {
-                    append(HttpHeaders.ContentDisposition, "form-data; name=\"data\"; filename=\"file\"")
-                })
-            },
-            boundary = BOUNDARY
+            )
+        } + PartData.FileItem(
+            provider = { ByteReadChannel(data.encode()) },
+            dispose = {},
+            partHeaders = Headers.build {
+                append(HttpHeaders.ContentDisposition, "form-data; name=\"data\"; filename=\"file\"")
+            }
         )
+
+        return MultiPartFormDataContent(parts, boundary = BOUNDARY)
     }
 
     fun buildAdParam(
