@@ -1,10 +1,11 @@
 package ai.saniou.thread.data.mapper
 
 import ai.saniou.thread.data.source.discourse.remote.dto.DiscourseCategory
+import ai.saniou.thread.db.table.forum.ChannelQueries
 import ai.saniou.thread.domain.model.forum.Channel
 import ai.saniou.thread.db.table.forum.Channel as EntityChannel
 
-fun EntityChannel.toDomain(): Channel {
+fun EntityChannel.toDomain(channelQueries: ChannelQueries): Channel {
     return Channel(
         id = id,
         name = name,
@@ -12,7 +13,7 @@ fun EntityChannel.toDomain(): Channel {
         description = description,
         descriptionText = descriptionText,
         groupId = fGroup,
-        groupName = "", // Database doesn't store group name directly in Channel table
+        groupName = channelQueries.getChannelCategory(sourceId, fGroup).executeAsOne().name,
         sourceName = sourceId,
         sort = sort,
         tag = null, // Not in DB

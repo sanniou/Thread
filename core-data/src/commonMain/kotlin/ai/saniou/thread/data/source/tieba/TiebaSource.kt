@@ -96,6 +96,49 @@ class TiebaSource(
         }
     }
 
+    override suspend fun getChannelTopics(
+        channelId: String,
+        page: Int,
+        isTimeline: Boolean
+    ): Result<List<Topic>> = runCatching {
+        val channel = database.channelQueries.getChannel(TiebaMapper.SOURCE_ID, channelId)
+            .executeAsOneOrNull()
+
+        val forumName = channel?.name ?: channelId
+
+        val request = FrsPageRequest(
+            FrsPageRequestData(
+                common = TiebaProtoBuilder.buildCommonRequest(tiebaParameterProvider, ClientVersion.TIEBA_V12),
+                kw = forumName,
+                pn = page,
+                rn = 30,
+                sort_type = 0,
+                scr_dip = 3.0,
+                scr_h = 1920,
+                scr_w = 1080,
+                load_type = 0,
+                q_type = 2,
+                app_pos = TiebaProtoBuilder.buildAppPosInfo(),
+                ad_param = TiebaProtoBuilder.buildAdParam()
+            )
+        )
+
+        val body = TiebaProtoBuilder.buildProtobufFormBody(
+            data = request,
+            clientVersion = ClientVersion.TIEBA_V12,
+            parameterProvider = tiebaParameterProvider
+        )
+
+        val response = officialProtobufTiebaApiV12.frsPageFlow(body, forumName).first()
+
+        if (response.error?.error_code != 0) {
+            throw Exception("Tieba Error: ${response.error?.error_msg} (Code: ${response.error?.error_code})")
+        }
+
+        TiebaMapper.mapFrsPageResponseToTopics(response, forumName, forumName)
+    }
+
+    @Deprecated("Use getChannelTopics instead")
     override fun getTopicsPager(
         channelId: String,
         isTimeline: Boolean,

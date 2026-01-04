@@ -50,11 +50,22 @@ interface Source {
     /**
      * 获取板块帖子分页数据
      */
+    @Deprecated("Use getChannelTopics instead")
     fun getTopicsPager(
         channelId: String,
         isTimeline: Boolean,
         initialPage: Int = 1,
     ): Flow<PagingData<Topic>>
+
+    /**
+     * 获取板块下的帖子列表（分页）
+     * 替代 getTopicsPager，配合 RemoteMediator 使用
+     */
+    suspend fun getChannelTopics(
+        channelId: String,
+        page: Int,
+        isTimeline: Boolean
+    ): Result<List<Topic>> = Result.failure(NotImplementedError("Not implemented"))
 
     suspend fun getTopicDetail(threadId: String, page: Int): Result<Topic>
 

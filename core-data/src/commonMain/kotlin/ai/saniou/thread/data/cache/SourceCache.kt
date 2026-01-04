@@ -41,7 +41,7 @@ interface SourceCache {
     /**
      * 批量保存帖子
      */
-    suspend fun saveTopics(topics: List<Topic>)
+    fun saveTopics(topics: List<Topic>)
 
     /**
      * 保存回复列表

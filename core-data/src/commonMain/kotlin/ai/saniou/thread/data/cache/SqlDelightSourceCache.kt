@@ -110,12 +110,10 @@ class SqlDelightSourceCache(
         }
     }
 
-    override suspend fun saveTopics(topics: List<Topic>) {
-        withContext(Dispatchers.IO) {
-            topicQueries.transaction {
-                topics.forEach { topic ->
-                    topicQueries.upsertTopic(topic)
-                }
+    override fun saveTopics(topics: List<Topic>) {
+        topicQueries.transaction {
+            topics.forEach { topic ->
+                topicQueries.upsertTopic(topic)
             }
         }
     }

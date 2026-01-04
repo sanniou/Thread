@@ -22,7 +22,7 @@ class FavoriteRepositoryImpl(
         return db.favoriteChannelQueries.getAllFavoriteChannel(sourceId)
             .asFlow()
             .mapToList(Dispatchers.IO)
-            .map { forums -> forums.map { it.toDomain() } }
+            .map { forums -> forums.map { it.toDomain(db.channelQueries) } }
     }
 
     @OptIn(ExperimentalTime::class)

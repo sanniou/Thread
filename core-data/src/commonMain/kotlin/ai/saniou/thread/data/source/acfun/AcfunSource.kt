@@ -86,7 +86,15 @@ class AcfunSource(
         return Result.success(Unit)
     }
 
+    override suspend fun getChannelTopics(
+        channelId: String,
+        page: Int,
+        isTimeline: Boolean
+    ): Result<List<Topic>> {
+        return Result.success(emptyList()) // Stub
+    }
 
+    @Deprecated("Use getChannelTopics instead")
     override fun getTopicsPager(
         channelId: String,
         isTimeline: Boolean,

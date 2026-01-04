@@ -85,7 +85,7 @@ class NmbSource(
         ) { channelFromDb, timelines, categoriesList ->
             val categories = categoriesList.associateBy { it.id }
             val channels = channelFromDb.map { channel ->
-                channel.toDomain().copy(
+                channel.toDomain(db.channelQueries).copy(
                     groupName = categories[channel.fGroup]?.name ?: "未知分类"
                 )
             }
@@ -155,6 +155,35 @@ class NmbSource(
         return Result.success(Unit)
     }
 
+    override suspend fun getChannelTopics(
+        channelId: String,
+        page: Int,
+        isTimeline: Boolean
+    ): Result<List<Topic>> {
+        val fid = channelId.toLongOrNull()
+            ?: return Result.failure(IllegalArgumentException("Invalid NMB channel ID"))
+
+        return try {
+            val response = if (isTimeline) {
+                nmbXdApi.timeline(fid, page.toLong())
+            } else {
+                nmbXdApi.showf(fid, page.toLong())
+            }
+
+            if (response is SaniouResult.Success) {
+                val topics = response.data.map {
+                    it.toDomain()
+                }
+                Result.success(topics)
+            } else {
+                Result.failure((response as SaniouResult.Error).ex)
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    @Deprecated("Use getChannelTopics instead")
     override fun getTopicsPager(
         channelId: String,
         isTimeline: Boolean,
@@ -258,7 +287,7 @@ class NmbSource(
         return db.channelQueries.getChannel(id = channelId, sourceId = id)
             .asFlow()
             .mapToOneOrNull(Dispatchers.Default)
-            .map { it?.toDomain() }
+            .map { it?.toDomain(db.channelQueries) }
     }
 
     fun getTimelinePager(

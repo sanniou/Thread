@@ -11,7 +11,6 @@ import ai.saniou.thread.data.source.discourse.remote.DiscourseApi
 import ai.saniou.thread.data.source.discourse.remote.dto.DiscourseTopic
 import ai.saniou.thread.data.source.discourse.remote.dto.DiscourseUser
 import ai.saniou.thread.data.source.nmb.remote.dto.RemoteKeyType
-import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.domain.model.forum.Author
 import ai.saniou.thread.domain.repository.SettingsRepository
@@ -49,7 +48,7 @@ class DiscourseSource(
     override fun observeChannels(): Flow<List<Channel>> {
         return cache.observeChannels(id).map { forums ->
             if (forums.isNotEmpty()) {
-                buildChannelTree(forums.map { it.toDomain() })
+                buildChannelTree(forums.map { it.toDomain(db.channelQueries) })
             } else {
                 emptyList()
             }
@@ -125,7 +124,42 @@ class DiscourseSource(
         }.sortedBy { it.sort }
     }
 
+    override suspend fun getChannelTopics(
+        channelId: String,
+        page: Int,
+        isTimeline: Boolean
+    ): Result<List<Topic>> {
+        // Discourse API mapping
+        // Assuming channelId is Category ID? Or 'latest' endpoint?
+        // DiscourseRemoteMediator logic:
+        // if (fid == "0" || fid == "latest") -> getLatestPosts
+        // else -> getCategoryTopics
+
+        return try {
+            val result = if (channelId == "0" || channelId == "latest") {
+                api.getLatestTopics(page)
+            } else {
+                api.getCategoryTopics(channelId, page)
+            }
+
+            when (result) {
+                is SaniouResult.Success -> {
+                    // Similar logic to DiscourseRemoteMediator
+                    val usersMap = result.data.users?.associateBy { it.id } ?: emptyMap()
+                    val topics = result.data.topicList.topics.map { topic ->
+                        topic.toPost(usersMap)
+                    }
+                    Result.success(topics)
+                }
+                is SaniouResult.Error -> Result.failure(result.ex)
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     @OptIn(ExperimentalPagingApi::class)
+    @Deprecated("Use getChannelTopics instead")
     override fun getTopicsPager(
         channelId: String,
         isTimeline: Boolean,

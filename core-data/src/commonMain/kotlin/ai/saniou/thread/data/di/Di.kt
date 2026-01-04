@@ -226,7 +226,8 @@ val dataModule = DI.Module("dataModule") {
     bind<ChannelRepository>() with singleton {
         ChannelRepositoryImpl(
             instance(),
-            instance(tag = "allSources")
+            instance(tag = "allSources"),
+            instance()
         )
     }
 
