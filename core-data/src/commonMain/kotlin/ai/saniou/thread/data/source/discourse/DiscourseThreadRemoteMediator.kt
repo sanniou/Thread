@@ -35,7 +35,6 @@ class DiscourseThreadRemoteMediator(
             db = db,
             type = RemoteKeyType.THREAD,
             id = topicId,
-            itemIdExtractor = { it.id }
         ),
         fetcher = { page -> fetcher(page) },
         saver = { topic, page, _ ->

@@ -133,6 +133,54 @@ class AcfunSource(
         }
     }
 
+    override suspend fun getTopicComments(
+        threadId: String,
+        page: Int,
+        isPoOnly: Boolean
+    ): Result<List<Comment>> {
+         val pcursor = if(page == 1) "0" else return Result.success(emptyList()) // AcFun uses cursor, simplistic page mapping
+         // This is tricky because AcFun uses cursor-based paging, not page-based.
+         // Standard RemoteMediator for page-based sources won't work well here without adaptation.
+         // However, GenericRemoteMediator is page-based (Int Key).
+         // If we force page 1 only for now or map page->cursor if possible.
+         // AcFun API provided here takes 'pcursor'.
+         
+         val sourceId = threadId.toLongOrNull()
+             ?: return Result.failure(IllegalArgumentException("Invalid threadId"))
+
+         return when (val response = acfunApi.getCommentList(
+            sourceId,
+            1,
+            pcursor,
+            20,
+            if (pcursor == "0") 1 else 0
+        )) {
+            is SaniouResult.Success -> {
+                val list = response.data.rootComments ?: emptyList()
+                 val replies = list.map { comment ->
+                    Comment(
+                        id = comment.commentId.toString(),
+                        content = comment.content ?: "",
+                        author = Author(
+                            id = comment.user?.id?.toString() ?: "",
+                            name = comment.user?.name ?: "Unknown",
+                            avatar = comment.user?.headUrl
+                        ),
+                        createdAt = Instant.fromEpochMilliseconds(
+                            comment.timestamp ?: 0
+                        ),
+                        images = emptyList(),
+                        isAdmin = false,
+                        title = "No.${comment.floor}",
+                        topicId = threadId,
+                    )
+                }
+                Result.success(replies)
+            }
+             is SaniouResult.Error -> Result.failure(response.ex)
+        }
+    }
+
     override fun getTopicCommentsPager(
         threadId: String,
         initialPage: Int,

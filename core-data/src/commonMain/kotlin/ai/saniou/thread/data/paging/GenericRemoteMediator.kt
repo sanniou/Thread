@@ -44,12 +44,12 @@ class GenericRemoteMediator<Key : Any, Value : Any, ResponseType : Any>(
     private val keyIncrementer: (Key) -> Key,
     private val keyDecrementer: (Key) -> Key,
     private val keyToLong: (Key) -> Long,
-    private val longToKey: (Long) -> Key
+    private val longToKey: (Long) -> Key,
 ) : RemoteMediator<Key, Value>() {
 
     override suspend fun load(
         loadType: LoadType,
-        state: PagingState<Key, Value>
+        state: PagingState<Key, Value>,
     ): RemoteMediatorMediatorResult {
         val key: Key = when (loadType) {
             LoadType.REFRESH -> {
@@ -100,6 +100,7 @@ class GenericRemoteMediator<Key : Any, Value : Any, ResponseType : Any>(
 
                 RemoteMediatorMediatorResultSuccess(endOfPaginationReached = endOfPagination)
             }
+
             is SaniouResult.Error -> {
                 RemoteMediatorMediatorResultError(result.ex)
             }

@@ -120,12 +120,10 @@ class SqlDelightSourceCache(
         }
     }
 
-    override suspend fun saveComments(comments: List<Comment>) {
-        withContext(Dispatchers.IO) {
-            commentQueries.transaction {
-                comments.forEach { reply ->
-                    commentQueries.upsertComment(reply)
-                }
+    override fun saveComments(comments: List<Comment>) {
+        commentQueries.transaction {
+            comments.forEach { reply ->
+                commentQueries.upsertComment(reply)
             }
         }
     }

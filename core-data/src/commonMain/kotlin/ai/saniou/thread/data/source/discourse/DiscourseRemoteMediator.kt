@@ -39,7 +39,6 @@ class DiscourseRemoteMediator(
                 db = db,
                 type = RemoteKeyType.FORUM,
                 id = fid,
-                itemIdExtractor = { it.channelId }
             ),
             fetcher = { page ->
                 if (fid == "latest") {

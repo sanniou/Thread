@@ -37,7 +37,6 @@ class ForumRemoteMediator(
             db = db,
             type = RemoteKeyType.FORUM,
             id = fid,
-            itemIdExtractor = { it.channelId }
         ),
         fetcher = { page -> fetcher(page) },
         saver = { forums, page, loadType ->

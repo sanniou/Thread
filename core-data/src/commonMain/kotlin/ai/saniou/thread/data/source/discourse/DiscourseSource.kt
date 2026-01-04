@@ -151,6 +151,37 @@ class DiscourseSource(
         }
     }
 
+    override suspend fun getTopicComments(
+        threadId: String,
+        page: Int,
+        isPoOnly: Boolean
+    ): Result<List<Comment>> {
+        if (isPoOnly) {
+             // Discourse API doesn't support PO only easily in this endpoint?
+             // Or we need to filter locally but that breaks pagination consistency if we rely on API pagination.
+             // For now, return failure or ignore flag.
+             // Ideally: NotImplementedError or ignore.
+        }
+        return when (val result = api.getTopic(threadId, page)) {
+            is SaniouResult.Success -> {
+                try {
+                    val response = result.data
+                    val comments = response.postStream.posts.map { discoursePost ->
+                         discoursePost.toComment(
+                            sourceId = id,
+                            threadId = response.id.toString(),
+                            page = page
+                        )
+                    }
+                    Result.success(comments)
+                } catch (e: Exception) {
+                    Result.failure(e)
+                }
+            }
+             is SaniouResult.Error -> Result.failure(result.ex)
+        } as Result<List<Comment>>
+    }
+
     override suspend fun getTopicDetail(threadId: String, page: Int): Result<Topic> {
         return when (val result = api.getTopic(threadId, page)) {
             is SaniouResult.Success -> {

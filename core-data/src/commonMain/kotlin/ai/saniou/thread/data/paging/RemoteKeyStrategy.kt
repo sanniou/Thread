@@ -45,40 +45,25 @@ interface RemoteKeyStrategy<Key : Any, Value : Any> {
  * @param db 数据库实例
  * @param type RemoteKey 类型 (例如 THREAD, FORUM)
  * @param id 关联的 ID (例如 threadId, forumId)
- * @param itemIdExtractor 从列表项中提取 ID 的函数，用于查询 RemoteKey
  */
 class DefaultRemoteKeyStrategy<Value : Any>(
     private val db: Database,
     private val type: RemoteKeyType,
-    private val id: String,
-    private val itemIdExtractor: (Value) -> String
+    private val id: String
 ) : RemoteKeyStrategy<Int, Value> {
 
     private val remoteKeyQueries = db.remoteKeyQueries
 
     override suspend fun getKeyForFirstItem(state: PagingState<Int, Value>): RemoteKeys? {
-        return state.pages.firstOrNull { it.data.isNotEmpty() }?.data?.firstOrNull()
-            ?.let { item ->
-                remoteKeyQueries.getRemoteKeyById(type, itemIdExtractor(item))
-                    .executeAsOneOrNull()
-            }
+        return remoteKeyQueries.getRemoteKeyById(type, id).executeAsOneOrNull()
     }
 
     override suspend fun getKeyForLastItem(state: PagingState<Int, Value>): RemoteKeys? {
-        return state.pages.lastOrNull { it.data.isNotEmpty() }?.data?.lastOrNull()
-            ?.let { item ->
-                remoteKeyQueries.getRemoteKeyById(type, itemIdExtractor(item))
-                    .executeAsOneOrNull()
-            }
+        return remoteKeyQueries.getRemoteKeyById(type, id).executeAsOneOrNull()
     }
 
     override suspend fun getKeyClosestToCurrentPosition(state: PagingState<Int, Value>): RemoteKeys? {
-        return state.anchorPosition?.let { position ->
-            state.closestItemToPosition(position)?.let { item ->
-                remoteKeyQueries.getRemoteKeyById(type, itemIdExtractor(item))
-                    .executeAsOneOrNull()
-            }
-        }
+        return remoteKeyQueries.getRemoteKeyById(type, id).executeAsOneOrNull()
     }
 
     override fun insertKeys(

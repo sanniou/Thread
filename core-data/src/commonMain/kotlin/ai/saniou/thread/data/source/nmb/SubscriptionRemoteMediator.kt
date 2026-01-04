@@ -32,7 +32,6 @@ class SubscriptionRemoteMediator(
             db = db,
             type = RemoteKeyType.SUBSCRIBE,
             id = subscriptionKey,
-            itemIdExtractor = { it.id }
         ),
         fetcher = { page -> forumRepository.feed(subscriptionKey, page.toLong()) },
         saver = { feedDetail, page, loadType ->

@@ -49,7 +49,6 @@ class ThreadRemoteMediator(
             db = db,
             type = if (isPoOnly) RemoteKeyType.THREAD_PO else RemoteKeyType.THREAD,
             id = threadId,
-            itemIdExtractor = { it.topicId } // topicId (threadId)
         ),
         fetcher = { page -> fetcher(page) },
         saver = { threadDetail, page, _ ->

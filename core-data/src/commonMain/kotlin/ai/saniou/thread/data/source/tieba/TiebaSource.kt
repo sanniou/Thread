@@ -127,6 +127,43 @@ class TiebaSource(
         ).flow
     }
 
+    override suspend fun getTopicComments(
+        threadId: String,
+        page: Int,
+        isPoOnly: Boolean
+    ): Result<List<Comment>> = runCatching {
+         val request = PbPageRequest(
+            PbPageRequestData(
+                common = TiebaProtoBuilder.buildCommonRequest(tiebaParameterProvider, ClientVersion.TIEBA_V12),
+                kz = threadId.toLongOrNull() ?: 0L,
+                pn = page,
+                rn = 30,
+                lz = if (isPoOnly) 1 else 0,
+                r = 0,
+                scr_dip = 3.0,
+                scr_h = 1920,
+                scr_w = 1080,
+                q_type = 2,
+                app_pos = TiebaProtoBuilder.buildAppPosInfo(),
+                ad_param = com.huanchengfly.tieba.post.api.models.protos.pbPage.AdParam()
+            )
+        )
+
+        val body = TiebaProtoBuilder.buildProtobufFormBody(
+            data = request,
+            clientVersion = ClientVersion.TIEBA_V12,
+            parameterProvider = tiebaParameterProvider
+        )
+
+        val response = officialProtobufTiebaApiV12.pbPageFlow(body).first()
+
+        if (response.error?.error_code != 0) {
+            throw Exception("Failed to fetch topic comments: ${response.error?.error_msg} (Code: ${response.error?.error_code})")
+        }
+
+        TiebaMapper.mapPbPageResponseToComments(response, threadId)
+    }
+
     override suspend fun getTopicDetail(threadId: String, page: Int): Result<Topic> = runCatching {
         val request = PbPageRequest(
             PbPageRequestData(

@@ -58,6 +58,17 @@ interface Source {
 
     suspend fun getTopicDetail(threadId: String, page: Int): Result<Topic>
 
+    /**
+     * 获取指定帖子的回复列表（分页）
+     * 替代 getTopicCommentsPager，配合 RemoteMediator 使用
+     */
+    suspend fun getTopicComments(
+        threadId: String,
+        page: Int,
+        isPoOnly: Boolean = false,
+    ): Result<List<Comment>> = Result.failure(NotImplementedError("Not implemented"))
+
+    @Deprecated("Use getTopicComments instead")
     fun getTopicCommentsPager(
         threadId: String,
         initialPage: Int,

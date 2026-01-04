@@ -1,6 +1,7 @@
 package ai.saniou.thread.data.repository
 
 import ai.saniou.corecommon.utils.toTime
+import ai.saniou.thread.data.mapper.toDomain
 import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
 import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
 import ai.saniou.thread.db.Database

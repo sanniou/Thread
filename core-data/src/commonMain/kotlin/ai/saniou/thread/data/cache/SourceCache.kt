@@ -46,7 +46,7 @@ interface SourceCache {
     /**
      * 保存回复列表
      */
-    suspend fun saveComments(comments: List<Comment>)
+    fun saveComments(comments: List<Comment>)
 
     /**
      * 清除指定板块的缓存

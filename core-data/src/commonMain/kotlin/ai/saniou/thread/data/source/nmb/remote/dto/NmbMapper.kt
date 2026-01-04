@@ -183,39 +183,17 @@ fun Thread.toDomain(): Topic = Topic(
 )
 
 @OptIn(ExperimentalTime::class)
-fun EntityComment.toDomain(imageQueries: ImageQueries? = null): Comment {
-    val images = imageQueries?.getImagesByParent(
-        sourceId = sourceId,
-        parentId = id,
-        parentType = ImageType.Comment
-    )?.executeAsList()?.map { it.toDomain() }
-        ?: emptyList()
-
+fun ThreadReply.toDomain(imageQueries: ImageQueries? = null): Comment {
     return Comment(
-        id = id,
-        topicId = topicId,
-        author = createAuthor(userHash, authorName),
-        createdAt = Instant.fromEpochMilliseconds(createdAt),
-        title = title,
-        content = content,
-        images = images,
-        isAdmin = (admin ?: 0) > 0,
-        floor = floor?.toInt(),
-        replyToId = replyToId
-    )
-}
-
-@OptIn(ExperimentalTime::class)
-fun ThreadReply.toDomain(): Comment =
-    Comment(
         id = id.toString(),
         topicId = threadId.toString(),
         author = createAuthor(userHash, name),
         createdAt = now.toTime(),
         title = title,
-        content = content ?: "",
+        content = content,
         images = createImageList(img, ext),
         isAdmin = admin > 0,
         floor = null, // API might not provide floor
         replyToId = null
     )
+}

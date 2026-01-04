@@ -540,12 +540,30 @@ class NmbSource(
         )
     }
 
+    override suspend fun getTopicComments(
+        threadId: String,
+        page: Int,
+        isPoOnly: Boolean
+    ): Result<List<Comment>> {
+        val tid = threadId.toLongOrNull()
+            ?: return Result.failure(IllegalArgumentException("Invalid NMB thread ID"))
+        return getThreadRepliesByPage(tid, page, isPoOnly)
+            .map { list -> list.map { it.toDomain(db.imageQueries) } }
+    }
+
     suspend fun getThreadRepliesByPage(
         threadId: Long,
         page: Int,
+        isPoOnly: Boolean = false,
     ): Result<List<ThreadReply>> {
         return try {
-            when (val response = nmbXdApi.thread(threadId, page.toLong())) {
+            val apiCall = if (isPoOnly) {
+                nmbXdApi.po(threadId, page.toLong())
+            } else {
+                nmbXdApi.thread(threadId, page.toLong())
+            }
+
+            when (val response = apiCall) {
                 is SaniouResult.Success -> {
                     val thread = response.data
                     // 更新数据库
