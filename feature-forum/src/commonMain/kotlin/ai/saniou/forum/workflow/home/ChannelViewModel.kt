@@ -7,12 +7,14 @@ import ai.saniou.forum.workflow.home.ChannelContract.Event
 import ai.saniou.forum.workflow.home.ChannelContract.ChannelUiState
 import ai.saniou.forum.workflow.home.ChannelContract.ChannelCategoryUiState
 import ai.saniou.thread.domain.model.forum.Channel
-import ai.saniou.thread.domain.repository.ChannelRepository
 import ai.saniou.thread.domain.usecase.channel.GetFavoriteChannelsUseCase
 import ai.saniou.thread.domain.usecase.channel.GetChannelsUseCase
 import ai.saniou.thread.domain.repository.SettingsRepository
 import ai.saniou.thread.domain.repository.getValue
 import ai.saniou.thread.domain.repository.saveValue
+import ai.saniou.thread.domain.usecase.channel.FetchChannelsUseCase
+import ai.saniou.thread.domain.usecase.channel.GetLastOpenedChannelUseCase
+import ai.saniou.thread.domain.usecase.channel.SaveLastOpenedChannelUseCase
 import ai.saniou.thread.domain.usecase.notice.GetNoticeUseCase
 import ai.saniou.thread.domain.usecase.notice.MarkNoticeAsReadUseCase
 import ai.saniou.thread.domain.usecase.post.ToggleFavoriteUseCase
@@ -33,11 +35,13 @@ class ChannelViewModel(
     private val getFavoriteChannelsUseCase: GetFavoriteChannelsUseCase,
     private val toggleFavoriteUseCase: ToggleFavoriteUseCase,
     private val appInitializer: AppInitializer,
-    private val channelRepository: ChannelRepository,
     private val getNoticeUseCase: GetNoticeUseCase,
     private val markNoticeAsReadUseCase: MarkNoticeAsReadUseCase,
     private val settingsRepository: SettingsRepository,
     private val getAvailableSourcesUseCase: GetAvailableSourcesUseCase,
+    private val fetchChannelsUseCase: FetchChannelsUseCase,
+    private val getLastOpenedChannelUseCase: GetLastOpenedChannelUseCase,
+    private val saveLastOpenedChannelUseCase: SaveLastOpenedChannelUseCase,
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(ChannelUiState())
@@ -126,8 +130,7 @@ class ChannelViewModel(
             // For now, we keep it to avoid breaking things.
             appInitializer.initialize()
 
-            // TODO: Replace with a UseCase
-            val lastOpenedForum = channelRepository.getLastOpenedChannel()
+            val lastOpenedForum = getLastOpenedChannelUseCase()
             // 如果最后打开的板块不是当前源的，则不选中
             val lastOpenedForumId =
                 if (lastOpenedForum?.sourceName == state.value.currentSourceId) lastOpenedForum.id else null
@@ -139,7 +142,7 @@ class ChannelViewModel(
 
             // Trigger fetch
             launch {
-                channelRepository.fetchChannels(currentSourceId)
+                fetchChannelsUseCase(currentSourceId)
                     .onFailure { e ->
                         // Only show error if we don't have data yet? Or maybe show a toast?
                         // For now, we rely on the flow to show data if available.
@@ -217,7 +220,7 @@ class ChannelViewModel(
 
     private fun selectForum(forum: Channel) {
         screenModelScope.launch {
-            channelRepository.saveLastOpenedChannel(forum)
+            saveLastOpenedChannelUseCase(forum)
         }
         _state.update { it.copy(currentChannel = forum) }
     }

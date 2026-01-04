@@ -71,6 +71,9 @@ import ai.saniou.thread.domain.repository.ReaderRepository
 import ai.saniou.thread.domain.repository.UserRepository
 import ai.saniou.thread.domain.usecase.reader.GetArticleCountsUseCase
 import ai.saniou.thread.domain.usecase.subscription.GenerateRandomSubscriptionIdUseCase
+import ai.saniou.thread.domain.usecase.channel.FetchChannelsUseCase
+import ai.saniou.thread.domain.usecase.channel.GetLastOpenedChannelUseCase
+import ai.saniou.thread.domain.usecase.channel.SaveLastOpenedChannelUseCase
 import ai.saniou.thread.network.ChallengeHandler
 import ai.saniou.thread.network.CloudflareProtectionPlugin
 import ai.saniou.thread.network.SaniouKtorfit
@@ -541,4 +544,8 @@ val dataModule = DI.Module("dataModule") {
             instance()
         )
     }
+
+    bind<FetchChannelsUseCase>() with singleton { FetchChannelsUseCase(instance()) }
+    bind<GetLastOpenedChannelUseCase>() with singleton { GetLastOpenedChannelUseCase(instance()) }
+    bind<SaveLastOpenedChannelUseCase>() with singleton { SaveLastOpenedChannelUseCase(instance()) }
 }
