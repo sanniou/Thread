@@ -34,7 +34,7 @@ class ForumRemoteMediator(
         initialKey = initialPage,
         remoteKeyStrategy = DefaultRemoteKeyStrategy(
             db = db,
-            type = RemoteKeyType.FORUM,
+            type = RemoteKeyType.CHANNEL,
             id = fid,
         ),
         fetcher = { page -> fetcher(page) },

@@ -38,7 +38,7 @@ class DiscourseRemoteMediator(
             initialKey = initialPage,
             remoteKeyStrategy = DefaultRemoteKeyStrategy(
                 db = db,
-                type = RemoteKeyType.FORUM,
+                type = RemoteKeyType.CHANNEL,
                 id = fid,
             ),
             fetcher = { page ->

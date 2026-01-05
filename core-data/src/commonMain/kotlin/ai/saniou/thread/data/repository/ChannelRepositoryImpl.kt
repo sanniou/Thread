@@ -13,6 +13,8 @@ import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.repository.ChannelRepository
 import ai.saniou.thread.domain.repository.Source
 import app.cash.paging.LoadType
+import app.cash.paging.Pager
+import app.cash.paging.PagingConfig
 import app.cash.paging.PagingData
 import app.cash.paging.map
 import kotlinx.coroutines.Dispatchers
@@ -127,16 +129,16 @@ class ChannelRepositoryImpl(
     ): Flow<PagingData<Topic>> {
         val source = sourceMap[sourceId] ?: return flowOf(PagingData.empty())
 
-        return app.cash.paging.Pager(
-            config = app.cash.paging.PagingConfig(pageSize = 20),
+        return Pager(
+            config = PagingConfig(pageSize = 20),
             initialKey = initialPage,
             remoteMediator = GenericRemoteMediator(
                 db = db,
-                dataPolicy = DataPolicy.CACHE_ELSE_NETWORK,
+                dataPolicy = DataPolicy.NETWORK_ELSE_CACHE,
                 initialKey = initialPage,
                 remoteKeyStrategy = DefaultRemoteKeyStrategy(
                     db = db,
-                    type = RemoteKeyType.FORUM, // Assuming FORUM key type is suitable for channel topics
+                    type = RemoteKeyType.CHANNEL,
                     id = "${sourceId}_${fid}_${isTimeline}"
                 ),
                 fetcher = { page ->
