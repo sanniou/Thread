@@ -30,6 +30,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import io.ktor.http.encodeURLQueryComponent
 
 class TiebaSource(
     private val miniTiebaApi: MiniTiebaApi,
@@ -79,12 +80,12 @@ class TiebaSource(
         // We need to implement mapForumRecommendResponseToChannels in TiebaMapper first.
         // Assuming it's similar to mapForumRecommendToChannels but takes ForumRecommendResponse.
         // For now, let's add a placeholder or update Mapper.
-        
+
         // Wait, I should update Mapper first. But I am editing Source now.
         // Let's assume Mapper has it or I will add it.
         // The previous JSON mapper: mapForumRecommendToChannels(response: ForumRecommend)
         // I need: mapForumRecommendResponseToChannels(response: ForumRecommendResponse)
-        
+
         val channels = TiebaMapper.mapForumRecommendResponseToChannels(response)
 
         database.transaction {
@@ -129,7 +130,7 @@ class TiebaSource(
             parameterProvider = tiebaParameterProvider
         )
 
-        val response = officialProtobufTiebaApiV12.frsPageFlow(body, forumName).first()
+        val response = officialProtobufTiebaApiV12.frsPageFlow(body, forumName.encodeURLQueryComponent()).first()
 
         if (response.error?.error_code != 0) {
             throw Exception("Tieba Error: ${response.error?.error_msg} (Code: ${response.error?.error_code})")
@@ -310,7 +311,7 @@ class TiebaTopicPagingSource(
                 parameterProvider = parameterProvider
             )
 
-            val response = api.frsPageFlow(body, forumName)
+            val response = api.frsPageFlow(body, forumName.encodeURLQueryComponent())
                 .map { it } // No transformation needed, it returns FrsPageResponse now
                 // But Flow needs to be collected. Ktorfit returns Flow<Response>.
                 // Wait, api.frsPageFlow returns Flow<FrsPageResponse>.
