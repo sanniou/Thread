@@ -44,7 +44,6 @@ class TopicRepositoryImpl(
 
     override fun getTopicDetail(sourceId: String, id: String, forceRefresh: Boolean): Flow<Topic> {
         return cache.observeTopic(sourceId, id)
-            .mapNotNull { it?.toDomain(db.commentQueries, db.imageQueries) }
             .onStart {
                 val source = sourceMap[sourceId]
                 if (source != null) {
@@ -56,7 +55,7 @@ class TopicRepositoryImpl(
                             // Ideally source should save to DB directly or cache.saveThread should handle images.
                             // NmbSource.getThreadDetail currently doesn't save to DB.
                             // Let's assume cache.saveThread handles basic info, but images need separate handling or source should do it.
-                            cache.saveTopic(post.toEntity())
+                            cache.saveTopic(post)
                         }
                     }
                 }
@@ -70,7 +69,7 @@ class TopicRepositoryImpl(
         forceRefresh: Boolean,
     ): Flow<TopicMetadata> {
         return cache.observeTopic(sourceId, id)
-            .mapNotNull { it?.toMetadata(db.commentQueries, db.imageQueries) }
+            .map { it.toMetadata() }
             .onStart {
                 val source = sourceMap[sourceId]
                 if (source != null) {
@@ -78,7 +77,7 @@ class TopicRepositoryImpl(
                     if (currentCache == null || forceRefresh) {
                         val result = source.getTopicDetail(id, 1)
                         result.onSuccess { post ->
-                            cache.saveTopic(post.toEntity())
+                            cache.saveTopic(post)
                         }
                     }
                 }

@@ -1,4 +1,4 @@
--- 创建 Comment 表 (原 ThreadReply)
+-- 创建 Comment 表
 CREATE TABLE IF NOT EXISTS Comment (
     id TEXT NOT NULL,
     sourceId TEXT NOT NULL,

@@ -1,52 +1,35 @@
 package ai.saniou.thread.data.cache
 
+import ai.saniou.thread.data.mapper.toDomain
+import ai.saniou.thread.data.mapper.toEntity
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.db.table.forum.Channel
-import ai.saniou.thread.db.table.forum.GetTopicsInChannelOffset
-import ai.saniou.thread.db.table.forum.Topic
 import ai.saniou.thread.db.table.forum.Comment
+import ai.saniou.thread.db.table.forum.GetTopicsInChannelOffset
+import ai.saniou.thread.domain.model.forum.Topic
 import app.cash.paging.PagingSource
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
+import app.cash.sqldelight.coroutines.mapToOne
 import app.cash.sqldelight.coroutines.mapToOneOrNull
 import app.cash.sqldelight.paging3.QueryPagingSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.withContext
 
 class SqlDelightSourceCache(
-    db: Database,
+    val db: Database,
 ) : SourceCache {
 
     private val topicQueries = db.topicQueries
     private val commentQueries = db.commentQueries
     private val channelQueries = db.channelQueries
 
-    override fun observeTopic(sourceId: String, topicId: String): Flow<Topic?> {
+    override fun observeTopic(sourceId: String, topicId: String): Flow<Topic> {
         return topicQueries.getTopic(sourceId, topicId)
             .asFlow()
-            .mapToOneOrNull(Dispatchers.IO)
-            .map {
-                it?.let {
-                    Topic(
-                        it.id,
-                        it.sourceId,
-                        it.channelId,
-                        it.commentCount,
-                        it.createdAt,
-                        it.userHash,
-                        it.authorName,
-                        it.title,
-                        it.content,
-                        it.summary,
-                        it.sage,
-                        it.admin,
-                        it.hide,
-                        it.page
-                    )
-                }
-            }
+            .mapToOne(Dispatchers.IO)
+            .map { it.toDomain(commentQueries, db.imageQueries) }
     }
 
     override fun getTopicCommentsPagingSource(
@@ -104,16 +87,106 @@ class SqlDelightSourceCache(
         )
     }
 
-    override suspend fun saveTopic(topic: Topic) {
-        withContext(Dispatchers.IO) {
-            topicQueries.upsertTopic(topic)
+    override fun saveTopic(topic: Topic) {
+        topicQueries.transaction {
+            val entity = topic.toEntity()
+            topicQueries.upsertTopic(entity)
+
+            // 保存图片
+            topic.images.forEach { image ->
+                db.imageQueries.upsertImage(
+                    ai.saniou.thread.db.table.forum.Image(
+                        id = image.originalUrl,
+                        sourceId = topic.sourceName,
+                        parentId = topic.id,
+                        parentType = ai.saniou.thread.domain.model.forum.ImageType.Topic,
+                        originalUrl = image.originalUrl,
+                        thumbnailUrl = image.thumbnailUrl,
+                        name = image.name,
+                        extension = image.extension,
+                        path = null,
+                        width = image.width?.toLong(),
+                        height = image.height?.toLong(),
+                        sortOrder = 0
+                    )
+                )
+            }
         }
     }
 
-    override fun saveTopics(topics: List<Topic>) {
+    override fun saveTopics(
+        topics: List<Topic>,
+        clearPage: Boolean,
+        sourceId: String,
+        channelId: String,
+        page: Int?,
+    ) {
         topicQueries.transaction {
+            // 1. 清理旧数据
+            if (clearPage && page != null) {
+                topicQueries.deleteTopicsByChannelAndPage(sourceId, channelId, page.toLong())
+            }
+
+            // 2. 保存新数据
             topics.forEach { topic ->
-                topicQueries.upsertTopic(topic)
+                val topicPage = page ?: 1
+                val topicEntity = topic.toEntity(page = topicPage)
+                topicQueries.upsertTopic(topicEntity)
+
+                if (topic.remainingCount != null) {
+                    topicQueries.upsertTopicInformation(
+                        id = topic.id,
+                        sourceId = topic.sourceName,
+                        remainingCount = topic.remainingCount,
+                        latestCommentId = topic.lastViewedCommentId ?: ""
+                    )
+                }
+
+                // Save Images
+                topic.images.forEach { image ->
+                    db.imageQueries.upsertImage(
+                        ai.saniou.thread.db.table.forum.Image(
+                            id = image.originalUrl,
+                            sourceId = topic.sourceName,
+                            parentId = topic.id,
+                            parentType = ai.saniou.thread.domain.model.forum.ImageType.Topic,
+                            originalUrl = image.originalUrl,
+                            thumbnailUrl = image.thumbnailUrl,
+                            name = image.name,
+                            extension = image.extension,
+                            path = null,
+                            width = image.width?.toLong(),
+                            height = image.height?.toLong(),
+                            sortOrder = 0
+                        )
+                    )
+                }
+
+                // Save Preview Comments
+                topic.comments.forEach { comment ->
+                    commentQueries.upsertComment(
+                        comment.toEntity(sourceId, Long.MIN_VALUE)
+                    )
+                    // Save Comment Images
+                    comment.images.forEach { image ->
+                        db.imageQueries.upsertImage(
+                            ai.saniou.thread.db.table.forum.Image(
+                                id = image.originalUrl,
+                                sourceId = topic.sourceName,
+                                parentId = comment.id,
+                                parentType = ai.saniou.thread.domain.model.forum.ImageType.Comment,
+                                originalUrl = image.originalUrl,
+                                thumbnailUrl = image.thumbnailUrl,
+                                name = image.name,
+                                extension = image.extension,
+                                path = null,
+                                width = image.width?.toLong(),
+                                height = image.height?.toLong(),
+                                sortOrder = 0
+                            )
+                        )
+                    }
+                }
             }
         }
     }
@@ -126,43 +199,33 @@ class SqlDelightSourceCache(
         }
     }
 
-    override suspend fun clearChannelCache(sourceId: String, channelId: String) {
-        withContext(Dispatchers.IO) {
-            topicQueries.deleteTopicPage(sourceId, channelId)
-        }
+    override fun clearChannelCache(sourceId: String, channelId: String) {
+        topicQueries.deleteTopicPage(sourceId, channelId)
     }
 
-    override suspend fun clearTopicCommentsCache(sourceId: String, topicId: String) {
-        withContext(Dispatchers.IO) {
-            commentQueries.deleteCommentsByTopicId(sourceId, topicId)
-        }
+    override fun clearTopicCommentsCache(sourceId: String, topicId: String) {
+        commentQueries.deleteCommentsByTopicId(sourceId, topicId)
     }
 
-    override suspend fun updateTopicLastAccessTime(
+    override fun updateTopicLastAccessTime(
         sourceId: String,
         topicId: String,
         time: Long,
     ) {
-        withContext(Dispatchers.IO) {
-            topicQueries.updateTopicLastAccessTime(time, sourceId, topicId)
-        }
+        topicQueries.updateTopicLastAccessTime(time, sourceId, topicId)
     }
 
-    override suspend fun updateTopicLastReadCommentId(
+    override fun updateTopicLastReadCommentId(
         sourceId: String,
         topicId: String,
         commentId: String,
     ) {
-        withContext(Dispatchers.IO) {
-            topicQueries.updateTopicLastReadCommentId(commentId, sourceId, topicId)
-        }
+        topicQueries.updateTopicLastReadCommentId(commentId, sourceId, topicId)
     }
 
-    override suspend fun getChannels(sourceId: String): List<Channel> {
-        return withContext(Dispatchers.IO) {
-            val allChannels = channelQueries.getChannelsBySource(sourceId).executeAsList()
-            sortChannels(allChannels)
-        }
+    override fun getChannels(sourceId: String): List<Channel> {
+        val allChannels = channelQueries.getChannelsBySource(sourceId).executeAsList()
+        return sortChannels(allChannels)
     }
 
     override fun observeChannels(sourceId: String): Flow<List<Channel>> {
@@ -200,12 +263,10 @@ class SqlDelightSourceCache(
         return result
     }
 
-    override suspend fun saveChannels(forums: List<Channel>) {
-        withContext(Dispatchers.IO) {
-            channelQueries.transaction {
-                forums.forEach { forum ->
-                    channelQueries.insertChannel(forum)
-                }
+    override fun saveChannels(forums: List<Channel>) {
+        channelQueries.transaction {
+            forums.forEach { forum ->
+                channelQueries.insertChannel(forum)
             }
         }
     }

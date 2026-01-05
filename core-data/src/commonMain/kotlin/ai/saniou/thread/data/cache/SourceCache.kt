@@ -1,9 +1,9 @@
 package ai.saniou.thread.data.cache
 
 import ai.saniou.thread.db.table.forum.Channel
-import ai.saniou.thread.db.table.forum.GetTopicsInChannelOffset
-import ai.saniou.thread.db.table.forum.Topic
 import ai.saniou.thread.db.table.forum.Comment
+import ai.saniou.thread.db.table.forum.GetTopicsInChannelOffset
+import ai.saniou.thread.domain.model.forum.Topic
 import app.cash.paging.PagingSource
 import kotlinx.coroutines.flow.Flow
 
@@ -14,7 +14,7 @@ interface SourceCache {
     /**
      * 观察指定帖子的详情
      */
-    fun observeTopic(sourceId: String, topicId: String): Flow<Topic?>
+    fun observeTopic(sourceId: String, topicId: String): Flow<Topic>
 
     /**
      * 观察指定帖子的回复列表（分页）
@@ -36,12 +36,24 @@ interface SourceCache {
     /**
      * 保存帖子详情
      */
-    suspend fun saveTopic(topic: Topic)
+    fun saveTopic(topic: Topic)
 
     /**
      * 批量保存帖子
+     *
+     * @param topics 帖子列表
+     * @param clearPage 是否清理该页数据
+     * @param sourceId 来源ID (用于清理)
+     * @param channelId 频道ID (用于清理)
+     * @param page 页码 (用于清理)
      */
-    fun saveTopics(topics: List<Topic>)
+    fun saveTopics(
+        topics: List<Topic>,
+        clearPage: Boolean = false,
+        sourceId: String,
+        channelId: String,
+        page: Int? = null,
+    )
 
     /**
      * 保存回复列表
@@ -51,27 +63,27 @@ interface SourceCache {
     /**
      * 清除指定板块的缓存
      */
-    suspend fun clearChannelCache(sourceId: String, channelId: String)
+    fun clearChannelCache(sourceId: String, channelId: String)
 
     /**
      * 清除指定帖子的回复缓存
      */
-    suspend fun clearTopicCommentsCache(sourceId: String, topicId: String)
+    fun clearTopicCommentsCache(sourceId: String, topicId: String)
 
     /**
      * 更新帖子最后访问时间
      */
-    suspend fun updateTopicLastAccessTime(sourceId: String, topicId: String, time: Long)
+    fun updateTopicLastAccessTime(sourceId: String, topicId: String, time: Long)
 
     /**
      * 更新帖子最后阅读的回复ID
      */
-    suspend fun updateTopicLastReadCommentId(sourceId: String, topicId: String, commentId: String)
+    fun updateTopicLastReadCommentId(sourceId: String, topicId: String, commentId: String)
 
     /**
      * 获取指定来源的所有板块
      */
-    suspend fun getChannels(sourceId: String): List<Channel>
+    fun getChannels(sourceId: String): List<Channel>
 
     /**
      * 观察指定来源的所有板块
@@ -81,5 +93,5 @@ interface SourceCache {
     /**
      * 批量保存板块
      */
-    suspend fun saveChannels(forums: List<Channel>)
+    fun saveChannels(forums: List<Channel>)
 }

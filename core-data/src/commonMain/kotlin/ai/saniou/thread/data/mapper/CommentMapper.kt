@@ -1,6 +1,5 @@
 package ai.saniou.thread.data.mapper
 
-import ai.saniou.thread.db.table.forum.GetMaxPage
 import ai.saniou.thread.db.table.forum.ImageQueries
 import ai.saniou.thread.domain.model.forum.Author
 import ai.saniou.thread.domain.model.forum.Comment

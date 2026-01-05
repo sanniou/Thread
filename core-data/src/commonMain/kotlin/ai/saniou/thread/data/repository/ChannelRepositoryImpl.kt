@@ -2,7 +2,6 @@ package ai.saniou.thread.data.repository
 
 import ai.saniou.thread.data.cache.SourceCache
 import ai.saniou.thread.data.mapper.toDomain
-import ai.saniou.thread.data.mapper.toEntity
 import ai.saniou.thread.data.paging.DataPolicy
 import ai.saniou.thread.data.paging.DefaultRemoteKeyStrategy
 import ai.saniou.thread.data.paging.GenericRemoteMediator
@@ -145,14 +144,14 @@ class ChannelRepositoryImpl(
                     source.getChannelTopics(fid, page, isTimeline)
                 },
                 saver = { topics, page, loadType ->
-                    if (loadType == LoadType.REFRESH) {
-                        // cache.clearChannelCache(sourceId, fid) // Optional: Clear old cache on refresh
-                    }
-                    cache.saveTopics(topics.map {
-                        it.toEntity(
-                            page = page
-                        )
-                    })
+                    val shouldClear = loadType == LoadType.REFRESH
+                    cache.saveTopics(
+                        topics = topics,
+                        clearPage = shouldClear,
+                        sourceId = sourceId,
+                        channelId = fid,
+                        page = page
+                    )
                 },
                 endOfPaginationReached = { it.isEmpty() },
                 keyIncrementer = { it + 1 },
