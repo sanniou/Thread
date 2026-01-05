@@ -30,7 +30,7 @@ fun SaniouKtorfit(
             install(ContentEncoding) {
                 mode = ContentEncodingConfig.Mode.All
                 gzip()
-//                deflate()
+                deflate()
             }
 
             install(ContentNegotiation) {
@@ -39,11 +39,12 @@ fun SaniouKtorfit(
                     isLenient = true
                     ignoreUnknownKeys = true
                 })
-                register(ContentType.Application.ProtoBuf, WireContentConverter())
+                val wireConverter = WireContentConverter()
+                register(ContentType.Application.ProtoBuf, wireConverter)
+                register(ContentType.Application.OctetStream, wireConverter)
             }
             install(DefaultRequest) {
                 header(HttpHeaders.ContentType, ContentType.Application.Json)
-//                userAgent(NetworkConstants.USER_AGENT)
             }
             install(Logging) {
                 format = LoggingFormat.OkHttp

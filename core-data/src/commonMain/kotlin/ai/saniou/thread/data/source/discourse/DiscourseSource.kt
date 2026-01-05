@@ -127,7 +127,7 @@ class DiscourseSource(
     override suspend fun getChannelTopics(
         channelId: String,
         page: Int,
-        isTimeline: Boolean
+        isTimeline: Boolean,
     ): Result<List<Topic>> {
         // Discourse API mapping
         // Assuming channelId is Category ID? Or 'latest' endpoint?
@@ -151,6 +151,7 @@ class DiscourseSource(
                     }
                     Result.success(topics)
                 }
+
                 is SaniouResult.Error -> Result.failure(result.ex)
             }
         } catch (e: Exception) {
@@ -197,20 +198,20 @@ class DiscourseSource(
     override suspend fun getTopicComments(
         threadId: String,
         page: Int,
-        isPoOnly: Boolean
+        isPoOnly: Boolean,
     ): Result<List<Comment>> {
         if (isPoOnly) {
-             // Discourse API doesn't support PO only easily in this endpoint?
-             // Or we need to filter locally but that breaks pagination consistency if we rely on API pagination.
-             // For now, return failure or ignore flag.
-             // Ideally: NotImplementedError or ignore.
+            // Discourse API doesn't support PO only easily in this endpoint?
+            // Or we need to filter locally but that breaks pagination consistency if we rely on API pagination.
+            // For now, return failure or ignore flag.
+            // Ideally: NotImplementedError or ignore.
         }
         return when (val result = api.getTopic(threadId, page)) {
             is SaniouResult.Success -> {
                 try {
                     val response = result.data
                     val comments = response.postStream.posts.map { discoursePost ->
-                         discoursePost.toComment(
+                        discoursePost.toComment(
                             sourceId = id,
                             threadId = response.id.toString(),
                             page = page
@@ -221,7 +222,8 @@ class DiscourseSource(
                     Result.failure(e)
                 }
             }
-             is SaniouResult.Error -> Result.failure(result.ex)
+
+            is SaniouResult.Error -> Result.failure(result.ex)
         } as Result<List<Comment>>
     }
 
@@ -244,7 +246,8 @@ class DiscourseSource(
                         createdAt = Instant.fromEpochMilliseconds(createdAt.toEpochMilliseconds()),
                         title = response.title,
                         content = firstPost?.cooked ?: "", // Use full content
-                        sourceName = "discourse",
+                        sourceName = name,
+                        sourceId = id,
                         sourceUrl = "https://meta.discourse.org/t/${response.id}",
                         author = Author(
                             id = firstPost?.username ?: "",
@@ -307,10 +310,10 @@ class DiscourseSource(
                 dataPolicy = DataPolicy.NETWORK_ELSE_CACHE,
                 initialPage = initialPage,
                 fetcher = { page ->
-                     when (val result = api.getTopic(threadId, page)) {
-                         is SaniouResult.Success -> Result.success(result.data)
-                         is SaniouResult.Error -> Result.failure(result.ex)
-                     }
+                    when (val result = api.getTopic(threadId, page)) {
+                        is SaniouResult.Success -> Result.success(result.data)
+                        is SaniouResult.Error -> Result.failure(result.ex)
+                    }
                 }
             ),
             pagingSourceFactory = {
@@ -352,6 +355,7 @@ internal fun DiscourseTopic.toPost(usersMap: Map<Long, DiscourseUser>): Topic {
         content = excerpt ?: fancyTitle,
         createdAt = Instant.fromEpochMilliseconds(postCreatedAt.toEpochMilliseconds()), // now -> createdAt
         sourceName = "discourse",
+        sourceId = "discourse",
         sourceUrl = "https://meta.discourse.org/t/$slug/$id",
         author = Author(
             id = user?.username ?: "Unknown",

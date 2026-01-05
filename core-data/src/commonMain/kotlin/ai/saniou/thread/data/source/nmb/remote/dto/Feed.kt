@@ -106,6 +106,7 @@ fun ForumThread.toDomain(): Topic {
     return Topic(
         id = id.toString(),
         sourceName = "nmb",
+        sourceId = "nmb",
         sourceUrl = "https://nmb.ai/thread/$id",
         title = title,
         content = content,

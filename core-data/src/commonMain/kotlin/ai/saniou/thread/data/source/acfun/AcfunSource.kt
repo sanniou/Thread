@@ -28,7 +28,7 @@ import kotlin.time.Clock
 
 class AcfunSource(
     private val acfunApi: AcfunApi,
-    private val acfunTokenManager: AcfunTokenManager
+    private val acfunTokenManager: AcfunTokenManager,
 ) : Source {
     override val id: String = "acfun"
     override val name: String = "AcFun"
@@ -89,7 +89,7 @@ class AcfunSource(
     override suspend fun getChannelTopics(
         channelId: String,
         page: Int,
-        isTimeline: Boolean
+        isTimeline: Boolean,
     ): Result<List<Topic>> {
         return Result.success(emptyList()) // Stub
     }
@@ -98,14 +98,15 @@ class AcfunSource(
     override fun getTopicsPager(
         channelId: String,
         isTimeline: Boolean,
-        initialPage: Int
+        initialPage: Int,
     ): Flow<PagingData<Topic>> {
         return flowOf(PagingData.empty())
     }
 
     override suspend fun getTopicDetail(threadId: String, page: Int): Result<Topic> {
         val articleId =
-            threadId.toLongOrNull() ?: return Result.failure(IllegalArgumentException("Invalid threadId"))
+            threadId.toLongOrNull()
+                ?: return Result.failure(IllegalArgumentException("Invalid threadId"))
 
         return when (val response = acfunApi.getArticleInfo(articleId)) {
             is SaniouResult.Success -> {
@@ -113,12 +114,16 @@ class AcfunSource(
                 if (data.result == 0) {
                     val post = Topic(
                         id = data.articleId?.toString() ?: threadId.toString(),
-                        sourceName = "acfun",
+                        sourceName = name,
+                        sourceId = id,
                         sourceUrl = "https://www.acfun.cn/a/ac${data.articleId}",
-                        title = data.title?:"",
+                        title = data.title ?: "",
                         content = data.parts?.joinToString("\n") { it.content } ?: data.description
                         ?: "",
-                        author = Author(id = data.user?.id?.toString() ?: "", name = data.user?.name ?: "Unknown"),
+                        author = Author(
+                            id = data.user?.id?.toString() ?: "",
+                            name = data.user?.name ?: "Unknown"
+                        ),
                         createdAt = Instant.fromEpochMilliseconds(data.createTimeMillis ?: 0),
                         channelName = data.channel?.name ?: "文章",
                         commentCount = (data.commentCount ?: 0).toLong(),
@@ -144,19 +149,20 @@ class AcfunSource(
     override suspend fun getTopicComments(
         threadId: String,
         page: Int,
-        isPoOnly: Boolean
+        isPoOnly: Boolean,
     ): Result<List<Comment>> {
-         val pcursor = if(page == 1) "0" else return Result.success(emptyList()) // AcFun uses cursor, simplistic page mapping
-         // This is tricky because AcFun uses cursor-based paging, not page-based.
-         // Standard RemoteMediator for page-based sources won't work well here without adaptation.
-         // However, GenericRemoteMediator is page-based (Int Key).
-         // If we force page 1 only for now or map page->cursor if possible.
-         // AcFun API provided here takes 'pcursor'.
-         
-         val sourceId = threadId.toLongOrNull()
-             ?: return Result.failure(IllegalArgumentException("Invalid threadId"))
+        val pcursor =
+            if (page == 1) "0" else return Result.success(emptyList()) // AcFun uses cursor, simplistic page mapping
+        // This is tricky because AcFun uses cursor-based paging, not page-based.
+        // Standard RemoteMediator for page-based sources won't work well here without adaptation.
+        // However, GenericRemoteMediator is page-based (Int Key).
+        // If we force page 1 only for now or map page->cursor if possible.
+        // AcFun API provided here takes 'pcursor'.
 
-         return when (val response = acfunApi.getCommentList(
+        val sourceId = threadId.toLongOrNull()
+            ?: return Result.failure(IllegalArgumentException("Invalid threadId"))
+
+        return when (val response = acfunApi.getCommentList(
             sourceId,
             1,
             pcursor,
@@ -165,7 +171,7 @@ class AcfunSource(
         )) {
             is SaniouResult.Success -> {
                 val list = response.data.rootComments ?: emptyList()
-                 val replies = list.map { comment ->
+                val replies = list.map { comment ->
                     Comment(
                         id = comment.commentId.toString(),
                         content = comment.content ?: "",
@@ -185,14 +191,15 @@ class AcfunSource(
                 }
                 Result.success(replies)
             }
-             is SaniouResult.Error -> Result.failure(response.ex)
+
+            is SaniouResult.Error -> Result.failure(response.ex)
         }
     }
 
     override fun getTopicCommentsPager(
         threadId: String,
         initialPage: Int,
-        isPoOnly: Boolean
+        isPoOnly: Boolean,
     ): Flow<PagingData<Comment>> {
         return Pager(
             config = PagingConfig(pageSize = 20),
@@ -276,6 +283,7 @@ class AcfunSource(
                     )
                     Result.success(trendResult)
                 }
+
                 is SaniouResult.Error -> {
                     Result.failure(response.ex)
                 }

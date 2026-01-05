@@ -34,6 +34,7 @@ fun SearchTopics.toDomain(
     return Topic(
         id = id,
         sourceName = sourceId,
+        sourceId = sourceId,
         sourceUrl = "https://nmb.ai/thread/$id", // TODO: Move URL generation to Source logic
         title = title,
         content = content ?: summary ?: "", // If content is null, fallback to summary, then empty
@@ -76,6 +77,7 @@ fun GetTopicsInChannelOffset.toDomain(
     return Topic(
         id = id,
         sourceName = sourceId,
+        sourceId = sourceId,
         sourceUrl = "https://nmb.ai/thread/$id", // TODO: Move URL generation to Source logic
         title = title,
         content = content ?: summary ?: "",
@@ -118,6 +120,7 @@ fun GetTopic.toDomain(
     return Topic(
         id = id,
         sourceName = sourceId,
+        sourceId = sourceId,
         sourceUrl = "https://nmb.ai/thread/$id", // TODO: Move URL generation to Source logic
         title = title,
         content = content ?: summary ?: "",
@@ -160,6 +163,7 @@ fun EntityTopic.toDomain(
     return Topic(
         id = id,
         sourceName = sourceId,
+        sourceId = sourceId,
         sourceUrl = "https://nmb.ai/thread/$id", // TODO: Move URL generation to Source logic
         title = title,
         content = content ?: summary ?: "",
@@ -221,7 +225,7 @@ fun Topic.toMetadata(): TopicMetadata {
         isSage = isSage,
         isAdmin = isAdmin,
         isHidden = isHidden,
-        sourceName = sourceName,
+        sourceName = sourceId,
         sourceUrl = sourceUrl,
         lastViewedCommentId = lastViewedCommentId
     )
@@ -230,7 +234,7 @@ fun Topic.toMetadata(): TopicMetadata {
 fun Topic.toEntity(page: Int = 1): EntityTopic {
     return EntityTopic(
         id = id,
-        sourceId = sourceName,
+        sourceId = sourceId,
         channelId = channelId,
         commentCount = commentCount,
         createdAt = createdAt.toEpochMilliseconds(),

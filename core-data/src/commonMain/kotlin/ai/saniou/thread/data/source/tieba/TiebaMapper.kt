@@ -127,15 +127,15 @@ object TiebaMapper {
     fun mapForumPageToTopics(response: ForumPageBean): List<Topic> {
         val forumName = response.forum?.name ?: ""
         val forumId = response.forum?.id ?: ""
-        
+
         return response.threadList?.mapNotNull { thread ->
             if (thread.tid == null) return@mapNotNull null
-            
+
             val author = Author(
                 id = thread.authorId ?: "0",
                 name = response.userList?.find { it.id == thread.authorId }?.nameShow
-                      ?: response.userList?.find { it.id == thread.authorId }?.name
-                      ?: "Unknown",
+                    ?: response.userList?.find { it.id == thread.authorId }?.name
+                    ?: "Unknown",
                 avatar = response.userList?.find { it.id == thread.authorId }?.portrait?.let {
                     "http://tb.himg.baidu.com/sys/portrait/item/$it"
                 },
@@ -161,7 +161,8 @@ object TiebaMapper {
                 content = thread.abstractBeans?.joinToString("\n") { it?.text ?: "" } ?: "",
                 summary = thread.abstractBeans?.joinToString("") { it?.text ?: "" },
                 author = author,
-                createdAt = thread.createTime?.toLongOrNull()?.let { Instant.fromEpochSeconds(it) } ?: Instant.fromEpochSeconds(0),
+                createdAt = thread.createTime?.toLongOrNull()?.let { Instant.fromEpochSeconds(it) }
+                    ?: Instant.fromEpochSeconds(0),
                 commentCount = thread.replyNum?.toLongOrNull() ?: 0,
                 images = images,
                 isSage = false,
@@ -169,6 +170,7 @@ object TiebaMapper {
                 isHidden = false,
                 isLocal = false,
                 sourceName = SOURCE_NAME,
+                sourceId = SOURCE_ID,
                 sourceUrl = "$BASE_URL/p/${thread.tid}"
             )
         } ?: emptyList()
@@ -177,10 +179,10 @@ object TiebaMapper {
     fun mapThreadContentToTopic(response: ThreadContentBean, threadId: String): Topic {
         val forumId = response.forum?.id ?: response.displayForum?.id ?: ""
         val forumName = response.forum?.name ?: response.displayForum?.name ?: ""
-        
-        val mainPost = response.postList?.firstOrNull { it.floor == "1" } 
+
+        val mainPost = response.postList?.firstOrNull { it.floor == "1" }
             ?: response.postList?.firstOrNull()
-        
+
         val authorBean = mainPost?.author ?: response.thread?.author
         val author = Author(
             id = authorBean?.id ?: "0",
@@ -188,28 +190,32 @@ object TiebaMapper {
             avatar = authorBean?.portrait?.let { "http://tb.himg.baidu.com/sys/portrait/item/$it" },
             sourceName = SOURCE_NAME
         )
-        
-        val threadTitle = response.thread?.title ?: mainPost?.title ?: ""
-        
-        // Extract content from first post
-        val content = mainPost?.content?.joinToString("") { contentBean: ThreadContentBean.ContentBean ->
-            when (contentBean.type) {
-                "0" -> contentBean.text ?: "" // Text
-                "1" -> "<a href=\"${contentBean.link}\">${contentBean.text}</a>" // Link
-                "2" -> if (contentBean.text == "#") "" else contentBean.text ?: "" // Emoji/Smiley (simplified)
-                "3" -> "<img src=\"${contentBean.bigCdnSrc ?: contentBean.cdnSrc ?: contentBean.src}\" />" // Image
-                else -> contentBean.text ?: ""
-            }
-        } ?: ""
 
-        val images = mainPost?.content?.filter { it.type == "3" }?.map { contentBean: ThreadContentBean.ContentBean ->
-             Image(
-                originalUrl = contentBean.bigCdnSrc ?: contentBean.cdnSrc ?: contentBean.src ?: "",
-                thumbnailUrl = contentBean.cdnSrc ?: contentBean.src ?: "",
-                width = contentBean.width?.toIntOrNull(),
-                height = contentBean.height?.toIntOrNull()
-            )
-        } ?: emptyList()
+        val threadTitle = response.thread?.title ?: mainPost?.title ?: ""
+
+        // Extract content from first post
+        val content =
+            mainPost?.content?.joinToString("") { contentBean: ThreadContentBean.ContentBean ->
+                when (contentBean.type) {
+                    "0" -> contentBean.text ?: "" // Text
+                    "1" -> "<a href=\"${contentBean.link}\">${contentBean.text}</a>" // Link
+                    "2" -> if (contentBean.text == "#") "" else contentBean.text
+                        ?: "" // Emoji/Smiley (simplified)
+                    "3" -> "<img src=\"${contentBean.bigCdnSrc ?: contentBean.cdnSrc ?: contentBean.src}\" />" // Image
+                    else -> contentBean.text ?: ""
+                }
+            } ?: ""
+
+        val images = mainPost?.content?.filter { it.type == "3" }
+            ?.map { contentBean: ThreadContentBean.ContentBean ->
+                Image(
+                    originalUrl = contentBean.bigCdnSrc ?: contentBean.cdnSrc ?: contentBean.src
+                    ?: "",
+                    thumbnailUrl = contentBean.cdnSrc ?: contentBean.src ?: "",
+                    width = contentBean.width?.toIntOrNull(),
+                    height = contentBean.height?.toIntOrNull()
+                )
+            } ?: emptyList()
 
         return Topic(
             id = threadId,
@@ -219,13 +225,15 @@ object TiebaMapper {
             content = content,
             summary = null,
             author = author,
-            createdAt = mainPost?.time?.toLongOrNull()?.let { Instant.fromEpochSeconds(it) } ?: Instant.fromEpochSeconds(0),
+            createdAt = mainPost?.time?.toLongOrNull()?.let { Instant.fromEpochSeconds(it) }
+                ?: Instant.fromEpochSeconds(0),
             commentCount = response.thread?.replyNum?.toLongOrNull() ?: 0,
             images = images,
             isSage = false,
             isAdmin = authorBean?.isBawu == "1",
             isHidden = false,
             sourceName = SOURCE_NAME,
+            sourceId = SOURCE_ID,
             sourceUrl = "$BASE_URL/p/$threadId"
         )
     }
@@ -234,7 +242,7 @@ object TiebaMapper {
         // Filter out the first post (floor 1) as it is the topic content, unless we are paging and this page doesn't contain floor 1
         // But typically floor 1 is handled in Topic.
         // Let's include all posts for now, maybe filtered by caller or UI.
-        
+
         return response.postList?.map { post: ThreadContentBean.PostListItemBean ->
             val author = Author(
                 id = post.authorId ?: post.author?.id ?: "0",
@@ -243,30 +251,34 @@ object TiebaMapper {
                 sourceName = SOURCE_NAME
             )
 
-            val content = post.content?.joinToString("") { contentBean: ThreadContentBean.ContentBean ->
-                when (contentBean.type) {
-                    "0" -> contentBean.text ?: ""
-                    "1" -> "<a href=\"${contentBean.link}\">${contentBean.text}</a>"
-                    "2" -> if (contentBean.text == "#") "" else contentBean.text ?: ""
-                    "3" -> "<img src=\"${contentBean.bigCdnSrc ?: contentBean.cdnSrc ?: contentBean.src}\" />"
-                    else -> contentBean.text ?: ""
-                }
-            } ?: ""
+            val content =
+                post.content?.joinToString("") { contentBean: ThreadContentBean.ContentBean ->
+                    when (contentBean.type) {
+                        "0" -> contentBean.text ?: ""
+                        "1" -> "<a href=\"${contentBean.link}\">${contentBean.text}</a>"
+                        "2" -> if (contentBean.text == "#") "" else contentBean.text ?: ""
+                        "3" -> "<img src=\"${contentBean.bigCdnSrc ?: contentBean.cdnSrc ?: contentBean.src}\" />"
+                        else -> contentBean.text ?: ""
+                    }
+                } ?: ""
 
-            val images = post.content?.filter { it.type == "3" }?.map { contentBean: ThreadContentBean.ContentBean ->
-                 Image(
-                    originalUrl = contentBean.bigCdnSrc ?: contentBean.cdnSrc ?: contentBean.src ?: "",
-                    thumbnailUrl = contentBean.cdnSrc ?: contentBean.src ?: "",
-                    width = contentBean.width?.toIntOrNull(),
-                    height = contentBean.height?.toIntOrNull()
-                )
-            } ?: emptyList()
+            val images = post.content?.filter { it.type == "3" }
+                ?.map { contentBean: ThreadContentBean.ContentBean ->
+                    Image(
+                        originalUrl = contentBean.bigCdnSrc ?: contentBean.cdnSrc ?: contentBean.src
+                        ?: "",
+                        thumbnailUrl = contentBean.cdnSrc ?: contentBean.src ?: "",
+                        width = contentBean.width?.toIntOrNull(),
+                        height = contentBean.height?.toIntOrNull()
+                    )
+                } ?: emptyList()
 
             Comment(
                 id = post.id ?: "",
                 topicId = topicId,
                 author = author,
-                createdAt = post.time?.toLongOrNull()?.let { Instant.fromEpochSeconds(it) } ?: Instant.fromEpochSeconds(0),
+                createdAt = post.time?.toLongOrNull()?.let { Instant.fromEpochSeconds(it) }
+                    ?: Instant.fromEpochSeconds(0),
                 title = post.title,
                 content = content,
                 images = images,
@@ -276,31 +288,33 @@ object TiebaMapper {
             )
         } ?: emptyList()
     }
-    
+
     fun mapSubFloorListToComments(response: SubFloorListBean, topicId: String): List<Comment> {
         return response.subPostList?.map { post: SubFloorListBean.PostInfo ->
-             val author = Author(
+            val author = Author(
                 id = post.author.id ?: "0",
                 name = post.author.nameShow ?: post.author.name ?: "Unknown",
                 avatar = post.author.portrait?.let { "http://tb.himg.baidu.com/sys/portrait/item/$it" },
                 sourceName = SOURCE_NAME
             )
-            
-            val content = post.content.joinToString("") { contentBean: ThreadContentBean.ContentBean ->
-                when (contentBean.type) {
-                     "0" -> contentBean.text ?: ""
-                    "1" -> "<a href=\"${contentBean.link}\">${contentBean.text}</a>"
-                    "2" -> if (contentBean.text == "#") "" else contentBean.text ?: ""
-                    "3" -> "<img src=\"${contentBean.bigCdnSrc ?: contentBean.cdnSrc ?: contentBean.src}\" />"
-                    else -> contentBean.text ?: ""
-                }
-            }
 
-             Comment(
+            val content =
+                post.content.joinToString("") { contentBean: ThreadContentBean.ContentBean ->
+                    when (contentBean.type) {
+                        "0" -> contentBean.text ?: ""
+                        "1" -> "<a href=\"${contentBean.link}\">${contentBean.text}</a>"
+                        "2" -> if (contentBean.text == "#") "" else contentBean.text ?: ""
+                        "3" -> "<img src=\"${contentBean.bigCdnSrc ?: contentBean.cdnSrc ?: contentBean.src}\" />"
+                        else -> contentBean.text ?: ""
+                    }
+                }
+
+            Comment(
                 id = post.id,
                 topicId = topicId,
                 author = author,
-                createdAt = post.time.toLongOrNull()?.let { Instant.fromEpochSeconds(it) } ?: Instant.fromEpochSeconds(0),
+                createdAt = post.time.toLongOrNull()?.let { Instant.fromEpochSeconds(it) }
+                    ?: Instant.fromEpochSeconds(0),
                 title = post.title,
                 content = content,
                 images = emptyList(), // Subposts rarely have images in this list view? Need check
@@ -311,14 +325,18 @@ object TiebaMapper {
         } ?: emptyList()
     }
 
-    fun mapFrsPageResponseToTopics(response: FrsPageResponse, defaultForumName: String, defaultForumId: String): List<Topic> {
+    fun mapFrsPageResponseToTopics(
+        response: FrsPageResponse,
+        defaultForumName: String,
+        defaultForumId: String,
+    ): List<Topic> {
         val data = response.data_ ?: return emptyList()
         val forumName = data.forum?.name ?: defaultForumName
         val forumId = data.forum?.id?.toString() ?: defaultForumId
 
         return data.thread_list.mapNotNull { thread ->
             val tid = thread.id.toString()
-            
+
             val authorUser = data.user_list.find { it.id == thread.authorId }
             val author = Author(
                 id = thread.authorId.toString(),
@@ -354,6 +372,7 @@ object TiebaMapper {
                 isHidden = false,
                 isLocal = false,
                 sourceName = SOURCE_NAME,
+                sourceId = SOURCE_ID,
                 sourceUrl = "$BASE_URL/p/$tid"
             )
         }
@@ -363,12 +382,12 @@ object TiebaMapper {
         val data = response.data_ ?: return null
         val thread = data.thread ?: return null
         val forum = data.forum
-        
+
         val forumId = forum?.id?.toString() ?: ""
         val forumName = forum?.name ?: ""
-        
+
         val mainPost = data.post_list.firstOrNull { it.floor == 1 } ?: data.post_list.firstOrNull()
-        
+
         val authorUser = data.user_list.find { it.id == mainPost?.author_id }
         val author = Author(
             id = mainPost?.author_id?.toString() ?: thread.authorId.toString(),
@@ -388,7 +407,7 @@ object TiebaMapper {
         } ?: ""
 
         val images = mainPost?.content?.filter { it.type == 3 }?.map { content ->
-             Image(
+            Image(
                 originalUrl = content.bigCdnSrc,
                 thumbnailUrl = content.cdnSrc,
                 width = content.width,
@@ -404,20 +423,22 @@ object TiebaMapper {
             content = content,
             summary = null,
             author = author,
-            createdAt = mainPost?.time?.toLong()?.let { Instant.fromEpochSeconds(it) } ?: Instant.fromEpochSeconds(0),
+            createdAt = mainPost?.time?.toLong()?.let { Instant.fromEpochSeconds(it) }
+                ?: Instant.fromEpochSeconds(0),
             commentCount = thread.replyNum.toLong(),
             images = images,
             isSage = false,
             isAdmin = false,
             isHidden = false,
             sourceName = SOURCE_NAME,
+            sourceId = SOURCE_ID,
             sourceUrl = "$BASE_URL/p/$threadId"
         )
     }
 
     fun mapPbPageResponseToComments(response: PbPageResponse, topicId: String): List<Comment> {
         val data = response.data_ ?: return emptyList()
-        
+
         return data.post_list.map { post ->
             val authorUser = data.user_list.find { it.id == post.author_id }
             val author = Author(
@@ -438,7 +459,7 @@ object TiebaMapper {
             }
 
             val images = post.content.filter { it.type == 3 }.map { content ->
-                 Image(
+                Image(
                     originalUrl = content.bigCdnSrc,
                     thumbnailUrl = content.cdnSrc,
                     width = content.width,

@@ -47,6 +47,7 @@ data class Topic(
     val isLocal: Boolean = false,
 
     // 来源信息
+    val sourceId: String,
     val sourceName: String,
     val sourceUrl: String,
 

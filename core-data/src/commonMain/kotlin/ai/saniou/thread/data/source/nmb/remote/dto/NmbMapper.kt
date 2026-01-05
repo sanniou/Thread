@@ -82,6 +82,7 @@ fun SelectSubscriptionTopic.toDomain(imageQueries: ImageQueries? = null): Topic 
     return Topic(
         id = id,
         sourceName = "nmb",
+        sourceId = "nmb",
         sourceUrl = "https://nmb.ai/thread/$id",
         title = title ?: "",
         content = content ?: "",
@@ -141,6 +142,7 @@ fun GetTopic.toDomain(imageQueries: ImageQueries? = null): Topic {
     return Topic(
         id = id,
         sourceName = sourceId ?: "nmb",
+        sourceId = sourceId ?: "nmb",
         sourceUrl = "https://nmb.ai/thread/$id",
         title = title,
         content = content ?: "",
@@ -164,6 +166,7 @@ fun GetTopic.toDomain(imageQueries: ImageQueries? = null): Topic {
 fun Thread.toDomain(): Topic = Topic(
     id = id.toString(),
     sourceName = "nmb",
+    sourceId = "nmb",
     sourceUrl = "https://nmb.ai/thread/$id",
     title = title,
     content = content ?: "",
