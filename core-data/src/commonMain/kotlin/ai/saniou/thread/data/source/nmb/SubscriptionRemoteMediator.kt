@@ -10,6 +10,7 @@ import ai.saniou.thread.data.source.nmb.remote.dto.nowToEpochMilliseconds
 import ai.saniou.thread.data.source.nmb.remote.dto.toTable
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.db.table.forum.SelectSubscriptionTopic
+import ai.saniou.thread.network.toResult
 import app.cash.paging.ExperimentalPagingApi
 import app.cash.paging.LoadType
 import app.cash.paging.PagingState
@@ -33,7 +34,7 @@ class SubscriptionRemoteMediator(
             type = RemoteKeyType.SUBSCRIBE,
             id = subscriptionKey,
         ),
-        fetcher = { page -> forumRepository.feed(subscriptionKey, page.toLong()) },
+        fetcher = { page -> forumRepository.feed(subscriptionKey, page.toLong()).toResult() },
         saver = { feedDetail, page, loadType ->
             if (loadType == LoadType.REFRESH) {
                 db.subscriptionQueries.deleteCloudSubscriptions(subscriptionKey)

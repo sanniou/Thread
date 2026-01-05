@@ -8,7 +8,6 @@ import ai.saniou.thread.data.source.nmb.remote.dto.toTable
 import ai.saniou.thread.data.source.nmb.remote.dto.toTableReply
 import ai.saniou.thread.data.manager.CdnManager
 import ai.saniou.thread.domain.model.forum.ImageType
-import ai.saniou.thread.network.SaniouResult
 import ai.saniou.thread.data.paging.DataPolicy
 import ai.saniou.thread.data.paging.DefaultRemoteKeyStrategy
 import ai.saniou.thread.data.paging.GenericRemoteMediator
@@ -26,7 +25,7 @@ class ForumRemoteMediator(
     private val dataPolicy: DataPolicy,
     private val initialPage: Int,
     private val cdnManager: CdnManager,
-    private val fetcher: suspend (page: Int) -> SaniouResult<List<Forum>>,
+    private val fetcher: suspend (page: Int) -> Result<List<Forum>>,
 ) : RemoteMediator<Int, GetThreadsInForumOffset>() {
 
     private val delegate = GenericRemoteMediator<Int, GetThreadsInForumOffset, List<Forum>>(

@@ -1,7 +1,6 @@
 package ai.saniou.thread.data.paging
 
 import ai.saniou.thread.db.Database
-import ai.saniou.thread.network.SaniouResult
 import app.cash.paging.ExperimentalPagingApi
 import app.cash.paging.LoadType
 import app.cash.paging.PagingState
@@ -37,7 +36,7 @@ class GenericRemoteMediator<Key : Any, Value : Any, ResponseType : Any>(
     private val dataPolicy: DataPolicy,
     private val initialKey: Key,
     private val remoteKeyStrategy: RemoteKeyStrategy<Key, Value>,
-    private val fetcher: suspend (key: Key) -> SaniouResult<ResponseType>,
+    private val fetcher: suspend (key: Key) -> Result<ResponseType>,
     private val saver: (ResponseType, Key, LoadType) -> Unit,
     private val endOfPaginationReached: (ResponseType) -> Boolean,
     private val cacheChecker: (suspend (Key) -> Boolean)? = null,
@@ -84,9 +83,8 @@ class GenericRemoteMediator<Key : Any, Value : Any, ResponseType : Any>(
             return RemoteMediatorMediatorResultSuccess(endOfPaginationReached = true)
         }
 
-        return when (val result = fetcher(key)) {
-            is SaniouResult.Success -> {
-                val responseData = result.data
+        return fetcher(key).fold(
+            onSuccess = { responseData ->
                 val endOfPagination = endOfPaginationReached(responseData)
 
                 db.transaction {
@@ -99,11 +97,10 @@ class GenericRemoteMediator<Key : Any, Value : Any, ResponseType : Any>(
                 }
 
                 RemoteMediatorMediatorResultSuccess(endOfPaginationReached = endOfPagination)
+            },
+            onFailure = { ex ->
+                RemoteMediatorMediatorResultError(ex)
             }
-
-            is SaniouResult.Error -> {
-                RemoteMediatorMediatorResultError(result.ex)
-            }
-        }
+        )
     }
 }

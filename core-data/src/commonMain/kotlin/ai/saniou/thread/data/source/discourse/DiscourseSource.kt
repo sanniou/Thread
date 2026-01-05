@@ -176,6 +176,15 @@ class DiscourseSource(
                 initialPage = initialPage,
                 dataPolicy = DataPolicy.NETWORK_ELSE_CACHE,
                 db = db,
+                // DiscourseRemoteMediator will likely be updated to use Result in future steps,
+                // but if it inherits from GenericRemoteMediator or similar pattern, we need to adapt here.
+                // Assuming DiscourseRemoteMediator is NOT GenericRemoteMediator but a custom one.
+                // If it IS custom, we might need to update IT as well.
+                // For now, let's leave it as the user only asked to fix "Source api definition".
+                // But wait, the user said "source returns result... GenericRemoteMediator defines SaniouResult... Repository needs conversion".
+                // We fixed GenericRemoteMediator.
+                // DiscourseRemoteMediator likely needs similar fix if it follows the pattern.
+                // Let's check DiscourseRemoteMediator later.
             ),
             pagingSourceFactory = {
                 cache.getChannelTopicPagingSource(id, channelId)
@@ -297,7 +306,12 @@ class DiscourseSource(
                 db = db,
                 dataPolicy = DataPolicy.NETWORK_ELSE_CACHE,
                 initialPage = initialPage,
-                fetcher = { page -> api.getTopic(threadId, page) }
+                fetcher = { page ->
+                     when (val result = api.getTopic(threadId, page)) {
+                         is SaniouResult.Success -> Result.success(result.data)
+                         is SaniouResult.Error -> Result.failure(result.ex)
+                     }
+                }
             ),
             pagingSourceFactory = {
                 cache.getTopicCommentsPagingSource(id, threadId)

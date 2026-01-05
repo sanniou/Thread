@@ -109,9 +109,7 @@ class TopicRepositoryImpl(
                     id = "${sourceId}_${threadId}_${isPoOnly}"
                 ),
                 fetcher = { page ->
-                    when (val result = source.getTopicComments(threadId, page, isPoOnly)) {
-                        else -> SaniouResult.Success(result.getOrDefault(emptyList()))
-                    }
+                    source.getTopicComments(threadId, page, isPoOnly)
                 },
                 saver = { comments, page, loadType ->
                     if (loadType == LoadType.REFRESH) {

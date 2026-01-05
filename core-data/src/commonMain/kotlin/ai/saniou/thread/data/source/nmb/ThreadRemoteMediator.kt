@@ -12,7 +12,6 @@ import ai.saniou.thread.data.manager.CdnManager
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.db.table.forum.Comment
 import ai.saniou.thread.domain.model.forum.ImageType
-import ai.saniou.thread.network.SaniouResult
 import app.cash.paging.ExperimentalPagingApi
 import app.cash.paging.LoadType
 import app.cash.paging.PagingState
@@ -28,7 +27,7 @@ class ThreadRemoteMediator(
     private val initialPage: Int,
     private val isPoOnly: Boolean = false,
     private val cdnManager: CdnManager,
-    private val fetcher: suspend (page: Int) -> SaniouResult<Thread>,
+    private val fetcher: suspend (page: Int) -> Result<Thread>,
 ) : RemoteMediator<Int, Comment>() {
 
     // When isPoOnly is true, we store pages as negative numbers to distinguish from normal pages

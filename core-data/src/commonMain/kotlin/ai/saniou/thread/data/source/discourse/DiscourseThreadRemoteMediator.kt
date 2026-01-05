@@ -9,7 +9,6 @@ import ai.saniou.thread.data.source.discourse.remote.dto.DiscourseTopicDetailRes
 import ai.saniou.thread.data.source.nmb.remote.dto.RemoteKeyType
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.db.table.forum.Comment
-import ai.saniou.thread.network.SaniouResult
 import app.cash.paging.ExperimentalPagingApi
 import app.cash.paging.LoadType
 import app.cash.paging.PagingState
@@ -24,7 +23,7 @@ class DiscourseThreadRemoteMediator(
     private val db: Database,
     private val dataPolicy: DataPolicy,
     private val initialPage: Int,
-    private val fetcher: suspend (page: Int) -> SaniouResult<DiscourseTopicDetailResponse>,
+    private val fetcher: suspend (page: Int) -> Result<DiscourseTopicDetailResponse>,
 ) : RemoteMediator<Int, Comment>() {
 
     private val delegate = GenericRemoteMediator<Int, Comment, DiscourseTopicDetailResponse>(

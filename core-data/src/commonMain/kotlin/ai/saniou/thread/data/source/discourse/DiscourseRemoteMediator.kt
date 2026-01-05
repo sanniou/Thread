@@ -13,6 +13,7 @@ import ai.saniou.thread.data.source.nmb.remote.dto.RemoteKeyType
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.db.table.forum.GetTopicsInChannelOffset
 import ai.saniou.thread.db.table.forum.Topic
+import ai.saniou.thread.network.toResult
 import app.cash.paging.ExperimentalPagingApi
 import app.cash.paging.LoadType
 import app.cash.paging.PagingState
@@ -45,7 +46,7 @@ class DiscourseRemoteMediator(
                     api.getLatestTopics(page)
                 } else {
                     api.getCategoryTopics(fid, page)
-                }
+                }.toResult()
             },
             saver = { response, page, loadType ->
                 val usersMap = response.users.associateBy { it.id }

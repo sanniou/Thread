@@ -351,10 +351,14 @@ class NmbSource(
                 isPoOnly = isPoOnly,
                 cdnManager = cdnManager,
                 fetcher = { page ->
-                    if (isPoOnly) {
+                    val result = if (isPoOnly) {
                         nmbXdApi.po(threadId, page.toLong())
                     } else {
                         nmbXdApi.thread(threadId, page.toLong())
+                    }
+                    when (result) {
+                        is SaniouResult.Success -> Result.success(result.data)
+                        is SaniouResult.Error -> Result.failure(result.ex)
                     }
                 }
             ),
@@ -554,7 +558,13 @@ class NmbSource(
                 dataPolicy = policy,
                 initialPage = initialPage,
                 cdnManager = cdnManager,
-                fetcher = fetcher
+                fetcher = { page ->
+                    // Adapt legacy SaniouResult fetcher to Result
+                    when (val result = fetcher(page)) {
+                        is SaniouResult.Success -> Result.success(result.data)
+                        is SaniouResult.Error -> Result.failure(result.ex)
+                    }
+                }
             ),
             pagingSourceFactory = {
                 QueryPagingSource(

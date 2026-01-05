@@ -11,17 +11,16 @@ import ai.saniou.thread.db.Database
 import ai.saniou.thread.domain.model.forum.Channel
 import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.repository.ChannelRepository
+import ai.saniou.thread.domain.repository.Source
+import app.cash.paging.LoadType
 import app.cash.paging.PagingData
+import app.cash.paging.map
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
-
-import ai.saniou.thread.domain.repository.Source
-import ai.saniou.thread.network.SaniouResult
-import app.cash.paging.LoadType
-import app.cash.paging.map
 
 class ChannelRepositoryImpl(
     private val db: Database,
@@ -126,8 +125,7 @@ class ChannelRepositoryImpl(
         isTimeline: Boolean,
         initialPage: Int,
     ): Flow<PagingData<Topic>> {
-        val source =
-            sourceMap[sourceId] ?: return kotlinx.coroutines.flow.flowOf(PagingData.empty())
+        val source = sourceMap[sourceId] ?: return flowOf(PagingData.empty())
 
         return app.cash.paging.Pager(
             config = app.cash.paging.PagingConfig(pageSize = 20),
@@ -142,9 +140,7 @@ class ChannelRepositoryImpl(
                     id = "${sourceId}_${fid}_${isTimeline}"
                 ),
                 fetcher = { page ->
-                    when (val result = source.getChannelTopics(fid, page, isTimeline)) {
-                        else -> SaniouResult.Success(result.getOrDefault(emptyList()))
-                    }
+                    source.getChannelTopics(fid, page, isTimeline)
                 },
                 saver = { topics, page, loadType ->
                     if (loadType == LoadType.REFRESH) {

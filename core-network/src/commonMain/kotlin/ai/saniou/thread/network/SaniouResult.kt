@@ -16,3 +16,10 @@ sealed class SaniouResult<T> {
         }
     }
 }
+
+fun <T> SaniouResult<T>.toResult(): Result<T> {
+    return when (this) {
+        is SaniouResult.Success -> Result.success(data)
+        is SaniouResult.Error -> Result.failure(ex)
+    }
+}
