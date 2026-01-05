@@ -49,7 +49,7 @@ class SubscriptionRemoteMediator(
                     sourceId = "nmb",
                     topicId = feed.id.toString(),
                     page = page.toLong(),
-                    subscriptionTime = feed.nowToEpochMilliseconds(),
+                    subscriptionTime = feed.now.nowToEpochMilliseconds(),
                     isLocal = 0
                 )
             }

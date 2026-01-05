@@ -53,7 +53,7 @@ fun Feed.toTable(sourceId: String, page: Long) = EntityTopic(
     sourceId = sourceId,
     channelId = fid.toString(),
     commentCount = replyCount,
-    createdAt = nowToEpochMilliseconds(), // now -> createdAt (Long)
+    createdAt = now.nowToEpochMilliseconds(), // now -> createdAt (Long)
     userHash = userHash,
     authorName = name,
     title = title,
@@ -66,10 +66,10 @@ fun Feed.toTable(sourceId: String, page: Long) = EntityTopic(
 )
 
 @OptIn(ExperimentalTime::class)
-fun Feed.nowToEpochMilliseconds(): Long {
+fun String.nowToEpochMilliseconds(): Long {
     // 原始格式：2025-11-17(一)04:10:48
     // 1. 去掉括号和星期
-    val cleaned = this.now.replace(Regex("\\(.*?\\)"), "")
+    val cleaned = this.replace(Regex("\\(.*?\\)"), "")
 
     // cleaned: "2025-11-1704:10:48"
     // 2. 插入一个 T，变成 ISO-8601 兼容格式
@@ -122,7 +122,8 @@ fun ForumThread.toDomain(): Topic {
         isLocal = false,
         // fixme  后续处理 lastReadCommentId 和 comments
         lastViewedCommentId = null,
-        orderKey = (replies.maxOfOrNull { it.id } ?: id).toString(),
+        orderKey = (replies.maxOfOrNull { it.now.nowToEpochMilliseconds() }
+            ?: now.nowToEpochMilliseconds()),
         comments = replies.map { it.toDomain(it.toString()) },
         remainingCount = remainingCount
     )

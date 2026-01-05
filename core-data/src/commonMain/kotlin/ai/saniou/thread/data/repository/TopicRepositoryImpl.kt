@@ -16,7 +16,6 @@ import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.model.forum.TopicMetadata
 import ai.saniou.thread.domain.repository.Source
 import ai.saniou.thread.domain.repository.TopicRepository
-import ai.saniou.thread.network.SaniouResult
 import app.cash.paging.ExperimentalPagingApi
 import app.cash.paging.LoadType
 import app.cash.paging.Pager
@@ -31,7 +30,6 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.withContext
 
@@ -94,9 +92,9 @@ class TopicRepositoryImpl(
         initialPage: Int,
     ): Flow<PagingData<Comment>> {
         val source = sourceMap[sourceId] ?: return flowOf(PagingData.empty())
-
+        val pageSize = 20
         return Pager(
-            config = PagingConfig(pageSize = 20),
+            config = PagingConfig(pageSize = pageSize),
             initialKey = initialPage,
             remoteMediator = GenericRemoteMediator(
                 db = db,
@@ -128,7 +126,13 @@ class TopicRepositoryImpl(
                         it.toEntity(sourceId, page.toLong())
                     })
                 },
-                endOfPaginationReached = { it.isEmpty() },
+                endOfPaginationReached = {
+                    //  nmb 特有的问题，正常的一页数据也会小于 20,所以只能判断是否为空来处理
+                    if (sourceId == "nmd")
+                        it.isEmpty()
+                    else
+                        it.size < pageSize
+                },
                 keyIncrementer = { it + 1 },
                 keyDecrementer = { it - 1 },
                 keyToLong = { it.toLong() },

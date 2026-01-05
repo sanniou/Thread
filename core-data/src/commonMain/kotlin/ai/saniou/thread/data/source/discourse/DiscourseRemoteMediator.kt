@@ -64,7 +64,7 @@ class DiscourseRemoteMediator(
                         id = topic.id,
                         sourceId = sourceId,
                         remainingCount = 0,
-                        latestCommentId = "" // Placeholder
+                        lastReplyAt = 0 // Placeholder
                     )
                 }
             },

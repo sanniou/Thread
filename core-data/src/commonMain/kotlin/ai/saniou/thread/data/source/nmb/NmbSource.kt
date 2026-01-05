@@ -207,55 +207,7 @@ class NmbSource(
 
             val response = nmbXdApi.thread(tid, page.toLong())
             if (response is SaniouResult.Success) {
-                val thread = response.data
-                db.topicQueries.transaction {
-                    val topic = thread.toTable(id, page = page.toLong())
-                    db.topicQueries.upsertTopic(topic)
-                    // Save Topic Image
-                    saveNmbImage(
-                        db = db,
-                        cdnManager = cdnManager,
-                        sourceId = id,
-                        parentId = thread.id.toString(),
-                        parentType = ImageType.Topic,
-                        img = thread.img,
-                        ext = thread.ext
-                    )
-
-                    // Save Topic as Comment (Floor 1)
-                    db.commentQueries.upsertComment(
-                        thread.toCommentEntity(sourceId = id)
-                    )
-                    saveNmbImage(
-                        db = db,
-                        cdnManager = cdnManager,
-                        sourceId = id,
-                        parentId = thread.id.toString(),
-                        parentType = ImageType.Comment,
-                        img = thread.img,
-                        ext = thread.ext
-                    )
-
-                    thread.replies.forEach { reply ->
-                        db.commentQueries.upsertComment(
-                            reply.toTableReply(
-                                sourceId = id,
-                                threadId = thread.id,
-                                page = page.toLong()
-                            )
-                        )
-                        saveNmbImage(
-                            db = db,
-                            cdnManager = cdnManager,
-                            sourceId = id,
-                            parentId = reply.id.toString(),
-                            parentType = ImageType.Comment,
-                            img = reply.img,
-                            ext = reply.ext
-                        )
-                    }
-                }
-                Result.success(thread.toDomain())
+                Result.success(response.data.toDomain())
             } else {
                 Result.failure((response as SaniouResult.Error).ex)
             }
@@ -571,37 +523,7 @@ class NmbSource(
         initialPage: Int,
         fetcher: suspend (page: Int) -> SaniouResult<List<ForumThread>>,
     ): Pager<Int, GetTopicsInChannelOffset> {
-        TODO()
-//        val pageSize = 20
-//        return Pager(
-//            config = PagingConfig(pageSize = pageSize),
-//            initialKey = initialPage,
-//            remoteMediator = ForumRemoteMediator(
-//                sourceId = id,
-//                fid = fid.toString(),
-//                db = db,
-//                dataPolicy = policy,
-//                initialPage = initialPage,
-//                cdnManager = cdnManager,
-//                fetcher = { page ->
-//                    // Adapt legacy SaniouResult fetcher to Result
-//                    when (val result = fetcher(page)) {
-//                        is SaniouResult.Success -> Result.success(result.data)
-//                        is SaniouResult.Error -> Result.failure(result.ex)
-//                    }
-//                }
-//            ),
-//            pagingSourceFactory = {
-//                QueryPagingSource(
-//                    transacter = db.topicQueries,
-//                    context = Dispatchers.Default,
-//                    countQuery = db.topicQueries.countTopicsByChannel(id, fid.toString()),
-//                    queryProvider = { limit, offset ->
-//                        db.topicQueries.getTopicsInChannelOffset(id, fid.toString(), limit, offset)
-//                    },
-//                )
-//            }
-//        )
+        throw NotImplementedError("createPager is deprecated and removed. Use ChannelRepository.getChannelTopicsPaging instead.")
     }
 
     override suspend fun getTopicComments(
@@ -619,14 +541,16 @@ class NmbSource(
                 nmbXdApi.thread(tid, page.toLong())
             }
 
-            when (val response = apiCall) {
+            when (apiCall) {
                 is SaniouResult.Success -> {
-                    val thread = response.data
+                    val thread = apiCall.data
                     val comments = mutableListOf<Comment>()
 
-                    // 将 Thread (主楼) 作为 Comment 存入
-                    // 主楼也视为一个 Comment
-                    comments.add(thread.toDomainComment(sourceId = id))
+                    if (page == 1) {
+                        // 将 Thread (主楼) 作为 Comment 存入
+                        // 主楼也视为一个 Comment
+                        comments.add(thread.toDomainComment(sourceId = id))
+                    }
 
                     // 添加回复
                     comments.addAll(
@@ -639,7 +563,7 @@ class NmbSource(
                 }
 
                 is SaniouResult.Error -> {
-                    Result.failure(response.ex)
+                    Result.failure(apiCall.ex)
                 }
             }
         } catch (e: Exception) {

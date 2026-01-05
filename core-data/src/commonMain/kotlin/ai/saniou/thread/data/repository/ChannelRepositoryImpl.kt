@@ -130,7 +130,7 @@ class ChannelRepositoryImpl(
         val pageSize = 20;
 
         return Pager(
-            config = PagingConfig(pageSize = 20),
+            config = PagingConfig(pageSize = pageSize),
             initialKey = initialPage,
             remoteMediator = GenericRemoteMediator(
                 db = db,
@@ -186,10 +186,7 @@ class ChannelRepositoryImpl(
                     )
                 },
                 endOfPaginationReached = {
-                    if (sourceId == "nmd")
-                        it.isEmpty()
-                    else
-                        it.size < 20
+                    it.size < pageSize
                 },
                 keyIncrementer = { it + 1 },
                 keyDecrementer = { it - 1 },
@@ -197,14 +194,17 @@ class ChannelRepositoryImpl(
                 longToKey = { it.toInt() }
             ),
             pagingSourceFactory = {
+                // Now using cache which returns Domain objects directly (as mapped in Cache implementation)
+                // Actually SqlDelightSourceCache returns Flow<PagingSource<Int, GetTopicsInChannelOffset>>
+                // which is PagingSource<Int, Entity>.
+                // Wait, let's check SqlDelightSourceCache.getChannelTopicPagingSource signature.
+                // It returns PagingSource<Int, GetTopicsInChannelOffset>.
+                // So we still need to map it here.
                 cache.getChannelTopicPagingSource(sourceId, channelId)
             }
         ).flow.map { pagingData ->
             pagingData.map {
-                it.toDomain(
-                    db.commentQueries,
-                    db.imageQueries
-                )
+                it.toDomain(db.commentQueries, db.imageQueries)
             }
         }
     }
