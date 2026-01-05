@@ -1,5 +1,6 @@
 package ai.saniou.thread.data.source.tieba
 
+import ai.saniou.thread.data.mapper.toDomain
 import ai.saniou.thread.data.source.tieba.remote.ClientVersion
 import ai.saniou.thread.data.source.tieba.remote.MiniTiebaApi
 import ai.saniou.thread.data.source.tieba.remote.OfficialProtobufTiebaApi
@@ -40,7 +41,7 @@ class TiebaSource(
     private val webTiebaApi: WebTiebaApi,
     private val database: Database,
     private val accountRepository: AccountRepository,
-    private val tiebaParameterProvider: TiebaParameterProvider
+    private val tiebaParameterProvider: TiebaParameterProvider,
 ) : Source {
     override val id: String = TiebaMapper.SOURCE_ID
     override val name: String = "百度贴吧"
@@ -56,7 +57,7 @@ class TiebaSource(
             .asFlow()
             .mapToList(Dispatchers.IO)
             .map { entities ->
-                entities.map { TiebaMapper.mapEntityToChannel(it) }
+                entities.map { it.toDomain(database.channelQueries) }
             }
     }
 
@@ -64,7 +65,10 @@ class TiebaSource(
         val body = TiebaProtoBuilder.buildProtobufFormBody(
             data = com.huanchengfly.tieba.post.api.models.protos.forumRecommend.ForumRecommendRequest(
                 com.huanchengfly.tieba.post.api.models.protos.forumRecommend.ForumRecommendRequestData(
-                    common = TiebaProtoBuilder.buildCommonRequest(tiebaParameterProvider, ClientVersion.TIEBA_V11)
+                    common = TiebaProtoBuilder.buildCommonRequest(
+                        tiebaParameterProvider,
+                        ClientVersion.TIEBA_V11
+                    )
                 )
             ),
             clientVersion = ClientVersion.TIEBA_V11,
@@ -100,7 +104,7 @@ class TiebaSource(
     override suspend fun getChannelTopics(
         channelId: String,
         page: Int,
-        isTimeline: Boolean
+        isTimeline: Boolean,
     ): Result<List<Topic>> = runCatching {
         val channel = database.channelQueries.getChannel(TiebaMapper.SOURCE_ID, channelId)
             .executeAsOneOrNull()
@@ -109,7 +113,10 @@ class TiebaSource(
 
         val request = FrsPageRequest(
             FrsPageRequestData(
-                common = TiebaProtoBuilder.buildCommonRequest(tiebaParameterProvider, ClientVersion.TIEBA_V12),
+                common = TiebaProtoBuilder.buildCommonRequest(
+                    tiebaParameterProvider,
+                    ClientVersion.TIEBA_V12
+                ),
                 kw = forumName,
                 pn = page,
                 rn = 30,
@@ -130,7 +137,9 @@ class TiebaSource(
             parameterProvider = tiebaParameterProvider
         )
 
-        val response = officialProtobufTiebaApiV12.frsPageFlow(body, forumName.encodeURLQueryComponent()).first()
+        val response =
+            officialProtobufTiebaApiV12.frsPageFlow(body, forumName.encodeURLQueryComponent())
+                .first()
 
         if (response.error?.error_code != 0) {
             throw Exception("Tieba Error: ${response.error?.error_msg} (Code: ${response.error?.error_code})")
@@ -143,7 +152,7 @@ class TiebaSource(
     override fun getTopicsPager(
         channelId: String,
         isTimeline: Boolean,
-        initialPage: Int
+        initialPage: Int,
     ): Flow<PagingData<Topic>> {
         // Tieba uses forum name as key in many places, but channelId in DB is forumId.
         // We might need to fetch the forum name from DB if channelId is numeric ID.
@@ -174,11 +183,14 @@ class TiebaSource(
     override suspend fun getTopicComments(
         threadId: String,
         page: Int,
-        isPoOnly: Boolean
+        isPoOnly: Boolean,
     ): Result<List<Comment>> = runCatching {
-         val request = PbPageRequest(
+        val request = PbPageRequest(
             PbPageRequestData(
-                common = TiebaProtoBuilder.buildCommonRequest(tiebaParameterProvider, ClientVersion.TIEBA_V12),
+                common = TiebaProtoBuilder.buildCommonRequest(
+                    tiebaParameterProvider,
+                    ClientVersion.TIEBA_V12
+                ),
                 kz = threadId.toLongOrNull() ?: 0L,
                 pn = page,
                 rn = 30,
@@ -211,7 +223,10 @@ class TiebaSource(
     override suspend fun getTopicDetail(threadId: String, page: Int): Result<Topic> = runCatching {
         val request = PbPageRequest(
             PbPageRequestData(
-                common = TiebaProtoBuilder.buildCommonRequest(tiebaParameterProvider, ClientVersion.TIEBA_V12),
+                common = TiebaProtoBuilder.buildCommonRequest(
+                    tiebaParameterProvider,
+                    ClientVersion.TIEBA_V12
+                ),
                 kz = threadId.toLongOrNull() ?: 0L,
                 pn = page,
                 rn = 30,
@@ -235,34 +250,35 @@ class TiebaSource(
         val response = officialProtobufTiebaApiV12.pbPageFlow(body).first()
 
         if (response.error?.error_code != 0) {
-             throw Exception("Failed to fetch topic detail: ${response.error?.error_msg} (Code: ${response.error?.error_code})")
+            throw Exception("Failed to fetch topic detail: ${response.error?.error_msg} (Code: ${response.error?.error_code})")
         }
-        TiebaMapper.mapPbPageResponseToTopic(response, threadId) ?: throw Exception("Failed to map topic")
+        TiebaMapper.mapPbPageResponseToTopic(response, threadId)
+            ?: throw Exception("Failed to map topic")
     }
 
     override fun getTopicCommentsPager(
         threadId: String,
         initialPage: Int,
-        isPoOnly: Boolean
+        isPoOnly: Boolean,
     ): Flow<PagingData<Comment>> {
-         return Pager(
-             config = PagingConfig(pageSize = 30),
-             pagingSourceFactory = {
-                 TiebaCommentPagingSource(
-                     officialProtobufTiebaApiV12,
-                     threadId,
-                     isPoOnly,
-                     tiebaParameterProvider
-                 )
-             }
-         ).flow
+        return Pager(
+            config = PagingConfig(pageSize = 30),
+            pagingSourceFactory = {
+                TiebaCommentPagingSource(
+                    officialProtobufTiebaApiV12,
+                    threadId,
+                    isPoOnly,
+                    tiebaParameterProvider
+                )
+            }
+        ).flow
     }
 
     override fun getChannel(channelId: String): Flow<Channel?> {
         return database.channelQueries.getChannel(id, channelId)
             .asFlow()
             .mapToOneOrNull(Dispatchers.IO)
-            .map { it?.let { TiebaMapper.mapEntityToChannel(it) } }
+            .map { it?.toDomain(database.channelQueries) }
     }
 }
 
@@ -270,7 +286,7 @@ class TiebaTopicPagingSource(
     private val api: OfficialProtobufTiebaApi,
     private val database: Database,
     private val channelId: String,
-    private val parameterProvider: TiebaParameterProvider
+    private val parameterProvider: TiebaParameterProvider,
 ) : PagingSource<Int, Topic>() {
 
     override fun getRefreshKey(state: PagingState<Int, Topic>): Int? {
@@ -290,7 +306,10 @@ class TiebaTopicPagingSource(
 
             val request = FrsPageRequest(
                 FrsPageRequestData(
-                    common = TiebaProtoBuilder.buildCommonRequest(parameterProvider, ClientVersion.TIEBA_V12),
+                    common = TiebaProtoBuilder.buildCommonRequest(
+                        parameterProvider,
+                        ClientVersion.TIEBA_V12
+                    ),
                     kw = forumName,
                     pn = page,
                     rn = 30, // Request count
@@ -321,10 +340,14 @@ class TiebaTopicPagingSource(
                 .first()
 
             if (response.error?.error_code != 0) {
-                 return LoadResult.Error(Exception("Tieba Error: ${response.error?.error_msg} (Code: ${response.error?.error_code})"))
+                return LoadResult.Error(Exception("Tieba Error: ${response.error?.error_msg} (Code: ${response.error?.error_code})"))
             }
 
-            val topics = TiebaMapper.mapFrsPageResponseToTopics(response, forumName, forumName) // Assuming forumName/Id is correct
+            val topics = TiebaMapper.mapFrsPageResponseToTopics(
+                response,
+                forumName,
+                forumName
+            ) // Assuming forumName/Id is correct
 
             val nextKey = if (response.data_?.page?.has_more == 1) page + 1 else null
 
@@ -343,7 +366,7 @@ class TiebaCommentPagingSource(
     private val api: OfficialProtobufTiebaApi,
     private val threadId: String,
     private val isPoOnly: Boolean,
-    private val parameterProvider: TiebaParameterProvider
+    private val parameterProvider: TiebaParameterProvider,
 ) : PagingSource<Int, Comment>() {
     override fun getRefreshKey(state: PagingState<Int, Comment>): Int? {
         return state.anchorPosition?.let { anchorPosition ->
@@ -357,7 +380,10 @@ class TiebaCommentPagingSource(
         return try {
             val request = PbPageRequest(
                 PbPageRequestData(
-                    common = TiebaProtoBuilder.buildCommonRequest(parameterProvider, ClientVersion.TIEBA_V12),
+                    common = TiebaProtoBuilder.buildCommonRequest(
+                        parameterProvider,
+                        ClientVersion.TIEBA_V12
+                    ),
                     kz = threadId.toLongOrNull() ?: 0L,
                     pn = page,
                     rn = 30,

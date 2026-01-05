@@ -110,6 +110,10 @@
 5.  **API 错误处理**:
     -   API 层返回 `SaniouResult<T>`，作为防腐层隔离网络异常。
     -   Source 层将 `SaniouResult.Error` 转换为 `Result.failure`。
+6.  core data 中的 Mapper 定义 
+    - 包名 ai.saniou.thread.data.mapper 下定义了所有Domain 层和DB层的互相转换函数。eg：ai.saniou.thread.data.mapper.TopicMapperKt#toEntity 
+    - source 下则定义了所有 api response 到 Domain 层的转换函数。eg：ai.saniou.thread.data.source.nmb.remote.dto.NmbMapperKt#toDomain(ai.saniou.thread.db.table.forum.TimeLine)
+
 
 ### 2.7 富文本渲染 (Rich Text Rendering)
 核心 UI 组件库提供了分层的富文本处理能力，请根据业务场景选择：
