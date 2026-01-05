@@ -36,13 +36,13 @@ class TopicViewModel(
     getChannelDetailUseCase: GetChannelDetailUseCase,
     getChannelNameUseCase: GetChannelNameUseCase,
     private val sourceId: String,
-    private val forumId: String,
-    private val fgroupId: String,
+    private val channelId: String,
+    private val channelCategoryId: String,
 ) : ScreenModel {
 
     private data class LoadRequest(
-        val fid: String,
-        val fgroup: String,
+        val channelId: String,
+        val channelCategory: String,
         val policy: DataPolicy = DataPolicy.NETWORK_ELSE_CACHE,
         val page: Int = 1,
     )
@@ -50,26 +50,26 @@ class TopicViewModel(
     private val _effect = Channel<Effect>()
     val effect = _effect.receiveAsFlow()
 
-    private val loadParams = MutableStateFlow(LoadRequest(fid = forumId, fgroup = fgroupId))
+    private val loadParams = MutableStateFlow(LoadRequest(channelId = channelId, channelCategory = channelCategoryId))
     private val showInfoDialog = MutableStateFlow(false)
 
     val topics: Flow<PagingData<Topic>> =
         loadParams.flatMapLatest { request ->
             getChannelTopicsPagingUseCase(
                 sourceId = sourceId,
-                fid = request.fid,
-                isTimeline = request.fgroup == "-1",
+                channelId = request.channelId,
+                isTimeline = request.channelCategory == "-1",
                 initialPage = request.page
             )
         }.cachedIn(screenModelScope)
 
-    private val forumDetailFlow = getChannelDetailUseCase(sourceId, forumId)
+    private val forumDetailFlow = getChannelDetailUseCase(sourceId, channelId)
         .map { UiStateWrapper.Success(it) as UiStateWrapper<ai.saniou.thread.domain.model.forum.Channel> }
         .onStart { emit(UiStateWrapper.Loading) }
         .catch { emit(UiStateWrapper.Error(it.toAppError())) }
 
     val state: StateFlow<State> = combine(
-        getChannelNameUseCase(sourceId, forumId),
+        getChannelNameUseCase(sourceId, channelId),
         forumDetailFlow,
         showInfoDialog
     ) { forumName, forumDetail, showDialog ->

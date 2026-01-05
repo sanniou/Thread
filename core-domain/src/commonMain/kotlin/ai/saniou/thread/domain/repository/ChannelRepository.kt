@@ -25,14 +25,14 @@ interface ChannelRepository {
     /**
      * 获取板块下的帖子分页数据
      *
-     * @param fid 板块ID
+     * @param channelId 板块ID
      * @param isTimeline 是否为时间线模式
      * @param initialPage 初始页码
      * @return 包含帖子分页数据的 Flow
      */
     fun getChannelTopicsPaging(
         sourceId: String,
-        fid: String,
+        channelId: String,
         isTimeline: Boolean,
         initialPage: Int = 1
     ): Flow<PagingData<Topic>>
@@ -41,19 +41,19 @@ interface ChannelRepository {
      * 获取板块名称
      *
      * @param sourceId 来源ID
-     * @param fid 板块ID
+     * @param channelId 板块ID
      * @return 包含板块名称的 Flow, 如果找不到则为 null
      */
-    fun getChannelName(sourceId: String, fid: String): Flow<String?>
+    fun getChannelName(sourceId: String, channelId: String): Flow<String?>
 
     /**
      * 获取板块详情
      *
      * @param sourceId 来源ID
-     * @param fid 板块ID
+     * @param channelId 板块ID
      * @return 包含板块详情的 Flow
      */
-    fun getChannelDetail(sourceId: String, fid: String): Flow<Channel?>
+    fun getChannelDetail(sourceId: String, channelId: String): Flow<Channel?>
 
     /**
      * 保存最后打开的板块

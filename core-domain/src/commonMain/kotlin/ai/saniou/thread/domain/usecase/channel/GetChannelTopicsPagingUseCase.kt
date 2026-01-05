@@ -10,13 +10,13 @@ class GetChannelTopicsPagingUseCase(
 ) {
     operator fun invoke(
         sourceId: String,
-        fid: String,
+        channelId: String,
         isTimeline: Boolean,
         initialPage: Int = 1,
     ): Flow<PagingData<Topic>> {
         return channelRepository.getChannelTopicsPaging(
             sourceId = sourceId,
-            fid = fid,
+            channelId = channelId,
             isTimeline = isTimeline,
             initialPage = initialPage
         )

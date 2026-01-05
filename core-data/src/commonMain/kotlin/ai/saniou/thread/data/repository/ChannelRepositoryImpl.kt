@@ -209,14 +209,14 @@ class ChannelRepositoryImpl(
         }
     }
 
-    override fun getChannelName(sourceId: String, fid: String): Flow<String?> {
+    override fun getChannelName(sourceId: String, channelId: String): Flow<String?> {
         val source = sourceMap[sourceId] ?: return kotlinx.coroutines.flow.flowOf(null)
-        return source.getChannel(fid).map { it?.name }
+        return source.getChannel(channelId).map { it?.name }
     }
 
-    override fun getChannelDetail(sourceId: String, fid: String): Flow<Channel?> {
+    override fun getChannelDetail(sourceId: String, channelId: String): Flow<Channel?> {
         val source = sourceMap[sourceId] ?: return kotlinx.coroutines.flow.flowOf(null)
-        return source.getChannel(fid)
+        return source.getChannel(channelId)
     }
 
     override suspend fun saveLastOpenedChannel(channel: Channel?) {

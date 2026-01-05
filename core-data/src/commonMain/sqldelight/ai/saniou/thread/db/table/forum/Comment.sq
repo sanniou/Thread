@@ -2,14 +2,14 @@
 CREATE TABLE IF NOT EXISTS Comment (
     id TEXT NOT NULL,
     sourceId TEXT NOT NULL,
-    topicId TEXT NOT NULL, -- 原 threadId
+    topicId TEXT NOT NULL,
     page INTEGER NOT NULL,
     userHash TEXT NOT NULL,
     admin INTEGER NOT NULL,
     title TEXT, -- 可为空
-    createdAt INTEGER NOT NULL, -- 原 now
+    createdAt INTEGER NOT NULL,
     content TEXT NOT NULL,
-    authorName TEXT NOT NULL, -- 原 name
+    authorName TEXT NOT NULL,
     floor INTEGER, -- 新增 floor
     replyToId TEXT, -- 新增 replyToId
     PRIMARY KEY (sourceId, id),
@@ -72,7 +72,7 @@ SELECT * FROM Comment WHERE sourceId = :sourceId AND id = :id;
 
 -- 获取指定 topicId 的最后五条回复
 getLastFiveComments:
-SELECT * FROM Comment WHERE sourceId = :sourceId AND topicId = :topicId AND (floor != 1 || floor ISNULL ) ORDER BY id DESC LIMIT 5;
+SELECT * FROM Comment WHERE sourceId = :sourceId AND topicId = :topicId AND (floor != 1 || floor ISNULL ) ORDER BY createdAt DESC LIMIT 5;
 
 -- 统计有效的 Comment 数量
 countValidComments:

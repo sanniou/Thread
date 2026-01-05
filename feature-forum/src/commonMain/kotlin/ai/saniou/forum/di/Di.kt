@@ -88,8 +88,8 @@ val nmbFeatureModule = DI.Module("nmbFeatureModule") {
             instance(),
             instance(),
             sourceId = params.first,
-            forumId = params.second,
-            fgroupId = params.third
+            channelId = params.second,
+            channelCategoryId = params.third
         )
     }
 

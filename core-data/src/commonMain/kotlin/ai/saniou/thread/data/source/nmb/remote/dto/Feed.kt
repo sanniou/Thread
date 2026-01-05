@@ -124,7 +124,7 @@ fun ForumThread.toDomain(): Topic {
         lastViewedCommentId = null,
         orderKey = (replies.maxOfOrNull { it.now.nowToEpochMilliseconds() }
             ?: now.nowToEpochMilliseconds()),
-        comments = replies.map { it.toDomain(it.toString()) },
+        comments = replies.map { it.toDomain(id.toString()) },
         remainingCount = remainingCount
     )
 }
