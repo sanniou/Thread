@@ -50,6 +50,7 @@ import kotlinx.datetime.plus
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
 import kotlin.time.ExperimentalTime
+import ai.saniou.thread.data.source.nmb.remote.dto.toDomainComment
 
 class NmbSource(
     private val nmbXdApi: NmbXdApi,
@@ -610,76 +611,31 @@ class NmbSource(
     ): Result<List<Comment>> {
         val tid = threadId.toLongOrNull()
             ?: return Result.failure(IllegalArgumentException("Invalid NMB thread ID"))
-        return getThreadRepliesByPage(tid, page, isPoOnly)
-            .map { list -> list.map { it.toDomain(db.imageQueries) } }
-    }
 
-    suspend fun getThreadRepliesByPage(
-        threadId: Long,
-        page: Int,
-        isPoOnly: Boolean = false,
-    ): Result<List<ThreadReply>> {
         return try {
             val apiCall = if (isPoOnly) {
-                nmbXdApi.po(threadId, page.toLong())
+                nmbXdApi.po(tid, page.toLong())
             } else {
-                nmbXdApi.thread(threadId, page.toLong())
+                nmbXdApi.thread(tid, page.toLong())
             }
 
             when (val response = apiCall) {
                 is SaniouResult.Success -> {
                     val thread = response.data
-                    // 更新数据库
-                    db.topicQueries.transaction {
-                        val topic = thread.toTable(id, page = page.toLong())
-                        db.topicQueries.upsertTopic(topic)
-                        // 保存 Topic 图片
-                        saveNmbImage(
-                            db = db,
-                            cdnManager = cdnManager,
-                            sourceId = id,
-                            parentId = thread.id.toString(),
-                            parentType = ImageType.Topic,
-                            img = thread.img,
-                            ext = thread.ext
-                        )
+                    val comments = mutableListOf<Comment>()
 
-                        // 将 Thread (主楼) 作为 Comment 存入
-                        db.commentQueries.upsertComment(
-                            thread.toCommentEntity(sourceId = id)
-                        )
-                        // 保存 Comment 图片 (为主楼图片再存一份，关联到 commentId)
-                        saveNmbImage(
-                            db = db,
-                            cdnManager = cdnManager,
-                            sourceId = id,
-                            parentId = thread.id.toString(),
-                            parentType = ImageType.Comment,
-                            img = thread.img,
-                            ext = thread.ext
-                        )
+                    // 将 Thread (主楼) 作为 Comment 存入
+                    // 主楼也视为一个 Comment
+                    comments.add(thread.toDomainComment(sourceId = id))
 
-                        thread.replies.forEach { reply ->
-                            db.commentQueries.upsertComment(
-                                reply.toTableReply(
-                                    sourceId = id,
-                                    threadId = thread.id,
-                                    page = page.toLong()
-                                )
-                            )
-                            // 保存 Comment 图片
-                            saveNmbImage(
-                                db = db,
-                                cdnManager = cdnManager,
-                                sourceId = id,
-                                parentId = reply.id.toString(),
-                                parentType = ImageType.Comment,
-                                img = reply.img,
-                                ext = reply.ext
-                            )
-                        }
-                    }
-                    Result.success(thread.replies)
+                    // 添加回复
+                    comments.addAll(
+                        thread.replies
+                            //"id":9999999,"user_hash":"Tips"
+                            .filter { it.id != 9999999L }
+                            .map { it.toDomain(threadId) })
+
+                    Result.success(comments)
                 }
 
                 is SaniouResult.Error -> {

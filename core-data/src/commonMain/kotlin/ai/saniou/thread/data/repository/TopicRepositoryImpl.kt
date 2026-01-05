@@ -28,6 +28,7 @@ import app.cash.sqldelight.coroutines.mapToList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
@@ -92,8 +93,7 @@ class TopicRepositoryImpl(
         isPoOnly: Boolean,
         initialPage: Int,
     ): Flow<PagingData<Comment>> {
-        val source =
-            sourceMap[sourceId] ?: return kotlinx.coroutines.flow.flowOf(PagingData.empty())
+        val source = sourceMap[sourceId] ?: return flowOf(PagingData.empty())
 
         return Pager(
             config = PagingConfig(pageSize = 20),

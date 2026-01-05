@@ -145,6 +145,37 @@ class ChannelRepositoryImpl(
                 },
                 saver = { topics, page, loadType ->
                     val shouldClear = loadType == LoadType.REFRESH
+                    // Paging 库在 loadType == REFRESH 时会负责 initialKey 的处理。
+                    // 但我们需要明确告诉 Cache 这一页的数据需要被替换（如果它存在）。
+                    // 当 loadType == REFRESH 时，通常意味着用户下拉刷新，或者初次加载。
+                    // 此时我们应该清理旧的缓存以保证数据的新鲜度，或者至少标记为 dirty。
+                    // 我们的策略是：如果是 REFRESH，则 clearPage = true，Cache 会执行 "page >= current -> page + 1" 的逻辑。
+                    
+                    // 这里有一个潜在问题：GenericRemoteMediator 的 pagerKey 是 Int。
+                    // 如果 initialPage 是 1，Refresh 时 key=1。
+                    // Cache.saveTopics(page=1, clear=true) 会把 page>=1 的数据都往后移一位。
+                    // 然后插入新的 page=1 数据。这是符合 "新数据下沉" 策略的。
+                    
+                    // 但是，如果是 APPEND (加载下一页)，key=2。
+                    // saveTopics(page=2, clear=false)。Cache 直接插入 page=2。
+                    // 这也是正确的。
+                    
+                    // 唯一需要注意的是，如果用户下拉刷新，但此时后端并没有新数据（例如，帖子列表没变）。
+                    // 我们可能会把 page 1 的数据移到 page 2，然后再次插入相同的 page 1 数据。
+                    // 这会导致数据重复（page 1 和 page 2 一样）。
+                    // 不过 upsertTopic 会基于 ID 更新，如果 ID 相同，会更新 page 字段。
+                    // 等等，`incrementTopicPage` 会把 `page` 更新为 `page + 1`。
+                    // 如果原来的 `page=1` 的帖子 A，变成了 `page=2`。
+                    // 然后我们插入新的 `page=1` 的帖子 A (upsert)。
+                    // `upsertTopic` 会把帖子 A 的 `page` 更新回 1。
+                    // 结果：帖子 A 回到了 page 1。Page 2 变空了？
+                    // 不，Page 2 是原来 Page 1 的数据。如果帖子 A 既在旧 Page 1 也在新 Page 1。
+                    // 第一步：旧 Page 1 所有帖子 -> Page 2。 A (page=2).
+                    // 第二步：插入新 Page 1 帖子 A。 -> A (page=1)。
+                    // 结果：A 的 page 被更新为 1。Page 2 中就没有 A 了。
+                    // 那么 Page 2 剩下的就是 "旧 Page 1 中有，但新 Page 1 中没有" 的帖子。即 "下沉" 的旧帖子。
+                    // 这正是我们想要的！完美。
+                    
                     cache.saveTopics(
                         topics = topics,
                         clearPage = shouldClear,

@@ -88,23 +88,28 @@
 ### 2.6 数据源交互规范 (Source Interaction Rules)
 为了确保响应式架构的一致性，所有 `Source` 实现必须遵循以下交互模式：
 
-1.  **SSOT (Single Source of Truth)**:
+1.  **架构分层与职责 (Layer Responsibilities)**:
+    -   **API Layer (Network)**: 纯网络请求，返回 `SaniouResult<Dto>`。不涉及任何 DB 操作。
+    -   **Source Layer (Domain Interface)**: 防腐层 (ACL)。将 `SaniouResult<Dto>` 转换为 `Result<DomainModel>`。**严禁**在此层直接操作 DB。
+    -   **Cache Layer (Data Store)**: 封装所有 DB 操作 (CRUD)。提供面向业务的接口 (如 `saveTopics(topics: List<Topic>)`)，内部处理事务、关联表保存 (如 Image/Comment) 和清理策略。
+    -   **Repository Layer (Data)**: 协调者。使用 `GenericRemoteMediator` 连接 Source (读网络) 和 Cache (写 DB)，并通过 Paging 向 Domain/UI 暴露数据。
+
+2.  **SSOT (Single Source of Truth)**:
     -   **原则**: 数据库 (DB) 是唯一的真实数据源。
     -   **读取**: UI/Domain 层永远只观察 DB 的数据流 (`Flow`)，不直接等待网络请求结果。
-    -   **写入**: 网络请求成功后，只负责将数据写入 DB，不直接返回数据给调用者。
+    -   **写入**: 数据流向为 `Network -> Source(Dto->Domain) -> Repository -> Cache(Domain->Entity->DB)`。
 
-2.  **接口分离**:
-    -   **`observeXxx(): Flow<T>`**: 纯观察方法。直接返回 DB 查询的 Flow。**严禁**在此方法中触发网络请求。
-    -   **`fetchXxx(): Result<Unit>`**: 纯副作用方法。执行 "Check Cache -> Network Request -> Write DB" 流程。返回操作成功/失败，不返回数据。
+3.  **接口分离**:
+    -   **`observeXxx(): Flow<T>`**: 纯观察方法。直接返回 DB 查询的 Flow。
+    -   **`fetchXxx(): Result<Unit>`**: 纯副作用方法。执行 "Check Cache -> Network Request -> Write DB" 流程。
 
-3.  **缓存策略 (Cache Strategy)**:
+4.  **缓存策略 (Cache Strategy)**:
     -   使用 `CacheStrategy` 工具类统一处理缓存过期逻辑。
-    -   **Network-First**: 优先请求网络，失败则不更新 DB（UI 继续显示旧数据或 Error 状态）。
-    -   **Stale-While-Revalidate**: UI 先显示 DB 中的旧数据，后台静默刷新。
+    -   **列表页缓存**: 采用"旧数据下沉"策略。刷新时，将当前页及之后的旧数据 `page + 1`，新数据占据当前页，实现无缝衔接的缓存体验。
 
-4.  **API 错误处理**:
+5.  **API 错误处理**:
     -   API 层返回 `SaniouResult<T>`，作为防腐层隔离网络异常。
-    -   Source 层将 `SaniouResult.Error` 转换为 `Result.failure` 或抛出异常，由 ViewModel 统一处理。
+    -   Source 层将 `SaniouResult.Error` 转换为 `Result.failure`。
 
 ### 2.7 富文本渲染 (Rich Text Rendering)
 核心 UI 组件库提供了分层的富文本处理能力，请根据业务场景选择：

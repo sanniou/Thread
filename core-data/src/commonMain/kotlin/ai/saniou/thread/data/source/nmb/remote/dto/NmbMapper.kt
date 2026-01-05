@@ -177,16 +177,16 @@ fun Thread.toDomain(): Topic = Topic(
     isAdmin = admin > 0,
     isHidden = hide > 0,
     isLocal = false,
-    comments = replies.map { it.toDomain() },
+    comments = replies.map { it.toDomain(id.toString()) },
     summary = null,
     remainingCount = (replyCount - replies.size).coerceAtLeast(0).toLong()
 )
 
 @OptIn(ExperimentalTime::class)
-fun ThreadReply.toDomain(imageQueries: ImageQueries? = null): Comment {
+fun ThreadReply.toDomain(topicId: String): Comment {
     return Comment(
         id = id.toString(),
-        topicId = threadId.toString(),
+        topicId = topicId,
         author = createAuthor(userHash, name),
         createdAt = now.toTime(),
         title = title,
@@ -194,6 +194,22 @@ fun ThreadReply.toDomain(imageQueries: ImageQueries? = null): Comment {
         images = createImageList(img, ext),
         isAdmin = admin > 0,
         floor = null, // API might not provide floor
+        replyToId = null
+    )
+}
+
+@OptIn(ExperimentalTime::class)
+fun Thread.toDomainComment(sourceId: String): Comment {
+    return Comment(
+        id = id.toString(),
+        topicId = id.toString(), // 主楼的 topicId 就是它自己
+        author = createAuthor(userHash, name),
+        createdAt = now.toTime(),
+        title = title,
+        content = content ?: "",
+        images = createImageList(img, ext),
+        isAdmin = admin > 0,
+        floor = 1, // 主楼默认 1 楼
         replyToId = null
     )
 }

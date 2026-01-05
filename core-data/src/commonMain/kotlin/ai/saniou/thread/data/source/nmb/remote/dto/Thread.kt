@@ -44,7 +44,6 @@ data class ThreadReply(
     override val img: String,
     override val ext: String,
     override val name: String,
-    val threadId: Long = 0,
 ) : IBaseAuthor, IThreadBody
 
 fun ThreadReply.toTableReply(sourceId: String, threadId: Long, page: Long = Long.MIN_VALUE) =
@@ -71,19 +70,6 @@ fun Thread.toTableReply(sourceId: String, page: Long) = this.replies.mapIndexed 
         page = page,
     )
 }
-
-fun Comment.toThreadReply() = ThreadReply(
-    id = id.toLongOrNull() ?: 0L,
-    userHash = userHash,
-    admin = admin,
-    title = title ?: "",
-    now = createdAt.toString(), // FIXME: Format timestamp back to string if needed
-    content = content,
-    img = "", // Image handled separately
-    ext = "",
-    name = authorName,
-    threadId = topicId.toLongOrNull() ?: 0L,
-)
 
 fun Thread.toTable(sourceId: String, page: Long) = Topic(
     id = id.toString(),
