@@ -6,6 +6,7 @@ import ai.saniou.thread.db.Database
 import ai.saniou.thread.db.table.forum.Channel
 import ai.saniou.thread.db.table.forum.Comment
 import ai.saniou.thread.db.table.forum.GetTopicsInChannelOffset
+import ai.saniou.thread.domain.model.forum.ImageType
 import ai.saniou.thread.domain.model.forum.Topic
 import app.cash.paging.PagingSource
 import app.cash.sqldelight.coroutines.asFlow
@@ -88,30 +89,7 @@ class SqlDelightSourceCache(
     }
 
     override fun saveTopic(topic: Topic) {
-        topicQueries.transaction {
-            val entity = topic.toEntity()
-            topicQueries.upsertTopic(entity)
-
-            // 保存图片
-            topic.images.forEach { image ->
-                db.imageQueries.upsertImage(
-                    ai.saniou.thread.db.table.forum.Image(
-                        id = image.originalUrl,
-                        sourceId = topic.sourceName,
-                        parentId = topic.id,
-                        parentType = ai.saniou.thread.domain.model.forum.ImageType.Topic,
-                        originalUrl = image.originalUrl,
-                        thumbnailUrl = image.thumbnailUrl,
-                        name = image.name,
-                        extension = image.extension,
-                        path = null,
-                        width = image.width?.toLong(),
-                        height = image.height?.toLong(),
-                        sortOrder = 0
-                    )
-                )
-            }
-        }
+        saveTopics(listOf(topic), false, topic.sourceName, topic.channelId)
     }
 
     override fun saveTopics(
@@ -143,21 +121,13 @@ class SqlDelightSourceCache(
                 }
 
                 // Save Images
-                topic.images.forEach { image ->
+                topic.images.forEachIndexed { index, image ->
                     db.imageQueries.upsertImage(
-                        ai.saniou.thread.db.table.forum.Image(
-                            id = image.originalUrl,
-                            sourceId = topic.sourceName,
+                        image.toEntity(
+                            sourceId = sourceId,
                             parentId = topic.id,
-                            parentType = ai.saniou.thread.domain.model.forum.ImageType.Topic,
-                            originalUrl = image.originalUrl,
-                            thumbnailUrl = image.thumbnailUrl,
-                            name = image.name,
-                            extension = image.extension,
-                            path = null,
-                            width = image.width?.toLong(),
-                            height = image.height?.toLong(),
-                            sortOrder = 0
+                            parentType = ImageType.Topic,
+                            index.toLong()
                         )
                     )
                 }
@@ -168,21 +138,13 @@ class SqlDelightSourceCache(
                         comment.toEntity(sourceId, Long.MIN_VALUE)
                     )
                     // Save Comment Images
-                    comment.images.forEach { image ->
+                    comment.images.forEachIndexed { index, image ->
                         db.imageQueries.upsertImage(
-                            ai.saniou.thread.db.table.forum.Image(
-                                id = image.originalUrl,
-                                sourceId = topic.sourceName,
+                            image.toEntity(
+                                sourceId = sourceId,
                                 parentId = comment.id,
-                                parentType = ai.saniou.thread.domain.model.forum.ImageType.Comment,
-                                originalUrl = image.originalUrl,
-                                thumbnailUrl = image.thumbnailUrl,
-                                name = image.name,
-                                extension = image.extension,
-                                path = null,
-                                width = image.width?.toLong(),
-                                height = image.height?.toLong(),
-                                sortOrder = 0
+                                parentType = ImageType.Comment,
+                                index.toLong()
                             )
                         )
                     }

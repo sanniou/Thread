@@ -17,14 +17,14 @@ fun EntityImage.toDomain(): Image {
 }
 
 fun Image.toEntity(
-    sourcrId: String,
+    sourceId: String,
     parentId: String,
     parentType: ImageType,
     sortOrder: Long,
 ): EntityImage {
     return EntityImage(
         id = originalUrl,
-        sourceId = sourcrId,
+        sourceId = sourceId,
         parentId = parentId,
         parentType = parentType,
         originalUrl = originalUrl,
