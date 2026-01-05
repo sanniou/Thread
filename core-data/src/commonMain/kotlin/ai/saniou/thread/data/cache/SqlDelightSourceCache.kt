@@ -116,7 +116,7 @@ class SqlDelightSourceCache(
                         id = topic.id,
                         sourceId = topic.sourceName,
                         remainingCount = topic.remainingCount,
-                        latestCommentId = topic.lastViewedCommentId ?: ""
+                        latestCommentId = topic.orderKey ?: ""
                     )
                 }
 

@@ -53,5 +53,6 @@ data class Topic(
     // 详情页数据
     val comments: List<Comment> = emptyList(),
     val remainingCount: Long? = null,
-    val lastViewedCommentId: String? = null
+    val lastViewedCommentId: String? = null,
+    val orderKey: String? = null,
 )

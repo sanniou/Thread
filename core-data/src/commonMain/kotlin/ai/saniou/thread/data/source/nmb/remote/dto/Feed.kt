@@ -85,7 +85,7 @@ fun Feed.nowToEpochMilliseconds(): Long {
 }
 
 @OptIn(ExperimentalTime::class)
-fun IBaseThread.toDomain(): Topic {
+fun ForumThread.toDomain(): Topic {
     val author = Author(
         id = userHash,
         name = name,
@@ -122,8 +122,9 @@ fun IBaseThread.toDomain(): Topic {
         isLocal = false,
         // fixme  后续处理 lastReadCommentId 和 comments
         lastViewedCommentId = null,
-        comments = emptyList(),
-        remainingCount = null
+        orderKey = (replies.maxOfOrNull { it.id } ?: id).toString(),
+        comments = replies.map { it.toDomain(it.toString()) },
+        remainingCount = remainingCount
     )
 }
 

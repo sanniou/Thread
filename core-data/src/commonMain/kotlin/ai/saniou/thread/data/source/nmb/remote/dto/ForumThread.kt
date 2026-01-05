@@ -17,7 +17,7 @@ import ai.saniou.thread.data.source.nmb.remote.dto.ThreadReply as ThreadReplyEnt
  */
 @Serializable
 @OptIn(ExperimentalSerializationApi::class)
-data class Forum(
+data class ForumThread(
     override val id: Long,// 串的 ID
     override val fid: Long,// 串所属的版面 ID
     @JsonNames("ReplyCount")
@@ -62,7 +62,7 @@ data class Reply(
 ) : IBaseAuthor
 
 
-fun Forum.toTable(sourceId: String, page: Long) = Topic(
+fun ForumThread.toTable(sourceId: String, page: Long) = Topic(
     id = this.id.toString(),
     sourceId = sourceId,
     channelId = this.fid.toString(),
@@ -79,7 +79,7 @@ fun Forum.toTable(sourceId: String, page: Long) = Topic(
     page = page,
 )
 
-fun Forum.toTableReply(sourceId: String) = this.replies.map { reply ->
+fun ForumThread.toTableReply(sourceId: String) = this.replies.map { reply ->
     Comment(
         id = reply.id.toString(),
         sourceId = sourceId,

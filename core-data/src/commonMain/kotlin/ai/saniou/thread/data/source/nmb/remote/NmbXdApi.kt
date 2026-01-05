@@ -4,7 +4,7 @@ import ai.saniou.thread.network.SaniouResult
 import ai.saniou.thread.data.source.nmb.remote.dto.CdnPath
 import ai.saniou.thread.data.source.nmb.remote.dto.CookieListResponse
 import ai.saniou.thread.data.source.nmb.remote.dto.Feed
-import ai.saniou.thread.data.source.nmb.remote.dto.Forum
+import ai.saniou.thread.data.source.nmb.remote.dto.ForumThread
 import ai.saniou.thread.data.source.nmb.remote.dto.ForumCategory
 import ai.saniou.thread.data.source.nmb.remote.dto.LastPost
 import ai.saniou.thread.data.source.nmb.remote.dto.LoginRequest
@@ -69,7 +69,7 @@ interface NmbXdApi {
     suspend fun showf(
         @Query("id") id: Long,//版面 ID
         @Query("page") page: Long,//页数，默认为 1
-    ): SaniouResult<List<Forum>>
+    ): SaniouResult<List<ForumThread>>
 
     /**
      * 查看时间线
@@ -82,7 +82,7 @@ interface NmbXdApi {
     suspend fun timeline(
         @Query("id") id: Long,//版面 ID
         @Query("page") page: Long,//页数，默认为 1
-    ): SaniouResult<List<Forum>>
+    ): SaniouResult<List<ForumThread>>
 
     /**
      * 查看串

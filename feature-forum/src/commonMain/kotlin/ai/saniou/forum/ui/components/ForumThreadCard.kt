@@ -2,8 +2,6 @@ package ai.saniou.forum.ui.components
 
 import ai.saniou.corecommon.utils.toRelativeTimeString
 import ai.saniou.coreui.theme.Dimens
-import ai.saniou.thread.data.source.nmb.remote.dto.IBaseThread
-import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
 import ai.saniou.thread.domain.model.forum.Image
 import ai.saniou.thread.domain.model.forum.Topic
 import androidx.compose.foundation.clickable
@@ -28,23 +26,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
-
-@Composable
-fun TopicCard(
-    thread: IBaseThread,
-    onClick: () -> Unit,
-    onImageClick: ((Image) -> Unit)? = null,
-    onUserClick: ((String) -> Unit)? = null,
-    showChannelBadge: Boolean = true,
-) {
-    TopicCard(
-        thread.toDomain(),
-        onClick,
-        onImageClick,
-        onUserClick,
-        showChannelBadge
-    )
-}
 
 /**
  * 串内容卡片，遵循 Modern Reddit-style Card 设计风格
@@ -81,7 +62,8 @@ fun TopicCard(
                 // Channel Avatar/Icon placeholder (Optional, can be added later)
                 // For now, using Channel Name as the primary anchor
                 if (showChannelBadge) {
-                    val channelText = if (topic.sourceName.isNotBlank()) "${topic.sourceName} · ${topic.channelName}" else topic.channelName
+                    val channelText =
+                        if (topic.sourceName.isNotBlank()) "${topic.sourceName} · ${topic.channelName}" else topic.channelName
                     Text(
                         text = channelText,
                         style = MaterialTheme.typography.labelSmall,
@@ -97,10 +79,15 @@ fun TopicCard(
 
                 // Author Info (Clickable)
                 Text(
-                    text = topic.author.name.takeIf { it.isNotBlank() && it != "无名氏" } ?: topic.author.id,
+                    text = topic.author.name.takeIf { it.isNotBlank() && it != "无名氏" }
+                        ?: topic.author.id,
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.outline,
-                    modifier = Modifier.clickable(enabled = onUserClick != null) { onUserClick?.invoke(topic.author.id) }
+                    modifier = Modifier.clickable(enabled = onUserClick != null) {
+                        onUserClick?.invoke(
+                            topic.author.id
+                        )
+                    }
                 )
 
                 Text(
@@ -191,7 +178,7 @@ fun TopicCard(
                     shape = MaterialTheme.shapes.small
                 ) {
                     Column(modifier = Modifier.padding(8.dp)) {
-                         RecentReplies(topic.comments.take(2)) // Limit to 2 recent replies for card view
+                        RecentReplies(topic.comments.take(2)) // Limit to 2 recent replies for card view
                         if ((topic.remainingCount ?: 0) > 0) {
                             Text(
                                 text = "查看其余 ${topic.remainingCount} 条回复...",

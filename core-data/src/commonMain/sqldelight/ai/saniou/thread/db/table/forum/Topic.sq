@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS TopicInformation (
     id TEXT NOT NULL,
     sourceId TEXT NOT NULL,
     remainingCount INTEGER,
-    latestCommentId TEXT NOT NULL,
+    latestCommentId TEXT NOT NULL, -- 列表页最新评论 ID 用来排序数据库 topic
     lastVisitedAt INTEGER NOT NULL DEFAULT 0,
     lastViewedCommentId TEXT,
     PRIMARY KEY (sourceId, id)

@@ -6,19 +6,20 @@ import ai.saniou.thread.data.mapper.toDomain
 import ai.saniou.thread.data.mapper.toMetadata
 import ai.saniou.thread.data.paging.DataPolicy
 import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
-import ai.saniou.thread.data.source.nmb.remote.dto.Forum
+import ai.saniou.thread.data.source.nmb.remote.dto.ForumThread
 import ai.saniou.thread.data.source.nmb.remote.dto.RemoteKeyType
 import ai.saniou.thread.data.source.nmb.remote.dto.Reply
 import ai.saniou.thread.data.source.nmb.remote.dto.Thread
 import ai.saniou.thread.data.source.nmb.remote.dto.ThreadReply
 import ai.saniou.thread.data.source.nmb.remote.dto.toCommentEntity
 import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
+import ai.saniou.thread.data.source.nmb.remote.dto.toDomainComment
 import ai.saniou.thread.data.source.nmb.remote.dto.toTable
 import ai.saniou.thread.data.source.nmb.remote.dto.toTableReply
 import ai.saniou.thread.db.Database
-import ai.saniou.thread.domain.model.forum.Account
 import ai.saniou.thread.db.table.forum.GetTopicsInChannelOffset
 import ai.saniou.thread.db.table.forum.Image
+import ai.saniou.thread.domain.model.forum.Account
 import ai.saniou.thread.domain.model.forum.Channel
 import ai.saniou.thread.domain.model.forum.Comment
 import ai.saniou.thread.domain.model.forum.ImageType
@@ -50,7 +51,6 @@ import kotlinx.datetime.plus
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
 import kotlin.time.ExperimentalTime
-import ai.saniou.thread.data.source.nmb.remote.dto.toDomainComment
 
 class NmbSource(
     private val nmbXdApi: NmbXdApi,
@@ -569,7 +569,7 @@ class NmbSource(
         fid: Long,
         policy: DataPolicy,
         initialPage: Int,
-        fetcher: suspend (page: Int) -> SaniouResult<List<Forum>>,
+        fetcher: suspend (page: Int) -> SaniouResult<List<ForumThread>>,
     ): Pager<Int, GetTopicsInChannelOffset> {
         TODO()
 //        val pageSize = 20

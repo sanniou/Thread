@@ -122,11 +122,12 @@ class ChannelRepositoryImpl(
     @OptIn(app.cash.paging.ExperimentalPagingApi::class)
     override fun getChannelTopicsPaging(
         sourceId: String,
-        fid: String,
+        channelId: String,
         isTimeline: Boolean,
         initialPage: Int,
     ): Flow<PagingData<Topic>> {
         val source = sourceMap[sourceId] ?: return flowOf(PagingData.empty())
+        val pageSize = 20;
 
         return Pager(
             config = PagingConfig(pageSize = 20),
@@ -138,10 +139,10 @@ class ChannelRepositoryImpl(
                 remoteKeyStrategy = DefaultRemoteKeyStrategy(
                     db = db,
                     type = RemoteKeyType.CHANNEL,
-                    id = "${sourceId}_${fid}_${isTimeline}"
+                    id = "${sourceId}_${channelId}_${isTimeline}"
                 ),
                 fetcher = { page ->
-                    source.getChannelTopics(fid, page, isTimeline)
+                    source.getChannelTopics(channelId, page, isTimeline)
                 },
                 saver = { topics, page, loadType ->
                     val shouldClear = loadType == LoadType.REFRESH
@@ -150,16 +151,16 @@ class ChannelRepositoryImpl(
                     // 当 loadType == REFRESH 时，通常意味着用户下拉刷新，或者初次加载。
                     // 此时我们应该清理旧的缓存以保证数据的新鲜度，或者至少标记为 dirty。
                     // 我们的策略是：如果是 REFRESH，则 clearPage = true，Cache 会执行 "page >= current -> page + 1" 的逻辑。
-                    
+
                     // 这里有一个潜在问题：GenericRemoteMediator 的 pagerKey 是 Int。
                     // 如果 initialPage 是 1，Refresh 时 key=1。
                     // Cache.saveTopics(page=1, clear=true) 会把 page>=1 的数据都往后移一位。
                     // 然后插入新的 page=1 数据。这是符合 "新数据下沉" 策略的。
-                    
+
                     // 但是，如果是 APPEND (加载下一页)，key=2。
                     // saveTopics(page=2, clear=false)。Cache 直接插入 page=2。
                     // 这也是正确的。
-                    
+
                     // 唯一需要注意的是，如果用户下拉刷新，但此时后端并没有新数据（例如，帖子列表没变）。
                     // 我们可能会把 page 1 的数据移到 page 2，然后再次插入相同的 page 1 数据。
                     // 这会导致数据重复（page 1 和 page 2 一样）。
@@ -175,23 +176,28 @@ class ChannelRepositoryImpl(
                     // 结果：A 的 page 被更新为 1。Page 2 中就没有 A 了。
                     // 那么 Page 2 剩下的就是 "旧 Page 1 中有，但新 Page 1 中没有" 的帖子。即 "下沉" 的旧帖子。
                     // 这正是我们想要的！完美。
-                    
+
                     cache.saveTopics(
                         topics = topics,
                         clearPage = shouldClear,
                         sourceId = sourceId,
-                        channelId = fid,
+                        channelId = channelId,
                         page = page
                     )
                 },
-                endOfPaginationReached = { it.isEmpty() },
+                endOfPaginationReached = {
+                    if (sourceId == "nmd")
+                        it.isEmpty()
+                    else
+                        it.size < 20
+                },
                 keyIncrementer = { it + 1 },
                 keyDecrementer = { it - 1 },
                 keyToLong = { it.toLong() },
                 longToKey = { it.toInt() }
             ),
             pagingSourceFactory = {
-                cache.getChannelTopicPagingSource(sourceId, fid)
+                cache.getChannelTopicPagingSource(sourceId, channelId)
             }
         ).flow.map { pagingData ->
             pagingData.map {
