@@ -122,9 +122,9 @@ class SqlDelightSourceCache(
         page: Int?,
     ) {
         topicQueries.transaction {
-            // 1. 清理旧数据
+            // 1. 清理旧数据: 将数据库中 page >= 当前page 的数据全部 +1 ，用作于缓存
             if (clearPage && page != null) {
-                topicQueries.deleteTopicsByChannelAndPage(sourceId, channelId, page.toLong())
+                topicQueries.incrementTopicPage(sourceId, channelId, page.toLong())
             }
 
             // 2. 保存新数据

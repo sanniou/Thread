@@ -84,6 +84,11 @@ SELECT count(1) FROM Topic WHERE sourceId = :sourceId AND channelId = :channelId
 deleteTopicsByChannelAndPage:
 DELETE FROM Topic WHERE sourceId = :sourceId AND channelId = :channelId AND page = :page;
 
+incrementTopicPage:
+UPDATE Topic
+SET page = page + 1
+WHERE sourceId = :sourceId AND channelId = :channelId AND page >= :page;
+
 -- 查询 TopicInformation 数据
 getTopicInformation:
 SELECT * FROM TopicInformation WHERE sourceId = :sourceId AND id = :id;
