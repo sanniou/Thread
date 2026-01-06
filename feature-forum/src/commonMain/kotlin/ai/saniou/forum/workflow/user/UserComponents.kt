@@ -22,8 +22,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -31,9 +29,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -47,8 +43,6 @@ import androidx.compose.ui.unit.dp
 import kotlin.time.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 import kotlin.time.ExperimentalTime
@@ -80,8 +74,8 @@ fun CookieListContent(
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            items(localCookies, key = { it.value }) { cookie ->
-                ReorderableItem(state, key = cookie.value) { isDragging ->
+            items(localCookies, key = { it.id }) { cookie ->
+                ReorderableItem(state, key = cookie.id) { isDragging ->
                     CookieItem(
                         cookie = cookie,
                         onDelete = { onDelete(cookie) },
@@ -102,6 +96,8 @@ fun CookieItem(
     modifier: Modifier = Modifier,
 ) {
     val elevation by animateDpAsState(if (isDragging) 8.dp else 2.dp)
+    val displayValue = if (cookie.sourceId == "tieba") cookie.alias ?: cookie.uid else cookie.value
+
     Card(
         modifier = modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = elevation)
@@ -117,12 +113,12 @@ fun CookieItem(
                     style = MaterialTheme.typography.titleMedium
                 )
                 IconButton(onClick = onDelete) {
-                    Icon(Icons.Default.Delete, contentDescription = "删除饼干")
+                    Icon(Icons.Default.Delete, contentDescription = "删除账号")
                 }
             }
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = cookie.value,
+                text = displayValue ?: "",
                 style = MaterialTheme.typography.bodyMedium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -139,68 +135,6 @@ fun CookieItem(
     }
 }
 
-@Serializable
-private data class CookieJson(
-    val cookie: String,
-    val name: String? = null,
-)
-
-@Composable
-fun AddCookieDialog(
-    onDismiss: () -> Unit,
-    onConfirm: (name: String, value: String) -> Unit,
-) {
-    var name by remember { mutableStateOf("") }
-    var value by remember { mutableStateOf("") }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("添加饼干") },
-        text = {
-            Column {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("名称 (可选)") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = value,
-                    onValueChange = { newValue ->
-                        val trimmed = newValue.trim()
-                        if (trimmed.startsWith("{")) {
-                            try {
-                                val cookieJson = Json.decodeFromString<CookieJson>(trimmed)
-                                value = cookieJson.cookie
-                                name = cookieJson.name ?: ""
-                            } catch (e: Exception) {
-                                value = newValue
-                            }
-                        } else {
-                            value = newValue
-                        }
-                    },
-                    label = { Text("值") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("取消")
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = { onConfirm(name, value) },
-                enabled = value.isNotBlank()
-            ) {
-                Text("确认")
-            }
-        }
-    )
-}
 
 @Composable
 fun UserGuideCard(onOpenUri: () -> Unit, modifier: Modifier = Modifier) {
@@ -246,7 +180,7 @@ fun EmptyCookieList(modifier: Modifier = Modifier) {
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "还没有饼干\n点击右下角的按钮添加一个吧",
+            text = "还没有账号\n点击右下角的按钮添加一个吧",
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.bodyLarge
         )

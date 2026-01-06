@@ -13,6 +13,7 @@ import ai.saniou.thread.data.source.discourse.remote.dto.DiscourseUser
 import ai.saniou.thread.data.source.nmb.remote.dto.RemoteKeyType
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.domain.model.forum.Author
+import ai.saniou.thread.domain.model.user.LoginStrategy
 import ai.saniou.thread.domain.repository.SettingsRepository
 import ai.saniou.thread.domain.repository.Source
 import ai.saniou.thread.domain.repository.observeValue
@@ -44,6 +45,10 @@ class DiscourseSource(
     override val isInitialized: Flow<Boolean> =
         settingsRepository.observeValue<Boolean>("discourse_initialized")
             .map { it == true }
+
+    override val loginStrategy: LoginStrategy = LoginStrategy.Api(
+        title = "Discourse 登录"
+    )
 
     override fun observeChannels(): Flow<List<Channel>> {
         return cache.observeChannels(id).map { forums ->

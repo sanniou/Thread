@@ -117,13 +117,31 @@ val nmbFeatureModule = DI.Module("nmbFeatureModule") {
     }
 
     // 用户认证相关
-    bindProvider { UserViewModel(instance(), instance(), instance(), instance()) }
+    bindProvider {
+        UserViewModel(
+            instance(),
+            instance(),
+            instance(),
+            instance(),
+            instance(),
+            instance()
+        )
+    }
 
     // 引用 ViewModel
     bindProvider { ReferenceViewModel(instance()) }
 
     // 订阅相关
-    bindProvider { SubscriptionViewModel(instance(), instance(), instance(), instance(), instance(), instance()) }
+    bindProvider {
+        SubscriptionViewModel(
+            instance(),
+            instance(),
+            instance(),
+            instance(),
+            instance(),
+            instance()
+        )
+    }
     // 搜索相关
     bindProvider { SearchViewModel(instance()) }
     bindFactory<String, UserDetailViewModel> { userHash ->

@@ -25,6 +25,8 @@ import ai.saniou.thread.domain.model.forum.Comment
 import ai.saniou.thread.domain.model.forum.ImageType
 import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.model.forum.TopicMetadata
+import ai.saniou.thread.domain.model.user.LoginField
+import ai.saniou.thread.domain.model.user.LoginStrategy
 import ai.saniou.thread.domain.repository.SettingsRepository
 import ai.saniou.thread.domain.repository.Source
 import ai.saniou.thread.domain.repository.SourceCapabilities
@@ -65,6 +67,19 @@ class NmbSource(
         supportsTrend = true,
         supportsTrendHistory = true,
         supportsPagination = true
+    )
+
+    override val loginStrategy: LoginStrategy = LoginStrategy.Manual(
+        title = "A岛匿名版 - 饼干导入",
+        description = "请输入您在 A岛匿名版 获取的饼干 (Cookie)，通常是一串随机字符。",
+        fields = listOf(
+            LoginField(
+                key = "cookie",
+                label = "饼干 (Cookie)",
+                hint = "例如：H4k...z9a",
+                isMultiline = true
+            )
+        )
     )
 
     override val isInitialized: Flow<Boolean> =

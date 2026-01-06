@@ -7,6 +7,7 @@ import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.model.forum.Comment
 import ai.saniou.thread.domain.model.forum.Trend
 import ai.saniou.thread.domain.model.forum.TrendResult
+import ai.saniou.thread.domain.model.user.LoginStrategy
 import ai.saniou.thread.domain.repository.Source
 import ai.saniou.thread.domain.repository.SourceCapabilities
 import ai.saniou.thread.network.SaniouResult
@@ -75,6 +76,10 @@ class AcfunSource(
         supportsTrend = true,
         supportsTrendHistory = false,
         supportsPagination = false
+    )
+
+    override val loginStrategy: LoginStrategy = LoginStrategy.Api(
+        title = "AcFun 登录"
     )
 
     override fun observeChannels(): Flow<List<Channel>> {

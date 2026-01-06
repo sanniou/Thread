@@ -4,6 +4,7 @@ import ai.saniou.thread.domain.model.forum.Channel
 import ai.saniou.thread.domain.model.forum.Comment
 import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.model.forum.TrendResult
+import ai.saniou.thread.domain.model.user.LoginStrategy
 import app.cash.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 
@@ -36,6 +37,11 @@ interface Source {
      * 功能能力标志
      */
     val capabilities: SourceCapabilities get() = SourceCapabilities()
+
+    /**
+     * 获取登录策略
+     */
+    val loginStrategy: LoginStrategy
 
     /**
      * 观察所有板块

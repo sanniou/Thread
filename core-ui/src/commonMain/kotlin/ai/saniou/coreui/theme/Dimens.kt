@@ -38,6 +38,8 @@ object Dimens {
 
     // Component Specific
     val drawer_header_height = 140.dp
+    val size_56 = 56.dp
+    val size_120 = 120.dp
 
     // Legacy Aliases (Deprecated)
     @Deprecated("Use padding_tiny")

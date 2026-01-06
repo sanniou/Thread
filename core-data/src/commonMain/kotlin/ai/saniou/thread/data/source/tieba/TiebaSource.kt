@@ -15,6 +15,7 @@ import com.huanchengfly.tieba.post.api.models.protos.pbPage.PbPageRequestData
 import ai.saniou.thread.domain.model.forum.Channel
 import ai.saniou.thread.domain.model.forum.Comment
 import ai.saniou.thread.domain.model.forum.Topic
+import ai.saniou.thread.domain.model.user.LoginStrategy
 import ai.saniou.thread.domain.repository.AccountRepository
 import ai.saniou.thread.domain.repository.Source
 import ai.saniou.thread.domain.repository.SourceCapabilities
@@ -50,6 +51,11 @@ class TiebaSource(
         supportsTrend = false,
         supportsTrendHistory = false,
         supportsPagination = true
+    )
+
+    override val loginStrategy: LoginStrategy = LoginStrategy.WebView(
+        url = "https://wappass.baidu.com/passport/?login",
+        targetCookieKeys = listOf("BDUSS", "STOKEN")
     )
 
     override fun observeChannels(): Flow<List<Channel>> {

@@ -16,6 +16,8 @@ interface UserContract {
         val isLoading: Boolean = true,
         val cookies: List<Account> = emptyList(),
         val error: String? = null,
+        val sourceId: String = "",
+        val loginStrategy: ai.saniou.thread.domain.model.user.LoginStrategy? = null,
     )
 
     /**
@@ -23,28 +25,27 @@ interface UserContract {
      */
     sealed interface Event {
         /**
-         * 重新加载饼干
+         * 加载数据
          */
-        data object LoadCookies : Event
+        data class LoadData(val sourceId: String) : Event
 
         /**
-         * 添加一个饼干
-         * @param name 别名
-         * @param value 饼干值
+         * 添加一个账号
+         * @param inputs 输入参数 (key-value map)
          */
-        data class AddCookie(val name: String, val value: String) : Event
+        data class AddAccount(val inputs: Map<String, String>) : Event
 
         /**
-         * 删除一个饼干
-         * @param account 要删除的饼干
+         * 删除一个账号
+         * @param account 要删除的账号
          */
-        data class DeleteCookie(val account: Account) : Event
+        data class DeleteAccount(val account: Account) : Event
 
         /**
-         * 更新饼干排序
-         * @param accounts 排序后的饼干列表
+         * 更新账号排序
+         * @param accounts 排序后的账号列表
          */
-        data class UpdateCookieOrder(val accounts: List<Account>) : Event
+        data class UpdateAccountOrder(val accounts: List<Account>) : Event
     }
 
     /**

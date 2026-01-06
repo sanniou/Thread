@@ -2,6 +2,7 @@ package ai.saniou.thread.data.source.nga
 
 import ai.saniou.thread.domain.model.forum.Channel
 import ai.saniou.thread.domain.model.forum.Topic
+import ai.saniou.thread.domain.model.user.LoginStrategy
 import ai.saniou.thread.domain.repository.Source
 import ai.saniou.thread.domain.model.forum.Comment
 import app.cash.paging.PagingData
@@ -16,6 +17,10 @@ import kotlinx.coroutines.flow.flowOf
 class NgaSource : Source {
     override val id: String = "nga"
     override val name: String = "NGA"
+
+    override val loginStrategy: LoginStrategy = LoginStrategy.Api(
+        title = "NGA 登录"
+    )
 
     override val isInitialized: Flow<Boolean> = flowOf(true)
 

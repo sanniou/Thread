@@ -1,11 +1,10 @@
 package ai.saniou.forum.workflow.user
 
-import ai.saniou.coreui.widgets.SaniouTopAppBar
 import ai.saniou.coreui.composition.LocalForumSourceId
+import ai.saniou.coreui.widgets.SaniouTopAppBar
 import ai.saniou.forum.di.nmbdi
-import ai.saniou.forum.workflow.login.TiebaLoginScreen
+import ai.saniou.forum.ui.login.LoginScreen
 import ai.saniou.forum.workflow.user.UserContract.Event
-import ai.saniou.thread.data.source.tieba.TiebaMapper
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,18 +15,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberTopAppBarState
@@ -63,7 +59,7 @@ data class UserPage(
         val sourceId = LocalForumSourceId.current
         val userViewModel: UserViewModel = rememberScreenModel()
         val state by userViewModel.state.collectAsStateWithLifecycle()
-        var showAddCookieDialog by remember { mutableStateOf(false) }
+        var showLoginScreen by remember { mutableStateOf(false) }
         val snackbarHostState = remember { SnackbarHostState() }
         val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
         val listState = rememberLazyListState()
@@ -71,6 +67,10 @@ data class UserPage(
             derivedStateOf {
                 listState.firstVisibleItemIndex == 0 || listState.isScrollInProgress.not()
             }
+        }
+
+        LaunchedEffect(sourceId) {
+            userViewModel.handleEvent(Event.LoadData(sourceId))
         }
 
         LaunchedEffect(Unit) {
@@ -92,15 +92,9 @@ data class UserPage(
                 )
             },
             floatingActionButton = {
-                AnimatedVisibility(visible = isFabVisible) {
-                    // Temporarily using different actions for debug/dev
-                    // Long term this should be a proper menu or check source type
+                AnimatedVisibility(visible = isFabVisible && state.loginStrategy != null) {
                     FloatingActionButton(onClick = {
-                        if (sourceId == TiebaMapper.SOURCE_ID) {
-                            navigator.push(TiebaLoginScreen())
-                        } else {
-                            showAddCookieDialog = true
-                        }
+                        showLoginScreen = true
                     }) {
                         Icon(Icons.Default.Add, contentDescription = "登录/添加账号")
                     }
@@ -116,12 +110,13 @@ data class UserPage(
             )
         }
 
-        if (showAddCookieDialog) {
-            AddCookieDialog(
-                onDismiss = { showAddCookieDialog = false },
-                onConfirm = { name, value ->
-                    userViewModel.handleEvent(Event.AddCookie(name, value))
-                    showAddCookieDialog = false
+        if (showLoginScreen && state.loginStrategy != null) {
+            LoginScreen(
+                strategy = state.loginStrategy!!,
+                onDismissRequest = { showLoginScreen = false },
+                onLoginSuccess = { inputs ->
+                    userViewModel.handleEvent(Event.AddAccount(inputs))
+                    showLoginScreen = false
                 }
             )
         }
@@ -142,11 +137,13 @@ private fun UserScreenContent(
     Column(
         modifier = modifier
     ) {
-        // This content should not scroll
-        UserGuideCard(
-            onOpenUri = { uriHandler.openUri("https://www.nmbxd.com/Member/User/Index/home.html") },
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-        )
+        if (state.sourceId == "nmb") {
+            // Only show NMB guide for NMB source
+            UserGuideCard(
+                onOpenUri = { uriHandler.openUri("https://www.nmbxd.com/Member/User/Index/home.html") },
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+        }
 
         when {
             state.isLoading -> {
@@ -166,7 +163,7 @@ private fun UserScreenContent(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("错误: ${state.error}")
                         Spacer(modifier = Modifier.height(16.dp))
-                        Button(onClick = { onEvent(Event.LoadCookies) }) {
+                        Button(onClick = { onEvent(Event.LoadData(state.sourceId)) }) {
                             Text("重试")
                         }
                     }
@@ -176,10 +173,10 @@ private fun UserScreenContent(
             else -> {
                 CookieListContent(
                     cookies = state.cookies,
-                    onDelete = { onEvent(Event.DeleteCookie(it)) },
+                    onDelete = { onEvent(Event.DeleteAccount(it)) },
                     onSortFinished = { newList ->
                         onEvent(
-                            Event.UpdateCookieOrder(
+                            Event.UpdateAccountOrder(
                                 newList
                             )
                         )
@@ -189,5 +186,5 @@ private fun UserScreenContent(
                 )
             }
         }
-}
+    }
 }
