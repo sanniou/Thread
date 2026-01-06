@@ -10,8 +10,8 @@ class UpdateTopicLastAccessTimeUseCase(
     private val topicRepository: TopicRepository,
     private val historyRepository: HistoryRepository
 ) {
-    suspend operator fun invoke(sourceId: String, threadId: String, time: Long) {
-        val post = topicRepository.getTopicDetail(sourceId, threadId).firstOrNull()
+    suspend operator fun invoke(sourceId: String, topicId: String, time: Long) {
+        val post = topicRepository.getTopicDetail(sourceId, topicId).firstOrNull()
         if (post != null) {
             historyRepository.addToHistory(HistoryPost(post, Instant.fromEpochMilliseconds(time)))
         }

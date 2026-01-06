@@ -658,7 +658,7 @@ class NmbSource(
      */
     suspend fun getTrendReplyByDate(targetDate: kotlinx.datetime.LocalDate): Result<ThreadReply?> {
         val anchor = getTrendAnchor()
-        var predictedPage: Int? = null
+        var predictedPage = 0
 
         // 1. 尝试通过 Anchor 预测页面
         if (anchor != null) {
@@ -674,122 +674,89 @@ class NmbSource(
                         predictedPage = cachedPage
                     } else if (targetDate > endDate) {
                         // 目标日期 > 缓存结束日期 (需要往后翻)
-                        // 如果缓存页已经不满 19 条，说明是最后一页，且数据还没生成
                         if (cachedCount < 19) {
-                            return Result.success(null)
-                        }
-
-                        // 往后找，按每天 1 条估算
-                        val daysNeeded = endDate.daysUntil(targetDate)
-                        // 缓存页已经有的天数 (近似)
-                        val countOnPage = startDate.daysUntil(endDate) + 1
-                        val remainingSlots = 19 - countOnPage
-
-                        if (daysNeeded <= remainingSlots) {
+                            // 若缓存页未满，必定在当前页(可能刚更新)或下一页，优先查当前页
                             predictedPage = cachedPage
                         } else {
-                            val remainingDays = daysNeeded - remainingSlots
-                            val additionalPages = (remainingDays - 1) / 19 + 1
-                            predictedPage = cachedPage + additionalPages
+                            // 缓存页已满，估算页码偏移
+                            val daysDiff = endDate.daysUntil(targetDate)
+                            // 粗略估算：假设每天1条，每页19条。
+                            val pageOffset = (daysDiff / 19).coerceAtLeast(1)
+                            predictedPage = cachedPage + pageOffset
                         }
                     } else { // targetDate < startDate
                         // 往前找
                         val daysDiff = targetDate.daysUntil(startDate)
-                        val pageOffset = (daysDiff - 1) / 19 + 1
-                        predictedPage = cachedPage - pageOffset
+                        val pageOffset = (daysDiff / 19).coerceAtLeast(1)
+                        predictedPage = (cachedPage - pageOffset).coerceAtLeast(1)
                     }
                 }
             } catch (e: Exception) {
-                // 预测失败，回退
+                // 预测失败，忽略
             }
         }
 
-        // 2. 如果没有预测或预测页面无效，计算最后一页
-        var currentPage = predictedPage ?: 0
-
-        if (currentPage <= 0) {
-            // 获取第一页以拿到总页数
+        // 2. 如果没有预测或预测页面无效，获取最后一页作为起点 (通常查Trend都是查最近的)
+        if (predictedPage <= 0) {
             val firstPageThread = getTrendThread(page = 1).getOrElse { return Result.failure(it) }
             val replyCount = firstPageThread.replyCount
             val lastPage = ((replyCount - 1) / 19) + 1
-            currentPage = lastPage.toInt()
+            predictedPage = lastPage.toInt()
         }
 
-        // 3. 验证并精确查找 (无循环重试，仅做一次邻近跳转)
-        val threadResult = getTrendThread(currentPage)
-        val thread = threadResult.getOrElse { return Result.failure(it) }
-        val replies = thread.replies
+        // 3. 搜索循环 (最多尝试 3 次跳页，解决预测偏差)
+        var currentPage = predictedPage
+        var steps = 0
+        val maxSteps = 3
 
-        // 空页异常处理
-        if (replies.isEmpty()) {
-            return Result.success(null)
-        }
+        while (steps < maxSteps) {
+            val threadResult = getTrendThread(currentPage)
+            val thread = threadResult.getOrElse { return Result.failure(it) }
+            val replies = thread.replies
 
-        // 解析当前页时间范围
-        val firstReplyDate =
-            ai.saniou.corecommon.utils.DateParser.parseDateFromNowString(replies.first().now)
-        val lastReplyDate =
-            ai.saniou.corecommon.utils.DateParser.parseDateFromNowString(replies.last().now)
-
-        if (firstReplyDate == null || lastReplyDate == null) {
-            return Result.failure(IllegalStateException("Date parsing failed for page $currentPage"))
-        }
-
-        // 更新 Anchor
-        setTrendAnchor(currentPage, replies.first().now, replies.last().now, replies.size)
-
-        // 检查是否命中当前页
-        val targetReply = replies.find {
-            ai.saniou.corecommon.utils.DateParser.parseDateFromNowString(it.now) == targetDate
-        }
-        if (targetReply != null) {
-            return Result.success(targetReply)
-        }
-
-        // 没命中，判断是向前还是向后
-        if (targetDate > lastReplyDate) {
-            // 目标日期在当前页之后
-            if (replies.size < 19) {
-                // 当前页未满，说明没有更新的数据了
+            if (replies.isEmpty()) {
+                // 如果当前页为空，停止搜索 (可能是页码超出)
                 return Result.success(null)
             }
-            // 尝试下一页
-            val nextPage = currentPage + 1
-            val nextThread = getTrendThread(nextPage).getOrElse { return Result.failure(it) }
-            val nextReplies = nextThread.replies
 
-            if (nextReplies.isNotEmpty()) {
-                setTrendAnchor(
-                    nextPage,
-                    nextReplies.first().now,
-                    nextReplies.last().now,
-                    nextReplies.size
-                )
-                val found = nextReplies.find {
+            // 更新 Anchor
+            val firstNow = replies.first().now
+            val lastNow = replies.last().now
+            setTrendAnchor(currentPage, firstNow, lastNow, replies.size)
+
+            val pageStart =
+                ai.saniou.corecommon.utils.DateParser.parseDateFromNowString(firstNow)
+            val pageEnd =
+                ai.saniou.corecommon.utils.DateParser.parseDateFromNowString(lastNow)
+
+            if (pageStart == null || pageEnd == null) {
+                return Result.failure(IllegalStateException("Date parsing failed for page $currentPage"))
+            }
+
+            // 检查命中
+            if (targetDate in pageStart..pageEnd) {
+                val targetReply = replies.find {
                     ai.saniou.corecommon.utils.DateParser.parseDateFromNowString(it.now) == targetDate
                 }
-                return Result.success(found)
+                return Result.success(targetReply)
             }
-        } else if (targetDate < firstReplyDate) {
-            // 目标日期在当前页之前
-            if (currentPage > 1) {
-                val prevPage = currentPage - 1
-                val prevThread = getTrendThread(prevPage).getOrElse { return Result.failure(it) }
-                val prevReplies = prevThread.replies
 
-                if (prevReplies.isNotEmpty()) {
-                    setTrendAnchor(
-                        prevPage,
-                        prevReplies.first().now,
-                        prevReplies.last().now,
-                        prevReplies.size
-                    )
-                    val found = prevReplies.find {
-                        ai.saniou.corecommon.utils.DateParser.parseDateFromNowString(it.now) == targetDate
-                    }
-                    return Result.success(found)
+            // 未命中，决定方向
+            if (targetDate > pageEnd) {
+                // 目标在未来
+                if (replies.size < 19) {
+                    // 当前页未满且目标更晚 -> 目标尚未生成
+                    return Result.success(null)
                 }
+                currentPage++
+            } else {
+                // 目标在过去 (targetDate < pageStart)
+                if (currentPage <= 1) {
+                    return Result.success(null)
+                }
+                currentPage--
             }
+            steps++
         }
 
         return Result.success(null)

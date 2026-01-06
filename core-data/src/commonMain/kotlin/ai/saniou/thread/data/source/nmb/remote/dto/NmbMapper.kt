@@ -180,7 +180,7 @@ fun Thread.toDomain(): Topic = Topic(
     isAdmin = admin > 0,
     isHidden = hide > 0,
     isLocal = false,
-    comments = replies.map { it.toDomain(id.toString()) },
+    comments = replies.filter { it.id != 9999999L }.map { it.toDomain(id.toString()) },
     summary = null,
     remainingCount = (replyCount - replies.size).coerceAtLeast(0).toLong()
 )
