@@ -8,10 +8,7 @@ import ai.saniou.thread.data.source.tieba.remote.OfficialTiebaApi
 import ai.saniou.thread.data.source.tieba.remote.TiebaProtoBuilder
 import ai.saniou.thread.data.source.tieba.remote.WebTiebaApi
 import ai.saniou.thread.db.Database
-import com.huanchengfly.tieba.post.api.models.protos.frsPage.FrsPageRequest
-import com.huanchengfly.tieba.post.api.models.protos.frsPage.FrsPageRequestData
-import com.huanchengfly.tieba.post.api.models.protos.pbPage.PbPageRequest
-import com.huanchengfly.tieba.post.api.models.protos.pbPage.PbPageRequestData
+import ai.saniou.thread.domain.model.FeedType
 import ai.saniou.thread.domain.model.forum.Channel
 import ai.saniou.thread.domain.model.forum.Comment
 import ai.saniou.thread.domain.model.forum.Topic
@@ -19,20 +16,25 @@ import ai.saniou.thread.domain.model.user.LoginStrategy
 import ai.saniou.thread.domain.repository.AccountRepository
 import ai.saniou.thread.domain.repository.Source
 import ai.saniou.thread.domain.repository.SourceCapabilities
-import app.cash.paging.Pager
-import app.cash.paging.PagingConfig
-import app.cash.paging.PagingData
 import app.cash.paging.PagingSource
 import app.cash.paging.PagingState
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOneOrNull
+import com.huanchengfly.tieba.post.api.models.protos.frsPage.FrsPageRequest
+import com.huanchengfly.tieba.post.api.models.protos.frsPage.FrsPageRequestData
+import com.huanchengfly.tieba.post.api.models.protos.pbPage.PbPageRequest
+import com.huanchengfly.tieba.post.api.models.protos.pbPage.PbPageRequestData
+import com.huanchengfly.tieba.post.api.models.protos.personalized.PersonalizedRequest
+import com.huanchengfly.tieba.post.api.models.protos.personalized.PersonalizedRequestData
+import com.huanchengfly.tieba.post.api.models.protos.userLike.UserLikeRequest
+import com.huanchengfly.tieba.post.api.models.protos.userLike.UserLikeRequestData
+import io.ktor.http.encodeURLQueryComponent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
-import io.ktor.http.encodeURLQueryComponent
 
 class TiebaSource(
     private val miniTiebaApi: MiniTiebaApi,
@@ -112,6 +114,68 @@ class TiebaSource(
         page: Int,
         isTimeline: Boolean,
     ): Result<List<Topic>> = runCatching {
+        when (channelId) {
+            FeedType.RECOMMEND.name.lowercase() -> fetchRecommendTopics(page)
+            FeedType.CONCERN.name.lowercase() -> fetchConcernTopics(page)
+            else -> fetchForumTopics(channelId, page)
+        }
+    }
+
+    private suspend fun fetchRecommendTopics(page: Int): List<Topic> {
+        val request = PersonalizedRequest(
+            PersonalizedRequestData(
+                common = TiebaProtoBuilder.buildCommonRequest(
+                    tiebaParameterProvider,
+                    ClientVersion.TIEBA_V11
+                ),
+                load_type = if (page == 1) 1 else 2,
+                pn = page
+            )
+        )
+
+        val body = TiebaProtoBuilder.buildProtobufFormBody(
+            data = request,
+            clientVersion = ClientVersion.TIEBA_V11,
+            parameterProvider = tiebaParameterProvider
+        )
+
+        val response = officialProtobufTiebaApiV11.personalizedFlow(body).first()
+
+        if (response.error?.error_code != 0) {
+            throw Exception("Tieba Error: ${response.error?.error_msg} (Code: ${response.error?.error_code})")
+        }
+
+        return TiebaMapper.mapPersonalizedResponseToTopics(response)
+    }
+
+    private suspend fun fetchConcernTopics(page: Int): List<Topic> {
+        val request = UserLikeRequest(
+            UserLikeRequestData(
+                common = TiebaProtoBuilder.buildCommonRequest(
+                    tiebaParameterProvider,
+                    ClientVersion.TIEBA_V11
+                ),
+                pageTag = if (page == 1) "" else page.toString(), // TODO: Check if pageTag supports page number
+                loadType = if (page == 1) 1 else 2
+            )
+        )
+
+        val body = TiebaProtoBuilder.buildProtobufFormBody(
+            data = request,
+            clientVersion = ClientVersion.TIEBA_V11,
+            parameterProvider = tiebaParameterProvider
+        )
+
+        val response = officialProtobufTiebaApiV11.userLikeFlow(body).first()
+
+        if (response.error?.error_code != 0) {
+            throw Exception("Tieba Error: ${response.error?.error_msg} (Code: ${response.error?.error_code})")
+        }
+
+        return TiebaMapper.mapUserLikeResponseToTopics(response)
+    }
+
+    private suspend fun fetchForumTopics(channelId: String, page: Int): List<Topic> {
         val channel = database.channelQueries.getChannel(TiebaMapper.SOURCE_ID, channelId)
             .executeAsOneOrNull()
 
@@ -151,7 +215,7 @@ class TiebaSource(
             throw Exception("Tieba Error: ${response.error?.error_msg} (Code: ${response.error?.error_code})")
         }
 
-        TiebaMapper.mapFrsPageResponseToTopics(response, forumName, forumName)
+        return TiebaMapper.mapFrsPageResponseToTopics(response, forumName, forumName)
     }
 
 

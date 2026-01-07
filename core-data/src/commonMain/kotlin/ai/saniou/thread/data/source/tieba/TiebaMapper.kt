@@ -10,7 +10,11 @@ import ai.saniou.thread.domain.model.forum.Comment
 import ai.saniou.thread.domain.model.forum.Image
 import ai.saniou.thread.domain.model.forum.Topic
 import com.huanchengfly.tieba.post.api.models.protos.frsPage.FrsPageResponse
+import com.huanchengfly.tieba.post.api.models.protos.hotThreadList.HotThreadListResponse
 import com.huanchengfly.tieba.post.api.models.protos.pbPage.PbPageResponse
+import com.huanchengfly.tieba.post.api.models.protos.personalized.PersonalizedResponse
+import com.huanchengfly.tieba.post.api.models.protos.topicList.TopicListResponse
+import com.huanchengfly.tieba.post.api.models.protos.userLike.UserLikeResponse
 import kotlinx.datetime.Instant
 
 object TiebaMapper {
@@ -361,8 +365,8 @@ object TiebaMapper {
                 channelId = forumId,
                 channelName = forumName,
                 title = thread.title,
-                content = thread._abstract.joinToString("\n") { it.text ?: "" },
-                summary = thread._abstract.joinToString("") { it.text ?: "" },
+                content = thread._abstract.joinToString("\n") { it.text },
+                summary = thread._abstract.joinToString("") { it.text },
                 author = author,
                 createdAt = thread.createTime.toLong().let { Instant.fromEpochSeconds(it) },
                 commentCount = thread.replyNum.toLong(),
@@ -374,6 +378,191 @@ object TiebaMapper {
                 sourceName = SOURCE_NAME,
                 sourceId = SOURCE_ID,
                 sourceUrl = "$BASE_URL/p/$tid"
+            )
+        }
+    }
+
+    fun mapPersonalizedResponseToTopics(response: PersonalizedResponse): List<Topic> {
+        val data = response.data_ ?: return emptyList()
+        return data.thread_list.mapNotNull { thread ->
+            val tid = thread.id.toString()
+            val author = Author(
+                id = thread.authorId.toString(),
+                name = thread.author?.nameShow ?: thread.author?.name ?: "Unknown",
+                avatar = thread.author?.portrait?.let { "http://tb.himg.baidu.com/sys/portrait/item/$it" },
+                sourceName = SOURCE_NAME
+            )
+
+            val images = thread.media.mapNotNull { media ->
+                if (media.type == 3) {
+                    Image(
+                        originalUrl = media.bigPic,
+                        thumbnailUrl = media.srcPic,
+                        width = media.width,
+                        height = media.height
+                    )
+                } else null
+            }
+
+            Topic(
+                id = tid,
+                channelId = thread.forumId.toString(),
+                channelName = thread.forumName,
+                title = thread.title,
+                content = thread._abstract.joinToString("\n") { it.text },
+                summary = thread._abstract.joinToString("") { it.text },
+                author = author,
+                createdAt = thread.createTime.toLong().let { Instant.fromEpochSeconds(it) },
+                commentCount = thread.replyNum.toLong(),
+                images = images,
+                isSage = false,
+                isAdmin = false,
+                isHidden = false,
+                isLocal = false,
+                sourceName = SOURCE_NAME,
+                sourceId = SOURCE_ID,
+                sourceUrl = "$BASE_URL/p/$tid"
+            )
+        }
+    }
+
+    fun mapUserLikeResponseToTopics(response: UserLikeResponse): List<Topic> {
+        val data = response.data_ ?: return emptyList()
+        // In Proto: repeated ConcernData threadInfo = 1;
+        // ConcernData has ThreadInfo threadList = 1;
+        return data.threadInfo.mapNotNull { concernData ->
+            val thread = concernData.threadList ?: return@mapNotNull null
+            val tid = thread.id.toString()
+            val author = Author(
+                id = thread.authorId.toString(),
+                name = thread.author?.nameShow ?: thread.author?.name ?: "Unknown",
+                avatar = thread.author?.portrait?.let { "http://tb.himg.baidu.com/sys/portrait/item/$it" },
+                sourceName = SOURCE_NAME
+            )
+
+            val images = thread.media.mapNotNull { media ->
+                if (media.type == 3) {
+                    Image(
+                        originalUrl = media.bigPic,
+                        thumbnailUrl = media.srcPic,
+                        width = media.width,
+                        height = media.height
+                    )
+                } else null
+            }
+
+            Topic(
+                id = tid,
+                channelId = thread.forumId.toString(),
+                channelName = thread.forumName,
+                title = thread.title,
+                content = thread._abstract.joinToString("\n") { it.text },
+                summary = thread._abstract.joinToString("") { it.text },
+                author = author,
+                createdAt = thread.createTime.toLong().let { Instant.fromEpochSeconds(it) },
+                commentCount = thread.replyNum.toLong(),
+                images = images,
+                isSage = false,
+                isAdmin = false,
+                isHidden = false,
+                isLocal = false,
+                sourceName = SOURCE_NAME,
+                sourceId = SOURCE_ID,
+                sourceUrl = "$BASE_URL/p/$tid"
+            )
+        }
+    }
+
+    fun mapHotThreadListResponseToTopics(response: HotThreadListResponse): List<Topic> {
+        val data = response.data_ ?: return emptyList()
+        
+        val threads = data.threadInfo.mapNotNull { thread ->
+            val tid = thread.id.toString()
+            val author = Author(
+                id = thread.authorId.toString(),
+                name = thread.author?.nameShow ?: thread.author?.name ?: "Unknown",
+                avatar = thread.author?.portrait?.let { "http://tb.himg.baidu.com/sys/portrait/item/$it" },
+                sourceName = SOURCE_NAME
+            )
+
+            val images = thread.media.mapNotNull { media ->
+                if (media.type == 3) {
+                    Image(
+                        originalUrl = media.bigPic,
+                        thumbnailUrl = media.srcPic,
+                        width = media.width,
+                        height = media.height
+                    )
+                } else null
+            }
+
+            Topic(
+                id = tid,
+                channelId = thread.forumId.toString(),
+                channelName = thread.forumName,
+                title = thread.title,
+                content = thread._abstract.joinToString("\n") { it.text },
+                summary = thread._abstract.joinToString("") { it.text },
+                author = author,
+                createdAt = thread.createTime.toLong().let { Instant.fromEpochSeconds(it) },
+                commentCount = thread.replyNum.toLong(),
+                images = images,
+                isSage = false,
+                isAdmin = false,
+                isHidden = false,
+                isLocal = false,
+                sourceName = SOURCE_NAME,
+                sourceId = SOURCE_ID,
+                sourceUrl = "$BASE_URL/p/$tid"
+            )
+        }
+
+        val topics = data.topicList.map { topic ->
+             Topic(
+                id = topic.topicId.toString(),
+                channelId = "",
+                channelName = "话题",
+                title = topic.topicName,
+                content = topic.topicDesc,
+                summary = topic.topicDesc,
+                author = Author(id = "0", name = "话题", avatar = null, sourceName = SOURCE_NAME),
+                createdAt = Instant.fromEpochSeconds(0), // No time in RecommendTopicList
+                commentCount = topic.discussNum.toLong(),
+                images = if (topic.topicPic.isNotEmpty()) listOf(Image(topic.topicPic, topic.topicPic, null, null)) else emptyList(),
+                isSage = false,
+                isAdmin = false,
+                isHidden = false,
+                isLocal = false,
+                sourceName = SOURCE_NAME,
+                sourceId = SOURCE_ID,
+                sourceUrl = ""
+            )
+        }
+
+        return threads + topics
+    }
+
+    fun mapTopicListResponseToTopics(response: TopicListResponse): List<Topic> {
+        val data = response.data_ ?: return emptyList()
+        return data.topic_list.map { topic ->
+             Topic(
+                id = topic.topic_id.toString(),
+                channelId = "",
+                channelName = "话题",
+                title = topic.topic_name,
+                content = topic.topic_desc,
+                summary = topic.topic_desc,
+                author = Author(id = "0", name = "话题", avatar = null, sourceName = SOURCE_NAME),
+                createdAt = Instant.fromEpochSeconds(0),
+                commentCount = topic.discuss_num.toLong(),
+                images = if (topic.topic_image.isNotEmpty()) listOf(Image(topic.topic_image, topic.topic_image, null, null)) else emptyList(),
+                isSage = false,
+                isAdmin = false,
+                isHidden = false,
+                isLocal = false,
+                sourceName = SOURCE_NAME,
+                sourceId = SOURCE_ID,
+                sourceUrl = ""
             )
         }
     }

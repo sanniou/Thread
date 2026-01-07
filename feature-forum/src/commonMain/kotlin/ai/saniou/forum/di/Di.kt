@@ -134,12 +134,12 @@ val nmbFeatureModule = DI.Module("nmbFeatureModule") {
     // 订阅相关
     bindProvider {
         SubscriptionViewModel(
-            instance(),
-            instance(),
-            instance(),
-            instance(),
-            instance(),
-            instance()
+            getSubscriptionFeedUseCase = instance(),
+            toggleSubscriptionUseCase = instance(),
+            syncLocalSubscriptionsUseCase = instance(),
+            observeActiveSubscriptionKeyUseCase = instance(),
+            saveSubscriptionKeyUseCase = instance(),
+            generateRandomSubscriptionIdUseCase = instance()
         )
     }
     // 搜索相关
@@ -147,12 +147,18 @@ val nmbFeatureModule = DI.Module("nmbFeatureModule") {
     bindFactory<String, UserDetailViewModel> { userHash ->
         UserDetailViewModel(
             userHash = userHash,
-            instance()
+            nmbRepository = instance()
         )
     }
 
     bindFactory<String, TrendViewModel> { sourceId ->
-        TrendViewModel(sourceId, instance(), instance(), instance())
+        TrendViewModel(
+            initialSourceId = sourceId,
+            getTrendUseCase = instance(),
+            settingsRepository = instance(),
+            sourceRepository = instance(),
+            getChannelTopicsPagingUseCase = instance()
+        )
     }
 
     bindFactory<String, SourceInitViewModel> { sourceId ->

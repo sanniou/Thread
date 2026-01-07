@@ -1,12 +1,14 @@
 package ai.saniou.thread.domain.repository
 
 import ai.saniou.thread.domain.model.forum.Channel
+import ai.saniou.thread.domain.model.FeedType
 import ai.saniou.thread.domain.model.forum.Comment
 import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.model.forum.TrendResult
 import ai.saniou.thread.domain.model.user.LoginStrategy
 import app.cash.paging.PagingData
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 
 data class SourceCapabilities(
     val supportsTrend: Boolean = false,
