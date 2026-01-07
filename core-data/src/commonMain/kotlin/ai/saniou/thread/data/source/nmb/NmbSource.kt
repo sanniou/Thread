@@ -4,9 +4,7 @@ import ai.saniou.thread.data.cache.CacheStrategy
 import ai.saniou.thread.data.manager.CdnManager
 import ai.saniou.thread.data.mapper.toDomain
 import ai.saniou.thread.data.mapper.toMetadata
-import ai.saniou.thread.data.paging.DataPolicy
 import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
-import ai.saniou.thread.data.source.nmb.remote.dto.ForumThread
 import ai.saniou.thread.data.source.nmb.remote.dto.RemoteKeyType
 import ai.saniou.thread.data.source.nmb.remote.dto.Reply
 import ai.saniou.thread.data.source.nmb.remote.dto.Thread
@@ -17,7 +15,6 @@ import ai.saniou.thread.data.source.nmb.remote.dto.toDomainComment
 import ai.saniou.thread.data.source.nmb.remote.dto.toTable
 import ai.saniou.thread.data.source.nmb.remote.dto.toTableReply
 import ai.saniou.thread.db.Database
-import ai.saniou.thread.db.table.forum.GetTopicsInChannelOffset
 import ai.saniou.thread.db.table.forum.Image
 import ai.saniou.thread.domain.model.forum.Account
 import ai.saniou.thread.domain.model.forum.Channel
@@ -32,7 +29,6 @@ import ai.saniou.thread.domain.repository.Source
 import ai.saniou.thread.domain.repository.SourceCapabilities
 import ai.saniou.thread.domain.repository.observeValue
 import ai.saniou.thread.network.SaniouResult
-import app.cash.paging.ExperimentalPagingApi
 import app.cash.paging.Pager
 import app.cash.paging.PagingConfig
 import app.cash.paging.PagingData
@@ -199,21 +195,6 @@ class NmbSource(
         }
     }
 
-    @Deprecated("Use getChannelTopics instead")
-    override fun getTopicsPager(
-        channelId: String,
-        isTimeline: Boolean,
-        initialPage: Int,
-    ): Flow<PagingData<Topic>> {
-        val fidLong =
-            channelId.toLongOrNull() ?: return kotlinx.coroutines.flow.flowOf(PagingData.empty())
-        val pagerFlow = if (isTimeline) {
-            getTimelinePager(fidLong, DataPolicy.NETWORK_ELSE_CACHE, initialPage)
-        } else {
-            getShowfPager(fidLong, DataPolicy.NETWORK_ELSE_CACHE, initialPage)
-        }
-        return pagerFlow
-    }
 
     override suspend fun getTopicDetail(threadId: String, page: Int): Result<Topic> {
         return try {
@@ -235,187 +216,12 @@ class NmbSource(
         return getTopicDetail(threadId, page).map { it.toMetadata() }
     }
 
-    override fun getTopicCommentsPager(
-        threadId: String,
-        initialPage: Int,
-        isPoOnly: Boolean,
-    ): Flow<PagingData<Comment>> {
-        val tid =
-            threadId.toLongOrNull() ?: return kotlinx.coroutines.flow.flowOf(PagingData.empty())
-        return getThreadRepliesPager(
-            tid,
-            null,
-            DataPolicy.NETWORK_ELSE_CACHE,
-            initialPage,
-            isPoOnly
-        )
-    }
-
     override fun getChannel(channelId: String): Flow<Channel?> {
         return db.channelQueries.getChannel(id = channelId, sourceId = id)
             .asFlow()
             .mapToOneOrNull(Dispatchers.Default)
             .map { it?.toDomain(db.channelQueries) }
     }
-
-    fun getTimelinePager(
-        fid: Long,
-        policy: DataPolicy,
-        initialPage: Int = 1,
-    ): Flow<PagingData<Topic>> {
-        return createPager(
-            fid = fid,
-            policy = policy,
-            initialPage = initialPage,
-            fetcher = { page -> nmbXdApi.timeline(fid, page.toLong()) }
-        ).flow.map { pagingData ->
-            pagingData.map {
-                it.toDomain(
-                    db.commentQueries,
-                    db.imageQueries
-                )
-            }
-        }
-    }
-
-    fun getShowfPager(
-        fid: Long,
-        policy: DataPolicy,
-        initialPage: Int = 1,
-    ): Flow<PagingData<Topic>> {
-        return createPager(
-            fid = fid,
-            policy = policy,
-            initialPage = initialPage,
-            fetcher = { page -> nmbXdApi.showf(fid, page.toLong()) }
-        ).flow.map { pagingData ->
-            pagingData.map {
-                it.toDomain(
-                    db.commentQueries,
-                    db.imageQueries
-                )
-            }
-        }
-    }
-
-    // Deprecated methods using Pager directly can be removed or simplified if ChannelRepository is the new standard.
-    // However, NmbSource.getTimelinePager and getShowfPager are still used by deprecated getTopicsPager.
-    // We should probably just keep them for backward compatibility if needed, or remove if fully migrating.
-    // The task said "deprecated and remove ForumRemoteMediator".
-    // NmbSource uses ForumRemoteMediator in createPager.
-    // We should probably update createPager to use GenericRemoteMediator as well, or just let ChannelRepository handle it.
-    // If ChannelRepository is the way forward, NmbSource shouldn't be creating Pagers for Channels.
-
-    // For now, I will modify createPager to use ForumRemoteMediator (which will be deleted) -> NO.
-    // I must delete ForumRemoteMediator. So NmbSource.createPager will break.
-    // But NmbSource.getTopicsPager is DEPRECATED.
-    // If I delete ForumRemoteMediator, I must fix or remove createPager.
-
-    // Let's remove the deprecated pagers from NmbSource entirely or implement them using ChannelRepository logic if possible.
-    // But Source shouldn't depend on Repository.
-    // So the deprecated methods in Source should likely be removed or stubbed if they are not used.
-    // Checking usage... Source.getTopicsPager is deprecated.
-
-    // I will replace ForumRemoteMediator usage in createPager with GenericRemoteMediator or just remove createPager if I can.
-    // Since I cannot check all usages easily without search, but it is deprecated.
-    // I will try to remove ForumRemoteMediator class file.
-
-    @OptIn(ExperimentalPagingApi::class)
-    fun getThreadRepliesPager(
-        threadId: Long,
-        poUserHash: String?,
-        policy: DataPolicy,
-        initialPage: Int = 1,
-        isPoOnly: Boolean = false,
-    ): Flow<PagingData<Comment>> {
-        val pageSize = 19
-        return Pager(
-            config = PagingConfig(pageSize = pageSize), // 每页19个回复
-            initialKey = ((initialPage - 1) * pageSize),
-            remoteMediator = ThreadRemoteMediator(
-                sourceId = id,
-                threadId = threadId.toString(),
-                db = db,
-                dataPolicy = policy,
-                initialPage = initialPage,
-                isPoOnly = isPoOnly,
-                cdnManager = cdnManager,
-                fetcher = { page ->
-                    val result = if (isPoOnly) {
-                        nmbXdApi.po(threadId, page.toLong())
-                    } else {
-                        nmbXdApi.thread(threadId, page.toLong())
-                    }
-                    when (result) {
-                        is SaniouResult.Success -> Result.success(result.data)
-                        is SaniouResult.Error -> Result.failure(result.ex)
-                    }
-                }
-            ),
-            pagingSourceFactory = {
-                if (isPoOnly) {
-                    QueryPagingSource(
-                        transacter = db.commentQueries,
-                        context = Dispatchers.Default,
-                        countQuery = db.commentQueries.countCommentsByTopicIdPoMode(
-                            sourceId = id,
-                            topicId = threadId.toString()
-                        ),
-                        queryProvider = { limit, offset ->
-                            db.commentQueries.getCommentsByTopicIdPoModeOffset(
-                                sourceId = id,
-                                topicId = threadId.toString(),
-                                limit = limit,
-                                offset = offset,
-                            )
-                        }
-                    )
-                } else if (poUserHash != null) {
-                    // 只看指定PO (Old logic, maybe deprecated or specific use case)
-                    QueryPagingSource(
-                        transacter = db.commentQueries,
-                        context = Dispatchers.Default,
-                        countQuery =
-                            db.commentQueries.countCommentsByTopicIdAndUserHash(
-                                id,
-                                threadId.toString(),
-                                poUserHash
-                            ),
-                        queryProvider = { limit, offset ->
-                            db.commentQueries.getCommentsByTopicIdAndUserHashOffset(
-                                sourceId = id,
-                                topicId = threadId.toString(),
-                                userHash = poUserHash,
-                                limit = limit,
-                                offset = offset,
-                            )
-                        }
-                    )
-                } else {
-                    // 查看全部
-                    QueryPagingSource(
-                        transacter = db.commentQueries,
-                        context = Dispatchers.Default,
-                        countQuery = db.commentQueries.countCommentsByTopicId(
-                            id,
-                            threadId.toString()
-                        ),
-                        queryProvider = { limit, offset ->
-                            db.commentQueries.getCommentsByTopicIdOffset(
-                                sourceId = id,
-                                topicId = threadId.toString(),
-                                limit = limit,
-                                offset = offset
-                            )
-                        }
-                    )
-                }
-            }
-        ).flow.map { pagingData ->
-            pagingData.map { it.toDomain(db.imageQueries) }
-        }
-    }
-
     suspend fun updateThreadLastAccessTime(threadId: Long, time: Long) {
         db.topicQueries.updateTopicLastAccessTime(time, id, threadId.toString())
     }
@@ -531,15 +337,6 @@ class NmbSource(
         }
     }
 
-    @OptIn(ExperimentalPagingApi::class)
-    private fun createPager(
-        fid: Long,
-        policy: DataPolicy,
-        initialPage: Int,
-        fetcher: suspend (page: Int) -> SaniouResult<List<ForumThread>>,
-    ): Pager<Int, GetTopicsInChannelOffset> {
-        throw NotImplementedError("createPager is deprecated and removed. Use ChannelRepository.getChannelTopicsPaging instead.")
-    }
 
     override suspend fun getTopicComments(
         threadId: String,

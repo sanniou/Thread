@@ -197,7 +197,8 @@ fun ThreadReply.toDomain(topicId: String): Comment {
         images = createImageList(img, ext),
         isAdmin = admin > 0,
         floor = null, // API might not provide floor
-        replyToId = null
+        replyToId = null,
+        sourceId = "nmb",
     )
 }
 
@@ -209,10 +210,11 @@ fun Thread.toDomainComment(sourceId: String): Comment {
         author = createAuthor(userHash, name),
         createdAt = now.toTime(),
         title = title,
-        content = content ?: "",
+        content = content,
         images = createImageList(img, ext),
         isAdmin = admin > 0,
         floor = 1, // 主楼默认 1 楼
-        replyToId = null
+        replyToId = null,
+        sourceId = sourceId
     )
 }

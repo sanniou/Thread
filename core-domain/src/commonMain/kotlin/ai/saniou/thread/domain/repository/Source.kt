@@ -54,16 +54,6 @@ interface Source {
     suspend fun fetchChannels(): Result<Unit>
 
     /**
-     * 获取板块帖子分页数据
-     */
-    @Deprecated("Use getChannelTopics instead")
-    fun getTopicsPager(
-        channelId: String,
-        isTimeline: Boolean,
-        initialPage: Int = 1,
-    ): Flow<PagingData<Topic>>
-
-    /**
      * 获取板块下的帖子列表（分页）
      * 替代 getTopicsPager，配合 RemoteMediator 使用
      */
@@ -84,13 +74,6 @@ interface Source {
         page: Int,
         isPoOnly: Boolean = false,
     ): Result<List<Comment>> = Result.failure(NotImplementedError("Not implemented"))
-
-    @Deprecated("Use getTopicComments instead")
-    fun getTopicCommentsPager(
-        threadId: String,
-        initialPage: Int,
-        isPoOnly: Boolean = false,
-    ): Flow<PagingData<Comment>>
 
     /**
      * 获取板块详情

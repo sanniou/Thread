@@ -122,9 +122,7 @@ class TopicRepositoryImpl(
                         // But if we want to ensure fresh data on refresh, we might clear.
                     }
                     // Filter out comments that might duplicate? upsert handles it.
-                    cache.saveComments(comments.map {
-                        it.toEntity(sourceId, page.toLong())
-                    })
+                    cache.saveComments(comments, sourceId, page)
                 },
                 endOfPaginationReached = {
                     //  nmb 特有的问题，正常的一页数据也会小于 20,所以只能判断是否为空来处理

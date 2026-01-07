@@ -9,6 +9,7 @@ import ai.saniou.thread.db.table.forum.GetTopicsInChannelOffset
 import ai.saniou.thread.domain.model.forum.ImageType
 import ai.saniou.thread.domain.model.forum.Topic
 import app.cash.paging.PagingSource
+import ai.saniou.thread.domain.model.forum.Comment as DomainComment
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOne
@@ -153,10 +154,23 @@ class SqlDelightSourceCache(
         }
     }
 
-    override fun saveComments(comments: List<Comment>) {
+    override fun saveComments(comments: List<DomainComment>, sourceId: String, page: Int) {
         commentQueries.transaction {
-            comments.forEach { reply ->
-                commentQueries.upsertComment(reply)
+            comments.forEach { comment ->
+                commentQueries.upsertComment(
+                    comment.toEntity(sourceId, page.toLong())
+                )
+                // Save Comment Images
+                comment.images.forEachIndexed { index, image ->
+                    db.imageQueries.upsertImage(
+                        image.toEntity(
+                            sourceId = sourceId,
+                            parentId = comment.id,
+                            parentType = ImageType.Comment,
+                            index.toLong()
+                        )
+                    )
+                }
             }
         }
     }

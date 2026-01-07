@@ -99,14 +99,6 @@ class AcfunSource(
         return Result.success(emptyList()) // Stub
     }
 
-    @Deprecated("Use getChannelTopics instead")
-    override fun getTopicsPager(
-        channelId: String,
-        isTimeline: Boolean,
-        initialPage: Int,
-    ): Flow<PagingData<Topic>> {
-        return flowOf(PagingData.empty())
-    }
 
     override suspend fun getTopicDetail(threadId: String, page: Int): Result<Topic> {
         val articleId =
@@ -192,6 +184,7 @@ class AcfunSource(
                         isAdmin = false,
                         title = "No.${comment.floor}",
                         topicId = threadId,
+                        sourceId = id
                     )
                 }
                 Result.success(replies)
@@ -199,65 +192,6 @@ class AcfunSource(
 
             is SaniouResult.Error -> Result.failure(response.ex)
         }
-    }
-
-    override fun getTopicCommentsPager(
-        threadId: String,
-        initialPage: Int,
-        isPoOnly: Boolean,
-    ): Flow<PagingData<Comment>> {
-        return Pager(
-            config = PagingConfig(pageSize = 20),
-            pagingSourceFactory = {
-                object : PagingSource<String, Comment>() {
-                    override suspend fun load(params: LoadParams<String>): LoadResult<String, Comment> {
-                        val pcursor = params.key ?: "0"
-                        val sourceId = threadId.toLongOrNull()
-                            ?: return LoadResult.Error(IllegalArgumentException("Invalid threadId"))
-
-                        return when (val response = acfunApi.getCommentList(
-                            sourceId,
-                            1,
-                            pcursor,
-                            20,
-                            if (pcursor == "0") 1 else 0
-                        )) { // sourceType 1 for article
-                            is SaniouResult.Success -> {
-                                val list = response.data.rootComments ?: emptyList()
-                                val nextKey =
-                                    if (response.data.pcursor == "nomore" || list.isEmpty()) null else response.data.pcursor
-
-                                val replies = list.map { comment ->
-                                    Comment(
-                                        id = comment.commentId.toString(),
-                                        content = comment.content ?: "",
-                                        author = Author(
-                                            id = comment.user?.id?.toString() ?: "",
-                                            name = comment.user?.name ?: "Unknown",
-                                            avatar = comment.user?.headUrl
-                                        ),
-                                        createdAt = Instant.fromEpochMilliseconds(
-                                            comment.timestamp ?: 0
-                                        ),
-                                        images = emptyList(),
-                                        isAdmin = false,
-                                        title = "No.${comment.floor}",
-                                        topicId = threadId,
-                                    )
-                                }
-                                LoadResult.Page(data = replies, prevKey = null, nextKey = nextKey)
-                            }
-
-                            is SaniouResult.Error -> LoadResult.Error(response.ex)
-                        }
-                    }
-
-                    override fun getRefreshKey(state: PagingState<String, Comment>): String? {
-                        return null
-                    }
-                }
-            }
-        ).flow
     }
 
     override fun getChannel(channelId: String): Flow<Channel?> {

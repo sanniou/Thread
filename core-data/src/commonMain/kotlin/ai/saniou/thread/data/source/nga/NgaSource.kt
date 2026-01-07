@@ -40,25 +40,9 @@ class NgaSource : Source {
         return Result.success(emptyList()) // Stub
     }
 
-    @Deprecated("Use getChannelTopics instead")
-    override fun getTopicsPager(
-        channelId: String,
-        isTimeline: Boolean,
-        initialPage: Int,
-    ): Flow<PagingData<Topic>> {
-        return flowOf(PagingData.empty())
-    }
 
     override suspend fun getTopicDetail(threadId: String, page: Int): Result<Topic> {
         return Result.failure(NotImplementedError("NGA source not implemented"))
-    }
-
-    override fun getTopicCommentsPager(
-        threadId: String,
-        initialPage: Int,
-        isPoOnly: Boolean,
-    ): Flow<PagingData<Comment>> {
-        return flowOf(PagingData.empty())
     }
 
     override fun getChannel(channelId: String): Flow<Channel?> {

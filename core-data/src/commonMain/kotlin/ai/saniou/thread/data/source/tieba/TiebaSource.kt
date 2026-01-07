@@ -154,37 +154,6 @@ class TiebaSource(
         TiebaMapper.mapFrsPageResponseToTopics(response, forumName, forumName)
     }
 
-    @Deprecated("Use getChannelTopics instead")
-    override fun getTopicsPager(
-        channelId: String,
-        isTimeline: Boolean,
-        initialPage: Int,
-    ): Flow<PagingData<Topic>> {
-        // Tieba uses forum name as key in many places, but channelId in DB is forumId.
-        // We might need to fetch the forum name from DB if channelId is numeric ID.
-        // For now, assuming channelId passed here IS the forum ID (fid) or Name?
-        // Let's assume it is forum NAME if it's not numeric, or ID if numeric.
-        // Actually, in `observeChannels`, we stored `forumId` as `Channel.id` and `forumName` as `Channel.name`.
-        // `MiniTiebaApi.forumPage` takes `kw` (forumName).
-        // We need to resolve Name from ID.
-
-        // This creates a small issue: Pager is synchronous in creation but needs async data (name lookup).
-        // Workaround: Use a PagingSource that resolves name lazily or pass name if possible.
-        // Or better: `getTopicsPager` caller usually has the Channel object.
-        // But the interface only provides `channelId`.
-
-        return Pager(
-            config = PagingConfig(pageSize = 20),
-            pagingSourceFactory = {
-                TiebaTopicPagingSource(
-                    officialProtobufTiebaApiV12, // Using V12 for Topics as default, or V11? Retrofit uses V12 for FrsPage
-                    database,
-                    channelId,
-                    tiebaParameterProvider
-                )
-            }
-        ).flow
-    }
 
     override suspend fun getTopicComments(
         threadId: String,
@@ -262,24 +231,6 @@ class TiebaSource(
             ?: throw Exception("Failed to map topic")
     }
 
-    override fun getTopicCommentsPager(
-        threadId: String,
-        initialPage: Int,
-        isPoOnly: Boolean,
-    ): Flow<PagingData<Comment>> {
-        return Pager(
-            config = PagingConfig(pageSize = 30),
-            pagingSourceFactory = {
-                TiebaCommentPagingSource(
-                    officialProtobufTiebaApiV12,
-                    threadId,
-                    isPoOnly,
-                    tiebaParameterProvider
-                )
-            }
-        ).flow
-    }
-
     override fun getChannel(channelId: String): Flow<Channel?> {
         return database.channelQueries.getChannel(id, channelId)
             .asFlow()
@@ -288,7 +239,7 @@ class TiebaSource(
     }
 }
 
-class TiebaTopicPagingSource(
+private class TiebaTopicPagingSource(
     private val api: OfficialProtobufTiebaApi,
     private val database: Database,
     private val channelId: String,
@@ -368,7 +319,7 @@ class TiebaTopicPagingSource(
     }
 }
 
-class TiebaCommentPagingSource(
+private class TiebaCommentPagingSource(
     private val api: OfficialProtobufTiebaApi,
     private val threadId: String,
     private val isPoOnly: Boolean,

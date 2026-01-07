@@ -10,6 +10,7 @@ import ai.saniou.thread.data.paging.DataPolicy
 import ai.saniou.thread.data.source.discourse.remote.DiscourseApi
 import ai.saniou.thread.data.source.discourse.remote.dto.DiscourseTopic
 import ai.saniou.thread.data.source.discourse.remote.dto.DiscourseUser
+import ai.saniou.thread.data.source.discourse.remote.dto.toComment
 import ai.saniou.thread.data.source.nmb.remote.dto.RemoteKeyType
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.domain.model.forum.Author
@@ -164,41 +165,6 @@ class DiscourseSource(
         }
     }
 
-    @OptIn(ExperimentalPagingApi::class)
-    @Deprecated("Use getChannelTopics instead")
-    override fun getTopicsPager(
-        channelId: String,
-        isTimeline: Boolean,
-        initialPage: Int,
-    ): Flow<PagingData<Topic>> {
-        return Pager(
-            config = PagingConfig(pageSize = 30),
-            initialKey = initialPage,
-            remoteMediator = DiscourseRemoteMediator(
-                sourceId = id,
-                fid = channelId,
-                api = api,
-                cache = cache,
-                initialPage = initialPage,
-                dataPolicy = DataPolicy.NETWORK_ELSE_CACHE,
-                db = db,
-                // DiscourseRemoteMediator will likely be updated to use Result in future steps,
-                // but if it inherits from GenericRemoteMediator or similar pattern, we need to adapt here.
-                // Assuming DiscourseRemoteMediator is NOT GenericRemoteMediator but a custom one.
-                // If it IS custom, we might need to update IT as well.
-                // For now, let's leave it as the user only asked to fix "Source api definition".
-                // But wait, the user said "source returns result... GenericRemoteMediator defines SaniouResult... Repository needs conversion".
-                // We fixed GenericRemoteMediator.
-                // DiscourseRemoteMediator likely needs similar fix if it follows the pattern.
-                // Let's check DiscourseRemoteMediator later.
-            ),
-            pagingSourceFactory = {
-                cache.getChannelTopicPagingSource(id, channelId)
-            }
-        ).flow.map { pagingData ->
-            pagingData.map { it.toDomain(db.commentQueries, db.imageQueries) }
-        }
-    }
 
     override suspend fun getTopicComments(
         threadId: String,
@@ -220,7 +186,7 @@ class DiscourseSource(
                             sourceId = id,
                             threadId = response.id.toString(),
                             page = page
-                        )
+                        ).copy(sourceId = id)
                     }
                     Result.success(comments)
                 } catch (e: Exception) {
@@ -296,36 +262,6 @@ class DiscourseSource(
             is SaniouResult.Error -> {
                 Result.failure(result.ex)
             }
-        }
-    }
-
-    @OptIn(ExperimentalPagingApi::class)
-    override fun getTopicCommentsPager(
-        threadId: String,
-        initialPage: Int,
-        isPoOnly: Boolean,
-    ): Flow<PagingData<Comment>> {
-        return Pager(
-            config = PagingConfig(pageSize = 20),
-            initialKey = initialPage,
-            remoteMediator = DiscourseThreadRemoteMediator(
-                sourceId = id,
-                topicId = threadId,
-                db = db,
-                dataPolicy = DataPolicy.NETWORK_ELSE_CACHE,
-                initialPage = initialPage,
-                fetcher = { page ->
-                    when (val result = api.getTopic(threadId, page)) {
-                        is SaniouResult.Success -> Result.success(result.data)
-                        is SaniouResult.Error -> Result.failure(result.ex)
-                    }
-                }
-            ),
-            pagingSourceFactory = {
-                cache.getTopicCommentsPagingSource(id, threadId)
-            }
-        ).flow.map { pagingData ->
-            pagingData.map { it.toDomain(db.imageQueries) }
         }
     }
 

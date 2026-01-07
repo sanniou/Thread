@@ -12,8 +12,8 @@ import ai.saniou.thread.domain.usecase.channel.GetChannelNameUseCase
 import ai.saniou.thread.domain.usecase.subscription.GetActiveSubscriptionKeyUseCase
 import ai.saniou.thread.domain.usecase.subscription.IsSubscribedUseCase
 import ai.saniou.thread.domain.usecase.subscription.ToggleSubscriptionUseCase
+import ai.saniou.thread.domain.usecase.thread.GetTopicCommentsUseCase
 import ai.saniou.thread.domain.usecase.thread.GetTopicMetadataUseCase
-import ai.saniou.thread.domain.usecase.thread.GetTopicCommentsPagingUseCase
 import ai.saniou.thread.data.manager.CdnManager
 import ai.saniou.thread.domain.model.forum.Image
 import ai.saniou.thread.domain.usecase.thread.UpdateTopicLastAccessTimeUseCase
@@ -46,7 +46,7 @@ data class TopicDetailViewModelParams(
 class TopicDetailViewModel(
     params: TopicDetailViewModelParams,
     private val getTopicMetadataUseCase: GetTopicMetadataUseCase,
-    private val getTopicCommentsPagingUseCase: GetTopicCommentsPagingUseCase,
+    private val getTopicCommentsUseCase: GetTopicCommentsUseCase,
     private val toggleSubscriptionUseCase: ToggleSubscriptionUseCase,
     private val addBookmarkUseCase: AddBookmarkUseCase,
     private val getActiveSubscriptionKeyUseCase: GetActiveSubscriptionKeyUseCase,
@@ -76,7 +76,7 @@ class TopicDetailViewModel(
 
     val replies: Flow<PagingData<Comment>> =
         loadRequest.flatMapLatest { request ->
-            getTopicCommentsPagingUseCase(
+            getTopicCommentsUseCase(
                 sourceId = sourceId,
                 threadId = request.threadId,
                 isPoOnly = request.isPoOnly,

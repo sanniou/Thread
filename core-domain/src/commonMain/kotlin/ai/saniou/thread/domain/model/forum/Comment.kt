@@ -26,5 +26,6 @@ data class Comment(
     val images: List<Image> = emptyList(),
     val isAdmin: Boolean,
     val floor: Int? = null,
-    val replyToId: String? = null
+    val replyToId: String? = null,
+    val sourceId: String? = null,
 )

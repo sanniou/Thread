@@ -6,6 +6,7 @@ import ai.saniou.thread.db.table.forum.GetTopicsInChannelOffset
 import ai.saniou.thread.domain.model.forum.Topic
 import app.cash.paging.PagingSource
 import kotlinx.coroutines.flow.Flow
+import ai.saniou.thread.domain.model.forum.Comment as DomainComment
 
 /**
  * 统一的数据缓存接口，屏蔽底层数据库操作
@@ -58,7 +59,7 @@ interface SourceCache {
     /**
      * 保存回复列表
      */
-    fun saveComments(comments: List<Comment>)
+    fun saveComments(comments: List<DomainComment>, sourceId: String, page: Int)
 
     /**
      * 清除指定板块的缓存

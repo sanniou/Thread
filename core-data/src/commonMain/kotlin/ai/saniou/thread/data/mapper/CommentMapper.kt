@@ -46,6 +46,7 @@ fun EntityComment.toDomain(imageQueries: ImageQueries? = null): Comment {
         images = images,
         isAdmin = admin > 0,
         floor = floor?.toInt(),
-        replyToId = replyToId
+        replyToId = replyToId,
+        sourceId = sourceId,
     )
 }
