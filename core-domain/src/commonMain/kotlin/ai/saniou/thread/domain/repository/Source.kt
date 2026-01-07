@@ -87,4 +87,9 @@ interface Source {
      */
     suspend fun getTrendList(forceRefresh: Boolean, dayOffset: Int): Result<TrendResult> =
         Result.failure(NotImplementedError("Trend not supported for this source"))
+
+    /**
+     * 获取 Feed 流（分页）
+     */
+    fun getFeedFlow(feedType: FeedType): Flow<PagingData<Topic>> = emptyFlow()
 }

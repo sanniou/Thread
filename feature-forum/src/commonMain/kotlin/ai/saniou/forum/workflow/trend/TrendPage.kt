@@ -98,7 +98,7 @@ data class TrendPage(
                 getTrendUseCase = di.direct.instance(),
                 settingsRepository = di.direct.instance(),
                 sourceRepository = di.direct.instance(),
-                getChannelTopicsPagingUseCase = di.direct.instance()
+                getFeedPagingUseCase = di.direct.instance()
             )
         }
         val state by viewModel.state.collectAsState()

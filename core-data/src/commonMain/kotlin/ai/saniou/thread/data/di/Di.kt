@@ -5,6 +5,7 @@ import ai.saniou.thread.data.database.createDatabase
 import ai.saniou.thread.data.manager.CdnManager
 import ai.saniou.thread.data.repository.BookmarkRepositoryImpl
 import ai.saniou.thread.data.repository.FavoriteRepositoryImpl
+import ai.saniou.thread.data.repository.FeedRepositoryImpl
 import ai.saniou.thread.data.repository.SourceRepositoryImpl
 import ai.saniou.thread.data.repository.ChannelRepositoryImpl
 import ai.saniou.thread.data.repository.HistoryRepositoryImpl
@@ -47,6 +48,7 @@ import ai.saniou.thread.data.sync.local.LocalSyncProvider
 import ai.saniou.thread.data.sync.webdav.WebDavSyncProvider
 import ai.saniou.thread.domain.repository.BookmarkRepository
 import ai.saniou.thread.domain.repository.FavoriteRepository
+import ai.saniou.thread.domain.repository.FeedRepository
 import ai.saniou.thread.domain.repository.SourceRepository
 import ai.saniou.thread.domain.repository.ChannelRepository
 import ai.saniou.thread.domain.repository.HistoryRepository
@@ -196,6 +198,11 @@ val dataModule = DI.Module("dataModule") {
     bind<BookmarkRepository>() with singleton { BookmarkRepositoryImpl(instance()) }
     bind<TagRepository>() with singleton { TagRepositoryImpl(instance()) }
     bind<FavoriteRepository>() with singleton { FavoriteRepositoryImpl(instance()) }
+    bind<FeedRepository>() with singleton {
+        FeedRepositoryImpl(
+            instance(),
+        )
+    }
     bind<SubscriptionRepository>() with singleton {
         SubscriptionRepositoryImpl(
             instance(),

@@ -9,7 +9,7 @@ import ai.saniou.thread.domain.model.FeedType
 import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.repository.SettingsRepository
 import ai.saniou.thread.domain.repository.SourceRepository
-import ai.saniou.thread.domain.usecase.channel.GetChannelTopicsPagingUseCase
+import ai.saniou.thread.domain.usecase.feed.GetFeedPagingUseCase
 import ai.saniou.thread.domain.usecase.misc.GetTrendUseCase
 import app.cash.paging.PagingData
 import cafe.adriel.voyager.core.model.ScreenModel
@@ -32,7 +32,7 @@ class TrendViewModel(
     private val getTrendUseCase: GetTrendUseCase,
     private val settingsRepository: SettingsRepository,
     private val sourceRepository: SourceRepository,
-    private val getChannelTopicsPagingUseCase: GetChannelTopicsPagingUseCase
+    private val getFeedPagingUseCase: GetFeedPagingUseCase
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(State())
@@ -49,11 +49,7 @@ class TrendViewModel(
             if (feedType == FeedType.HOT) {
                 emptyFlow()
             } else {
-                getChannelTopicsPagingUseCase(
-                    sourceId = sourceId,
-                    channelId = feedType.name.lowercase(),
-                    isTimeline = true
-                )
+                getFeedPagingUseCase(sourceId, feedType)
             }
         }
 

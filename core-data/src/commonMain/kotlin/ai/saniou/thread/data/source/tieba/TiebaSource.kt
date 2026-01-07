@@ -16,6 +16,9 @@ import ai.saniou.thread.domain.model.user.LoginStrategy
 import ai.saniou.thread.domain.repository.AccountRepository
 import ai.saniou.thread.domain.repository.Source
 import ai.saniou.thread.domain.repository.SourceCapabilities
+import app.cash.paging.Pager
+import app.cash.paging.PagingConfig
+import app.cash.paging.PagingData
 import app.cash.paging.PagingSource
 import app.cash.paging.PagingState
 import app.cash.sqldelight.coroutines.asFlow
@@ -109,70 +112,37 @@ class TiebaSource(
         }
     }
 
+    override fun getFeedFlow(feedType: FeedType): Flow<PagingData<Topic>> {
+        return Pager(
+            config = PagingConfig(pageSize = 20, enablePlaceholders = false),
+            pagingSourceFactory = {
+                when (feedType) {
+                    FeedType.RECOMMEND -> TiebaRecommendPagingSource(
+                        api = officialProtobufTiebaApiV11,
+                        parameterProvider = tiebaParameterProvider
+                    )
+
+                    FeedType.CONCERN -> TiebaConcernPagingSource(
+                        api = officialProtobufTiebaApiV11,
+                        parameterProvider = tiebaParameterProvider
+                    )
+
+                    else -> object : PagingSource<Int, Topic>() {
+                        override fun getRefreshKey(state: PagingState<Int, Topic>): Int? = null
+                        override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Topic> =
+                            LoadResult.Page(emptyList(), null, null)
+                    }
+                }
+            }
+        ).flow
+    }
+
     override suspend fun getChannelTopics(
         channelId: String,
         page: Int,
         isTimeline: Boolean,
     ): Result<List<Topic>> = runCatching {
-        when (channelId) {
-            FeedType.RECOMMEND.name.lowercase() -> fetchRecommendTopics(page)
-            FeedType.CONCERN.name.lowercase() -> fetchConcernTopics(page)
-            else -> fetchForumTopics(channelId, page)
-        }
-    }
-
-    private suspend fun fetchRecommendTopics(page: Int): List<Topic> {
-        val request = PersonalizedRequest(
-            PersonalizedRequestData(
-                common = TiebaProtoBuilder.buildCommonRequest(
-                    tiebaParameterProvider,
-                    ClientVersion.TIEBA_V11
-                ),
-                load_type = if (page == 1) 1 else 2,
-                pn = page
-            )
-        )
-
-        val body = TiebaProtoBuilder.buildProtobufFormBody(
-            data = request,
-            clientVersion = ClientVersion.TIEBA_V11,
-            parameterProvider = tiebaParameterProvider
-        )
-
-        val response = officialProtobufTiebaApiV11.personalizedFlow(body).first()
-
-        if (response.error?.error_code != 0) {
-            throw Exception("Tieba Error: ${response.error?.error_msg} (Code: ${response.error?.error_code})")
-        }
-
-        return TiebaMapper.mapPersonalizedResponseToTopics(response)
-    }
-
-    private suspend fun fetchConcernTopics(page: Int): List<Topic> {
-        val request = UserLikeRequest(
-            UserLikeRequestData(
-                common = TiebaProtoBuilder.buildCommonRequest(
-                    tiebaParameterProvider,
-                    ClientVersion.TIEBA_V11
-                ),
-                pageTag = if (page == 1) "" else page.toString(), // TODO: Check if pageTag supports page number
-                loadType = if (page == 1) 1 else 2
-            )
-        )
-
-        val body = TiebaProtoBuilder.buildProtobufFormBody(
-            data = request,
-            clientVersion = ClientVersion.TIEBA_V11,
-            parameterProvider = tiebaParameterProvider
-        )
-
-        val response = officialProtobufTiebaApiV11.userLikeFlow(body).first()
-
-        if (response.error?.error_code != 0) {
-            throw Exception("Tieba Error: ${response.error?.error_msg} (Code: ${response.error?.error_code})")
-        }
-
-        return TiebaMapper.mapUserLikeResponseToTopics(response)
+        fetchForumTopics(channelId, page)
     }
 
     private suspend fun fetchForumTopics(channelId: String, page: Int): List<Topic> {
@@ -437,6 +407,100 @@ private class TiebaCommentPagingSource(
 
             LoadResult.Page(
                 data = comments,
+                prevKey = if (page == 1) null else page - 1,
+                nextKey = nextKey
+            )
+        } catch (e: Exception) {
+            LoadResult.Error(e)
+        }
+    }
+}
+
+private class TiebaRecommendPagingSource(
+    private val api: OfficialProtobufTiebaApi,
+    private val parameterProvider: TiebaParameterProvider
+) : PagingSource<Int, Topic>() {
+    override fun getRefreshKey(state: PagingState<Int, Topic>): Int? = null
+
+    override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Topic> {
+        val page = params.key ?: 1
+        return try {
+            val request = PersonalizedRequest(
+                PersonalizedRequestData(
+                    common = TiebaProtoBuilder.buildCommonRequest(
+                        parameterProvider,
+                        ClientVersion.TIEBA_V11
+                    ),
+                    load_type = if (page == 1) 1 else 2,
+                    pn = page
+                )
+            )
+
+            val body = TiebaProtoBuilder.buildProtobufFormBody(
+                data = request,
+                clientVersion = ClientVersion.TIEBA_V11,
+                parameterProvider = parameterProvider
+            )
+
+            val response = api.personalizedFlow(body).first()
+
+            if (response.error?.error_code != 0) {
+                return LoadResult.Error(Exception("Tieba Error: ${response.error?.error_msg} (Code: ${response.error?.error_code})"))
+            }
+
+            val topics = TiebaMapper.mapPersonalizedResponseToTopics(response)
+
+            val nextKey = page + 1
+
+            LoadResult.Page(
+                data = topics,
+                prevKey = if (page == 1) null else page - 1,
+                nextKey = nextKey
+            )
+        } catch (e: Exception) {
+            LoadResult.Error(e)
+        }
+    }
+}
+
+private class TiebaConcernPagingSource(
+    private val api: OfficialProtobufTiebaApi,
+    private val parameterProvider: TiebaParameterProvider
+) : PagingSource<Int, Topic>() {
+    override fun getRefreshKey(state: PagingState<Int, Topic>): Int? = null
+
+    override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Topic> {
+        val page = params.key ?: 1
+        return try {
+            val request = UserLikeRequest(
+                UserLikeRequestData(
+                    common = TiebaProtoBuilder.buildCommonRequest(
+                        parameterProvider,
+                        ClientVersion.TIEBA_V11
+                    ),
+                    pageTag = if (page == 1) "" else page.toString(),
+                    loadType = if (page == 1) 1 else 2
+                )
+            )
+
+            val body = TiebaProtoBuilder.buildProtobufFormBody(
+                data = request,
+                clientVersion = ClientVersion.TIEBA_V11,
+                parameterProvider = parameterProvider
+            )
+
+            val response = api.userLikeFlow(body).first()
+
+            if (response.error?.error_code != 0) {
+                return LoadResult.Error(Exception("Tieba Error: ${response.error?.error_msg} (Code: ${response.error?.error_code})"))
+            }
+
+            val topics = TiebaMapper.mapUserLikeResponseToTopics(response)
+
+            val nextKey = if (topics.isNotEmpty()) page + 1 else null
+
+            LoadResult.Page(
+                data = topics,
                 prevKey = if (page == 1) null else page - 1,
                 nextKey = nextKey
             )
