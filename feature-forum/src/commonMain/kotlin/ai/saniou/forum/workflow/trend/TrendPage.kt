@@ -84,7 +84,7 @@ import org.kodein.di.instance
 
 data class TrendPage(
     val di: DI = nmbdi,
-    val onMenuClick: (() -> Unit)? = null
+    val onMenuClick: (() -> Unit)? = null,
 ) : Screen {
 
     @OptIn(ExperimentalMaterial3Api::class)
@@ -93,13 +93,7 @@ data class TrendPage(
         val navigator = LocalNavigator.currentOrThrow
         val sourceId = LocalForumSourceId.current
         val viewModel: TrendViewModel = rememberScreenModel(tag = sourceId) {
-            TrendViewModel(
-                initialSourceId = sourceId,
-                getTrendUseCase = di.direct.instance(),
-                settingsRepository = di.direct.instance(),
-                sourceRepository = di.direct.instance(),
-                getFeedPagingUseCase = di.direct.instance()
-            )
+            nmbdi.direct.instance(arg = sourceId)
         }
         val state by viewModel.state.collectAsState()
         val snackbarHostState = remember { SnackbarHostState() }
@@ -196,7 +190,10 @@ data class TrendPage(
                                     var expanded by remember { mutableStateOf(false) }
                                     Box {
                                         IconButton(onClick = { expanded = true }) {
-                                            Icon(Icons.Default.ArrowDropDown, contentDescription = "Switch Source")
+                                            Icon(
+                                                Icons.Default.ArrowDropDown,
+                                                contentDescription = "Switch Source"
+                                            )
                                         }
                                         DropdownMenu(
                                             expanded = expanded,
@@ -230,7 +227,10 @@ data class TrendPage(
                                 }
                             } else {
                                 IconButton(onClick = { navigator.pop() }) {
-                                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                                    Icon(
+                                        Icons.AutoMirrored.Filled.ArrowBack,
+                                        contentDescription = "Back"
+                                    )
                                 }
                             }
                         },
@@ -240,13 +240,19 @@ data class TrendPage(
                         actions = {
                             if (state.selectedFeedType == FeedType.HOT && state.currentSource.supportsHistory) {
                                 IconButton(onClick = { viewModel.onEvent(Event.PreviousDay) }) {
-                                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "前一天")
+                                    Icon(
+                                        Icons.AutoMirrored.Filled.ArrowBack,
+                                        contentDescription = "前一天"
+                                    )
                                 }
                                 IconButton(
                                     onClick = { viewModel.onEvent(Event.NextDay) },
                                     enabled = state.dayOffset > 0
                                 ) {
-                                    Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "后一天")
+                                    Icon(
+                                        Icons.AutoMirrored.Filled.ArrowForward,
+                                        contentDescription = "后一天"
+                                    )
                                 }
                                 IconButton(onClick = { viewModel.onEvent(Event.OnInfoClick) }) {
                                     Icon(Icons.Default.Info, contentDescription = "源地址")
@@ -258,7 +264,7 @@ data class TrendPage(
                             }
                         }
                     )
-                    
+
                     if (state.availableFeedTypes.size > 1) {
                         ScrollableTabRow(
                             selectedTabIndex = state.availableFeedTypes.indexOf(state.selectedFeedType),
