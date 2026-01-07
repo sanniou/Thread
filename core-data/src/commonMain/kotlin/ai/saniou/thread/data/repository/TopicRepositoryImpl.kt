@@ -131,6 +131,13 @@ class TopicRepositoryImpl(
                     else
                         it.size < pageSize
                 },
+                cacheChecker = { page ->
+                    db.commentQueries.countCommentsByTopicIdAndPage(
+                        sourceId = sourceId,
+                        topicId = threadId,
+                        page = page.toLong()
+                    ).executeAsOne() > 0
+                },
                 keyIncrementer = { it + 1 },
                 keyDecrementer = { it - 1 },
                 keyToLong = { it.toLong() },
