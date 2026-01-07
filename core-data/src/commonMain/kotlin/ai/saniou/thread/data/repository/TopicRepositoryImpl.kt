@@ -2,11 +2,11 @@ package ai.saniou.thread.data.repository
 
 import ai.saniou.thread.data.cache.SourceCache
 import ai.saniou.thread.data.mapper.toDomain
-import ai.saniou.thread.data.mapper.toEntity
 import ai.saniou.thread.data.mapper.toMetadata
 import ai.saniou.thread.data.paging.DataPolicy
 import ai.saniou.thread.data.paging.DefaultRemoteKeyStrategy
 import ai.saniou.thread.data.paging.GenericRemoteMediator
+import ai.saniou.thread.data.source.nmb.NMBSourceId
 import ai.saniou.thread.data.source.nmb.remote.dto.RemoteKeyType
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.domain.model.forum.Comment
@@ -126,7 +126,7 @@ class TopicRepositoryImpl(
                 },
                 endOfPaginationReached = {
                     //  nmb 特有的问题，正常的一页数据也会小于 20,所以只能判断是否为空来处理
-                    if (sourceId == "nmd")
+                    if (sourceId == NMBSourceId)
                         it.isEmpty()
                     else
                         it.size < pageSize

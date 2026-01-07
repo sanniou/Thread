@@ -50,14 +50,18 @@ import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
 import kotlin.time.ExperimentalTime
 
+
+val NMBSourceId = "nmb";
+val NMBSourceName = "A岛";
+
 class NmbSource(
     private val nmbXdApi: NmbXdApi,
     private val db: Database,
     private val settingsRepository: SettingsRepository,
     private val cdnManager: CdnManager,
 ) : Source {
-    override val id: String = "nmb"
-    override val name: String = "A岛"
+    override val id: String = NMBSourceId
+    override val name: String = NMBSourceName
 
     override val capabilities: SourceCapabilities = SourceCapabilities(
         supportsTrend = true,
@@ -222,6 +226,7 @@ class NmbSource(
             .mapToOneOrNull(Dispatchers.Default)
             .map { it?.toDomain(db.channelQueries) }
     }
+
     suspend fun updateThreadLastAccessTime(threadId: Long, time: Long) {
         db.topicQueries.updateTopicLastAccessTime(time, id, threadId.toString())
     }
