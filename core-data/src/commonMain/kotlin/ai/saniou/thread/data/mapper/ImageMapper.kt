@@ -1,5 +1,6 @@
 package ai.saniou.thread.data.mapper
 
+import ai.saniou.corecommon.utils.UuidUtils
 import ai.saniou.thread.domain.model.forum.Image
 import ai.saniou.thread.domain.model.forum.ImageType
 import ai.saniou.thread.db.table.forum.Image as EntityImage
@@ -23,7 +24,7 @@ fun Image.toEntity(
     sortOrder: Long,
 ): EntityImage {
     return EntityImage(
-        id = originalUrl,
+        id = UuidUtils.randomUuid(),
         sourceId = sourceId,
         parentId = parentId,
         parentType = parentType,

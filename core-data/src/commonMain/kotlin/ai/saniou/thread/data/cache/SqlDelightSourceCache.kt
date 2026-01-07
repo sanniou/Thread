@@ -128,7 +128,7 @@ class SqlDelightSourceCache(
                             sourceId = sourceId,
                             parentId = topic.id,
                             parentType = ImageType.Topic,
-                            index.toLong()
+                            sortOrder = index.toLong()
                         )
                     )
                 }
@@ -145,7 +145,7 @@ class SqlDelightSourceCache(
                                 sourceId = sourceId,
                                 parentId = comment.id,
                                 parentType = ImageType.Comment,
-                                index.toLong()
+                                sortOrder = index.toLong()
                             )
                         )
                     }
@@ -167,7 +167,7 @@ class SqlDelightSourceCache(
                             sourceId = sourceId,
                             parentId = comment.id,
                             parentType = ImageType.Comment,
-                            index.toLong()
+                            sortOrder = index.toLong()
                         )
                     )
                 }
