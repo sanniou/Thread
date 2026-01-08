@@ -4,21 +4,21 @@ import ai.saniou.corecommon.utils.toRelativeTimeString
 import ai.saniou.coreui.composition.LocalForumSourceId
 import ai.saniou.coreui.state.AppError
 import ai.saniou.coreui.state.DefaultError
+import ai.saniou.coreui.state.PagingStateLayout
+import ai.saniou.coreui.state.StateLayout
+import ai.saniou.coreui.state.UiStateWrapper
 import ai.saniou.coreui.state.toAppError
 import ai.saniou.coreui.theme.Dimens
-import ai.saniou.coreui.widgets.ErrorBanner
-import ai.saniou.coreui.widgets.PullToRefreshWrapper
 import ai.saniou.coreui.widgets.SaniouTopAppBar
 import ai.saniou.coreui.widgets.ShimmerContainer
 import ai.saniou.coreui.widgets.VerticalSpacerSmall
 import ai.saniou.forum.di.nmbdi
 import ai.saniou.forum.ui.components.Badge
 import ai.saniou.forum.ui.components.LoadEndIndicator
-import ai.saniou.forum.ui.components.LoadingFailedIndicator
-import ai.saniou.forum.ui.components.LoadingIndicator
 import ai.saniou.forum.ui.components.PageJumpDialog
 import ai.saniou.forum.ui.components.ReferenceSheet
 import ai.saniou.forum.ui.components.SkeletonReplyItem
+import ai.saniou.forum.ui.components.SubCommentsDialog
 import ai.saniou.forum.ui.components.ThreadAuthor
 import ai.saniou.forum.ui.components.ThreadBody
 import ai.saniou.forum.workflow.image.ImagePreviewPage
@@ -31,7 +31,9 @@ import ai.saniou.forum.workflow.topicdetail.TopicDetailContract.Effect
 import ai.saniou.forum.workflow.topicdetail.TopicDetailContract.Event
 import ai.saniou.forum.workflow.topicdetail.TopicDetailContract.State
 import ai.saniou.forum.workflow.user.UserDetailPage
+import ai.saniou.thread.data.mapper.toMetadata
 import ai.saniou.thread.domain.model.forum.Image
+import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.model.forum.TopicMetadata
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -187,7 +189,8 @@ data class TopicDetailPage(
             topBar = {
                 SaniouTopAppBar(
                     title = {
-                        if (state.metadata != null) {
+                        // Only show title if we have topic data or at least forum name
+                        if (state.topicWrapper is UiStateWrapper.Success) {
                             Text(
                                 text = state.forumName,
                                 style = MaterialTheme.typography.titleLarge,
@@ -209,7 +212,7 @@ data class TopicDetailPage(
                     },
                     onNavigationClick = { navigator.pop() },
                     actions = {
-                        if (state.metadata != null) {
+                        if (state.topicWrapper is UiStateWrapper.Success) {
                             IconButton(onClick = { viewModel.onEvent(Event.Refresh) }) {
                                 Icon(Icons.Default.Refresh, contentDescription = "刷新")
                             }
@@ -255,11 +258,11 @@ data class TopicDetailPage(
             },
             snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
             floatingActionButton = {
-                if (state.metadata != null) {
+                if (state.topicWrapper is UiStateWrapper.Success) {
                     FloatingActionButton(
                         onClick = {
-                            state.metadata?.let {
-                                navigator.push(PostPage(resto = it.id.toInt()))
+                            (state.topicWrapper as? UiStateWrapper.Success<Topic>)?.value?.let { topic ->
+                                navigator.push(PostPage(resto = topic.id.toInt()))
                             }
                         }
                     ) {
@@ -288,6 +291,7 @@ data class TopicDetailPage(
                         ImagePreviewPage(
                             ImagePreviewViewModelParams(
                                 imageProvider = ThreadImageProvider(
+                                    sourceId = sourceId,
                                     threadId = threadId.toLongOrNull() ?: 0L,
                                     getTopicImagesUseCase = nmbdi.direct.instance()
                                 ),
@@ -301,7 +305,8 @@ data class TopicDetailPage(
                 onCopy = { viewModel.onEvent(Event.CopyContent(it)) },
                 onBookmark = { viewModel.onEvent(Event.BookmarkReply(it)) },
                 onBookmarkImage = { image -> viewModel.onEvent(Event.BookmarkImage(image)) },
-                onUserClick = { userHash -> navigator.push(UserDetailPage(userHash)) }
+                onUserClick = { userHash -> navigator.push(UserDetailPage(userHash)) },
+                onReplyClicked = { commentId -> viewModel.onEvent(Event.ShowSubComments(commentId)) }
             )
         }
 
@@ -333,6 +338,15 @@ data class TopicDetailPage(
                 }
             )
         }
+
+        // 楼中楼弹窗
+        if (state.showSubCommentsDialog) {
+            SubCommentsDialog(
+                wrapper = state.subCommentsWrapper,
+                onDismiss = { viewModel.onEvent(Event.HideSubComments) },
+                onRetry = { viewModel.onEvent(Event.RetrySubCommentsLoad) }
+            )
+        }
     }
 }
 
@@ -354,29 +368,35 @@ private fun ThreadContentRouter(
     onBookmark: (Comment) -> Unit,
     onBookmarkImage: (Image) -> Unit,
     onUserClick: (String) -> Unit,
+    onReplyClicked: (String) -> Unit,
 ) {
-    Box(modifier = modifier) {
-        if (state.error != null) {
+    StateLayout(
+        state = state.topicWrapper,
+        onRetry = onRefresh,
+        modifier = modifier,
+        loading = { ThreadShimmer() },
+        error = { error ->
             ThreadErrorContent(
-                error = state.error,
+                error = error,
                 onRetry = onRefresh
             )
-        } else {
-            ThreadSuccessContent(
-                state = state,
-                lazyListState = lazyListState,
-                onRefresh = { /* Handled by PullToRefresh */ },
-                onReplyClicked = { /* TODO */ },
-                onTogglePoOnly = onTogglePoOnly,
-                onRefClick = onRefClick,
-                onImageClick = onImageClick,
-                onUpdateLastReadId = onUpdateLastReadId,
-                onCopy = onCopy,
-                onBookmark = onBookmark,
-                onBookmarkImage = onBookmarkImage,
-                onUserClick = onUserClick
-            )
         }
+    ) { topic ->
+        ThreadSuccessContent(
+            state = state,
+            topic = topic,
+            lazyListState = lazyListState,
+            onRefresh = onRefresh,
+            onReplyClicked = onReplyClicked,
+            onTogglePoOnly = onTogglePoOnly,
+            onRefClick = onRefClick,
+            onImageClick = onImageClick,
+            onUpdateLastReadId = onUpdateLastReadId,
+            onCopy = onCopy,
+            onBookmark = onBookmark,
+            onBookmarkImage = onBookmarkImage,
+            onUserClick = onUserClick
+        )
     }
 }
 
@@ -508,6 +528,7 @@ private fun ThreadReplyShimmer() {
 @Composable
 fun ThreadSuccessContent(
     state: State,
+    topic: Topic,
     lazyListState: LazyListState,
     onRefresh: () -> Unit,
     onReplyClicked: (String) -> Unit,
@@ -558,34 +579,22 @@ fun ThreadSuccessContent(
             }
     }
 
-    // 错误提示状态
-    var showErrorBanner by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf("") }
-
-    // 监听刷新错误 (当有数据时)
-    val refreshState = replies.loadState.refresh
-    LaunchedEffect(refreshState) {
-        if (refreshState is LoadStateError && replies.itemCount > 0) {
-            val error = refreshState.error.toAppError { }
-            errorMessage = error.message
-            showErrorBanner = true
-        } else if (refreshState !is LoadStateError) {
-            showErrorBanner = false
+    PagingStateLayout(
+        items = replies,
+        loading = { ThreadReplyShimmer() },
+        empty = { EmptyReplyContent(onRefresh = { replies.refresh() }) },
+        error = { error ->
+            ThreadErrorContent(
+                error = error,
+                onRetry = { replies.retry() }
+            )
         }
-    }
-
-    Column {
-        ErrorBanner(
-            visible = showErrorBanner,
-            message = "刷新失败: $errorMessage - 点击重试",
-            onClick = { replies.retry() }
-        )
-
-        PullToRefreshWrapper(onRefreshTrigger = { replies.refresh() }) {
-            ThreadList(
-                state = state,
-                lazyListState = lazyListState,
-                onReplyClicked = onReplyClicked,
+    ) {
+        ThreadList(
+            state = state,
+            topic = topic,
+            lazyListState = lazyListState,
+            onReplyClicked = onReplyClicked,
             onTogglePoOnly = onTogglePoOnly,
             onRefClick = onRefClick,
             onImageClick = { image ->
@@ -597,9 +606,8 @@ fun ThreadSuccessContent(
             onCopy = onCopy,
             onBookmarkImage = onBookmarkImage,
             onUserClick = onUserClick,
-                onBookmark = onBookmark
-            )
-        }
+            onBookmark = onBookmark
+        )
     }
 }
 
@@ -607,6 +615,7 @@ fun ThreadSuccessContent(
 @Composable
 private fun ThreadList(
     state: State,
+    topic: Topic,
     lazyListState: LazyListState,
     onReplyClicked: (String) -> Unit,
     onTogglePoOnly: () -> Unit,
@@ -620,16 +629,6 @@ private fun ThreadList(
 ) {
     val replies = state.replies.collectAsLazyPagingItems()
 
-    // 处理初始加载失败的情况 (空列表且刷新失败)
-    val refreshState = replies.loadState.refresh
-    if (replies.itemCount == 0 && refreshState is LoadStateError) {
-        ThreadErrorContent(
-            error = refreshState.error.toAppError { replies.retry() },
-            onRetry = { replies.retry() }
-        )
-        return
-    }
-
     LazyColumn(
         state = lazyListState,
         modifier = Modifier,
@@ -638,46 +637,67 @@ private fun ThreadList(
     ) {
         // Main Content
         item {
-            val mainComment = if (replies.itemCount > 0) {
-                replies.peek(0)
-            } else null
-            val metadata = state.metadata
+            // Construct a Comment object from Topic for ThreadMainPost
+            // This is a bit of a hack, ideally ThreadMainPost should accept Topic or we should have a unified model
+            val mainComment = Comment(
+                id = topic.id,
+                topicId = topic.id,
+                author = topic.author,
+                createdAt = topic.createdAt,
+                title = topic.title,
+                content = topic.content,
+                images = topic.images,
+                isAdmin = topic.isAdmin,
+                floor = 1,
+                replyToId = null,
+                sourceId = topic.sourceId,
+                agreeCount = topic.agreeCount,
+                disagreeCount = topic.disagreeCount,
+                subCommentCount = topic.commentCount.toInt(),
+                authorLevel = null,
+                isPo = true
+            )
 
-            if (mainComment != null && metadata != null) {
-                ThreadMainPost(
-                    metadata = metadata,
-                    comment = mainComment,
-                    refClick = onRefClick,
-                    onImageClick = onImageClick,
-                    onCopy = { onCopy(mainComment.content) },
-                    onBookmark = { onBookmark(mainComment) },
-                    onBookmarkImage = onBookmarkImage,
-                    onUserClick = onUserClick
-                )
-            } else {
-                // Shimmer for main content
-                ThreadShimmer()
-            }
+            // We need TopicMetadata for ThreadMainPost
+//            val metadata = TopicMetadata(
+//                id = topic.id,
+//                channelId = topic.channelId,
+//                title = topic.title,
+//                author = topic.author,
+//                commentCount = topic.commentCount,
+//                lastViewedCommentId = null,
+//                lastViewedTime = 0
+//            )
+            val metadata = topic.toMetadata()
+
+            ThreadMainPost(
+                metadata = metadata,
+                comment = mainComment,
+                refClick = onRefClick,
+                onImageClick = onImageClick,
+                onCopy = { onCopy(mainComment.content) },
+                onBookmark = { onBookmark(mainComment) },
+                onBookmarkImage = onBookmarkImage,
+                onUserClick = onUserClick
+            )
         }
 
         // Toolbar
         stickyHeader {
-            state.metadata?.let {
-                ThreadToolbar(
-                    replyCount = it.commentCount.toString(),
-                    isPoOnly = state.isPoOnlyMode,
-                    onTogglePoOnly = onTogglePoOnly
-                )
-            }
+            ThreadToolbar(
+                replyCount = topic.commentCount.toString(),
+                isPoOnly = state.isPoOnlyMode,
+                onTogglePoOnly = onTogglePoOnly
+            )
         }
 
         // Replies
-        items((replies.itemCount - 1).coerceAtLeast(0)) { index ->
-            val reply = replies[index + 1]
+        items(replies.itemCount) { index ->
+            val reply = replies[index]
             if (reply != null) {
                 ThreadReply(
                     reply = reply,
-                    poUserHash = state.metadata?.author?.id ?: "",
+                    poUserHash = topic.author.id,
                     onReplyClicked = onReplyClicked,
                     refClick = onRefClick,
                     onImageClick = onImageClick,
@@ -697,26 +717,9 @@ private fun ThreadList(
 
         // Paging state footer
         item {
-            when {
-                replies.loadState.refresh is LoadStateLoading && replies.itemCount == 0 -> {
-                    ThreadShimmer()
-                }
-                replies.loadState.append is LoadStateLoading -> {
-                    LoadingIndicator()
-                }
-                replies.loadState.refresh is LoadStateError -> {
-                    // Refresh error with items is handled by checking itemCount above,
-                    // or could show a footer/snackbar here if desired.
-                }
-                replies.loadState.append is LoadStateError -> {
-                    LoadingFailedIndicator()
-                }
-                replies.loadState.append.endOfPaginationReached -> {
-                    if (replies.itemCount > 1) { // Show only if there are replies
-                        LoadEndIndicator(onClick = { replies.refresh() })
-                    } else {
-                        EmptyReplyContent(onRefresh = { replies.refresh() })
-                    }
+            if (replies.loadState.append.endOfPaginationReached) {
+                if (replies.itemCount > 0) { // Show only if there are replies
+                    LoadEndIndicator(onClick = { replies.refresh() })
                 }
             }
         }

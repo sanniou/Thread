@@ -24,5 +24,10 @@ internal fun DiscoursePost.toComment(sourceId: String, threadId: String, page: I
         authorName = name ?: username,
         floor = postNumber.toLong(),
         replyToId = replyToPostNumber?.toString(),
+        agreeCount = 0,
+        disagreeCount = 0,
+        subCommentCount = 0,
+        authorLevel = null,
+        isPo = false
     )
 }

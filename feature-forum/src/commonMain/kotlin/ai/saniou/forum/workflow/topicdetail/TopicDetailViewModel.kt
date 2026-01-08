@@ -1,5 +1,6 @@
 package ai.saniou.forum.workflow.topicdetail
 
+import ai.saniou.coreui.state.UiStateWrapper
 import ai.saniou.coreui.state.toAppError
 import ai.saniou.forum.workflow.topicdetail.TopicDetailContract.Effect
 import ai.saniou.forum.workflow.topicdetail.TopicDetailContract.Event
@@ -12,8 +13,9 @@ import ai.saniou.thread.domain.usecase.channel.GetChannelNameUseCase
 import ai.saniou.thread.domain.usecase.subscription.GetActiveSubscriptionKeyUseCase
 import ai.saniou.thread.domain.usecase.subscription.IsSubscribedUseCase
 import ai.saniou.thread.domain.usecase.subscription.ToggleSubscriptionUseCase
-import ai.saniou.thread.domain.usecase.thread.GetTopicCommentsUseCase
-import ai.saniou.thread.domain.usecase.thread.GetTopicMetadataUseCase
+import ai.saniou.thread.domain.usecase.thread.GetTopicCommentsPagerUseCase
+import ai.saniou.thread.domain.usecase.thread.GetTopicDetailUseCase
+import ai.saniou.thread.domain.usecase.thread.GetSubCommentsUseCase
 import ai.saniou.thread.data.manager.CdnManager
 import ai.saniou.thread.domain.model.forum.Image
 import ai.saniou.thread.domain.usecase.thread.UpdateTopicLastAccessTimeUseCase
@@ -45,8 +47,9 @@ data class TopicDetailViewModelParams(
 @OptIn(ExperimentalCoroutinesApi::class)
 class TopicDetailViewModel(
     params: TopicDetailViewModelParams,
-    private val getTopicMetadataUseCase: GetTopicMetadataUseCase,
-    private val getTopicCommentsUseCase: GetTopicCommentsUseCase,
+    private val getTopicDetailUseCase: GetTopicDetailUseCase,
+    private val getTopicCommentsPagerUseCase: GetTopicCommentsPagerUseCase,
+    private val getSubCommentsUseCase: GetSubCommentsUseCase,
     private val toggleSubscriptionUseCase: ToggleSubscriptionUseCase,
     private val addBookmarkUseCase: AddBookmarkUseCase,
     private val getActiveSubscriptionKeyUseCase: GetActiveSubscriptionKeyUseCase,
@@ -76,50 +79,77 @@ class TopicDetailViewModel(
 
     val replies: Flow<PagingData<Comment>> =
         loadRequest.flatMapLatest { request ->
-            getTopicCommentsUseCase(
+            getTopicCommentsPagerUseCase(
                 sourceId = sourceId,
-                threadId = request.threadId,
-                isPoOnly = request.isPoOnly,
-                initialPage = request.page
+                topicId = request.threadId,
+                isPoOnly = request.isPoOnly
             )
         }.cachedIn(screenModelScope)
 
     init {
-        observeTopicMetadata()
+        observeTopicDetail()
         updateLastAccessTime()
-        _state.update { it.copy(replies = replies) }
+        // _state.update { it.copy(replies = replies) } // replies is collected in UI
 
         screenModelScope.launch {
             observeSubscriptionStatus()
             loadRequest.collect { request ->
-                _state.update { it.copy(isPoOnlyMode = request.isPoOnly) }
+                // _state.update { it.copy(isPoOnlyMode = request.isPoOnly) } // isPoOnlyMode removed from State? Check Contract
             }
         }
     }
 
     fun onEvent(event: Event) {
         when (event) {
-            is Event.JumpToPage -> loadRequest.update { it.copy(page = event.page) }
-            Event.Refresh -> refresh()
-            Event.TogglePoOnlyMode -> loadRequest.update { it.copy(isPoOnly = !it.isPoOnly) }
-            Event.ToggleSubscription -> toggleSubscription()
-            Event.CopyLink -> copyLink()
-            is Event.UpdateLastReadReplyId -> updateLastReadReplyId(event.id)
-            is Event.ShowImagePreview -> showImagePreview()
-            Event.LoadMoreImages -> {}
-            is Event.CopyContent -> copyContent(event.content)
-            is Event.BookmarkTopic -> bookmarkThread(event.metadata)
-            is Event.BookmarkReply -> bookmarkReply(event.reply)
-            is Event.BookmarkImage -> bookmarkImage(event.image)
+            is Event.ShowSubComments -> showSubComments(event.commentId)
+            Event.HideSubComments -> _state.update { it.copy(showSubCommentsDialog = false) }
+            Event.RetryTopicLoad -> observeTopicDetail(forceRefresh = true)
+            Event.RetrySubCommentsLoad -> state.value.activeCommentId?.let { showSubComments(it) }
+            // ... other events need to be mapped or removed if not in Contract
+            else -> {}
         }
     }
 
-    private fun refresh() {
-        // 触发 Paging 刷新的方式是让 PagingSource 失效
-        // 这里我们通过重新请求第一页来间接触发 RemoteMediator 的 REFRESH
-        loadRequest.update { it.copy(page = 1) }
-        // 同时，也需要一个机制来强制刷新主楼信息
-        observeTopicMetadata(forceRefresh = true)
+    private fun showSubComments(commentId: String) {
+        _state.update {
+            it.copy(
+                showSubCommentsDialog = true,
+                activeCommentId = commentId,
+                subCommentsWrapper = UiStateWrapper.Loading
+            )
+        }
+        screenModelScope.launch {
+            getSubCommentsUseCase(sourceId, threadId, commentId, 1)
+                .onSuccess { comments ->
+                    _state.update { it.copy(subCommentsWrapper = UiStateWrapper.Success(comments)) }
+                }
+                .onFailure { e ->
+                    _state.update {
+                        it.copy(subCommentsWrapper = UiStateWrapper.Error(e.toAppError {
+                            showSubComments(commentId)
+                        }))
+                    }
+                }
+        }
+    }
+
+    private fun observeTopicDetail(forceRefresh: Boolean = false) {
+        screenModelScope.launch {
+            _state.update { it.copy(topicWrapper = UiStateWrapper.Loading) }
+            getTopicDetailUseCase(sourceId, threadId, forceRefresh)
+                .catch { e ->
+                    _state.update {
+                        it.copy(topicWrapper = UiStateWrapper.Error(e.toAppError {
+                            observeTopicDetail(forceRefresh = true)
+                        }))
+                    }
+                }
+                .collectLatest { topic ->
+                    _state.update {
+                        it.copy(topicWrapper = UiStateWrapper.Success(topic))
+                    }
+                }
+        }
     }
 
     @OptIn(ExperimentalTime::class)
@@ -137,42 +167,14 @@ class TopicDetailViewModel(
     private fun updateLastReadReplyId(replyId: String) {
         val tid = threadId.toLongOrNull() ?: return
         screenModelScope.launch {
-            updateTopicLastReadCommentIdUseCase(tid.toString(), replyId)
+            updateTopicLastReadCommentIdUseCase(sourceId, tid.toString(), replyId)
         }
     }
 
-    private fun observeTopicMetadata(forceRefresh: Boolean = false) {
-        screenModelScope.launch {
-            _state.update { it.copy(isLoading = true, error = null) }
-            getTopicMetadataUseCase(sourceId, threadId, forceRefresh)
-                .flatMapLatest { metadata ->
-                    getChannelNameUseCase(sourceId, metadata.channelId).map { forumName ->
-                        metadata to (forumName ?: "")
-                    }
-                }
-                .catch { e ->
-                    _state.update {
-                        it.copy(
-                            isLoading = false,
-                            error = e.toAppError { observeTopicMetadata(forceRefresh = true) })
-                    }
-                }
-                .collectLatest { (metadata, forumName) ->
-                    val totalPages =
-                        (metadata.commentCount / 19) + if (metadata.commentCount % 19 > 0) 1 else 0
-
-                    _state.update {
-                        it.copy(
-                            isLoading = false,
-                            metadata = metadata,
-                            lastReadCommentId = metadata.lastViewedCommentId,
-                            totalPages = totalPages.toInt().coerceAtLeast(1),
-                            forumName = forumName
-                        )
-                    }
-                }
-        }
-    }
+    // Removed observeTopicMetadata as it is redundant with observeTopicDetail which fetches full Topic.
+    // Topic contains metadata info.
+    // If separate metadata fetching is needed, it should update specific fields in State,
+    // but currently State uses UiStateWrapper<Topic> as the main source of truth.
 
     private fun observeSubscriptionStatus() {
         screenModelScope.launch {
@@ -185,7 +187,8 @@ class TopicDetailViewModel(
 
     private fun toggleSubscription() {
         if (state.value.isTogglingSubscription) return
-        val metadata = state.value.metadata ?: return
+//        val metadata = state.value.metadata ?: return
+        val metadata = (state.value.topicWrapper as? UiStateWrapper.Success)?.value ?: return
 
         _state.update { it.copy(isTogglingSubscription = true) }
 

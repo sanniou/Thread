@@ -17,10 +17,11 @@ interface ImageProvider {
  * An implementation of ImageProvider that fetches images from a specific thread.
  */
 class ThreadImageProvider(
+    private val sourceId: String,
     private val threadId: Long,
     private val getTopicImagesUseCase: GetTopicImagesUseCase
 ) : ImageProvider {
     override fun load(): Flow<List<Image>> {
-        return getTopicImagesUseCase(threadId)
+        return getTopicImagesUseCase(sourceId, threadId)
     }
 }

@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 class GetTopicImagesUseCase(
     private val topicRepository: TopicRepository
 ) {
-    operator fun invoke(threadId: Long): Flow<List<Image>> {
-        return topicRepository.getTopicImages(threadId)
+    operator fun invoke(sourceId: String, threadId: Long): Flow<List<Image>> {
+        return topicRepository.getTopicImages(sourceId, threadId)
     }
 }

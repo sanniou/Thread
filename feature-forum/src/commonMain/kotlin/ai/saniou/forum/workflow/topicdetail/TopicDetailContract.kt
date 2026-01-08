@@ -1,7 +1,8 @@
 package ai.saniou.forum.workflow.topicdetail
 
-import ai.saniou.coreui.state.AppError
+import ai.saniou.coreui.state.UiStateWrapper
 import ai.saniou.thread.domain.model.forum.Image
+import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.model.forum.TopicMetadata
 import ai.saniou.thread.domain.model.forum.Comment
 import app.cash.paging.PagingData
@@ -15,21 +16,23 @@ interface TopicDetailContract {
     /**
      * UI 状态，承载页面的所有数据和状态
      *
-     * @property isLoading 是否正在加载主内容
-     * @property error 全局错误信息
-     * @property metadata 帖子元数据
+     * @property topicWrapper 主楼内容状态
+     * @property subCommentsWrapper 楼中楼列表状态
+     * @property showSubCommentsDialog 是否显示楼中楼弹窗
+     * @property activeCommentId 当前查看楼中楼的评论ID
      * @property replies 回复列表的分页数据流
-     * @property currentPage 当前页码
      * @property totalPages 总页数
-     * @property isPoOnlyMode 是否开启“只看PO”模式
      * @property isSubscribed 是否已订阅
      * @property forumName 板块名称
-     * @property forumName 板块名称
+     * @property lastReadCommentId 最后阅读的评论ID
+     * @property isPoOnlyMode 是否开启“只看PO”模式
+     * @property isTogglingSubscription 是否正在切换订阅状态
      */
     data class State(
-        val isLoading: Boolean = true,
-        val error: AppError? = null,
-        val metadata: TopicMetadata? = null,
+        val topicWrapper: UiStateWrapper<Topic> = UiStateWrapper.Loading,
+        val subCommentsWrapper: UiStateWrapper<List<Comment>> = UiStateWrapper.Loading,
+        val showSubCommentsDialog: Boolean = false,
+        val activeCommentId: String? = null,
         val replies: Flow<PagingData<Comment>> = emptyFlow(),
         val totalPages: Int = 1,
         val isSubscribed: Boolean = false,
@@ -109,6 +112,11 @@ interface TopicDetailContract {
          * @param image 图片
          */
         data class BookmarkImage(val image: Image) : Event
+
+        data class ShowSubComments(val commentId: String) : Event
+        object HideSubComments : Event
+        object RetryTopicLoad : Event
+        object RetrySubCommentsLoad : Event
     }
 
     /**
@@ -131,5 +139,9 @@ interface TopicDetailContract {
          * 导航到图片预览页面
          */
         object NavigateToImagePreview : Effect
+        data class ShowSubComments(val commentId: String) : Event
+        object HideSubComments : Event
+        object RetryTopicLoad : Event
+        object RetrySubCommentsLoad : Event
     }
 }

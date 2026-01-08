@@ -1,3 +1,5 @@
+import kotlin.Boolean;
+
 -- 创建 Comment 表
 CREATE TABLE IF NOT EXISTS Comment (
     id TEXT NOT NULL,
@@ -12,6 +14,11 @@ CREATE TABLE IF NOT EXISTS Comment (
     authorName TEXT NOT NULL,
     floor INTEGER, -- 新增 floor
     replyToId TEXT, -- 新增 replyToId
+    agreeCount INTEGER,
+    disagreeCount INTEGER,
+    subCommentCount INTEGER NOT NULL DEFAULT 0,
+    authorLevel INTEGER,
+    isPo INTEGER AS Boolean NOT NULL DEFAULT 0,
     PRIMARY KEY (sourceId, id),
     FOREIGN KEY (sourceId, topicId) REFERENCES Topic(sourceId, id) ON DELETE CASCADE
 );
@@ -22,7 +29,8 @@ CREATE INDEX IF NOT EXISTS idx_comment_topic_id ON Comment(sourceId, topicId);
 -- 插入 Comment 数据
 upsertComment:
 INSERT INTO Comment (
-    id, sourceId, topicId, page, userHash, admin, title, createdAt, content, authorName, floor, replyToId
+    id, sourceId, topicId, page, userHash, admin, title, createdAt, content, authorName, floor, replyToId,
+    agreeCount, disagreeCount, subCommentCount, authorLevel, isPo
 ) VALUES ?
 ON CONFLICT(sourceId, id) DO UPDATE SET
     topicId = excluded.topicId,
@@ -34,7 +42,12 @@ ON CONFLICT(sourceId, id) DO UPDATE SET
     content = excluded.content,
     authorName = excluded.authorName,
     floor = excluded.floor,
-    replyToId = excluded.replyToId;
+    replyToId = excluded.replyToId,
+    agreeCount = excluded.agreeCount,
+    disagreeCount = excluded.disagreeCount,
+    subCommentCount = excluded.subCommentCount,
+    authorLevel = excluded.authorLevel,
+    isPo = excluded.isPo;
 
 -- 更新 Comment 数据
 updateComment:
@@ -48,7 +61,12 @@ UPDATE Comment SET
     content = ?,
     authorName = ?,
     floor = ?,
-    replyToId = ?
+    replyToId = ?,
+    agreeCount = ?,
+    disagreeCount = ?,
+    subCommentCount = ?,
+    authorLevel = ?,
+    isPo = ?
 WHERE sourceId = ? AND id = ?;
 
 -- 删除 Comment 数据
@@ -165,3 +183,25 @@ SELECT count(*) FROM Comment WHERE userHash = :userHash  AND page >= 0;
 -- 根据日期范围查找回复 (用于 Trend 缓存)
 getCommentByTopicIdAndDateRange:
 SELECT * FROM Comment WHERE sourceId = :sourceId AND topicId = :topicId AND createdAt >= :start AND createdAt < :end ORDER BY id ASC LIMIT 1;
+
+getAllCommentsByTopicId:
+SELECT * FROM Comment WHERE sourceId = :sourceId AND topicId = :topicId AND page >= 0 ORDER BY id ASC;
+
+getAllCommentsByTopicIdPoMode:
+SELECT Comment.*
+FROM Comment
+JOIN Topic ON Comment.sourceId = Topic.sourceId AND Comment.topicId = Topic.id
+WHERE Comment.sourceId = :sourceId
+  AND Comment.topicId = :topicId
+  AND Comment.userHash = Topic.userHash
+ORDER BY Comment.id ASC;
+
+getCommentsByTopicIdPoMode:
+SELECT Comment.*
+FROM Comment
+JOIN Topic ON Comment.sourceId = Topic.sourceId AND Comment.topicId = Topic.id
+WHERE Comment.sourceId = :sourceId
+  AND Comment.topicId = :topicId
+  AND Comment.userHash = Topic.userHash
+  AND Comment.page = :page
+ORDER BY Comment.id ASC;

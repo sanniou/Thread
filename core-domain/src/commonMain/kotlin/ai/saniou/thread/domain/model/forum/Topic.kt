@@ -38,6 +38,9 @@ data class Topic(
     val createdAt: Instant,
 
     val commentCount: Long,
+    val agreeCount: Long? = null,
+    val disagreeCount: Long? = null,
+    val isCollected: Boolean? = null,
     val images: List<Image> = emptyList(),
 
     // 状态标记

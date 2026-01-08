@@ -1,8 +1,8 @@
 package ai.saniou.thread.data.source.nmb.remote.dto
 
 import ai.saniou.corecommon.utils.toTime
-import ai.saniou.thread.db.table.forum.Topic
 import ai.saniou.thread.db.table.forum.Comment
+import ai.saniou.thread.db.table.forum.Topic
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonNames
@@ -77,7 +77,11 @@ fun ForumThread.toTable(sourceId: String, page: Long) = Topic(
     admin = this.admin,
     hide = this.hide,
     page = page,
-)
+    agreeCount = 0,
+    disagreeCount = 0,
+    isCollected = false,
+
+    )
 
 fun ForumThread.toTableReply(sourceId: String) = this.replies.map { reply ->
     Comment(
@@ -92,6 +96,11 @@ fun ForumThread.toTableReply(sourceId: String) = this.replies.map { reply ->
         topicId = this.id.toString(),
         page = Long.MIN_VALUE, //unknown
         floor = null,
-        replyToId = null
+        replyToId = null,
+        agreeCount = 0,
+        disagreeCount = 0,
+        subCommentCount = 0,
+        authorLevel = null,
+        isPo = false,
     )
 }

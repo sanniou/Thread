@@ -87,7 +87,12 @@ class ReferenceRepositoryImpl(
             // img/ext removed
             authorName = name,
             floor = null,
-            replyToId = null
+            replyToId = null,
+            agreeCount = 0,
+            disagreeCount = 0,
+            subCommentCount = 0,
+            authorLevel = null,
+            isPo = false
         )
     }
 }

@@ -38,38 +38,52 @@ interface TopicRepository {
      * @param sourceId 来源ID
      * @param threadId 帖子ID
      * @param isPoOnly 是否只看PO主
-     * @param initialPage 初始页码
+     * @param topicId 帖子ID
+     * @param isPoOnly 是否只看PO主
      * @return 包含帖子回复分页数据的 Flow
      */
-    fun getTopicCommentsPaging(
+    fun getTopicCommentsPager(
         sourceId: String,
-        threadId: String,
-        isPoOnly: Boolean,
-        initialPage: Int = 1
+        topicId: String,
+        isPoOnly: Boolean
     ): Flow<PagingData<Comment>>
+
+    /**
+     * 获取楼中楼（子评论）
+     *
+     * @param sourceId 来源ID
+     * @param topicId 帖子ID
+     * @param commentId 评论ID
+     * @param page 页码
+     * @return 包含子评论列表的 Result
+     */
+    suspend fun getSubComments(sourceId: String, topicId: String, commentId: String, page: Int): Result<List<Comment>>
 
     /**
      * 获取帖子中的所有图片
      *
+     * @param sourceId 来源ID
      * @param threadId 帖子ID
      * @return 包含图片列表的 Flow
      */
-    fun getTopicImages(threadId: Long): Flow<List<Image>>
+    fun getTopicImages(sourceId: String, threadId: Long): Flow<List<Image>>
 
     /**
      * 获取帖子的所有回复（非分页）
      *
-     * @param threadId 帖子ID
+     * @param sourceId 来源ID
+     * @param topicId 帖子ID
      * @param isPoOnly 是否只看PO主
      * @return 包含帖子回复列表的 Flow
      */
-    fun getTopicComments(threadId: Long, isPoOnly: Boolean): Flow<List<Comment>>
+    fun getTopicComments(sourceId: String, topicId: String, isPoOnly: Boolean): Flow<List<Comment>>
 
     /**
      * 更新帖子最后已读的回复ID
      *
+     * @param sourceId 来源ID
      * @param threadId 帖子ID
      * @param replyId 回复ID
      */
-    suspend fun updateTopicLastReadCommentId(threadId: String, replyId: String)
+    suspend fun updateTopicLastReadCommentId(sourceId: String, threadId: String, replyId: String)
 }

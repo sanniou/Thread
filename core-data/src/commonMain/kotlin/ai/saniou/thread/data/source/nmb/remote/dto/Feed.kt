@@ -62,7 +62,10 @@ fun Feed.toTable(sourceId: String, page: Long) = EntityTopic(
     sage = sage,
     admin = admin,
     hide = hide,
-    page = page
+    page = page,
+    agreeCount = 0,
+    disagreeCount = 0,
+    isCollected = false
 )
 
 @OptIn(ExperimentalTime::class)

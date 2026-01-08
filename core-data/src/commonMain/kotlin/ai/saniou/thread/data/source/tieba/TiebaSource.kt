@@ -26,6 +26,8 @@ import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOneOrNull
 import com.huanchengfly.tieba.post.api.models.protos.frsPage.FrsPageRequest
 import com.huanchengfly.tieba.post.api.models.protos.frsPage.FrsPageRequestData
+import com.huanchengfly.tieba.post.api.models.protos.pbFloor.PbFloorRequest
+import com.huanchengfly.tieba.post.api.models.protos.pbFloor.PbFloorRequestData
 import com.huanchengfly.tieba.post.api.models.protos.pbPage.PbPageRequest
 import com.huanchengfly.tieba.post.api.models.protos.pbPage.PbPageRequestData
 import io.ktor.http.encodeURLQueryComponent
@@ -181,13 +183,15 @@ class TiebaSource(
         page: Int,
         isPoOnly: Boolean,
     ): Result<List<Comment>> = runCatching {
+        val kz = threadId.toLongOrNull() ?: throw IllegalArgumentException("Invalid threadId: $threadId")
+
         val request = PbPageRequest(
             PbPageRequestData(
                 common = TiebaProtoBuilder.buildCommonRequest(
                     tiebaParameterProvider,
                     ClientVersion.TIEBA_V12
                 ),
-                kz = threadId.toLongOrNull() ?: 0L,
+                kz = kz,
                 pn = page,
                 rn = 30,
                 lz = if (isPoOnly) 1 else 0,
@@ -217,13 +221,15 @@ class TiebaSource(
     }
 
     override suspend fun getTopicDetail(threadId: String, page: Int): Result<Topic> = runCatching {
+        val kz = threadId.toLongOrNull() ?: throw IllegalArgumentException("Invalid threadId: $threadId")
+
         val request = PbPageRequest(
             PbPageRequestData(
                 common = TiebaProtoBuilder.buildCommonRequest(
                     tiebaParameterProvider,
                     ClientVersion.TIEBA_V12
                 ),
-                kz = threadId.toLongOrNull() ?: 0L,
+                kz = kz,
                 pn = page,
                 rn = 30,
                 lz = 0,
@@ -257,6 +263,40 @@ class TiebaSource(
             .asFlow()
             .mapToOneOrNull(Dispatchers.IO)
             .map { it?.toDomain(database.channelQueries) }
+    }
+
+    suspend fun getSubComments(
+        topicId: String,
+        postId: String,
+        page: Int
+    ): Result<List<Comment>> = runCatching {
+        val kz = topicId.toLongOrNull() ?: throw IllegalArgumentException("Invalid topicId: $topicId")
+        val pid = postId.toLongOrNull() ?: throw IllegalArgumentException("Invalid postId: $postId")
+
+        val request = PbFloorRequest(
+            PbFloorRequestData(
+                common = TiebaProtoBuilder.buildCommonRequest(
+                    tiebaParameterProvider,
+                    ClientVersion.TIEBA_V12
+                ),
+                kz = kz,
+                pid = pid,
+                pn = page,
+                scr_dip = 3.0,
+                scr_h = 1920,
+                scr_w = 1080
+            )
+        )
+        val body = TiebaProtoBuilder.buildProtobufFormBody(
+            data = request,
+            clientVersion = ClientVersion.TIEBA_V12,
+            parameterProvider = tiebaParameterProvider
+        )
+        val response = officialProtobufTiebaApiV12.pbFloorFlow(body).first()
+        if (response.error?.error_code != 0) {
+            throw Exception("Failed to fetch sub-comments: ${response.error?.error_msg} (Code: ${response.error?.error_code})")
+        }
+        TiebaMapper.mapPbFloorResponseToComments(response, topicId)
     }
 }
 

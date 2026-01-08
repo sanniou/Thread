@@ -118,6 +118,9 @@ private fun DiscourseTopic.toTopicEntity(
         sage = 0,
         admin = if (pinned || closed) 1 else 0,
         hide = if (!visible) 1 else 0,
-        page = page
-    )
+        page = page,
+        agreeCount = 0,
+        disagreeCount = 0,
+        isCollected = false,
+        )
 }

@@ -44,6 +44,9 @@ fun SearchTopics.toDomain(
         channelId = channelId,
         channelName = "", // DB Topic table usually doesn't store channel name, need Join or lookup
         commentCount = commentCount,
+        agreeCount = agreeCount,
+        disagreeCount = disagreeCount,
+        isCollected = isCollected,
         images = images,
         isSage = sage > 0,
         isAdmin = admin > 0,
@@ -87,6 +90,9 @@ fun GetTopicsInChannelOffset.toDomain(
         channelId = channelId,
         channelName = "", // DB Topic table usually doesn't store channel name, need Join or lookup
         commentCount = commentCount,
+        agreeCount = agreeCount,
+        disagreeCount = disagreeCount,
+        isCollected = isCollected,
         images = images,
         isSage = sage > 0,
         isAdmin = admin > 0,
@@ -130,6 +136,9 @@ fun GetTopic.toDomain(
         channelId = channelId,
         channelName = "", // DB Topic table usually doesn't store channel name, need Join or lookup
         commentCount = commentCount,
+        agreeCount = agreeCount,
+        disagreeCount = disagreeCount,
+        isCollected = isCollected,
         images = images,
         isSage = sage > 0,
         isAdmin = admin > 0,
@@ -173,6 +182,9 @@ fun EntityTopic.toDomain(
         channelId = channelId,
         channelName = "", // DB Topic table usually doesn't store channel name, need Join or lookup
         commentCount = commentCount,
+        agreeCount = agreeCount,
+        disagreeCount = disagreeCount,
+        isCollected = isCollected,
         images = images,
         isSage = sage > 0,
         isAdmin = admin > 0,
@@ -236,7 +248,7 @@ fun Topic.toEntity(page: Int = 1): EntityTopic {
         id = id,
         sourceId = sourceId,
         channelId = channelId,
-        commentCount = commentCount,
+        commentCount = commentCount.toLong(),
         createdAt = createdAt.toEpochMilliseconds(),
         userHash = author.id,
         authorName = author.name,
@@ -246,6 +258,9 @@ fun Topic.toEntity(page: Int = 1): EntityTopic {
         sage = if (isSage) 1 else 0,
         admin = if (isAdmin) 1 else 0,
         hide = if (isHidden) 1 else 0,
-        page = page.toLong()
+        page = page.toLong(),
+        agreeCount = agreeCount,
+        disagreeCount = disagreeCount,
+        isCollected = isCollected
     )
 }

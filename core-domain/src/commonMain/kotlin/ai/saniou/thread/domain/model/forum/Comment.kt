@@ -28,4 +28,9 @@ data class Comment(
     val floor: Int? = null,
     val replyToId: String? = null,
     val sourceId: String? = null,
+    val agreeCount: Long? = null,
+    val disagreeCount: Long? = null,
+    val subCommentCount: Int = 0,
+    val authorLevel: Int? = null,
+    val isPo: Boolean = false,
 )

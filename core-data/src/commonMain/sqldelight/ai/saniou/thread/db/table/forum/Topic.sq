@@ -1,3 +1,5 @@
+import kotlin.Boolean;
+
 -- 创建 TopicInformation 表
 CREATE TABLE IF NOT EXISTS TopicInformation (
     id TEXT NOT NULL,
@@ -15,7 +17,6 @@ CREATE TABLE IF NOT EXISTS Topic (
     sourceId TEXT NOT NULL,
     channelId TEXT NOT NULL,
     commentCount INTEGER NOT NULL,
-    createdAt INTEGER NOT NULL,
     userHash TEXT NOT NULL,
     authorName TEXT NOT NULL,
     title TEXT, -- 可为空
@@ -25,6 +26,10 @@ CREATE TABLE IF NOT EXISTS Topic (
     admin INTEGER NOT NULL,
     hide INTEGER NOT NULL,
     page INTEGER NOT NULL,
+    agreeCount INTEGER ,
+    disagreeCount INTEGER ,
+    isCollected INTEGER AS Boolean ,
+    createdAt INTEGER NOT NULL,
     PRIMARY KEY (sourceId, id)
 );
 
@@ -36,29 +41,11 @@ CREATE INDEX IF NOT EXISTS idx_topic_channel_id ON Topic(sourceId, channelId);
 -- 插入 Topic 数据 (无 Page)
 upsertTopicNoPage:
 INSERT INTO Topic (
-    id, sourceId, channelId, commentCount, createdAt, userHash, authorName, title, content, summary, sage, admin, hide, page
+    id, sourceId, channelId, commentCount, userHash, authorName, title, content, summary, sage, admin, hide, page,
+    agreeCount, disagreeCount, isCollected, createdAt
 ) VALUES ?
 ON CONFLICT (sourceId, id) DO UPDATE SET
     commentCount = excluded.commentCount,
-    createdAt = excluded.createdAt,
-    userHash = excluded.userHash,
-    authorName = excluded.authorName,
-    title = COALESCE(excluded.title, Topic.title),
-    content = COALESCE(excluded.content, Topic.content), -- 只有当新 content 非空时才更新
-    summary = COALESCE(excluded.summary, Topic.summary),
-    sage = excluded.sage,
-    admin = excluded.admin,
-    hide = excluded.hide;
-
--- 插入 Topic 数据
-upsertTopic:
-INSERT INTO Topic (
-    id, sourceId, channelId, commentCount, createdAt, userHash, authorName, title, content, summary, sage, admin, hide, page
-) VALUES ?
-ON CONFLICT (sourceId, id) DO UPDATE SET
-    channelId = excluded.channelId,
-    commentCount = excluded.commentCount,
-    createdAt = excluded.createdAt,
     userHash = excluded.userHash,
     authorName = excluded.authorName,
     title = COALESCE(excluded.title, Topic.title),
@@ -67,7 +54,33 @@ ON CONFLICT (sourceId, id) DO UPDATE SET
     sage = excluded.sage,
     admin = excluded.admin,
     hide = excluded.hide,
-    page = excluded.page;
+    agreeCount = excluded.agreeCount,
+    disagreeCount = excluded.disagreeCount,
+    isCollected = excluded.isCollected,
+    createdAt = excluded.createdAt;
+
+-- 插入 Topic 数据
+upsertTopic:
+INSERT INTO Topic (
+    id, sourceId, channelId, commentCount, userHash, authorName, title, content, summary, sage, admin, hide, page,
+    agreeCount, disagreeCount, isCollected, createdAt
+) VALUES ?
+ON CONFLICT (sourceId, id) DO UPDATE SET
+    channelId = excluded.channelId,
+    commentCount = excluded.commentCount,
+    userHash = excluded.userHash,
+    authorName = excluded.authorName,
+    title = COALESCE(excluded.title, Topic.title),
+    content = COALESCE(excluded.content, Topic.content), -- 只有当新 content 非空时才更新
+    summary = COALESCE(excluded.summary, Topic.summary),
+    sage = excluded.sage,
+    admin = excluded.admin,
+    hide = excluded.hide,
+    page = excluded.page,
+    agreeCount = excluded.agreeCount,
+    disagreeCount = excluded.disagreeCount,
+    isCollected = excluded.isCollected,
+    createdAt = excluded.createdAt;
 
 -- 插入或更新 TopicInformation 数据
 upsertTopicInformation:
@@ -101,8 +114,6 @@ SELECT * FROM Topic;
 updateTopic:
 UPDATE Topic SET
     channelId = ?,
-    commentCount = ?,
-    createdAt = ?,
     userHash = ?,
     authorName = ?,
     title = ?,
@@ -110,7 +121,12 @@ UPDATE Topic SET
     summary = ?,
     sage = ?,
     admin = ?,
-    hide = ?
+    hide = ?,
+    commentCount = ?,
+    agreeCount = ?,
+    disagreeCount = ?,
+    isCollected = ?,
+    createdAt = ?
 WHERE sourceId = ? AND id = ?;
 
 -- 仅更新 Topic 详情内容 (用于 Discourse 详情页刷新)

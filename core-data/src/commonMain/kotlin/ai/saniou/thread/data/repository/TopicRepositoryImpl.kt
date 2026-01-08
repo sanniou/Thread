@@ -3,11 +3,9 @@ package ai.saniou.thread.data.repository
 import ai.saniou.thread.data.cache.SourceCache
 import ai.saniou.thread.data.mapper.toDomain
 import ai.saniou.thread.data.mapper.toMetadata
-import ai.saniou.thread.data.paging.DataPolicy
-import ai.saniou.thread.data.paging.DefaultRemoteKeyStrategy
-import ai.saniou.thread.data.paging.GenericRemoteMediator
-import ai.saniou.thread.data.source.nmb.NMBSourceId
-import ai.saniou.thread.data.source.nmb.remote.dto.RemoteKeyType
+import ai.saniou.thread.data.paging.SqlDelightPagingSource
+import ai.saniou.thread.data.paging.TopicCommentsRemoteMediator
+import ai.saniou.thread.data.source.tieba.TiebaSource
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.domain.model.forum.Comment
 import ai.saniou.thread.domain.model.forum.Image
@@ -85,98 +83,72 @@ class TopicRepositoryImpl(
     }
 
     @OptIn(ExperimentalPagingApi::class)
-    override fun getTopicCommentsPaging(
+    override fun getTopicCommentsPager(
         sourceId: String,
-        threadId: String,
+        topicId: String,
         isPoOnly: Boolean,
-        initialPage: Int,
     ): Flow<PagingData<Comment>> {
-        val source = sourceMap[sourceId] ?: return flowOf(PagingData.empty())
-        val pageSize = 20
+        val source = sourceMap[sourceId]
+            ?: return flowOf(PagingData.empty())
+
+        // This is a specific implementation for Tieba, we might need a more generic approach
+        // if other sources are added with different paging mechanisms.
+        if (source !is TiebaSource) {
+            return flowOf(PagingData.empty())
+        }
+
         return Pager(
-            config = PagingConfig(pageSize = pageSize),
-            initialKey = initialPage,
-            remoteMediator = GenericRemoteMediator(
-                db = db,
-                dataPolicy = DataPolicy.CACHE_ELSE_NETWORK,
-                initialKey = initialPage,
-                remoteKeyStrategy = DefaultRemoteKeyStrategy(
-                    db = db,
-                    type = RemoteKeyType.THREAD,
-                    id = "${sourceId}_${threadId}_${isPoOnly}"
-                ),
-                fetcher = { page ->
-                    source.getTopicComments(threadId, page, isPoOnly)
-                },
-                saver = { comments, page, loadType ->
-                    if (loadType == LoadType.REFRESH) {
-                        // TODO: Implement cleaner for specific config?
-                        // Currently clearTopicCommentsCache clears ALL comments for the topic.
-                        // If we support partial refresh or mix PO only, we need to be careful.
-                        // For now, consistent with full refresh:
-                        // cache.clearTopicCommentsCache(sourceId, threadId)
-                        // But wait, if we are scrolling back, REFRESH loadType might not mean "Swipe Refresh".
-                        // In Paging3 RemoteMediator, REFRESH loadType is triggered on initial load or invalidate.
-                        // We should probably NOT clear everything if we want to keep history?
-                        // Actually, RemoteKeys management handles the "where are we".
-                        // But if we want to ensure fresh data on refresh, we might clear.
-                    }
-                    // Filter out comments that might duplicate? upsert handles it.
-                    cache.saveComments(comments, sourceId, page)
-                },
-                endOfPaginationReached = {
-                    //  nmb 特有的问题，正常的一页数据也会小于 20,所以只能判断是否为空来处理
-                    if (sourceId == NMBSourceId)
-                        it.isEmpty()
-                    else
-                        it.size < pageSize
-                },
-                cacheChecker = { page ->
-                    db.commentQueries.countCommentsByTopicIdAndPage(
-                        sourceId = sourceId,
-                        topicId = threadId,
-                        page = page.toLong()
-                    ).executeAsOne() > 0
-                },
-                keyIncrementer = { it + 1 },
-                keyDecrementer = { it - 1 },
-                keyToLong = { it.toLong() },
-                longToKey = { it.toInt() }
+            config = PagingConfig(pageSize = 30),
+            remoteMediator = TopicCommentsRemoteMediator(
+                topicId = topicId,
+                isPoOnly = isPoOnly,
+                database = db,
+                tiebaSource = source
             ),
             pagingSourceFactory = {
-                // TODO: Pass userHash for PO filtering if needed, or handle isPoOnly in query
-                // Currently getTopicCommentsPagingSource supports userHash but we need to know PO's hash.
-                // If we don't know PO hash, isPoOnly filter relies on API returning subset and we storing it.
-                // Issue: If we store PO-only comments in same table, getTopicCommentsPagingSource without hash returns ALL.
-                // We need to pass a filter mode to paging source if we want to distinguish in UI.
-                // For now, let's assume standard flow.
-                cache.getTopicCommentsPagingSource(sourceId, threadId, null)
+                if (isPoOnly) {
+                    SqlDelightPagingSource(
+                        transacter = db,
+                        context = Dispatchers.IO,
+                        countQueryProvider = { db.commentQueries.countCommentsByTopicIdPoMode(sourceId, topicId) },
+                        pageQueryProvider = { page ->
+                            db.commentQueries.getCommentsByTopicIdPoMode(sourceId, topicId, page.toLong())
+                        }
+                    )
+                } else {
+                    SqlDelightPagingSource(
+                        transacter = db,
+                        context = Dispatchers.IO,
+                        countQueryProvider = { db.commentQueries.countCommentsByTopicId(sourceId, topicId) },
+                        pageQueryProvider = { page ->
+                            db.commentQueries.getCommentsByTopicId(sourceId, topicId, page.toLong())
+                        }
+                    )
+                }
             }
-        ).flow.map { pagingData ->
-            pagingData.map { it.toDomain(db.imageQueries) }
-        }
+        ).flow.map { it.map { it.toDomain(db.imageQueries) } }
     }
 
-    override fun getTopicImages(threadId: Long): Flow<List<Image>> {
-        // Assume sourceId is "nmb" for now, or we need to pass it in.
-        // Given getTopicImages interface only has threadId, we might default to "nmb" or query all.
-        // But TopicImage table requires sourceId.
-        // Let's assume "nmb" as it's the primary use case for now, or query all matching threadId regardless of source?
-        // Better to use "nmb" as default.
-        val sourceId = "nmb"
+    override suspend fun getSubComments(
+        sourceId: String,
+        topicId: String,
+        commentId: String,
+        page: Int,
+    ): Result<List<Comment>> {
+        val source = sourceMap[sourceId]
+            ?: return Result.failure(Exception("Source not found: $sourceId"))
+
+        if (source !is TiebaSource) {
+            return Result.failure(Exception("getSubComments is not supported for source: $sourceId"))
+        }
+        return source.getSubComments(topicId, commentId, page)
+    }
+
+    override fun getTopicImages(sourceId: String, threadId: Long): Flow<List<Image>> {
         return db.imageQueries.getImagesByParent(
             sourceId = sourceId,
             parentId = threadId.toString(),
-            parentType = ImageType.Comment // Usually images are in comments? Or Topic?
-            // The original logic `getThreadImages` query filtered `img != ''`.
-            // Now we have Image table.
-            // A thread has images in its topic (main post) AND its comments (replies).
-            // This function likely wants ALL images in the thread viewer gallery.
-            // So we need to UNION or fetch both.
-            // SQLDelight doesn't easily stream a UNION of two different queries if they map differently,
-            // but here they map to same Image entity.
-            // Let's just fetch Comment images for now as that's the bulk.
-            // Or better, fetch both and combine in memory.
+            parentType = ImageType.Comment
         )
             .asFlow()
             .mapToList(Dispatchers.IO)
@@ -186,16 +158,30 @@ class TopicRepositoryImpl(
     }
 
     override fun getTopicComments(
-        threadId: Long,
+        sourceId: String,
+        topicId: String,
         isPoOnly: Boolean,
     ): Flow<List<Comment>> {
-        TODO("Not yet implemented")
+        val query = if (isPoOnly) {
+            db.commentQueries.getAllCommentsByTopicIdPoMode(sourceId, topicId)
+        } else {
+            db.commentQueries.getAllCommentsByTopicId(sourceId, topicId)
+        }
+
+        return query
+            .asFlow()
+            .mapToList(Dispatchers.IO)
+            .map { list ->
+                list.map { it.toDomain(db.imageQueries) }
+            }
     }
 
 
-    override suspend fun updateTopicLastReadCommentId(threadId: String, replyId: String) {
-        // FIXME: Need sourceId. Assuming "nmb" for now or fetch from existing thread context.
-        val sourceId = "nmb"
+    override suspend fun updateTopicLastReadCommentId(
+        sourceId: String,
+        threadId: String,
+        replyId: String,
+    ) {
         withContext(Dispatchers.IO) {
             cache.updateTopicLastReadCommentId(sourceId, threadId, replyId)
         }

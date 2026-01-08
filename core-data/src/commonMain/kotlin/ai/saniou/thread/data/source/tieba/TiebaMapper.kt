@@ -14,6 +14,7 @@ import com.huanchengfly.tieba.post.api.models.protos.hotThreadList.HotThreadList
 import com.huanchengfly.tieba.post.api.models.protos.pbPage.PbPageResponse
 import com.huanchengfly.tieba.post.api.models.protos.personalized.PersonalizedResponse
 import com.huanchengfly.tieba.post.api.models.protos.topicList.TopicListResponse
+import com.huanchengfly.tieba.post.api.models.protos.pbFloor.PbFloorResponse
 import com.huanchengfly.tieba.post.api.models.protos.userLike.UserLikeResponse
 import kotlinx.datetime.Instant
 
@@ -141,7 +142,7 @@ object TiebaMapper {
                     ?: response.userList?.find { it.id == thread.authorId }?.name
                     ?: "Unknown",
                 avatar = response.userList?.find { it.id == thread.authorId }?.portrait?.let {
-                    "http://tb.himg.baidu.com/sys/portrait/item/$it"
+                    "https://tb.himg.baidu.com/sys/portrait/item/$it"
                 },
                 sourceName = SOURCE_NAME
             )
@@ -191,7 +192,7 @@ object TiebaMapper {
         val author = Author(
             id = authorBean?.id ?: "0",
             name = authorBean?.nameShow ?: authorBean?.name ?: "Unknown",
-            avatar = authorBean?.portrait?.let { "http://tb.himg.baidu.com/sys/portrait/item/$it" },
+            avatar = authorBean?.portrait?.let { "https://tb.himg.baidu.com/sys/portrait/item/$it" },
             sourceName = SOURCE_NAME
         )
 
@@ -251,7 +252,7 @@ object TiebaMapper {
             val author = Author(
                 id = post.authorId ?: post.author?.id ?: "0",
                 name = post.author?.nameShow ?: post.author?.name ?: "Unknown",
-                avatar = post.author?.portrait?.let { "http://tb.himg.baidu.com/sys/portrait/item/$it" },
+                avatar = post.author?.portrait?.let { "https://tb.himg.baidu.com/sys/portrait/item/$it" },
                 sourceName = SOURCE_NAME
             )
 
@@ -298,7 +299,7 @@ object TiebaMapper {
             val author = Author(
                 id = post.author.id ?: "0",
                 name = post.author.nameShow ?: post.author.name ?: "Unknown",
-                avatar = post.author.portrait?.let { "http://tb.himg.baidu.com/sys/portrait/item/$it" },
+                avatar = post.author.portrait?.let { "https://tb.himg.baidu.com/sys/portrait/item/$it" },
                 sourceName = SOURCE_NAME
             )
 
@@ -345,7 +346,7 @@ object TiebaMapper {
             val author = Author(
                 id = thread.authorId.toString(),
                 name = authorUser?.nameShow ?: authorUser?.name ?: "Unknown",
-                avatar = authorUser?.portrait?.let { "http://tb.himg.baidu.com/sys/portrait/item/$it" },
+                avatar = authorUser?.portrait?.let { "https://tb.himg.baidu.com/sys/portrait/item/$it" },
                 sourceName = SOURCE_NAME
             )
 
@@ -389,7 +390,7 @@ object TiebaMapper {
             val author = Author(
                 id = thread.authorId.toString(),
                 name = thread.author?.nameShow ?: thread.author?.name ?: "Unknown",
-                avatar = thread.author?.portrait?.let { "http://tb.himg.baidu.com/sys/portrait/item/$it" },
+                avatar = thread.author?.portrait?.let { "https://tb.himg.baidu.com/sys/portrait/item/$it" },
                 sourceName = SOURCE_NAME
             )
 
@@ -436,7 +437,7 @@ object TiebaMapper {
             val author = Author(
                 id = thread.authorId.toString(),
                 name = thread.author?.nameShow ?: thread.author?.name ?: "Unknown",
-                avatar = thread.author?.portrait?.let { "http://tb.himg.baidu.com/sys/portrait/item/$it" },
+                avatar = thread.author?.portrait?.let { "https://tb.himg.baidu.com/sys/portrait/item/$it" },
                 sourceName = SOURCE_NAME
             )
 
@@ -481,7 +482,7 @@ object TiebaMapper {
             val author = Author(
                 id = thread.authorId.toString(),
                 name = thread.author?.nameShow ?: thread.author?.name ?: "Unknown",
-                avatar = thread.author?.portrait?.let { "http://tb.himg.baidu.com/sys/portrait/item/$it" },
+                avatar = thread.author?.portrait?.let { "https://tb.himg.baidu.com/sys/portrait/item/$it" },
                 sourceName = SOURCE_NAME
             )
 
@@ -597,7 +598,7 @@ object TiebaMapper {
         val author = Author(
             id = mainPost?.author_id?.toString() ?: thread.authorId.toString(),
             name = authorUser?.nameShow ?: authorUser?.name ?: "Unknown",
-            avatar = authorUser?.portrait?.let { "http://tb.himg.baidu.com/sys/portrait/item/$it" },
+            avatar = authorUser?.portrait?.let { "https://tb.himg.baidu.com/sys/portrait/item/$it" },
             sourceName = SOURCE_NAME
         )
 
@@ -631,6 +632,9 @@ object TiebaMapper {
             createdAt = mainPost?.time?.toLong()?.let { Instant.fromEpochSeconds(it) }
                 ?: Instant.fromEpochSeconds(0),
             commentCount = thread.replyNum.toLong(),
+            agreeCount = thread.agree?.agreeNum,
+            disagreeCount = thread.agree?.disagreeNum,
+            isCollected = thread.collectStatus == 1,
             images = images,
             isSage = false,
             isAdmin = false,
@@ -643,13 +647,14 @@ object TiebaMapper {
 
     fun mapPbPageResponseToComments(response: PbPageResponse, topicId: String): List<Comment> {
         val data = response.data_ ?: return emptyList()
+        val threadAuthorId = data.thread?.author?.id
 
         return data.post_list.map { post ->
             val authorUser = data.user_list.find { it.id == post.author_id }
             val author = Author(
                 id = post.author_id.toString(),
                 name = authorUser?.nameShow ?: authorUser?.name ?: "Unknown",
-                avatar = authorUser?.portrait?.let { "http://tb.himg.baidu.com/sys/portrait/item/$it" },
+                avatar = authorUser?.portrait?.let { "https://tb.himg.baidu.com/sys/portrait/item/$it" },
                 sourceName = SOURCE_NAME
             )
 
@@ -682,7 +687,54 @@ object TiebaMapper {
                 images = images,
                 isAdmin = false, // Check bawu/manager info if needed
                 floor = post.floor,
-                replyToId = null
+                replyToId = null,
+                agreeCount = post.agree?.agreeNum,
+                disagreeCount = post.agree?.disagreeNum,
+                subCommentCount = post.sub_post_number,
+                authorLevel = authorUser?.level_id,
+                isPo = post.author_id == threadAuthorId
+            )
+        }
+    }
+
+    fun mapPbFloorResponseToComments(response: PbFloorResponse, topicId: String): List<Comment> {
+        val data = response.data_ ?: return emptyList()
+        val threadAuthorId = data.thread?.author?.id
+        return data.subpost_list.map { post ->
+            val authorUser = post.author
+            val author = Author(
+                id = post.author_id.toString(),
+                name = authorUser?.nameShow ?: authorUser?.name ?: "Unknown",
+                avatar = authorUser?.portrait?.let { "https://tb.himg.baidu.com/sys/portrait/item/$it" },
+                sourceName = SOURCE_NAME
+            )
+
+            val content = post.content.joinToString("") { content ->
+                when (content.type) {
+                    0 -> content.text ?: ""
+                    1 -> "<a href=\"${content.link}\">${content.text}</a>"
+                    2 -> if (content.text == "#") "" else content.text ?: ""
+                    3 -> "<img src=\"${content.bigCdnSrc}\" />"
+                    else -> content.text ?: ""
+                }
+            }
+
+            Comment(
+                id = post.id.toString(),
+                topicId = topicId,
+                author = author,
+                createdAt = post.time.toLong().let { Instant.fromEpochSeconds(it) },
+                title = "",
+                content = content,
+                images = emptyList(),
+                isAdmin = false,
+                floor = post.floor,
+                replyToId = null,
+                agreeCount = post.agree?.agreeNum,
+                disagreeCount = post.agree?.disagreeNum,
+                subCommentCount = 0,
+                authorLevel = authorUser?.level_id,
+                isPo = post.author_id == threadAuthorId
             )
         }
     }

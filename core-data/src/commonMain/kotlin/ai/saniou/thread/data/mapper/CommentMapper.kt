@@ -20,7 +20,12 @@ fun Comment.toEntity(sourceId: String, page: Long): EntityComment {
         content = content,
         authorName = author.name,
         floor = floor?.toLong(),
-        replyToId = replyToId
+        replyToId = replyToId,
+        agreeCount = agreeCount,
+        disagreeCount = disagreeCount,
+        subCommentCount = subCommentCount.toLong(),
+        authorLevel = authorLevel?.toLong(),
+        isPo = isPo
     )
 }
 
@@ -48,5 +53,10 @@ fun EntityComment.toDomain(imageQueries: ImageQueries? = null): Comment {
         floor = floor?.toInt(),
         replyToId = replyToId,
         sourceId = sourceId,
+        agreeCount = agreeCount,
+        disagreeCount = disagreeCount,
+        subCommentCount = subCommentCount.toInt(),
+        authorLevel = authorLevel?.toInt(),
+        isPo = isPo
     )
 }

@@ -59,7 +59,11 @@ fun ThreadReply.toTableReply(sourceId: String, threadId: Long, page: Long = Long
         authorName = this.name,
         topicId = threadId.toString(),
         page = page,
-        floor = null,
+        floor = null, agreeCount = 0,
+        disagreeCount = 0,
+        subCommentCount = 0,
+        authorLevel = null,
+        isPo = false,
         replyToId = null
     )
 
@@ -86,6 +90,9 @@ fun Thread.toTable(sourceId: String, page: Long) = Topic(
     admin = admin,
     hide = hide,
     page = page,
+    agreeCount = 0,
+    disagreeCount = 0,
+    isCollected = false,
 )
 
 fun Thread.toCommentEntity(sourceId: String) = Comment(
@@ -100,5 +107,10 @@ fun Thread.toCommentEntity(sourceId: String) = Comment(
     content = content,
     authorName = name,
     floor = 1,
-    replyToId = null
+    agreeCount = 0,
+    disagreeCount = 0,
+    subCommentCount = 0,
+    authorLevel = null,
+    isPo = false,
+    replyToId = null,
 )

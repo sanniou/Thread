@@ -83,7 +83,7 @@ class AcfunSource(
     )
 
     override fun observeChannels(): Flow<List<Channel>> {
-        return kotlinx.coroutines.flow.flowOf(emptyList())
+        return flowOf(emptyList())
     }
 
     override suspend fun fetchChannels(): Result<Unit> {

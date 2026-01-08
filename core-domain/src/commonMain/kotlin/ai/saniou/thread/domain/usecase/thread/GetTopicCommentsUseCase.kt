@@ -12,6 +12,6 @@ class GetTopicCommentsUseCase(private val topicRepository: TopicRepository) {
         isPoOnly: Boolean,
         initialPage: Int = 1,
     ): Flow<PagingData<Comment>> {
-        return topicRepository.getTopicCommentsPaging(sourceId, threadId, isPoOnly, initialPage)
+        return topicRepository.getTopicCommentsPager(sourceId, threadId, isPoOnly)
     }
 }
