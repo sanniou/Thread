@@ -16,7 +16,10 @@ import ai.saniou.forum.workflow.trend.TrendContract.Effect
 import ai.saniou.forum.workflow.trend.TrendContract.Event
 import ai.saniou.forum.workflow.trend.TrendContract.TrendItem
 import ai.saniou.thread.domain.model.FeedType
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,6 +33,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
@@ -47,12 +53,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SuggestionChip
-import androidx.compose.material3.SuggestionChipDefaults
-import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
@@ -65,14 +67,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -266,17 +271,19 @@ data class TrendPage(
                     )
 
                     if (state.availableFeedTypes.size > 1) {
-                        ScrollableTabRow(
-                            selectedTabIndex = state.availableFeedTypes.indexOf(state.selectedFeedType),
-                            edgePadding = 0.dp,
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(MaterialTheme.colorScheme.primaryContainer)
+                                .horizontalScroll(rememberScrollState())
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                             state.availableFeedTypes.forEach { type ->
-                                Tab(
+                                TrendTab(
+                                    text = type.name,
                                     selected = state.selectedFeedType == type,
-                                    onClick = { viewModel.onEvent(Event.SelectFeed(type)) },
-                                    text = { Text(type.name) }
+                                    onSelected = { viewModel.onEvent(Event.SelectFeed(type)) }
                                 )
                             }
                         }
@@ -307,8 +314,11 @@ data class TrendPage(
                                 verticalArrangement = Arrangement.spacedBy(8.dp),
                                 modifier = Modifier.fillMaxSize()
                             ) {
-                                items(state.items, key = { it.topicId }) { item ->
+                                itemsIndexed(
+                                    state.items,
+                                    key = { _, item -> item.topicId }) { index, item ->
                                     TrendItemCard(
+                                        index = index,
                                         item = item,
                                         onClick = { viewModel.onEvent(Event.OnTrendItemClick(item.topicId)) }
                                     )
@@ -331,6 +341,7 @@ data class TrendPage(
 
     @Composable
     fun TrendItemCard(
+        index: Int,
         item: TrendItem,
         onClick: () -> Unit,
     ) {
@@ -349,14 +360,9 @@ data class TrendPage(
                 verticalAlignment = Alignment.Top
             ) {
                 // Rank Number
-                Text(
-                    text = item.rank,
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        fontWeight = FontWeight.ExtraBold,
-                        fontStyle = FontStyle.Italic
-                    ),
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
-                    modifier = Modifier.width(48.dp) // Fixed width for alignment
+                RankText(
+                    index = index,
+                    rank = item.rank
                 )
 
                 Spacer(modifier = Modifier.width(8.dp))
@@ -367,15 +373,14 @@ data class TrendPage(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        SuggestionChip(
-                            onClick = {},
-                            label = { Text(item.channel) },
-                            colors = SuggestionChipDefaults.suggestionChipColors(
-                                containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                                labelColor = MaterialTheme.colorScheme.onSecondaryContainer
-                            ),
-                            border = null,
-                            modifier = Modifier.height(24.dp)
+                        Text(
+                            text = item.channel,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                            modifier = Modifier
+                                .clip(MaterialTheme.shapes.small)
+                                .background(MaterialTheme.colorScheme.secondaryContainer)
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
                         )
 
                         Text(
@@ -388,8 +393,12 @@ data class TrendPage(
                             Text(
                                 text = "NEW",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.error,
-                                fontWeight = FontWeight.Bold
+                                color = MaterialTheme.colorScheme.onError,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier
+                                    .clip(MaterialTheme.shapes.small)
+                                    .background(MaterialTheme.colorScheme.error)
+                                    .padding(horizontal = 4.dp, vertical = 2.dp)
                             )
                         }
                     }
@@ -415,5 +424,55 @@ data class TrendPage(
                 }
             }
         }
+    }
+
+    @Composable
+    private fun TrendTab(
+        text: String,
+        selected: Boolean,
+        onSelected: () -> Unit
+    ) {
+        val textColor by animateColorAsState(
+            targetValue = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        val backgroundColor by animateColorAsState(
+            targetValue = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
+        )
+        Text(
+            text = text,
+            textAlign = TextAlign.Center,
+            color = textColor,
+            maxLines = 1,
+            modifier = Modifier
+                .clip(RoundedCornerShape(100))
+                .background(backgroundColor)
+                .clickable(onClick = onSelected)
+                .padding(horizontal = 16.dp, vertical = 6.dp),
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
+        )
+    }
+
+    @Composable
+    private fun RankText(
+        index: Int,
+        rank: String
+    ) {
+        val color = when (index) {
+            0 -> Color(0xFFD50000) // RedA700
+            1 -> Color(0xFFFF6D00) // OrangeA700
+            2 -> Color(0xFFFFD600) // Yellow
+            else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+        }
+
+        Text(
+            text = rank,
+            style = MaterialTheme.typography.headlineMedium.copy(
+                fontWeight = FontWeight.Bold,
+            ),
+            color = color,
+            modifier = Modifier.width(48.dp), // Fixed width for alignment
+            textAlign = TextAlign.Center
+        )
     }
 }
