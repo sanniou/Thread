@@ -1,28 +1,49 @@
 package ai.saniou.thread.data.repository
 
-import ai.saniou.thread.data.source.nmb.NmbSource
-import ai.saniou.corecommon.utils.DateParser
 import ai.saniou.corecommon.utils.toTime
+import ai.saniou.thread.data.paging.DataPolicy
+import ai.saniou.thread.data.paging.GenericRemoteMediator
+import ai.saniou.thread.data.source.nmb.NmbSource
+import ai.saniou.thread.data.source.tieba.TiebaMapper
+import ai.saniou.thread.data.source.tieba.TiebaParameterProvider
+import ai.saniou.thread.data.source.tieba.remote.ClientVersion
+import ai.saniou.thread.data.source.tieba.remote.OfficialProtobufTiebaApi
+import ai.saniou.thread.data.source.tieba.remote.TiebaProtoBuilder
+import ai.saniou.thread.db.Database
+import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.model.forum.Trend
 import ai.saniou.thread.domain.model.forum.TrendResult
-import ai.saniou.thread.domain.repository.SettingsRepository
 import ai.saniou.thread.domain.repository.SourceRepository
 import ai.saniou.thread.domain.repository.TrendRepository
-import ai.saniou.thread.domain.repository.getValue
+import app.cash.paging.Pager
+import app.cash.paging.PagingConfig
+import app.cash.paging.PagingData
+import app.cash.paging.PagingSource
+import app.cash.paging.PagingState
+import com.huanchengfly.tieba.post.api.models.protos.hotThreadList.HotThreadListRequest
+import com.huanchengfly.tieba.post.api.models.protos.hotThreadList.HotThreadListRequestData
+import com.huanchengfly.tieba.post.api.models.protos.personalized.PersonalizedRequest
+import com.huanchengfly.tieba.post.api.models.protos.personalized.PersonalizedRequestData
+import com.huanchengfly.tieba.post.api.models.protos.topicList.TopicListRequest
+import com.huanchengfly.tieba.post.api.models.protos.topicList.TopicListRequestData
+import com.huanchengfly.tieba.post.api.models.protos.userLike.UserLikeRequest
+import com.huanchengfly.tieba.post.api.models.protos.userLike.UserLikeRequestData
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.daysUntil
 import kotlinx.datetime.minus
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
-import kotlin.time.Duration.Companion.days
 import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalTime::class)
 class TrendRepositoryImpl(
     private val nmbSource: NmbSource,
-    private val sourceRepository: SourceRepository
+    private val sourceRepository: SourceRepository,
+    private val officialProtobufTiebaApiV11: OfficialProtobufTiebaApi,
+    private val tiebaParameterProvider: TiebaParameterProvider,
+    private val database: Database,
 ) : TrendRepository {
 
     override suspend fun getTrendItems(
@@ -97,8 +118,8 @@ class TrendRepositoryImpl(
             val isNew = headerMatch.groupValues[4].isNotEmpty()
 
             // Regex to extract thread ID: >>No.67520848
-            // 修复：兼容 HTML 实体 &gt;
-            val threadIdRegex = """(?:>>|&gt;&gt;)No\.(\d+)""".toRegex()
+            // 修复：兼容 HTML 实体 >
+            val threadIdRegex = """(?:>>|>>)No\.(\d+)""".toRegex()
             val threadIdMatch = threadIdRegex.find(segment)
             val threadId = threadIdMatch?.groupValues?.get(1)?.toLongOrNull() ?: continue
 
@@ -117,5 +138,186 @@ class TrendRepositoryImpl(
         }
 
         return items
+    }
+
+    override fun getHotThreads(): Flow<PagingData<Topic>> {
+        return Pager(
+            config = PagingConfig(pageSize = 20, enablePlaceholders = false),
+            pagingSourceFactory = {
+                object : PagingSource<Int, Topic>() {
+                    override fun getRefreshKey(state: PagingState<Int, Topic>): Int? = null
+
+                    override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Topic> {
+                        val page = params.key ?: 1
+                        if (page > 1) {
+                            return LoadResult.Page(emptyList(), null, null)
+                        }
+                        return try {
+                            val request = HotThreadListRequest(
+                                HotThreadListRequestData(
+                                    common = TiebaProtoBuilder.buildCommonRequest(
+                                        tiebaParameterProvider,
+                                        ClientVersion.TIEBA_V11
+                                    )
+                                )
+                            )
+                            val body = TiebaProtoBuilder.buildProtobufFormBody(
+                                data = request,
+                                clientVersion = ClientVersion.TIEBA_V11,
+                                parameterProvider = tiebaParameterProvider
+                            )
+                            val response = officialProtobufTiebaApiV11.hotThreadListFlow(body).first()
+                            if (response.error?.error_code != 0 && response.error?.error_code != null) {
+                                return LoadResult.Error(Exception("Tieba Error: ${response.error?.error_msg}"))
+                            }
+                            val topics = TiebaMapper.mapHotThreadListResponseToTopics(response)
+                            LoadResult.Page(
+                                data = topics,
+                                prevKey = null,
+                                nextKey = null
+                            )
+                        } catch (e: Exception) {
+                            LoadResult.Error(e)
+                        }
+                    }
+                }
+            }
+        ).flow
+    }
+
+    override fun getTopicList(): Flow<PagingData<Topic>> {
+        return Pager(
+            config = PagingConfig(pageSize = 20, enablePlaceholders = false),
+            pagingSourceFactory = {
+                object : PagingSource<Int, Topic>() {
+                    override fun getRefreshKey(state: PagingState<Int, Topic>): Int? = null
+
+                    override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Topic> {
+                        val page = params.key ?: 1
+                        if (page > 1) {
+                            return LoadResult.Page(emptyList(), null, null)
+                        }
+                        return try {
+                            val request = TopicListRequest(
+                                TopicListRequestData(
+                                    common = TiebaProtoBuilder.buildCommonRequest(
+                                        tiebaParameterProvider,
+                                        ClientVersion.TIEBA_V11
+                                    ),
+//                                    sort_type = 1
+                                )
+                            )
+                            val body = TiebaProtoBuilder.buildProtobufFormBody(
+                                data = request,
+                                clientVersion = ClientVersion.TIEBA_V11,
+                                parameterProvider = tiebaParameterProvider
+                            )
+                            val response = officialProtobufTiebaApiV11.topicListFlow(body).first()
+                            if (response.error?.error_code != 0 && response.error?.error_code != null) {
+                                return LoadResult.Error(Exception("Tieba Error: ${response.error?.error_msg}"))
+                            }
+                            val topics = TiebaMapper.mapTopicListResponseToTopics(response)
+                            LoadResult.Page(
+                                data = topics,
+                                prevKey = null,
+                                nextKey = null
+                            )
+                        } catch (e: Exception) {
+                            LoadResult.Error(e)
+                        }
+                    }
+                }
+            }
+        ).flow
+    }
+
+    override fun getConcernFeed(): Flow<PagingData<Topic>> {
+        return Pager(
+            config = PagingConfig(pageSize = 20, enablePlaceholders = false),
+            pagingSourceFactory = {
+                object : PagingSource<Int, Topic>() {
+                    override fun getRefreshKey(state: PagingState<Int, Topic>): Int? = null
+
+                    override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Topic> {
+                        val page = params.key ?: 1
+                        return try {
+                            val request = UserLikeRequest(
+                                UserLikeRequestData(
+                                    common = TiebaProtoBuilder.buildCommonRequest(
+                                        tiebaParameterProvider,
+                                        ClientVersion.TIEBA_V11
+                                    ),
+                                    pageTag = if (page == 1) "" else page.toString(),
+                                    loadType = if (page == 1) 1 else 2
+                                )
+                            )
+                            val body = TiebaProtoBuilder.buildProtobufFormBody(
+                                data = request,
+                                clientVersion = ClientVersion.TIEBA_V11,
+                                parameterProvider = tiebaParameterProvider
+                            )
+                            val response = officialProtobufTiebaApiV11.userLikeFlow(body).first()
+                            if (response.error?.error_code != 0 && response.error?.error_code != null) {
+                                return LoadResult.Error(Exception("Tieba Error: ${response.error?.error_msg}"))
+                            }
+                            val topics = TiebaMapper.mapUserLikeResponseToTopics(response)
+                            val nextKey = if (topics.isNotEmpty()) page + 1 else null
+                            LoadResult.Page(
+                                data = topics,
+                                prevKey = if (page == 1) null else page - 1,
+                                nextKey = nextKey
+                            )
+                        } catch (e: Exception) {
+                            LoadResult.Error(e)
+                        }
+                    }
+                }
+            }
+        ).flow
+    }
+
+    override fun getPersonalizedFeed(): Flow<PagingData<Topic>> {
+        return Pager(
+            config = PagingConfig(pageSize = 20, enablePlaceholders = false),
+            pagingSourceFactory = {
+                object : PagingSource<Int, Topic>() {
+                    override fun getRefreshKey(state: PagingState<Int, Topic>): Int? = null
+
+                    override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Topic> {
+                        val page = params.key ?: 1
+                        return try {
+                            val request = PersonalizedRequest(
+                                PersonalizedRequestData(
+                                    common = TiebaProtoBuilder.buildCommonRequest(
+                                        tiebaParameterProvider,
+                                        ClientVersion.TIEBA_V11
+                                    ),
+                                    load_type = if (page == 1) 1 else 2,
+                                    pn = page
+                                )
+                            )
+                            val body = TiebaProtoBuilder.buildProtobufFormBody(
+                                data = request,
+                                clientVersion = ClientVersion.TIEBA_V11,
+                                parameterProvider = tiebaParameterProvider
+                            )
+                            val response = officialProtobufTiebaApiV11.personalizedFlow(body).first()
+                            if (response.error?.error_code != 0 && response.error?.error_code != null) {
+                                return LoadResult.Error(Exception("Tieba Error: ${response.error?.error_msg}"))
+                            }
+                            val topics = TiebaMapper.mapPersonalizedResponseToTopics(response)
+                            val nextKey = page + 1
+                            LoadResult.Page(
+                                data = topics,
+                                prevKey = if (page == 1) null else page - 1,
+                                nextKey = nextKey
+                            )
+                        } catch (e: Exception) {
+                            LoadResult.Error(e)
+                        }
+                    }
+                }
+            }
+        ).flow
     }
 }

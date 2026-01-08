@@ -5,11 +5,11 @@ import ai.saniou.coreui.state.toAppError
 import ai.saniou.forum.workflow.trend.TrendContract.Effect
 import ai.saniou.forum.workflow.trend.TrendContract.Event
 import ai.saniou.forum.workflow.trend.TrendContract.State
-import ai.saniou.thread.domain.model.FeedType
 import ai.saniou.thread.domain.model.forum.Topic
+import ai.saniou.thread.domain.model.forum.TrendType
 import ai.saniou.thread.domain.repository.SettingsRepository
 import ai.saniou.thread.domain.repository.SourceRepository
-import ai.saniou.thread.domain.usecase.feed.GetFeedPagingUseCase
+import ai.saniou.thread.domain.repository.TrendRepository
 import ai.saniou.thread.domain.usecase.misc.GetTrendUseCase
 import app.cash.paging.PagingData
 import cafe.adriel.voyager.core.model.ScreenModel
@@ -32,7 +32,7 @@ class TrendViewModel(
     private val getTrendUseCase: GetTrendUseCase,
     private val settingsRepository: SettingsRepository,
     private val sourceRepository: SourceRepository,
-    private val getFeedPagingUseCase: GetFeedPagingUseCase
+    private val trendRepository: TrendRepository
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(State())
@@ -43,13 +43,14 @@ class TrendViewModel(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val feedPagingFlow: Flow<PagingData<Topic>> = state
-        .map { it.currentSource.id to it.selectedFeedType }
+        .map { it.currentSource.id to it.selectedTrendType }
         .distinctUntilChanged()
-        .flatMapLatest { (sourceId, feedType) ->
-            if (feedType == FeedType.HOT) {
-                emptyFlow()
-            } else {
-                getFeedPagingUseCase(sourceId, feedType)
+        .flatMapLatest { (sourceId, trendType) ->
+            when (trendType) {
+                TrendType.HOT -> if (sourceId == "tieba") trendRepository.getHotThreads() else emptyFlow()
+                TrendType.TOPIC -> trendRepository.getTopicList()
+                TrendType.CONCERN -> trendRepository.getConcernFeed()
+                TrendType.PERSONALIZED -> trendRepository.getPersonalizedFeed()
             }
         }
 
@@ -75,17 +76,19 @@ class TrendViewModel(
     private fun updateCurrentSourceInfo(sourceId: String) {
         val source = sourceRepository.getSource(sourceId)
         if (source != null) {
-            val availableTypes = mutableListOf<FeedType>()
+            val availableTypes = mutableListOf<TrendType>()
             if (source.capabilities.supportsTrend) {
-                availableTypes.add(FeedType.HOT)
+                availableTypes.add(TrendType.HOT)
             }
-            if (source.capabilities.supportsPagination) {
-                availableTypes.add(FeedType.RECOMMEND)
-                availableTypes.add(FeedType.CONCERN)
+            if (source.id == "tieba") {
+                availableTypes.add(TrendType.HOT)
+                availableTypes.add(TrendType.TOPIC)
+                availableTypes.add(TrendType.CONCERN)
+                availableTypes.add(TrendType.PERSONALIZED)
             }
 
             if (availableTypes.isEmpty()) {
-                availableTypes.add(FeedType.HOT) // Fallback
+                availableTypes.add(TrendType.HOT) // Fallback
             }
 
             _state.update {
@@ -95,8 +98,8 @@ class TrendViewModel(
                         name = source.name,
                         supportsHistory = source.capabilities.supportsTrendHistory
                     ),
-                    availableFeedTypes = availableTypes,
-                    selectedFeedType = if (availableTypes.contains(it.selectedFeedType)) it.selectedFeedType else availableTypes.first()
+                    availableTrendTypes = availableTypes,
+                    selectedTrendType = if (availableTypes.contains(it.selectedTrendType)) it.selectedTrendType else availableTypes.first()
                 )
             }
         }
@@ -128,8 +131,8 @@ class TrendViewModel(
             Event.ToggleSource -> {
                 // Source switching is handled globally now
             }
-            is Event.SelectFeed -> {
-                _state.update { it.copy(selectedFeedType = event.feedType) }
+            is Event.SelectTrendType -> {
+                _state.update { it.copy(selectedTrendType = event.trendType) }
                 loadData()
             }
             is Event.SelectSource -> {
@@ -140,7 +143,7 @@ class TrendViewModel(
     }
 
     private fun loadData(forceRefresh: Boolean = false) {
-        if (_state.value.selectedFeedType == FeedType.HOT) {
+        if (_state.value.selectedTrendType == TrendType.HOT && _state.value.currentSource.id != "tieba") {
             loadTrend(forceRefresh)
         } else {
             // Clear trend items if not HOT

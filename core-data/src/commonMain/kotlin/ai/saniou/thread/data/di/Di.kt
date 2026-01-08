@@ -221,7 +221,15 @@ val dataModule = DI.Module("dataModule") {
     }
     bind<HistoryRepository>() with singleton { HistoryRepositoryImpl(instance()) }
     bind<PostRepository>() with singleton { PostRepositoryImpl(instance()) }
-    bind<TrendRepository>() with singleton { TrendRepositoryImpl(instance(), instance()) }
+    bind<TrendRepository>() with singleton {
+        TrendRepositoryImpl(
+            instance(),
+            instance(),
+            instance(tag = "V11"),
+            instance(),
+            instance()
+        )
+    }
     bind<ReferenceRepository>() with singleton { ReferenceRepositoryImpl(instance(), instance()) }
     bind<TopicRepository>() with singleton {
         TopicRepositoryImpl(

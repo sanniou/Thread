@@ -2,8 +2,8 @@ package ai.saniou.forum.workflow.trend
 
 import ai.saniou.coreui.state.AppError
 import ai.saniou.thread.data.source.nmb.remote.dto.Thread
-import ai.saniou.thread.domain.model.FeedType
 import ai.saniou.thread.domain.model.forum.Trend
+import ai.saniou.thread.domain.model.forum.TrendType
 import kotlinx.serialization.Serializable
 
 /**
@@ -40,8 +40,8 @@ interface TrendContract {
         val rawThread: Thread? = null, // 保留原始数据以备不时之需
         val currentSource: SourceInfo = SourceInfo("nmb", "A岛", true), // 当前数据源信息
         val availableSources: List<SourceInfo> = emptyList(),
-        val selectedFeedType: FeedType = FeedType.HOT,
-        val availableFeedTypes: List<FeedType> = listOf(FeedType.HOT),
+        val selectedTrendType: TrendType = TrendType.HOT,
+        val availableTrendTypes: List<TrendType> = listOf(TrendType.HOT),
     )
 
     @Serializable
@@ -86,9 +86,9 @@ interface TrendContract {
         object ToggleSource : Event
 
         /**
-         * 选择 Feed 类型
+         * 选择 Trend 类型
          */
-        data class SelectFeed(val feedType: FeedType) : Event
+        data class SelectTrendType(val trendType: TrendType) : Event
 
         /**
          * 选择数据源

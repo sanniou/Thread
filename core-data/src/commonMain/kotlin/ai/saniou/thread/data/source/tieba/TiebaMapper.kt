@@ -20,7 +20,7 @@ import kotlinx.datetime.Instant
 object TiebaMapper {
 
     const val SOURCE_ID = "tieba"
-    private const val SOURCE_NAME = "Tieba"
+    const val SOURCE_NAME = "Tieba"
     private const val BASE_URL = "https://tieba.baidu.com"
 
     fun mapForumRecommendToChannels(response: ForumRecommend): List<Channel> {
@@ -475,7 +475,7 @@ object TiebaMapper {
 
     fun mapHotThreadListResponseToTopics(response: HotThreadListResponse): List<Topic> {
         val data = response.data_ ?: return emptyList()
-        
+
         val threads = data.threadInfo.mapNotNull { thread ->
             val tid = thread.id.toString()
             val author = Author(
@@ -518,7 +518,7 @@ object TiebaMapper {
         }
 
         val topics = data.topicList.map { topic ->
-             Topic(
+            Topic(
                 id = topic.topicId.toString(),
                 channelId = "",
                 channelName = "话题",
@@ -528,7 +528,14 @@ object TiebaMapper {
                 author = Author(id = "0", name = "话题", avatar = null, sourceName = SOURCE_NAME),
                 createdAt = Instant.fromEpochSeconds(0), // No time in RecommendTopicList
                 commentCount = topic.discussNum.toLong(),
-                images = if (topic.topicPic.isNotEmpty()) listOf(Image(topic.topicPic, topic.topicPic, null, null)) else emptyList(),
+                images = if (topic.topicPic.isNotEmpty()) listOf(
+                    Image(
+                        topic.topicPic,
+                        topic.topicPic,
+                        null,
+                        null
+                    )
+                ) else emptyList(),
                 isSage = false,
                 isAdmin = false,
                 isHidden = false,
@@ -543,9 +550,11 @@ object TiebaMapper {
     }
 
     fun mapTopicListResponseToTopics(response: TopicListResponse): List<Topic> {
-        val data = response.data_ ?: return emptyList()
+        val data = response.data_?.topic_bang ?: return emptyList()
+        val moduleTitle = data.module_title
+        val tips = data.tips
         return data.topic_list.map { topic ->
-             Topic(
+            Topic(
                 id = topic.topic_id.toString(),
                 channelId = "",
                 channelName = "话题",
@@ -554,8 +563,15 @@ object TiebaMapper {
                 summary = topic.topic_desc,
                 author = Author(id = "0", name = "话题", avatar = null, sourceName = SOURCE_NAME),
                 createdAt = Instant.fromEpochSeconds(0),
-                commentCount = topic.discuss_num.toLong(),
-                images = if (topic.topic_image.isNotEmpty()) listOf(Image(topic.topic_image, topic.topic_image, null, null)) else emptyList(),
+                commentCount = topic.discuss_num,
+                images = if (topic.topic_pic.isNotEmpty()) listOf(
+                    Image(
+                        topic.topic_pic,
+                        topic.topic_pic,
+                        null,
+                        null
+                    )
+                ) else emptyList(),
                 isSage = false,
                 isAdmin = false,
                 isHidden = false,

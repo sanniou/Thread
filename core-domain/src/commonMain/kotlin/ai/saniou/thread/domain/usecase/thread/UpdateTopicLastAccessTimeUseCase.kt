@@ -3,6 +3,7 @@ package ai.saniou.thread.domain.usecase.thread
 import ai.saniou.thread.domain.model.history.HistoryPost
 import ai.saniou.thread.domain.repository.HistoryRepository
 import ai.saniou.thread.domain.repository.TopicRepository
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.firstOrNull
 import kotlin.time.Instant
 

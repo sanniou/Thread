@@ -157,7 +157,7 @@ val nmbFeatureModule = DI.Module("nmbFeatureModule") {
             getTrendUseCase = instance(),
             settingsRepository = instance(),
             sourceRepository = instance(),
-            getFeedPagingUseCase = instance()
+            trendRepository = instance()
         )
     }
 

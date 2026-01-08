@@ -50,7 +50,7 @@ class TiebaSource(
     private val tiebaParameterProvider: TiebaParameterProvider,
 ) : Source {
     override val id: String = TiebaMapper.SOURCE_ID
-    override val name: String = "百度贴吧"
+    override val name: String = TiebaMapper.SOURCE_NAME
     override val isInitialized: Flow<Boolean> = flowOf(true)
     override val capabilities: SourceCapabilities = SourceCapabilities(
         supportsTrend = false,
@@ -91,15 +91,6 @@ class TiebaSource(
         if (response.error?.error_code != 0) {
             throw Exception("Failed to fetch channels: ${response.error?.error_msg} (Code: ${response.error?.error_code})")
         }
-
-        // We need to implement mapForumRecommendResponseToChannels in TiebaMapper first.
-        // Assuming it's similar to mapForumRecommendToChannels but takes ForumRecommendResponse.
-        // For now, let's add a placeholder or update Mapper.
-
-        // Wait, I should update Mapper first. But I am editing Source now.
-        // Let's assume Mapper has it or I will add it.
-        // The previous JSON mapper: mapForumRecommendToChannels(response: ForumRecommend)
-        // I need: mapForumRecommendResponseToChannels(response: ForumRecommendResponse)
 
         val channels = TiebaMapper.mapForumRecommendResponseToChannels(response)
 

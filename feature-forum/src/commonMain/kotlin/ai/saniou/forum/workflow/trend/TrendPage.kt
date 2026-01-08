@@ -15,8 +15,9 @@ import ai.saniou.forum.workflow.topicdetail.TopicDetailPage
 import ai.saniou.forum.workflow.trend.TrendContract.Effect
 import ai.saniou.forum.workflow.trend.TrendContract.Event
 import ai.saniou.forum.workflow.trend.TrendContract.TrendItem
-import ai.saniou.thread.domain.model.FeedType
+import ai.saniou.thread.domain.model.forum.TrendType
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -34,6 +35,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -55,6 +58,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.TabRowDefaults
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
@@ -92,7 +99,7 @@ data class TrendPage(
     val onMenuClick: (() -> Unit)? = null,
 ) : Screen {
 
-    @OptIn(ExperimentalMaterial3Api::class)
+    @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
@@ -104,6 +111,27 @@ data class TrendPage(
         val snackbarHostState = remember { SnackbarHostState() }
         var showSourceDialog by remember { mutableStateOf(false) }
         var sourceUrl by remember { mutableStateOf("") }
+
+        val pagerState = rememberPagerState(
+            initialPage = 0,
+            initialPageOffsetFraction = 0f
+        ) {
+            state.availableTrendTypes.size
+        }
+
+        LaunchedEffect(state.selectedTrendType) {
+            val index = state.availableTrendTypes.indexOf(state.selectedTrendType)
+            if (index != -1 && pagerState.currentPage != index) {
+                pagerState.animateScrollToPage(index)
+            }
+        }
+
+        LaunchedEffect(pagerState.currentPage) {
+            val type = state.availableTrendTypes.getOrNull(pagerState.currentPage)
+            if (type != null && state.selectedTrendType != type) {
+                viewModel.onEvent(Event.SelectTrendType(type))
+            }
+        }
 
         LaunchedEffect(Unit) {
             viewModel.effect.collectLatest { effect ->
@@ -184,7 +212,7 @@ data class TrendPage(
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 SaniouAppBarTitle(
                                     title = state.currentSource.name,
-                                    subtitle = if (state.selectedFeedType == FeedType.HOT) {
+                                    subtitle = if (state.selectedTrendType == TrendType.HOT) {
                                         state.trendDate.takeIf { it.isNotEmpty() }
                                     } else {
                                         null
@@ -243,7 +271,7 @@ data class TrendPage(
                             containerColor = MaterialTheme.colorScheme.primaryContainer
                         ),
                         actions = {
-                            if (state.selectedFeedType == FeedType.HOT && state.currentSource.supportsHistory) {
+                            if (state.selectedTrendType == TrendType.HOT && state.currentSource.supportsHistory) {
                                 IconButton(onClick = { viewModel.onEvent(Event.PreviousDay) }) {
                                     Icon(
                                         Icons.AutoMirrored.Filled.ArrowBack,
@@ -270,20 +298,34 @@ data class TrendPage(
                         }
                     )
 
-                    if (state.availableFeedTypes.size > 1) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(MaterialTheme.colorScheme.primaryContainer)
-                                .horizontalScroll(rememberScrollState())
-                                .padding(horizontal = 16.dp, vertical = 8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    if (state.availableTrendTypes.size > 1) {
+                        TabRow(
+                            selectedTabIndex = pagerState.currentPage,
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.primary,
+                            indicator = { tabPositions ->
+                                TabRowDefaults.SecondaryIndicator(
+                                    Modifier.tabIndicatorOffset(tabPositions[pagerState.currentPage]),
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            },
+                            divider = {}
                         ) {
-                            state.availableFeedTypes.forEach { type ->
-                                TrendTab(
-                                    text = type.name,
-                                    selected = state.selectedFeedType == type,
-                                    onSelected = { viewModel.onEvent(Event.SelectFeed(type)) }
+                            state.availableTrendTypes.forEachIndexed { index, type ->
+                                Tab(
+                                    selected = pagerState.currentPage == index,
+                                    onClick = {
+                                        viewModel.onEvent(Event.SelectTrendType(type))
+                                    },
+                                    text = {
+                                        Text(
+                                            text = type.name,
+                                            style = MaterialTheme.typography.labelLarge,
+                                            fontWeight = if (pagerState.currentPage == index) FontWeight.Bold else FontWeight.Normal
+                                        )
+                                    },
+                                    selectedContentColor = MaterialTheme.colorScheme.primary,
+                                    unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
@@ -292,48 +334,66 @@ data class TrendPage(
             },
             snackbarHost = { SnackbarHost(snackbarHostState) }
         ) { innerPadding ->
-            Box(
+            HorizontalPager(
+                state = pagerState,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
-            ) {
-                if (state.selectedFeedType == FeedType.HOT) {
-                    if (state.isLoading) {
-                        LoadingIndicator()
-                    } else if (state.error != null) {
-                        DefaultError(
-                            error = state.error,
-                            onRetryClick = { viewModel.onEvent(Event.Refresh) }
+            ) { page ->
+                val type = state.availableTrendTypes.getOrNull(page) ?: return@HorizontalPager
+                
+                Box(modifier = Modifier.fillMaxSize()) {
+                    if (type == TrendType.HOT && state.currentSource.id != "tieba") {
+                        TrendHotList(
+                            state = state,
+                            onRefresh = { viewModel.onEvent(Event.Refresh) },
+                            onItemClick = { viewModel.onEvent(Event.OnTrendItemClick(it)) }
                         )
                     } else {
-                        PullToRefreshWrapper(
-                            onRefreshTrigger = { viewModel.onEvent(Event.Refresh) }
-                        ) {
-                            LazyColumn(
-                                contentPadding = PaddingValues(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp),
-                                modifier = Modifier.fillMaxSize()
-                            ) {
-                                itemsIndexed(
-                                    state.items,
-                                    key = { _, item -> item.topicId }) { index, item ->
-                                    TrendItemCard(
-                                        index = index,
-                                        item = item,
-                                        onClick = { viewModel.onEvent(Event.OnTrendItemClick(item.topicId)) }
-                                    )
-                                }
-                            }
-                        }
+                        ListThreadPage(
+                            threadFlow = viewModel.feedPagingFlow,
+                            onThreadClicked = { topicId -> navigator.push(TopicDetailPage(topicId)) },
+                            onImageClick = { _, _ -> /* TODO: Handle Image Click */ },
+                            onUserClick = { /* TODO: Handle User Click */ },
+                            showChannelBadge = true
+                        )
                     }
-                } else {
-                    ListThreadPage(
-                        threadFlow = viewModel.feedPagingFlow,
-                        onThreadClicked = { topicId -> navigator.push(TopicDetailPage(topicId)) },
-                        onImageClick = { _, _ -> /* TODO: Handle Image Click */ },
-                        onUserClick = { /* TODO: Handle User Click */ },
-                        showChannelBadge = true
-                    )
+                }
+            }
+        }
+    }
+
+    @Composable
+    fun TrendHotList(
+        state: TrendContract.State,
+        onRefresh: () -> Unit,
+        onItemClick: (String) -> Unit
+    ) {
+        if (state.isLoading) {
+            LoadingIndicator()
+        } else if (state.error != null) {
+            DefaultError(
+                error = state.error,
+                onRetryClick = onRefresh
+            )
+        } else {
+            PullToRefreshWrapper(
+                onRefreshTrigger = onRefresh
+            ) {
+                LazyColumn(
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    itemsIndexed(
+                        state.items,
+                        key = { _, item -> item.topicId }) { index, item ->
+                        TrendItemCard(
+                            index = index,
+                            item = item,
+                            onClick = { onItemClick(item.topicId) }
+                        )
+                    }
                 }
             }
         }
