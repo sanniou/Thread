@@ -176,10 +176,6 @@ data class TopicDetailPage(
                     is Effect.CopyToClipboard -> {
                         clipboardManager.setText(AnnotatedString(effect.text))
                     }
-
-                    is Effect.NavigateToImagePreview -> {
-                        // This navigation is now handled with parameters, not from a shared state
-                    }
                 }
             }
         }
@@ -247,6 +243,13 @@ data class TopicDetailPage(
                                     text = { Text("复制链接") },
                                     onClick = {
                                         viewModel.onEvent(Event.CopyLink)
+                                        showMenu = false
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("收藏本帖") },
+                                    onClick = {
+                                        viewModel.onEvent(Event.BookmarkTopic)
                                         showMenu = false
                                     }
                                 )
@@ -658,16 +661,6 @@ private fun ThreadList(
                 isPo = true
             )
 
-            // We need TopicMetadata for ThreadMainPost
-//            val metadata = TopicMetadata(
-//                id = topic.id,
-//                channelId = topic.channelId,
-//                title = topic.title,
-//                author = topic.author,
-//                commentCount = topic.commentCount,
-//                lastViewedCommentId = null,
-//                lastViewedTime = 0
-//            )
             val metadata = topic.toMetadata()
 
             ThreadMainPost(

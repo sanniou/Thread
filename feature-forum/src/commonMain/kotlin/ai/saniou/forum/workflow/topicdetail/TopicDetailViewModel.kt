@@ -89,25 +89,46 @@ class TopicDetailViewModel(
     init {
         observeTopicDetail()
         updateLastAccessTime()
-        // _state.update { it.copy(replies = replies) } // replies is collected in UI
+        _state.update { it.copy(replies = replies) }
 
         screenModelScope.launch {
             observeSubscriptionStatus()
             loadRequest.collect { request ->
-                // _state.update { it.copy(isPoOnlyMode = request.isPoOnly) } // isPoOnlyMode removed from State? Check Contract
+                _state.update { it.copy(isPoOnlyMode = request.isPoOnly) }
             }
         }
     }
 
     fun onEvent(event: Event) {
         when (event) {
+            is Event.JumpToPage -> jumpToPage(event.page)
+            Event.Refresh -> refresh()
+            Event.TogglePoOnlyMode -> togglePoOnlyMode()
+            Event.ToggleSubscription -> toggleSubscription()
+            Event.CopyLink -> copyLink()
+            is Event.CopyContent -> copyContent(event.content)
+            is Event.BookmarkTopic -> bookmarkTopic()
+            is Event.BookmarkReply -> bookmarkReply(event.reply)
+            is Event.BookmarkImage -> bookmarkImage(event.image)
+            is Event.UpdateLastReadReplyId -> updateLastReadReplyId(event.id)
             is Event.ShowSubComments -> showSubComments(event.commentId)
             Event.HideSubComments -> _state.update { it.copy(showSubCommentsDialog = false) }
             Event.RetryTopicLoad -> observeTopicDetail(forceRefresh = true)
             Event.RetrySubCommentsLoad -> state.value.activeCommentId?.let { showSubComments(it) }
-            // ... other events need to be mapped or removed if not in Contract
-            else -> {}
         }
+    }
+
+    private fun jumpToPage(page: Int) {
+        loadRequest.update { it.copy(page = page) }
+    }
+
+    private fun refresh() {
+        loadRequest.update { it.copy(page = 1) }
+        observeTopicDetail(forceRefresh = true)
+    }
+
+    private fun togglePoOnlyMode() {
+        loadRequest.update { it.copy(isPoOnly = !it.isPoOnly) }
     }
 
     private fun showSubComments(commentId: String) {
@@ -145,8 +166,15 @@ class TopicDetailViewModel(
                     }
                 }
                 .collectLatest { topic ->
+                    observeChannelName(topic.channelId)
+                    val totalPages =
+                        (topic.commentCount / 30) + if (topic.commentCount % 30 > 0) 1 else 0
+
                     _state.update {
-                        it.copy(topicWrapper = UiStateWrapper.Success(topic))
+                        it.copy(
+                            topicWrapper = UiStateWrapper.Success(topic),
+                            totalPages = totalPages.toInt().coerceAtLeast(1)
+                        )
                     }
                 }
         }
@@ -171,10 +199,13 @@ class TopicDetailViewModel(
         }
     }
 
-    // Removed observeTopicMetadata as it is redundant with observeTopicDetail which fetches full Topic.
-    // Topic contains metadata info.
-    // If separate metadata fetching is needed, it should update specific fields in State,
-    // but currently State uses UiStateWrapper<Topic> as the main source of truth.
+    private fun observeChannelName(channelId: String) {
+        screenModelScope.launch {
+            getChannelNameUseCase(sourceId, channelId).collect { forumName ->
+                _state.update { it.copy(forumName = forumName ?: "") }
+            }
+        }
+    }
 
     private fun observeSubscriptionStatus() {
         screenModelScope.launch {
@@ -187,16 +218,19 @@ class TopicDetailViewModel(
 
     private fun toggleSubscription() {
         if (state.value.isTogglingSubscription) return
-//        val metadata = state.value.metadata ?: return
-        val metadata = (state.value.topicWrapper as? UiStateWrapper.Success)?.value ?: return
+        val topic = (state.value.topicWrapper as? UiStateWrapper.Success)?.value ?: return
 
         _state.update { it.copy(isTogglingSubscription = true) }
 
         val currentSubscribed = state.value.isSubscribed
         screenModelScope.launch {
             val subscriptionKey =
-                getActiveSubscriptionKeyUseCase() ?: throw IllegalStateException("未设置订阅ID")
-            toggleSubscriptionUseCase(subscriptionKey, metadata.id, currentSubscribed)
+                getActiveSubscriptionKeyUseCase() ?: run {
+                    _effect.send(Effect.ShowSnackbar("未设置订阅ID"))
+                    _state.update { it.copy(isTogglingSubscription = false) }
+                    return@launch
+                }
+            toggleSubscriptionUseCase(subscriptionKey, topic.id, currentSubscribed)
                 .onSuccess { resultMessage ->
                     // UI state will be updated by the database flow
                     _state.update { it.copy(isTogglingSubscription = false) }
@@ -211,7 +245,13 @@ class TopicDetailViewModel(
 
     private fun copyLink() {
         screenModelScope.launch {
-            val url = "https://nmb.com/t/$threadId"
+            val topic = (state.value.topicWrapper as? UiStateWrapper.Success)?.value
+            val url = if (topic != null) {
+                // If we have topic info, use its source URL or construct one
+                 topic.sourceUrl.ifEmpty { "https://nmb.com/t/$threadId" }
+            } else {
+                 "https://nmb.com/t/$threadId"
+            }
             _effect.send(Effect.CopyToClipboard(url))
             _effect.send(Effect.ShowSnackbar("链接已复制到剪贴板"))
         }
@@ -224,12 +264,25 @@ class TopicDetailViewModel(
         }
     }
 
-    private fun bookmarkThread(metadata: TopicMetadata) {
+    private fun bookmarkTopic() {
         screenModelScope.launch {
-            // Cannot bookmark a thread without its content.
-            // This action should be disabled or get content from somewhere else.
-            // For now, we just show a message.
-            _effect.send(Effect.ShowSnackbar("无法收藏：缺少主楼内容"))
+            val topic = (state.value.topicWrapper as? UiStateWrapper.Success)?.value
+            if (topic == null) {
+                _effect.send(Effect.ShowSnackbar("无法收藏：数据未加载"))
+                return@launch
+            }
+
+            addBookmarkUseCase(
+                Bookmark.Quote(
+                    id = "nmb.Thread.${topic.id}",
+                    createdAt = Clock.System.now(),
+                    tags = listOf(),
+                    content = topic.content,
+                    sourceId = topic.id,
+                    sourceType = "nmb.Thread"
+                )
+            )
+            _effect.send(Effect.ShowSnackbar("帖子已收藏"))
         }
     }
 
@@ -267,9 +320,4 @@ class TopicDetailViewModel(
         }
     }
 
-    private fun showImagePreview() {
-        screenModelScope.launch {
-            _effect.send(Effect.NavigateToImagePreview)
-        }
-    }
 }

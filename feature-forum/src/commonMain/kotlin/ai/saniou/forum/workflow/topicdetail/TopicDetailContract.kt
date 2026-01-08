@@ -79,17 +79,6 @@ interface TopicDetailContract {
         data class UpdateLastReadReplyId(val id: String) : Event
 
         /**
-         * 显示图片预览
-         * @param imgPath 初始图片路径
-         */
-        data class ShowImagePreview(val imgPath: String) : Event
-
-        /**
-         * 加载更多图片
-         */
-        object LoadMoreImages : Event
-
-        /**
          * 复制内容到剪贴板
          * @param content 要复制的内容
          */
@@ -97,9 +86,8 @@ interface TopicDetailContract {
 
         /**
          * 收藏主楼
-         * @param metadata 帖子元数据
          */
-        data class BookmarkTopic(val metadata: TopicMetadata) : Event
+        object BookmarkTopic : Event
 
         /**
          * 收藏回复
@@ -113,9 +101,25 @@ interface TopicDetailContract {
          */
         data class BookmarkImage(val image: Image) : Event
 
+        /**
+         * 显示楼中楼弹窗
+         * @param commentId 评论ID
+         */
         data class ShowSubComments(val commentId: String) : Event
+
+        /**
+         * 隐藏楼中楼弹窗
+         */
         object HideSubComments : Event
+
+        /**
+         * 重试加载主贴
+         */
         object RetryTopicLoad : Event
+
+        /**
+         * 重试加载楼中楼
+         */
         object RetrySubCommentsLoad : Event
     }
 
@@ -134,14 +138,5 @@ interface TopicDetailContract {
          * @param text 要复制的文本
          */
         data class CopyToClipboard(val text: String) : Effect
-
-        /**
-         * 导航到图片预览页面
-         */
-        object NavigateToImagePreview : Effect
-        data class ShowSubComments(val commentId: String) : Event
-        object HideSubComments : Event
-        object RetryTopicLoad : Event
-        object RetrySubCommentsLoad : Event
     }
 }

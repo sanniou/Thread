@@ -2,10 +2,13 @@ package ai.saniou.thread.data.repository
 
 import ai.saniou.thread.data.cache.SourceCache
 import ai.saniou.thread.data.mapper.toDomain
+import ai.saniou.thread.data.mapper.toEntity
 import ai.saniou.thread.data.mapper.toMetadata
+import ai.saniou.thread.data.paging.DataPolicy
+import ai.saniou.thread.data.paging.DefaultRemoteKeyStrategy
+import ai.saniou.thread.data.paging.GenericRemoteMediator
 import ai.saniou.thread.data.paging.SqlDelightPagingSource
-import ai.saniou.thread.data.paging.TopicCommentsRemoteMediator
-import ai.saniou.thread.data.source.tieba.TiebaSource
+import ai.saniou.thread.data.source.nmb.remote.dto.RemoteKeyType
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.domain.model.forum.Comment
 import ai.saniou.thread.domain.model.forum.Image
@@ -91,19 +94,39 @@ class TopicRepositoryImpl(
         val source = sourceMap[sourceId]
             ?: return flowOf(PagingData.empty())
 
-        // This is a specific implementation for Tieba, we might need a more generic approach
-        // if other sources are added with different paging mechanisms.
-        if (source !is TiebaSource) {
-            return flowOf(PagingData.empty())
-        }
-
         return Pager(
             config = PagingConfig(pageSize = 30),
-            remoteMediator = TopicCommentsRemoteMediator(
-                topicId = topicId,
-                isPoOnly = isPoOnly,
-                database = db,
-                tiebaSource = source
+            remoteMediator = GenericRemoteMediator(
+                db = db,
+                dataPolicy = DataPolicy.CACHE_ELSE_NETWORK,
+                initialKey = 1,
+                remoteKeyStrategy = DefaultRemoteKeyStrategy(
+                    db = db,
+                    type = RemoteKeyType.THREAD,
+                    id = "${sourceId}_${topicId}_${if (isPoOnly) "po" else "all"}"
+                ),
+                fetcher = { page ->
+                    source.getTopicComments(topicId, page, isPoOnly)
+                },
+                saver = { comments, page, _ ->
+                    if (comments.isNotEmpty()) {
+                        comments.map {
+                            it.toEntity(
+                                sourceId = sourceId,
+                                page = page.toLong()
+                            )
+                        }.forEach {
+                            db.commentQueries.upsertComment(it)
+                        }
+                    }
+                },
+                endOfPaginationReached = { comments ->
+                    comments.isEmpty()
+                },
+                keyIncrementer = { it + 1 },
+                keyDecrementer = { it - 1 },
+                keyToLong = { it.toLong() },
+                longToKey = { it.toInt() }
             ),
             pagingSourceFactory = {
                 if (isPoOnly) {
@@ -138,9 +161,6 @@ class TopicRepositoryImpl(
         val source = sourceMap[sourceId]
             ?: return Result.failure(Exception("Source not found: $sourceId"))
 
-        if (source !is TiebaSource) {
-            return Result.failure(Exception("getSubComments is not supported for source: $sourceId"))
-        }
         return source.getSubComments(topicId, commentId, page)
     }
 

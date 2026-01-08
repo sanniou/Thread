@@ -46,9 +46,9 @@ class ImagePreviewViewModel(
 
     fun onEvent(event: Event) {
         when (event) {
-            Event.LoadMore -> loadImages() // Renamed from loadMoreImages
+            Event.LoadMore -> loadImages()
             is Event.SaveImage -> {
-                // TODO: 保存图片
+                // UI handles saving directly for now via ImageSaver
             }
         }
     }
