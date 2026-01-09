@@ -24,7 +24,7 @@ fun Image.toEntity(
     sortOrder: Long,
 ): EntityImage {
     return EntityImage(
-        id = UuidUtils.randomUuid(),
+        id = sourceId + parentId + sortOrder,
         sourceId = sourceId,
         parentId = parentId,
         parentType = parentType,
