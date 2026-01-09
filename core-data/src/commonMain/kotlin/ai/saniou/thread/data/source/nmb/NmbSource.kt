@@ -217,7 +217,11 @@ class NmbSource(
     }
 
     suspend fun getTopicMetadata(threadId: String, page: Int): Result<TopicMetadata> {
-        return getTopicDetail(threadId, page).map { it.toMetadata() }
+        return getTopicDetail(threadId, page).map { topic ->
+            topic.toMetadata().copy(
+                totalPages = (topic.commentCount / 19).toInt() + if (topic.commentCount % 19 > 0) 1 else 0
+            )
+        }
     }
 
     override fun getChannel(channelId: String): Flow<Channel?> {

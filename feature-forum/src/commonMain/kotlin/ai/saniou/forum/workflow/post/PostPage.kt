@@ -88,6 +88,7 @@ import org.jetbrains.compose.resources.stringResource
 import org.kodein.di.direct
 import org.kodein.di.instance
 import thread.feature_forum.generated.resources.Res
+import thread.feature_forum.generated.resources.*
 import thread.feature_forum.generated.resources.post_page_add_image
 import thread.feature_forum.generated.resources.post_page_back
 import thread.feature_forum.generated.resources.post_page_content

@@ -19,6 +19,12 @@ import kotlin.time.Instant
  * @param sourceName 来源标识
  * @param sourceUrl 来源URL
  * @param lastViewedCommentId 最后阅读的评论ID
+ * @param totalPages 总页数 (null 表示不支持跳页)
+ * @param poll 投票信息
+ * @param tags 标签列表
+ * @param agreeCount 点赞数
+ * @param disagreeCount 点踩数
+ * @param isCollected 是否已收藏
  */
 data class TopicMetadata(
     val id: String,
@@ -33,5 +39,11 @@ data class TopicMetadata(
     val isHidden: Boolean,
     val sourceName: String,
     val sourceUrl: String,
-    val lastViewedCommentId: String? = null
+    val lastViewedCommentId: String? = null,
+    val totalPages: Int? = null,
+    val poll: Poll? = null,
+    val tags: List<Tag>? = null,
+    val agreeCount: Long? = null,
+    val disagreeCount: Long? = null,
+    val isCollected: Boolean? = null
 )

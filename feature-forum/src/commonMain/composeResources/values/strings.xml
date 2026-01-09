@@ -25,6 +25,12 @@
     <string name="reply_count">回复: %1$s</string>
     <string name="jump_to_top">回顶</string>
     <string name="jump_to_page">跳转至</string>
+    <string name="poll_not_implemented">投票功能暂未实现</string>
+    <string name="copy_content">复制内容</string>
+    <string name="bookmark_thread">收藏串</string>
+    <string name="open_original_link">打开原链接</string>
+    <string name="bookmark_reply">收藏回复</string>
+    <string name="share">分享</string>
 
     <!-- TopicPage -->
     <string name="topic_page_post">发帖</string>

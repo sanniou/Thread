@@ -18,6 +18,7 @@ import ai.saniou.thread.domain.usecase.thread.GetTopicDetailUseCase
 import ai.saniou.thread.domain.usecase.thread.GetSubCommentsUseCase
 import ai.saniou.thread.data.manager.CdnManager
 import ai.saniou.thread.domain.model.forum.Image
+import ai.saniou.thread.domain.usecase.thread.GetTopicMetadataUseCase
 import ai.saniou.thread.domain.usecase.thread.UpdateTopicLastAccessTimeUseCase
 import ai.saniou.thread.domain.usecase.thread.UpdateTopicLastReadCommentIdUseCase
 import app.cash.paging.PagingData
@@ -47,7 +48,7 @@ data class TopicDetailViewModelParams(
 @OptIn(ExperimentalCoroutinesApi::class)
 class TopicDetailViewModel(
     params: TopicDetailViewModelParams,
-    private val getTopicDetailUseCase: GetTopicDetailUseCase,
+    private val getTopicMetadataUseCase: GetTopicMetadataUseCase,
     private val getTopicCommentsPagerUseCase: GetTopicCommentsPagerUseCase,
     private val getSubCommentsUseCase: GetSubCommentsUseCase,
     private val toggleSubscriptionUseCase: ToggleSubscriptionUseCase,
@@ -157,7 +158,7 @@ class TopicDetailViewModel(
     private fun observeTopicDetail(forceRefresh: Boolean = false) {
         screenModelScope.launch {
             _state.update { it.copy(topicWrapper = UiStateWrapper.Loading) }
-            getTopicDetailUseCase(sourceId, threadId, forceRefresh)
+            getTopicMetadataUseCase(sourceId, threadId, forceRefresh)
                 .catch { e ->
                     _state.update {
                         it.copy(topicWrapper = UiStateWrapper.Error(e.toAppError {
@@ -165,15 +166,12 @@ class TopicDetailViewModel(
                         }))
                     }
                 }
-                .collectLatest { topic ->
-                    observeChannelName(topic.channelId)
-                    val totalPages =
-                        (topic.commentCount / 30) + if (topic.commentCount % 30 > 0) 1 else 0
-
+                .collectLatest { metadata ->
+                    observeChannelName(metadata.channelId)
                     _state.update {
                         it.copy(
-                            topicWrapper = UiStateWrapper.Success(topic),
-                            totalPages = totalPages.toInt().coerceAtLeast(1)
+                            topicWrapper = UiStateWrapper.Success(metadata),
+                            totalPages = metadata.totalPages ?: 1
                         )
                     }
                 }
@@ -218,7 +216,7 @@ class TopicDetailViewModel(
 
     private fun toggleSubscription() {
         if (state.value.isTogglingSubscription) return
-        val topic = (state.value.topicWrapper as? UiStateWrapper.Success)?.value ?: return
+        val metadata = (state.value.topicWrapper as? UiStateWrapper.Success)?.value ?: return
 
         _state.update { it.copy(isTogglingSubscription = true) }
 
@@ -230,7 +228,7 @@ class TopicDetailViewModel(
                     _state.update { it.copy(isTogglingSubscription = false) }
                     return@launch
                 }
-            toggleSubscriptionUseCase(subscriptionKey, topic.id, currentSubscribed)
+            toggleSubscriptionUseCase(subscriptionKey, metadata.id, currentSubscribed)
                 .onSuccess { resultMessage ->
                     // UI state will be updated by the database flow
                     _state.update { it.copy(isTogglingSubscription = false) }
@@ -245,10 +243,10 @@ class TopicDetailViewModel(
 
     private fun copyLink() {
         screenModelScope.launch {
-            val topic = (state.value.topicWrapper as? UiStateWrapper.Success)?.value
-            val url = if (topic != null) {
+            val metadata = (state.value.topicWrapper as? UiStateWrapper.Success)?.value
+            val url = if (metadata != null) {
                 // If we have topic info, use its source URL or construct one
-                 topic.sourceUrl.ifEmpty { "https://nmb.com/t/$threadId" }
+                 metadata.sourceUrl.ifEmpty { "https://nmb.com/t/$threadId" }
             } else {
                  "https://nmb.com/t/$threadId"
             }
@@ -266,19 +264,19 @@ class TopicDetailViewModel(
 
     private fun bookmarkTopic() {
         screenModelScope.launch {
-            val topic = (state.value.topicWrapper as? UiStateWrapper.Success)?.value
-            if (topic == null) {
+            val metadata = (state.value.topicWrapper as? UiStateWrapper.Success)?.value
+            if (metadata == null) {
                 _effect.send(Effect.ShowSnackbar("无法收藏：数据未加载"))
                 return@launch
             }
 
             addBookmarkUseCase(
                 Bookmark.Quote(
-                    id = "nmb.Thread.${topic.id}",
+                    id = "nmb.Thread.${metadata.id}",
                     createdAt = Clock.System.now(),
                     tags = listOf(),
-                    content = topic.content,
-                    sourceId = topic.id,
+                    content = metadata.title ?: "", // Metadata doesn't have content, use title or empty
+                    sourceId = metadata.id,
                     sourceType = "nmb.Thread"
                 )
             )

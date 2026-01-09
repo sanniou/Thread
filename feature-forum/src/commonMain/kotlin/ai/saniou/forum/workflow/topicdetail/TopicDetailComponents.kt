@@ -50,10 +50,87 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.jetbrains.compose.resources.stringResource
+import thread.feature_forum.generated.resources.Res
+import thread.feature_forum.generated.resources.*
+
+@Composable
+fun TopicHeader(
+    metadata: TopicMetadata,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(
+                start = Dimens.padding_standard,
+                end = Dimens.padding_standard,
+                top = Dimens.padding_large,
+                bottom = Dimens.padding_small
+            )
+    ) {
+        // Title
+        if (!metadata.title.isNullOrBlank() && metadata.title != stringResource(Res.string.empty_title)) {
+            Text(
+                text = metadata.title!!,
+                style = MaterialTheme.typography.headlineSmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 0.sp,
+                    lineHeight = 32.sp
+                ),
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(Dimens.padding_small))
+        }
+
+        // Tags / Badges Row
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(Dimens.padding_tiny),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Source Badge
+            if (metadata.sourceName.isNotBlank()) {
+                Badge(
+                    text = metadata.sourceName.uppercase(),
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            // Status Badges
+            if (metadata.isAdmin) {
+                Badge(
+                    text = stringResource(Res.string.flag_admin),
+                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                    contentColor = MaterialTheme.colorScheme.onErrorContainer
+                )
+            }
+            if (metadata.isSage) {
+                Badge(
+                    text = "SAGE",
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+            }
+            // Custom Tags
+            metadata.tags?.forEach { tag ->
+                Badge(
+                    text = tag.name,
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+        }
+
+        // Polls (Placeholder for now)
+        if (metadata.poll != null) {
+            Spacer(modifier = Modifier.height(Dimens.padding_medium))
+            Text(stringResource(Res.string.poll_not_implemented), style = MaterialTheme.typography.bodySmall)
+        }
+    }
+}
 
 @Composable
 fun ThreadMainPost(
-    metadata: TopicMetadata,
     comment: Comment,
     refClick: (Long) -> Unit,
     onImageClick: (Image) -> Unit,
@@ -69,33 +146,14 @@ fun ThreadMainPost(
     Surface(
         modifier = modifier.fillMaxWidth(),
         color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 0.dp, // Flat design for modern look
+        tonalElevation = 0.dp,
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = Dimens.padding_large, bottom = Dimens.padding_medium),
+                .padding(vertical = Dimens.padding_medium),
         ) {
-            // 1. Title Area (If present) - Prominent and bold
-            val displayTitle = metadata.title ?: comment.title
-            if (!displayTitle.isNullOrBlank() && displayTitle != "无标题") {
-                Text(
-                    text = displayTitle,
-                    style = MaterialTheme.typography.headlineSmall.copy(
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 0.sp,
-                        lineHeight = 32.sp
-                    ),
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(
-                        start = Dimens.padding_standard,
-                        end = Dimens.padding_standard,
-                        bottom = Dimens.padding_medium
-                    )
-                )
-            }
-
-            // 2. Author & Meta Info Row
+            // Author Row
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -103,55 +161,17 @@ fun ThreadMainPost(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 ThreadAuthor(
-                    author = metadata.author,
-                    threadTime = metadata.createdAt.toRelativeTimeString(),
+                    author = comment.author,
+                    threadTime = comment.createdAt.toRelativeTimeString(),
                     isPo = true,
                     onClick = onUserClick,
-                    badges = {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(Dimens.padding_tiny),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            // Source Badge
-                            if (metadata.sourceName.isNotBlank()) {
-                                Badge(
-                                    text = metadata.sourceName.uppercase(),
-                                    containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                            // Status Badges
-                            if (metadata.isAdmin) {
-                                Badge(
-                                    text = "ADMIN",
-                                    containerColor = MaterialTheme.colorScheme.errorContainer,
-                                    contentColor = MaterialTheme.colorScheme.onErrorContainer
-                                )
-                            }
-                            if (metadata.isSage) {
-                                Badge(
-                                    text = "SAGE",
-                                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                                )
-                            }
-                        }
-                    },
                     modifier = Modifier.weight(1f)
-                )
-
-                // ID Display - Subtle
-                 Text(
-                    text = "#${metadata.id}",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.outline,
-                    modifier = Modifier.padding(start = 8.dp)
                 )
             }
 
             Spacer(modifier = Modifier.height(Dimens.padding_medium))
 
-            // 3. Content Body
+            // Content Body
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -172,8 +192,7 @@ fun ThreadMainPost(
 
             Spacer(modifier = Modifier.height(Dimens.padding_large))
 
-            // 4. Action Bar
-            // Using a cleaner, icon-focused design
+            // Action Bar
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -183,22 +202,22 @@ fun ThreadMainPost(
             ) {
                  ActionButton(
                     icon = Icons.Default.Reply,
-                    text = "回复",
+                    text = stringResource(Res.string.reply),
                     onClick = { /* TODO */ }
                 )
                 ActionButton(
                     icon = Icons.Outlined.ContentCopy,
-                    text = "复制",
+                    text = stringResource(Res.string.copy),
                     onClick = onCopy
                 )
                 ActionButton(
                     icon = Icons.Outlined.BookmarkBorder,
-                    text = "收藏",
+                    text = stringResource(Res.string.bookmark),
                     onClick = onBookmark
                 )
                 ActionButton(
                     icon = Icons.Outlined.Share,
-                    text = "分享",
+                    text = stringResource(Res.string.share),
                     onClick = { showMenu = true }
                 )
             }
@@ -209,7 +228,7 @@ fun ThreadMainPost(
                 onDismissRequest = { showMenu = false }
             ) {
                  DropdownMenuItem(
-                    text = { Text("复制内容") },
+                    text = { Text(stringResource(Res.string.copy_content)) },
                     leadingIcon = { Icon(Icons.Filled.ContentCopy, null) },
                     onClick = {
                         onCopy()
@@ -217,23 +236,13 @@ fun ThreadMainPost(
                     }
                 )
                 DropdownMenuItem(
-                    text = { Text("收藏串") },
+                    text = { Text(stringResource(Res.string.bookmark_thread)) },
                     leadingIcon = { Icon(Icons.Filled.BookmarkBorder, null) },
                     onClick = {
                         onBookmark()
                         showMenu = false
                     }
                 )
-                if (metadata.sourceUrl.isNotBlank()) {
-                    DropdownMenuItem(
-                        text = { Text("打开原链接") },
-                        leadingIcon = { Icon(Icons.Default.OpenInNew, null) },
-                        onClick = {
-                            uriHandler.openUri(metadata.sourceUrl)
-                            showMenu = false
-                        }
-                    )
-                }
             }
         }
     }
@@ -288,7 +297,7 @@ fun ThreadReply(
                 badges = {
                     if (reply.isAdmin) {
                         Badge(
-                            text = "ADMIN",
+                            text = stringResource(Res.string.flag_admin),
                             containerColor = MaterialTheme.colorScheme.error,
                             contentColor = MaterialTheme.colorScheme.onError
                         )
@@ -318,7 +327,7 @@ fun ThreadReply(
         }
 
         // Optional Title (for replies)
-        if (!reply.title.isNullOrBlank() && reply.title != "无标题") {
+        if (!reply.title.isNullOrBlank() && reply.title != stringResource(Res.string.empty_title)) {
             Spacer(modifier = Modifier.height(6.dp))
             Text(
                 text = reply.title!!,
@@ -345,7 +354,7 @@ fun ThreadReply(
             onDismissRequest = { showMenu = false }
         ) {
              DropdownMenuItem(
-                text = { Text("回复") },
+                text = { Text(stringResource(Res.string.reply)) },
                 leadingIcon = { Icon(Icons.Filled.Reply, null) },
                 onClick = {
                     onReplyClicked(reply.id)
@@ -353,7 +362,7 @@ fun ThreadReply(
                 }
             )
             DropdownMenuItem(
-                text = { Text("复制内容") },
+                text = { Text(stringResource(Res.string.copy_content)) },
                 leadingIcon = { Icon(Icons.Filled.ContentCopy, null) },
                 onClick = {
                     onCopy()
@@ -361,7 +370,7 @@ fun ThreadReply(
                 }
             )
             DropdownMenuItem(
-                text = { Text("收藏回复") },
+                text = { Text(stringResource(Res.string.bookmark_reply)) },
                 leadingIcon = { Icon(Icons.Filled.BookmarkBorder, null) },
                 onClick = {
                     onBookmark()

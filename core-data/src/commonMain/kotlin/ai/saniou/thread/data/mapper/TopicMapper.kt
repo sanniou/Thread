@@ -222,6 +222,14 @@ fun EntityTopic.toMetadata(
         isAdmin = admin > 0,
         isHidden = hide > 0,
         lastViewedCommentId = null,
+        totalPages = when (sourceId) {
+            "nmb" -> (commentCount / 19).toInt() + if (commentCount % 19 > 0) 1 else 0
+            "tieba" -> (commentCount / 30).toInt() + if (commentCount % 30 > 0) 1 else 0
+            else -> null
+        },
+        agreeCount = agreeCount,
+        disagreeCount = disagreeCount,
+        isCollected = isCollected
     )
 }
 
@@ -239,7 +247,15 @@ fun Topic.toMetadata(): TopicMetadata {
         isHidden = isHidden,
         sourceName = sourceId,
         sourceUrl = sourceUrl,
-        lastViewedCommentId = lastViewedCommentId
+        lastViewedCommentId = lastViewedCommentId,
+        totalPages = when (sourceId) {
+            "nmb" -> (commentCount / 19).toInt() + if (commentCount % 19 > 0) 1 else 0
+            "tieba" -> (commentCount / 30).toInt() + if (commentCount % 30 > 0) 1 else 0
+            else -> null
+        },
+        agreeCount = agreeCount,
+        disagreeCount = disagreeCount,
+        isCollected = isCollected
     )
 }
 

@@ -126,6 +126,9 @@ import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import org.jetbrains.compose.resources.stringResource
+import thread.feature_forum.generated.resources.Res
+import thread.feature_forum.generated.resources.*
 
 data class TopicDetailPage(
     val threadId: String,
@@ -210,7 +213,7 @@ data class TopicDetailPage(
                     actions = {
                         if (state.topicWrapper is UiStateWrapper.Success) {
                             IconButton(onClick = { viewModel.onEvent(Event.Refresh) }) {
-                                Icon(Icons.Default.Refresh, contentDescription = "刷新")
+                                Icon(Icons.Default.Refresh, contentDescription = stringResource(Res.string.refresh))
                             }
                             IconButton(
                                 onClick = { viewModel.onEvent(Event.ToggleSubscription) },
@@ -221,33 +224,35 @@ data class TopicDetailPage(
                                 } else {
                                     Icon(
                                         imageVector = if (state.isSubscribed) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                                        contentDescription = "收藏"
+                                        contentDescription = stringResource(Res.string.subscribe)
                                     )
                                 }
                             }
                             IconButton(onClick = { showMenu = !showMenu }) {
-                                Icon(Icons.Default.MoreVert, contentDescription = "更多选项")
+                                Icon(Icons.Default.MoreVert, contentDescription = stringResource(Res.string.more_options))
                             }
                             DropdownMenu(
                                 expanded = showMenu,
                                 onDismissRequest = { showMenu = false }
                             ) {
+                                if (state.totalPages > 1) {
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(Res.string.jump_page)) },
+                                        onClick = {
+                                            showJumpDialog = true
+                                            showMenu = false
+                                        }
+                                    )
+                                }
                                 DropdownMenuItem(
-                                    text = { Text("跳页") },
-                                    onClick = {
-                                        showJumpDialog = true
-                                        showMenu = false
-                                    }
-                                )
-                                DropdownMenuItem(
-                                    text = { Text("复制链接") },
+                                    text = { Text(stringResource(Res.string.copy_link)) },
                                     onClick = {
                                         viewModel.onEvent(Event.CopyLink)
                                         showMenu = false
                                     }
                                 )
                                 DropdownMenuItem(
-                                    text = { Text("收藏本帖") },
+                                    text = { Text(stringResource(Res.string.bookmark_thread)) },
                                     onClick = {
                                         viewModel.onEvent(Event.BookmarkTopic)
                                         showMenu = false
@@ -264,12 +269,12 @@ data class TopicDetailPage(
                 if (state.topicWrapper is UiStateWrapper.Success) {
                     FloatingActionButton(
                         onClick = {
-                            (state.topicWrapper as? UiStateWrapper.Success<Topic>)?.value?.let { topic ->
-                                navigator.push(PostPage(resto = topic.id.toInt()))
+                            (state.topicWrapper as? UiStateWrapper.Success<TopicMetadata>)?.value?.let { metadata ->
+                                navigator.push(PostPage(resto = metadata.id.toInt()))
                             }
                         }
                     ) {
-                        Icon(Icons.Default.Edit, contentDescription = "回复")
+                        Icon(Icons.Default.Edit, contentDescription = stringResource(Res.string.reply))
                     }
                 }
             }
@@ -384,10 +389,10 @@ private fun ThreadContentRouter(
                 onRetry = onRefresh
             )
         }
-    ) { topic ->
+    ) { metadata ->
         ThreadSuccessContent(
             state = state,
-            topic = topic,
+            metadata = metadata,
             lazyListState = lazyListState,
             onRefresh = onRefresh,
             onReplyClicked = onReplyClicked,
@@ -470,7 +475,7 @@ private fun ThreadShimmer() {
                         .height(16.dp)
                         .clip(RoundedCornerShape(4.dp))
                         .background(brush)
-                )
+                    )
                 VerticalSpacerSmall()
                 Box(
                     modifier = Modifier
@@ -531,7 +536,7 @@ private fun ThreadReplyShimmer() {
 @Composable
 fun ThreadSuccessContent(
     state: State,
-    topic: Topic,
+    metadata: TopicMetadata,
     lazyListState: LazyListState,
     onRefresh: () -> Unit,
     onReplyClicked: (String) -> Unit,
@@ -595,7 +600,7 @@ fun ThreadSuccessContent(
     ) {
         ThreadList(
             state = state,
-            topic = topic,
+            metadata = metadata,
             lazyListState = lazyListState,
             onReplyClicked = onReplyClicked,
             onTogglePoOnly = onTogglePoOnly,
@@ -618,7 +623,7 @@ fun ThreadSuccessContent(
 @Composable
 private fun ThreadList(
     state: State,
-    topic: Topic,
+    metadata: TopicMetadata,
     lazyListState: LazyListState,
     onReplyClicked: (String) -> Unit,
     onTogglePoOnly: () -> Unit,
@@ -638,67 +643,52 @@ private fun ThreadList(
         contentPadding = PaddingValues(bottom = 80.dp),
         verticalArrangement = Arrangement.spacedBy(Dimens.padding_small)
     ) {
-        // Main Content
+        // Header (Title, Tags, etc.)
         item {
-            // Construct a Comment object from Topic for ThreadMainPost
-            // This is a bit of a hack, ideally ThreadMainPost should accept Topic or we should have a unified model
-            val mainComment = Comment(
-                id = topic.id,
-                topicId = topic.id,
-                author = topic.author,
-                createdAt = topic.createdAt,
-                title = topic.title,
-                content = topic.content,
-                images = topic.images,
-                isAdmin = topic.isAdmin,
-                floor = 1,
-                replyToId = null,
-                sourceId = topic.sourceId,
-                agreeCount = topic.agreeCount,
-                disagreeCount = topic.disagreeCount,
-                subCommentCount = topic.commentCount.toInt(),
-                authorLevel = null,
-                isPo = true
-            )
-
-            val metadata = topic.toMetadata()
-
-            ThreadMainPost(
-                metadata = metadata,
-                comment = mainComment,
-                refClick = onRefClick,
-                onImageClick = onImageClick,
-                onCopy = { onCopy(mainComment.content) },
-                onBookmark = { onBookmark(mainComment) },
-                onBookmarkImage = onBookmarkImage,
-                onUserClick = onUserClick
-            )
+            TopicHeader(metadata = metadata)
         }
 
         // Toolbar
         stickyHeader {
             ThreadToolbar(
-                replyCount = topic.commentCount.toString(),
+                replyCount = metadata.commentCount.toString(),
                 isPoOnly = state.isPoOnlyMode,
                 onTogglePoOnly = onTogglePoOnly
             )
         }
 
-        // Replies
+        // Replies (including Main Post if it's the first item)
         items(replies.itemCount) { index ->
             val reply = replies[index]
             if (reply != null) {
-                ThreadReply(
-                    reply = reply,
-                    poUserHash = topic.author.id,
-                    onReplyClicked = onReplyClicked,
-                    refClick = onRefClick,
-                    onImageClick = onImageClick,
-                    onCopy = { onCopy(reply.content) },
-                    onBookmark = { onBookmark(reply) },
-                    onBookmarkImage = onBookmarkImage,
-                    onUserClick = onUserClick
-                )
+                // Check if this is the main post (floor 1 or id matches topic id)
+                // Note: Some sources might not have floor 1, or ID might differ.
+                // But typically floor 1 is the main post.
+                val isMainPost = reply.floor == 1 || reply.id == metadata.id
+
+                if (isMainPost) {
+                    ThreadMainPost(
+                        comment = reply,
+                        refClick = onRefClick,
+                        onImageClick = onImageClick,
+                        onCopy = { onCopy(reply.content) },
+                        onBookmark = { onBookmark(reply) },
+                        onBookmarkImage = onBookmarkImage,
+                        onUserClick = onUserClick
+                    )
+                } else {
+                    ThreadReply(
+                        reply = reply,
+                        poUserHash = metadata.author.id,
+                        onReplyClicked = onReplyClicked,
+                        refClick = onRefClick,
+                        onImageClick = onImageClick,
+                        onCopy = { onCopy(reply.content) },
+                        onBookmark = { onBookmark(reply) },
+                        onBookmarkImage = onBookmarkImage,
+                        onUserClick = onUserClick
+                    )
+                }
                 HorizontalDivider(
                     thickness = 0.5.dp,
                     color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)
@@ -738,17 +728,17 @@ private fun EmptyReplyContent(onRefresh: () -> Unit) {
                 tint = MaterialTheme.colorScheme.primary
             )
             Text(
-                text = "暂无回复",
+                text = stringResource(Res.string.no_replies),
                 style = MaterialTheme.typography.titleMedium
             )
             Text(
-                text = "成为第一个回复的人吧！",
+                text = stringResource(Res.string.be_first_reply),
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Button(onClick = onRefresh) {
-                Text("刷新")
+                Text(stringResource(Res.string.refresh))
             }
         }
     }
@@ -774,7 +764,7 @@ private fun ThreadToolbar(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = "全部回复 ($replyCount)",
+                text = stringResource(Res.string.reply_count, replyCount),
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
@@ -783,7 +773,7 @@ private fun ThreadToolbar(
             FilterChip(
                 selected = isPoOnly,
                 onClick = onTogglePoOnly,
-                label = { Text("只看PO") },
+                label = { Text(stringResource(Res.string.view_po_only)) },
                 leadingIcon = if (isPoOnly) {
                     {
                         Icon(
@@ -806,4 +796,3 @@ private fun ThreadToolbar(
         }
     }
 }
-

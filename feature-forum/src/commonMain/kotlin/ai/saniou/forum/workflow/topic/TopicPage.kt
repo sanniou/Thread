@@ -64,6 +64,7 @@ import org.kodein.di.DI
 import org.kodein.di.direct
 import org.kodein.di.instance
 import thread.feature_forum.generated.resources.Res
+import thread.feature_forum.generated.resources.*
 import thread.feature_forum.generated.resources.topic_page_back
 import thread.feature_forum.generated.resources.topic_page_interval
 import thread.feature_forum.generated.resources.topic_page_menu

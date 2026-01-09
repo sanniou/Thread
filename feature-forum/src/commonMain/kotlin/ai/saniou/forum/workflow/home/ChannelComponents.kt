@@ -45,6 +45,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import thread.feature_forum.generated.resources.Res
+import thread.feature_forum.generated.resources.*
 import thread.feature_forum.generated.resources.forum_favorite_add
 import thread.feature_forum.generated.resources.forum_favorite_remove
 import thread.feature_forum.generated.resources.forum_limited_time

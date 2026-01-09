@@ -81,6 +81,7 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import org.kodein.di.DI
 import thread.feature_forum.generated.resources.Res
+import thread.feature_forum.generated.resources.*
 import thread.feature_forum.generated.resources.category_collapse
 import thread.feature_forum.generated.resources.category_expand
 import thread.feature_forum.generated.resources.drawer_search

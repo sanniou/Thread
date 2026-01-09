@@ -29,7 +29,7 @@ interface TopicDetailContract {
      * @property isTogglingSubscription 是否正在切换订阅状态
      */
     data class State(
-        val topicWrapper: UiStateWrapper<Topic> = UiStateWrapper.Loading,
+        val topicWrapper: UiStateWrapper<TopicMetadata> = UiStateWrapper.Loading,
         val subCommentsWrapper: UiStateWrapper<List<Comment>> = UiStateWrapper.Loading,
         val showSubCommentsDialog: Boolean = false,
         val activeCommentId: String? = null,
