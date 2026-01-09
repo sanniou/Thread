@@ -8,7 +8,6 @@ import ai.saniou.coreui.widgets.RichText
 import ai.saniou.coreui.widgets.SaniouAppBarTitle
 import ai.saniou.coreui.widgets.SaniouTopAppBar
 import ai.saniou.coreui.widgets.VerticalSpacerSmall
-import ai.saniou.forum.di.nmbdi
 import ai.saniou.forum.ui.components.LoadingIndicator
 import ai.saniou.forum.workflow.home.ListThreadPage
 import ai.saniou.forum.workflow.topicdetail.TopicDetailPage
@@ -20,7 +19,6 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,15 +27,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -84,28 +79,27 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.flow.collectLatest
-import org.kodein.di.DI
+import org.kodein.di.compose.localDI
 import org.kodein.di.direct
 import org.kodein.di.instance
 
 data class TrendPage(
-    val di: DI = nmbdi,
     val onMenuClick: (() -> Unit)? = null,
 ) : Screen {
 
     @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
     @Composable
     override fun Content() {
+        val dI = localDI()
         val navigator = LocalNavigator.currentOrThrow
-        val sourceId = LocalForumSourceId.current
-        val viewModel: TrendViewModel = rememberScreenModel(tag = sourceId) {
-            nmbdi.direct.instance(arg = sourceId)
+        val forumSourceId = LocalForumSourceId.current
+        val viewModel: TrendViewModel = rememberScreenModel(tag = forumSourceId) {
+            dI.direct.instance(arg = forumSourceId)
         }
         val state by viewModel.state.collectAsState()
         val snackbarHostState = remember { SnackbarHostState() }
@@ -341,7 +335,7 @@ data class TrendPage(
                     .padding(innerPadding)
             ) { page ->
                 val type = state.availableTrendTypes.getOrNull(page) ?: return@HorizontalPager
-                
+
                 Box(modifier = Modifier.fillMaxSize()) {
                     if (type == TrendType.HOT && state.currentSource.id != "tieba") {
                         TrendHotList(
@@ -367,7 +361,7 @@ data class TrendPage(
     fun TrendHotList(
         state: TrendContract.State,
         onRefresh: () -> Unit,
-        onItemClick: (String) -> Unit
+        onItemClick: (String) -> Unit,
     ) {
         if (state.isLoading) {
             LoadingIndicator()
@@ -490,7 +484,7 @@ data class TrendPage(
     private fun TrendTab(
         text: String,
         selected: Boolean,
-        onSelected: () -> Unit
+        onSelected: () -> Unit,
     ) {
         val textColor by animateColorAsState(
             targetValue = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
@@ -516,7 +510,7 @@ data class TrendPage(
     @Composable
     private fun RankText(
         index: Int,
-        rank: String
+        rank: String,
     ) {
         val color = when (index) {
             0 -> Color(0xFFD50000) // RedA700

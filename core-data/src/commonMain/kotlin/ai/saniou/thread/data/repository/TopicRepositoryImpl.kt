@@ -9,6 +9,7 @@ import ai.saniou.thread.data.paging.DefaultRemoteKeyStrategy
 import ai.saniou.thread.data.paging.GenericRemoteMediator
 import ai.saniou.thread.data.paging.SqlDelightPagingSource
 import ai.saniou.thread.data.source.nmb.remote.dto.RemoteKeyType
+import ai.saniou.thread.data.source.tieba.TiebaSource
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.domain.model.forum.Comment
 import ai.saniou.thread.domain.model.forum.Image
@@ -161,6 +162,9 @@ class TopicRepositoryImpl(
         val source = sourceMap[sourceId]
             ?: return Result.failure(Exception("Source not found: $sourceId"))
 
+        if (source !is TiebaSource) {
+            return Result.failure(Exception("getSubComments is not supported for source: $sourceId"))
+        }
         return source.getSubComments(topicId, commentId, page)
     }
 

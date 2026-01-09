@@ -12,6 +12,7 @@ import ai.saniou.thread.domain.repository.SourceRepository
 import ai.saniou.thread.domain.repository.TrendRepository
 import ai.saniou.thread.domain.usecase.misc.GetTrendUseCase
 import app.cash.paging.PagingData
+import app.cash.paging.cachedIn
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -52,7 +53,7 @@ class TrendViewModel(
                 TrendType.CONCERN -> trendRepository.getConcernFeed()
                 TrendType.PERSONALIZED -> trendRepository.getPersonalizedFeed()
             }
-        }
+        }.cachedIn(screenModelScope)
 
     init {
         screenModelScope.launch {
@@ -154,7 +155,7 @@ class TrendViewModel(
     private fun loadTrend(forceRefresh: Boolean = false, dayOffset: Int = state.value.dayOffset) {
         screenModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null, dayOffset = dayOffset) }
-            
+
             val currentSourceId = _state.value.currentSource.id
 
             getTrendUseCase(currentSourceId, forceRefresh, dayOffset)
