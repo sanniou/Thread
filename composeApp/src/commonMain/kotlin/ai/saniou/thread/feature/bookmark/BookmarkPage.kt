@@ -2,7 +2,6 @@ package ai.saniou.thread.feature.bookmark
 
 import ai.saniou.coreui.widgets.NetworkImage
 import ai.saniou.coreui.widgets.SaniouTopAppBar
-import ai.saniou.forum.ui.components.NmbImage
 import ai.saniou.forum.workflow.topicdetail.TopicDetailPage
 import ai.saniou.reader.workflow.articledetail.ArticleDetailPage
 import ai.saniou.thread.domain.model.bookmark.Bookmark

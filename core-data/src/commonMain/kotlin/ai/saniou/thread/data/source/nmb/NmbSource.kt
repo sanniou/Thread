@@ -188,7 +188,7 @@ class NmbSource(
 
             if (response is SaniouResult.Success) {
                 val topics = response.data.map {
-                    it.toDomain()
+                    it.toDomain(cdnManager.currentCdnUrl.value)
                 }
                 Result.success(topics)
             } else {
@@ -207,7 +207,7 @@ class NmbSource(
 
             val response = nmbXdApi.thread(tid, page.toLong())
             if (response is SaniouResult.Success) {
-                Result.success(response.data.toDomain())
+                Result.success(response.data.toDomain(cdnManager.currentCdnUrl.value))
             } else {
                 Result.failure((response as SaniouResult.Error).ex)
             }
@@ -370,7 +370,7 @@ class NmbSource(
                     if (page == 1) {
                         // 将 Thread (主楼) 作为 Comment 存入
                         // 主楼也视为一个 Comment
-                        comments.add(thread.toDomainComment(sourceId = id))
+                        comments.add(thread.toDomainComment(sourceId = id, cdnUrl = cdnManager.currentCdnUrl.value))
                     }
 
                     // 添加回复
@@ -378,7 +378,7 @@ class NmbSource(
                         thread.replies
                             //"id":9999999,"user_hash":"Tips"
                             .filter { it.id != 9999999L }
-                            .map { it.toDomain(threadId) })
+                            .map { it.toDomain(threadId, cdnManager.currentCdnUrl.value) })
 
                     Result.success(comments)
                 }

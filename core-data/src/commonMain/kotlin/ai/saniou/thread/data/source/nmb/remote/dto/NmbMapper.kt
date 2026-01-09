@@ -1,21 +1,19 @@
 package ai.saniou.thread.data.source.nmb.remote.dto
 
 import ai.saniou.corecommon.utils.toTime
-import ai.saniou.thread.db.table.forum.GetTopic
-import ai.saniou.thread.db.table.forum.SelectSubscriptionTopic
-import ai.saniou.thread.db.table.forum.Comment as EntityComment
-import ai.saniou.thread.db.table.forum.TimeLine
-import ai.saniou.thread.domain.model.forum.Topic
-import ai.saniou.thread.domain.model.forum.Comment
-import ai.saniou.thread.domain.model.forum.Author
-import ai.saniou.thread.domain.model.forum.Image
-import ai.saniou.thread.domain.model.forum.Channel
 import ai.saniou.thread.data.mapper.toDomain
+import ai.saniou.thread.db.table.forum.GetTopic
 import ai.saniou.thread.db.table.forum.ImageQueries
+import ai.saniou.thread.db.table.forum.SelectSubscriptionTopic
+import ai.saniou.thread.db.table.forum.TimeLine
+import ai.saniou.thread.domain.model.forum.Author
+import ai.saniou.thread.domain.model.forum.Channel
+import ai.saniou.thread.domain.model.forum.Comment
+import ai.saniou.thread.domain.model.forum.Image
 import ai.saniou.thread.domain.model.forum.ImageType
+import ai.saniou.thread.domain.model.forum.Topic
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
-import ai.saniou.thread.db.table.forum.Image as EntityImage
 
 fun TimeLine.toDomain(): Channel = Channel(
     id = id.toString(),
@@ -47,12 +45,13 @@ fun TimeLine.toDomain(): Channel = Channel(
 )
 
 // Helper to create single Image list
-private fun createImageList(img: String?, ext: String?): List<Image> {
+private fun createImageList(img: String?, ext: String?, cdnUrl: String): List<Image> {
     return if (!img.isNullOrEmpty() && !ext.isNullOrEmpty()) {
+        val baseUrl = cdnUrl.removeSuffix("/")
         listOf(
             Image(
-                originalUrl = "$img$ext",
-                thumbnailUrl = "$img$ext",
+                originalUrl = "$baseUrl/image/$img$ext",
+                thumbnailUrl = "$baseUrl/thumb/$img$ext",
                 extension = ext
             )
         )
@@ -163,7 +162,7 @@ fun GetTopic.toDomain(imageQueries: ImageQueries? = null): Topic {
 }
 
 @OptIn(ExperimentalTime::class)
-fun Thread.toDomain(): Topic = Topic(
+fun Thread.toDomain(cdnUrl: String): Topic = Topic(
     id = id.toString(),
     sourceName = "nmb",
     sourceId = "nmb",
@@ -175,18 +174,18 @@ fun Thread.toDomain(): Topic = Topic(
     channelId = fid.toString(),
     channelName = "",
     commentCount = replyCount,
-    images = createImageList(img, ext),
+    images = createImageList(img, ext, cdnUrl),
     isSage = sage > 0,
     isAdmin = admin > 0,
     isHidden = hide > 0,
     isLocal = false,
-    comments = replies.filter { it.id != 9999999L }.map { it.toDomain(id.toString()) },
+    comments = replies.filter { it.id != 9999999L }.map { it.toDomain(id.toString(), cdnUrl) },
     summary = null,
-    remainingCount = (replyCount - replies.size).coerceAtLeast(0).toLong()
+    remainingCount = (replyCount - replies.size).coerceAtLeast(0)
 )
 
 @OptIn(ExperimentalTime::class)
-fun ThreadReply.toDomain(topicId: String): Comment {
+fun ThreadReply.toDomain(topicId: String, cdnUrl: String): Comment {
     return Comment(
         id = id.toString(),
         topicId = topicId,
@@ -194,7 +193,7 @@ fun ThreadReply.toDomain(topicId: String): Comment {
         createdAt = now.toTime(),
         title = title,
         content = content,
-        images = createImageList(img, ext),
+        images = createImageList(img, ext, cdnUrl),
         isAdmin = admin > 0,
         floor = null, // API might not provide floor
         replyToId = null,
@@ -203,7 +202,7 @@ fun ThreadReply.toDomain(topicId: String): Comment {
 }
 
 @OptIn(ExperimentalTime::class)
-fun Thread.toDomainComment(sourceId: String): Comment {
+fun Thread.toDomainComment(sourceId: String, cdnUrl: String): Comment {
     return Comment(
         id = id.toString(),
         topicId = id.toString(), // 主楼的 topicId 就是它自己
@@ -211,10 +210,47 @@ fun Thread.toDomainComment(sourceId: String): Comment {
         createdAt = now.toTime(),
         title = title,
         content = content,
-        images = createImageList(img, ext),
+        images = createImageList(img, ext, cdnUrl),
         isAdmin = admin > 0,
         floor = 1, // 主楼默认 1 楼
         replyToId = null,
         sourceId = sourceId
+    )
+}
+
+
+@OptIn(ExperimentalTime::class)
+fun ForumThread.toDomain(cdnUrl: String): Topic {
+    val author = Author(
+        id = userHash,
+        name = name,
+        sourceName = "nmb"
+    )
+    val images = createImageList(img, ext, cdnUrl)
+
+    return Topic(
+        id = id.toString(),
+        sourceName = "nmb",
+        sourceId = "nmb",
+        sourceUrl = "https://nmb.ai/thread/$id",
+        title = title,
+        content = content,
+        summary = content,
+        author = author,
+        createdAt = now.toTime(),
+        channelId = fid.toString(), // channelId
+        channelName = "",
+        commentCount = replyCount, // commentCount
+        images = images,
+        isSage = sage > 0,
+        isAdmin = admin > 0,
+        isHidden = hide > 0,
+        isLocal = false,
+        // fixme  后续处理 lastReadCommentId 和 comments
+        lastViewedCommentId = null,
+        orderKey = (replies.maxOfOrNull { it.now.nowToEpochMilliseconds() }
+            ?: now.nowToEpochMilliseconds()),
+        comments = replies.map { it.toDomain(id.toString(), cdnUrl) },
+        remainingCount = remainingCount
     )
 }

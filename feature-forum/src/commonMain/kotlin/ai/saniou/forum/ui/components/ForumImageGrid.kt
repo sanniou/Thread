@@ -39,7 +39,7 @@ import androidx.compose.ui.unit.dp
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun NmbImageGrid(
+fun ForumImageGrid(
     images: List<Image>,
     onImageClick: (Image) -> Unit,
     onImageLongClick: ((Image) -> Unit)? = null,
@@ -56,29 +56,38 @@ fun NmbImageGrid(
             1 -> {
                 val image = images.first()
 
-                NmbImageItem(
+                ForumImage(
                     image = image,
+                    isThumb = true,
                     modifier = Modifier
                         .height(Dimens.image_height_medium)
                         .wrapContentWidth(Alignment.Start)
-                        .clip(MaterialTheme.shapes.small),
+                        .clip(MaterialTheme.shapes.small)
+                        .combinedClickable(
+                            onClick = { onImageClick(image) },
+                            onLongClick = { onImageLongClick?.invoke(image) }
+                        ),
                     contentScale = ContentScale.FillHeight,
-                    onClick = { onImageClick(image) },
-                    onLongClick = { onImageLongClick?.invoke(image) }
+                    contentDescription = "帖子图片"
                 )
             }
 
             2 -> {
                 Row(horizontalArrangement = Arrangement.spacedBy(spacing)) {
                     images.forEach { image ->
-                        NmbImageItem(
+                        ForumImage(
                             image = image,
+                            isThumb = true,
                             modifier = Modifier
                                 .weight(1f)
                                 .aspectRatio(1f)
-                                .clip(RoundedCornerShape(radius)),
-                            onClick = { onImageClick(image) },
-                            onLongClick = { onImageLongClick?.invoke(image) }
+                                .clip(RoundedCornerShape(radius))
+                                .combinedClickable(
+                                    onClick = { onImageClick(image) },
+                                    onLongClick = { onImageLongClick?.invoke(image) }
+                                ),
+                            contentDescription = "帖子图片",
+                            contentScale = ContentScale.Crop
                         )
                     }
                 }
@@ -88,27 +97,37 @@ fun NmbImageGrid(
                 Column(verticalArrangement = Arrangement.spacedBy(spacing)) {
                     Row(horizontalArrangement = Arrangement.spacedBy(spacing)) {
                         images.take(2).forEach { image ->
-                            NmbImageItem(
+                            ForumImage(
                                 image = image,
+                                isThumb = true,
                                 modifier = Modifier
                                     .weight(1f)
                                     .aspectRatio(1f)
-                                    .clip(RoundedCornerShape(radius)),
-                                onClick = { onImageClick(image) },
-                                onLongClick = { onImageLongClick?.invoke(image) }
+                                    .clip(RoundedCornerShape(radius))
+                                    .combinedClickable(
+                                        onClick = { onImageClick(image) },
+                                        onLongClick = { onImageLongClick?.invoke(image) }
+                                    ),
+                                contentDescription = "帖子图片",
+                                contentScale = ContentScale.Crop
                             )
                         }
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(spacing)) {
                         images.drop(2).take(2).forEach { image ->
-                            NmbImageItem(
+                            ForumImage(
                                 image = image,
+                                isThumb = true,
                                 modifier = Modifier
                                     .weight(1f)
                                     .aspectRatio(1f)
-                                    .clip(RoundedCornerShape(radius)),
-                                onClick = { onImageClick(image) },
-                                onLongClick = { onImageLongClick?.invoke(image) }
+                                    .clip(RoundedCornerShape(radius))
+                                    .combinedClickable(
+                                        onClick = { onImageClick(image) },
+                                        onLongClick = { onImageLongClick?.invoke(image) }
+                                    ),
+                                contentDescription = "帖子图片",
+                                contentScale = ContentScale.Crop
                             )
                         }
                     }
@@ -130,13 +149,18 @@ fun NmbImageGrid(
                                     val remaining = count - 9
 
                                     Box(modifier = Modifier.weight(1f).aspectRatio(1f)) {
-                                        NmbImageItem(
+                                        ForumImage(
                                             image = image,
+                                            isThumb = true,
                                             modifier = Modifier
                                                 .matchParentSize()
-                                                .clip(RoundedCornerShape(radius)),
-                                            onClick = { onImageClick(image) },
-                                            onLongClick = { onImageLongClick?.invoke(image) }
+                                                .clip(RoundedCornerShape(radius))
+                                                .combinedClickable(
+                                                    onClick = { onImageClick(image) },
+                                                    onLongClick = { onImageLongClick?.invoke(image) }
+                                                ),
+                                            contentDescription = "帖子图片",
+                                            contentScale = ContentScale.Crop
                                         )
 
                                         if (isOverlay) {
@@ -173,24 +197,3 @@ fun NmbImageGrid(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-private fun NmbImageItem(
-    image: Image,
-    modifier: Modifier,
-    contentScale: ContentScale = ContentScale.Crop,
-    onClick: () -> Unit,
-    onLongClick: (() -> Unit)? = null,
-) {
-    NmbImage(
-        imgPath = image.thumbnailUrl,
-        ext = "",
-        isThumb = true,
-        contentDescription = "帖子图片",
-        modifier = modifier.combinedClickable(
-            onClick = onClick,
-            onLongClick = onLongClick
-        ),
-        contentScale = contentScale
-    )
-}

@@ -44,7 +44,7 @@ fun ThreadBody(
 
         if (images.isNotEmpty()) {
             Spacer(modifier = Modifier.height(Dimens.padding_medium))
-            NmbImageGrid(
+            ForumImageGrid(
                 images = images,
                 onImageClick = onImageClick,
                 onImageLongClick = onImageLongClick,

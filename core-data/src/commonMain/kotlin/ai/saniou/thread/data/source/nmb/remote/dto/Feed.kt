@@ -1,9 +1,5 @@
 package ai.saniou.thread.data.source.nmb.remote.dto
 
-import ai.saniou.corecommon.utils.toTime
-import ai.saniou.thread.domain.model.forum.Author
-import ai.saniou.thread.domain.model.forum.Image
-import ai.saniou.thread.domain.model.forum.Topic
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
@@ -85,52 +81,6 @@ fun String.nowToEpochMilliseconds(): Long {
 
     // 4. 转为 epoch milliseconds（系统所在时区）
     return ldt.toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds()
-}
-
-@OptIn(ExperimentalTime::class)
-fun ForumThread.toDomain(): Topic {
-    val author = Author(
-        id = userHash,
-        name = name,
-        sourceName = "nmb"
-    )
-    val images = if (img.isNotBlank() && ext.isNotBlank()) {
-        listOf(
-            Image(
-                originalUrl = "$img$ext",
-                thumbnailUrl = "$img$ext",
-                extension = ext
-            )
-        )
-    } else {
-        emptyList()
-    }
-
-    return Topic(
-        id = id.toString(),
-        sourceName = "nmb",
-        sourceId = "nmb",
-        sourceUrl = "https://nmb.ai/thread/$id",
-        title = title,
-        content = content,
-        summary = content,
-        author = author,
-        createdAt = now.toTime(),
-        channelId = fid.toString(), // channelId
-        channelName = "",
-        commentCount = replyCount, // commentCount
-        images = images,
-        isSage = sage > 0,
-        isAdmin = admin > 0,
-        isHidden = hide > 0,
-        isLocal = false,
-        // fixme  后续处理 lastReadCommentId 和 comments
-        lastViewedCommentId = null,
-        orderKey = (replies.maxOfOrNull { it.now.nowToEpochMilliseconds() }
-            ?: now.nowToEpochMilliseconds()),
-        comments = replies.map { it.toDomain(id.toString()) },
-        remainingCount = remainingCount
-    )
 }
 
 interface IBaseThread : IBaseAuthor, IThreadBody {
