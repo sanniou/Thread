@@ -1,16 +1,10 @@
 package ai.saniou.forum.workflow.trend
 
-import ai.saniou.corecommon.utils.toRelativeTimeString
-import ai.saniou.coreui.state.toAppError
 import ai.saniou.forum.workflow.trend.TrendContract.Effect
 import ai.saniou.forum.workflow.trend.TrendContract.Event
 import ai.saniou.forum.workflow.trend.TrendContract.State
-import ai.saniou.thread.domain.model.forum.Topic
-import ai.saniou.thread.domain.model.forum.TrendType
-import ai.saniou.thread.domain.repository.SettingsRepository
-import ai.saniou.thread.domain.repository.SourceRepository
+import ai.saniou.thread.domain.model.TrendItem
 import ai.saniou.thread.domain.repository.TrendRepository
-import ai.saniou.thread.domain.usecase.misc.GetTrendUseCase
 import app.cash.paging.PagingData
 import app.cash.paging.cachedIn
 import cafe.adriel.voyager.core.model.ScreenModel
@@ -30,9 +24,6 @@ import kotlinx.coroutines.launch
 
 class TrendViewModel(
     private val initialSourceId: String,
-    private val getTrendUseCase: GetTrendUseCase,
-    private val settingsRepository: SettingsRepository,
-    private val sourceRepository: SourceRepository,
     private val trendRepository: TrendRepository
 ) : ScreenModel {
 
@@ -42,65 +33,40 @@ class TrendViewModel(
     private val _effect = Channel<Effect>()
     val effect = _effect.receiveAsFlow()
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val feedPagingFlow: Flow<PagingData<Topic>> = state
-        .map { it.currentSource.id to it.selectedTrendType }
-        .distinctUntilChanged()
-        .flatMapLatest { (sourceId, trendType) ->
-            when (trendType) {
-                TrendType.HOT -> if (sourceId == "tieba") trendRepository.getHotThreads() else emptyFlow()
-                TrendType.TOPIC -> trendRepository.getTopicList()
-                TrendType.CONCERN -> trendRepository.getConcernFeed()
-                TrendType.PERSONALIZED -> trendRepository.getPersonalizedFeed()
-            }
-        }.cachedIn(screenModelScope)
-
     init {
         screenModelScope.launch {
             loadAvailableSources()
-            updateCurrentSourceInfo(initialSourceId)
-            loadData()
+            selectSource(initialSourceId)
         }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val trendPagingFlow: Flow<PagingData<TrendItem>> = state
+        .map { Triple(it.selectedSource, it.selectedTab, it.trendParams) }
+        .distinctUntilChanged()
+        .flatMapLatest { (source, tab, params) ->
+            if (source == null || tab == null) {
+                emptyFlow()
+            } else {
+                trendRepository.getTrendPagingData(source.id, tab, params)
+            }
+        }.cachedIn(screenModelScope)
+
     private fun loadAvailableSources() {
-        val sources = sourceRepository.getAvailableSources().map {
-            TrendContract.SourceInfo(
-                id = it.id,
-                name = it.name,
-                supportsHistory = it.capabilities.supportsTrendHistory
-            )
-        }
+        val sources = trendRepository.getAvailableTrendSources()
         _state.update { it.copy(availableSources = sources) }
     }
 
-    private fun updateCurrentSourceInfo(sourceId: String) {
-        val source = sourceRepository.getSource(sourceId)
+    private fun selectSource(sourceId: String) {
+        val source = trendRepository.getTrendSource(sourceId) ?: trendRepository.getAvailableTrendSources().firstOrNull()
         if (source != null) {
-            val availableTypes = mutableListOf<TrendType>()
-            if (source.capabilities.supportsTrend) {
-                availableTypes.add(TrendType.HOT)
-            }
-            if (source.id == "tieba") {
-                availableTypes.add(TrendType.HOT)
-                availableTypes.add(TrendType.TOPIC)
-                availableTypes.add(TrendType.CONCERN)
-                availableTypes.add(TrendType.PERSONALIZED)
-            }
-
-            if (availableTypes.isEmpty()) {
-                availableTypes.add(TrendType.HOT) // Fallback
-            }
-
+            val tabs = source.getTrendTabs()
             _state.update {
                 it.copy(
-                    currentSource = TrendContract.SourceInfo(
-                        id = source.id,
-                        name = source.name,
-                        supportsHistory = source.capabilities.supportsTrendHistory
-                    ),
-                    availableTrendTypes = availableTypes,
-                    selectedTrendType = if (availableTypes.contains(it.selectedTrendType)) it.selectedTrendType else availableTypes.first()
+                    selectedSource = source,
+                    availableTabs = tabs,
+                    selectedTab = tabs.firstOrNull(),
+                    trendParams = it.trendParams.copy(dayOffset = 0) // Reset date on source switch
                 )
             }
         }
@@ -108,71 +74,46 @@ class TrendViewModel(
 
     fun onEvent(event: Event) {
         when (event) {
-            Event.Refresh -> loadData(forceRefresh = true)
-            Event.PreviousDay -> {
-                val currentOffset = state.value.dayOffset
-                loadTrend(dayOffset = currentOffset + 1)
+            is Event.SelectSource -> {
+                selectSource(event.sourceId)
             }
-            Event.NextDay -> {
-                val currentOffset = state.value.dayOffset
-                if (currentOffset > 0) {
-                    loadTrend(dayOffset = currentOffset - 1)
+
+            is Event.SelectTab -> {
+                val tab = _state.value.availableTabs.find { it.id == event.tabId }
+                if (tab != null) {
+                    _state.update { it.copy(selectedTab = tab) }
                 }
             }
+
+            is Event.SelectDate -> {
+                _state.update {
+                    it.copy(trendParams = it.trendParams.copy(dayOffset = event.dayOffset))
+                }
+            }
+
             is Event.OnTrendItemClick -> {
                 screenModelScope.launch {
-                    _effect.send(Effect.NavigateToThread(event.topicId))
+                    _effect.send(Effect.NavigateToThread(event.item.id, event.item.sourceId))
                 }
             }
-            Event.OnInfoClick -> {
+
+            Event.Refresh -> {
+                _state.update {
+                    it.copy(trendParams = it.trendParams.copy(forceRefresh = true))
+                }
+                // Reset forceRefresh after a short delay or immediately, 
+                // but since Paging handles refresh via invalidate, we might just need to trigger it.
+                // However, our params are part of the flow key, so changing params triggers reload.
+                // We should probably reset forceRefresh back to false after triggering.
+                // For now, let's just update params. The PagingSource should handle the one-time refresh logic if needed,
+                // or we can toggle it back.
                 screenModelScope.launch {
-                    _effect.send(Effect.ShowInfoDialog("https://www.nmbxd1.com/t/50248044"))
-                }
-            }
-            Event.ToggleSource -> {
-                // Source switching is handled globally now
-            }
-            is Event.SelectTrendType -> {
-                _state.update { it.copy(selectedTrendType = event.trendType) }
-                loadData()
-            }
-            is Event.SelectSource -> {
-                updateCurrentSourceInfo(event.sourceId)
-                loadData()
-            }
-        }
-    }
-
-    private fun loadData(forceRefresh: Boolean = false) {
-        if (_state.value.selectedTrendType == TrendType.HOT && _state.value.currentSource.id != "tieba") {
-            loadTrend(forceRefresh)
-        } else {
-            // Clear trend items if not HOT
-            _state.update { it.copy(items = emptyList()) }
-        }
-    }
-
-    private fun loadTrend(forceRefresh: Boolean = false, dayOffset: Int = state.value.dayOffset) {
-        screenModelScope.launch {
-            _state.update { it.copy(isLoading = true, error = null, dayOffset = dayOffset) }
-
-            val currentSourceId = _state.value.currentSource.id
-
-            getTrendUseCase(currentSourceId, forceRefresh, dayOffset)
-                .onSuccess { result ->
-                    val (trendDate, items, correctedDayOffset) = result
+                    kotlinx.coroutines.delay(100)
                     _state.update {
-                        it.copy(
-                            isLoading = false,
-                            trendDate = trendDate.toRelativeTimeString(),
-                            items = items.map { item -> item.toUI() },
-                            dayOffset = correctedDayOffset ?: it.dayOffset
-                        )
+                        it.copy(trendParams = it.trendParams.copy(forceRefresh = false))
                     }
                 }
-                .onFailure { e ->
-                    _state.update { it.copy(isLoading = false, error = e.toAppError { loadTrend(forceRefresh = true, dayOffset) }) }
-                }
+            }
         }
     }
 }

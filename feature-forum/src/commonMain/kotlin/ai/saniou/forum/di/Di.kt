@@ -155,9 +155,6 @@ val nmbFeatureModule = DI.Module("nmbFeatureModule") {
     bindFactory<String, TrendViewModel> { sourceId ->
         TrendViewModel(
             initialSourceId = sourceId,
-            getTrendUseCase = instance(),
-            settingsRepository = instance(),
-            sourceRepository = instance(),
             trendRepository = instance()
         )
     }

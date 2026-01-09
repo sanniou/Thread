@@ -34,9 +34,11 @@ import ai.saniou.thread.data.source.tieba.remote.createLiteApiInterface
 import ai.saniou.thread.data.source.tieba.remote.createSofireApi
 import ai.saniou.thread.data.source.tieba.remote.createOfficialProtobufTiebaApi
 import ai.saniou.thread.data.source.tieba.TiebaSource
+import ai.saniou.thread.data.source.tieba.TiebaTrendSource
 import ai.saniou.thread.data.source.nga.NgaSource
 import ai.saniou.thread.data.source.nmb.NmbAccountProvider
 import ai.saniou.thread.data.source.nmb.NmbSource
+import ai.saniou.thread.data.source.nmb.NmbTrendSource
 import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
 import ai.saniou.thread.data.source.nmb.remote.createNmbXdApi
 import ai.saniou.thread.data.cache.SourceCache
@@ -57,6 +59,7 @@ import ai.saniou.thread.domain.repository.PostRepository
 import ai.saniou.thread.domain.repository.ReferenceRepository
 import ai.saniou.thread.domain.repository.SettingsRepository
 import ai.saniou.thread.domain.repository.Source
+import ai.saniou.thread.domain.source.TrendSource
 import ai.saniou.thread.domain.repository.SubscriptionRepository
 import ai.saniou.thread.domain.repository.SyncProvider
 import ai.saniou.thread.domain.repository.SyncRepository
@@ -221,13 +224,25 @@ val dataModule = DI.Module("dataModule") {
     }
     bind<HistoryRepository>() with singleton { HistoryRepositoryImpl(instance()) }
     bind<PostRepository>() with singleton { PostRepositoryImpl(instance()) }
+
+    bind<TrendSource>(tag = "nmbTrend") with singleton { NmbTrendSource(instance()) }
+    bind<TrendSource>(tag = "tiebaTrend") with singleton {
+        TiebaTrendSource(
+            instance(tag = "V11"),
+            instance()
+        )
+    }
+
+    bind<Set<TrendSource>>(tag = "allTrendSources") with singleton {
+        HashSet<TrendSource>().apply {
+            add(instance(tag = "nmbTrend"))
+            add(instance(tag = "tiebaTrend"))
+        }
+    }
+
     bind<TrendRepository>() with singleton {
         TrendRepositoryImpl(
-            instance(),
-            instance(),
-            instance(tag = "V11"),
-            instance(),
-            instance()
+            instance(tag = "allTrendSources")
         )
     }
     bind<ReferenceRepository>() with singleton { ReferenceRepositoryImpl(instance(), instance()) }

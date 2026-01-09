@@ -1,10 +1,10 @@
 package ai.saniou.forum.workflow.trend
 
 import ai.saniou.coreui.state.AppError
-import ai.saniou.thread.data.source.nmb.remote.dto.Thread
-import ai.saniou.thread.domain.model.forum.Trend
-import ai.saniou.thread.domain.model.forum.TrendType
-import kotlinx.serialization.Serializable
+import ai.saniou.thread.domain.model.TrendItem
+import ai.saniou.thread.domain.model.TrendParams
+import ai.saniou.thread.domain.model.TrendTab
+import ai.saniou.thread.domain.source.TrendSource
 
 /**
  * 趋势页面的 UI 状态和事件定义
@@ -12,43 +12,16 @@ import kotlinx.serialization.Serializable
 interface TrendContract {
 
     /**
-     * 解析后的趋势条目
-     */
-    @Serializable
-    data class TrendItem(
-        val rank: String,      // 排名，如 "01"
-        val trendNum: String,  // 趋势值，如 "Trend 34"
-        val channel: String,     // 版块，如 "[综合版1]"
-        val isNew: Boolean,    // 是否是 New
-        val topicId: String,    // 串 ID
-        val content: String,    // 内容预览
-    )
-
-    /**
      * UI 状态
-     * @property isLoading 是否正在加载
-     * @property error 错误信息
-     * @property trendDate 趋势数据的日期，如 "2025-12-01(一)01:04:01"
-     * @property items 解析后的趋势列表
      */
     data class State(
         val isLoading: Boolean = false,
         val error: AppError? = null,
-        val trendDate: String = "",
-        val items: List<TrendItem> = emptyList(),
-        val dayOffset: Int = 0, // 0 = 今天, 1 = 昨天, etc.
-        val rawThread: Thread? = null, // 保留原始数据以备不时之需
-        val currentSource: SourceInfo = SourceInfo("nmb", "A岛", true), // 当前数据源信息
-        val availableSources: List<SourceInfo> = emptyList(),
-        val selectedTrendType: TrendType = TrendType.HOT,
-        val availableTrendTypes: List<TrendType> = listOf(TrendType.HOT),
-    )
-
-    @Serializable
-    data class SourceInfo(
-        val id: String,
-        val name: String,
-        val supportsHistory: Boolean,
+        val selectedSource: TrendSource? = null,
+        val selectedTab: TrendTab? = null,
+        val trendParams: TrendParams = TrendParams(),
+        val availableSources: List<TrendSource> = emptyList(),
+        val availableTabs: List<TrendTab> = emptyList()
     )
 
     /**
@@ -63,37 +36,22 @@ interface TrendContract {
         /**
          * 点击趋势条目
          */
-        data class OnTrendItemClick(val topicId: String) : Event
-
-        /**
-         * 点击信息按钮（显示源地址）
-         */
-        object OnInfoClick : Event
-
-        /**
-         * 查看前一天
-         */
-        object PreviousDay : Event
-
-        /**
-         * 查看后一天
-         */
-        object NextDay : Event
-
-        /**
-         * 切换数据源
-         */
-        object ToggleSource : Event
-
-        /**
-         * 选择 Trend 类型
-         */
-        data class SelectTrendType(val trendType: TrendType) : Event
+        data class OnTrendItemClick(val item: TrendItem) : Event
 
         /**
          * 选择数据源
          */
         data class SelectSource(val sourceId: String) : Event
+
+        /**
+         * 选择 Tab
+         */
+        data class SelectTab(val tabId: String) : Event
+
+        /**
+         * 选择日期 (用于历史回溯)
+         */
+        data class SelectDate(val dayOffset: Int) : Event
     }
 
     /**
@@ -101,16 +59,6 @@ interface TrendContract {
      */
     sealed interface Effect {
         data class ShowSnackbar(val message: String) : Effect
-        data class NavigateToThread(val topicId: String) : Effect
-        data class ShowInfoDialog(val url: String) : Effect
+        data class NavigateToThread(val topicId: String, val sourceId: String) : Effect
     }
 }
-
-fun Trend.toUI() = TrendContract.TrendItem(
-    rank = rank,
-    trendNum = trendNum,
-    channel = channel,
-    isNew = isNew,
-    topicId = topicId,
-    content = contentPreview
-)

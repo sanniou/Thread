@@ -51,8 +51,8 @@ import kotlin.time.Duration.Companion.days
 import kotlin.time.ExperimentalTime
 
 
-val NMBSourceId = "nmb";
-val NMBSourceName = "A岛";
+const val NMBSourceId = "nmb"
+const val NMBSourceName = "A岛"
 
 class NmbSource(
     private val nmbXdApi: NmbXdApi,
@@ -64,10 +64,10 @@ class NmbSource(
     override val name: String = NMBSourceName
 
     override val capabilities: SourceCapabilities = SourceCapabilities(
-        supportsTrend = true,
-        supportsTrendHistory = true,
         supportsPagination = true
     )
+
+    override val trendSource by lazy { NmbTrendSource(this) }
 
     override val loginStrategy: LoginStrategy = LoginStrategy.Manual(
         title = "A岛匿名版 - 饼干导入",

@@ -4,15 +4,13 @@ import ai.saniou.thread.domain.model.forum.Channel
 import ai.saniou.thread.domain.model.FeedType
 import ai.saniou.thread.domain.model.forum.Comment
 import ai.saniou.thread.domain.model.forum.Topic
-import ai.saniou.thread.domain.model.forum.TrendResult
 import ai.saniou.thread.domain.model.user.LoginStrategy
+import ai.saniou.thread.domain.source.TrendSource
 import app.cash.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 
 data class SourceCapabilities(
-    val supportsTrend: Boolean = false,
-    val supportsTrendHistory: Boolean = false,
     val supportsPagination: Boolean = true,
 )
 
@@ -83,10 +81,10 @@ interface Source {
     fun getChannel(channelId: String): Flow<Channel?>
 
     /**
-     * 获取热门榜单
+     * The associated TrendSource, if this source provides trend functionality.
+     * This will be null for sources that do not support trends.
      */
-    suspend fun getTrendList(forceRefresh: Boolean, dayOffset: Int): Result<TrendResult> =
-        Result.failure(NotImplementedError("Trend not supported for this source"))
+    val trendSource: TrendSource? get() = null
 
     /**
      * 获取 Feed 流（分页）

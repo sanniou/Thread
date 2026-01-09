@@ -2,21 +2,16 @@ package ai.saniou.thread.data.source.acfun
 
 import ai.saniou.thread.data.source.acfun.remote.AcfunApi
 import ai.saniou.thread.data.source.acfun.remote.AcfunTokenManager
+import ai.saniou.thread.domain.model.forum.Author
 import ai.saniou.thread.domain.model.forum.Channel
-import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.model.forum.Comment
+import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.model.forum.Trend
 import ai.saniou.thread.domain.model.forum.TrendResult
 import ai.saniou.thread.domain.model.user.LoginStrategy
 import ai.saniou.thread.domain.repository.Source
 import ai.saniou.thread.domain.repository.SourceCapabilities
 import ai.saniou.thread.network.SaniouResult
-import ai.saniou.thread.domain.model.forum.Author
-import app.cash.paging.Pager
-import app.cash.paging.PagingConfig
-import app.cash.paging.PagingData
-import app.cash.paging.PagingSource
-import app.cash.paging.PagingState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -24,8 +19,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
-import kotlin.time.Instant
 import kotlin.time.Clock
+import kotlin.time.Instant
 
 class AcfunSource(
     private val acfunApi: AcfunApi,
@@ -73,8 +68,6 @@ class AcfunSource(
     }
 
     override val capabilities: SourceCapabilities = SourceCapabilities(
-        supportsTrend = true,
-        supportsTrendHistory = false,
         supportsPagination = false
     )
 
@@ -198,7 +191,7 @@ class AcfunSource(
         return flowOf(null)
     }
 
-    override suspend fun getTrendList(forceRefresh: Boolean, dayOffset: Int): Result<TrendResult> {
+     suspend fun getTrendList(forceRefresh: Boolean, dayOffset: Int): Result<TrendResult> {
         if (dayOffset != 0) {
             return Result.failure(IllegalArgumentException("AcFun does not support historical trends"))
         }

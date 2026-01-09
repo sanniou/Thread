@@ -51,10 +51,15 @@ class TiebaSource(
     override val name: String = TiebaMapper.SOURCE_NAME
     override val isInitialized: Flow<Boolean> = flowOf(true)
     override val capabilities: SourceCapabilities = SourceCapabilities(
-        supportsTrend = false,
-        supportsTrendHistory = false,
         supportsPagination = true
     )
+
+    override val trendSource by lazy {
+        TiebaTrendSource(
+            officialProtobufTiebaApiV11,
+            tiebaParameterProvider
+        )
+    }
 
     override val loginStrategy: LoginStrategy = LoginStrategy.WebView(
         url = "https://wappass.baidu.com/passport/?login",

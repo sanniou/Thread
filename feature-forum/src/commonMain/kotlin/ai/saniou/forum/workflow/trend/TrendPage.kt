@@ -1,21 +1,16 @@
 package ai.saniou.forum.workflow.trend
 
 import ai.saniou.coreui.composition.LocalForumSourceId
-import ai.saniou.coreui.state.DefaultError
+import ai.saniou.coreui.state.PagingStateLayout
 import ai.saniou.coreui.widgets.BlankLinePolicy
-import ai.saniou.coreui.widgets.PullToRefreshWrapper
 import ai.saniou.coreui.widgets.RichText
 import ai.saniou.coreui.widgets.SaniouAppBarTitle
 import ai.saniou.coreui.widgets.SaniouTopAppBar
 import ai.saniou.coreui.widgets.VerticalSpacerSmall
-import ai.saniou.forum.ui.components.LoadingIndicator
-import ai.saniou.forum.workflow.home.ListThreadPage
 import ai.saniou.forum.workflow.topicdetail.TopicDetailPage
 import ai.saniou.forum.workflow.trend.TrendContract.Effect
 import ai.saniou.forum.workflow.trend.TrendContract.Event
-import ai.saniou.forum.workflow.trend.TrendContract.TrendItem
-import ai.saniou.thread.domain.model.forum.TrendType
-import androidx.compose.animation.animateColorAsState
+import ai.saniou.thread.domain.model.TrendItem
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -30,18 +25,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -58,7 +49,6 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -71,14 +61,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import app.cash.paging.compose.collectAsLazyPagingItems
+import app.cash.paging.compose.itemKey
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -103,27 +91,25 @@ data class TrendPage(
         }
         val state by viewModel.state.collectAsState()
         val snackbarHostState = remember { SnackbarHostState() }
-        var showSourceDialog by remember { mutableStateOf(false) }
-        var sourceUrl by remember { mutableStateOf("") }
 
         val pagerState = rememberPagerState(
             initialPage = 0,
             initialPageOffsetFraction = 0f
         ) {
-            state.availableTrendTypes.size
+            state.availableTabs.size
         }
 
-        LaunchedEffect(state.selectedTrendType) {
-            val index = state.availableTrendTypes.indexOf(state.selectedTrendType)
+        LaunchedEffect(state.selectedTab) {
+            val index = state.availableTabs.indexOf(state.selectedTab)
             if (index != -1 && pagerState.currentPage != index) {
                 pagerState.animateScrollToPage(index)
             }
         }
 
         LaunchedEffect(pagerState.currentPage) {
-            val type = state.availableTrendTypes.getOrNull(pagerState.currentPage)
-            if (type != null && state.selectedTrendType != type) {
-                viewModel.onEvent(Event.SelectTrendType(type))
+            val tab = state.availableTabs.getOrNull(pagerState.currentPage)
+            if (tab != null && state.selectedTab != tab) {
+                viewModel.onEvent(Event.SelectTab(tab.id))
             }
         }
 
@@ -137,65 +123,8 @@ data class TrendPage(
                     is Effect.NavigateToThread -> {
                         navigator.push(TopicDetailPage(effect.topicId))
                     }
-
-                    is Effect.ShowInfoDialog -> {
-                        sourceUrl = effect.url
-                        showSourceDialog = true
-                    }
                 }
             }
-        }
-
-        if (showSourceDialog) {
-            val sourceId = sourceUrl.substringAfterLast("/").toLongOrNull()
-            AlertDialog(
-                onDismissRequest = { showSourceDialog = false },
-                title = { Text("数据来源") },
-                text = {
-                    Column {
-                        Text("本页 Trend 数据统计自串：")
-                        VerticalSpacerSmall()
-                        if (sourceId != null) {
-                            Text(
-                                text = buildAnnotatedString {
-                                    withStyle(
-                                        style = SpanStyle(
-                                            color = MaterialTheme.colorScheme.primary,
-                                            textDecoration = TextDecoration.Underline,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    ) {
-                                        append("No.$sourceId")
-                                    }
-                                },
-                                modifier = Modifier.clickable {
-                                    showSourceDialog = false
-                                    navigator.push(TopicDetailPage(sourceId))
-                                }
-                            )
-                        } else {
-                            Text(sourceUrl)
-                        }
-                    }
-                },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            if (sourceId != null) {
-                                navigator.push(TopicDetailPage(sourceId))
-                            }
-                            showSourceDialog = false
-                        }
-                    ) {
-                        Text("查看原串")
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showSourceDialog = false }) {
-                        Text("关闭")
-                    }
-                }
-            )
         }
 
         Scaffold(
@@ -205,9 +134,10 @@ data class TrendPage(
                         title = {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 SaniouAppBarTitle(
-                                    title = state.currentSource.name,
-                                    subtitle = if (state.selectedTrendType == TrendType.HOT) {
-                                        state.trendDate.takeIf { it.isNotEmpty() }
+                                    title = state.selectedSource?.name ?: "趋势",
+                                    subtitle = if (state.selectedTab?.supportsHistory == true) {
+                                        // TODO: Format date properly
+                                        if (state.trendParams.dayOffset == 0) "今天" else "${state.trendParams.dayOffset}天前"
                                     } else {
                                         null
                                     }
@@ -265,24 +195,21 @@ data class TrendPage(
                             containerColor = MaterialTheme.colorScheme.primaryContainer
                         ),
                         actions = {
-                            if (state.selectedTrendType == TrendType.HOT && state.currentSource.supportsHistory) {
-                                IconButton(onClick = { viewModel.onEvent(Event.PreviousDay) }) {
+                            if (state.selectedTab?.supportsHistory == true) {
+                                IconButton(onClick = { viewModel.onEvent(Event.SelectDate(state.trendParams.dayOffset + 1)) }) {
                                     Icon(
                                         Icons.AutoMirrored.Filled.ArrowBack,
                                         contentDescription = "前一天"
                                     )
                                 }
                                 IconButton(
-                                    onClick = { viewModel.onEvent(Event.NextDay) },
-                                    enabled = state.dayOffset > 0
+                                    onClick = { viewModel.onEvent(Event.SelectDate(state.trendParams.dayOffset - 1)) },
+                                    enabled = state.trendParams.dayOffset > 0
                                 ) {
                                     Icon(
                                         Icons.AutoMirrored.Filled.ArrowForward,
                                         contentDescription = "后一天"
                                     )
-                                }
-                                IconButton(onClick = { viewModel.onEvent(Event.OnInfoClick) }) {
-                                    Icon(Icons.Default.Info, contentDescription = "源地址")
                                 }
                             } else {
                                 IconButton(onClick = { viewModel.onEvent(Event.Refresh) }) {
@@ -292,7 +219,7 @@ data class TrendPage(
                         }
                     )
 
-                    if (state.availableTrendTypes.size > 1) {
+                    if (state.availableTabs.size > 1) {
                         TabRow(
                             selectedTabIndex = pagerState.currentPage,
                             containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -305,15 +232,15 @@ data class TrendPage(
                             },
                             divider = {}
                         ) {
-                            state.availableTrendTypes.forEachIndexed { index, type ->
+                            state.availableTabs.forEachIndexed { index, tab ->
                                 Tab(
                                     selected = pagerState.currentPage == index,
                                     onClick = {
-                                        viewModel.onEvent(Event.SelectTrendType(type))
+                                        viewModel.onEvent(Event.SelectTab(tab.id))
                                     },
                                     text = {
                                         Text(
-                                            text = type.name,
+                                            text = tab.name,
                                             style = MaterialTheme.typography.labelLarge,
                                             fontWeight = if (pagerState.currentPage == index) FontWeight.Bold else FontWeight.Normal
                                         )
@@ -334,58 +261,57 @@ data class TrendPage(
                     .fillMaxSize()
                     .padding(innerPadding)
             ) { page ->
-                val type = state.availableTrendTypes.getOrNull(page) ?: return@HorizontalPager
+                // Ensure we are rendering the correct tab content
+                // Since HorizontalPager keeps pages alive, we need to make sure the content matches the tab
+                // But here we use a single PagingFlow in ViewModel that updates based on selection.
+                // This might cause issues with Pager preloading.
+                // Ideally, each page should have its own flow or we disable preloading/caching issues.
+                // Given the requirement, we will just render the list which observes the current flow.
+                // Note: This is a simplification. For robust Pager, we might need a map of flows.
+                // But since we want dynamic tabs, a single flow updated by selection is tricky with Pager.
+                // Let's assume the user switches tabs via tap, which updates VM state, which updates flow.
+                // The Pager swipe also updates VM state.
 
-                Box(modifier = Modifier.fillMaxSize()) {
-                    if (type == TrendType.HOT && state.currentSource.id != "tieba") {
-                        TrendHotList(
-                            state = state,
-                            onRefresh = { viewModel.onEvent(Event.Refresh) },
-                            onItemClick = { viewModel.onEvent(Event.OnTrendItemClick(it)) }
-                        )
-                    } else {
-                        ListThreadPage(
-                            threadFlow = viewModel.feedPagingFlow,
-                            onThreadClicked = { topicId -> navigator.push(TopicDetailPage(topicId)) },
-                            onImageClick = { _, _ -> /* TODO: Handle Image Click */ },
-                            onUserClick = { /* TODO: Handle User Click */ },
-                            showChannelBadge = true
-                        )
-                    }
-                }
+                val tab = state.availableTabs.getOrNull(page) ?: return@HorizontalPager
+
+                // Only render content if this page corresponds to the selected tab to avoid mismatched data
+                // or accept that off-screen pages might show stale data until swiped to.
+                // Actually, we should probably just use the flow.
+
+                TrendList(
+                    viewModel = viewModel,
+                    onItemClick = { viewModel.onEvent(Event.OnTrendItemClick(it)) }
+                )
             }
         }
     }
 
     @Composable
-    fun TrendHotList(
-        state: TrendContract.State,
-        onRefresh: () -> Unit,
-        onItemClick: (String) -> Unit,
+    fun TrendList(
+        viewModel: TrendViewModel,
+        onItemClick: (TrendItem) -> Unit,
     ) {
-        if (state.isLoading) {
-            LoadingIndicator()
-        } else if (state.error != null) {
-            DefaultError(
-                error = state.error,
-                onRetryClick = onRefresh
-            )
-        } else {
-            PullToRefreshWrapper(
-                onRefreshTrigger = onRefresh
+        val items = viewModel.trendPagingFlow.collectAsLazyPagingItems()
+
+        PagingStateLayout(
+            items = items,
+            onRetry = { items.retry() }
+        ) {
+            LazyColumn(
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxSize()
             ) {
-                LazyColumn(
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    itemsIndexed(
-                        state.items,
-                        key = { _, item -> item.topicId }) { index, item ->
+                items(
+                    count = items.itemCount,
+                    key = items.itemKey { it.id }
+                ) { index ->
+                    val item = items[index]
+                    if (item != null) {
                         TrendItemCard(
                             index = index,
                             item = item,
-                            onClick = { onItemClick(item.topicId) }
+                            onClick = { onItemClick(item) }
                         )
                     }
                 }
@@ -414,12 +340,13 @@ data class TrendPage(
                 verticalAlignment = Alignment.Top
             ) {
                 // Rank Number
-                RankText(
-                    index = index,
-                    rank = item.rank
-                )
-
-                Spacer(modifier = Modifier.width(8.dp))
+                if (item.rank != null) {
+                    RankText(
+                        index = index,
+                        rank = item.rank.toString().padStart(2, '0')
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
 
                 Column(modifier = Modifier.weight(1f)) {
                     // Header: Forum | ID | Time?
@@ -427,18 +354,20 @@ data class TrendPage(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Text(
-                            text = item.channel,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer,
-                            modifier = Modifier
-                                .clip(MaterialTheme.shapes.small)
-                                .background(MaterialTheme.colorScheme.secondaryContainer)
-                                .padding(horizontal = 6.dp, vertical = 2.dp)
-                        )
+                        if (item.channel != null) {
+                            Text(
+                                text = item.channel!!,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                modifier = Modifier
+                                    .clip(MaterialTheme.shapes.small)
+                                    .background(MaterialTheme.colorScheme.secondaryContainer)
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
 
                         Text(
-                            text = "No.${item.topicId}",
+                            text = if (item.title.startsWith("No.")) item.title else "No.${item.id}",
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.outline
                         )
@@ -459,8 +388,18 @@ data class TrendPage(
 
                     VerticalSpacerSmall()
 
+                    if (item.title.isNotEmpty() && !item.title.startsWith("No.")) {
+                        Text(
+                            text = item.title,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        VerticalSpacerSmall()
+                    }
+
                     RichText(
-                        text = item.content,
+                        text = item.contentPreview,
                         blankLinePolicy = BlankLinePolicy.REMOVE,
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurface,
@@ -470,41 +409,16 @@ data class TrendPage(
 
                     VerticalSpacerSmall()
 
-                    Text(
-                        text = item.trendNum, // e.g., "Trend 34"
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.tertiary
-                    )
+                    if (item.hotness != null) {
+                        Text(
+                            text = item.hotness!!, // e.g., "Trend 34" or "34 replies"
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.tertiary
+                        )
+                    }
                 }
             }
         }
-    }
-
-    @Composable
-    private fun TrendTab(
-        text: String,
-        selected: Boolean,
-        onSelected: () -> Unit,
-    ) {
-        val textColor by animateColorAsState(
-            targetValue = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        val backgroundColor by animateColorAsState(
-            targetValue = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
-        )
-        Text(
-            text = text,
-            textAlign = TextAlign.Center,
-            color = textColor,
-            maxLines = 1,
-            modifier = Modifier
-                .clip(RoundedCornerShape(100))
-                .background(backgroundColor)
-                .clickable(onClick = onSelected)
-                .padding(horizontal = 16.dp, vertical = 6.dp),
-            style = MaterialTheme.typography.labelLarge,
-            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
-        )
     }
 
     @Composable

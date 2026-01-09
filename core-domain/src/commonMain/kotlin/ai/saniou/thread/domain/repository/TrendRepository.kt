@@ -1,18 +1,26 @@
 package ai.saniou.thread.domain.repository
 
-import ai.saniou.thread.domain.model.forum.Topic
-import ai.saniou.thread.domain.model.forum.TrendResult
+import ai.saniou.thread.domain.model.TrendItem
+import ai.saniou.thread.domain.model.TrendTab
+import ai.saniou.thread.domain.model.TrendParams
+import ai.saniou.thread.domain.source.TrendSource
 import app.cash.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 
 interface TrendRepository {
-    suspend fun getTrendItems(sourceId: String, forceRefresh: Boolean, dayOffset: Int): Result<TrendResult>
+    /**
+     * Returns a list of all available trend sources discovered via DI.
+     */
+    fun getAvailableTrendSources(): List<TrendSource>
 
-    fun getHotThreads(): Flow<PagingData<Topic>>
+    /**
+     * Gets a specific trend source by its ID.
+     */
+    fun getTrendSource(id: String): TrendSource?
 
-    fun getTopicList(): Flow<PagingData<Topic>>
-
-    fun getConcernFeed(): Flow<PagingData<Topic>>
-
-    fun getPersonalizedFeed(): Flow<PagingData<Topic>>
+    /**
+     * A convenience method to directly get the PagingData flow from a source.
+     * The ViewModel will primarily use this.
+     */
+    fun getTrendPagingData(sourceId: String, tab: TrendTab, params: TrendParams): Flow<PagingData<TrendItem>>
 }
