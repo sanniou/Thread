@@ -110,16 +110,7 @@ class TopicRepositoryImpl(
                     source.getTopicComments(topicId, page, isPoOnly)
                 },
                 saver = { comments, page, _ ->
-                    if (comments.isNotEmpty()) {
-                        comments.map {
-                            it.toEntity(
-                                sourceId = sourceId,
-                                page = page.toLong()
-                            )
-                        }.forEach {
-                            db.commentQueries.upsertComment(it)
-                        }
-                    }
+                    cache.saveComments(comments,sourceId,page)
                 },
                 endOfPaginationReached = { comments ->
                     comments.isEmpty()

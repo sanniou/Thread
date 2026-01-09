@@ -35,6 +35,7 @@ interface TopicDetailContract {
         val activeCommentId: String? = null,
         val replies: Flow<PagingData<Comment>> = emptyFlow(),
         val totalPages: Int = 1,
+        val currentPage: Int = 1,
         val isSubscribed: Boolean = false,
         val forumName: String = "",
         val lastReadCommentId: String? = null,

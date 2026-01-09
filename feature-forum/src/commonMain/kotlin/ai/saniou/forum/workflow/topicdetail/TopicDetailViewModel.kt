@@ -95,7 +95,12 @@ class TopicDetailViewModel(
         screenModelScope.launch {
             observeSubscriptionStatus()
             loadRequest.collect { request ->
-                _state.update { it.copy(isPoOnlyMode = request.isPoOnly) }
+                _state.update {
+                    it.copy(
+                        isPoOnlyMode = request.isPoOnly,
+                        currentPage = request.page
+                    )
+                }
             }
         }
     }

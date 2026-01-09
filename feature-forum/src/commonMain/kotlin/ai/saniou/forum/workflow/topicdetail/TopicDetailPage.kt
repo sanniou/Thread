@@ -643,52 +643,71 @@ private fun ThreadList(
         contentPadding = PaddingValues(bottom = 80.dp),
         verticalArrangement = Arrangement.spacedBy(Dimens.padding_small)
     ) {
-        // Header (Title, Tags, etc.)
+        // 1. Hero Card (Metadata + Main Post Content)
         item {
-            TopicHeader(metadata = metadata)
+            // Logic to determine if we should show content in Hero Card
+            // We only show content if we are on Page 1.
+            // If replies[0] is available and matches main post, we show it.
+            // If replies[0] is loading (null) but we are on Page 1, we show placeholder.
+            // If we are NOT on Page 1, we don't show content or placeholder in Hero Card.
+
+            val isPageOne = state.currentPage == 1
+            val firstItem = if (replies.itemCount > 0) replies[0] else null
+
+            // If firstItem is null (loading), we assume it might be main post if on Page 1
+            val isMainPost = if (firstItem != null) {
+                firstItem.floor == 1 || firstItem.id == metadata.id
+            } else {
+                isPageOne // Assume loading item on page 1 is main post
+            }
+
+            val heroComment = if (isPageOne && isMainPost) firstItem else null
+            val showPlaceholder = isPageOne && firstItem == null
+
+            HeroTopicCard(
+                metadata = metadata,
+                comment = heroComment,
+                showContentPlaceholder = showPlaceholder,
+                refClick = onRefClick,
+                onImageClick = onImageClick,
+                onCopy = { heroComment?.content?.let(onCopy) },
+                onBookmark = { heroComment?.let(onBookmark) },
+                onBookmarkImage = onBookmarkImage,
+                onUserClick = onUserClick
+            )
         }
 
-        // Toolbar
+        // 2. Sticky Filter Bar
         stickyHeader {
-            ThreadToolbar(
+            FilterBar(
                 replyCount = metadata.commentCount.toString(),
                 isPoOnly = state.isPoOnlyMode,
                 onTogglePoOnly = onTogglePoOnly
             )
         }
 
-        // Replies (including Main Post if it's the first item)
+        // 3. Replies List
         items(replies.itemCount) { index ->
             val reply = replies[index]
-            if (reply != null) {
-                // Check if this is the main post (floor 1 or id matches topic id)
-                // Note: Some sources might not have floor 1, or ID might differ.
-                // But typically floor 1 is the main post.
-                val isMainPost = reply.floor == 1 || reply.id == metadata.id
 
-                if (isMainPost) {
-                    ThreadMainPost(
-                        comment = reply,
-                        refClick = onRefClick,
-                        onImageClick = onImageClick,
-                        onCopy = { onCopy(reply.content) },
-                        onBookmark = { onBookmark(reply) },
-                        onBookmarkImage = onBookmarkImage,
-                        onUserClick = onUserClick
-                    )
-                } else {
-                    ThreadReply(
-                        reply = reply,
-                        poUserHash = metadata.author.id,
-                        onReplyClicked = onReplyClicked,
-                        refClick = onRefClick,
-                        onImageClick = onImageClick,
-                        onCopy = { onCopy(reply.content) },
-                        onBookmark = { onBookmark(reply) },
-                        onBookmarkImage = onBookmarkImage,
-                        onUserClick = onUserClick
-                    )
-                }
+            // Check if this item was already rendered in the Hero Card
+            // We skip index 0 if we are on Page 1 (because it's the main post)
+            if (index == 0 && state.currentPage == 1) {
+                 return@items
+            }
+
+            if (reply != null) {
+                ThreadReply(
+                    reply = reply,
+                    poUserHash = metadata.author.id,
+                    onReplyClicked = onReplyClicked,
+                    refClick = onRefClick,
+                    onImageClick = onImageClick,
+                    onCopy = { onCopy(reply.content) },
+                    onBookmark = { onBookmark(reply) },
+                    onBookmarkImage = onBookmarkImage,
+                    onUserClick = onUserClick
+                )
                 HorizontalDivider(
                     thickness = 0.5.dp,
                     color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)
@@ -740,59 +759,6 @@ private fun EmptyReplyContent(onRefresh: () -> Unit) {
             Button(onClick = onRefresh) {
                 Text(stringResource(Res.string.refresh))
             }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun ThreadToolbar(
-    replyCount: String,
-    isPoOnly: Boolean,
-    onTogglePoOnly: () -> Unit,
-) {
-    Surface(
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.98f),
-        shadowElevation = 2.dp,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = Dimens.padding_standard, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = stringResource(Res.string.reply_count, replyCount),
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-
-            FilterChip(
-                selected = isPoOnly,
-                onClick = onTogglePoOnly,
-                label = { Text(stringResource(Res.string.view_po_only)) },
-                leadingIcon = if (isPoOnly) {
-                    {
-                        Icon(
-                            Icons.Default.Check,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
-                } else null,
-                colors = FilterChipDefaults.filterChipColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                    selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
-                ),
-                border = null,
-                shape = CircleShape,
-                modifier = Modifier.height(32.dp)
-            )
         }
     }
 }
