@@ -46,60 +46,72 @@ class GenericRemoteMediator<Key : Any, Value : Any, ResponseType : Any>(
     private val longToKey: (Long) -> Key,
 ) : RemoteMediator<Key, Value>() {
 
+    init {
+        if (dataPolicy == DataPolicy.CACHE_ELSE_NETWORK) {
+            requireNotNull(cacheChecker) {
+                "cacheChecker must be provided when using DataPolicy.CACHE_ELSE_NETWORK"
+            }
+        }
+    }
+
     override suspend fun load(
         loadType: LoadType,
         state: PagingState<Key, Value>,
     ): RemoteMediatorMediatorResult {
-        val key: Key = when (loadType) {
-            LoadType.REFRESH -> {
-                val remoteKey = remoteKeyStrategy.getKeyClosestToCurrentPosition(state)
-                remoteKey?.nextKey?.let { nextKeyLong ->
-                    val nextKey = longToKey(nextKeyLong)
-                    keyDecrementer(nextKey)
-                } ?: initialKey
-            }
-
-            LoadType.PREPEND -> {
-                val remoteKey = remoteKeyStrategy.getKeyForFirstItem(state)
-                val prevKeyLong = remoteKey?.prevKey
-                    ?: return RemoteMediatorMediatorResultSuccess(endOfPaginationReached = remoteKey != null)
-                longToKey(prevKeyLong)
-            }
-
-            LoadType.APPEND -> {
-                val remoteKey = remoteKeyStrategy.getKeyForLastItem(state)
-                val nextKeyLong = remoteKey?.nextKey
-                    ?: return RemoteMediatorMediatorResultSuccess(endOfPaginationReached = remoteKey != null)
-                longToKey(nextKeyLong)
-            }
-        }
-
-        // 策略检查
-        if (dataPolicy == DataPolicy.CACHE_ELSE_NETWORK && cacheChecker != null) {
-            if (cacheChecker.invoke(key)) {
-                return RemoteMediatorMediatorResultSuccess(endOfPaginationReached = false)
-            }
-        } else if (dataPolicy == DataPolicy.CACHE_ONLY) {
-            return RemoteMediatorMediatorResultSuccess(endOfPaginationReached = true)
-        }
-
-        return fetcher(key).fold(
-            onSuccess = { responseData ->
-                val endOfPagination = endOfPaginationReached(responseData)
-                db.transaction {
-                    saver(responseData, key, loadType)
-
-                    val prevKey = if (key == initialKey) null else keyDecrementer(key)
-                    val nextKey = if (endOfPagination) null else keyIncrementer(key)
-
-                    remoteKeyStrategy.insertKeys(key, prevKey, nextKey, endOfPagination)
+        return try {
+            val key: Key = when (loadType) {
+                LoadType.REFRESH -> {
+                    val remoteKey = remoteKeyStrategy.getKeyClosestToCurrentPosition(state)
+                    remoteKey?.nextKey?.let { nextKeyLong ->
+                        val nextKey = longToKey(nextKeyLong)
+                        keyDecrementer(nextKey)
+                    } ?: initialKey
                 }
 
-                RemoteMediatorMediatorResultSuccess(endOfPaginationReached = endOfPagination)
-            },
-            onFailure = { ex ->
-                RemoteMediatorMediatorResultError(ex)
+                LoadType.PREPEND -> {
+                    val remoteKey = remoteKeyStrategy.getKeyForFirstItem(state)
+                    val prevKeyLong = remoteKey?.prevKey
+                        ?: return RemoteMediatorMediatorResultSuccess(endOfPaginationReached = remoteKey != null)
+                    longToKey(prevKeyLong)
+                }
+
+                LoadType.APPEND -> {
+                    val remoteKey = remoteKeyStrategy.getKeyForLastItem(state)
+                    val nextKeyLong = remoteKey?.nextKey
+                        ?: return RemoteMediatorMediatorResultSuccess(endOfPaginationReached = remoteKey != null)
+                    longToKey(nextKeyLong)
+                }
             }
-        )
+
+            // 策略检查
+            if (dataPolicy == DataPolicy.CACHE_ELSE_NETWORK && cacheChecker != null) {
+                if (cacheChecker.invoke(key)) {
+                    return RemoteMediatorMediatorResultSuccess(endOfPaginationReached = false)
+                }
+            } else if (dataPolicy == DataPolicy.CACHE_ONLY) {
+                return RemoteMediatorMediatorResultSuccess(endOfPaginationReached = true)
+            }
+
+            fetcher(key).fold(
+                onSuccess = { responseData ->
+                    val endOfPagination = endOfPaginationReached(responseData)
+                    db.transaction {
+                        saver(responseData, key, loadType)
+
+                        val prevKey = if (key == initialKey) null else keyDecrementer(key)
+                        val nextKey = if (endOfPagination) null else keyIncrementer(key)
+
+                        remoteKeyStrategy.insertKeys(key, prevKey, nextKey, endOfPagination)
+                    }
+
+                    RemoteMediatorMediatorResultSuccess(endOfPaginationReached = endOfPagination)
+                },
+                onFailure = { ex ->
+                    RemoteMediatorMediatorResultError(ex)
+                }
+            )
+        } catch (e: Exception) {
+            RemoteMediatorMediatorResultError(e)
+        }
     }
 }
