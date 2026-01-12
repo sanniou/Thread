@@ -76,7 +76,7 @@ class TopicRepositoryImpl(
             .onStart {
                 val source = sourceMap[sourceId]
                 if (source != null) {
-                    val currentCache = cache.observeTopic(sourceId, id).firstOrNull()
+                    val currentCache = db.topicQueries.getTopic(sourceId, id).executeAsOneOrNull()
                     if (currentCache == null || forceRefresh) {
                         val result = source.getTopicDetail(id, 1)
                         result.onSuccess { post ->
