@@ -115,6 +115,13 @@ class TopicRepositoryImpl(
                 endOfPaginationReached = { comments ->
                     comments.isEmpty()
                 },
+                cacheChecker = { page ->
+                    if (isPoOnly) {
+                        db.commentQueries.countCommentsByTopicIdPoMode(sourceId, topicId).executeAsOne() > 0
+                    } else {
+                        db.commentQueries.countCommentsByTopicId(sourceId, topicId).executeAsOne() > 0
+                    }
+                },
                 keyIncrementer = { it + 1 },
                 keyDecrementer = { it - 1 },
                 keyToLong = { it.toLong() },

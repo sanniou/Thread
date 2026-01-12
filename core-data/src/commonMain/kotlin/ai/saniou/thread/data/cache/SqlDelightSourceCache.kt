@@ -9,16 +9,15 @@ import ai.saniou.thread.db.table.forum.GetTopicsInChannelOffset
 import ai.saniou.thread.domain.model.forum.ImageType
 import ai.saniou.thread.domain.model.forum.Topic
 import app.cash.paging.PagingSource
-import ai.saniou.thread.domain.model.forum.Comment as DomainComment
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
-import app.cash.sqldelight.coroutines.mapToOne
 import app.cash.sqldelight.coroutines.mapToOneOrNull
 import app.cash.sqldelight.paging3.QueryPagingSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
+import ai.saniou.thread.domain.model.forum.Comment as DomainComment
 
 class SqlDelightSourceCache(
     val db: Database,
@@ -31,7 +30,8 @@ class SqlDelightSourceCache(
     override fun observeTopic(sourceId: String, topicId: String): Flow<Topic> {
         return topicQueries.getTopic(sourceId, topicId)
             .asFlow()
-            .mapToOne(Dispatchers.IO)
+            .mapToOneOrNull(Dispatchers.IO)
+            .filterNotNull()
             .map { it.toDomain(commentQueries, db.imageQueries) }
     }
 
