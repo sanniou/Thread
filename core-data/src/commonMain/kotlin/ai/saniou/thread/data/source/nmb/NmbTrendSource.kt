@@ -42,7 +42,7 @@ class NmbTrendSource(
             val targetDate = today.minus(params.dayOffset, DateTimeUnit.DAY)
 
             // 1. Try to get from local cache if not force refreshing
-            if (!params.forceRefresh) {
+            if (params.refreshId == 0L) {
                 if (params.dayOffset == 0) {
                     // For today, check if the latest reply is from today
                     val localLatestReply = nmbSource.getLocalLatestReply(trendThreadId)

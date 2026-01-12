@@ -26,5 +26,5 @@ data class TrendTab(
 // 趋势请求参数
 data class TrendParams(
     val dayOffset: Int = 0, // 0 = today, 1 = yesterday...
-    val forceRefresh: Boolean = false
+    val refreshId: Long = 0 // 0 = default/cache, >0 = force refresh version
 )

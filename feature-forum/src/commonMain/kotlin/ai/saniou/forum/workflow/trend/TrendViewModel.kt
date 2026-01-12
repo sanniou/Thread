@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.time.Clock
 
 class TrendViewModel(
     private val initialSourceId: String,
@@ -66,7 +67,7 @@ class TrendViewModel(
                     selectedSource = source,
                     availableTabs = tabs,
                     selectedTab = tabs.firstOrNull(),
-                    trendParams = it.trendParams.copy(dayOffset = 0) // Reset date on source switch
+                    trendParams = it.trendParams.copy(dayOffset = 0, refreshId = 0) // Reset date and refresh state on source switch
                 )
             }
         }
@@ -81,13 +82,20 @@ class TrendViewModel(
             is Event.SelectTab -> {
                 val tab = _state.value.availableTabs.find { it.id == event.tabId }
                 if (tab != null) {
-                    _state.update { it.copy(selectedTab = tab) }
+                    // Reset refreshId when switching tabs to use cache by default
+                    _state.update {
+                        it.copy(
+                            selectedTab = tab,
+                            trendParams = it.trendParams.copy(refreshId = 0)
+                        )
+                    }
                 }
             }
 
             is Event.SelectDate -> {
                 _state.update {
-                    it.copy(trendParams = it.trendParams.copy(dayOffset = event.dayOffset))
+                    // Reset refreshId when changing date to use cache by default
+                    it.copy(trendParams = it.trendParams.copy(dayOffset = event.dayOffset, refreshId = 0))
                 }
             }
 
@@ -99,19 +107,8 @@ class TrendViewModel(
 
             Event.Refresh -> {
                 _state.update {
-                    it.copy(trendParams = it.trendParams.copy(forceRefresh = true))
-                }
-                // Reset forceRefresh after a short delay or immediately, 
-                // but since Paging handles refresh via invalidate, we might just need to trigger it.
-                // However, our params are part of the flow key, so changing params triggers reload.
-                // We should probably reset forceRefresh back to false after triggering.
-                // For now, let's just update params. The PagingSource should handle the one-time refresh logic if needed,
-                // or we can toggle it back.
-                screenModelScope.launch {
-                    kotlinx.coroutines.delay(100)
-                    _state.update {
-                        it.copy(trendParams = it.trendParams.copy(forceRefresh = false))
-                    }
+                    // Use current timestamp as refreshId to force a new Pager creation with NETWORK_ONLY policy
+                    it.copy(trendParams = it.trendParams.copy(refreshId = Clock.System.now().toEpochMilliseconds()))
                 }
             }
         }

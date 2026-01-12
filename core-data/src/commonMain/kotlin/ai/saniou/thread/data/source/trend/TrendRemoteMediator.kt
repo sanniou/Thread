@@ -36,7 +36,7 @@ class TrendRemoteMediator(
 
     val mediator: RemoteMediator<Int, GetTrendsWithTopic> = GenericRemoteMediator(
         db = db,
-        dataPolicy = if (params.forceRefresh) DataPolicy.NETWORK_ONLY else DataPolicy.CACHE_ELSE_NETWORK,
+        dataPolicy = if (params.refreshId > 0) DataPolicy.NETWORK_ONLY else DataPolicy.CACHE_ELSE_NETWORK,
         initialKey = 1,
         remoteKeyStrategy = object : RemoteKeyStrategy<Int, GetTrendsWithTopic> {
             override suspend fun getKeyClosestToCurrentPosition(state: app.cash.paging.PagingState<Int, GetTrendsWithTopic>): ai.saniou.thread.db.table.RemoteKeys? {
