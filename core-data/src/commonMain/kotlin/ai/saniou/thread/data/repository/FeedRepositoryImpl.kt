@@ -22,10 +22,7 @@ class FeedRepositoryImpl(
     }
 
     override fun getFeed(sourceId: String, feedType: FeedType): Flow<PagingData<Topic>> {
-        val source = sourceRepository.getSource(sourceId)
-        if (source == null) {
-            return emptyFlow()
-        }
+        val source = sourceRepository.getSource(sourceId) ?: return emptyFlow()
         return source.getFeedFlow(feedType)
     }
 }

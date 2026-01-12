@@ -106,31 +106,6 @@ class TiebaSource(
         }
     }
 
-    override fun getFeedFlow(feedType: FeedType): Flow<PagingData<Topic>> {
-        return Pager(
-            config = PagingConfig(pageSize = 20, enablePlaceholders = false),
-            pagingSourceFactory = {
-                when (feedType) {
-                    FeedType.RECOMMEND -> TiebaRecommendPagingSource(
-                        api = officialProtobufTiebaApiV11,
-                        parameterProvider = tiebaParameterProvider
-                    )
-
-                    FeedType.CONCERN -> TiebaConcernPagingSource(
-                        api = officialProtobufTiebaApiV11,
-                        parameterProvider = tiebaParameterProvider
-                    )
-
-                    else -> object : PagingSource<Int, Topic>() {
-                        override fun getRefreshKey(state: PagingState<Int, Topic>): Int? = null
-                        override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Topic> =
-                            LoadResult.Page(emptyList(), null, null)
-                    }
-                }
-            }
-        ).flow
-    }
-
     override suspend fun getChannelTopics(
         channelId: String,
         page: Int,
