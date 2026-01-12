@@ -57,6 +57,8 @@ class TopicRepositoryImpl(
                             // NmbSource.getThreadDetail currently doesn't save to DB.
                             // Let's assume cache.saveThread handles basic info, but images need separate handling or source should do it.
                             cache.saveTopic(post)
+                        }.onFailure {
+                            throw it
                         }
                     }
                 }
@@ -79,6 +81,8 @@ class TopicRepositoryImpl(
                         val result = source.getTopicDetail(id, 1)
                         result.onSuccess { post ->
                             cache.saveTopic(post)
+                        }.onFailure {
+                            throw it
                         }
                     }
                 }
@@ -110,16 +114,18 @@ class TopicRepositoryImpl(
                     source.getTopicComments(topicId, page, isPoOnly)
                 },
                 saver = { comments, page, _ ->
-                    cache.saveComments(comments,sourceId,page)
+                    cache.saveComments(comments, sourceId, page)
                 },
                 endOfPaginationReached = { comments ->
                     comments.isEmpty()
                 },
                 cacheChecker = { page ->
                     if (isPoOnly) {
-                        db.commentQueries.countCommentsByTopicIdPoMode(sourceId, topicId).executeAsOne() > 0
+                        db.commentQueries.countCommentsByTopicIdPoMode(sourceId, topicId)
+                            .executeAsOne() > 0
                     } else {
-                        db.commentQueries.countCommentsByTopicId(sourceId, topicId).executeAsOne() > 0
+                        db.commentQueries.countCommentsByTopicId(sourceId, topicId)
+                            .executeAsOne() > 0
                     }
                 },
                 keyIncrementer = { it + 1 },
@@ -132,16 +138,30 @@ class TopicRepositoryImpl(
                     SqlDelightPagingSource(
                         transacter = db,
                         context = Dispatchers.IO,
-                        countQueryProvider = { db.commentQueries.countCommentsByTopicIdPoMode(sourceId, topicId) },
+                        countQueryProvider = {
+                            db.commentQueries.countCommentsByTopicIdPoMode(
+                                sourceId,
+                                topicId
+                            )
+                        },
                         pageQueryProvider = { page ->
-                            db.commentQueries.getCommentsByTopicIdPoMode(sourceId, topicId, page.toLong())
+                            db.commentQueries.getCommentsByTopicIdPoMode(
+                                sourceId,
+                                topicId,
+                                page.toLong()
+                            )
                         }
                     )
                 } else {
                     SqlDelightPagingSource(
                         transacter = db,
                         context = Dispatchers.IO,
-                        countQueryProvider = { db.commentQueries.countCommentsByTopicId(sourceId, topicId) },
+                        countQueryProvider = {
+                            db.commentQueries.countCommentsByTopicId(
+                                sourceId,
+                                topicId
+                            )
+                        },
                         pageQueryProvider = { page ->
                             db.commentQueries.getCommentsByTopicId(sourceId, topicId, page.toLong())
                         }

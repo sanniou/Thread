@@ -187,11 +187,15 @@ class TopicDetailViewModel(
     private fun updateLastAccessTime() {
         val tid = threadId.toLongOrNull() ?: return
         screenModelScope.launch {
-            updateTopicLastAccessTimeUseCase(
-                sourceId,
-                tid.toString(),
-                Clock.System.now().toEpochMilliseconds()
-            )
+            try {
+                updateTopicLastAccessTimeUseCase(
+                    sourceId,
+                    tid.toString(),
+                    Clock.System.now().toEpochMilliseconds()
+                )
+            } catch (e: Exception) {
+                //fixme
+            }
         }
     }
 
@@ -251,9 +255,9 @@ class TopicDetailViewModel(
             val metadata = (state.value.topicWrapper as? UiStateWrapper.Success)?.value
             val url = if (metadata != null) {
                 // If we have topic info, use its source URL or construct one
-                 metadata.sourceUrl.ifEmpty { "https://nmb.com/t/$threadId" }
+                metadata.sourceUrl.ifEmpty { "https://nmb.com/t/$threadId" }
             } else {
-                 "https://nmb.com/t/$threadId"
+                "https://nmb.com/t/$threadId"
             }
             _effect.send(Effect.CopyToClipboard(url))
             _effect.send(Effect.ShowSnackbar("链接已复制到剪贴板"))
@@ -280,7 +284,8 @@ class TopicDetailViewModel(
                     id = "nmb.Thread.${metadata.id}",
                     createdAt = Clock.System.now(),
                     tags = listOf(),
-                    content = metadata.title ?: "", // Metadata doesn't have content, use title or empty
+                    content = metadata.title
+                        ?: "", // Metadata doesn't have content, use title or empty
                     sourceId = metadata.id,
                     sourceType = "nmb.Thread"
                 )
