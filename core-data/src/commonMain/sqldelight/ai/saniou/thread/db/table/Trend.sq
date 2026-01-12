@@ -1,49 +1,81 @@
 import kotlin.Boolean;
 
 CREATE TABLE Trend (
-    id TEXT NOT NULL, -- Unique ID for this item, usually the topic/thread ID
+    id TEXT NOT NULL PRIMARY KEY,
     sourceId TEXT NOT NULL,
     tabId TEXT NOT NULL,
+    topicId TEXT NOT NULL,
+    date TEXT NOT NULL,
+    rank INTEGER NOT NULL,
+    page INTEGER NOT NULL,
+    
+    -- Snapshot data (used when Topic is missing)
     title TEXT NOT NULL,
     contentPreview TEXT NOT NULL,
-    rank INTEGER,
     hotness TEXT,
     channel TEXT,
     author TEXT,
     url TEXT NOT NULL,
     isNew INTEGER AS Boolean NOT NULL DEFAULT 0,
     payload TEXT,
-    page INTEGER NOT NULL,
-    createdAt INTEGER NOT NULL,
-    PRIMARY KEY (sourceId, tabId, id)
+    
+    createdAt INTEGER NOT NULL
 );
 
-CREATE INDEX idx_trend_query ON Trend(sourceId, tabId, page, rank);
+CREATE INDEX idx_trend_query ON Trend(sourceId, tabId, date, page, rank);
 
 upsert:
-INSERT INTO Trend(id, sourceId, tabId, title, contentPreview, rank, hotness, channel, author, url, isNew, payload, page, createdAt)
+INSERT INTO Trend(id, sourceId, tabId, topicId, date, rank, page, title, contentPreview, hotness, channel, author, url, isNew, payload, createdAt)
 VALUES ?
-ON CONFLICT(sourceId, tabId, id) DO UPDATE SET
+ON CONFLICT(id) DO UPDATE SET
+    sourceId = excluded.sourceId,
+    tabId = excluded.tabId,
+    topicId = excluded.topicId,
+    date = excluded.date,
+    rank = excluded.rank,
+    page = excluded.page,
     title = excluded.title,
     contentPreview = excluded.contentPreview,
-    rank = excluded.rank,
     hotness = excluded.hotness,
     channel = excluded.channel,
     author = excluded.author,
     url = excluded.url,
     isNew = excluded.isNew,
     payload = excluded.payload,
-    page = excluded.page,
     createdAt = excluded.createdAt;
 
 countTrends:
-SELECT count(*) FROM Trend WHERE sourceId = :sourceId AND tabId = :tabId;
+SELECT count(*) FROM Trend WHERE sourceId = :sourceId AND tabId = :tabId AND date = :date;
 
-getTrends:
-SELECT * FROM Trend WHERE sourceId = :sourceId AND tabId = :tabId ORDER BY page ASC, rank ASC LIMIT :limit OFFSET :offset;
+getTrendsWithTopic:
+SELECT 
+    Trend.id,
+    Trend.sourceId,
+    Trend.tabId,
+    Trend.topicId,
+    Trend.date,
+    Trend.rank,
+    Trend.page,
+    COALESCE(Topic.title, Trend.title) AS title,
+    COALESCE(Topic.summary, Trend.contentPreview) AS contentPreview,
+    Trend.hotness,
+    COALESCE(Channel.name, Trend.channel) AS channel,
+    COALESCE(Topic.authorName, Trend.author) AS author,
+    Trend.url,
+    Trend.isNew,
+    Trend.payload,
+    Trend.createdAt
+FROM Trend
+LEFT JOIN Topic ON Trend.sourceId = Topic.sourceId AND Trend.topicId = Topic.id
+LEFT JOIN Channel ON Topic.sourceId = Channel.sourceId AND Topic.channelId = Channel.id
+WHERE Trend.sourceId = :sourceId 
+  AND Trend.tabId = :tabId 
+  AND Trend.date = :date
+ORDER BY Trend.page ASC, Trend.rank ASC
+LIMIT :limit OFFSET :offset;
 
-deleteTrendsByTab:
-DELETE FROM Trend WHERE sourceId = :sourceId AND tabId = :tabId;
+deleteTrendsByTabAndDate:
+DELETE FROM Trend WHERE sourceId = :sourceId AND tabId = :tabId AND date = :date;
 
-deleteTrendsByTabAndPage:
-DELETE FROM Trend WHERE sourceId = :sourceId AND tabId = :tabId AND page = :page;
+deleteTrendsByTabDateAndPage:
+DELETE FROM Trend WHERE sourceId = :sourceId AND tabId = :tabId AND date = :date AND page = :page;

@@ -2,7 +2,7 @@ package ai.saniou.thread.data.repository
 
 import ai.saniou.thread.data.source.trend.TrendRemoteMediator
 import ai.saniou.thread.db.Database
-import ai.saniou.thread.db.table.Trend
+import ai.saniou.thread.db.table.GetTrendsWithTopic
 import ai.saniou.thread.domain.model.TrendItem
 import ai.saniou.thread.domain.model.TrendParams
 import ai.saniou.thread.domain.model.TrendTab
@@ -19,6 +19,11 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
+import kotlinx.datetime.toLocalDateTime
+import kotlin.time.Clock
 
 class TrendRepositoryImpl(
     private val sources: Set<TrendSource>, // Injected by DI
@@ -46,27 +51,30 @@ class TrendRepositoryImpl(
             params = params
         )
 
+        val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+        val targetDate = today.minus(params.dayOffset, DateTimeUnit.DAY).toString()
+
         return Pager(
             config = PagingConfig(pageSize = 20, enablePlaceholders = false),
             remoteMediator = mediator.mediator,
             pagingSourceFactory = {
                 QueryPagingSource(
-                    countQuery = db.trendQueries.countTrends(sourceId, tab.id),
+                    countQuery = db.trendQueries.countTrends(sourceId, tab.id, targetDate),
                     transacter = db.trendQueries,
                     context = Dispatchers.IO,
                     queryProvider = { limit, offset ->
-                        db.trendQueries.getTrends(sourceId, tab.id, limit, offset)
+                        db.trendQueries.getTrendsWithTopic(sourceId, tab.id, targetDate, limit, offset)
                     }
                 )
             }
         ).flow.map { pagingData ->
             pagingData.map { trend ->
                 TrendItem(
-                    id = trend.id,
+                    id = trend.topicId, // Use topicId as the main ID for UI
                     sourceId = trend.sourceId,
                     title = trend.title,
                     contentPreview = trend.contentPreview,
-                    rank = trend.rank?.toInt(),
+                    rank = trend.rank.toInt(),
                     hotness = trend.hotness,
                     channel = trend.channel,
                     author = trend.author,
