@@ -32,45 +32,45 @@ interface OfficialProtobufTiebaApi {
      * cmd=309264
      */
     @POST("c/f/excellent/personalized?cmd=309264")
-    fun personalizedFlow(
+    suspend fun personalizedFlow(
         @Body body: MultiPartFormDataContent,
-    ): Flow<PersonalizedResponse>
+    ): PersonalizedResponse
 
     /**
      * 用户关注的吧更新流 (Protobuf)
      * cmd=309474
      */
     @POST("c/f/concern/userlike?cmd=309474")
-    fun userLikeFlow(
+    suspend fun userLikeFlow(
         @Body body: MultiPartFormDataContent,
-    ): Flow<UserLikeResponse>
+    ): UserLikeResponse
 
     /**
      * 热门帖子列表 (Protobuf)
      * cmd=309661
      */
     @POST("c/f/forum/hotThreadList?cmd=309661")
-    fun hotThreadListFlow(
+    suspend fun hotThreadListFlow(
         @Body body: MultiPartFormDataContent,
-    ): Flow<HotThreadListResponse>
+    ): HotThreadListResponse
 
     /**
      * 推荐话题列表 (Protobuf)
      * cmd=309289
      */
     @POST("c/f/recommend/topicList?cmd=309289")
-    fun topicListFlow(
+    suspend fun topicListFlow(
         @Body body: MultiPartFormDataContent,
-    ): Flow<TopicListResponse>
+    ): TopicListResponse
 
     /**
      * 板块推荐 (Protobuf)
      * cmd=303011
      */
     @POST("c/f/forum/forumrecommend?cmd=303011")
-    fun forumRecommendFlow(
+    suspend fun forumRecommendFlow(
         @Body body: MultiPartFormDataContent,
-    ): Flow<ForumRecommendResponse>
+    ): ForumRecommendResponse
 
     /**
      * 吧首页帖子列表 (FRS Page) (Protobuf)
@@ -79,134 +79,134 @@ interface OfficialProtobufTiebaApi {
      * @param forumName 吧名 header (部分请求需要)
      */
     @POST("c/f/frs/page?cmd=301001")
-    fun frsPageFlow(
+    suspend fun frsPageFlow(
         @Body body: MultiPartFormDataContent,
         @Header("forum_name") forumName: String? = null,
-    ): Flow<FrsPageResponse>
+    ): FrsPageResponse
 
     /**
      * 吧帖子列表 (FRS ThreadList) (Protobuf)
      * cmd=301002
      */
     @POST("c/f/frs/threadlist?cmd=301002")
-    fun threadListFlow(
+    suspend fun threadListFlow(
         @Body body: MultiPartFormDataContent,
-    ): Flow<ThreadListResponse>
+    ): ThreadListResponse
 
     /**
      * 用户资料 (Protobuf)
      * cmd=303012
      */
     @POST("c/u/user/profile?cmd=303012&format=protobuf")
-    fun profileFlow(
+    suspend fun profileFlow(
         @Body body: MultiPartFormDataContent,
-    ): Flow<ProfileResponse>
+    ): ProfileResponse
 
     /**
      * 帖子详情页 (PB Page) (Protobuf)
      * cmd=302001
      */
     @POST("c/f/pb/page?cmd=302001&format=protobuf")
-    fun pbPageFlow(
+    suspend fun pbPageFlow(
         @Body body: MultiPartFormDataContent,
-    ): Flow<PbPageResponse>
+    ): PbPageResponse
 
     /**
      * 楼中楼 (PB Floor) (Protobuf)
      * cmd=302002
      */
     @POST("c/f/pb/floor?cmd=302002&format=protobuf")
-    fun pbFloorFlow(
+    suspend fun pbFloorFlow(
         @Body body: MultiPartFormDataContent,
-    ): Flow<PbFloorResponse>
+    ): PbFloorResponse
 
     /**
      * 发布新帖 (Protobuf)
      * cmd=309731
      */
     @POST("c/c/post/add?cmd=309731&format=protobuf")
-    fun addPostFlow(
+    suspend fun addPostFlow(
         @Body body: MultiPartFormDataContent,
-    ): Flow<AddPostResponse>
+    ): AddPostResponse
 
     /**
      * 搜索建议 (Protobuf)
      * cmd=309438
      */
     @POST("c/s/searchSug?cmd=309438&format=protobuf")
-    fun searchSugFlow(
+    suspend fun searchSugFlow(
         @Body body: MultiPartFormDataContent,
-    ): Flow<SearchSugResponse>
+    ): SearchSugResponse
 
     /**
      * 获取吧详情 (Protobuf)
      * cmd=303021
      */
     @POST("c/f/forum/getforumdetail?cmd=303021&format=protobuf")
-    fun getForumDetailFlow(
+    suspend fun getForumDetailFlow(
         @Body body: MultiPartFormDataContent,
-    ): Flow<GetForumDetailResponse>
+    ): GetForumDetailResponse
 
     /**
      * 获取吧务信息 (Protobuf)
      * cmd=301007
      */
     @POST("c/f/forum/getBawuInfo?cmd=301007&format=protobuf")
-    fun getBawuInfoFlow(
+    suspend fun getBawuInfoFlow(
         @Body body: MultiPartFormDataContent,
-    ): Flow<GetBawuInfoResponse>
+    ): GetBawuInfoResponse
 
     /**
      * 获取等级信息 (Protobuf)
      * cmd=301005
      */
     @POST("c/f/forum/getLevelInfo?cmd=301005&format=protobuf")
-    fun getLevelInfoFlow(
+    suspend fun getLevelInfoFlow(
         @Body body: MultiPartFormDataContent,
-    ): Flow<GetLevelInfoResponse>
+    ): GetLevelInfoResponse
 
     /**
      * 获取成员信息 (Protobuf)
      * cmd=301004
      */
     @POST("c/f/forum/getMemberInfo?cmd=301004&format=protobuf")
-    fun getMemberInfoFlow(
+    suspend fun getMemberInfoFlow(
         @Body body: MultiPartFormDataContent,
-    ): Flow<GetMemberInfoResponse>
+    ): GetMemberInfoResponse
 
     /**
      * 获取吧规详情 (Protobuf)
      * cmd=309690
      */
     @POST("c/f/forum/forumRuleDetail?cmd=309690&format=protobuf")
-    fun forumRuleDetailFlow(
+    suspend fun forumRuleDetailFlow(
         @Body body: MultiPartFormDataContent,
-    ): Flow<ForumRuleDetailResponse>
+    ): ForumRuleDetailResponse
 
     /**
      * 获取用户发布列表 (Protobuf)
      * cmd=303002
      */
     @POST("c/u/feed/userpost?cmd=303002&format=protobuf")
-    fun userPostFlow(
+    suspend fun userPostFlow(
         @Body body: MultiPartFormDataContent,
-    ): Flow<UserPostResponse>
+    ): UserPostResponse
 
     /**
      * 获取用户信息 (Protobuf)
      * cmd=303024
      */
     @POST("c/u/user/getuserinfo?cmd=303024&format=protobuf")
-    fun getUserInfoFlow(
+    suspend fun getUserInfoFlow(
         @Body body: MultiPartFormDataContent,
-    ): Flow<GetUserInfoResponse>
+    ): GetUserInfoResponse
 
     /**
      * 获取浏览历史板块 (Protobuf)
      * cmd=309601
      */
     @POST("c/f/forum/gethistoryforum?cmd=309601&format=protobuf")
-    fun getHistoryForumFlow(
+    suspend fun getHistoryForumFlow(
         @Body body: MultiPartFormDataContent,
-    ): Flow<GetHistoryForumResponse>
+    ): GetHistoryForumResponse
 }

@@ -89,7 +89,7 @@ class TiebaSource(
             parameterProvider = tiebaParameterProvider
         )
 
-        val response = officialProtobufTiebaApiV11.forumRecommendFlow(body).first()
+        val response = officialProtobufTiebaApiV11.forumRecommendFlow(body)
 
         if (response.error?.error_code != 0) {
             throw Exception("Failed to fetch channels: ${response.error?.error_msg} (Code: ${response.error?.error_code})")
@@ -173,7 +173,7 @@ class TiebaSource(
 
         val response =
             officialProtobufTiebaApiV12.frsPageFlow(body, forumName.encodeURLQueryComponent())
-                .first()
+
 
         if (response.error?.error_code != 0) {
             throw Exception("Tieba Error: ${response.error?.error_msg} (Code: ${response.error?.error_code})")
@@ -216,7 +216,7 @@ class TiebaSource(
             parameterProvider = tiebaParameterProvider
         )
 
-        val response = officialProtobufTiebaApiV12.pbPageFlow(body).first()
+        val response = officialProtobufTiebaApiV12.pbPageFlow(body)
 
         if (response.error?.error_code != 0) {
             throw Exception("Failed to fetch topic comments: ${response.error?.error_msg} (Code: ${response.error?.error_code})")
@@ -254,7 +254,7 @@ class TiebaSource(
             parameterProvider = tiebaParameterProvider
         )
 
-        val response = officialProtobufTiebaApiV12.pbPageFlow(body).first()
+        val response = officialProtobufTiebaApiV12.pbPageFlow(body)
 
         if (response.error?.error_code != 0) {
             throw Exception("Failed to fetch topic detail: ${response.error?.error_msg} (Code: ${response.error?.error_code})")
@@ -297,7 +297,7 @@ class TiebaSource(
             clientVersion = ClientVersion.TIEBA_V12,
             parameterProvider = tiebaParameterProvider
         )
-        val response = officialProtobufTiebaApiV12.pbFloorFlow(body).first()
+        val response = officialProtobufTiebaApiV12.pbFloorFlow(body)
         if (response.error?.error_code != 0) {
             throw Exception("Failed to fetch sub-comments: ${response.error?.error_msg} (Code: ${response.error?.error_code})")
         }

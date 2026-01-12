@@ -36,7 +36,7 @@ class TiebaConcernPagingSource(
                 parameterProvider = parameterProvider
             )
 
-            val response = api.userLikeFlow(body).first()
+            val response = api.userLikeFlow(body)
 
             if (response.error?.error_code != 0) {
                 return LoadResult.Error(Exception("Tieba Error: ${response.error?.error_msg} (Code: ${response.error?.error_code})"))

@@ -22,10 +22,12 @@ import com.huanchengfly.tieba.post.api.models.protos.topicList.TopicListRequest
 import com.huanchengfly.tieba.post.api.models.protos.topicList.TopicListRequestData
 import com.huanchengfly.tieba.post.api.models.protos.userLike.UserLikeRequest
 import com.huanchengfly.tieba.post.api.models.protos.userLike.UserLikeRequestData
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlin.collections.emptyList
+import kotlin.coroutines.coroutineContext
 
 class TiebaTrendSource(
     private val officialProtobufTiebaApiV11: OfficialProtobufTiebaApi,
@@ -102,7 +104,7 @@ class TiebaTrendSource(
             clientVersion = ClientVersion.TIEBA_V11,
             parameterProvider = tiebaParameterProvider
         )
-        val response = officialProtobufTiebaApiV11.hotThreadListFlow(body).first()
+        val response = officialProtobufTiebaApiV11.hotThreadListFlow(body)
         if (response.error?.error_code != 0 && response.error?.error_code != null) {
             throw Exception("Tieba Error: ${response.error?.error_msg}")
         }
@@ -124,7 +126,7 @@ class TiebaTrendSource(
             clientVersion = ClientVersion.TIEBA_V11,
             parameterProvider = tiebaParameterProvider
         )
-        val response = officialProtobufTiebaApiV11.topicListFlow(body).first()
+        val response = officialProtobufTiebaApiV11.topicListFlow(body)
         if (response.error?.error_code != 0 && response.error?.error_code != null) {
             throw Exception("Tieba Error: ${response.error?.error_msg}")
         }
@@ -147,7 +149,7 @@ class TiebaTrendSource(
             clientVersion = ClientVersion.TIEBA_V11,
             parameterProvider = tiebaParameterProvider
         )
-        val response = officialProtobufTiebaApiV11.userLikeFlow(body).first()
+        val response = officialProtobufTiebaApiV11.userLikeFlow(body)
         if (response.error?.error_code != 0 && response.error?.error_code != null) {
             throw Exception("Tieba Error: ${response.error?.error_msg}")
         }
@@ -170,7 +172,7 @@ class TiebaTrendSource(
             clientVersion = ClientVersion.TIEBA_V11,
             parameterProvider = tiebaParameterProvider
         )
-        val response = officialProtobufTiebaApiV11.personalizedFlow(body).first()
+        val response = officialProtobufTiebaApiV11.personalizedFlow(body)
         if (response.error?.error_code != 0 && response.error?.error_code != null) {
             throw Exception("Tieba Error: ${response.error?.error_msg}")
         }
