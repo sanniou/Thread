@@ -90,11 +90,11 @@ class SqlDelightSourceCache(
         )
     }
 
-    override fun saveTopic(topic: Topic) {
+    override suspend fun saveTopic(topic: Topic) {
         saveTopics(listOf(topic), false, topic.sourceName, topic.channelId)
     }
 
-    override fun saveTopics(
+    override suspend fun saveTopics(
         topics: List<Topic>,
         clearPage: Boolean,
         sourceId: String,
@@ -155,7 +155,7 @@ class SqlDelightSourceCache(
         }
     }
 
-    override fun saveComments(comments: List<DomainComment>, sourceId: String, page: Int) {
+    override suspend fun saveComments(comments: List<DomainComment>, sourceId: String, page: Int) {
         commentQueries.transaction {
             comments.forEach { comment ->
                 commentQueries.upsertComment(
@@ -176,15 +176,15 @@ class SqlDelightSourceCache(
         }
     }
 
-    override fun clearChannelCache(sourceId: String, channelId: String) {
+    override suspend fun clearChannelCache(sourceId: String, channelId: String) {
         topicQueries.deleteTopicPage(sourceId, channelId)
     }
 
-    override fun clearTopicCommentsCache(sourceId: String, topicId: String) {
+    override suspend fun clearTopicCommentsCache(sourceId: String, topicId: String) {
         commentQueries.deleteCommentsByTopicId(sourceId, topicId)
     }
 
-    override fun updateTopicLastAccessTime(
+    override suspend fun updateTopicLastAccessTime(
         sourceId: String,
         topicId: String,
         time: Long,
@@ -192,7 +192,7 @@ class SqlDelightSourceCache(
         topicQueries.updateTopicLastAccessTime(time, sourceId, topicId)
     }
 
-    override fun updateTopicLastReadCommentId(
+    override suspend fun updateTopicLastReadCommentId(
         sourceId: String,
         topicId: String,
         commentId: String,
@@ -240,7 +240,7 @@ class SqlDelightSourceCache(
         return result
     }
 
-    override fun saveChannels(forums: List<Channel>) {
+    override suspend fun saveChannels(forums: List<Channel>) {
         channelQueries.transaction {
             forums.forEach { forum ->
                 channelQueries.insertChannel(forum)

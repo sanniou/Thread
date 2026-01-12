@@ -242,7 +242,8 @@ val dataModule = DI.Module("dataModule") {
 
     bind<TrendRepository>() with singleton {
         TrendRepositoryImpl(
-            instance(tag = "allTrendSources")
+            instance(tag = "allTrendSources"),
+            instance()
         )
     }
     bind<ReferenceRepository>() with singleton { ReferenceRepositoryImpl(instance(), instance()) }

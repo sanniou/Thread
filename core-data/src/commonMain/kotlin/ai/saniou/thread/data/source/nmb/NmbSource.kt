@@ -665,7 +665,7 @@ class NmbSource(
     }
 }
 
-internal fun saveNmbImage(
+internal suspend fun saveNmbImage(
     db: Database,
     cdnManager: CdnManager,
     sourceId: String,

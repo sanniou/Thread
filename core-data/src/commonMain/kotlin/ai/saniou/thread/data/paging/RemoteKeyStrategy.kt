@@ -34,7 +34,7 @@ interface RemoteKeyStrategy<Key : Any, Value : Any> {
     /**
      * 插入或更新 RemoteKey
      */
-    fun insertKeys(key: Key, prevKey: Key?, nextKey: Key?, endOfPagination: Boolean)
+    suspend fun insertKeys(key: Key, prevKey: Key?, nextKey: Key?, endOfPagination: Boolean)
 }
 
 /**
@@ -66,7 +66,7 @@ class DefaultRemoteKeyStrategy<Value : Any>(
         return remoteKeyQueries.getRemoteKeyById(type, id).executeAsOneOrNull()
     }
 
-    override fun insertKeys(
+    override suspend fun insertKeys(
         key: Int,
         prevKey: Int?,
         nextKey: Int?,

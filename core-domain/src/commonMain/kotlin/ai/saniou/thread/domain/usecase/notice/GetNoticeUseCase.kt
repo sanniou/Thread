@@ -16,7 +16,7 @@ class GetNoticeUseCase(
 class MarkNoticeAsReadUseCase(
     private val noticeRepository: NoticeRepository
 ) {
-    operator fun invoke(id: String) {
+    suspend operator fun invoke(id: String) {
         noticeRepository.markAsRead(id)
     }
 }

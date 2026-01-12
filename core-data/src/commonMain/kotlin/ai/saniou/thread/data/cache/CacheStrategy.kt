@@ -44,7 +44,7 @@ object CacheStrategy {
      * @param keyType 远程键类型
      * @param keyId 远程键ID
      */
-    fun updateLastFetchTime(
+    suspend fun updateLastFetchTime(
         db: Database,
         keyType: RemoteKeyType,
         keyId: String

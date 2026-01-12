@@ -87,6 +87,7 @@ sqldelight {
         create("Database") {
             dialect(libs.sqldelight.sqlite.dialect)
             packageName.set("ai.saniou.thread.db")
+            generateAsync.set(true)
         }
     }
 }

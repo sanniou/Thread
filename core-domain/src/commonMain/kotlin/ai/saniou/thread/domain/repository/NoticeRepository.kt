@@ -6,5 +6,5 @@ import kotlinx.coroutines.flow.Flow
 interface NoticeRepository {
     suspend fun getLatestNotice(): Flow<Notice?>
     suspend fun fetchAndCacheNotice()
-    fun markAsRead(id: String)
+    suspend fun markAsRead(id: String)
 }

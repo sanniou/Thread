@@ -3,16 +3,16 @@ package ai.saniou.forum.workflow.home
 import ai.saniou.coreui.state.UiStateWrapper
 import ai.saniou.coreui.state.toAppError
 import ai.saniou.forum.initializer.AppInitializer
-import ai.saniou.forum.workflow.home.ChannelContract.Event
-import ai.saniou.forum.workflow.home.ChannelContract.ChannelUiState
 import ai.saniou.forum.workflow.home.ChannelContract.ChannelCategoryUiState
+import ai.saniou.forum.workflow.home.ChannelContract.ChannelUiState
+import ai.saniou.forum.workflow.home.ChannelContract.Event
 import ai.saniou.thread.domain.model.forum.Channel
-import ai.saniou.thread.domain.usecase.channel.GetFavoriteChannelsUseCase
-import ai.saniou.thread.domain.usecase.channel.GetChannelsUseCase
 import ai.saniou.thread.domain.repository.SettingsRepository
 import ai.saniou.thread.domain.repository.getValue
 import ai.saniou.thread.domain.repository.saveValue
 import ai.saniou.thread.domain.usecase.channel.FetchChannelsUseCase
+import ai.saniou.thread.domain.usecase.channel.GetChannelsUseCase
+import ai.saniou.thread.domain.usecase.channel.GetFavoriteChannelsUseCase
 import ai.saniou.thread.domain.usecase.channel.GetLastOpenedChannelUseCase
 import ai.saniou.thread.domain.usecase.channel.SaveLastOpenedChannelUseCase
 import ai.saniou.thread.domain.usecase.notice.GetNoticeUseCase
@@ -26,7 +26,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 

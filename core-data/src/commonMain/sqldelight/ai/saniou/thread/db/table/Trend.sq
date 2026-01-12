@@ -1,0 +1,49 @@
+import kotlin.Boolean;
+
+CREATE TABLE Trend (
+    id TEXT NOT NULL, -- Unique ID for this item, usually the topic/thread ID
+    sourceId TEXT NOT NULL,
+    tabId TEXT NOT NULL,
+    title TEXT NOT NULL,
+    contentPreview TEXT NOT NULL,
+    rank INTEGER,
+    hotness TEXT,
+    channel TEXT,
+    author TEXT,
+    url TEXT NOT NULL,
+    isNew INTEGER AS Boolean NOT NULL DEFAULT 0,
+    payload TEXT,
+    page INTEGER NOT NULL,
+    createdAt INTEGER NOT NULL,
+    PRIMARY KEY (sourceId, tabId, id)
+);
+
+CREATE INDEX idx_trend_query ON Trend(sourceId, tabId, page, rank);
+
+upsert:
+INSERT INTO Trend(id, sourceId, tabId, title, contentPreview, rank, hotness, channel, author, url, isNew, payload, page, createdAt)
+VALUES ?
+ON CONFLICT(sourceId, tabId, id) DO UPDATE SET
+    title = excluded.title,
+    contentPreview = excluded.contentPreview,
+    rank = excluded.rank,
+    hotness = excluded.hotness,
+    channel = excluded.channel,
+    author = excluded.author,
+    url = excluded.url,
+    isNew = excluded.isNew,
+    payload = excluded.payload,
+    page = excluded.page,
+    createdAt = excluded.createdAt;
+
+countTrends:
+SELECT count(*) FROM Trend WHERE sourceId = :sourceId AND tabId = :tabId;
+
+getTrends:
+SELECT * FROM Trend WHERE sourceId = :sourceId AND tabId = :tabId ORDER BY page ASC, rank ASC LIMIT :limit OFFSET :offset;
+
+deleteTrendsByTab:
+DELETE FROM Trend WHERE sourceId = :sourceId AND tabId = :tabId;
+
+deleteTrendsByTabAndPage:
+DELETE FROM Trend WHERE sourceId = :sourceId AND tabId = :tabId AND page = :page;

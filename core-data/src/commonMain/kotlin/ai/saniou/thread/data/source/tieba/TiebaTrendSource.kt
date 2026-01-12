@@ -44,39 +44,30 @@ class TiebaTrendSource(
     }
 
     override fun getTrendPagingData(tab: TrendTab, params: TrendParams): Flow<PagingData<TrendItem>> {
-        return Pager(
-            config = PagingConfig(pageSize = 20, enablePlaceholders = false),
-            pagingSourceFactory = {
-                when (tab.id) {
-                    "tieba_hot" -> TiebaHotThreadPagingSource(
-                        officialProtobufTiebaApiV11,
-                        tiebaParameterProvider
-                    )
+        // This method is now deprecated in favor of fetchTrendData + RemoteMediator
+        // But we keep it empty or throw exception if called directly,
+        // or we can implement a simple Pager if we want to support non-cached mode.
+        // For now, since we are moving to Repository-managed PagingData, this can be removed or left as stub.
+        // However, the interface still requires it.
+        // Ideally, we should refactor the interface to remove this method if all sources support fetchTrendData.
+        // But for gradual migration, let's return empty flow here as Repository will use fetchTrendData.
+        return kotlinx.coroutines.flow.emptyFlow()
+    }
 
-                    "tieba_topic" -> TiebaTopicListPagingSource(
-                        officialProtobufTiebaApiV11,
-                        tiebaParameterProvider
-                    )
-
-                    "tieba_concern" -> TiebaConcernPagingSource(
-                        officialProtobufTiebaApiV11,
-                        tiebaParameterProvider
-                    )
-
-                    "tieba_recommend" -> TiebaRecommendPagingSource(
-                        officialProtobufTiebaApiV11,
-                        tiebaParameterProvider
-                    )
-
-                    else -> object : PagingSource<Int, Topic>() {
-                        override fun getRefreshKey(state: PagingState<Int, Topic>): Int? = null
-                        override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Topic> =
-                            LoadResult.Page(emptyList(), null, null)
-                    }
-                }
+    override suspend fun fetchTrendData(
+        tab: TrendTab,
+        params: TrendParams,
+        page: Int
+    ): Result<List<TrendItem>> {
+        return try {
+            val topics = when (tab.id) {
+                "tieba_hot" -> fetchHotThread(page)
+                "tieba_topic" -> fetchTopicList(page)
+                "tieba_concern" -> fetchConcern(page)
+                "tieba_recommend" -> fetchRecommend(page)
+                else -> emptyList()
             }
-        ).flow.map { pagingData ->
-            pagingData.map { topic ->
+            Result.success(topics.map { topic ->
                 TrendItem(
                     id = topic.id,
                     sourceId = id,
@@ -90,171 +81,99 @@ class TiebaTrendSource(
                     isNew = false,
                     payload = emptyMap()
                 )
-            }
+            })
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 
-    private class TiebaHotThreadPagingSource(
-        private val api: OfficialProtobufTiebaApi,
-        private val parameterProvider: TiebaParameterProvider
-    ) : PagingSource<Int, Topic>() {
-        override fun getRefreshKey(state: PagingState<Int, Topic>): Int? = null
-
-        override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Topic> {
-            val page = params.key ?: 1
-            if (page > 1) {
-                return LoadResult.Page(emptyList(), null, null)
-            }
-            return try {
-                val request = HotThreadListRequest(
-                    HotThreadListRequestData(
-                        common = TiebaProtoBuilder.buildCommonRequest(
-                            parameterProvider,
-                            ClientVersion.TIEBA_V11
-                        )
-                    )
+    private suspend fun fetchHotThread(page: Int): List<Topic> {
+        if (page > 1) return emptyList()
+        val request = HotThreadListRequest(
+            HotThreadListRequestData(
+                common = TiebaProtoBuilder.buildCommonRequest(
+                    tiebaParameterProvider,
+                    ClientVersion.TIEBA_V11
                 )
-                val body = TiebaProtoBuilder.buildProtobufFormBody(
-                    data = request,
-                    clientVersion = ClientVersion.TIEBA_V11,
-                    parameterProvider = parameterProvider
-                )
-                val response = api.hotThreadListFlow(body).first()
-                if (response.error?.error_code != 0 && response.error?.error_code != null) {
-                    return LoadResult.Error(Exception("Tieba Error: ${response.error?.error_msg}"))
-                }
-                val topics = TiebaMapper.mapHotThreadListResponseToTopics(response)
-                LoadResult.Page(
-                    data = topics,
-                    prevKey = null,
-                    nextKey = null
-                )
-            } catch (e: Exception) {
-                LoadResult.Error(e)
-            }
+            )
+        )
+        val body = TiebaProtoBuilder.buildProtobufFormBody(
+            data = request,
+            clientVersion = ClientVersion.TIEBA_V11,
+            parameterProvider = tiebaParameterProvider
+        )
+        val response = officialProtobufTiebaApiV11.hotThreadListFlow(body).first()
+        if (response.error?.error_code != 0 && response.error?.error_code != null) {
+            throw Exception("Tieba Error: ${response.error?.error_msg}")
         }
+        return TiebaMapper.mapHotThreadListResponseToTopics(response)
     }
 
-    private class TiebaTopicListPagingSource(
-        private val api: OfficialProtobufTiebaApi,
-        private val parameterProvider: TiebaParameterProvider
-    ) : PagingSource<Int, Topic>() {
-        override fun getRefreshKey(state: PagingState<Int, Topic>): Int? = null
-
-        override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Topic> {
-            val page = params.key ?: 1
-            if (page > 1) {
-                return LoadResult.Page(emptyList(), null, null)
-            }
-            return try {
-                val request = TopicListRequest(
-                    TopicListRequestData(
-                        common = TiebaProtoBuilder.buildCommonRequest(
-                            parameterProvider,
-                            ClientVersion.TIEBA_V11
-                        ),
-                    )
-                )
-                val body = TiebaProtoBuilder.buildProtobufFormBody(
-                    data = request,
-                    clientVersion = ClientVersion.TIEBA_V11,
-                    parameterProvider = parameterProvider
-                )
-                val response = api.topicListFlow(body).first()
-                if (response.error?.error_code != 0 && response.error?.error_code != null) {
-                    return LoadResult.Error(Exception("Tieba Error: ${response.error?.error_msg}"))
-                }
-                val topics = TiebaMapper.mapTopicListResponseToTopics(response)
-                LoadResult.Page(
-                    data = topics,
-                    prevKey = null,
-                    nextKey = null
-                )
-            } catch (e: Exception) {
-                LoadResult.Error(e)
-            }
+    private suspend fun fetchTopicList(page: Int): List<Topic> {
+        if (page > 1) return emptyList()
+        val request = TopicListRequest(
+            TopicListRequestData(
+                common = TiebaProtoBuilder.buildCommonRequest(
+                    tiebaParameterProvider,
+                    ClientVersion.TIEBA_V11
+                ),
+            )
+        )
+        val body = TiebaProtoBuilder.buildProtobufFormBody(
+            data = request,
+            clientVersion = ClientVersion.TIEBA_V11,
+            parameterProvider = tiebaParameterProvider
+        )
+        val response = officialProtobufTiebaApiV11.topicListFlow(body).first()
+        if (response.error?.error_code != 0 && response.error?.error_code != null) {
+            throw Exception("Tieba Error: ${response.error?.error_msg}")
         }
+        return TiebaMapper.mapTopicListResponseToTopics(response)
     }
 
-    private class TiebaConcernPagingSource(
-        private val api: OfficialProtobufTiebaApi,
-        private val parameterProvider: TiebaParameterProvider
-    ) : PagingSource<Int, Topic>() {
-        override fun getRefreshKey(state: PagingState<Int, Topic>): Int? = null
-
-        override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Topic> {
-            val page = params.key ?: 1
-            return try {
-                val request = UserLikeRequest(
-                    UserLikeRequestData(
-                        common = TiebaProtoBuilder.buildCommonRequest(
-                            parameterProvider,
-                            ClientVersion.TIEBA_V11
-                        ),
-                        pageTag = if (page == 1) "" else page.toString(),
-                        loadType = if (page == 1) 1 else 2
-                    )
-                )
-                val body = TiebaProtoBuilder.buildProtobufFormBody(
-                    data = request,
-                    clientVersion = ClientVersion.TIEBA_V11,
-                    parameterProvider = parameterProvider
-                )
-                val response = api.userLikeFlow(body).first()
-                if (response.error?.error_code != 0 && response.error?.error_code != null) {
-                    return LoadResult.Error(Exception("Tieba Error: ${response.error?.error_msg}"))
-                }
-                val topics = TiebaMapper.mapUserLikeResponseToTopics(response)
-                val nextKey = if (topics.isNotEmpty()) page + 1 else null
-                LoadResult.Page(
-                    data = topics,
-                    prevKey = if (page == 1) null else page - 1,
-                    nextKey = nextKey
-                )
-            } catch (e: Exception) {
-                LoadResult.Error(e)
-            }
+    private suspend fun fetchConcern(page: Int): List<Topic> {
+        val request = UserLikeRequest(
+            UserLikeRequestData(
+                common = TiebaProtoBuilder.buildCommonRequest(
+                    tiebaParameterProvider,
+                    ClientVersion.TIEBA_V11
+                ),
+                pageTag = if (page == 1) "" else page.toString(),
+                loadType = if (page == 1) 1 else 2
+            )
+        )
+        val body = TiebaProtoBuilder.buildProtobufFormBody(
+            data = request,
+            clientVersion = ClientVersion.TIEBA_V11,
+            parameterProvider = tiebaParameterProvider
+        )
+        val response = officialProtobufTiebaApiV11.userLikeFlow(body).first()
+        if (response.error?.error_code != 0 && response.error?.error_code != null) {
+            throw Exception("Tieba Error: ${response.error?.error_msg}")
         }
+        return TiebaMapper.mapUserLikeResponseToTopics(response)
     }
 
-    private class TiebaRecommendPagingSource(
-        private val api: OfficialProtobufTiebaApi,
-        private val parameterProvider: TiebaParameterProvider
-    ) : PagingSource<Int, Topic>() {
-        override fun getRefreshKey(state: PagingState<Int, Topic>): Int? = null
-
-        override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Topic> {
-            val page = params.key ?: 1
-            return try {
-                val request = PersonalizedRequest(
-                    PersonalizedRequestData(
-                        common = TiebaProtoBuilder.buildCommonRequest(
-                            parameterProvider,
-                            ClientVersion.TIEBA_V11
-                        ),
-                        load_type = if (page == 1) 1 else 2,
-                        pn = page
-                    )
-                )
-                val body = TiebaProtoBuilder.buildProtobufFormBody(
-                    data = request,
-                    clientVersion = ClientVersion.TIEBA_V11,
-                    parameterProvider = parameterProvider
-                )
-                val response = api.personalizedFlow(body).first()
-                if (response.error?.error_code != 0 && response.error?.error_code != null) {
-                    return LoadResult.Error(Exception("Tieba Error: ${response.error?.error_msg}"))
-                }
-                val topics = TiebaMapper.mapPersonalizedResponseToTopics(response)
-                val nextKey = page + 1
-                LoadResult.Page(
-                    data = topics,
-                    prevKey = if (page == 1) null else page - 1,
-                    nextKey = nextKey
-                )
-            } catch (e: Exception) {
-                LoadResult.Error(e)
-            }
+    private suspend fun fetchRecommend(page: Int): List<Topic> {
+        val request = PersonalizedRequest(
+            PersonalizedRequestData(
+                common = TiebaProtoBuilder.buildCommonRequest(
+                    tiebaParameterProvider,
+                    ClientVersion.TIEBA_V11
+                ),
+                load_type = if (page == 1) 1 else 2,
+                pn = page
+            )
+        )
+        val body = TiebaProtoBuilder.buildProtobufFormBody(
+            data = request,
+            clientVersion = ClientVersion.TIEBA_V11,
+            parameterProvider = tiebaParameterProvider
+        )
+        val response = officialProtobufTiebaApiV11.personalizedFlow(body).first()
+        if (response.error?.error_code != 0 && response.error?.error_code != null) {
+            throw Exception("Tieba Error: ${response.error?.error_msg}")
         }
+        return TiebaMapper.mapPersonalizedResponseToTopics(response)
     }
 }

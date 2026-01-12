@@ -37,7 +37,7 @@ interface SourceCache {
     /**
      * 保存帖子详情
      */
-    fun saveTopic(topic: Topic)
+    suspend fun saveTopic(topic: Topic)
 
     /**
      * 批量保存帖子
@@ -48,7 +48,7 @@ interface SourceCache {
      * @param channelId 频道ID (用于清理)
      * @param page 页码 (用于清理)
      */
-    fun saveTopics(
+    suspend fun saveTopics(
         topics: List<Topic>,
         clearPage: Boolean = false,
         sourceId: String,
@@ -59,27 +59,27 @@ interface SourceCache {
     /**
      * 保存回复列表
      */
-    fun saveComments(comments: List<DomainComment>, sourceId: String, page: Int)
+    suspend fun saveComments(comments: List<DomainComment>, sourceId: String, page: Int)
 
     /**
      * 清除指定板块的缓存
      */
-    fun clearChannelCache(sourceId: String, channelId: String)
+    suspend fun clearChannelCache(sourceId: String, channelId: String)
 
     /**
      * 清除指定帖子的回复缓存
      */
-    fun clearTopicCommentsCache(sourceId: String, topicId: String)
+    suspend fun clearTopicCommentsCache(sourceId: String, topicId: String)
 
     /**
      * 更新帖子最后访问时间
      */
-    fun updateTopicLastAccessTime(sourceId: String, topicId: String, time: Long)
+    suspend fun updateTopicLastAccessTime(sourceId: String, topicId: String, time: Long)
 
     /**
      * 更新帖子最后阅读的回复ID
      */
-    fun updateTopicLastReadCommentId(sourceId: String, topicId: String, commentId: String)
+    suspend fun updateTopicLastReadCommentId(sourceId: String, topicId: String, commentId: String)
 
     /**
      * 获取指定来源的所有板块
@@ -94,5 +94,5 @@ interface SourceCache {
     /**
      * 批量保存板块
      */
-    fun saveChannels(forums: List<Channel>)
+    suspend fun saveChannels(forums: List<Channel>)
 }

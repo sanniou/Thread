@@ -54,7 +54,7 @@ class NoticeRepositoryImpl(
         }
     }
 
-    override fun markAsRead(id: String) {
+    override suspend fun markAsRead(id: String) {
         db.noticeQueries.markAsRead(id)
     }
 

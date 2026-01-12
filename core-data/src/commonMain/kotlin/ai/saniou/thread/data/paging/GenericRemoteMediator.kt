@@ -37,7 +37,7 @@ class GenericRemoteMediator<Key : Any, Value : Any, ResponseType : Any>(
     private val initialKey: Key,
     private val remoteKeyStrategy: RemoteKeyStrategy<Key, Value>,
     private val fetcher: suspend (key: Key) -> Result<ResponseType>,
-    private val saver: (ResponseType, Key, LoadType) -> Unit,
+    private val saver: suspend (ResponseType, Key, LoadType) -> Unit,
     private val endOfPaginationReached: (ResponseType) -> Boolean,
     private val cacheChecker: (suspend (Key) -> Boolean)? = null,
     private val keyIncrementer: (Key) -> Key,
@@ -86,7 +86,6 @@ class GenericRemoteMediator<Key : Any, Value : Any, ResponseType : Any>(
         return fetcher(key).fold(
             onSuccess = { responseData ->
                 val endOfPagination = endOfPaginationReached(responseData)
-
                 db.transaction {
                     saver(responseData, key, loadType)
 

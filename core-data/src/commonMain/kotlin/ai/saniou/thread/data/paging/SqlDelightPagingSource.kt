@@ -36,7 +36,7 @@ import kotlin.properties.Delegates
  * @throws IllegalArgumentException 如果没有提供任何 queryProvider，或者同时提供了两者。
  */
 class SqlDelightPagingSource<Value : Any>(
-    private val transacter: Transacter,
+    private val transacter: SuspendingTransacter,
     private val context: CoroutineContext,
     private val countQueryProvider: () -> Query<Long>,
     private val limitOffsetQueryProvider: ((limit: Long, offset: Long) -> Query<Value>)? = null,
