@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -27,12 +26,12 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 
 /**
- * 商业级图片网格组件
+ * 商业级图片网格组件 (九宫格布局)
  *
  * 策略:
  * 1张图: 限制最大宽高比，根据图片比例自适应，最大高度不超过屏幕宽度的 4/3
  * 2张图: 2列平分
- * 3张图: 1大(2/3宽) + 2小(竖排) 或 3列平分? -> 采用 3列平分最稳妥，或者仿微信朋友圈 9宫格逻辑
+ * 3张图: 3列平分 (九宫格第一行)
  * 4张图: 2x2 网格
  * 5-9张: 3列多行网格
  * >9张: 3列网格，第9张显示 "+N" 遮罩
@@ -137,8 +136,11 @@ fun ForumImageGrid(
             else -> {
                 // 3, 5-9+ 使用 3列网格
                 val rows = (count + 2) / 3
+                // 最多显示3行 (9张)
+                val displayRows = minOf(rows, 3)
+                
                 Column(verticalArrangement = Arrangement.spacedBy(spacing)) {
-                    for (i in 0 until rows) {
+                    for (i in 0 until displayRows) {
                         Row(horizontalArrangement = Arrangement.spacedBy(spacing)) {
                             for (j in 0 until 3) {
                                 val index = i * 3 + j
@@ -196,4 +198,3 @@ fun ForumImageGrid(
         }
     }
 }
-

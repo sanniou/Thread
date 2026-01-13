@@ -33,4 +33,5 @@ data class Comment(
     val subCommentCount: Int = 0,
     val authorLevel: Int? = null,
     val isPo: Boolean = false,
+    val subCommentsPreview: List<Comment> = emptyList(), // 楼中楼预览 (前N条)
 )

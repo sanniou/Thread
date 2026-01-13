@@ -2,7 +2,10 @@ package ai.saniou.forum.workflow.topicdetail
 
 import ai.saniou.corecommon.utils.toRelativeTimeString
 import ai.saniou.coreui.theme.Dimens
+import ai.saniou.forum.ui.components.AnimatedIconButton
 import ai.saniou.forum.ui.components.Badge
+import ai.saniou.forum.ui.components.LikeButton
+import ai.saniou.forum.ui.components.SubCommentPreview
 import ai.saniou.forum.ui.components.ThreadAuthor
 import ai.saniou.forum.ui.components.ThreadBody
 import ai.saniou.thread.domain.model.forum.Comment
@@ -25,6 +28,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ContentCopy
@@ -50,6 +54,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
@@ -75,21 +80,21 @@ fun HeroTopicCard(
     val uriHandler = LocalUriHandler.current
     var showMenu by remember { mutableStateOf(false) }
 
-    // Magazine Style: Clean background, generous spacing
+    // Card Style: Modern, clean, with subtle separation
     Column(
         modifier = modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surface)
-            .padding(bottom = Dimens.padding_large)
+            .padding(bottom = Dimens.padding_medium)
     ) {
-        // 1. Title Section (Large, Bold, Serif-like if possible)
+        // 1. Title Section (Large, Bold)
         if (!metadata.title.isNullOrBlank() && metadata.title != stringResource(Res.string.empty_title)) {
             Text(
                 text = metadata.title!!,
                 style = MaterialTheme.typography.headlineMedium.copy(
                     fontWeight = FontWeight.Bold,
                     letterSpacing = (-0.5).sp,
-                    lineHeight = 36.sp
+                    lineHeight = 32.sp
                 ),
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(
@@ -176,7 +181,7 @@ fun HeroTopicCard(
         }
 
         // 4. Polls (Placeholder)
-        if (metadata.poll != null) {
+        if (metadata.capabilities.hasPoll && metadata.poll != null) {
             Spacer(modifier = Modifier.height(Dimens.padding_medium))
             Text(
                 text = stringResource(Res.string.poll_not_implemented),
@@ -186,36 +191,49 @@ fun HeroTopicCard(
             )
         }
 
-        Spacer(modifier = Modifier.height(Dimens.padding_large))
+        Spacer(modifier = Modifier.height(Dimens.padding_medium))
 
-        // 5. Action Bar (Integrated)
+        // 5. Action Bar (Integrated with Micro-interactions)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = Dimens.padding_small),
-            horizontalArrangement = Arrangement.SpaceEvenly,
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            ActionButton(
-                icon = Icons.Default.Reply,
-                text = stringResource(Res.string.reply),
-                onClick = { /* TODO */ }
-            )
-            ActionButton(
-                icon = Icons.Outlined.ContentCopy,
-                text = stringResource(Res.string.copy),
-                onClick = onCopy
-            )
-            ActionButton(
-                icon = Icons.Outlined.BookmarkBorder,
-                text = stringResource(Res.string.bookmark),
-                onClick = onBookmark
-            )
-            ActionButton(
-                icon = Icons.Outlined.Share,
-                text = stringResource(Res.string.share),
-                onClick = { showMenu = true }
-            )
+            // Left Actions
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (metadata.capabilities.hasUpvote) {
+                    LikeButton(
+                        isLiked = false, // TODO: Bind to real state
+                        count = metadata.agreeCount,
+                        onClick = { /* TODO: Implement Upvote */ }
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
+                
+                AnimatedIconButton(
+                    onClick = { /* TODO: Reply */ },
+                    icon = Icons.Default.Reply,
+                    contentDescription = stringResource(Res.string.reply)
+                )
+            }
+
+            // Right Actions
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                AnimatedIconButton(
+                    onClick = onBookmark,
+                    icon = Icons.Outlined.BookmarkBorder,
+                    selectedIcon = Icons.Filled.Bookmark,
+                    isSelected = metadata.isCollected == true,
+                    contentDescription = stringResource(Res.string.bookmark)
+                )
+                AnimatedIconButton(
+                    onClick = { showMenu = true },
+                    icon = Icons.Outlined.Share,
+                    contentDescription = stringResource(Res.string.share)
+                )
+            }
         }
 
         // Dropdown Menu
@@ -407,6 +425,38 @@ fun ThreadReply(
             onImageClick = onImageClick,
             onImageLongClick = { image -> onBookmarkImage(image) }
         )
+
+        // Sub-comments Preview (Twitter Style)
+        if (reply.subCommentsPreview.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(Dimens.padding_small))
+            SubCommentPreview(
+                subComments = reply.subCommentsPreview,
+                totalCount = reply.subCommentCount,
+                onViewMoreClick = { onReplyClicked(reply.id) },
+                onCommentClick = { /* TODO: Navigate to specific sub-comment? */ }
+            )
+        }
+
+        // Action Bar (Simplified for replies)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = Dimens.padding_small),
+            horizontalArrangement = Arrangement.End
+        ) {
+            AnimatedIconButton(
+                onClick = { onReplyClicked(reply.id) },
+                icon = Icons.Default.Reply,
+                contentDescription = stringResource(Res.string.reply),
+                modifier = Modifier.size(32.dp)
+            )
+            AnimatedIconButton(
+                onClick = onBookmark,
+                icon = Icons.Outlined.BookmarkBorder,
+                contentDescription = stringResource(Res.string.bookmark),
+                modifier = Modifier.size(32.dp)
+            )
+        }
 
         // Menu
         DropdownMenu(

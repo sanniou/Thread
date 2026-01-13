@@ -57,6 +57,7 @@ fun EntityComment.toDomain(imageQueries: ImageQueries? = null): Comment {
         disagreeCount = disagreeCount,
         subCommentCount = subCommentCount.toInt(),
         authorLevel = authorLevel?.toInt(),
-        isPo = isPo
+        isPo = isPo,
+        subCommentsPreview = emptyList() // TODO: 从 DB 或 API 映射楼中楼预览
     )
 }

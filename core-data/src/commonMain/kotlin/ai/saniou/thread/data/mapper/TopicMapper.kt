@@ -7,8 +7,7 @@ import ai.saniou.thread.db.table.forum.GetTopic
 import ai.saniou.thread.db.table.forum.GetTopicsInChannelOffset
 import ai.saniou.thread.db.table.forum.ImageQueries
 import ai.saniou.thread.db.table.forum.SearchTopics
-import ai.saniou.thread.domain.model.Tag
-import ai.saniou.thread.domain.model.TagType
+import ai.saniou.thread.domain.model.SourceCapabilities
 import ai.saniou.thread.domain.model.forum.Author
 import ai.saniou.thread.domain.model.forum.ImageType
 import ai.saniou.thread.domain.model.forum.Topic
@@ -247,7 +246,12 @@ fun EntityTopic.toMetadata(
         },
         agreeCount = agreeCount,
         disagreeCount = disagreeCount,
-        isCollected = isCollected
+        isCollected = isCollected,
+        capabilities = when (sourceId) {
+            "nmb" -> SourceCapabilities.Nmb
+            "tieba" -> SourceCapabilities.Tieba
+            else -> SourceCapabilities.Default
+        }
     )
 }
 
@@ -271,7 +275,12 @@ fun Topic.toMetadata(): TopicMetadata {
         },
         agreeCount = agreeCount,
         disagreeCount = disagreeCount,
-        isCollected = isCollected
+        isCollected = isCollected,
+        capabilities = when (sourceId) {
+            "nmb" -> SourceCapabilities.Nmb
+            "tieba" -> SourceCapabilities.Tieba
+            else -> SourceCapabilities.Default
+        }
     )
 }
 

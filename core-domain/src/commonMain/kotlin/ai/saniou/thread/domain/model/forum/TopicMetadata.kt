@@ -1,5 +1,6 @@
 package ai.saniou.thread.domain.model.forum
 
+import ai.saniou.thread.domain.model.SourceCapabilities
 import ai.saniou.thread.domain.model.Tag
 import kotlin.time.Instant
 
@@ -40,5 +41,6 @@ data class TopicMetadata(
     val tags: List<Tag> = emptyList(),
     val agreeCount: Long? = null,
     val disagreeCount: Long? = null,
-    val isCollected: Boolean? = null
+    val isCollected: Boolean? = null,
+    val capabilities: SourceCapabilities = SourceCapabilities.Default
 )
