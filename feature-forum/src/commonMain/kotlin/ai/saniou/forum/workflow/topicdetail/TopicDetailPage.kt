@@ -18,7 +18,7 @@ import ai.saniou.forum.ui.components.LoadEndIndicator
 import ai.saniou.forum.ui.components.PageJumpDialog
 import ai.saniou.forum.ui.components.ReferenceSheet
 import ai.saniou.forum.ui.components.SkeletonReplyItem
-import ai.saniou.forum.ui.components.SubCommentsDialog
+import ai.saniou.forum.ui.components.SubCommentsSheet
 import ai.saniou.forum.ui.components.ThreadAuthor
 import ai.saniou.forum.ui.components.ThreadBody
 import ai.saniou.forum.workflow.image.ImagePreviewPage
@@ -313,6 +313,7 @@ data class TopicDetailPage(
                 onCopy = { viewModel.onEvent(Event.CopyContent(it)) },
                 onBookmark = { viewModel.onEvent(Event.BookmarkReply(it)) },
                 onBookmarkImage = { image -> viewModel.onEvent(Event.BookmarkImage(image)) },
+                onUpvote = { viewModel.onEvent(Event.UpvoteTopic) },
                 onUserClick = { userHash -> navigator.push(UserDetailPage(userHash)) },
                 onReplyClicked = { commentId -> viewModel.onEvent(Event.ShowSubComments(commentId)) }
             )
@@ -349,7 +350,7 @@ data class TopicDetailPage(
 
         // 楼中楼弹窗
         if (state.showSubCommentsDialog) {
-            SubCommentsDialog(
+            SubCommentsSheet(
                 wrapper = state.subCommentsWrapper,
                 onDismiss = { viewModel.onEvent(Event.HideSubComments) },
                 onRetry = { viewModel.onEvent(Event.RetrySubCommentsLoad) }
@@ -375,6 +376,7 @@ private fun ThreadContentRouter(
     onCopy: (String) -> Unit,
     onBookmark: (Comment) -> Unit,
     onBookmarkImage: (Image) -> Unit,
+    onUpvote: () -> Unit,
     onUserClick: (String) -> Unit,
     onReplyClicked: (String) -> Unit,
 ) {
@@ -403,6 +405,7 @@ private fun ThreadContentRouter(
             onCopy = onCopy,
             onBookmark = onBookmark,
             onBookmarkImage = onBookmarkImage,
+            onUpvote = onUpvote,
             onUserClick = onUserClick
         )
     }
@@ -547,6 +550,7 @@ fun ThreadSuccessContent(
     onCopy: (String) -> Unit,
     onBookmark: (Comment) -> Unit,
     onBookmarkImage: (Image) -> Unit,
+    onUpvote: () -> Unit,
     onUserClick: (String) -> Unit,
 ) {
     val replies = state.replies.collectAsLazyPagingItems()
@@ -613,6 +617,7 @@ fun ThreadSuccessContent(
             onRefresh = onRefresh,
             onCopy = onCopy,
             onBookmarkImage = onBookmarkImage,
+            onUpvote = onUpvote,
             onUserClick = onUserClick,
             onBookmark = onBookmark
         )
@@ -633,6 +638,7 @@ private fun ThreadList(
     onCopy: (String) -> Unit,
     onBookmark: (Comment) -> Unit,
     onBookmarkImage: (Image) -> Unit,
+    onUpvote: () -> Unit,
     onUserClick: (String) -> Unit,
 ) {
     val replies = state.replies.collectAsLazyPagingItems()
@@ -673,6 +679,7 @@ private fun ThreadList(
                 onCopy = { heroComment?.content?.let(onCopy) },
                 onBookmark = { heroComment?.let(onBookmark) },
                 onBookmarkImage = onBookmarkImage,
+                onUpvote = onUpvote,
                 onUserClick = onUserClick
             )
         }

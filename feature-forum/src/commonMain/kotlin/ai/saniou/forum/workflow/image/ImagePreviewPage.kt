@@ -114,9 +114,6 @@ data class ImagePreviewPage(
                 HorizontalPager(
                     state = pagerState,
                     modifier = Modifier.fillMaxSize(),
-                    key = { index ->
-                        if (index < uiState.images.size) uiState.images[index].originalUrl else index
-                    }
                 ) { page ->
                     if (page < uiState.images.size) {
                         val image = uiState.images[page]

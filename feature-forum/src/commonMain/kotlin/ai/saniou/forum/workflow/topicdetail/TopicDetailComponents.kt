@@ -74,6 +74,7 @@ fun HeroTopicCard(
     onCopy: () -> Unit,
     onBookmark: () -> Unit,
     onBookmarkImage: (Image) -> Unit,
+    onUpvote: () -> Unit,
     onUserClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -91,17 +92,17 @@ fun HeroTopicCard(
         if (!metadata.title.isNullOrBlank() && metadata.title != stringResource(Res.string.empty_title)) {
             Text(
                 text = metadata.title!!,
-                style = MaterialTheme.typography.headlineMedium.copy(
+                style = MaterialTheme.typography.headlineSmall.copy(
                     fontWeight = FontWeight.Bold,
-                    letterSpacing = (-0.5).sp,
-                    lineHeight = 32.sp
+                    letterSpacing = (-0.2).sp,
+                    lineHeight = 28.sp
                 ),
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(
                     start = Dimens.padding_standard,
                     end = Dimens.padding_standard,
                     top = Dimens.padding_large,
-                    bottom = Dimens.padding_medium
+                    bottom = Dimens.padding_small
                 )
             )
         }
@@ -135,10 +136,16 @@ fun HeroTopicCard(
                         metadata.tags.forEach { tag ->
                             Badge(
                                 text = tag.name,
-                                containerColor = MaterialTheme.colorScheme.primaryContainer, // TODO: Use tag color
+                                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.8f),
                                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                         }
+                        // 楼主标识
+                        Badge(
+                            text = "楼主",
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        )
                     }
                 },
                 modifier = Modifier.weight(1f)
@@ -207,7 +214,7 @@ fun HeroTopicCard(
                     LikeButton(
                         isLiked = false, // TODO: Bind to real state
                         count = metadata.agreeCount,
-                        onClick = { /* TODO: Implement Upvote */ }
+                        onClick = onUpvote
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                 }

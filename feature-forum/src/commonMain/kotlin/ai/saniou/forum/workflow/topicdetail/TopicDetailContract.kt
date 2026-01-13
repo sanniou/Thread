@@ -103,6 +103,11 @@ interface TopicDetailContract {
         data class BookmarkImage(val image: Image) : Event
 
         /**
+         * 点赞主贴
+         */
+        object UpvoteTopic : Event
+
+        /**
          * 显示楼中楼弹窗
          * @param commentId 评论ID
          */

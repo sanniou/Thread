@@ -117,6 +117,7 @@ class TopicDetailViewModel(
             is Event.BookmarkTopic -> bookmarkTopic()
             is Event.BookmarkReply -> bookmarkReply(event.reply)
             is Event.BookmarkImage -> bookmarkImage(event.image)
+            is Event.UpvoteTopic -> upvoteTopic()
             is Event.UpdateLastReadReplyId -> updateLastReadReplyId(event.id)
             is Event.ShowSubComments -> showSubComments(event.commentId)
             Event.HideSubComments -> _state.update { it.copy(showSubCommentsDialog = false) }
@@ -195,7 +196,7 @@ class TopicDetailViewModel(
                     Clock.System.now().toEpochMilliseconds()
                 )
             } catch (e: Exception) {
-                //fixme
+                // Ignore errors during background update
             }
         }
     }
@@ -326,6 +327,13 @@ class TopicDetailViewModel(
                 )
             )
             _effect.send(Effect.ShowSnackbar("图片已收藏"))
+        }
+    }
+
+    private fun upvoteTopic() {
+        // TODO: Implement actual upvote logic when API is available
+        screenModelScope.launch {
+            _effect.send(Effect.ShowSnackbar("点赞功能开发中"))
         }
     }
 

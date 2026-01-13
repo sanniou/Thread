@@ -46,7 +46,7 @@ fun SubCommentPreview(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(Dimens.corner_radius_medium))
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f))
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.3f))
             .padding(Dimens.padding_small)
     ) {
         subComments.forEachIndexed { index, comment ->
@@ -55,7 +55,7 @@ fun SubCommentPreview(
                 onClick = { onCommentClick(comment) }
             )
             if (index < subComments.lastIndex) {
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(6.dp))
             }
         }
 
@@ -63,11 +63,12 @@ fun SubCommentPreview(
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = stringResource(Res.string.view_more_replies, totalCount),
-                style = MaterialTheme.typography.labelMedium,
+                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier
+                    .clip(RoundedCornerShape(4.dp))
                     .clickable(onClick = onViewMoreClick)
-                    .padding(vertical = 4.dp)
+                    .padding(vertical = 4.dp, horizontal = 2.dp)
             )
         }
     }
@@ -81,33 +82,43 @@ private fun SubCommentItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clip(RoundedCornerShape(4.dp))
             .clickable(onClick = onClick)
-            .padding(vertical = 2.dp)
+            .padding(vertical = 2.dp, horizontal = 2.dp)
     ) {
         Text(
             text = buildAnnotatedString {
                 withStyle(
                     style = SpanStyle(
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontSize = 13.sp
                     )
                 ) {
                     append(comment.author.name)
                     if (comment.isPo) {
-                        append(" (PO)")
+                        withStyle(
+                            style = SpanStyle(
+                                color = MaterialTheme.colorScheme.primary,
+                                fontSize = 11.sp
+                            )
+                        ) {
+                            append(" PO")
+                        }
                     }
                     append(": ")
                 }
                 withStyle(
                     style = SpanStyle(
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 13.sp
                     )
                 ) {
                     append(comment.content.replace("\n", " "))
                 }
             },
             style = MaterialTheme.typography.bodySmall.copy(lineHeight = 18.sp),
-            maxLines = 2,
+            maxLines = 3,
             overflow = TextOverflow.Ellipsis
         )
     }

@@ -71,6 +71,7 @@
     <string name="retry">重试</string>
     <string name="back">返回</string>
     <string name="view_more_replies">查看更多回复</string>
+    <string name="sub_comments_title">查看更多回复</string>
 
     <string name="post_page_reply">回复</string>
     <string name="post_page_new_post">发帖: %1$s</string>
