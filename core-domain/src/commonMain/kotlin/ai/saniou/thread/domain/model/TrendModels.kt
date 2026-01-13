@@ -2,7 +2,7 @@ package ai.saniou.thread.domain.model
 
 // 趋势项，列表中的每一条数据
 data class TrendItem(
-    val id: String, // Unique ID for this item, usually the topic/thread ID
+    val topicId: String,
     val sourceId: String,
     val title: String,
     val contentPreview: String,
@@ -12,7 +12,7 @@ data class TrendItem(
     val author: String?,
     val url: String, // Direct URL to the item
     val isNew: Boolean = false,
-    val payload: Map<String, Any> = emptyMap() // For source-specific data
+    val payload: Map<String, Any> = emptyMap(), // For source-specific data
 )
 
 // 趋势 Tab，用于 UI 上的分类
@@ -20,11 +20,11 @@ data class TrendTab(
     val id: String, // Unique ID for this tab within its source
     val name: String, // Display name, e.g., "热议"
     val supportsHistory: Boolean = false, // Does this tab support date picking?
-    val payload: Map<String, String> = emptyMap() // For source-specific parameters
+    val payload: Map<String, String> = emptyMap(), // For source-specific parameters
 )
 
 // 趋势请求参数
 data class TrendParams(
     val dayOffset: Int = 0, // 0 = today, 1 = yesterday...
-    val refreshId: Long = 0 // 0 = default/cache, >0 = force refresh version
+    val refreshId: Long = 0, // 0 = default/cache, >0 = force refresh version
 )

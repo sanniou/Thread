@@ -3,6 +3,7 @@ package ai.saniou.thread.data.cache
 import ai.saniou.thread.data.mapper.toDomain
 import ai.saniou.thread.data.mapper.toEntity
 import ai.saniou.thread.db.Database
+import ai.saniou.thread.db.table.TopicTag
 import ai.saniou.thread.db.table.forum.Channel
 import ai.saniou.thread.db.table.forum.Comment
 import ai.saniou.thread.db.table.forum.GetTopicsInChannelOffset
@@ -26,13 +27,14 @@ class SqlDelightSourceCache(
     private val topicQueries = db.topicQueries
     private val commentQueries = db.commentQueries
     private val channelQueries = db.channelQueries
+    private val topicTagQueries = db.topicTagQueries
 
     override fun observeTopic(sourceId: String, topicId: String): Flow<Topic> {
         return topicQueries.getTopic(sourceId, topicId)
             .asFlow()
             .mapToOneOrNull(Dispatchers.IO)
             .filterNotNull()
-            .map { it.toDomain(commentQueries, db.imageQueries) }
+            .map { it.toDomain(commentQueries, db.imageQueries, topicTagQueries) }
     }
 
     override fun getTopicCommentsPagingSource(
@@ -112,6 +114,18 @@ class SqlDelightSourceCache(
                 val topicPage = page ?: 1
                 val topicEntity = topic.toEntity(page = topicPage)
                 topicQueries.upsertTopic(topicEntity)
+
+                // Save Tags
+                topic.tags.forEach { tag ->
+                    db.tagQueries.insert(tag.toEntity())
+                    topicTagQueries.insert(
+                        TopicTag(
+                            sourceId = topic.sourceId,
+                            topicId = topic.id,
+                            tagId = tag.id
+                        )
+                    )
+                }
 
                 if (topic.remainingCount != null) {
                     topicQueries.upsertTopicInformation(

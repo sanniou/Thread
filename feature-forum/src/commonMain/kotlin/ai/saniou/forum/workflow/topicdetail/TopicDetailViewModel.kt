@@ -8,6 +8,7 @@ import ai.saniou.forum.workflow.topicdetail.TopicDetailContract.State
 import ai.saniou.thread.domain.model.bookmark.Bookmark
 import ai.saniou.thread.domain.model.forum.TopicMetadata
 import ai.saniou.thread.domain.model.forum.Comment
+import ai.saniou.thread.domain.model.Tag
 import ai.saniou.thread.domain.usecase.bookmark.AddBookmarkUseCase
 import ai.saniou.thread.domain.usecase.channel.GetChannelNameUseCase
 import ai.saniou.thread.domain.usecase.subscription.GetActiveSubscriptionKeyUseCase
@@ -163,7 +164,7 @@ class TopicDetailViewModel(
     private fun observeTopicDetail(forceRefresh: Boolean = false) {
         screenModelScope.launch {
             _state.update { it.copy(topicWrapper = UiStateWrapper.Loading) }
-            getTopicMetadataUseCase(sourceId, threadId, forceRefresh)
+            getTopicMetadataUseCase(sourceId, threadId, false)
                 .catch { e ->
                     _state.update {
                         it.copy(topicWrapper = UiStateWrapper.Error(e.toAppError {
@@ -283,7 +284,7 @@ class TopicDetailViewModel(
                 Bookmark.Quote(
                     id = "nmb.Thread.${metadata.id}",
                     createdAt = Clock.System.now(),
-                    tags = listOf(),
+                    tags = listOf(), // TODO: Convert metadata tags to bookmark tags if needed
                     content = metadata.title
                         ?: "", // Metadata doesn't have content, use title or empty
                     sourceId = metadata.id,

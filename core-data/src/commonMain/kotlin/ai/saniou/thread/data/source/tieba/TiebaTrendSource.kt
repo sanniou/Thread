@@ -8,12 +8,7 @@ import ai.saniou.thread.domain.model.TrendParams
 import ai.saniou.thread.domain.model.TrendTab
 import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.source.TrendSource
-import app.cash.paging.Pager
-import app.cash.paging.PagingConfig
 import app.cash.paging.PagingData
-import app.cash.paging.PagingSource
-import app.cash.paging.PagingState
-import app.cash.paging.map
 import com.huanchengfly.tieba.post.api.models.protos.hotThreadList.HotThreadListRequest
 import com.huanchengfly.tieba.post.api.models.protos.hotThreadList.HotThreadListRequestData
 import com.huanchengfly.tieba.post.api.models.protos.personalized.PersonalizedRequest
@@ -22,12 +17,8 @@ import com.huanchengfly.tieba.post.api.models.protos.topicList.TopicListRequest
 import com.huanchengfly.tieba.post.api.models.protos.topicList.TopicListRequestData
 import com.huanchengfly.tieba.post.api.models.protos.userLike.UserLikeRequest
 import com.huanchengfly.tieba.post.api.models.protos.userLike.UserLikeRequestData
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
 import kotlin.collections.emptyList
-import kotlin.coroutines.coroutineContext
 
 class TiebaTrendSource(
     private val officialProtobufTiebaApiV11: OfficialProtobufTiebaApi,
@@ -71,7 +62,7 @@ class TiebaTrendSource(
             }
             Result.success(topics.map { topic ->
                 TrendItem(
-                    id = topic.id,
+                    topicId = topic.id,
                     sourceId = id,
                     title = topic.title ?: "",
                     contentPreview = topic.content ?: "",

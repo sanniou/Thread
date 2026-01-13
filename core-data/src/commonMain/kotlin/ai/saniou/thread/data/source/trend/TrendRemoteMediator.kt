@@ -90,7 +90,7 @@ class TrendRemoteMediator(
                         id = UuidUtils.randomUuid(), // Use UUID as primary key
                         sourceId = source.id,
                         tabId = tab.id,
-                        topicId = item.id, // Link to Topic ID
+                        topicId = item.topicId,
                         date = targetDate,
                         rank = item.rank?.toLong() ?: (index + 1).toLong(),
                         page = page.toLong(),

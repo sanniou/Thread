@@ -29,24 +29,11 @@ CREATE TABLE Bookmark (
     duration INTEGER
 );
 
-CREATE TABLE Tag (
-    id TEXT NOT NULL PRIMARY KEY,
-    name TEXT NOT NULL UNIQUE
-);
 
-CREATE TABLE BookmarkTag (
-    bookmarkId TEXT NOT NULL,
-    tagId TEXT NOT NULL,
-    PRIMARY KEY (bookmarkId, tagId),
-    FOREIGN KEY (bookmarkId) REFERENCES Bookmark(id) ON DELETE CASCADE,
-    FOREIGN KEY (tagId) REFERENCES Tag(id) ON DELETE CASCADE
-);
 
 -- Indexes for performance
 CREATE INDEX idx_bookmark_createdAt ON Bookmark(createdAt);
 CREATE INDEX idx_bookmark_type ON Bookmark(type);
-CREATE INDEX idx_tag_name ON Tag(name);
-CREATE INDEX idx_bookmarktag_tagid ON BookmarkTag(tagId);
 
 
 selectAll:

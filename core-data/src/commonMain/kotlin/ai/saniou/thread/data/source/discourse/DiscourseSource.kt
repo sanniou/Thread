@@ -225,14 +225,12 @@ class DiscourseSource(
                             name = firstPost?.name ?: firstPost?.username ?: "Anonymous"
                         ), // author -> Author object
                         channelName = "Discourse", // forumName -> channelName
-                        isSage = false,
-                        isAdmin = false,
-                        isHidden = false,
                         isLocal = false,
                         lastViewedCommentId = "",
                         comments = emptyList(),
                         remainingCount = null,
-                        summary = null
+                        summary = null,
+                        tags = emptyList() // TODO: Map tags
                     )
 
                     // Update cache/DB
@@ -303,13 +301,11 @@ internal fun DiscourseTopic.toPost(usersMap: Map<Long, DiscourseUser>): Topic {
             name = user?.name ?: user?.username ?: "Anonymous"
         ),
         channelName = "Discourse", // forumName -> channelName
-        isSage = false,
-        isAdmin = pinned || closed,
-        isHidden = !visible,
         isLocal = false,
         lastViewedCommentId = "",
         comments = emptyList(),
         summary = null,
         remainingCount = null,
+        tags = emptyList() // TODO: Map tags
     )
 }

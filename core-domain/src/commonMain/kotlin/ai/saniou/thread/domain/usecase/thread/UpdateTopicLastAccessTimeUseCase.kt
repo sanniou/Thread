@@ -9,10 +9,10 @@ import kotlin.time.Instant
 
 class UpdateTopicLastAccessTimeUseCase(
     private val topicRepository: TopicRepository,
-    private val historyRepository: HistoryRepository
+    private val historyRepository: HistoryRepository,
 ) {
     suspend operator fun invoke(sourceId: String, topicId: String, time: Long) {
-        val post = topicRepository.getTopicDetail(sourceId, topicId)
+        val post = topicRepository.getTopicDetail(sourceId, topicId, false)
             .catch {
                 throw it
             }

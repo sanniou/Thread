@@ -110,7 +110,7 @@ class NmbTrendSource(
 
             items.add(
                 TrendItem(
-                    id = threadId,
+                    topicId = threadId,
                     sourceId = "nmb",
                     title = "No.$threadId", // NMB usually doesn't have titles, use ID
                     contentPreview = contentPreview,

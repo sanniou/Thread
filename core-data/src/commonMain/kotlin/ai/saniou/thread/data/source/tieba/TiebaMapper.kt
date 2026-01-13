@@ -8,7 +8,10 @@ import ai.saniou.thread.domain.model.forum.Author
 import ai.saniou.thread.domain.model.forum.Channel
 import ai.saniou.thread.domain.model.forum.Comment
 import ai.saniou.thread.domain.model.forum.Image
+import ai.saniou.thread.domain.model.Tag
+import ai.saniou.thread.domain.model.TagType
 import ai.saniou.thread.domain.model.forum.Topic
+import com.huanchengfly.tieba.post.api.models.protos.forumRecommend.ForumRecommendResponse
 import com.huanchengfly.tieba.post.api.models.protos.frsPage.FrsPageResponse
 import com.huanchengfly.tieba.post.api.models.protos.hotThreadList.HotThreadListResponse
 import com.huanchengfly.tieba.post.api.models.protos.pbPage.PbPageResponse
@@ -45,7 +48,7 @@ object TiebaMapper {
         }
     }
 
-    fun mapForumRecommendResponseToChannels(response: com.huanchengfly.tieba.post.api.models.protos.forumRecommend.ForumRecommendResponse): List<Channel> {
+    fun mapForumRecommendResponseToChannels(response: ForumRecommendResponse): List<Channel> {
         val likeForum = response.data_?.like_forum ?: emptyList()
         return likeForum.map { forum ->
             Channel(
@@ -170,13 +173,11 @@ object TiebaMapper {
                     ?: Instant.fromEpochSeconds(0),
                 commentCount = thread.replyNum?.toLongOrNull() ?: 0,
                 images = images,
-                isSage = false,
-                isAdmin = false, // Cannot determine easily from list
-                isHidden = false,
                 isLocal = false,
                 sourceName = SOURCE_NAME,
                 sourceId = SOURCE_ID,
-                sourceUrl = "$BASE_URL/p/${thread.tid}"
+                sourceUrl = "$BASE_URL/p/${thread.tid}",
+                tags = emptyList()
             )
         } ?: emptyList()
     }
@@ -234,12 +235,11 @@ object TiebaMapper {
                 ?: Instant.fromEpochSeconds(0),
             commentCount = response.thread?.replyNum?.toLongOrNull() ?: 0,
             images = images,
-            isSage = false,
-            isAdmin = authorBean?.isBawu == "1",
-            isHidden = false,
+            isLocal = false,
             sourceName = SOURCE_NAME,
             sourceId = SOURCE_ID,
-            sourceUrl = "$BASE_URL/p/$threadId"
+            sourceUrl = "$BASE_URL/p/$threadId",
+            tags = if (authorBean?.isBawu == "1") listOf(Tag(id = "admin", name = "Admin", type = TagType.SYSTEM)) else emptyList()
         )
     }
 
@@ -372,13 +372,11 @@ object TiebaMapper {
                 createdAt = thread.createTime.toLong().let { Instant.fromEpochSeconds(it) },
                 commentCount = thread.replyNum.toLong(),
                 images = images,
-                isSage = false,
-                isAdmin = false,
-                isHidden = false,
                 isLocal = false,
                 sourceName = SOURCE_NAME,
                 sourceId = SOURCE_ID,
-                sourceUrl = "$BASE_URL/p/$tid"
+                sourceUrl = "$BASE_URL/p/$tid",
+                tags = emptyList()
             )
         }
     }
@@ -416,13 +414,11 @@ object TiebaMapper {
                 createdAt = thread.createTime.toLong().let { Instant.fromEpochSeconds(it) },
                 commentCount = thread.replyNum.toLong(),
                 images = images,
-                isSage = false,
-                isAdmin = false,
-                isHidden = false,
                 isLocal = false,
                 sourceName = SOURCE_NAME,
                 sourceId = SOURCE_ID,
-                sourceUrl = "$BASE_URL/p/$tid"
+                sourceUrl = "$BASE_URL/p/$tid",
+                tags = emptyList()
             )
         }
     }
@@ -463,13 +459,11 @@ object TiebaMapper {
                 createdAt = thread.createTime.toLong().let { Instant.fromEpochSeconds(it) },
                 commentCount = thread.replyNum.toLong(),
                 images = images,
-                isSage = false,
-                isAdmin = false,
-                isHidden = false,
                 isLocal = false,
                 sourceName = SOURCE_NAME,
                 sourceId = SOURCE_ID,
-                sourceUrl = "$BASE_URL/p/$tid"
+                sourceUrl = "$BASE_URL/p/$tid",
+                tags = emptyList()
             )
         }
     }
@@ -508,13 +502,11 @@ object TiebaMapper {
                 createdAt = thread.createTime.toLong().let { Instant.fromEpochSeconds(it) },
                 commentCount = thread.replyNum.toLong(),
                 images = images,
-                isSage = false,
-                isAdmin = false,
-                isHidden = false,
                 isLocal = false,
                 sourceName = SOURCE_NAME,
                 sourceId = SOURCE_ID,
-                sourceUrl = "$BASE_URL/p/$tid"
+                sourceUrl = "$BASE_URL/p/$tid",
+                tags = emptyList()
             )
         }
 
@@ -537,13 +529,11 @@ object TiebaMapper {
                         null
                     )
                 ) else emptyList(),
-                isSage = false,
-                isAdmin = false,
-                isHidden = false,
                 isLocal = false,
                 sourceName = SOURCE_NAME,
                 sourceId = SOURCE_ID,
-                sourceUrl = ""
+                sourceUrl = "",
+                tags = emptyList()
             )
         }
 
@@ -556,6 +546,25 @@ object TiebaMapper {
         val tips = data.tips
         return data.topic_list.map { topic ->
             Topic(
+                tags = arrayListOf<Tag>().also {
+                    when (topic.tag) {
+                        1 -> it.add(
+                            Tag(
+                                id = "${topic.topic_id}ttag",
+                                name = "New",
+                                type = TagType.SYSTEM
+                            )
+                        )
+
+                        2 -> it.add(
+                            Tag(
+                                id = "${topic.topic_id}ttag",
+                                name = "Hot",
+                                type = TagType.SYSTEM
+                            )
+                        )
+                    }
+                },
                 id = topic.topic_id.toString(),
                 channelId = "",
                 channelName = "话题",
@@ -573,9 +582,6 @@ object TiebaMapper {
                         null
                     )
                 ) else emptyList(),
-                isSage = false,
-                isAdmin = false,
-                isHidden = false,
                 isLocal = false,
                 sourceName = SOURCE_NAME,
                 sourceId = SOURCE_ID,
@@ -636,12 +642,10 @@ object TiebaMapper {
             disagreeCount = thread.agree?.disagreeNum,
             isCollected = thread.collectStatus == 1,
             images = images,
-            isSage = false,
-            isAdmin = false,
-            isHidden = false,
             sourceName = SOURCE_NAME,
             sourceId = SOURCE_ID,
-            sourceUrl = "$BASE_URL/p/$threadId"
+            sourceUrl = "$BASE_URL/p/$threadId",
+            tags = emptyList()
         )
     }
 

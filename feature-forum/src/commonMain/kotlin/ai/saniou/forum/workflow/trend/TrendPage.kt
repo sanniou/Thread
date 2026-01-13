@@ -304,7 +304,7 @@ data class TrendPage(
             ) {
                 items(
                     count = items.itemCount,
-                    key = items.itemKey { it.id }
+                    key = items.itemKey { it.topicId }
                 ) { index ->
                     val item = items[index]
                     if (item != null) {
@@ -367,7 +367,7 @@ data class TrendPage(
                         }
 
                         Text(
-                            text = if (item.title.startsWith("No.")) item.title else "No.${item.id}",
+                            text = if (item.title.startsWith("No.")) item.title else "No.${item.topicId}",
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.outline
                         )

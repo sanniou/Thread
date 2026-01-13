@@ -1,7 +1,7 @@
 package ai.saniou.thread.data.mapper
 
+import ai.saniou.thread.domain.model.Tag
 import ai.saniou.thread.domain.model.bookmark.Bookmark
-import ai.saniou.thread.domain.model.bookmark.Tag
 
 fun Bookmark.toEntity(): ai.saniou.thread.db.table.Bookmark {
     return when (this) {

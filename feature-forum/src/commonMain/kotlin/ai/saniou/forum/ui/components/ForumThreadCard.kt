@@ -99,18 +99,10 @@ fun TopicCard(
                 Spacer(modifier = Modifier.weight(1f))
 
                 // Badges (Right Aligned)
-                if (topic.isAdmin) {
+                topic.tags.forEach { tag ->
                     Badge(
-                        text = "ADMIN",
-                        containerColor = MaterialTheme.colorScheme.errorContainer,
-                        contentColor = MaterialTheme.colorScheme.onErrorContainer,
-                        modifier = Modifier.padding(start = 4.dp)
-                    )
-                }
-                if (topic.isSage) {
-                    Badge(
-                        text = "SAGE",
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        text = tag.name,
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer, // TODO: Use tag color if available
                         contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
                         modifier = Modifier.padding(start = 4.dp)
                     )

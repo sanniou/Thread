@@ -1,7 +1,7 @@
 package ai.saniou.thread.feature.bookmark
 
 import ai.saniou.thread.domain.model.bookmark.Bookmark
-import ai.saniou.thread.domain.model.bookmark.Tag
+import ai.saniou.thread.domain.model.Tag
 import app.cash.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow

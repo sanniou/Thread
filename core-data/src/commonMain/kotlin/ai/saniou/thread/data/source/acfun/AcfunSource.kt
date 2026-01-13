@@ -118,9 +118,6 @@ class AcfunSource(
                         channelName = data.channel?.name ?: "文章",
                         commentCount = (data.commentCount ?: 0).toLong(),
                         images = emptyList(), // TODO: extract images from content or coverUrl
-                        isSage = false,
-                        isAdmin = false,
-                        isHidden = false,
                         isLocal = false,
                         channelId = data.channel?.id?.toString() ?: "0",
                         summary = null,

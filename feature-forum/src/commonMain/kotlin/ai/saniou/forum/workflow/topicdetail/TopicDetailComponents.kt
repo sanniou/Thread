@@ -126,26 +126,11 @@ fun HeroTopicCard(
                                 contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                        // Status Badges
-                        if (metadata.isAdmin) {
-                            Badge(
-                                text = stringResource(Res.string.flag_admin),
-                                containerColor = MaterialTheme.colorScheme.errorContainer,
-                                contentColor = MaterialTheme.colorScheme.onErrorContainer
-                            )
-                        }
-                        if (metadata.isSage) {
-                            Badge(
-                                text = "SAGE",
-                                containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                            )
-                        }
-                        // Custom Tags
-                        metadata.tags?.forEach { tag ->
+                        // Tags
+                        metadata.tags.forEach { tag ->
                             Badge(
                                 text = tag.name,
-                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                containerColor = MaterialTheme.colorScheme.primaryContainer, // TODO: Use tag color
                                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                         }

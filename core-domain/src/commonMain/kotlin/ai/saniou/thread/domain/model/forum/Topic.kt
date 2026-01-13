@@ -1,5 +1,6 @@
 package ai.saniou.thread.domain.model.forum
 
+import ai.saniou.thread.domain.model.Tag
 import kotlin.time.Instant
 
 /**
@@ -14,9 +15,6 @@ import kotlin.time.Instant
  * @param createdAt 创建时间
  * @param commentCount 评论/回复数量 (原 replyCount)
  * @param images 图片列表
- * @param isSage 是否SAGE
- * @param isAdmin 是否管理员
- * @param isHidden 是否隐藏
  * @param isLocal 是否本地记录
  * @param sourceName 来源标识
  * @param sourceUrl 来源URL
@@ -44,9 +42,6 @@ data class Topic(
     val images: List<Image> = emptyList(),
 
     // 状态标记
-    val isSage: Boolean,
-    val isAdmin: Boolean,
-    val isHidden: Boolean,
     val isLocal: Boolean = false,
 
     // 来源信息
@@ -56,6 +51,7 @@ data class Topic(
 
     // 详情页数据
     val comments: List<Comment> = emptyList(),
+    val tags: List<Tag> = emptyList(),
     val remainingCount: Long? = null,
     val lastViewedCommentId: String? = null,
     val orderKey: Long? = null,

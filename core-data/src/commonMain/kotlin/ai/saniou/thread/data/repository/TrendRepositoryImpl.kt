@@ -2,7 +2,6 @@ package ai.saniou.thread.data.repository
 
 import ai.saniou.thread.data.source.trend.TrendRemoteMediator
 import ai.saniou.thread.db.Database
-import ai.saniou.thread.db.table.GetTrendsWithTopic
 import ai.saniou.thread.domain.model.TrendItem
 import ai.saniou.thread.domain.model.TrendParams
 import ai.saniou.thread.domain.model.TrendTab
@@ -70,7 +69,7 @@ class TrendRepositoryImpl(
         ).flow.map { pagingData ->
             pagingData.map { trend ->
                 TrendItem(
-                    id = trend.topicId, // Use topicId as the main ID for UI
+                    topicId = trend.topicId, // Use topicId as the main ID for UI
                     sourceId = trend.sourceId,
                     title = trend.title,
                     contentPreview = trend.contentPreview,

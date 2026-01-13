@@ -1,7 +1,16 @@
-import ai.saniou.thread.db.table.Tag;
+import ai.saniou.thread.domain.model.TagType;
+
+CREATE TABLE Tag (
+    id TEXT NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL,
+    color TEXT,
+    icon TEXT,
+    url TEXT,
+    type TEXT AS TagType NOT NULL
+);
 
 insert:
-INSERT OR IGNORE INTO Tag(id, name) VALUES ?;
+INSERT OR IGNORE INTO Tag(id, name, color, icon, url, type) VALUES ?;
 
 getTagsForBookmark:
 SELECT T.* FROM Tag T

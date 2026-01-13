@@ -1,5 +1,6 @@
 package ai.saniou.thread.domain.model.bookmark
 
+import ai.saniou.thread.domain.model.Tag
 import kotlin.time.Instant
 
 /**

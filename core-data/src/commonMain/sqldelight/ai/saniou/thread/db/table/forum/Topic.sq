@@ -17,14 +17,11 @@ CREATE TABLE IF NOT EXISTS Topic (
     sourceId TEXT NOT NULL,
     channelId TEXT NOT NULL,
     commentCount INTEGER NOT NULL,
-    userHash TEXT NOT NULL,
+    authorId TEXT NOT NULL,
     authorName TEXT NOT NULL,
     title TEXT, -- 可为空
     content TEXT, -- 详情页 HTML 内容，可能为空 (列表页不返回)
     summary TEXT, -- 列表页摘要，可能为空
-    sage INTEGER NOT NULL,
-    admin INTEGER NOT NULL,
-    hide INTEGER NOT NULL,
     page INTEGER NOT NULL,
     agreeCount INTEGER ,
     disagreeCount INTEGER ,
@@ -41,19 +38,16 @@ CREATE INDEX IF NOT EXISTS idx_topic_channel_id ON Topic(sourceId, channelId);
 -- 插入 Topic 数据 (无 Page)
 upsertTopicNoPage:
 INSERT INTO Topic (
-    id, sourceId, channelId, commentCount, userHash, authorName, title, content, summary, sage, admin, hide, page,
+    id, sourceId, channelId, commentCount, authorId, authorName, title, content, summary, page,
     agreeCount, disagreeCount, isCollected, createdAt
 ) VALUES ?
 ON CONFLICT (sourceId, id) DO UPDATE SET
     commentCount = excluded.commentCount,
-    userHash = excluded.userHash,
+    authorId = excluded.authorId,
     authorName = excluded.authorName,
     title = COALESCE(excluded.title, Topic.title),
     content = COALESCE(excluded.content, Topic.content), -- 只有当新 content 非空时才更新
     summary = COALESCE(excluded.summary, Topic.summary),
-    sage = excluded.sage,
-    admin = excluded.admin,
-    hide = excluded.hide,
     agreeCount = excluded.agreeCount,
     disagreeCount = excluded.disagreeCount,
     isCollected = excluded.isCollected,
@@ -62,20 +56,17 @@ ON CONFLICT (sourceId, id) DO UPDATE SET
 -- 插入 Topic 数据
 upsertTopic:
 INSERT INTO Topic (
-    id, sourceId, channelId, commentCount, userHash, authorName, title, content, summary, sage, admin, hide, page,
+    id, sourceId, channelId, commentCount, authorId, authorName, title, content, summary, page,
     agreeCount, disagreeCount, isCollected, createdAt
 ) VALUES ?
 ON CONFLICT (sourceId, id) DO UPDATE SET
     channelId = excluded.channelId,
     commentCount = excluded.commentCount,
-    userHash = excluded.userHash,
+    authorId = excluded.authorId,
     authorName = excluded.authorName,
     title = COALESCE(excluded.title, Topic.title),
     content = COALESCE(excluded.content, Topic.content), -- 只有当新 content 非空时才更新
     summary = COALESCE(excluded.summary, Topic.summary),
-    sage = excluded.sage,
-    admin = excluded.admin,
-    hide = excluded.hide,
     page = excluded.page,
     agreeCount = excluded.agreeCount,
     disagreeCount = excluded.disagreeCount,
@@ -114,14 +105,11 @@ SELECT * FROM Topic;
 updateTopic:
 UPDATE Topic SET
     channelId = ?,
-    userHash = ?,
+    authorId = ?,
     authorName = ?,
     title = ?,
     content = ?,
     summary = ?,
-    sage = ?,
-    admin = ?,
-    hide = ?,
     commentCount = ?,
     agreeCount = ?,
     disagreeCount = ?,
@@ -186,9 +174,9 @@ WHERE (CAST(id AS TEXT) LIKE ('%' || :query || '%') OR title LIKE ('%' || :query
 getTopicsByUserHashOffset:
 SELECT Topic.* FROM Topic
 LEFT JOIN TopicInformation ON Topic.id = TopicInformation.id AND Topic.sourceId = TopicInformation.sourceId
-WHERE userHash = :userHash
+WHERE authorId = :authorId
 ORDER BY lastReplyAt DESC
 LIMIT :limit OFFSET :offset;
 
 countTopicsByUserHash:
-SELECT count(*) FROM Topic WHERE userHash = :userHash;
+SELECT count(*) FROM Topic WHERE authorId = :authorId;

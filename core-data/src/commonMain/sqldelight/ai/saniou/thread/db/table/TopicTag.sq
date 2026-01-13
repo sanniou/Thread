@@ -1,0 +1,18 @@
+CREATE TABLE TopicTag (
+    sourceId TEXT NOT NULL,
+    topicId TEXT NOT NULL,
+    tagId TEXT NOT NULL,
+    PRIMARY KEY (sourceId, topicId, tagId),
+    FOREIGN KEY (tagId) REFERENCES Tag(id) ON DELETE CASCADE
+);
+
+insert:
+INSERT OR IGNORE INTO TopicTag(sourceId, topicId, tagId) VALUES ?;
+
+getTagsForTopic:
+SELECT T.* FROM Tag T
+JOIN TopicTag TT ON T.id = TT.tagId
+WHERE TT.sourceId = ? AND TT.topicId = ?;
+
+deleteTagsForTopic:
+DELETE FROM TopicTag WHERE sourceId = ? AND topicId = ?;

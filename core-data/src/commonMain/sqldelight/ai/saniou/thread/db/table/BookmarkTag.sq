@@ -1,4 +1,11 @@
-import ai.saniou.thread.db.table.BookmarkTag;
+CREATE TABLE BookmarkTag (
+    bookmarkId TEXT NOT NULL,
+    tagId TEXT NOT NULL,
+    PRIMARY KEY (bookmarkId, tagId),
+    FOREIGN KEY (bookmarkId) REFERENCES Bookmark(id) ON DELETE CASCADE,
+    FOREIGN KEY (tagId) REFERENCES Tag(id) ON DELETE CASCADE
+);
+CREATE INDEX idx_bookmarktag_tagid ON BookmarkTag(tagId);
 
 insert:
 INSERT OR IGNORE INTO BookmarkTag(bookmarkId, tagId) VALUES ?;

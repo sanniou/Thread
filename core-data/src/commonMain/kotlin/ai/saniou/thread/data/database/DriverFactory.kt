@@ -3,6 +3,7 @@ package ai.saniou.thread.data.database
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.db.table.Bookmark
 import ai.saniou.thread.db.table.RemoteKeys
+import ai.saniou.thread.db.table.Tag
 import ai.saniou.thread.db.table.forum.FavoriteChannel
 import ai.saniou.thread.db.table.forum.Image
 import app.cash.sqldelight.ColumnAdapter
@@ -21,6 +22,7 @@ fun createDatabase(driverFactory: DriverFactory): Database {
         FavoriteChannelAdapter = FavoriteChannel.Adapter(EnumColumnAdapter()),
         ImageAdapter = Image.Adapter(EnumColumnAdapter()),
         RemoteKeysAdapter = RemoteKeys.Adapter(EnumColumnAdapter()),
+        TagAdapter = Tag.Adapter(EnumColumnAdapter()),
         BookmarkAdapter = Bookmark.Adapter(object : ColumnAdapter<Instant, Long> {
             override fun decode(databaseValue: Long): Instant {
                 return Instant.fromEpochMilliseconds(databaseValue)

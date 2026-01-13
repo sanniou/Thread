@@ -52,10 +52,6 @@ class TopicRepositoryImpl(
                     if (currentCache == null || forceRefresh) {
                         val result = source.getTopicDetail(id, 1)
                         result.onSuccess { post ->
-                            // Convert back to entity for saving (warning: images might be lost if toEntity doesn't handle them or cache.saveThread doesn't save images)
-                            // Ideally source should save to DB directly or cache.saveThread should handle images.
-                            // NmbSource.getThreadDetail currently doesn't save to DB.
-                            // Let's assume cache.saveThread handles basic info, but images need separate handling or source should do it.
                             cache.saveTopic(post)
                         }.onFailure {
                             throw it

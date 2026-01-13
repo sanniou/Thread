@@ -1,5 +1,6 @@
 package ai.saniou.thread.domain.model.forum
 
+import ai.saniou.thread.domain.model.Tag
 import kotlin.time.Instant
 
 /**
@@ -13,9 +14,6 @@ import kotlin.time.Instant
  * @param author 作者信息
  * @param createdAt 创建时间
  * @param commentCount 评论/回复数量
- * @param isSage 是否SAGE
- * @param isAdmin 是否管理员
- * @param isHidden 是否隐藏
  * @param sourceName 来源标识
  * @param sourceUrl 来源URL
  * @param lastViewedCommentId 最后阅读的评论ID
@@ -34,15 +32,12 @@ data class TopicMetadata(
     val author: Author,
     val createdAt: Instant,
     val commentCount: Long,
-    val isSage: Boolean,
-    val isAdmin: Boolean,
-    val isHidden: Boolean,
     val sourceName: String,
     val sourceUrl: String,
     val lastViewedCommentId: String? = null,
     val totalPages: Int? = null,
     val poll: Poll? = null,
-    val tags: List<Tag>? = null,
+    val tags: List<Tag> = emptyList(),
     val agreeCount: Long? = null,
     val disagreeCount: Long? = null,
     val isCollected: Boolean? = null

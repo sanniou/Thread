@@ -101,7 +101,7 @@ class TrendViewModel(
 
             is Event.OnTrendItemClick -> {
                 screenModelScope.launch {
-                    _effect.send(Effect.NavigateToThread(event.item.id, event.item.sourceId))
+                    _effect.send(Effect.NavigateToThread(event.item.topicId, event.item.sourceId))
                 }
             }
 

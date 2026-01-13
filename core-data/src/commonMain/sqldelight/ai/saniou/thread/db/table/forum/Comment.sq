@@ -150,7 +150,7 @@ FROM Comment
 JOIN Topic ON Comment.sourceId = Topic.sourceId AND Comment.topicId = Topic.id
 WHERE Comment.sourceId = :sourceId
   AND Comment.topicId = :topicId
-  AND Comment.userHash = Topic.userHash;
+  AND Comment.userHash = Topic.authorId;
 
 getCommentsByTopicIdPoModeOffset:
 SELECT Comment.*
@@ -158,7 +158,7 @@ FROM Comment
 JOIN Topic ON Comment.sourceId = Topic.sourceId AND Comment.topicId = Topic.id
 WHERE Comment.sourceId = :sourceId
   AND Comment.topicId = :topicId
-  AND Comment.userHash = Topic.userHash
+  AND Comment.userHash = Topic.authorId
 ORDER BY Comment.id ASC
 LIMIT :limit OFFSET :offset;
 
@@ -193,7 +193,7 @@ FROM Comment
 JOIN Topic ON Comment.sourceId = Topic.sourceId AND Comment.topicId = Topic.id
 WHERE Comment.sourceId = :sourceId
   AND Comment.topicId = :topicId
-  AND Comment.userHash = Topic.userHash
+  AND Comment.userHash = Topic.authorId
 ORDER BY Comment.id ASC;
 
 getCommentsByTopicIdPoMode:
@@ -202,6 +202,6 @@ FROM Comment
 JOIN Topic ON Comment.sourceId = Topic.sourceId AND Comment.topicId = Topic.id
 WHERE Comment.sourceId = :sourceId
   AND Comment.topicId = :topicId
-  AND Comment.userHash = Topic.userHash
+  AND Comment.userHash = Topic.authorId
   AND Comment.page = :page
 ORDER BY Comment.id ASC;
