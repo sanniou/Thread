@@ -424,7 +424,9 @@ object TiebaMapper {
                 sourceName = SOURCE_NAME,
                 sourceId = SOURCE_ID,
                 sourceUrl = "$BASE_URL/p/$tid",
-                tags = emptyList()
+                tags = emptyList(),
+                agreeCount = thread.agreeNum.toLong(),
+                remainingCount = thread.commentNum.toLong(),
             )
         }
     }
