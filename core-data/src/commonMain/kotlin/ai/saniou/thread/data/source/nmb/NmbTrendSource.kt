@@ -14,7 +14,7 @@ import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
 
 class NmbTrendSource(
-    private val nmbSource: NmbSource
+    private val nmbSource: NmbSource,
 ) : TrendSource {
     override val id: String = "nmb"
     override val name: String = "A岛"
@@ -25,14 +25,18 @@ class NmbTrendSource(
         )
     }
 
-    override fun getTrendPagingData(tab: TrendTab, params: TrendParams): Flow<PagingData<TrendItem>> {
-        return emptyFlow()
+    override fun trendDataEnded(
+        tab: TrendTab,
+        params: TrendParams,
+        trends: List<TrendItem>,
+    ): Boolean {
+        return true // 不支持分页
     }
 
     override suspend fun fetchTrendData(
         tab: TrendTab,
         params: TrendParams,
-        page: Int
+        page: Int,
     ): Result<List<TrendItem>> {
         if (page > 1) return Result.success(emptyList())
 
@@ -47,7 +51,8 @@ class NmbTrendSource(
                     // For today, check if the latest reply is from today
                     val localLatestReply = nmbSource.getLocalLatestReply(trendThreadId)
                     if (localLatestReply != null) {
-                        val replyDate = localLatestReply.createdAt.toLocalDateTime(TimeZone.currentSystemDefault()).date
+                        val replyDate =
+                            localLatestReply.createdAt.toLocalDateTime(TimeZone.currentSystemDefault()).date
                         if (replyDate == today) {
                             return Result.success(parseTrendContent(localLatestReply.content))
                         }

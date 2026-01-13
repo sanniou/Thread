@@ -8,7 +8,6 @@ import ai.saniou.thread.domain.model.TrendParams
 import ai.saniou.thread.domain.model.TrendTab
 import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.source.TrendSource
-import app.cash.paging.PagingData
 import com.huanchengfly.tieba.post.api.models.protos.hotThreadList.HotThreadListRequest
 import com.huanchengfly.tieba.post.api.models.protos.hotThreadList.HotThreadListRequestData
 import com.huanchengfly.tieba.post.api.models.protos.personalized.PersonalizedRequest
@@ -17,8 +16,6 @@ import com.huanchengfly.tieba.post.api.models.protos.topicList.TopicListRequest
 import com.huanchengfly.tieba.post.api.models.protos.topicList.TopicListRequestData
 import com.huanchengfly.tieba.post.api.models.protos.userLike.UserLikeRequest
 import com.huanchengfly.tieba.post.api.models.protos.userLike.UserLikeRequestData
-import kotlinx.coroutines.flow.Flow
-import kotlin.collections.emptyList
 
 class TiebaTrendSource(
     private val officialProtobufTiebaApiV11: OfficialProtobufTiebaApi,
@@ -36,21 +33,10 @@ class TiebaTrendSource(
         )
     }
 
-    override fun getTrendPagingData(tab: TrendTab, params: TrendParams): Flow<PagingData<TrendItem>> {
-        // This method is now deprecated in favor of fetchTrendData + RemoteMediator
-        // But we keep it empty or throw exception if called directly,
-        // or we can implement a simple Pager if we want to support non-cached mode.
-        // For now, since we are moving to Repository-managed PagingData, this can be removed or left as stub.
-        // However, the interface still requires it.
-        // Ideally, we should refactor the interface to remove this method if all sources support fetchTrendData.
-        // But for gradual migration, let's return empty flow here as Repository will use fetchTrendData.
-        return kotlinx.coroutines.flow.emptyFlow()
-    }
-
     override suspend fun fetchTrendData(
         tab: TrendTab,
         params: TrendParams,
-        page: Int
+        page: Int,
     ): Result<List<TrendItem>> {
         return try {
             val topics = when (tab.id) {
@@ -77,6 +63,20 @@ class TiebaTrendSource(
             })
         } catch (e: Exception) {
             Result.failure(e)
+        }
+    }
+
+    override fun trendDataEnded(
+        tab: TrendTab,
+        params: TrendParams,
+        trends: List<TrendItem>,
+    ): Boolean {
+        return when (tab.id) {
+            "tieba_hot" -> trends.isEmpty()
+            "tieba_topic" -> trends.isEmpty()
+            "tieba_concern" -> trends.isEmpty()
+            "tieba_recommend" -> true // 每次刷新只请求一页
+            else -> true
         }
     }
 

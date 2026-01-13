@@ -239,7 +239,13 @@ object TiebaMapper {
             sourceName = SOURCE_NAME,
             sourceId = SOURCE_ID,
             sourceUrl = "$BASE_URL/p/$threadId",
-            tags = if (authorBean?.isBawu == "1") listOf(Tag(id = "admin", name = "Admin", type = TagType.SYSTEM)) else emptyList()
+            tags = if (authorBean?.isBawu == "1") listOf(
+                Tag(
+                    id = "admin",
+                    name = "Admin",
+                    type = TagType.SYSTEM
+                )
+            ) else emptyList()
         )
     }
 
@@ -383,11 +389,11 @@ object TiebaMapper {
 
     fun mapPersonalizedResponseToTopics(response: PersonalizedResponse): List<Topic> {
         val data = response.data_ ?: return emptyList()
-        return data.thread_list.mapNotNull { thread ->
+        return data.thread_list.map { thread ->
             val tid = thread.id.toString()
             val author = Author(
-                id = thread.authorId.toString(),
-                name = thread.author?.nameShow ?: thread.author?.name ?: "Unknown",
+                id = thread.author?.id?.toString() ?: thread.authorId.toString(),
+                name = thread.author?.nameShow ?: thread.author?.name ?: "",
                 avatar = thread.author?.portrait?.let { "https://tb.himg.baidu.com/sys/portrait/item/$it" },
                 sourceName = SOURCE_NAME
             )

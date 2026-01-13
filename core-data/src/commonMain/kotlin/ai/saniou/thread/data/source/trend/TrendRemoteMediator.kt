@@ -108,7 +108,7 @@ class TrendRemoteMediator(
             }
         },
         endOfPaginationReached = { items ->
-            items.isEmpty()
+              source.trendDataEnded(tab, params, items)
         },
         cacheChecker = { page ->
             // Check if we have data for this specific date
