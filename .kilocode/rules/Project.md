@@ -50,6 +50,8 @@
     -   **Error**: 对应 `UiStateWrapper.Error`，必须包含 `AppError`。
     -   **Success**: 对应 `UiStateWrapper.Success<T>`。
     -   **Helper**: 使用 `MutableStateFlow<UiStateWrapper<T>>.updateData { }` 扩展函数来安全地更新 Success 状态下的数据，避免手动类型检查。
+    -   **注意**: 虽然 Wrapper 模式简单，但在多数据源组合的复杂页面中可能导致状态嵌套过深。此时建议采用 **扁平化状态 (Flat State)** 模式（直接在 State 类中定义 `isLoading`, `error` 字段），以提升组合性。
+    -   **演进方向**: 在追求极致体验的场景下，应逐步移除 `UiStateWrapper`，改由每个 Feature Contract 自行定义扁平化的状态接口，配合 **UI Overlay** 模式实现非阻塞式交互。
 
 2.  **Error Handling**:
     -   禁止在 UI 层直接处理 `Throwable`。
@@ -234,6 +236,7 @@
 - [ ] **RichText**: 严禁硬编码正则解析业务文本。对于特定源的文本格式（如 `>>No.123`），必须实现 `RichTextPlugin`。
 - [ ] **ID Type**: 为了兼容不同系统，Domain 层 ID 统一使用 `String`，在 Data 层针对不同 API 进行转换。
 - [ ] **Testing**: 虽然项目目前未集成测试，但在设计 API 和 UseCase 时，必须考虑可测试性（依赖注入、纯函数逻辑）。
+- [ ] **Navigation**: 项目标准导航库为 **Voyager**，请遵循其 `Screen` 和 `ScreenModel` 的生命周期规范。
 - [ ] **Refactoring**: 开始编码前请先思考：本次用到了哪些公共资源和组件，是否有必要下沉到 core 模块。
 
 - 商业级交付标准:UIXUI、设计、架构。
