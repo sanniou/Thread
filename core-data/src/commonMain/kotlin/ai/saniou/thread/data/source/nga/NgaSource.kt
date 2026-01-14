@@ -5,7 +5,7 @@ import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.model.user.LoginStrategy
 import ai.saniou.thread.domain.repository.Source
 import ai.saniou.thread.domain.model.forum.Comment
-import app.cash.paging.PagingData
+import androidx.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 

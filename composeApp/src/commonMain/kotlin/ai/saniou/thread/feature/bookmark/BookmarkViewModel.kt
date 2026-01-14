@@ -7,7 +7,7 @@ import ai.saniou.thread.domain.usecase.bookmark.RemoveBookmarkUseCase
 import ai.saniou.thread.feature.bookmark.BookmarkContract.Effect
 import ai.saniou.thread.feature.bookmark.BookmarkContract.Event
 import ai.saniou.thread.feature.bookmark.BookmarkContract.State
-import app.cash.paging.cachedIn
+import androidx.paging.cachedIn
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi

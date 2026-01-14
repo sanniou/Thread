@@ -9,7 +9,7 @@ import ai.saniou.thread.db.table.forum.Comment
 import ai.saniou.thread.db.table.forum.GetTopicsInChannelOffset
 import ai.saniou.thread.domain.model.forum.ImageType
 import ai.saniou.thread.domain.model.forum.Topic
-import app.cash.paging.PagingSource
+import androidx.paging.PagingSource
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOneOrNull

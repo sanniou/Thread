@@ -19,11 +19,11 @@ import ai.saniou.thread.domain.repository.SettingsRepository
 import ai.saniou.thread.domain.repository.Source
 import ai.saniou.thread.domain.repository.observeValue
 import ai.saniou.thread.network.SaniouResult
-import app.cash.paging.ExperimentalPagingApi
-import app.cash.paging.Pager
-import app.cash.paging.PagingConfig
-import app.cash.paging.PagingData
-import app.cash.paging.map
+import androidx.paging.ExperimentalPagingApi
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import androidx.paging.map
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlin.time.Duration.Companion.days

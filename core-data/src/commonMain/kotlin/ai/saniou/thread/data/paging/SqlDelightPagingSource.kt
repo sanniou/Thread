@@ -1,16 +1,8 @@
 package ai.saniou.thread.data.paging
 
-import app.cash.paging.PagingSource
-import app.cash.paging.PagingSourceLoadParams
-import app.cash.paging.PagingSourceLoadResult
-import app.cash.paging.PagingSourceLoadResultError
-import app.cash.paging.PagingSourceLoadResultPage
-import app.cash.paging.PagingState
-import app.cash.sqldelight.Query
-import app.cash.sqldelight.SuspendingTransacter
-import app.cash.sqldelight.Transacter
-import app.cash.sqldelight.TransacterBase
-import app.cash.sqldelight.TransactionCallbacks
+import androidx.paging.PagingSource
+import androidx.paging.PagingState
+import app.cash.sqldelight.*
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.CoroutineContext
 import kotlin.properties.Delegates
@@ -66,8 +58,7 @@ class SqlDelightPagingSource<Value : Any>(
         }
     }
 
-
-    override suspend fun load(params: PagingSourceLoadParams<Int>): PagingSourceLoadResult<Int, Value> {
+    override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Value> {
         return try {
             withContext(context) {
                 val pageNumber = params.key ?: 1
@@ -95,14 +86,14 @@ class SqlDelightPagingSource<Value : Any>(
                     pageNumber + 1
                 }
 
-                PagingSourceLoadResultPage(
+                LoadResult.Page(
                     data = data,
                     prevKey = prevKey,
                     nextKey = nextKey
                 )
             }
         } catch (e: Exception) {
-            PagingSourceLoadResultError(e)
+            LoadResult.Error(e)
         }
     }
 
@@ -154,7 +145,7 @@ internal class OffsetQueryPagingSource2<RowType : Any>(
             is LoadParams.Prepend<*> -> minOf(key, params.loadSize)
             else -> params.loadSize
         }
-        val getPagingSourceLoadResult: TransactionCallbacks.() -> LoadResult<Int, RowType> = {
+        val getLoadResult: TransactionCallbacks.() -> LoadResult<Int, RowType> = {
             val count = countQuery.executeAsOne()
             val offset = when (params) {
                 is LoadParams.Prepend<*> -> maxOf(0, key - params.loadSize)
@@ -164,7 +155,7 @@ internal class OffsetQueryPagingSource2<RowType : Any>(
                     count - params.loadSize
                 ) else key
 
-                else -> error("Unknown PagingSourceLoadParams ${params::class}")
+                else -> error("Unknown LoadParams ${params::class}")
             }
             val data = queryProvider(limit, offset)
                 .also { currentQuery = it }
@@ -179,8 +170,8 @@ internal class OffsetQueryPagingSource2<RowType : Any>(
             )
         }
         val loadResult = when (transacter) {
-            is Transacter -> transacter.transactionWithResult(bodyWithReturn = getPagingSourceLoadResult)
-            is SuspendingTransacter -> transacter.transactionWithResult(bodyWithReturn = getPagingSourceLoadResult)
+            is Transacter -> transacter.transactionWithResult(bodyWithReturn = getLoadResult)
+            is SuspendingTransacter -> transacter.transactionWithResult(bodyWithReturn = getLoadResult)
         }
         (if (invalid) LoadResult.Invalid() else loadResult)
     }
@@ -217,7 +208,7 @@ internal class PageNumQueryPagingSource2<RowType : Any>(
         val page = params.key ?: initialPage
         val limit = params.loadSize
 
-        val getPagingSourceLoadResult: TransactionCallbacks.() -> LoadResult<Int, RowType> = {
+        val getLoadResult: TransactionCallbacks.() -> LoadResult<Int, RowType> = {
             val count = countQuery.executeAsOne().toInt()
             val data = queryProvider(limit, page)
                 .also { currentQuery = it }
@@ -235,8 +226,8 @@ internal class PageNumQueryPagingSource2<RowType : Any>(
             )
         }
         val loadResult = when (transacter) {
-            is Transacter -> transacter.transactionWithResult(bodyWithReturn = getPagingSourceLoadResult)
-            is SuspendingTransacter -> transacter.transactionWithResult(bodyWithReturn = getPagingSourceLoadResult)
+            is Transacter -> transacter.transactionWithResult(bodyWithReturn = getLoadResult)
+            is SuspendingTransacter -> transacter.transactionWithResult(bodyWithReturn = getLoadResult)
         }
         (if (invalid) LoadResult.Invalid() else loadResult)
     }

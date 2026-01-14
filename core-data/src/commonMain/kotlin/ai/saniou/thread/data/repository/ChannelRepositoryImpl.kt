@@ -11,11 +11,11 @@ import ai.saniou.thread.domain.model.forum.Channel
 import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.repository.ChannelRepository
 import ai.saniou.thread.domain.repository.Source
-import app.cash.paging.LoadType
-import app.cash.paging.Pager
-import app.cash.paging.PagingConfig
-import app.cash.paging.PagingData
-import app.cash.paging.map
+import androidx.paging.LoadType
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import androidx.paging.map
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
@@ -119,7 +119,6 @@ class ChannelRepositoryImpl(
         return source.fetchChannels()
     }
 
-    @OptIn(app.cash.paging.ExperimentalPagingApi::class)
     override fun getChannelTopicsPaging(
         sourceId: String,
         channelId: String,

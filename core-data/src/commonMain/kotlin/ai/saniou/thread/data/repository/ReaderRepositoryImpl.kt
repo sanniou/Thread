@@ -6,10 +6,10 @@ import ai.saniou.thread.domain.model.reader.Article
 import ai.saniou.thread.domain.model.reader.FeedSource
 import ai.saniou.thread.domain.model.reader.FeedType
 import ai.saniou.thread.domain.repository.ReaderRepository
-import app.cash.paging.Pager
-import app.cash.paging.PagingConfig
-import app.cash.paging.PagingData
-import app.cash.paging.map
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import androidx.paging.map
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOne

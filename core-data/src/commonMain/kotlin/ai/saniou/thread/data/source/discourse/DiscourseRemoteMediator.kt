@@ -14,11 +14,11 @@ import ai.saniou.thread.db.Database
 import ai.saniou.thread.db.table.forum.GetTopicsInChannelOffset
 import ai.saniou.thread.db.table.forum.Topic
 import ai.saniou.thread.network.toResult
-import app.cash.paging.ExperimentalPagingApi
-import app.cash.paging.LoadType
-import app.cash.paging.PagingState
-import app.cash.paging.RemoteMediator
-import app.cash.paging.RemoteMediatorMediatorResult
+import androidx.paging.ExperimentalPagingApi
+import androidx.paging.LoadType
+import androidx.paging.PagingState
+import androidx.paging.RemoteMediator
+import androidx.paging.RemoteMediator.MediatorResult
 
 @OptIn(ExperimentalPagingApi::class)
 class DiscourseRemoteMediator(
@@ -86,7 +86,7 @@ class DiscourseRemoteMediator(
     override suspend fun load(
         loadType: LoadType,
         state: PagingState<Int, GetTopicsInChannelOffset>,
-    ): RemoteMediatorMediatorResult {
+    ): MediatorResult {
         return delegate.load(loadType, state)
     }
 }

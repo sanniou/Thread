@@ -7,10 +7,10 @@ import ai.saniou.thread.domain.model.history.HistoryArticle
 import ai.saniou.thread.domain.model.history.HistoryItem
 import ai.saniou.thread.domain.model.history.HistoryPost
 import ai.saniou.thread.domain.repository.HistoryRepository
-import app.cash.paging.Pager
-import app.cash.paging.PagingConfig
-import app.cash.paging.PagingData
-import app.cash.paging.map
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import androidx.paging.map
 import app.cash.sqldelight.paging3.QueryPagingSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow

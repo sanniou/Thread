@@ -5,8 +5,8 @@ import ai.saniou.forum.workflow.trend.TrendContract.Event
 import ai.saniou.forum.workflow.trend.TrendContract.State
 import ai.saniou.thread.domain.model.TrendItem
 import ai.saniou.thread.domain.repository.TrendRepository
-import app.cash.paging.PagingData
-import app.cash.paging.cachedIn
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi

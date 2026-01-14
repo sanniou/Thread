@@ -11,11 +11,11 @@ import ai.saniou.thread.data.source.nmb.remote.dto.toTable
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.db.table.forum.SelectSubscriptionTopic
 import ai.saniou.thread.network.toResult
-import app.cash.paging.ExperimentalPagingApi
-import app.cash.paging.LoadType
-import app.cash.paging.PagingState
-import app.cash.paging.RemoteMediator
-import app.cash.paging.RemoteMediatorMediatorResult
+import androidx.paging.ExperimentalPagingApi
+import androidx.paging.LoadType
+import androidx.paging.PagingState
+import androidx.paging.RemoteMediator
+import androidx.paging.RemoteMediator.MediatorResult
 
 @OptIn(ExperimentalPagingApi::class)
 class SubscriptionRemoteMediator(
@@ -70,7 +70,7 @@ class SubscriptionRemoteMediator(
     override suspend fun load(
         loadType: LoadType,
         state: PagingState<Int, SelectSubscriptionTopic>,
-    ): RemoteMediatorMediatorResult {
+    ): MediatorResult {
         return delegate.load(loadType, state)
     }
 }

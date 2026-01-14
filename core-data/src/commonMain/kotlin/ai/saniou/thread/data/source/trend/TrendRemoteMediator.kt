@@ -11,9 +11,10 @@ import ai.saniou.thread.db.table.Trend
 import ai.saniou.thread.domain.model.TrendParams
 import ai.saniou.thread.domain.model.TrendTab
 import ai.saniou.thread.domain.source.TrendSource
-import app.cash.paging.ExperimentalPagingApi
-import app.cash.paging.LoadType
-import app.cash.paging.RemoteMediator
+import androidx.paging.ExperimentalPagingApi
+import androidx.paging.LoadType
+import androidx.paging.PagingState
+import androidx.paging.RemoteMediator
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
@@ -39,17 +40,17 @@ class TrendRemoteMediator(
         dataPolicy = if (params.refreshId > 0) DataPolicy.NETWORK_ONLY else DataPolicy.CACHE_ELSE_NETWORK,
         initialKey = 1,
         remoteKeyStrategy = object : RemoteKeyStrategy<Int, GetTrendsWithTopic> {
-            override suspend fun getKeyClosestToCurrentPosition(state: app.cash.paging.PagingState<Int, GetTrendsWithTopic>): ai.saniou.thread.db.table.RemoteKeys? {
+            override suspend fun getKeyClosestToCurrentPosition(state: PagingState<Int, GetTrendsWithTopic>): ai.saniou.thread.db.table.RemoteKeys? {
                 return db.remoteKeyQueries.getRemoteKeyById(RemoteKeyType.TREND, remoteKeyId)
                     .executeAsOneOrNull()
             }
 
-            override suspend fun getKeyForFirstItem(state: app.cash.paging.PagingState<Int, GetTrendsWithTopic>): ai.saniou.thread.db.table.RemoteKeys? {
+            override suspend fun getKeyForFirstItem(state: PagingState<Int, GetTrendsWithTopic>): ai.saniou.thread.db.table.RemoteKeys? {
                 return db.remoteKeyQueries.getRemoteKeyById(RemoteKeyType.TREND, remoteKeyId)
                     .executeAsOneOrNull()
             }
 
-            override suspend fun getKeyForLastItem(state: app.cash.paging.PagingState<Int, GetTrendsWithTopic>): ai.saniou.thread.db.table.RemoteKeys? {
+            override suspend fun getKeyForLastItem(state: PagingState<Int, GetTrendsWithTopic>): ai.saniou.thread.db.table.RemoteKeys? {
                 return db.remoteKeyQueries.getRemoteKeyById(RemoteKeyType.TREND, remoteKeyId)
                     .executeAsOneOrNull()
             }

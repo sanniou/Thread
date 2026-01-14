@@ -62,7 +62,7 @@ kotlin {
             implementation(libs.material3.window.size)
             implementation(libs.material3.adaptive.navigation)
             implementation("org.jetbrains.compose.ui:ui-backhandler:1.8.0")
-
+            implementation(libs.paging.compose)
             implementation(libs.cash.paging.compose.common)
             implementation(libs.sqldelight.paging3)
             implementation(libs.sqldelight.coroutines)

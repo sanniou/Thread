@@ -2,7 +2,7 @@ package ai.saniou.thread.domain.usecase.reader
 
 import ai.saniou.thread.domain.model.reader.Article
 import ai.saniou.thread.domain.repository.ReaderRepository
-import app.cash.paging.PagingData
+import androidx.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 
 class GetArticlesUseCase(private val repository: ReaderRepository) {

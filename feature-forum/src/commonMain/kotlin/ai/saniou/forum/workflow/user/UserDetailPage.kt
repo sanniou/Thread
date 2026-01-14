@@ -44,9 +44,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import app.cash.paging.LoadStateError
-import app.cash.paging.LoadStateLoading
-import app.cash.paging.compose.collectAsLazyPagingItems
+import androidx.paging.LoadState
+import androidx.paging.LoadState.Error
+import androidx.paging.LoadState.Loading
+import androidx.paging.compose.collectAsLazyPagingItems
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -154,8 +155,8 @@ data class UserDetailPage(
                                 }
 
                                 when (topics.loadState.refresh) {
-                                    is LoadStateLoading -> item { ThreadListSkeleton() }
-                                    is LoadStateError -> item {
+                                    is Loading -> item { ThreadListSkeleton() }
+                                    is Error -> item {
                                         Box(
                                             modifier = Modifier.fillMaxWidth().padding(32.dp),
                                             contentAlignment = Alignment.Center
@@ -170,8 +171,8 @@ data class UserDetailPage(
                                 }
 
                                 when (topics.loadState.append) {
-                                    is LoadStateLoading -> item { LoadingIndicator() }
-                                    is LoadStateError -> item { LoadingFailedIndicator() }
+                                    is Loading -> item { LoadingIndicator() }
+                                    is Error -> item { LoadingFailedIndicator() }
                                     else -> {
                                         if (topics.loadState.append.endOfPaginationReached && topics.itemCount > 0) {
                                             item { LoadEndIndicator() }
@@ -179,7 +180,7 @@ data class UserDetailPage(
                                     }
                                 }
 
-                                if (topics.loadState.refresh !is LoadStateLoading && topics.itemCount == 0) {
+                                if (topics.loadState.refresh !is Loading && topics.itemCount == 0) {
                                     item {
                                         EmptyContent(message = "该用户还没有发布过串")
                                     }
@@ -242,8 +243,8 @@ data class UserDetailPage(
                                 }
 
                                 when (replies.loadState.refresh) {
-                                    is LoadStateLoading -> item { LoadingIndicator() }
-                                    is LoadStateError -> item {
+                                    is Loading -> item { LoadingIndicator() }
+                                    is Error -> item {
                                         Box(
                                             modifier = Modifier.fillMaxWidth().padding(32.dp),
                                             contentAlignment = Alignment.Center
@@ -258,8 +259,8 @@ data class UserDetailPage(
                                 }
 
                                 when (replies.loadState.append) {
-                                    is LoadStateLoading -> item { LoadingIndicator() }
-                                    is LoadStateError -> item { LoadingFailedIndicator() }
+                                    is Loading -> item { LoadingIndicator() }
+                                    is Error -> item { LoadingFailedIndicator() }
                                     else -> {
                                         if (replies.loadState.append.endOfPaginationReached && replies.itemCount > 0) {
                                             item { LoadEndIndicator() }
@@ -267,7 +268,7 @@ data class UserDetailPage(
                                     }
                                 }
 
-                                if (replies.loadState.refresh !is LoadStateLoading && replies.itemCount == 0) {
+                                if (replies.loadState.refresh !is Loading && replies.itemCount == 0) {
                                     item {
                                         EmptyContent(message = "该用户还没有发布过回复")
                                     }

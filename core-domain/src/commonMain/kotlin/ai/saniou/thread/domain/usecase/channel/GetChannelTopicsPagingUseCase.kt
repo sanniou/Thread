@@ -2,7 +2,7 @@ package ai.saniou.thread.domain.usecase.channel
 
 import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.repository.ChannelRepository
-import app.cash.paging.PagingData
+import androidx.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 
 class GetChannelTopicsPagingUseCase(

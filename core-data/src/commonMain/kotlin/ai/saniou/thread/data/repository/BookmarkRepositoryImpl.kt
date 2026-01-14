@@ -6,7 +6,7 @@ import ai.saniou.thread.data.mapper.toDomain
 import ai.saniou.thread.data.mapper.toEntity
 import ai.saniou.thread.domain.model.bookmark.Bookmark
 import ai.saniou.thread.domain.repository.BookmarkRepository
-import app.cash.paging.PagingSource
+import androidx.paging.PagingSource
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.paging3.QueryPagingSource

@@ -8,3 +8,13 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform) apply false
     alias(libs.plugins.composeHotReload) apply false
 }
+
+
+allprojects {
+    configurations.all {
+        resolutionStrategy {
+            cacheChangingModulesFor(365, "days")
+        }
+    }
+}
+

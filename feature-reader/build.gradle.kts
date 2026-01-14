@@ -71,8 +71,7 @@ kotlin {
             implementation("org.jetbrains.compose.material3.adaptive:adaptive:1.1.0")
             implementation("org.jetbrains.compose.material3.adaptive:adaptive-layout:1.1.0")
             implementation("org.jetbrains.compose.material3.adaptive:adaptive-navigation:1.1.0")
-
-            implementation(libs.cash.paging.compose.common)
+            implementation(libs.paging.compose)
             implementation(libs.sqldelight.paging3)
             implementation(libs.sqldelight.coroutines)
             implementation(libs.reorderable)

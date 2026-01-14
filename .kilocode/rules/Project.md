@@ -68,7 +68,7 @@
     -   对于 Paging 3 列表，**必须**使用 `PagingStateLayout` 包裹 `LazyColumn` / `LazyVerticalGrid` 等组件。
     -   **职责**: 自动监听 `items.loadState.refresh` 状态。
         -   **Loading**: 显示全屏加载动画。
-        -   **Error**: 将 `LoadStateError` 转换为 `AppError` 并显示错误页。
+        -   **Error**: 将 `LoadState.Error` 转换为 `AppError` 并显示错误页。
         -   **Empty**: 当 `itemCount == 0` 时处理空状态（可通过 `empty` 参数自定义）。
 5.  **SaniouResult**:
     - 所有 API 返回Response必须定义为 SaniouResult<T> ，会将结果包装成SaniouResult.Success/Failed 等状态

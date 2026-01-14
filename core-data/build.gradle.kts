@@ -17,6 +17,7 @@ wire {
 kotlin {
     sourceSets.all {
         languageSettings.optIn("kotlin.time.ExperimentalTime")
+        languageSettings.optIn("androidx.paging.ExperimentalPagingApi")
     }
     androidTarget {
         compilerOptions {

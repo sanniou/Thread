@@ -1,13 +1,10 @@
 package ai.saniou.thread.data.paging
 
 import ai.saniou.thread.db.Database
-import app.cash.paging.ExperimentalPagingApi
-import app.cash.paging.LoadType
-import app.cash.paging.PagingState
-import app.cash.paging.RemoteMediator
-import app.cash.paging.RemoteMediatorMediatorResult
-import app.cash.paging.RemoteMediatorMediatorResultError
-import app.cash.paging.RemoteMediatorMediatorResultSuccess
+import androidx.paging.LoadType
+import androidx.paging.PagingState
+import androidx.paging.RemoteMediator
+
 
 /**
  * 通用 RemoteMediator 实现
@@ -30,7 +27,6 @@ import app.cash.paging.RemoteMediatorMediatorResultSuccess
  * @param itemsExtractor 从 ResponseType 中提取 List<Value>，用于判断分页是否结束
  * @param cacheChecker (可选) 缓存检查函数，用于 CACHE_ELSE_NETWORK 策略。如果返回 true，则跳过网络请求。
  */
-@OptIn(ExperimentalPagingApi::class)
 class GenericRemoteMediator<Key : Any, Value : Any, ResponseType : Any>(
     private val db: Database,
     private val dataPolicy: DataPolicy,
@@ -57,7 +53,7 @@ class GenericRemoteMediator<Key : Any, Value : Any, ResponseType : Any>(
     override suspend fun load(
         loadType: LoadType,
         state: PagingState<Key, Value>,
-    ): RemoteMediatorMediatorResult {
+    ): MediatorResult {
         return try {
             val key: Key = when (loadType) {
                 LoadType.REFRESH -> {
@@ -71,14 +67,14 @@ class GenericRemoteMediator<Key : Any, Value : Any, ResponseType : Any>(
                 LoadType.PREPEND -> {
                     val remoteKey = remoteKeyStrategy.getKeyForFirstItem(state)
                     val prevKeyLong = remoteKey?.prevKey
-                        ?: return RemoteMediatorMediatorResultSuccess(endOfPaginationReached = remoteKey != null)
+                        ?: return MediatorResult.Success(endOfPaginationReached = remoteKey != null)
                     longToKey(prevKeyLong)
                 }
 
                 LoadType.APPEND -> {
                     val remoteKey = remoteKeyStrategy.getKeyForLastItem(state)
                     val nextKeyLong = remoteKey?.nextKey
-                        ?: return RemoteMediatorMediatorResultSuccess(endOfPaginationReached = remoteKey != null)
+                        ?: return MediatorResult.Success(endOfPaginationReached = remoteKey != null)
                     longToKey(nextKeyLong)
                 }
             }
@@ -86,10 +82,10 @@ class GenericRemoteMediator<Key : Any, Value : Any, ResponseType : Any>(
             // 策略检查
             if (dataPolicy == DataPolicy.CACHE_ELSE_NETWORK && cacheChecker != null) {
                 if (cacheChecker.invoke(key)) {
-                    return RemoteMediatorMediatorResultSuccess(endOfPaginationReached = false)
+                    return MediatorResult.Success(endOfPaginationReached = false)
                 }
             } else if (dataPolicy == DataPolicy.CACHE_ONLY) {
-                return RemoteMediatorMediatorResultSuccess(endOfPaginationReached = true)
+                return MediatorResult.Success(endOfPaginationReached = true)
             }
 
             fetcher(key).fold(
@@ -104,14 +100,14 @@ class GenericRemoteMediator<Key : Any, Value : Any, ResponseType : Any>(
                         remoteKeyStrategy.insertKeys(key, prevKey, nextKey, endOfPagination)
                     }
 
-                    RemoteMediatorMediatorResultSuccess(endOfPaginationReached = endOfPagination)
+                    MediatorResult.Success(endOfPaginationReached = endOfPagination)
                 },
                 onFailure = { ex ->
-                    RemoteMediatorMediatorResultError(ex)
+                    MediatorResult.Error(ex)
                 }
             )
         } catch (e: Exception) {
-            RemoteMediatorMediatorResultError(e)
+            MediatorResult.Error(e)
         }
     }
 }

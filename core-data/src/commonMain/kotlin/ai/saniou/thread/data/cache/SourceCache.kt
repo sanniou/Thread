@@ -4,7 +4,7 @@ import ai.saniou.thread.db.table.forum.Channel
 import ai.saniou.thread.db.table.forum.Comment
 import ai.saniou.thread.db.table.forum.GetTopicsInChannelOffset
 import ai.saniou.thread.domain.model.forum.Topic
-import app.cash.paging.PagingSource
+import androidx.paging.PagingSource
 import kotlinx.coroutines.flow.Flow
 import ai.saniou.thread.domain.model.forum.Comment as DomainComment
 

@@ -2,7 +2,7 @@ package ai.saniou.forum.workflow.user
 
 import ai.saniou.thread.domain.model.forum.Comment
 import ai.saniou.thread.domain.model.forum.Topic
-import app.cash.paging.PagingData
+import androidx.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 
 interface UserDetailContract {

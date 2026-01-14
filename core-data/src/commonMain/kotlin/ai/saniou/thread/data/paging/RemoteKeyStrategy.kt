@@ -3,7 +3,7 @@ package ai.saniou.thread.data.paging
 import ai.saniou.thread.data.source.nmb.remote.dto.RemoteKeyType
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.db.table.RemoteKeys
-import app.cash.paging.PagingState
+import androidx.paging.PagingState
 import kotlin.time.Clock
 
 /**

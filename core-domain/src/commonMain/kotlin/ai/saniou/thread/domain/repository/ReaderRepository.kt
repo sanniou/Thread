@@ -2,7 +2,7 @@ package ai.saniou.thread.domain.repository
 
 import ai.saniou.thread.domain.model.reader.Article
 import ai.saniou.thread.domain.model.reader.FeedSource
-import app.cash.paging.PagingData
+import androidx.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 
 interface ReaderRepository {

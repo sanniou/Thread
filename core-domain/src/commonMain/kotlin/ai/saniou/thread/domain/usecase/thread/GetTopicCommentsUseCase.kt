@@ -2,7 +2,7 @@ package ai.saniou.thread.domain.usecase.thread
 
 import ai.saniou.thread.domain.model.forum.Comment
 import ai.saniou.thread.domain.repository.TopicRepository
-import app.cash.paging.PagingData
+import androidx.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 
 class GetTopicCommentsUseCase(private val topicRepository: TopicRepository) {

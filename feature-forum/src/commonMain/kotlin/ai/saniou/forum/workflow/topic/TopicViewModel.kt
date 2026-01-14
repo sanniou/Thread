@@ -10,8 +10,8 @@ import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.usecase.channel.GetChannelDetailUseCase
 import ai.saniou.thread.domain.usecase.channel.GetChannelNameUseCase
 import ai.saniou.thread.domain.usecase.channel.GetChannelTopicsPagingUseCase
-import app.cash.paging.PagingData
-import app.cash.paging.cachedIn
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi

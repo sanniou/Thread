@@ -3,11 +3,10 @@ package ai.saniou.coreui.state
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import app.cash.paging.LoadStateError
-import app.cash.paging.LoadStateLoading
-import app.cash.paging.compose.LazyPagingItems
+import androidx.paging.LoadState.Error
+import androidx.paging.LoadState.Loading
+import androidx.paging.compose.LazyPagingItems
 
 /**
  * Paging 3 状态布局组件
@@ -35,7 +34,7 @@ fun <T : Any> PagingStateLayout(
         val refreshState = items.loadState.refresh
 
         when {
-            refreshState is LoadStateLoading -> {
+            refreshState is Loading -> {
                 if (loading != null) {
                     loading()
                 } else {
@@ -43,7 +42,7 @@ fun <T : Any> PagingStateLayout(
                 }
             }
 
-            refreshState is LoadStateError -> {
+            refreshState is Error -> {
                 val appError = refreshState.error.toAppError(onRetry)
                 if (error != null) {
                     error(appError)
@@ -54,7 +53,7 @@ fun <T : Any> PagingStateLayout(
 
             // Empty State Handling
             // Only show empty state if not loading and itemCount is 0
-            items.itemCount == 0 && refreshState !is LoadStateLoading -> {
+            items.itemCount == 0 && refreshState !is Loading -> {
                 if (empty != null) {
                     empty()
                 } else {

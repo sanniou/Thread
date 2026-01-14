@@ -5,7 +5,7 @@ import ai.saniou.thread.domain.model.feed.TimelineItem
 import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.repository.FeedRepository
 import ai.saniou.thread.domain.repository.SourceRepository
-import app.cash.paging.PagingData
+import androidx.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 

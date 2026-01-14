@@ -4,8 +4,8 @@ import ai.saniou.coreui.state.toAppError
 import ai.saniou.thread.domain.model.reader.Article
 import ai.saniou.thread.domain.model.reader.FeedSource
 import ai.saniou.thread.domain.usecase.reader.*
-import app.cash.paging.PagingData
-import app.cash.paging.cachedIn
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.flow.*

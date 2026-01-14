@@ -2,7 +2,7 @@ package ai.saniou.thread.domain.usecase.subscription
 
 import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.repository.SubscriptionRepository
-import app.cash.paging.PagingData
+import androidx.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 
 class GetSubscriptionFeedUseCase(private val subscriptionRepository: SubscriptionRepository) {

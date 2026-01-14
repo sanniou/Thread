@@ -22,8 +22,8 @@ import ai.saniou.thread.domain.model.forum.Image
 import ai.saniou.thread.domain.usecase.thread.GetTopicMetadataUseCase
 import ai.saniou.thread.domain.usecase.thread.UpdateTopicLastAccessTimeUseCase
 import ai.saniou.thread.domain.usecase.thread.UpdateTopicLastReadCommentIdUseCase
-import app.cash.paging.PagingData
-import app.cash.paging.cachedIn
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi

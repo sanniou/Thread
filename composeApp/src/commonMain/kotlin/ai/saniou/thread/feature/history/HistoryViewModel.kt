@@ -5,10 +5,10 @@ import ai.saniou.thread.domain.model.history.HistoryArticle
 import ai.saniou.thread.domain.model.history.HistoryItem
 import ai.saniou.thread.domain.model.history.HistoryPost
 import ai.saniou.thread.domain.usecase.history.GetHistoryUseCase
-import app.cash.paging.PagingData
-import app.cash.paging.cachedIn
-import app.cash.paging.insertSeparators
-import app.cash.paging.map
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
+import androidx.paging.insertSeparators
+import androidx.paging.map
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi

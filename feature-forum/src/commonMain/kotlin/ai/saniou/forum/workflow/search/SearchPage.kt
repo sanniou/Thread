@@ -46,9 +46,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import app.cash.paging.LoadStateError
-import app.cash.paging.LoadStateLoading
-import app.cash.paging.compose.collectAsLazyPagingItems
+import androidx.paging.LoadState.Error
+import androidx.paging.LoadState.Loading
+import androidx.paging.compose.collectAsLazyPagingItems
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.kodein.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -175,13 +175,13 @@ data class SearchPage(
 
             item {
                 when (threads.loadState.append) {
-                    is LoadStateError -> LoadingFailedIndicator()
-                    is LoadStateLoading -> LoadingIndicator()
+                    is Error -> LoadingFailedIndicator()
+                    is Loading -> LoadingIndicator()
                     else -> if (threads.itemCount > 0) LoadEndIndicator() else null
                 }
             }
 
-            if (threads.loadState.refresh is LoadStateLoading) {
+            if (threads.loadState.refresh is Loading) {
                 item { LoadingIndicator() }
             }
         }
@@ -211,13 +211,13 @@ data class SearchPage(
 
             item {
                 when (replies.loadState.append) {
-                    is LoadStateError -> LoadingFailedIndicator()
-                    is LoadStateLoading -> LoadingIndicator()
+                    is Error -> LoadingFailedIndicator()
+                    is Loading -> LoadingIndicator()
                     else -> if (replies.itemCount > 0) LoadEndIndicator() else null
                 }
             }
 
-            if (replies.loadState.refresh is LoadStateLoading) {
+            if (replies.loadState.refresh is Loading) {
                 item { LoadingIndicator() }
             }
         }

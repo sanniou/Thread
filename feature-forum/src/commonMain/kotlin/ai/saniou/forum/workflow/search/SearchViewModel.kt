@@ -4,7 +4,7 @@ import ai.saniou.forum.workflow.search.SearchContract.Event
 import ai.saniou.forum.workflow.search.SearchContract.SearchType
 import ai.saniou.forum.workflow.search.SearchContract.State
 import ai.saniou.thread.data.source.nmb.NmbSource
-import app.cash.paging.cachedIn
+import androidx.paging.cachedIn
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.FlowPreview

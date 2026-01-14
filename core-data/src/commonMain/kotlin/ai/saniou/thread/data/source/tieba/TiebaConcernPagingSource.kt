@@ -4,8 +4,8 @@ import ai.saniou.thread.data.source.tieba.remote.ClientVersion
 import ai.saniou.thread.data.source.tieba.remote.OfficialProtobufTiebaApi
 import ai.saniou.thread.data.source.tieba.remote.TiebaProtoBuilder
 import ai.saniou.thread.domain.model.forum.Topic
-import app.cash.paging.PagingSource
-import app.cash.paging.PagingState
+import androidx.paging.PagingSource
+import androidx.paging.PagingState
 import com.huanchengfly.tieba.post.api.models.protos.userLike.UserLikeRequest
 import com.huanchengfly.tieba.post.api.models.protos.userLike.UserLikeRequestData
 import kotlinx.coroutines.flow.first

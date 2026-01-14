@@ -1,6 +1,6 @@
 package ai.saniou.thread.domain.repository
 
-import app.cash.paging.PagingData
+import androidx.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 import ai.saniou.thread.domain.model.forum.Topic
 
