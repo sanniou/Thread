@@ -3,9 +3,9 @@ import ai.saniou.thread.data.source.nmb.remote.dto.RemoteKeyType;
 CREATE TABLE RemoteKeys (
     type TEXT AS RemoteKeyType NOT NULL,
     id TEXT NOT NULL,
-    prevKey INTEGER,
-    currKey INTEGER NOT NULL,
-    nextKey INTEGER,
+    prevKey TEXT,
+    currKey TEXT NOT NULL,
+    nextKey TEXT,
     updateAt INTEGER NOT NULL,
     PRIMARY KEY (type, id)
 );

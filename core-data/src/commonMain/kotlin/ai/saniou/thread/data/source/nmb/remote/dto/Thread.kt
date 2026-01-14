@@ -46,7 +46,12 @@ data class ThreadReply(
     override val name: String,
 ) : IBaseAuthor, IThreadBody
 
-fun ThreadReply.toTableReply(sourceId: String, threadId: Long, page: Long = Long.MIN_VALUE) =
+fun ThreadReply.toTableReply(
+    sourceId: String,
+    threadId: Long,
+    page: Long = Long.MIN_VALUE,
+    floor: Long = Long.MIN_VALUE,
+) =
     Comment(
         id = this.id.toString(),
         sourceId = sourceId,
@@ -59,7 +64,8 @@ fun ThreadReply.toTableReply(sourceId: String, threadId: Long, page: Long = Long
         authorName = this.name,
         topicId = threadId.toString(),
         page = page,
-        floor = null, agreeCount = 0,
+        floor = floor,
+        agreeCount = 0,
         disagreeCount = 0,
         subCommentCount = 0,
         authorLevel = null,
@@ -90,6 +96,9 @@ fun Thread.toTable(sourceId: String, page: Long) = Topic(
     agreeCount = 0,
     disagreeCount = 0,
     isCollected = false,
+    lastReplyAt = 0L,
+    lastVisitedAt = null,
+    lastViewedCommentId = null,
 )
 
 fun Thread.toCommentEntity(sourceId: String) = Comment(

@@ -33,9 +33,10 @@ class NmbTrendSource(
     override suspend fun fetchTrendData(
         tab: TrendTab,
         params: TrendParams,
-        page: Int,
+        cursor: String?,
     ): Result<List<TrendItem>> {
-        if (page > 1) return Result.success(emptyList())
+        // NMB Trend doesn't support pagination
+        if (cursor != null) return Result.success(emptyList())
 
         return try {
             val trendThreadId = 50248044L

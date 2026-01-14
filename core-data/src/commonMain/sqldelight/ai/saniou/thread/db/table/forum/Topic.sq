@@ -1,16 +1,5 @@
 import kotlin.Boolean;
 
--- 创建 TopicInformation 表
-CREATE TABLE IF NOT EXISTS TopicInformation (
-    id TEXT NOT NULL,
-    sourceId TEXT NOT NULL,
-    remainingCount INTEGER,
-    lastReplyAt INTEGER NOT NULL DEFAULT 0, -- 列表页最新评论时间戳 用来排序数据库 topic
-    lastVisitedAt INTEGER NOT NULL DEFAULT 0,
-    lastViewedCommentId TEXT,
-    PRIMARY KEY (sourceId, id)
-);
-
 -- 创建 Topic 表
 CREATE TABLE IF NOT EXISTS Topic (
     id TEXT NOT NULL,
@@ -27,19 +16,23 @@ CREATE TABLE IF NOT EXISTS Topic (
     disagreeCount INTEGER ,
     isCollected INTEGER AS Boolean ,
     createdAt INTEGER NOT NULL,
+    lastReplyAt INTEGER NOT NULL DEFAULT 0, -- 列表页最新评论时间戳 用来排序数据库 topic
+    lastVisitedAt INTEGER,
+    lastViewedCommentId TEXT,
+
     PRIMARY KEY (sourceId, id)
 );
 
 -- 索引迁移
-CREATE INDEX IF NOT EXISTS idx_topic_last_key ON TopicInformation(lastReplyAt);
-CREATE INDEX IF NOT EXISTS idx_topic_last_access_time ON TopicInformation(lastVisitedAt);
+CREATE INDEX IF NOT EXISTS idx_topic_last_key ON Topic(lastReplyAt);
+CREATE INDEX IF NOT EXISTS idx_topic_last_access_time ON Topic(lastVisitedAt);
 CREATE INDEX IF NOT EXISTS idx_topic_channel_id ON Topic(sourceId, channelId);
 
 -- 插入 Topic 数据 (无 Page)
 upsertTopicNoPage:
 INSERT INTO Topic (
     id, sourceId, channelId, commentCount, authorId, authorName, title, content, summary, page,
-    agreeCount, disagreeCount, isCollected, createdAt
+    agreeCount, disagreeCount, isCollected, createdAt, lastReplyAt
 ) VALUES ?
 ON CONFLICT (sourceId, id) DO UPDATE SET
     commentCount = excluded.commentCount,
@@ -51,13 +44,15 @@ ON CONFLICT (sourceId, id) DO UPDATE SET
     agreeCount = excluded.agreeCount,
     disagreeCount = excluded.disagreeCount,
     isCollected = excluded.isCollected,
-    createdAt = excluded.createdAt;
+    createdAt = excluded.createdAt,
+    lastReplyAt = excluded.lastReplyAt;
+    -- lastVisitedAt and lastViewedCommentId are preserved (not updated)
 
 -- 插入 Topic 数据
 upsertTopic:
 INSERT INTO Topic (
     id, sourceId, channelId, commentCount, authorId, authorName, title, content, summary, page,
-    agreeCount, disagreeCount, isCollected, createdAt
+    agreeCount, disagreeCount, isCollected, createdAt, lastReplyAt
 ) VALUES ?
 ON CONFLICT (sourceId, id) DO UPDATE SET
     channelId = excluded.channelId,
@@ -71,15 +66,9 @@ ON CONFLICT (sourceId, id) DO UPDATE SET
     agreeCount = excluded.agreeCount,
     disagreeCount = excluded.disagreeCount,
     isCollected = excluded.isCollected,
-    createdAt = excluded.createdAt;
-
--- 插入或更新 TopicInformation 数据
-upsertTopicInformation:
-INSERT INTO TopicInformation (id, sourceId, remainingCount, lastReplyAt)
-VALUES (?, ?, ?, ?)
-ON CONFLICT(sourceId, id) DO UPDATE SET
-    remainingCount = excluded.remainingCount,
+    createdAt = excluded.createdAt,
     lastReplyAt = excluded.lastReplyAt;
+    -- lastVisitedAt and lastViewedCommentId are preserved (not updated)
 
 -- 查询 Topic 数据 (方法名保留原逻辑但改名)
 countTopicsByChannelAndPage:
@@ -92,10 +81,6 @@ incrementTopicPage:
 UPDATE Topic
 SET page = page + 1
 WHERE sourceId = :sourceId AND channelId = :channelId AND page >= :page;
-
--- 查询 TopicInformation 数据
-getTopicInformation:
-SELECT * FROM TopicInformation WHERE sourceId = :sourceId AND id = :id;
 
 -- 查询所有 Topic 数据
 getAllTopics:
@@ -124,10 +109,6 @@ UPDATE Topic SET
     content = COALESCE(?, content)
 WHERE sourceId = ? AND id = ?;
 
--- 删除 TopicInformation 数据
-deleteTopicInformation:
-DELETE FROM TopicInformation WHERE sourceId = ? AND id = ?;
-
 -- 删除 Topic 数据
 deleteTopic:
 DELETE FROM Topic WHERE sourceId = ? AND id = ?;
@@ -137,46 +118,43 @@ deleteTopicPage:
 DELETE FROM Topic WHERE sourceId = ? AND channelId = ?;
 
 getTopic:
-SELECT Topic.*, TopicInformation.lastViewedCommentId
+SELECT *
 FROM Topic
-LEFT JOIN TopicInformation ON Topic.id = TopicInformation.id AND Topic.sourceId = TopicInformation.sourceId
 WHERE Topic.sourceId = :sourceId AND Topic.id = :id;
 
 countTopicsByChannel:
 SELECT count(*) FROM Topic WHERE sourceId = :sourceId AND channelId = :channelId;
 
 getTopicsInChannel:
-SELECT * FROM Topic LEFT JOIN TopicInformation ON Topic.id = TopicInformation.id AND Topic.sourceId = TopicInformation.sourceId WHERE Topic.sourceId = :sourceId AND channelId = :channelId AND page = :page ORDER BY lastReplyAt DESC;
+SELECT * FROM Topic WHERE Topic.sourceId = :sourceId AND channelId = :channelId AND page = :page ORDER BY lastReplyAt DESC;
 
 getTopicsByChannel:
 SELECT * FROM Topic WHERE sourceId = :sourceId AND channelId = :channelId AND page = :page;
 
 getTopicsInChannelOffset:
-SELECT * FROM Topic LEFT JOIN TopicInformation ON Topic.id = TopicInformation.id AND Topic.sourceId = TopicInformation.sourceId WHERE Topic.sourceId = :sourceId AND channelId = :channelId ORDER BY lastReplyAt DESC LIMIT :limit OFFSET :offset;
+SELECT * FROM Topic WHERE Topic.sourceId = :sourceId AND channelId = :channelId ORDER BY lastReplyAt DESC LIMIT :limit OFFSET :offset;
 
 getTopicsInChannelKeyset:
-SELECT Topic.*, TopicInformation.lastViewedCommentId
+SELECT *
 FROM Topic
-LEFT JOIN TopicInformation ON Topic.id = TopicInformation.id AND Topic.sourceId = TopicInformation.sourceId
 WHERE Topic.sourceId = :sourceId
   AND channelId = :channelId
   AND (
-      TopicInformation.lastReplyAt < :lastReplyAt
-      OR (TopicInformation.lastReplyAt = :lastReplyAt AND Topic.id < :lastId)
+      lastReplyAt < :lastReplyAt
+      OR (lastReplyAt = :lastReplyAt AND id < :lastId)
   )
-ORDER BY TopicInformation.lastReplyAt DESC, Topic.id DESC
+ORDER BY lastReplyAt DESC, id DESC
 LIMIT :limit;
 
 updateTopicLastAccessTime:
-UPDATE TopicInformation SET lastVisitedAt = :last_access_time WHERE sourceId = :sourceId AND id = :id;
+UPDATE Topic SET lastVisitedAt = :last_access_time WHERE sourceId = :sourceId AND id = :id;
 
 updateTopicLastReadCommentId:
-UPDATE TopicInformation SET lastViewedCommentId = :last_read_comment_id WHERE sourceId = :sourceId AND id = :id;
+UPDATE Topic SET lastViewedCommentId = :last_read_comment_id WHERE sourceId = :sourceId AND id = :id;
 
 searchTopics:
 SELECT * FROM Topic
-LEFT JOIN TopicInformation ON Topic.id = TopicInformation.id AND Topic.sourceId = TopicInformation.sourceId
-WHERE (CAST(Topic.id AS TEXT) LIKE ('%' || :query || '%') OR title LIKE ('%' || :query || '%') OR content LIKE ('%' || :query || '%'))
+WHERE (CAST(id AS TEXT) LIKE ('%' || :query || '%') OR title LIKE ('%' || :query || '%') OR content LIKE ('%' || :query || '%'))
 ORDER BY lastReplyAt DESC
 LIMIT :limit OFFSET :offset;
 
@@ -185,8 +163,7 @@ SELECT count(*) FROM Topic
 WHERE (CAST(id AS TEXT) LIKE ('%' || :query || '%') OR title LIKE ('%' || :query || '%') OR content LIKE ('%' || :query || '%'));
 
 getTopicsByUserHashOffset:
-SELECT Topic.* FROM Topic
-LEFT JOIN TopicInformation ON Topic.id = TopicInformation.id AND Topic.sourceId = TopicInformation.sourceId
+SELECT * FROM Topic
 WHERE authorId = :authorId
 ORDER BY lastReplyAt DESC
 LIMIT :limit OFFSET :offset;

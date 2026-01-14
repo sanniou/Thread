@@ -4,10 +4,11 @@ import ai.saniou.thread.data.cache.SourceCache
 import ai.saniou.thread.data.mapper.toDomain
 import ai.saniou.thread.data.mapper.toEntity
 import ai.saniou.thread.data.mapper.toMetadata
+import ai.saniou.thread.data.model.CommentKey
 import ai.saniou.thread.data.paging.DataPolicy
 import ai.saniou.thread.data.paging.DefaultRemoteKeyStrategy
 import ai.saniou.thread.data.paging.GenericRemoteMediator
-import ai.saniou.thread.data.paging.SqlDelightPagingSource
+import ai.saniou.thread.data.paging.KeysetPagingSource
 import ai.saniou.thread.data.source.nmb.remote.dto.RemoteKeyType
 import ai.saniou.thread.data.source.tieba.TiebaSource
 import ai.saniou.thread.db.Database
@@ -104,7 +105,9 @@ class TopicRepositoryImpl(
                 remoteKeyStrategy = DefaultRemoteKeyStrategy(
                     db = db,
                     type = RemoteKeyType.THREAD,
-                    id = "${sourceId}_${topicId}_${if (isPoOnly) "po" else "all"}"
+                    id = "${sourceId}_${topicId}_${if (isPoOnly) "po" else "all"}",
+                    serializer = { it.toString() },
+                    deserializer = { it.toInt() }
                 ),
                 fetcher = { page ->
                     source.getTopicComments(topicId, page, isPoOnly)
@@ -112,6 +115,7 @@ class TopicRepositoryImpl(
                 saver = { comments, page, _ ->
                     cache.saveComments(comments, sourceId, page)
                 },
+                itemsExtractor = { it },
                 endOfPaginationReached = { comments ->
                     comments.isEmpty()
                 },
@@ -121,25 +125,24 @@ class TopicRepositoryImpl(
                             sourceId,
                             topicId,
                             page.toLong()
-                        )
-                            .executeAsOne() > 0
+                        ).executeAsOne() > 0
                     } else {
                         db.commentQueries.countCommentsByTopicIdAndPage(
                             sourceId,
                             topicId,
                             page.toLong()
-                        )
-                            .executeAsOne() > 0
+                        ).executeAsOne() > 0
                     }
                 },
-                keyIncrementer = { it + 1 },
-                keyDecrementer = { it - 1 },
-                keyToLong = { it.toLong() },
-                longToKey = { it.toInt() }
+                keyExtractor = { comment ->
+                    comment.floor.toInt()
+                }
             ),
             pagingSourceFactory = {
+                // Use CommentKey (floor, id) for DB paging
+                val initialKey = CommentKey(0, "")
                 if (isPoOnly) {
-                    SqlDelightPagingSource(
+                    KeysetPagingSource(
                         transacter = db,
                         context = Dispatchers.IO,
                         countQueryProvider = {
@@ -148,16 +151,22 @@ class TopicRepositoryImpl(
                                 topicId
                             )
                         },
-                        pageQueryProvider = { page ->
-                            db.commentQueries.getCommentsByTopicIdPoMode(
+                        queryProvider = { key, limit ->
+                            val currentKey = key ?: initialKey
+                            db.commentQueries.getCommentsPoModeKeyset(
                                 sourceId,
                                 topicId,
-                                page.toLong()
+                                currentKey.floor,
+                                currentKey.id,
+                                limit
                             )
+                        },
+                        keyExtractor = { comment ->
+                            CommentKey(comment.floor ?: 0, comment.id)
                         }
                     )
                 } else {
-                    SqlDelightPagingSource(
+                    KeysetPagingSource(
                         transacter = db,
                         context = Dispatchers.IO,
                         countQueryProvider = {
@@ -166,8 +175,18 @@ class TopicRepositoryImpl(
                                 topicId
                             )
                         },
-                        pageQueryProvider = { page ->
-                            db.commentQueries.getCommentsByTopicId(sourceId, topicId, page.toLong())
+                        queryProvider = { key, limit ->
+                            val currentKey = key ?: initialKey
+                            db.commentQueries.getCommentsKeyset(
+                                sourceId,
+                                topicId,
+                                currentKey.floor,
+                                currentKey.id,
+                                limit
+                            )
+                        },
+                        keyExtractor = { comment ->
+                            CommentKey(comment.floor ?: 0, comment.id)
                         }
                     )
                 }

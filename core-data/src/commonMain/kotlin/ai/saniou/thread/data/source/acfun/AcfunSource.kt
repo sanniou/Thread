@@ -174,7 +174,15 @@ class AcfunSource(
                         isAdmin = false,
                         title = "No.${comment.floor}",
                         topicId = threadId,
-                        sourceId = id
+                        sourceId = id,
+                        floor = TODO(),
+                        replyToId = TODO(),
+                        agreeCount = TODO(),
+                        disagreeCount = TODO(),
+                        subCommentCount = TODO(),
+                        authorLevel = TODO(),
+                        isPo = TODO(),
+                        subCommentsPreview = TODO()
                     )
                 }
                 Result.success(replies)

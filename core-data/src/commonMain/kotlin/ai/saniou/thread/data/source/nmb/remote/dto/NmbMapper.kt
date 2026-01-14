@@ -2,18 +2,12 @@ package ai.saniou.thread.data.source.nmb.remote.dto
 
 import ai.saniou.corecommon.utils.toTime
 import ai.saniou.thread.data.mapper.toDomain
-import ai.saniou.thread.db.table.forum.GetTopic
 import ai.saniou.thread.db.table.forum.ImageQueries
 import ai.saniou.thread.db.table.forum.SelectSubscriptionTopic
 import ai.saniou.thread.db.table.forum.TimeLine
-import ai.saniou.thread.domain.model.forum.Author
-import ai.saniou.thread.domain.model.forum.Channel
-import ai.saniou.thread.domain.model.forum.Comment
-import ai.saniou.thread.domain.model.forum.Image
-import ai.saniou.thread.domain.model.forum.ImageType
-import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.model.Tag
 import ai.saniou.thread.domain.model.TagType
+import ai.saniou.thread.domain.model.forum.*
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
@@ -95,67 +89,9 @@ fun SelectSubscriptionTopic.toDomain(imageQueries: ImageQueries? = null): Topic 
         images = images,
         isLocal = isLocal == 1L,
         comments = emptyList(),
-        remainingCount = null,
         tags = emptyList(), // TODO: Map tags from DB if available
         summary = null,
         lastViewedCommentId = null
-    )
-}
-
-// 注意：ThreadWithInformation 需要根据新的 TopicInformation 重构，这里暂时注释或假设有类似结构
-/*
-@OptIn(ExperimentalTime::class)
-fun TopicWithInformation.toDomain(): Topic = Topic(
-    id = id.toString(),
-    sourceName = "nmb",
-    sourceUrl = "https://nmb.ai/thread/$id",
-    title = title,
-    content = content ?: "",
-    author = createAuthor(userHash, authorName),
-    createdAt = Instant.fromEpochMilliseconds(createdAt),
-    channelId = channelId,
-    channelName = "",
-    commentCount = commentCount ?: 0,
-    images = createImageList(img, ext),
-    isSage = (sage ?: 0) > 0,
-    isAdmin = (admin ?: 0) > 0,
-    isHidden = (hide ?: 0) > 0,
-    isLocal = true,
-    comments = comments.map { it.toDomain() }.reversed(),
-    remainingCount = remainingCount
-)
-*/
-
-@OptIn(ExperimentalTime::class)
-fun GetTopic.toDomain(imageQueries: ImageQueries? = null): Topic {
-    val images = if (imageQueries != null) {
-        imageQueries.getImagesByParent(
-            sourceId = sourceId ?: "nmb",
-            parentId = id,
-            parentType = ImageType.Topic
-        ).executeAsList().map { it.toDomain() }
-    } else {
-        emptyList()
-    }
-
-    return Topic(
-        id = id,
-        sourceName = sourceId,
-        sourceId = sourceId,
-        sourceUrl = "https://nmb.ai/thread/$id",
-        title = title,
-        content = content ?: "",
-        author = createAuthor(authorId, authorName),
-        createdAt = Instant.fromEpochMilliseconds(createdAt),
-        channelId = channelId,
-        channelName = "",
-        commentCount = commentCount,
-        images = images,
-        isLocal = true,
-        comments = emptyList(), // GetTopic doesn't join with comments
-        summary = null,
-        tags = emptyList(), // TODO: Map tags from DB if available
-        remainingCount = null
     )
 }
 
@@ -181,7 +117,6 @@ fun Thread.toDomain(cdnUrl: String): Topic = Topic(
         if (admin > 0) add(Tag(id = "admin", name = "Admin", type = TagType.SYSTEM))
         if (hide > 0) add(Tag(id = "hide", name = "Hide", type = TagType.SYSTEM))
     },
-    remainingCount = (replyCount - replies.size).coerceAtLeast(0)
 )
 
 @OptIn(ExperimentalTime::class)
@@ -195,7 +130,7 @@ fun ThreadReply.toDomain(topicId: String, cdnUrl: String): Comment {
         content = content,
         images = createImageList(img, ext, cdnUrl),
         isAdmin = admin > 0,
-        floor = null, // API might not provide floor
+        floor = 1, // API might not provide floor todo get by page
         replyToId = null,
         sourceId = "nmb",
     )
@@ -253,6 +188,5 @@ fun ForumThread.toDomain(cdnUrl: String): Topic {
         orderKey = (replies.maxOfOrNull { it.now.nowToEpochMilliseconds() }
             ?: now.nowToEpochMilliseconds()),
         comments = replies.map { it.toDomain(id.toString(), cdnUrl) },
-        remainingCount = remainingCount
     )
 }

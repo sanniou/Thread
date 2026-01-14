@@ -294,7 +294,7 @@ object TiebaMapper {
                 content = content,
                 images = images,
                 isAdmin = post.author?.isBawu == "1",
-                floor = post.floor?.toIntOrNull(),
+                floor = post.floor!!.toLong(),
                 replyToId = null // Tieba main floor replies don't have direct parent usually, unless sub-post
             )
         } ?: emptyList()
@@ -330,7 +330,7 @@ object TiebaMapper {
                 content = content,
                 images = emptyList(), // Subposts rarely have images in this list view? Need check
                 isAdmin = post.author.isBawu == "1",
-                floor = null, // Subposts are within a floor
+                floor = post.floor.toLong(), // Subposts are within a floor
                 replyToId = null // Could infer from content if it starts with "Reply to..."
             )
         } ?: emptyList()
@@ -426,7 +426,6 @@ object TiebaMapper {
                 sourceUrl = "$BASE_URL/p/$tid",
                 tags = emptyList(),
                 agreeCount = thread.agreeNum.toLong(),
-                remainingCount = thread.commentNum.toLong(),
             )
         }
     }
@@ -698,7 +697,7 @@ object TiebaMapper {
                 content = content,
                 images = images,
                 isAdmin = false, // Check bawu/manager info if needed
-                floor = post.floor,
+                floor = post.floor.toLong(),
                 replyToId = null,
                 agreeCount = post.agree?.agreeNum,
                 disagreeCount = post.agree?.disagreeNum,
@@ -740,7 +739,7 @@ object TiebaMapper {
                 content = content,
                 images = emptyList(),
                 isAdmin = false,
-                floor = post.floor,
+                floor = post.floor.toLong(),
                 replyToId = null,
                 agreeCount = post.agree?.agreeNum,
                 disagreeCount = post.agree?.disagreeNum,

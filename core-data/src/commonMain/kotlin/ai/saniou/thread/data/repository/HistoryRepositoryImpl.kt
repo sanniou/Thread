@@ -54,7 +54,7 @@ class HistoryRepositoryImpl(
                         val post = db.topicQueries.getTopic(history.sourceId, history.itemId)
                             .executeAsOneOrNull()?.let { entity ->
                                 // 需要传入 imageQueries
-                                entity.toDomain(db.imageQueries)
+                                entity.toDomain(db.commentQueries,db.imageQueries,db.topicTagQueries)
                             }
                         if (post != null) {
                             HistoryPost(post, accessTime)

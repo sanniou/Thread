@@ -4,6 +4,7 @@ import ai.saniou.thread.data.cache.CacheStrategy
 import ai.saniou.thread.data.manager.CdnManager
 import ai.saniou.thread.data.mapper.toDomain
 import ai.saniou.thread.data.mapper.toMetadata
+import ai.saniou.thread.data.model.TopicKey
 import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
 import ai.saniou.thread.data.source.nmb.remote.dto.RemoteKeyType
 import ai.saniou.thread.data.source.nmb.remote.dto.Reply
@@ -173,9 +174,10 @@ class NmbSource(
 
     override suspend fun getChannelTopics(
         channelId: String,
-        page: Int,
+        cursor: Any?,
         isTimeline: Boolean,
     ): Result<List<Topic>> {
+        cursor as TopicKey
         val fid = channelId.toLongOrNull()
             ?: return Result.failure(IllegalArgumentException("Invalid NMB channel ID"))
 

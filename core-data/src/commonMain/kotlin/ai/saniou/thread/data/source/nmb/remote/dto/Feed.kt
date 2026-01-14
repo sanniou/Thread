@@ -49,7 +49,7 @@ fun Feed.toTable(sourceId: String, page: Long) = EntityTopic(
     sourceId = sourceId,
     channelId = fid.toString(),
     commentCount = replyCount,
-    createdAt = now.nowToEpochMilliseconds(), // now -> createdAt (Long)
+    createdAt = now.nowToEpochMilliseconds(),
     authorId = userHash,
     authorName = name,
     title = title,
@@ -58,7 +58,10 @@ fun Feed.toTable(sourceId: String, page: Long) = EntityTopic(
     page = page,
     agreeCount = 0,
     disagreeCount = 0,
-    isCollected = false
+    isCollected = false,
+    lastReplyAt = now.nowToEpochMilliseconds(),
+    lastVisitedAt = null,
+    lastViewedCommentId = null
 )
 
 @OptIn(ExperimentalTime::class)

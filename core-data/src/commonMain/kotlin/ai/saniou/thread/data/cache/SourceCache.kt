@@ -1,11 +1,12 @@
 package ai.saniou.thread.data.cache
 
+import ai.saniou.thread.data.model.TopicKey
 import ai.saniou.thread.db.table.forum.Channel
 import ai.saniou.thread.db.table.forum.Comment
-import ai.saniou.thread.db.table.forum.GetTopicsInChannelOffset
-import ai.saniou.thread.domain.model.forum.Topic
+import ai.saniou.thread.domain.model.forum.Topic as Topic
 import androidx.paging.PagingSource
 import kotlinx.coroutines.flow.Flow
+import ai.saniou.thread.db.table.forum.Topic as DbTopic
 import ai.saniou.thread.domain.model.forum.Comment as DomainComment
 
 /**
@@ -32,7 +33,7 @@ interface SourceCache {
     fun getChannelTopicPagingSource(
         sourceId: String,
         channelId: String,
-    ): PagingSource<Int, GetTopicsInChannelOffset>
+    ): PagingSource<TopicKey, DbTopic>
 
     /**
      * 保存帖子详情

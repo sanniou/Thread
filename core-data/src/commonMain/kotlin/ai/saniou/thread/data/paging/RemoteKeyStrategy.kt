@@ -2,7 +2,6 @@ package ai.saniou.thread.data.paging
 
 import ai.saniou.thread.data.source.nmb.remote.dto.RemoteKeyType
 import ai.saniou.thread.db.Database
-import ai.saniou.thread.db.table.RemoteKeys
 import androidx.paging.PagingState
 import kotlin.time.Clock
 
@@ -19,17 +18,17 @@ interface RemoteKeyStrategy<Key : Any, Value : Any> {
     /**
      * 获取列表中第一项对应的 RemoteKey
      */
-    suspend fun getKeyForFirstItem(state: PagingState<Key, Value>): RemoteKeys?
+    suspend fun getKeyForFirstItem(state: PagingState<Key, Value>): Key?
 
     /**
      * 获取列表中最后一项对应的 RemoteKey
      */
-    suspend fun getKeyForLastItem(state: PagingState<Key, Value>): RemoteKeys?
+    suspend fun getKeyForLastItem(state: PagingState<Key, Value>): Key?
 
     /**
      * 获取最接近当前滚动位置的 RemoteKey
      */
-    suspend fun getKeyClosestToCurrentPosition(state: PagingState<Key, Value>): RemoteKeys?
+    suspend fun getKeyClosestToCurrentPosition(state: PagingState<Key, Value>): Key?
 
     /**
      * 插入或更新 RemoteKey
@@ -40,45 +39,52 @@ interface RemoteKeyStrategy<Key : Any, Value : Any> {
 /**
  * 基于 SQLDelight RemoteKeys 表的默认实现
  *
- * 适用于使用 Long 类型作为分页键（如页码）的场景。
+ * 适用于使用任意类型作为分页键的场景，通过序列化器转换为 String 存储。
  *
  * @param db 数据库实例
  * @param type RemoteKey 类型 (例如 THREAD, FORUM)
  * @param id 关联的 ID (例如 threadId, forumId)
+ * @param serializer Key 序列化函数
+ * @param deserializer Key 反序列化函数
  */
-class DefaultRemoteKeyStrategy<Value : Any>(
+class DefaultRemoteKeyStrategy<Key : Any, Value : Any>(
     private val db: Database,
     private val type: RemoteKeyType,
-    private val id: String
-) : RemoteKeyStrategy<Int, Value> {
+    private val id: String,
+    private val serializer: (Key) -> String,
+    private val deserializer: (String) -> Key
+) : RemoteKeyStrategy<Key, Value> {
 
     private val remoteKeyQueries = db.remoteKeyQueries
 
-    override suspend fun getKeyForFirstItem(state: PagingState<Int, Value>): RemoteKeys? {
-        return remoteKeyQueries.getRemoteKeyById(type, id).executeAsOneOrNull()
+    override suspend fun getKeyForFirstItem(state: PagingState<Key, Value>): Key? {
+        val remoteKey = remoteKeyQueries.getRemoteKeyById(type, id).executeAsOneOrNull()
+        return remoteKey?.prevKey?.let(deserializer)
     }
 
-    override suspend fun getKeyForLastItem(state: PagingState<Int, Value>): RemoteKeys? {
-        return remoteKeyQueries.getRemoteKeyById(type, id).executeAsOneOrNull()
+    override suspend fun getKeyForLastItem(state: PagingState<Key, Value>): Key? {
+        val remoteKey = remoteKeyQueries.getRemoteKeyById(type, id).executeAsOneOrNull()
+        return remoteKey?.nextKey?.let(deserializer)
     }
 
-    override suspend fun getKeyClosestToCurrentPosition(state: PagingState<Int, Value>): RemoteKeys? {
-        return remoteKeyQueries.getRemoteKeyById(type, id).executeAsOneOrNull()
+    override suspend fun getKeyClosestToCurrentPosition(state: PagingState<Key, Value>): Key? {
+        val remoteKey = remoteKeyQueries.getRemoteKeyById(type, id).executeAsOneOrNull()
+        return remoteKey?.currKey?.let(deserializer)
     }
 
     override suspend fun insertKeys(
-        key: Int,
-        prevKey: Int?,
-        nextKey: Int?,
+        key: Key,
+        prevKey: Key?,
+        nextKey: Key?,
         endOfPagination: Boolean
     ) {
         val finalNextKey = if (endOfPagination) null else nextKey
         remoteKeyQueries.insertKey(
             type = type,
             id = id,
-            prevKey = prevKey?.toLong(),
-            currKey = key.toLong(),
-            nextKey = finalNextKey?.toLong(),
+            prevKey = prevKey?.let(serializer),
+            currKey = serializer(key),
+            nextKey = finalNextKey?.let(serializer),
             updateAt = Clock.System.now().toEpochMilliseconds(),
         )
     }

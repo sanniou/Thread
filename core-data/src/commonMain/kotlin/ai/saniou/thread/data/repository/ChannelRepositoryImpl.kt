@@ -2,6 +2,7 @@ package ai.saniou.thread.data.repository
 
 import ai.saniou.thread.data.cache.SourceCache
 import ai.saniou.thread.data.mapper.toDomain
+import ai.saniou.thread.data.model.TopicKey
 import ai.saniou.thread.data.paging.DataPolicy
 import ai.saniou.thread.data.paging.DefaultRemoteKeyStrategy
 import ai.saniou.thread.data.paging.GenericRemoteMediator
@@ -11,11 +12,7 @@ import ai.saniou.thread.domain.model.forum.Channel
 import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.repository.ChannelRepository
 import ai.saniou.thread.domain.repository.Source
-import androidx.paging.LoadType
-import androidx.paging.Pager
-import androidx.paging.PagingConfig
-import androidx.paging.PagingData
-import androidx.paging.map
+import androidx.paging.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
@@ -126,79 +123,52 @@ class ChannelRepositoryImpl(
         initialPage: Int,
     ): Flow<PagingData<Topic>> {
         val source = sourceMap[sourceId] ?: return flowOf(PagingData.empty())
-        val pageSize = 20;
+        val pageSize = 20
+
+        // TopicKey: (lastReplyAt, id)
+        // Initial Key: Max Value (Latest)
+        // Note: For descending sort, we start with MAX_VALUE.
+        // The ID part doesn't matter for the very first page as long as lastReplyAt is larger than any real data.
+        val initialKey = TopicKey(Long.MAX_VALUE, "")
 
         return Pager(
             config = PagingConfig(pageSize = pageSize),
-            initialKey = initialPage,
+            initialKey = initialKey,
             remoteMediator = GenericRemoteMediator(
                 db = db,
                 dataPolicy = DataPolicy.NETWORK_ELSE_CACHE,
-                initialKey = initialPage,
+                initialKey = initialKey,
                 remoteKeyStrategy = DefaultRemoteKeyStrategy(
                     db = db,
                     type = RemoteKeyType.CHANNEL,
-                    id = "${sourceId}_${channelId}_${isTimeline}"
+                    id = "${sourceId}_${channelId}_${isTimeline}",
+                    serializer = { it.toString() },
+                    deserializer = { TopicKey.fromString(it) }
                 ),
-                fetcher = { page ->
-                    source.getChannelTopics(channelId, page, isTimeline)
+                fetcher = { key ->
+                    // Pass the key as cursor string to the source
+                    source.getChannelTopics(channelId, key, isTimeline)
                 },
-                saver = { topics, page, loadType ->
+                saver = { topics, _, loadType ->
                     val shouldClear = loadType == LoadType.REFRESH
-                    // Paging 库在 loadType == REFRESH 时会负责 initialKey 的处理。
-                    // 但我们需要明确告诉 Cache 这一页的数据需要被替换（如果它存在）。
-                    // 当 loadType == REFRESH 时，通常意味着用户下拉刷新，或者初次加载。
-                    // 此时我们应该清理旧的缓存以保证数据的新鲜度，或者至少标记为 dirty。
-                    // 我们的策略是：如果是 REFRESH，则 clearPage = true，Cache 会执行 "page >= current -> page + 1" 的逻辑。
-
-                    // 这里有一个潜在问题：GenericRemoteMediator 的 pagerKey 是 Int。
-                    // 如果 initialPage 是 1，Refresh 时 key=1。
-                    // Cache.saveTopics(page=1, clear=true) 会把 page>=1 的数据都往后移一位。
-                    // 然后插入新的 page=1 数据。这是符合 "新数据下沉" 策略的。
-
-                    // 但是，如果是 APPEND (加载下一页)，key=2。
-                    // saveTopics(page=2, clear=false)。Cache 直接插入 page=2。
-                    // 这也是正确的。
-
-                    // 唯一需要注意的是，如果用户下拉刷新，但此时后端并没有新数据（例如，帖子列表没变）。
-                    // 我们可能会把 page 1 的数据移到 page 2，然后再次插入相同的 page 1 数据。
-                    // 这会导致数据重复（page 1 和 page 2 一样）。
-                    // 不过 upsertTopic 会基于 ID 更新，如果 ID 相同，会更新 page 字段。
-                    // 等等，`incrementTopicPage` 会把 `page` 更新为 `page + 1`。
-                    // 如果原来的 `page=1` 的帖子 A，变成了 `page=2`。
-                    // 然后我们插入新的 `page=1` 的帖子 A (upsert)。
-                    // `upsertTopic` 会把帖子 A 的 `page` 更新回 1。
-                    // 结果：帖子 A 回到了 page 1。Page 2 变空了？
-                    // 不，Page 2 是原来 Page 1 的数据。如果帖子 A 既在旧 Page 1 也在新 Page 1。
-                    // 第一步：旧 Page 1 所有帖子 -> Page 2。 A (page=2).
-                    // 第二步：插入新 Page 1 帖子 A。 -> A (page=1)。
-                    // 结果：A 的 page 被更新为 1。Page 2 中就没有 A 了。
-                    // 那么 Page 2 剩下的就是 "旧 Page 1 中有，但新 Page 1 中没有" 的帖子。即 "下沉" 的旧帖子。
-                    // 这正是我们想要的！完美。
-
                     cache.saveTopics(
                         topics = topics,
                         clearPage = shouldClear,
                         sourceId = sourceId,
                         channelId = channelId,
-                        page = page
+                        page = null // Keyset paging doesn't use page numbers
                     )
                 },
+                itemsExtractor = { it },
                 endOfPaginationReached = {
                     it.size < pageSize
                 },
-                keyIncrementer = { it + 1 },
-                keyDecrementer = { it - 1 },
-                keyToLong = { it.toLong() },
-                longToKey = { it.toInt() }
+                keyExtractor = { topic ->
+                    TopicKey(topic.orderKey ?: 0L, topic.id)
+                }
             ),
             pagingSourceFactory = {
-                // Now using cache which returns Domain objects directly (as mapped in Cache implementation)
-                // Actually SqlDelightSourceCache returns Flow<PagingSource<Int, GetTopicsInChannelOffset>>
-                // which is PagingSource<Int, Entity>.
-                // Wait, let's check SqlDelightSourceCache.getChannelTopicPagingSource signature.
-                // It returns PagingSource<Int, GetTopicsInChannelOffset>.
-                // So we still need to map it here.
+                // Use the new KeysetPagingSource from Cache
                 cache.getChannelTopicPagingSource(sourceId, channelId)
             }
         ).flow.map { pagingData ->

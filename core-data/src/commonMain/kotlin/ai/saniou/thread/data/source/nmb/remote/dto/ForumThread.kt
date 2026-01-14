@@ -1,7 +1,6 @@
 package ai.saniou.thread.data.source.nmb.remote.dto
 
 import ai.saniou.corecommon.utils.toTime
-import ai.saniou.thread.db.table.forum.Comment
 import ai.saniou.thread.db.table.forum.Topic
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
@@ -77,27 +76,8 @@ fun ForumThread.toTable(sourceId: String, page: Long) = Topic(
     agreeCount = 0,
     disagreeCount = 0,
     isCollected = false,
+    lastReplyAt = now.toTime().toEpochMilliseconds(),
+    lastVisitedAt = null,
+    lastViewedCommentId = null,
+)
 
-    )
-
-fun ForumThread.toTableReply(sourceId: String) = this.replies.map { reply ->
-    Comment(
-        id = reply.id.toString(),
-        sourceId = sourceId,
-        authorName = reply.name,
-        createdAt = now.toTime().toEpochMilliseconds(),
-        userHash = reply.userHash,
-        title = reply.title,
-        content = reply.content,
-        admin = reply.admin,
-        topicId = this.id.toString(),
-        page = Long.MIN_VALUE, //unknown
-        floor = null,
-        replyToId = null,
-        agreeCount = 0,
-        disagreeCount = 0,
-        subCommentCount = 0,
-        authorLevel = null,
-        isPo = false,
-    )
-}

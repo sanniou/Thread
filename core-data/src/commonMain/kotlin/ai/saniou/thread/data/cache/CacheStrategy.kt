@@ -54,7 +54,7 @@ object CacheStrategy {
             type = keyType,
             id = keyId,
             nextKey = null,
-            currKey = Long.MIN_VALUE,
+            currKey = Long.MIN_VALUE.toString(),
             prevKey = null,
             updateAt = now.toEpochMilliseconds(),
         )

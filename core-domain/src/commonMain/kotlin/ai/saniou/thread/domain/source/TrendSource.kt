@@ -25,12 +25,25 @@ interface TrendSource {
     /**
      * Fetches trend data for a given tab and page.
      * This is used by the RemoteMediator to fetch data from the network.
+     *
+     * @param cursor The pagination cursor. For page-based sources, this is the page number (as String).
+     *               For time-based sources, this is the timestamp.
      */
     suspend fun fetchTrendData(
         tab: TrendTab,
         params: TrendParams,
+        cursor: String?,
+    ): Result<List<TrendItem>> {
+        // Default implementation for backward compatibility with page-based sources
+        return fetchTrendData(tab, params, cursor?.toIntOrNull() ?: 1)
+    }
+
+    @Deprecated("Use fetchTrendData(tab, params, cursor) instead")
+    suspend fun fetchTrendData(
+        tab: TrendTab,
+        params: TrendParams,
         page: Int,
-    ): Result<List<TrendItem>>
+    ): Result<List<TrendItem>> = Result.success(emptyList())
 
     fun trendDataEnded(tab: TrendTab, params: TrendParams, trends: List<TrendItem>): Boolean
 }

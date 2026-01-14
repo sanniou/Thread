@@ -13,6 +13,7 @@ data class TrendItem(
     val url: String, // Direct URL to the item
     val isNew: Boolean = false,
     val payload: Map<String, Any> = emptyMap(), // For source-specific data
+    val receiveDate: Long = 0L, // For realtime sorting
 )
 
 // 趋势 Tab，用于 UI 上的分类

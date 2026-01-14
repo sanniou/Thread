@@ -228,7 +228,6 @@ class DiscourseSource(
                         isLocal = false,
                         lastViewedCommentId = "",
                         comments = emptyList(),
-                        remainingCount = null,
                         summary = null,
                         tags = emptyList() // TODO: Map tags
                     )
@@ -305,7 +304,6 @@ internal fun DiscourseTopic.toPost(usersMap: Map<Long, DiscourseUser>): Topic {
         lastViewedCommentId = "",
         comments = emptyList(),
         summary = null,
-        remainingCount = null,
         tags = emptyList() // TODO: Map tags
     )
 }

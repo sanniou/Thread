@@ -36,8 +36,9 @@ class TiebaTrendSource(
     override suspend fun fetchTrendData(
         tab: TrendTab,
         params: TrendParams,
-        page: Int,
+        cursor: String?,
     ): Result<List<TrendItem>> {
+        val page = cursor?.toIntOrNull() ?: 1
         return try {
             val topics = when (tab.id) {
                 "tieba_hot" -> fetchHotThread(page)

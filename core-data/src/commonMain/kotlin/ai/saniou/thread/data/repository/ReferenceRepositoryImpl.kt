@@ -86,7 +86,7 @@ class ReferenceRepositoryImpl(
             content = content,
             // img/ext removed
             authorName = name,
-            floor = null,
+            floor = Long.MIN_VALUE,
             replyToId = null,
             agreeCount = 0,
             disagreeCount = 0,

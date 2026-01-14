@@ -25,7 +25,7 @@ class SubscriptionRemoteMediator(
     private val dataPolicy: DataPolicy,
 ) : RemoteMediator<Int, SelectSubscriptionTopic>() {
 
-    private val delegate = GenericRemoteMediator<Int, SelectSubscriptionTopic, List<Feed>>(
+    private val delegate = GenericRemoteMediator<Int, SelectSubscriptionTopic, Feed>(
         db = db,
         dataPolicy = dataPolicy,
         initialKey = 1,
@@ -33,6 +33,8 @@ class SubscriptionRemoteMediator(
             db = db,
             type = RemoteKeyType.SUBSCRIBE,
             id = subscriptionKey,
+            serializer = { it.toString() },
+            deserializer = { it.toInt() }
         ),
         fetcher = { page -> forumRepository.feed(subscriptionKey, page.toLong()).toResult() },
         saver = { feedDetail, page, loadType ->
@@ -61,10 +63,9 @@ class SubscriptionRemoteMediator(
                 .executeAsOne()
             subscriptionsInDb > 0
         },
-        keyIncrementer = { it + 1 },
-        keyDecrementer = { it - 1 },
-        keyToLong = { it.toLong() },
-        longToKey = { it.toInt() }
+        nextKeyProvider = { key, _ -> key + 1 },
+        prevKeyProvider = { key, _ -> if (key > 1) key - 1 else null },
+        itemsExtractor = { it },
     )
 
     override suspend fun load(

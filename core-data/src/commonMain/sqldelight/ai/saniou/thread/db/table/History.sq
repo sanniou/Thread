@@ -26,10 +26,9 @@ DELETE FROM History;
 
 -- 查询历史记录 (Post)
 getPostHistory:
-SELECT History.*, Topic.*, TopicInformation.lastViewedCommentId
+SELECT History.*, Topic.*
 FROM History
 JOIN Topic ON History.itemId = Topic.id AND History.sourceId = Topic.sourceId
-LEFT JOIN TopicInformation ON Topic.id = TopicInformation.id AND Topic.sourceId = TopicInformation.sourceId
 WHERE History.type = 'post'
 ORDER BY History.accessTime DESC
 LIMIT :limit OFFSET :offset;

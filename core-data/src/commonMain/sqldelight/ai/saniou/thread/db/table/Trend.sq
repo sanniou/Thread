@@ -8,7 +8,7 @@ CREATE TABLE Trend (
     date TEXT NOT NULL,
     rank INTEGER NOT NULL,
     page INTEGER NOT NULL,
-    
+
     -- Snapshot data (used when Topic is missing)
     title TEXT NOT NULL,
     contentPreview TEXT NOT NULL,
@@ -18,7 +18,7 @@ CREATE TABLE Trend (
     url TEXT NOT NULL,
     isNew INTEGER AS Boolean NOT NULL DEFAULT 0,
     payload TEXT,
-    
+
     publishDate INTEGER,
     updateDate INTEGER,
     receiveDate INTEGER NOT NULL
@@ -53,7 +53,7 @@ countTrends:
 SELECT count(*) FROM Trend WHERE sourceId = :sourceId AND tabId = :tabId AND date = :date;
 
 getTrendsWithTopic:
-SELECT 
+SELECT
     Trend.id,
     Trend.sourceId,
     Trend.tabId,
@@ -81,7 +81,8 @@ WHERE Trend.sourceId = :sourceId
 ORDER BY Trend.page ASC, Trend.rank ASC
 LIMIT :limit OFFSET :offset;
 
-getTrendsKeyset:
+-- 定义一个视图，包含所有复杂的计算字段
+CREATE VIEW TrendDetailView AS
 SELECT
     Trend.id,
     Trend.sourceId,
@@ -103,41 +104,27 @@ SELECT
     Trend.receiveDate
 FROM Trend
 LEFT JOIN Topic ON Trend.sourceId = Topic.sourceId AND Trend.topicId = Topic.id
-LEFT JOIN Channel ON Topic.sourceId = Channel.sourceId AND Topic.channelId = Channel.id
-WHERE Trend.sourceId = :sourceId
-  AND Trend.tabId = :tabId
-  AND Trend.date = :date
-  AND Trend.rank > :lastRank
-ORDER BY Trend.rank ASC
+LEFT JOIN Channel ON Topic.sourceId = Channel.sourceId AND Topic.channelId = Channel.id;
+
+-- 查询 1：使用 Keyser Paging (基于 Rank)
+getTrendsKeyset:
+SELECT *
+FROM TrendDetailView
+WHERE sourceId = :sourceId
+  AND tabId = :tabId
+  AND date = :date
+  AND rank > :lastRank
+ORDER BY rank ASC
 LIMIT :limit;
 
+-- 查询 2：使用 Keyset Paging (基于 ReceiveDate)
 getRealtimeTrendsKeyset:
-SELECT
-    Trend.id,
-    Trend.sourceId,
-    Trend.tabId,
-    Trend.topicId,
-    Trend.date,
-    Trend.rank,
-    Trend.page,
-    COALESCE(Topic.title, Trend.title) AS title,
-    COALESCE(Topic.summary, Trend.contentPreview) AS contentPreview,
-    Trend.hotness,
-    COALESCE(Channel.name, Trend.channel) AS channel,
-    COALESCE(Topic.authorName, Trend.author) AS author,
-    Trend.url,
-    Trend.isNew,
-    Trend.payload,
-    Trend.publishDate,
-    Trend.updateDate,
-    Trend.receiveDate
-FROM Trend
-LEFT JOIN Topic ON Trend.sourceId = Topic.sourceId AND Trend.topicId = Topic.id
-LEFT JOIN Channel ON Topic.sourceId = Channel.sourceId AND Topic.channelId = Channel.id
-WHERE Trend.sourceId = :sourceId
-  AND Trend.tabId = :tabId
-  AND Trend.receiveDate < :lastReceiveDate
-ORDER BY Trend.receiveDate DESC
+SELECT *
+FROM TrendDetailView
+WHERE sourceId = :sourceId
+  AND tabId = :tabId
+  AND receiveDate < :lastReceiveDate
+ORDER BY receiveDate DESC
 LIMIT :limit;
 
 deleteTrendsByTabAndDate:

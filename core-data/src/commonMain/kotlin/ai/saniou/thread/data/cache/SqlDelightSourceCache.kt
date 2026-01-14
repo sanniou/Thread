@@ -2,13 +2,14 @@ package ai.saniou.thread.data.cache
 
 import ai.saniou.thread.data.mapper.toDomain
 import ai.saniou.thread.data.mapper.toEntity
+import ai.saniou.thread.data.model.TopicKey
+import ai.saniou.thread.data.paging.KeysetPagingSource
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.db.table.TopicTag
 import ai.saniou.thread.db.table.forum.Channel
 import ai.saniou.thread.db.table.forum.Comment
-import ai.saniou.thread.db.table.forum.GetTopicsInChannelOffset
+import ai.saniou.thread.db.table.forum.Topic
 import ai.saniou.thread.domain.model.forum.ImageType
-import ai.saniou.thread.domain.model.forum.Topic
 import androidx.paging.PagingSource
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
@@ -19,6 +20,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import ai.saniou.thread.domain.model.forum.Comment as DomainComment
+import ai.saniou.thread.domain.model.forum.Topic as DomainTopic
 
 class SqlDelightSourceCache(
     val db: Database,
@@ -29,7 +31,7 @@ class SqlDelightSourceCache(
     private val channelQueries = db.channelQueries
     private val topicTagQueries = db.topicTagQueries
 
-    override fun observeTopic(sourceId: String, topicId: String): Flow<Topic> {
+    override fun observeTopic(sourceId: String, topicId: String): Flow<DomainTopic> {
         return topicQueries.getTopic(sourceId, topicId)
             .asFlow()
             .mapToOneOrNull(Dispatchers.IO)
@@ -81,23 +83,32 @@ class SqlDelightSourceCache(
     override fun getChannelTopicPagingSource(
         sourceId: String,
         channelId: String,
-    ): PagingSource<Int, GetTopicsInChannelOffset> {
-        return QueryPagingSource(
+    ): PagingSource<TopicKey, Topic> {
+        return KeysetPagingSource(
             transacter = topicQueries,
             context = Dispatchers.IO,
-            countQuery = topicQueries.countTopicsByChannel(sourceId, channelId),
-            queryProvider = { limit, offset ->
-                topicQueries.getTopicsInChannelOffset(sourceId, channelId, limit, offset)
+            countQueryProvider = { topicQueries.countTopicsByChannel(sourceId, channelId) },
+            queryProvider = { key, limit ->
+                topicQueries.getTopicsInChannelKeyset(
+                    sourceId = sourceId,
+                    channelId = channelId,
+                    lastReplyAt = key?.lastReplyAt ?: Long.MAX_VALUE,
+                    lastId = key?.id ?: "",
+                    limit = limit
+                )
+            },
+            keyExtractor = { topic ->
+                TopicKey(topic.lastReplyAt, topic.id)
             }
         )
     }
 
-    override suspend fun saveTopic(topic: Topic) {
+    override suspend fun saveTopic(topic: DomainTopic) {
         saveTopics(listOf(topic), false, topic.sourceName, topic.channelId)
     }
 
     override suspend fun saveTopics(
-        topics: List<Topic>,
+        topics: List<DomainTopic>,
         clearPage: Boolean,
         sourceId: String,
         channelId: String,
@@ -124,15 +135,6 @@ class SqlDelightSourceCache(
                             topicId = topic.id,
                             tagId = tag.id
                         )
-                    )
-                }
-
-                if (topic.remainingCount != null) {
-                    topicQueries.upsertTopicInformation(
-                        id = topic.id,
-                        sourceId = topic.sourceName,
-                        remainingCount = topic.remainingCount,
-                        lastReplyAt = topic.orderKey ?: 0L
                     )
                 }
 

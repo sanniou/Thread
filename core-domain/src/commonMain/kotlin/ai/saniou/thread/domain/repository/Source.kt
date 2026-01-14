@@ -56,11 +56,21 @@ interface Source {
     /**
      * 获取板块下的帖子列表（分页）
      * 替代 getTopicsPager，配合 RemoteMediator 使用
+     *
+     * @param cursor 分页游标。对于 Keyset Paging，这是序列化后的 Key。
+     *               为了兼容旧代码，如果 cursor 可以转为 Int，则视为页码。
      */
     suspend fun getChannelTopics(
         channelId: String,
+        cursor: Any?,
+        isTimeline: Boolean,
+    ): Result<List<Topic>> = TODO()
+
+    @Deprecated("Use getChannelTopics(channelId, cursor, isTimeline) instead")
+    suspend fun getChannelTopics(
+        channelId: String,
         page: Int,
-        isTimeline: Boolean
+        isTimeline: Boolean,
     ): Result<List<Topic>> = Result.failure(NotImplementedError("Not implemented"))
 
     suspend fun getTopicDetail(threadId: String, page: Int): Result<Topic>
