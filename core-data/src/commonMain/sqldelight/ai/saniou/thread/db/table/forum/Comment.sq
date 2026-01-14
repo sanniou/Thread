@@ -152,6 +152,15 @@ WHERE Comment.sourceId = :sourceId
   AND Comment.topicId = :topicId
   AND Comment.userHash = Topic.authorId;
 
+countCommentsByTopicIdPoModeAndPage:
+SELECT count(1)
+FROM Comment
+JOIN Topic ON Comment.sourceId = Topic.sourceId AND Comment.topicId = Topic.id
+WHERE Comment.sourceId = :sourceId
+  AND Comment.topicId = :topicId
+  AND Comment.userHash = Topic.authorId
+  AND Comment.page = :page;
+
 getCommentsByTopicIdPoModeOffset:
 SELECT Comment.*
 FROM Comment

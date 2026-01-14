@@ -117,10 +117,18 @@ class TopicRepositoryImpl(
                 },
                 cacheChecker = { page ->
                     if (isPoOnly) {
-                        db.commentQueries.countCommentsByTopicIdPoMode(sourceId, topicId)
+                        db.commentQueries.countCommentsByTopicIdPoModeAndPage(
+                            sourceId,
+                            topicId,
+                            page.toLong()
+                        )
                             .executeAsOne() > 0
                     } else {
-                        db.commentQueries.countCommentsByTopicId(sourceId, topicId)
+                        db.commentQueries.countCommentsByTopicIdAndPage(
+                            sourceId,
+                            topicId,
+                            page.toLong()
+                        )
                             .executeAsOne() > 0
                     }
                 },
