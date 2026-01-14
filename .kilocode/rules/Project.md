@@ -108,7 +108,12 @@
     -   **列表页缓存 (Smart Cleanup)**:
         -   **版本控制**: 引入 `receiveDate` 字段标记数据批次。
         -   **严格模式 (Strict Mode)**: 默认只显示 `MAX(receiveDate)` 的最新批次数据，确保列表纯净，避免幽灵数据。
-        -   **降级模式 (Fallback Mode)**: 当网络加载失败时，支持通过 **Side-Channel** 手动切换到混合模式，显示所有本地历史数据，保障离线阅读体验。
+        -   **降级模式 (Fallback Mode)**: 当网络加载失败时，支持通过 **Side-Channel Control** (旁路控制) 手动切换到混合模式，显示所有本地历史数据，保障离线阅读体验。
+
+    -   **Side-Channel Paging Control (旁路控制范式)**:
+        -   **问题**: Paging 3 的 `Pager` 重建代价高昂（导致列表重置）。
+        -   **解决方案**: 对于视图模式的切换（如 Strict/Fallback, SortOrder），**严禁**通过 UseCase 参数重建 Pager。
+        -   **规范**: 必须在 Repository 层维护状态 (`StateFlow`)，并通过触发轻量级 DB 更新 (`notifyQueries`) 来强制 PagingSource 重新构建。这实现了在不销毁 Pager 的情况下“原地刷新”列表。
 
 5.  **API 错误处理**:
     -   API 层返回 `SaniouResult<T>`，作为防腐层隔离网络异常。
@@ -228,6 +233,7 @@
 - [ ] **Utils**: 涉及特定格式字符串解析（如日期、特定文本结构）时，优先考虑封装为独立的 Utils 类或扩展函数，避免在业务逻辑中散落硬编码。
 - [ ] **RichText**: 严禁硬编码正则解析业务文本。对于特定源的文本格式（如 `>>No.123`），必须实现 `RichTextPlugin`。
 - [ ] **ID Type**: 为了兼容不同系统，Domain 层 ID 统一使用 `String`，在 Data 层针对不同 API 进行转换。
+- [ ] **Testing**: 虽然项目目前未集成测试，但在设计 API 和 UseCase 时，必须考虑可测试性（依赖注入、纯函数逻辑）。
 - [ ] **Refactoring**: 开始编码前请先思考：本次用到了哪些公共资源和组件，是否有必要下沉到 core 模块。
 
 - 商业级交付标准:UIXUI、设计、架构。
