@@ -171,6 +171,25 @@ WHERE Comment.sourceId = :sourceId
 ORDER BY Comment.id ASC
 LIMIT :limit OFFSET :offset;
 
+getCommentsKeyset:
+SELECT * FROM Comment
+WHERE sourceId = :sourceId
+  AND topicId = :topicId
+  AND floor > :lastFloor
+ORDER BY floor ASC
+LIMIT :limit;
+
+getCommentsPoModeKeyset:
+SELECT Comment.*
+FROM Comment
+JOIN Topic ON Comment.sourceId = Topic.sourceId AND Comment.topicId = Topic.id
+WHERE Comment.sourceId = :sourceId
+  AND Comment.topicId = :topicId
+  AND Comment.userHash = Topic.authorId
+  AND Comment.floor > :lastFloor
+ORDER BY Comment.floor ASC
+LIMIT :limit;
+
 searchComments:
 SELECT * FROM Comment
 WHERE (content LIKE ('%' || :query || '%') OR title LIKE ('%' || :query || '%'))

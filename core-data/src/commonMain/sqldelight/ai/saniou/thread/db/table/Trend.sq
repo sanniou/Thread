@@ -19,13 +19,16 @@ CREATE TABLE Trend (
     isNew INTEGER AS Boolean NOT NULL DEFAULT 0,
     payload TEXT,
     
-    createdAt INTEGER NOT NULL
+    publishDate INTEGER,
+    updateDate INTEGER,
+    receiveDate INTEGER NOT NULL
 );
 
 CREATE INDEX idx_trend_query ON Trend(sourceId, tabId, date, page, rank);
+CREATE INDEX idx_trend_realtime ON Trend(sourceId, tabId, receiveDate);
 
 upsert:
-INSERT INTO Trend(id, sourceId, tabId, topicId, date, rank, page, title, contentPreview, hotness, channel, author, url, isNew, payload, createdAt)
+INSERT INTO Trend(id, sourceId, tabId, topicId, date, rank, page, title, contentPreview, hotness, channel, author, url, isNew, payload, publishDate, updateDate, receiveDate)
 VALUES ?
 ON CONFLICT(id) DO UPDATE SET
     sourceId = excluded.sourceId,
@@ -42,7 +45,9 @@ ON CONFLICT(id) DO UPDATE SET
     url = excluded.url,
     isNew = excluded.isNew,
     payload = excluded.payload,
-    createdAt = excluded.createdAt;
+    publishDate = excluded.publishDate,
+    updateDate = excluded.updateDate,
+    receiveDate = excluded.receiveDate;
 
 countTrends:
 SELECT count(*) FROM Trend WHERE sourceId = :sourceId AND tabId = :tabId AND date = :date;
@@ -64,15 +69,76 @@ SELECT
     Trend.url,
     Trend.isNew,
     Trend.payload,
-    Trend.createdAt
+    Trend.publishDate,
+    Trend.updateDate,
+    Trend.receiveDate
 FROM Trend
 LEFT JOIN Topic ON Trend.sourceId = Topic.sourceId AND Trend.topicId = Topic.id
 LEFT JOIN Channel ON Topic.sourceId = Channel.sourceId AND Topic.channelId = Channel.id
-WHERE Trend.sourceId = :sourceId 
-  AND Trend.tabId = :tabId 
+WHERE Trend.sourceId = :sourceId
+  AND Trend.tabId = :tabId
   AND Trend.date = :date
 ORDER BY Trend.page ASC, Trend.rank ASC
 LIMIT :limit OFFSET :offset;
+
+getTrendsKeyset:
+SELECT
+    Trend.id,
+    Trend.sourceId,
+    Trend.tabId,
+    Trend.topicId,
+    Trend.date,
+    Trend.rank,
+    Trend.page,
+    COALESCE(Topic.title, Trend.title) AS title,
+    COALESCE(Topic.summary, Trend.contentPreview) AS contentPreview,
+    Trend.hotness,
+    COALESCE(Channel.name, Trend.channel) AS channel,
+    COALESCE(Topic.authorName, Trend.author) AS author,
+    Trend.url,
+    Trend.isNew,
+    Trend.payload,
+    Trend.publishDate,
+    Trend.updateDate,
+    Trend.receiveDate
+FROM Trend
+LEFT JOIN Topic ON Trend.sourceId = Topic.sourceId AND Trend.topicId = Topic.id
+LEFT JOIN Channel ON Topic.sourceId = Channel.sourceId AND Topic.channelId = Channel.id
+WHERE Trend.sourceId = :sourceId
+  AND Trend.tabId = :tabId
+  AND Trend.date = :date
+  AND Trend.rank > :lastRank
+ORDER BY Trend.rank ASC
+LIMIT :limit;
+
+getRealtimeTrendsKeyset:
+SELECT
+    Trend.id,
+    Trend.sourceId,
+    Trend.tabId,
+    Trend.topicId,
+    Trend.date,
+    Trend.rank,
+    Trend.page,
+    COALESCE(Topic.title, Trend.title) AS title,
+    COALESCE(Topic.summary, Trend.contentPreview) AS contentPreview,
+    Trend.hotness,
+    COALESCE(Channel.name, Trend.channel) AS channel,
+    COALESCE(Topic.authorName, Trend.author) AS author,
+    Trend.url,
+    Trend.isNew,
+    Trend.payload,
+    Trend.publishDate,
+    Trend.updateDate,
+    Trend.receiveDate
+FROM Trend
+LEFT JOIN Topic ON Trend.sourceId = Topic.sourceId AND Trend.topicId = Topic.id
+LEFT JOIN Channel ON Topic.sourceId = Channel.sourceId AND Topic.channelId = Channel.id
+WHERE Trend.sourceId = :sourceId
+  AND Trend.tabId = :tabId
+  AND Trend.receiveDate < :lastReceiveDate
+ORDER BY Trend.receiveDate DESC
+LIMIT :limit;
 
 deleteTrendsByTabAndDate:
 DELETE FROM Trend WHERE sourceId = :sourceId AND tabId = :tabId AND date = :date;

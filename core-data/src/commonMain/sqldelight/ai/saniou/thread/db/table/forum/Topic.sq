@@ -154,6 +154,19 @@ SELECT * FROM Topic WHERE sourceId = :sourceId AND channelId = :channelId AND pa
 getTopicsInChannelOffset:
 SELECT * FROM Topic LEFT JOIN TopicInformation ON Topic.id = TopicInformation.id AND Topic.sourceId = TopicInformation.sourceId WHERE Topic.sourceId = :sourceId AND channelId = :channelId ORDER BY lastReplyAt DESC LIMIT :limit OFFSET :offset;
 
+getTopicsInChannelKeyset:
+SELECT Topic.*, TopicInformation.lastViewedCommentId
+FROM Topic
+LEFT JOIN TopicInformation ON Topic.id = TopicInformation.id AND Topic.sourceId = TopicInformation.sourceId
+WHERE Topic.sourceId = :sourceId
+  AND channelId = :channelId
+  AND (
+      TopicInformation.lastReplyAt < :lastReplyAt
+      OR (TopicInformation.lastReplyAt = :lastReplyAt AND Topic.id < :lastId)
+  )
+ORDER BY TopicInformation.lastReplyAt DESC, Topic.id DESC
+LIMIT :limit;
+
 updateTopicLastAccessTime:
 UPDATE TopicInformation SET lastVisitedAt = :last_access_time WHERE sourceId = :sourceId AND id = :id;
 
