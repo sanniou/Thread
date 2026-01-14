@@ -55,6 +55,7 @@ interface SourceCache {
         sourceId: String,
         channelId: String,
         page: Int? = null,
+        receiveDate: Long? = null,
     )
 
     /**

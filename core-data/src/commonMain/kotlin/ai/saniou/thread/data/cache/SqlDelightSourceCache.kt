@@ -113,8 +113,15 @@ class SqlDelightSourceCache(
         sourceId: String,
         channelId: String,
         page: Int?,
+        receiveDate: Long?,
     ) {
         topicQueries.transaction {
+            // 0. Determine Receive Date
+            // If receiveDate is provided (REFRESH), use it.
+            // If not provided (APPEND), find the current MAX receiveDate for this channel to maintain consistency.
+            val effectiveReceiveDate = receiveDate ?: topicQueries.getMaxReceiveDate(sourceId, channelId)
+                .executeAsOneOrNull()?.MAX ?: 0L
+
             // 1. 清理旧数据: 将数据库中 page >= 当前page 的数据全部 +1 ，用作于缓存
             if (clearPage && page != null) {
                 topicQueries.incrementTopicPage(sourceId, channelId, page.toLong())
@@ -123,7 +130,7 @@ class SqlDelightSourceCache(
             // 2. 保存新数据
             topics.forEach { topic ->
                 val topicPage = page ?: 1
-                val topicEntity = topic.toEntity(page = topicPage)
+                val topicEntity = topic.toEntity(page = topicPage, receiveDate = effectiveReceiveDate)
                 topicQueries.upsertTopic(topicEntity)
 
                 // Save Tags

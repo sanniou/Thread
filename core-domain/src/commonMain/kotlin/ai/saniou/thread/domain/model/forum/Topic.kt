@@ -43,6 +43,7 @@ data class Topic(
 
     // 状态标记
     val isLocal: Boolean = false,
+    val receiveDate: Long = 0,
 
     // 来源信息
     val sourceId: String,

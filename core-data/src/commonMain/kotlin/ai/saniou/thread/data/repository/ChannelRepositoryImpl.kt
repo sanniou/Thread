@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
+import kotlin.time.Clock
 
 class ChannelRepositoryImpl(
     private val db: Database,
@@ -151,12 +152,21 @@ class ChannelRepositoryImpl(
                 },
                 saver = { topics, _, loadType ->
                     val shouldClear = loadType == LoadType.REFRESH
+                    // Smart Cleanup: Generate new version (timestamp) ONLY on Refresh.
+                    // For Append, pass null to let Cache resolve the existing version.
+                    val receiveDate = if (loadType == LoadType.REFRESH) {
+                        Clock.System.now().toEpochMilliseconds()
+                    } else {
+                        null
+                    }
+
                     cache.saveTopics(
                         topics = topics,
                         clearPage = shouldClear,
                         sourceId = sourceId,
                         channelId = channelId,
-                        page = null // Keyset paging doesn't use page numbers
+                        page = null, // Keyset paging doesn't use page numbers
+                        receiveDate = receiveDate
                     )
                 },
                 itemsExtractor = { it },
