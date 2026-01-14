@@ -33,6 +33,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalCoroutinesApi::class)
 class TopicViewModel(
     getChannelTopicsPagingUseCase: GetChannelTopicsPagingUseCase,
+    private val setChannelFallbackModeUseCase: ai.saniou.thread.domain.usecase.channel.SetChannelFallbackModeUseCase,
     getChannelDetailUseCase: GetChannelDetailUseCase,
     getChannelNameUseCase: GetChannelNameUseCase,
     private val sourceId: String,
@@ -100,6 +101,12 @@ class TopicViewModel(
 
             is Event.ToggleInfoDialog -> {
                 showInfoDialog.value = event.show
+            }
+
+            Event.ShowCache -> {
+                screenModelScope.launch {
+                    setChannelFallbackModeUseCase(sourceId, channelId, true)
+                }
             }
         }
     }

@@ -83,15 +83,23 @@ class SqlDelightSourceCache(
     override fun getChannelTopicPagingSource(
         sourceId: String,
         channelId: String,
+        isFallback: Boolean,
     ): PagingSource<TopicKey, Topic> {
         return KeysetPagingSource(
             transacter = topicQueries,
             context = Dispatchers.IO,
-            countQueryProvider = { topicQueries.countTopicsByChannel(sourceId, channelId) },
+            countQueryProvider = {
+                topicQueries.countTopicsByChannel(
+                    sourceId = sourceId,
+                    channelId = channelId,
+                    isFallback = if (isFallback) 1L else 0L
+                )
+            },
             queryProvider = { key, limit ->
                 topicQueries.getTopicsInChannelKeyset(
                     sourceId = sourceId,
                     channelId = channelId,
+                    isFallback = if (isFallback) 1L else 0L,
                     lastReplyAt = key?.lastReplyAt ?: Long.MAX_VALUE,
                     lastId = key?.id ?: "",
                     limit = limit

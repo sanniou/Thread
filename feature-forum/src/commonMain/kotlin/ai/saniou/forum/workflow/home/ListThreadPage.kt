@@ -48,6 +48,7 @@ fun ListThreadPage(
     state: LazyListState = rememberLazyListState(),
     headerContent: (@Composable () -> Unit)? = null,
     showChannelBadge: Boolean = true,
+    onShowCache: (() -> Unit)? = null,
 ) {
     val threads = threadFlow.collectAsLazyPagingItems()
 
@@ -58,6 +59,19 @@ fun ListThreadPage(
         PagingStateLayout(
             items = threads,
             loading = { ThreadListSkeleton() },
+            error = { appError ->
+                ai.saniou.coreui.state.DefaultError(
+                    error = appError,
+                    onRetry = { threads.retry() },
+                    action = if (onShowCache != null) {
+                        {
+                            androidx.compose.material3.TextButton(onClick = onShowCache) {
+                                Text("显示缓存")
+                            }
+                        }
+                    } else null
+                )
+            },
             empty = {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -99,7 +113,11 @@ fun ListThreadPage(
 
                 item {
                     when (threads.loadState.append) {
-                        is Error -> LoadingFailedIndicator()
+                        is Error -> LoadingFailedIndicator(
+                            onClick = { threads.retry() },
+                            onShowCache = onShowCache
+                        )
+
                         is Loading -> LoadingIndicator()
                         else -> LoadEndIndicator()
                     }

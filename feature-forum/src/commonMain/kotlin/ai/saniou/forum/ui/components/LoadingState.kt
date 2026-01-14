@@ -37,19 +37,32 @@ fun LoadEndIndicator(onClick: (() -> Unit)? = null) {
 }
 
 @Composable
-fun LoadingFailedIndicator(modifier: Modifier = Modifier, onClick: (() -> Unit)? = null) {
-    Box(
+fun LoadingFailedIndicator(
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
+    onShowCache: (() -> Unit)? = null
+) {
+    androidx.compose.foundation.layout.Column(
         modifier = modifier
             .fillMaxWidth()
-            .clickable { onClick?.invoke() }
             .padding(24.dp),
-        contentAlignment = Alignment.Center
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)
     ) {
         Text(
             text = "加载失败，点击重试",
             style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.error
+            color = MaterialTheme.colorScheme.error,
+            modifier = Modifier.clickable { onClick?.invoke() }
         )
+        if (onShowCache != null) {
+            Text(
+                text = "显示缓存内容",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.secondary,
+                modifier = Modifier.clickable { onShowCache() }
+            )
+        }
     }
 }
 

@@ -285,6 +285,7 @@ data class TopicPage(
                     onUserClick = { userHash -> navigator.push(UserDetailPage(userHash)) },
                     modifier = Modifier.weight(1f),
                     showChannelBadge = false,
+                    onShowCache = { viewModel.onEvent(TopicContract.Event.ShowCache) },
                     headerContent = {
                         // Integrated Forum Info
                         val detailState = state.channelDetail

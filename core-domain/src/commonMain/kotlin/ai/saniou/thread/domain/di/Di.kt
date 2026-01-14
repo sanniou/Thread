@@ -73,6 +73,7 @@ val domainModule = DI.Module("domainModule") {
     bindProvider { GetChannelsUseCase(instance()) }
     bindProvider { GetFavoriteChannelsUseCase(instance()) }
     bindProvider { GetChannelTopicsPagingUseCase(instance()) }
+    bindProvider { ai.saniou.thread.domain.usecase.channel.SetChannelFallbackModeUseCase(instance()) }
     bindProvider { GetChannelNameUseCase(instance()) }
     bindProvider { GetChannelDetailUseCase(instance()) }
 

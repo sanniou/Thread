@@ -33,6 +33,7 @@ interface SourceCache {
     fun getChannelTopicPagingSource(
         sourceId: String,
         channelId: String,
+        isFallback: Boolean = false,
     ): PagingSource<TopicKey, DbTopic>
 
     /**

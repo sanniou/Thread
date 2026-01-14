@@ -132,10 +132,10 @@ WHERE Topic.sourceId = :sourceId AND Topic.id = :id;
 
 countTopicsByChannel:
 SELECT count(*) FROM Topic WHERE sourceId = :sourceId AND channelId = :channelId
-AND receiveDate = (
-    SELECT MAX(receiveDate)
-    FROM Topic
-    WHERE sourceId = :sourceId AND channelId = :channelId
+AND (
+    (:isFallback = 1)
+    OR
+    (receiveDate = (SELECT MAX(receiveDate) FROM Topic WHERE sourceId = :sourceId AND channelId = :channelId))
 );
 
 getTopicsInChannel:
@@ -152,10 +152,10 @@ SELECT *
 FROM Topic
 WHERE Topic.sourceId = :sourceId
   AND channelId = :channelId
-  AND receiveDate = (
-      SELECT MAX(receiveDate)
-      FROM Topic
-      WHERE sourceId = :sourceId AND channelId = :channelId
+  AND (
+      (:isFallback = 1)
+      OR
+      (receiveDate = (SELECT MAX(receiveDate) FROM Topic WHERE sourceId = :sourceId AND channelId = :channelId))
   )
   AND (
       lastReplyAt < :lastReplyAt
@@ -188,3 +188,9 @@ LIMIT :limit OFFSET :offset;
 
 countTopicsByUserHash:
 SELECT count(*) FROM Topic WHERE authorId = :authorId;
+
+-- 触发通知 (不实际修改数据)
+touchChannelTopics:
+UPDATE Topic
+SET receiveDate = receiveDate
+WHERE sourceId = :sourceId AND channelId = :channelId;

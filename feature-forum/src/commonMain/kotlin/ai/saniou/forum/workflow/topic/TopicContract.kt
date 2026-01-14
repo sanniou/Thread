@@ -49,6 +49,11 @@ interface TopicContract {
          * 切换板块信息弹窗的显示状态
          */
         data class ToggleInfoDialog(val show: Boolean) : Event
+
+        /**
+         * 显示缓存数据 (降级模式)
+         */
+        object ShowCache : Event
     }
 
     /**

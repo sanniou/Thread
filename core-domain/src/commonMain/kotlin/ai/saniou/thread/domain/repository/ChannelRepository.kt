@@ -66,4 +66,15 @@ interface ChannelRepository {
      * @return 最后打开的板块，如果不存在则为null
      */
     suspend fun getLastOpenedChannel(): Channel?
+
+    /**
+     * 设置板块的降级模式 (Fallback Mode)
+     * 当开启时，PagingSource 将忽略 `receiveDate` 过滤，显示所有历史数据。
+     * 这通常在网络加载失败后由用户手动触发。
+     *
+     * @param sourceId 来源ID
+     * @param channelId 板块ID
+     * @param enabled 是否开启降级模式
+     */
+    suspend fun setFallbackMode(sourceId: String, channelId: String, enabled: Boolean)
 }

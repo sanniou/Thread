@@ -92,7 +92,7 @@
     -   **API Layer (Network)**: 纯网络请求，返回 `SaniouResult<Dto>`。不涉及任何 DB 操作。
     -   **Source Layer (Domain Interface)**: 防腐层 (ACL)。将 `SaniouResult<Dto>` 转换为 `Result<DomainModel>`。**严禁**在此层直接操作 DB。
     -   **Cache Layer (Data Store)**: 封装所有 DB 操作 (CRUD)。提供面向业务的接口 (如 `saveTopics(topics: List<Topic>)`)，内部处理事务、关联表保存 (如 Image/Comment) 和清理策略。
-    -   **Repository Layer (Data)**: 协调者。使用 `GenericRemoteMediator` 连接 Source (读网络) 和 Cache (写 DB)，并通过 Paging 向 Domain/UI 暴露数据。
+    -   **Repository Layer (Data)**: 协调者。使用 `GenericRemoteMediator` 连接 Source (读网络) 和 Cache (写 DB)，并通过 Paging 向 Domain/UI 暴露数据。负责维护 `FallbackState` 等 UI 无关的状态。
 
 2.  **SSOT (Single Source of Truth)**:
     -   **原则**: 数据库 (DB) 是唯一的真实数据源。
@@ -105,7 +105,10 @@
 
 4.  **缓存策略 (Cache Strategy)**:
     -   使用 `CacheStrategy` 工具类统一处理缓存过期逻辑。
-    -   **列表页缓存**: 采用"旧数据下沉"策略。刷新时，将当前页及之后的旧数据 `page + 1`，新数据占据当前页，实现无缝衔接的缓存体验。
+    -   **列表页缓存 (Smart Cleanup)**:
+        -   **版本控制**: 引入 `receiveDate` 字段标记数据批次。
+        -   **严格模式 (Strict Mode)**: 默认只显示 `MAX(receiveDate)` 的最新批次数据，确保列表纯净，避免幽灵数据。
+        -   **降级模式 (Fallback Mode)**: 当网络加载失败时，支持通过 **Side-Channel** 手动切换到混合模式，显示所有本地历史数据，保障离线阅读体验。
 
 5.  **API 错误处理**:
     -   API 层返回 `SaniouResult<T>`，作为防腐层隔离网络异常。
