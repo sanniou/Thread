@@ -58,7 +58,9 @@ fun EntityTopic.toDomain(
         comments = commentQueries?.getLastFiveComments(sourceId, id)?.executeAsList()?.map {
             it.toDomain()
         } ?: emptyList(),
-        tags = tags
+        tags = tags,
+        receiveOrder = receiveOrder,
+        lastReplyAt = lastReplyAt,
     )
 }
 
@@ -134,7 +136,7 @@ fun Topic.toMetadata(): TopicMetadata {
     )
 }
 
-fun Topic.toEntity(page: Int = 1, receiveDate: Long = 0): EntityTopic {
+fun Topic.toEntity(page: Int = 1): EntityTopic {
     return EntityTopic(
         id = id,
         sourceId = sourceId,
@@ -153,6 +155,7 @@ fun Topic.toEntity(page: Int = 1, receiveDate: Long = 0): EntityTopic {
         lastReplyAt = lastReplyAt ?: 0L,
         lastVisitedAt = 0L, // Default value, will be preserved by upsert logic
         lastViewedCommentId = null, // Default value, will be preserved by upsert logic
-        receiveDate = receiveDate
+        receiveDate = receiveDate,
+        receiveOrder = receiveOrder,
     )
 }

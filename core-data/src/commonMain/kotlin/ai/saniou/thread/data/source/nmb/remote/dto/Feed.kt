@@ -65,7 +65,8 @@ fun Feed.toTable(sourceId: String, topicQueries: TopicQueries): EntityTopic {
         lastReplyAt = topic?.lastReplyAt ?: 0,
         lastVisitedAt = topic?.lastVisitedAt,
         lastViewedCommentId = topic?.lastViewedCommentId,
-        receiveDate = topic?.receiveDate ?: -1
+        receiveDate = topic?.receiveDate ?: -1,
+        receiveOrder = topic?.receiveOrder ?: -1
     )
 }
 

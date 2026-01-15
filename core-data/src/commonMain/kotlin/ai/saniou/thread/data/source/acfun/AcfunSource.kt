@@ -124,6 +124,8 @@ class AcfunSource(
                         channelId = data.channel?.id?.toString() ?: "0",
                         summary = null,
                         lastViewedCommentId = "",
+                        receiveDate = TODO(),
+                        receiveOrder = TODO(),
                     )
                     Result.success(post)
                 } else {
@@ -183,12 +185,13 @@ class AcfunSource(
                         subCommentsPreview = emptyList()
                     )
                 }
-                
+
                 // AcFun API should return next cursor. Assuming response.data.pcursor is the next one.
                 // If pcursor is "no_more" or similar, nextCursor is null.
                 // Let's assume response.data.pcursor is the next cursor.
-                val nextCursor = if (response.data.pcursor == "no_more" || list.isEmpty()) null else response.data.pcursor
-                
+                val nextCursor =
+                    if (response.data.pcursor == "no_more" || list.isEmpty()) null else response.data.pcursor
+
                 Result.success(PagedResult(replies, null, nextCursor))
             }
 

@@ -100,7 +100,8 @@ fun Thread.toTable(sourceId: String, page: Long) = Topic(
     lastReplyAt = 0L,
     lastVisitedAt = null,
     lastViewedCommentId = null,
-    receiveDate = Clock.System.now().toEpochMilliseconds(),
+    receiveDate = TODO(),
+    receiveOrder = TODO(),
 )
 
 fun Thread.toCommentEntity(sourceId: String) = Comment(
