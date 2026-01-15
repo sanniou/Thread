@@ -49,26 +49,6 @@ ON CONFLICT(sourceId, id) DO UPDATE SET
     authorLevel = excluded.authorLevel,
     isPo = excluded.isPo;
 
--- 更新 Comment 数据
-updateComment:
-UPDATE Comment SET
-    topicId=?,
-    page=?,
-    userHash = ?,
-    admin = ?,
-    title = ?,
-    createdAt = ?,
-    content = ?,
-    authorName = ?,
-    floor = ?,
-    replyToId = ?,
-    agreeCount = ?,
-    disagreeCount = ?,
-    subCommentCount = ?,
-    authorLevel = ?,
-    isPo = ?
-WHERE sourceId = ? AND id = ?;
-
 -- 删除 Comment 数据
 deleteComment:
 DELETE FROM Comment WHERE sourceId = ? AND id = ?;
@@ -120,6 +100,9 @@ SELECT MAX(page) FROM Comment WHERE sourceId = :sourceId AND topicId = :topicId;
 countCommentsByTopicIdAndPage:
 SELECT count(1) FROM Comment WHERE sourceId = :sourceId AND topicId = :topicId AND page = :page;
 
+countCommentsByTopicIdAndFloor:
+SELECT count(1) FROM Comment WHERE sourceId = :sourceId AND topicId = :topicId AND floor >= :floor LIMIT 1;
+
 deleteCommentsByTopicIdAndPage:
 DELETE FROM Comment WHERE sourceId = :sourceId AND topicId = :topicId AND page = :page;
 
@@ -160,6 +143,16 @@ WHERE Comment.sourceId = :sourceId
   AND Comment.topicId = :topicId
   AND Comment.userHash = Topic.authorId
   AND Comment.page = :page;
+
+countCommentsByTopicIdPoModeAndFloor:
+SELECT count(1)
+FROM Comment
+JOIN Topic ON Comment.sourceId = Topic.sourceId AND Comment.topicId = Topic.id
+WHERE Comment.sourceId = :sourceId
+  AND Comment.topicId = :topicId
+  AND Comment.userHash = Topic.authorId
+  AND Comment.floor >= :floor
+LIMIT 1;
 
 getCommentsByTopicIdPoModeOffset:
 SELECT Comment.*

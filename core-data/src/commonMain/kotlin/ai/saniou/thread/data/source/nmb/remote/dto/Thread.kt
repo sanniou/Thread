@@ -7,6 +7,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonNames
 import ai.saniou.thread.db.table.forum.Comment
 import ai.saniou.thread.db.table.forum.Topic
+import kotlin.time.Clock
 
 @Serializable
 @OptIn(ExperimentalSerializationApi::class)
@@ -99,6 +100,7 @@ fun Thread.toTable(sourceId: String, page: Long) = Topic(
     lastReplyAt = 0L,
     lastVisitedAt = null,
     lastViewedCommentId = null,
+    receiveDate = Clock.System.now().toEpochMilliseconds(),
 )
 
 fun Thread.toCommentEntity(sourceId: String) = Comment(

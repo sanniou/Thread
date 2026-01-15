@@ -11,7 +11,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class CommentKey(
     val floor: Long,
-    val id: String
+    val id: String,
 ) {
     override fun toString(): String = "$floor:$id"
 

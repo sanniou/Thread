@@ -1,7 +1,5 @@
 package ai.saniou.thread.data.source.nmb.remote.dto
 
-import ai.saniou.corecommon.utils.toTime
-import ai.saniou.thread.db.table.forum.Topic
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonNames
@@ -60,24 +58,4 @@ data class Reply(
     val hide: Long? = null,// ？
 ) : IBaseAuthor
 
-
-fun ForumThread.toTable(sourceId: String, page: Long) = Topic(
-    id = this.id.toString(),
-    sourceId = sourceId,
-    channelId = this.fid.toString(),
-    commentCount = this.replyCount,
-    createdAt = now.toTime().toEpochMilliseconds(),
-    authorId = this.userHash,
-    authorName = this.name,
-    title = this.title,
-    content = this.content,
-    summary = this.content, // NMB list provides full content
-    page = page,
-    agreeCount = 0,
-    disagreeCount = 0,
-    isCollected = false,
-    lastReplyAt = now.toTime().toEpochMilliseconds(),
-    lastVisitedAt = null,
-    lastViewedCommentId = null,
-)
 

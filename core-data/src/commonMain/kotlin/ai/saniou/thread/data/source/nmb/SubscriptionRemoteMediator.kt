@@ -15,7 +15,6 @@ import androidx.paging.ExperimentalPagingApi
 import androidx.paging.LoadType
 import androidx.paging.PagingState
 import androidx.paging.RemoteMediator
-import androidx.paging.RemoteMediator.MediatorResult
 
 @OptIn(ExperimentalPagingApi::class)
 class SubscriptionRemoteMediator(
@@ -43,7 +42,7 @@ class SubscriptionRemoteMediator(
             }
 
             feedDetail.forEach { feed ->
-                val topic = feed.toTable("nmb", Long.MAX_VALUE)
+                val topic = feed.toTable("nmb", db.topicQueries)
                 db.topicQueries.upsertTopicNoPage(topic)
 
                 db.subscriptionQueries.insertSubscription(

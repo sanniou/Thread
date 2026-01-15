@@ -1,5 +1,6 @@
 package ai.saniou.thread.data.cache
 
+import ai.saniou.thread.data.model.CommentKey
 import ai.saniou.thread.data.model.TopicKey
 import ai.saniou.thread.db.table.forum.Channel
 import ai.saniou.thread.db.table.forum.Comment
@@ -62,7 +63,7 @@ interface SourceCache {
     /**
      * 保存回复列表
      */
-    suspend fun saveComments(comments: List<DomainComment>, sourceId: String, page: Int)
+    suspend fun saveComments(comments: List<DomainComment>, sourceId: String, cursor: CommentKey)
 
     /**
      * 清除指定板块的缓存

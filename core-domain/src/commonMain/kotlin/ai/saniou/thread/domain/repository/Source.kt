@@ -81,7 +81,7 @@ interface Source {
      */
     suspend fun getTopicComments(
         threadId: String,
-        page: Int,
+        commentKey: Any,
         isPoOnly: Boolean = false,
     ): Result<List<Comment>> = Result.failure(NotImplementedError("Not implemented"))
 

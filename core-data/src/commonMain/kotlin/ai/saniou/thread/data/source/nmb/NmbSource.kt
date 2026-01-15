@@ -4,25 +4,13 @@ import ai.saniou.thread.data.cache.CacheStrategy
 import ai.saniou.thread.data.manager.CdnManager
 import ai.saniou.thread.data.mapper.toDomain
 import ai.saniou.thread.data.mapper.toMetadata
+import ai.saniou.thread.data.model.CommentKey
 import ai.saniou.thread.data.model.TopicKey
 import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
-import ai.saniou.thread.data.source.nmb.remote.dto.RemoteKeyType
-import ai.saniou.thread.data.source.nmb.remote.dto.Reply
-import ai.saniou.thread.data.source.nmb.remote.dto.Thread
-import ai.saniou.thread.data.source.nmb.remote.dto.ThreadReply
-import ai.saniou.thread.data.source.nmb.remote.dto.toCommentEntity
-import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
-import ai.saniou.thread.data.source.nmb.remote.dto.toDomainComment
-import ai.saniou.thread.data.source.nmb.remote.dto.toTable
-import ai.saniou.thread.data.source.nmb.remote.dto.toTableReply
+import ai.saniou.thread.data.source.nmb.remote.dto.*
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.db.table.forum.Image
-import ai.saniou.thread.domain.model.forum.Account
-import ai.saniou.thread.domain.model.forum.Channel
-import ai.saniou.thread.domain.model.forum.Comment
-import ai.saniou.thread.domain.model.forum.ImageType
-import ai.saniou.thread.domain.model.forum.Topic
-import ai.saniou.thread.domain.model.forum.TopicMetadata
+import ai.saniou.thread.domain.model.forum.*
 import ai.saniou.thread.domain.model.user.LoginField
 import ai.saniou.thread.domain.model.user.LoginStrategy
 import ai.saniou.thread.domain.repository.SettingsRepository
@@ -178,14 +166,16 @@ class NmbSource(
         isTimeline: Boolean,
     ): Result<List<Topic>> {
         cursor as TopicKey
+        val page = cursor.topic?.page?.plus(1)
+            ?: return Result.failure(IllegalArgumentException("Invalid cursor page"))
         val fid = channelId.toLongOrNull()
             ?: return Result.failure(IllegalArgumentException("Invalid NMB channel ID"))
 
         return try {
             val response = if (isTimeline) {
-                nmbXdApi.timeline(fid, page.toLong())
+                nmbXdApi.timeline(fid, page)
             } else {
-                nmbXdApi.showf(fid, page.toLong())
+                nmbXdApi.showf(fid, page)
             }
 
             if (response is SaniouResult.Success) {
@@ -351,17 +341,19 @@ class NmbSource(
 
     override suspend fun getTopicComments(
         threadId: String,
-        page: Int,
+        commentKey: Any,
         isPoOnly: Boolean,
     ): Result<List<Comment>> {
+        commentKey as CommentKey
+        val page = commentKey.floor / 19
         val tid = threadId.toLongOrNull()
             ?: return Result.failure(IllegalArgumentException("Invalid NMB thread ID"))
 
         return try {
             val apiCall = if (isPoOnly) {
-                nmbXdApi.po(tid, page.toLong())
+                nmbXdApi.po(tid, page)
             } else {
-                nmbXdApi.thread(tid, page.toLong())
+                nmbXdApi.thread(tid, page)
             }
 
             when (apiCall) {
@@ -369,10 +361,15 @@ class NmbSource(
                     val thread = apiCall.data
                     val comments = mutableListOf<Comment>()
 
-                    if (page == 1) {
+                    if (page == 1L) {
                         // 将 Thread (主楼) 作为 Comment 存入
                         // 主楼也视为一个 Comment
-                        comments.add(thread.toDomainComment(sourceId = id, cdnUrl = cdnManager.currentCdnUrl.value))
+                        comments.add(
+                            thread.toDomainComment(
+                                sourceId = id,
+                                cdnUrl = cdnManager.currentCdnUrl.value
+                            )
+                        )
                     }
 
                     // 添加回复

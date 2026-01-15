@@ -1,5 +1,6 @@
 package ai.saniou.thread.data.source.acfun
 
+import ai.saniou.thread.data.model.CommentKey
 import ai.saniou.thread.data.source.acfun.remote.AcfunApi
 import ai.saniou.thread.data.source.acfun.remote.AcfunTokenManager
 import ai.saniou.thread.domain.model.forum.Author
@@ -135,11 +136,11 @@ class AcfunSource(
 
     override suspend fun getTopicComments(
         threadId: String,
-        page: Int,
+        commentKey: Any,
         isPoOnly: Boolean,
     ): Result<List<Comment>> {
-        val pcursor =
-            if (page == 1) "0" else return Result.success(emptyList()) // AcFun uses cursor, simplistic page mapping
+        commentKey as CommentKey
+        val pcursor = if (commentKey.floor == 1L) "0" else return Result.success(emptyList()) // AcFun uses cursor, simplistic page mapping
         // This is tricky because AcFun uses cursor-based paging, not page-based.
         // Standard RemoteMediator for page-based sources won't work well here without adaptation.
         // However, GenericRemoteMediator is page-based (Int Key).

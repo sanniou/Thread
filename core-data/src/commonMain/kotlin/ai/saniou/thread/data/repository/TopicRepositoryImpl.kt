@@ -2,7 +2,6 @@ package ai.saniou.thread.data.repository
 
 import ai.saniou.thread.data.cache.SourceCache
 import ai.saniou.thread.data.mapper.toDomain
-import ai.saniou.thread.data.mapper.toEntity
 import ai.saniou.thread.data.mapper.toMetadata
 import ai.saniou.thread.data.model.CommentKey
 import ai.saniou.thread.data.paging.DataPolicy
@@ -12,28 +11,14 @@ import ai.saniou.thread.data.paging.KeysetPagingSource
 import ai.saniou.thread.data.source.nmb.remote.dto.RemoteKeyType
 import ai.saniou.thread.data.source.tieba.TiebaSource
 import ai.saniou.thread.db.Database
-import ai.saniou.thread.domain.model.forum.Comment
-import ai.saniou.thread.domain.model.forum.Image
-import ai.saniou.thread.domain.model.forum.ImageType
-import ai.saniou.thread.domain.model.forum.Topic
-import ai.saniou.thread.domain.model.forum.TopicMetadata
+import ai.saniou.thread.domain.model.forum.*
 import ai.saniou.thread.domain.repository.Source
 import ai.saniou.thread.domain.repository.TopicRepository
-import androidx.paging.ExperimentalPagingApi
-import androidx.paging.LoadType
-import androidx.paging.Pager
-import androidx.paging.PagingConfig
-import androidx.paging.PagingData
-import androidx.paging.map
+import androidx.paging.*
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
 
 class TopicRepositoryImpl(
@@ -101,16 +86,16 @@ class TopicRepositoryImpl(
             remoteMediator = GenericRemoteMediator(
                 db = db,
                 dataPolicy = DataPolicy.CACHE_ELSE_NETWORK,
-                initialKey = 1,
+                initialKey = CommentKey(1, ""),
                 remoteKeyStrategy = DefaultRemoteKeyStrategy(
                     db = db,
                     type = RemoteKeyType.THREAD,
                     id = "${sourceId}_${topicId}_${if (isPoOnly) "po" else "all"}",
                     serializer = { it.toString() },
-                    deserializer = { it.toInt() }
+                    deserializer = { CommentKey.fromString(it) }
                 ),
-                fetcher = { page ->
-                    source.getTopicComments(topicId, page, isPoOnly)
+                fetcher = { commentKey ->
+                    source.getTopicComments(topicId, commentKey, isPoOnly)
                 },
                 saver = { comments, page, _ ->
                     cache.saveComments(comments, sourceId, page)
@@ -119,23 +104,23 @@ class TopicRepositoryImpl(
                 endOfPaginationReached = { comments ->
                     comments.isEmpty()
                 },
-                cacheChecker = { page ->
+                cacheChecker = { cursor ->
                     if (isPoOnly) {
-                        db.commentQueries.countCommentsByTopicIdPoModeAndPage(
+                        db.commentQueries.countCommentsByTopicIdPoModeAndFloor(
                             sourceId,
                             topicId,
-                            page.toLong()
+                            cursor.floor
                         ).executeAsOne() > 0
                     } else {
-                        db.commentQueries.countCommentsByTopicIdAndPage(
+                        db.commentQueries.countCommentsByTopicIdAndFloor(
                             sourceId,
                             topicId,
-                            page.toLong()
+                            cursor.floor
                         ).executeAsOne() > 0
                     }
                 },
                 keyExtractor = { comment ->
-                    comment.floor.toInt()
+                    CommentKey(comment.floor, comment.id)
                 }
             ),
             pagingSourceFactory = {
@@ -147,18 +132,17 @@ class TopicRepositoryImpl(
                         context = Dispatchers.IO,
                         countQueryProvider = {
                             db.commentQueries.countCommentsByTopicIdPoMode(
-                                sourceId,
-                                topicId
+                                sourceId = sourceId,
+                                topicId = topicId
                             )
                         },
                         queryProvider = { key, limit ->
                             val currentKey = key ?: initialKey
                             db.commentQueries.getCommentsPoModeKeyset(
-                                sourceId,
-                                topicId,
-                                currentKey.floor,
-                                currentKey.id,
-                                limit
+                                sourceId = sourceId,
+                                topicId = topicId,
+                                lastFloor = currentKey.floor,
+                                limit = limit
                             )
                         },
                         keyExtractor = { comment ->
@@ -178,11 +162,10 @@ class TopicRepositoryImpl(
                         queryProvider = { key, limit ->
                             val currentKey = key ?: initialKey
                             db.commentQueries.getCommentsKeyset(
-                                sourceId,
-                                topicId,
-                                currentKey.floor,
-                                currentKey.id,
-                                limit
+                                sourceId = sourceId,
+                                topicId = topicId,
+                                lastFloor = currentKey.floor,
+                                limit = limit
                             )
                         },
                         keyExtractor = { comment ->

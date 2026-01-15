@@ -2,6 +2,7 @@ package ai.saniou.thread.data.cache
 
 import ai.saniou.thread.data.mapper.toDomain
 import ai.saniou.thread.data.mapper.toEntity
+import ai.saniou.thread.data.model.CommentKey
 import ai.saniou.thread.data.model.TopicKey
 import ai.saniou.thread.data.paging.KeysetPagingSource
 import ai.saniou.thread.db.Database
@@ -186,11 +187,12 @@ class SqlDelightSourceCache(
         }
     }
 
-    override suspend fun saveComments(comments: List<DomainComment>, sourceId: String, page: Int) {
+
+    override suspend fun saveComments(comments: List<DomainComment>, sourceId: String, cursor: CommentKey) {
         commentQueries.transaction {
             comments.forEach { comment ->
                 commentQueries.upsertComment(
-                    comment.toEntity(sourceId, page.toLong())
+                    comment.toEntity(sourceId, cursor.floor)
                 )
                 // Save Comment Images
                 comment.images.forEachIndexed { index, image ->

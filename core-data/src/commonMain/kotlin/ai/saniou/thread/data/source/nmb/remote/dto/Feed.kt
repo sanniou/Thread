@@ -1,5 +1,6 @@
 package ai.saniou.thread.data.source.nmb.remote.dto
 
+import ai.saniou.thread.db.table.forum.TopicQueries
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
@@ -44,25 +45,29 @@ data class Feed(
 ) : IBaseThread
 
 
-fun Feed.toTable(sourceId: String, page: Long) = EntityTopic(
-    id = id.toString(),
-    sourceId = sourceId,
-    channelId = fid.toString(),
-    commentCount = replyCount,
-    createdAt = now.nowToEpochMilliseconds(),
-    authorId = userHash,
-    authorName = name,
-    title = title,
-    content = content,
-    summary = content, // NMB feed provides full content
-    page = page,
-    agreeCount = 0,
-    disagreeCount = 0,
-    isCollected = false,
-    lastReplyAt = now.nowToEpochMilliseconds(),
-    lastVisitedAt = null,
-    lastViewedCommentId = null
-)
+fun Feed.toTable(sourceId: String, topicQueries: TopicQueries): EntityTopic {
+    val topic = topicQueries.getTopic(sourceId, id.toString()).executeAsOneOrNull()
+    return EntityTopic(
+        id = id.toString(),
+        sourceId = sourceId,
+        channelId = fid.toString(),
+        commentCount = replyCount,
+        createdAt = now.nowToEpochMilliseconds(),
+        authorId = userHash,
+        authorName = name,
+        title = title,
+        content = content,
+        summary = content, // NMB feed provides full content
+        page = topic?.page ?: -1,
+        agreeCount = topic?.agreeCount,
+        disagreeCount = topic?.disagreeCount,
+        isCollected = topic?.isCollected,
+        lastReplyAt = topic?.lastReplyAt ?: 0,
+        lastVisitedAt = topic?.lastVisitedAt,
+        lastViewedCommentId = topic?.lastViewedCommentId,
+        receiveDate = topic?.receiveDate ?: -1
+    )
+}
 
 @OptIn(ExperimentalTime::class)
 fun String.nowToEpochMilliseconds(): Long {

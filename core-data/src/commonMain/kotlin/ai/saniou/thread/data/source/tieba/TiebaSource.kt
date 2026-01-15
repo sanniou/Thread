@@ -1,6 +1,8 @@
 package ai.saniou.thread.data.source.tieba
 
 import ai.saniou.thread.data.mapper.toDomain
+import ai.saniou.thread.data.model.CommentKey
+import ai.saniou.thread.data.model.TopicKey
 import ai.saniou.thread.data.source.tieba.remote.ClientVersion
 import ai.saniou.thread.data.source.tieba.remote.MiniTiebaApi
 import ai.saniou.thread.data.source.tieba.remote.OfficialProtobufTiebaApi
@@ -160,10 +162,13 @@ class TiebaSource(
 
     override suspend fun getTopicComments(
         threadId: String,
-        page: Int,
+        cursor: Any,
         isPoOnly: Boolean,
     ): Result<List<Comment>> = runCatching {
-        val kz = threadId.toLongOrNull() ?: throw IllegalArgumentException("Invalid threadId: $threadId")
+        cursor as CommentKey
+        val page = (cursor.floor / 20 + 1).toInt()
+        val kz =
+            threadId.toLongOrNull() ?: throw IllegalArgumentException("Invalid threadId: $threadId")
 
         val request = PbPageRequest(
             PbPageRequestData(
@@ -201,7 +206,8 @@ class TiebaSource(
     }
 
     override suspend fun getTopicDetail(threadId: String, page: Int): Result<Topic> = runCatching {
-        val kz = threadId.toLongOrNull() ?: throw IllegalArgumentException("Invalid threadId: $threadId")
+        val kz =
+            threadId.toLongOrNull() ?: throw IllegalArgumentException("Invalid threadId: $threadId")
 
         val request = PbPageRequest(
             PbPageRequestData(
@@ -248,9 +254,10 @@ class TiebaSource(
     suspend fun getSubComments(
         topicId: String,
         postId: String,
-        page: Int
+        page: Int,
     ): Result<List<Comment>> = runCatching {
-        val kz = topicId.toLongOrNull() ?: throw IllegalArgumentException("Invalid topicId: $topicId")
+        val kz =
+            topicId.toLongOrNull() ?: throw IllegalArgumentException("Invalid topicId: $topicId")
         val pid = postId.toLongOrNull() ?: throw IllegalArgumentException("Invalid postId: $postId")
 
         val request = PbFloorRequest(

@@ -6,6 +6,7 @@ import ai.saniou.thread.data.mapper.flatten
 import ai.saniou.thread.data.mapper.toDomain
 import ai.saniou.thread.data.mapper.toDomainTree
 import ai.saniou.thread.data.mapper.toEntity
+import ai.saniou.thread.data.model.CommentKey
 import ai.saniou.thread.data.paging.DataPolicy
 import ai.saniou.thread.data.source.discourse.remote.DiscourseApi
 import ai.saniou.thread.data.source.discourse.remote.dto.DiscourseTopic
@@ -168,9 +169,11 @@ class DiscourseSource(
 
     override suspend fun getTopicComments(
         threadId: String,
-        page: Int,
+        commentKey: Any,
         isPoOnly: Boolean,
     ): Result<List<Comment>> {
+        commentKey as CommentKey
+        val page = (commentKey.floor / 20 + 1).toInt()
         if (isPoOnly) {
             // Discourse API doesn't support PO only easily in this endpoint?
             // Or we need to filter locally but that breaks pagination consistency if we rely on API pagination.
