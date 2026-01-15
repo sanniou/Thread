@@ -166,8 +166,7 @@ class NmbSource(
         isTimeline: Boolean,
     ): Result<List<Topic>> {
         cursor as TopicKey
-        val page = cursor.topic?.page?.plus(1)
-            ?: return Result.failure(IllegalArgumentException("Invalid cursor page"))
+        val page = cursor.topic?.page?.plus(1) ?: 1
         val fid = channelId.toLongOrNull()
             ?: return Result.failure(IllegalArgumentException("Invalid NMB channel ID"))
 

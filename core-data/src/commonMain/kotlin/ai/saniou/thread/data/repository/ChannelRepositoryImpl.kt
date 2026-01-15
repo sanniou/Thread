@@ -2,6 +2,7 @@ package ai.saniou.thread.data.repository
 
 import ai.saniou.thread.data.cache.SourceCache
 import ai.saniou.thread.data.mapper.toDomain
+import ai.saniou.thread.data.mapper.toEntity
 import ai.saniou.thread.data.model.TopicKey
 import ai.saniou.thread.data.paging.DataPolicy
 import ai.saniou.thread.data.paging.DefaultRemoteKeyStrategy
@@ -14,10 +15,7 @@ import ai.saniou.thread.domain.repository.ChannelRepository
 import ai.saniou.thread.domain.repository.Source
 import androidx.paging.*
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
 import kotlin.time.Clock
 
@@ -28,7 +26,7 @@ class ChannelRepositoryImpl(
 ) : ChannelRepository {
 
     private val sourceMap by lazy { sources.associateBy { it.id } }
-    private val fallbackStates = kotlinx.coroutines.flow.MutableStateFlow<Map<String, Boolean>>(emptyMap())
+    private val fallbackStates = MutableStateFlow<Map<String, Boolean>>(emptyMap())
 
     override fun getChannels(sourceId: String): Flow<List<Channel>> {
         return cache.observeChannels(sourceId).map { channels ->
@@ -131,7 +129,7 @@ class ChannelRepositoryImpl(
         // Initial Key: Max Value (Latest)
         // Note: For descending sort, we start with MAX_VALUE.
         // The ID part doesn't matter for the very first page as long as lastReplyAt is larger than any real data.
-        val initialKey = TopicKey(Long.MAX_VALUE, "")
+        val initialKey = TopicKey(Clock.System.now().toEpochMilliseconds(), "")
 
         return Pager(
             config = PagingConfig(pageSize = pageSize),
@@ -152,22 +150,13 @@ class ChannelRepositoryImpl(
                     source.getChannelTopics(channelId, key, isTimeline)
                 },
                 saver = { topics, _, loadType ->
-                    val shouldClear = loadType == LoadType.REFRESH
-                    // Smart Cleanup: Generate new version (timestamp) ONLY on Refresh.
-                    // For Append, pass null to let Cache resolve the existing version.
-                    val receiveDate = if (loadType == LoadType.REFRESH) {
-                        Clock.System.now().toEpochMilliseconds()
-                    } else {
-                        null
-                    }
-
                     cache.saveTopics(
                         topics = topics,
-                        clearPage = shouldClear,
+                        clearPage = true,
                         sourceId = sourceId,
                         channelId = channelId,
                         page = null, // Keyset paging doesn't use page numbers
-                        receiveDate = receiveDate
+                        receiveDate = initialKey.receiveDate
                     )
                 },
                 itemsExtractor = { it },
@@ -175,7 +164,7 @@ class ChannelRepositoryImpl(
                     it.size < pageSize
                 },
                 keyExtractor = { topic ->
-                    TopicKey(topic.orderKey ?: 0L, topic.id)
+                    TopicKey(topic.receiveDate, topic.id, topic.toEntity())
                 }
             ),
             pagingSourceFactory = {

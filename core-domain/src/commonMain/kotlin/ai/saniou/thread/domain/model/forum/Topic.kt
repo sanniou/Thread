@@ -54,5 +54,5 @@ data class Topic(
     val comments: List<Comment> = emptyList(),
     val tags: List<Tag> = emptyList(),
     val lastViewedCommentId: String? = null,
-    val orderKey: Long? = null,
+    val lastReplyAt: Long? = null,
 )

@@ -185,7 +185,7 @@ fun ForumThread.toDomain(cdnUrl: String): Topic {
             if (admin > 0) add(Tag(id = "admin", name = "Admin", type = TagType.SYSTEM))
             if (hide > 0) add(Tag(id = "hide", name = "Hide", type = TagType.SYSTEM))
         },
-        orderKey = (replies.maxOfOrNull { it.now.nowToEpochMilliseconds() }
+        lastReplyAt = (replies.maxOfOrNull { it.now.nowToEpochMilliseconds() }
             ?: now.nowToEpochMilliseconds()),
         comments = replies.map { it.toDomain(id.toString(), cdnUrl) },
     )

@@ -150,7 +150,7 @@ fun Topic.toEntity(page: Int = 1, receiveDate: Long = 0): EntityTopic {
         agreeCount = agreeCount,
         disagreeCount = disagreeCount,
         isCollected = isCollected,
-        lastReplyAt = orderKey ?: 0L,
+        lastReplyAt = lastReplyAt ?: 0L,
         lastVisitedAt = 0L, // Default value, will be preserved by upsert logic
         lastViewedCommentId = null, // Default value, will be preserved by upsert logic
         receiveDate = receiveDate

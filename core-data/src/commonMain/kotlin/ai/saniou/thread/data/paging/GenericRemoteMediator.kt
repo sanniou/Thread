@@ -67,14 +67,13 @@ class GenericRemoteMediator<Key : Any, PagerValue : Any, FetcherValue : Any>(
 
                 LoadType.PREPEND -> {
                     val remoteKey = remoteKeyStrategy.getKeyForFirstItem(state)
-                    remoteKey
-                        ?: return MediatorResult.Success(endOfPaginationReached = remoteKey != null)
+                    remoteKey ?: return MediatorResult.Success(endOfPaginationReached = false)
                 }
 
                 LoadType.APPEND -> {
                     val remoteKey = remoteKeyStrategy.getKeyForLastItem(state)
                     remoteKey
-                        ?: return MediatorResult.Success(endOfPaginationReached = remoteKey != null)
+                        ?: return MediatorResult.Success(endOfPaginationReached = false)
                 }
             }
 

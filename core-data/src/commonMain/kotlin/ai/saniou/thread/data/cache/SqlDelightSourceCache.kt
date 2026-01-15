@@ -101,8 +101,8 @@ class SqlDelightSourceCache(
                     sourceId = sourceId,
                     channelId = channelId,
                     isFallback = if (isFallback) 1L else 0L,
-                    lastReplyAt = key?.lastReplyAt ?: Long.MAX_VALUE,
-                    lastId = key?.id ?: "",
+                    lastReplyAt = key?.receiveDate ?: Long.MAX_VALUE,
+                    lastId = key?.topicId ?: "",
                     limit = limit
                 )
             },
@@ -132,6 +132,7 @@ class SqlDelightSourceCache(
                 .executeAsOneOrNull()?.MAX ?: 0L
 
             // 1. 清理旧数据: 将数据库中 page >= 当前page 的数据全部 +1 ，用作于缓存
+            // 新的缓存策略不基于 page， 而是 receiveDate，所以未来可以删除
             if (clearPage && page != null) {
                 topicQueries.incrementTopicPage(sourceId, channelId, page.toLong())
             }
