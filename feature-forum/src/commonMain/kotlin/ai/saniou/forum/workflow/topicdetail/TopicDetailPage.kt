@@ -26,7 +26,6 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -342,7 +341,7 @@ private fun ThreadContentRouter(
 
 @Composable
 private fun ThreadErrorContent(error: AppError, onRetry: () -> Unit) {
-    DefaultError(error = error, onRetryClick = onRetry)
+    DefaultError(error = error, onRetry = onRetry)
 }
 
 // endregion
@@ -591,7 +590,7 @@ private fun ThreadList(
 
             // If firstItem is null (loading), we assume it might be main post if on Page 1
             val isMainPost = if (firstItem != null) {
-                firstItem.floor == 1 || firstItem.id == metadata.id
+                firstItem.floor == 1L || firstItem.id == metadata.id
             } else {
                 isPageOne // Assume loading item on page 1 is main post
             }

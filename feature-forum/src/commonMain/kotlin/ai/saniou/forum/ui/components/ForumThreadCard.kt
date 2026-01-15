@@ -171,9 +171,9 @@ fun TopicCard(
                 ) {
                     Column(modifier = Modifier.padding(8.dp)) {
                         RecentReplies(topic.comments.take(2)) // Limit to 2 recent replies for card view
-                        if ((topic.remainingCount ?: 0) > 0) {
+                        if ((topic.commentCount ?: 0) > 0) {
                             Text(
-                                text = "查看其余 ${topic.remainingCount} 条回复...",
+                                text = "查看其余 ${topic.commentCount} 条回复...",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.Medium,

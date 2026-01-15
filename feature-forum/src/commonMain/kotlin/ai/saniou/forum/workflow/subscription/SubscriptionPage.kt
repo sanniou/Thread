@@ -75,7 +75,6 @@ import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import org.kodein.di.DI
 import thread.feature_forum.generated.resources.Res
-import thread.feature_forum.generated.resources.*
 import thread.feature_forum.generated.resources.subscription_cancel
 import thread.feature_forum.generated.resources.subscription_confirm
 import thread.feature_forum.generated.resources.subscription_empty
@@ -293,7 +292,7 @@ private fun ErrorContent(
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier.fillMaxSize()) {
-        DefaultError(error = error, onRetryClick = onRetry)
+        DefaultError(error = error, onRetry = onRetry)
     }
 }
 

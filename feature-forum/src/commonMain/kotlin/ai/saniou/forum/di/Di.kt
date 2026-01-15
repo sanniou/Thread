@@ -75,6 +75,7 @@ val nmbFeatureModule = DI.Module("nmbFeatureModule") {
             instance(),
             instance(),
             instance(),
+            instance(),
             "nmb",
             params.first.toString(),
             params.second.toString()
@@ -84,6 +85,7 @@ val nmbFeatureModule = DI.Module("nmbFeatureModule") {
     // New factory supporting SourceId
     bindFactory<Triple<String, String, String>, TopicViewModel> { params ->
         TopicViewModel(
+            instance(),
             instance(),
             instance(),
             instance(),

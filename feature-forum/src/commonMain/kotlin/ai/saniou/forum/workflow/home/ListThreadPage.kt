@@ -1,5 +1,6 @@
 package ai.saniou.forum.workflow.home
 
+import ai.saniou.coreui.state.DefaultError
 import ai.saniou.coreui.state.PagingStateLayout
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.PullToRefreshWrapper
@@ -26,6 +27,7 @@ import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -60,16 +62,16 @@ fun ListThreadPage(
             items = threads,
             loading = { ThreadListSkeleton() },
             error = { appError ->
-                ai.saniou.coreui.state.DefaultError(
+                DefaultError(
                     error = appError,
                     onRetry = { threads.retry() },
-                    action = if (onShowCache != null) {
-                        {
-                            androidx.compose.material3.TextButton(onClick = onShowCache) {
+                    action = {
+                        if (onShowCache != null) {
+                            TextButton(onClick = onShowCache) {
                                 Text("显示缓存")
                             }
                         }
-                    } else null
+                    }
                 )
             },
             empty = {

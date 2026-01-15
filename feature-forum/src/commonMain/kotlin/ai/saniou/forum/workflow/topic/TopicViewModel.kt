@@ -10,6 +10,7 @@ import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.usecase.channel.GetChannelDetailUseCase
 import ai.saniou.thread.domain.usecase.channel.GetChannelNameUseCase
 import ai.saniou.thread.domain.usecase.channel.GetChannelTopicsPagingUseCase
+import ai.saniou.thread.domain.usecase.channel.SetChannelFallbackModeUseCase
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import cafe.adriel.voyager.core.model.ScreenModel
@@ -33,7 +34,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalCoroutinesApi::class)
 class TopicViewModel(
     getChannelTopicsPagingUseCase: GetChannelTopicsPagingUseCase,
-    private val setChannelFallbackModeUseCase: ai.saniou.thread.domain.usecase.channel.SetChannelFallbackModeUseCase,
+    private val setChannelFallbackModeUseCase: SetChannelFallbackModeUseCase,
     getChannelDetailUseCase: GetChannelDetailUseCase,
     getChannelNameUseCase: GetChannelNameUseCase,
     private val sourceId: String,

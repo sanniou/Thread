@@ -47,7 +47,8 @@ fun SaniouErrorPage(
     onRetryClick: () -> Unit,
     modifier: Modifier = Modifier,
     onNavBack: (() -> Unit)? = null,
-    title: String? = null
+    title: String? = null,
+    action: @Composable () -> Unit = {},
 ) {
     val isNetworkError = error.type == AppErrorType.NETWORK
 
@@ -126,6 +127,7 @@ fun SaniouErrorPage(
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(stringResource(Res.string.core_ui_no_internet_retry))
                 }
+                action()
             }
         }
     }

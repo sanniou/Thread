@@ -72,10 +72,15 @@ fun DefaultLoading() {
 }
 
 @Composable
-fun DefaultError(error: AppError? = null, onRetryClick: () -> Unit) {
+fun DefaultError(
+    error: AppError? = null,
+    onRetry: () -> Unit,
+    action: @Composable () -> Unit = {},
+) {
     SaniouErrorPage(
         error = error ?: AppError(message = "未知错误"),
-        onRetryClick = onRetryClick
+        onRetryClick = onRetry,
+        action = action
     )
 }
 
@@ -84,7 +89,7 @@ fun DefaultError(error: AppError? = null, onRetryClick: () -> Unit) {
  */
 @Composable
 inline fun DefaultError(crossinline onRetryClick: () -> Unit) {
-    DefaultError(null) { onRetryClick() }
+    DefaultError(null, { onRetryClick() }, {})
 }
 
 inline fun <reified T> MutableStateFlow<LoadableState<T>>.valueOrNull(): T? {
