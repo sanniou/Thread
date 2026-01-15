@@ -3,6 +3,7 @@ package ai.saniou.thread.data.source.acfun
 import ai.saniou.thread.data.model.CommentKey
 import ai.saniou.thread.data.source.acfun.remote.AcfunApi
 import ai.saniou.thread.data.source.acfun.remote.AcfunTokenManager
+import ai.saniou.thread.domain.model.PagedResult
 import ai.saniou.thread.domain.model.forum.Author
 import ai.saniou.thread.domain.model.forum.Channel
 import ai.saniou.thread.domain.model.forum.Comment
@@ -87,10 +88,10 @@ class AcfunSource(
 
     override suspend fun getChannelTopics(
         channelId: String,
-        page: Int,
+        cursor: String?,
         isTimeline: Boolean,
-    ): Result<List<Topic>> {
-        return Result.success(emptyList()) // Stub
+    ): Result<PagedResult<Topic>> {
+        return Result.failure(NotImplementedError("AcFun channel topics not implemented"))
     }
 
 
@@ -136,16 +137,12 @@ class AcfunSource(
 
     override suspend fun getTopicComments(
         threadId: String,
-        commentKey: Any,
+        cursor: String?,
         isPoOnly: Boolean,
-    ): Result<List<Comment>> {
-        commentKey as CommentKey
-        val pcursor = if (commentKey.floor == 1L) "0" else return Result.success(emptyList()) // AcFun uses cursor, simplistic page mapping
-        // This is tricky because AcFun uses cursor-based paging, not page-based.
-        // Standard RemoteMediator for page-based sources won't work well here without adaptation.
-        // However, GenericRemoteMediator is page-based (Int Key).
-        // If we force page 1 only for now or map page->cursor if possible.
-        // AcFun API provided here takes 'pcursor'.
+    ): Result<PagedResult<Comment>> {
+        // AcFun uses "pcursor" which is a string.
+        // Initial cursor is usually "0".
+        val pcursor = cursor ?: "0"
 
         val sourceId = threadId.toLongOrNull()
             ?: return Result.failure(IllegalArgumentException("Invalid threadId"))
@@ -176,17 +173,23 @@ class AcfunSource(
                         title = "No.${comment.floor}",
                         topicId = threadId,
                         sourceId = id,
-                        floor = TODO(),
-                        replyToId = TODO(),
-                        agreeCount = TODO(),
-                        disagreeCount = TODO(),
-                        subCommentCount = TODO(),
-                        authorLevel = TODO(),
-                        isPo = TODO(),
-                        subCommentsPreview = TODO()
+                        floor = comment.floor?.toLong() ?: 0L,
+                        replyToId = null,
+                        agreeCount = 0,
+                        disagreeCount = 0,
+                        subCommentCount = 0,
+                        authorLevel = 0,
+                        isPo = false,
+                        subCommentsPreview = emptyList()
                     )
                 }
-                Result.success(replies)
+                
+                // AcFun API should return next cursor. Assuming response.data.pcursor is the next one.
+                // If pcursor is "no_more" or similar, nextCursor is null.
+                // Let's assume response.data.pcursor is the next cursor.
+                val nextCursor = if (response.data.pcursor == "no_more" || list.isEmpty()) null else response.data.pcursor
+                
+                Result.success(PagedResult(replies, null, nextCursor))
             }
 
             is SaniouResult.Error -> Result.failure(response.ex)
@@ -197,7 +200,7 @@ class AcfunSource(
         return flowOf(null)
     }
 
-     suspend fun getTrendList(forceRefresh: Boolean, dayOffset: Int): Result<TrendResult> {
+    suspend fun getTrendList(forceRefresh: Boolean, dayOffset: Int): Result<TrendResult> {
         if (dayOffset != 0) {
             return Result.failure(IllegalArgumentException("AcFun does not support historical trends"))
         }

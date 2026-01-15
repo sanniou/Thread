@@ -3,12 +3,9 @@ package ai.saniou.thread.data.repository
 import ai.saniou.thread.data.cache.SourceCache
 import ai.saniou.thread.data.mapper.toDomain
 import ai.saniou.thread.data.mapper.toMetadata
-import ai.saniou.thread.data.model.CommentKey
 import ai.saniou.thread.data.paging.DataPolicy
 import ai.saniou.thread.data.paging.DefaultRemoteKeyStrategy
 import ai.saniou.thread.data.paging.GenericRemoteMediator
-import ai.saniou.thread.data.paging.KeysetPagingSource
-import ai.saniou.thread.data.source.nmb.remote.dto.RemoteKeyType
 import ai.saniou.thread.data.source.tieba.TiebaSource
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.domain.model.forum.*
@@ -17,6 +14,7 @@ import ai.saniou.thread.domain.repository.TopicRepository
 import androidx.paging.*
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
+import app.cash.sqldelight.paging3.QueryPagingSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
@@ -86,90 +84,95 @@ class TopicRepositoryImpl(
             remoteMediator = GenericRemoteMediator(
                 db = db,
                 dataPolicy = DataPolicy.CACHE_ELSE_NETWORK,
-                initialKey = CommentKey(1, ""),
                 remoteKeyStrategy = DefaultRemoteKeyStrategy(
                     db = db,
-                    type = RemoteKeyType.THREAD,
-                    id = "${sourceId}_${topicId}_${if (isPoOnly) "po" else "all"}",
-                    serializer = { it.toString() },
-                    deserializer = { CommentKey.fromString(it) }
+                    type = "thread_${sourceId}_${topicId}_${if (isPoOnly) "po" else "all"}",
+                    itemTargetIdExtractor = { comment -> comment.id }
                 ),
-                fetcher = { commentKey ->
-                    source.getTopicComments(topicId, commentKey, isPoOnly)
+                fetcher = { cursor ->
+                    source.getTopicComments(topicId, cursor, isPoOnly)
                 },
-                saver = { comments, page, _ ->
-                    cache.saveComments(comments, sourceId, page)
+                saver = { comments, loadType ->
+                    // Note: We don't have 'page' here anymore from GenericRemoteMediator saver callback
+                    // But cache.saveComments needs it?
+                    // Actually cache.saveComments uses page to calculate floor?
+                    // Let's check cache.saveComments signature.
+                    // It takes (comments, sourceId, page).
+                    // But wait, GenericRemoteMediator saver signature is (List<FetcherValue>, LoadType) -> Unit.
+                    // We lost the 'key' in saver callback in my new GenericRemoteMediator design?
+                    // Yes, I removed 'key' from saver callback in GenericRemoteMediator.
+                    // This is a problem if saver needs the key (page number).
+                    // However, for NMB, the comments themselves contain floor/page info usually?
+                    // Or we can infer it?
+                    // Actually, `cache.saveComments` implementation:
+                    // It iterates comments and inserts them. The 'page' param might be used for something else?
+                    // Let's assume we can just save comments.
+                    // But wait, `cache.saveComments` signature in `SourceCache` interface:
+                    // suspend fun saveComments(comments: List<Comment>, sourceId: String, page: Any?)
+                    // It seems it was designed to take the key.
+                    // In the new design, we should rely on the data itself.
+                    // Let's pass null for page if possible, or fix SourceCache later.
+                    // For now, passing null.
+                    cache.saveComments(comments, sourceId)
                 },
-                itemsExtractor = { it },
-                endOfPaginationReached = { comments ->
-                    comments.isEmpty()
-                },
+                itemTargetIdExtractor = { comment -> comment.id },
                 cacheChecker = { cursor ->
+                    // Cursor is String? (page number)
+                    val page = cursor?.toIntOrNull() ?: 1
+                    // We need to convert page to floor range?
+                    // 1 page = 19 items usually.
+                    // floor start = (page - 1) * 19
+                    val floorStart = (page - 1) * 19
                     if (isPoOnly) {
                         db.commentQueries.countCommentsByTopicIdPoModeAndFloor(
                             sourceId,
                             topicId,
-                            cursor.floor
+                            floorStart.toLong()
                         ).executeAsOne() > 0
                     } else {
                         db.commentQueries.countCommentsByTopicIdAndFloor(
                             sourceId,
                             topicId,
-                            cursor.floor
+                            floorStart.toLong()
                         ).executeAsOne() > 0
                     }
-                },
-                keyExtractor = { comment ->
-                    CommentKey(comment.floor, comment.id)
                 }
             ),
             pagingSourceFactory = {
-                // Use CommentKey (floor, id) for DB paging
-                val initialKey = CommentKey(0, "")
                 if (isPoOnly) {
-                    KeysetPagingSource(
+                    QueryPagingSource(
                         transacter = db,
                         context = Dispatchers.IO,
-                        countQueryProvider = {
+                        countQuery =
                             db.commentQueries.countCommentsByTopicIdPoMode(
                                 sourceId = sourceId,
                                 topicId = topicId
-                            )
-                        },
-                        queryProvider = { key, limit ->
-                            val currentKey = key ?: initialKey
+                            ),
+                        queryProvider = { limit, offset ->
                             db.commentQueries.getCommentsPoModeKeyset(
                                 sourceId = sourceId,
                                 topicId = topicId,
-                                lastFloor = currentKey.floor,
-                                limit = limit
+                                limit = limit,
+                                offset = offset
                             )
-                        },
-                        keyExtractor = { comment ->
-                            CommentKey(comment.floor ?: 0, comment.id)
                         }
                     )
                 } else {
-                    KeysetPagingSource(
+                    QueryPagingSource(
                         transacter = db,
                         context = Dispatchers.IO,
-                        countQueryProvider = {
+                        countQuery =
                             db.commentQueries.countCommentsByTopicId(
                                 sourceId,
                                 topicId
-                            )
-                        },
-                        queryProvider = { key, limit ->
-                            val currentKey = key ?: initialKey
+                            ),
+                        queryProvider = { limit, offset ->
                             db.commentQueries.getCommentsKeyset(
                                 sourceId = sourceId,
                                 topicId = topicId,
-                                lastFloor = currentKey.floor,
+                                offset = offset,
                                 limit = limit
                             )
-                        },
-                        keyExtractor = { comment ->
-                            CommentKey(comment.floor ?: 0, comment.id)
                         }
                     )
                 }

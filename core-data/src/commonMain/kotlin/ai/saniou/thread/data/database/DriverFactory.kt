@@ -21,7 +21,6 @@ fun createDatabase(driverFactory: DriverFactory): Database {
         driver = driver,
         FavoriteChannelAdapter = FavoriteChannel.Adapter(EnumColumnAdapter()),
         ImageAdapter = Image.Adapter(EnumColumnAdapter()),
-        RemoteKeysAdapter = RemoteKeys.Adapter(EnumColumnAdapter()),
         TagAdapter = Tag.Adapter(EnumColumnAdapter()),
         BookmarkAdapter = Bookmark.Adapter(object : ColumnAdapter<Instant, Long> {
             override fun decode(databaseValue: Long): Instant {

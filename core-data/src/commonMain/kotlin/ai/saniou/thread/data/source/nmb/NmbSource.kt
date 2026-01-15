@@ -10,6 +10,7 @@ import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
 import ai.saniou.thread.data.source.nmb.remote.dto.*
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.db.table.forum.Image
+import ai.saniou.thread.domain.model.PagedResult
 import ai.saniou.thread.domain.model.forum.*
 import ai.saniou.thread.domain.model.user.LoginField
 import ai.saniou.thread.domain.model.user.LoginStrategy
@@ -106,7 +107,7 @@ class NmbSource(
         // 1. Check cache policy
         val needUpdate = CacheStrategy.shouldFetch(
             db = db,
-            keyType = RemoteKeyType.FORUM_CATEGORY,
+            keyType = RemoteKeyType.FORUM_CATEGORY.name,
             keyId = RemoteKeyType.FORUM_CATEGORY.name,
             expiration = 1.days
         )
@@ -123,7 +124,7 @@ class NmbSource(
 
         CacheStrategy.updateLastFetchTime(
             db = db,
-            keyType = RemoteKeyType.FORUM_CATEGORY,
+            keyType = RemoteKeyType.FORUM_CATEGORY.name,
             keyId = RemoteKeyType.FORUM_CATEGORY.name
         )
         return Result.success(Unit)
@@ -162,26 +163,40 @@ class NmbSource(
 
     override suspend fun getChannelTopics(
         channelId: String,
-        cursor: Any?,
+        cursor: String?,
         isTimeline: Boolean,
-    ): Result<List<Topic>> {
-        cursor as TopicKey
-        val page = cursor.topic?.page?.plus(1) ?: 1
+    ): Result<PagedResult<Topic>> {
+        // NMB uses page numbers. Cursor is expected to be "1", "2", etc.
+        // If cursor is null, it means page 1.
+        val page = cursor?.toIntOrNull() ?: 1
         val fid = channelId.toLongOrNull()
             ?: return Result.failure(IllegalArgumentException("Invalid NMB channel ID"))
 
         return try {
             val response = if (isTimeline) {
-                nmbXdApi.timeline(fid, page)
+                nmbXdApi.timeline(fid, page.toLong())
             } else {
-                nmbXdApi.showf(fid, page)
+                nmbXdApi.showf(fid, page.toLong())
             }
 
             if (response is SaniouResult.Success) {
                 val topics = response.data.map {
                     it.toDomain(cdnManager.currentCdnUrl.value)
                 }
-                Result.success(topics)
+                // NMB doesn't tell us if there's a next page easily, but we can assume
+                // if we got a full page (19 or 20 items), there might be more.
+                // Or simply always return page + 1.
+                // If list is empty, nextCursor should be null.
+                val nextCursor = if (topics.isNotEmpty()) (page + 1).toString() else null
+                val prevCursor = if (page > 1) (page - 1).toString() else null
+
+                Result.success(
+                    PagedResult(
+                        data = topics,
+                        prevCursor = prevCursor,
+                        nextCursor = nextCursor
+                    )
+                )
             } else {
                 Result.failure((response as SaniouResult.Error).ex)
             }
@@ -340,19 +355,19 @@ class NmbSource(
 
     override suspend fun getTopicComments(
         threadId: String,
-        commentKey: Any,
+        cursor: String?,
         isPoOnly: Boolean,
-    ): Result<List<Comment>> {
-        commentKey as CommentKey
-        val page = commentKey.floor / 19
+    ): Result<PagedResult<Comment>> {
+        // NMB comments are paged by page number (1, 2, 3...)
+        val page = cursor?.toIntOrNull() ?: 1
         val tid = threadId.toLongOrNull()
             ?: return Result.failure(IllegalArgumentException("Invalid NMB thread ID"))
 
         return try {
             val apiCall = if (isPoOnly) {
-                nmbXdApi.po(tid, page)
+                nmbXdApi.po(tid, page.toLong())
             } else {
-                nmbXdApi.thread(tid, page)
+                nmbXdApi.thread(tid, page.toLong())
             }
 
             when (apiCall) {
@@ -360,7 +375,7 @@ class NmbSource(
                     val thread = apiCall.data
                     val comments = mutableListOf<Comment>()
 
-                    if (page == 1L) {
+                    if (page == 1) {
                         // 将 Thread (主楼) 作为 Comment 存入
                         // 主楼也视为一个 Comment
                         comments.add(
@@ -378,7 +393,16 @@ class NmbSource(
                             .filter { it.id != 9999999L }
                             .map { it.toDomain(threadId, cdnManager.currentCdnUrl.value) })
 
-                    Result.success(comments)
+                    val nextCursor = if (comments.isNotEmpty()) (page + 1).toString() else null
+                    val prevCursor = if (page > 1) (page - 1).toString() else null
+
+                    Result.success(
+                        PagedResult(
+                            data = comments,
+                            prevCursor = prevCursor,
+                            nextCursor = nextCursor
+                        )
+                    )
                 }
 
                 is SaniouResult.Error -> {

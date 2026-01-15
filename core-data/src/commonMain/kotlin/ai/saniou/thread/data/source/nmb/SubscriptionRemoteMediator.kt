@@ -5,11 +5,11 @@ import ai.saniou.thread.data.paging.DefaultRemoteKeyStrategy
 import ai.saniou.thread.data.paging.GenericRemoteMediator
 import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
 import ai.saniou.thread.data.source.nmb.remote.dto.Feed
-import ai.saniou.thread.data.source.nmb.remote.dto.RemoteKeyType
 import ai.saniou.thread.data.source.nmb.remote.dto.nowToEpochMilliseconds
 import ai.saniou.thread.data.source.nmb.remote.dto.toTable
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.db.table.forum.SelectSubscriptionTopic
+import ai.saniou.thread.domain.model.PagedResult
 import ai.saniou.thread.network.toResult
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.LoadType
@@ -24,21 +24,30 @@ class SubscriptionRemoteMediator(
     private val dataPolicy: DataPolicy,
 ) : RemoteMediator<Int, SelectSubscriptionTopic>() {
 
-    private val delegate = GenericRemoteMediator<Int, SelectSubscriptionTopic, Feed>(
+    private val delegate = GenericRemoteMediator<SelectSubscriptionTopic, Feed>(
         db = db,
         dataPolicy = dataPolicy,
-        initialKey = 1,
         remoteKeyStrategy = DefaultRemoteKeyStrategy(
             db = db,
-            type = RemoteKeyType.SUBSCRIBE,
-            id = subscriptionKey,
-            serializer = { it.toString() },
-            deserializer = { it.toInt() }
+            type = "subscribe_$subscriptionKey",
+            itemTargetIdExtractor = { feed -> feed.id }
         ),
-        fetcher = { page -> forumRepository.feed(subscriptionKey, page.toLong()).toResult() },
-        saver = { feedDetail, page, loadType ->
+        fetcher = { cursor ->
+            val page = cursor?.toIntOrNull() ?: 1
+            forumRepository.feed(subscriptionKey, page.toLong()).toResult().map { feeds ->
+                val nextCursor = if (feeds.isNotEmpty()) (page + 1).toString() else null
+                val prevCursor = if (page > 1) (page - 1).toString() else null
+                PagedResult(feeds, prevCursor, nextCursor)
+            }
+        },
+        saver = { feedDetail, loadType ->
             if (loadType == LoadType.REFRESH) {
                 db.subscriptionQueries.deleteCloudSubscriptions(subscriptionKey)
+            }
+
+            // Infer page from DB count for APPEND, 1 for REFRESH
+            val page = if (loadType == LoadType.REFRESH) 1L else {
+                 (db.subscriptionQueries.countSubscriptionsBySubscriptionKey(subscriptionKey).executeAsOne() / 19) + 1
             }
 
             feedDetail.forEach { feed ->
@@ -49,22 +58,20 @@ class SubscriptionRemoteMediator(
                     subscriptionKey = subscriptionKey,
                     sourceId = "nmb",
                     topicId = feed.id.toString(),
-                    page = page.toLong(),
+                    page = page,
                     subscriptionTime = feed.now.nowToEpochMilliseconds(),
                     isLocal = 0
                 )
             }
         },
-        endOfPaginationReached = { it.isEmpty() },
-        cacheChecker = { page ->
+        itemTargetIdExtractor = { feed -> feed.id.toString() },
+        cacheChecker = { cursor ->
+            val page = cursor?.toIntOrNull() ?: 1
             val subscriptionsInDb = db.subscriptionQueries
                 .countSubscriptionsBySubscriptionKeyAndPage(subscriptionKey, page.toLong())
                 .executeAsOne()
             subscriptionsInDb > 0
-        },
-        nextKeyProvider = { key, _ -> key + 1 },
-        prevKeyProvider = { key, _ -> if (key > 1) key - 1 else null },
-        itemsExtractor = { it },
+        }
     )
 
     override suspend fun load(

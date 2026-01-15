@@ -12,8 +12,9 @@ import ai.saniou.thread.data.source.discourse.remote.DiscourseApi
 import ai.saniou.thread.data.source.discourse.remote.dto.DiscourseTopic
 import ai.saniou.thread.data.source.discourse.remote.dto.DiscourseUser
 import ai.saniou.thread.data.source.discourse.remote.dto.toComment
-import ai.saniou.thread.data.source.nmb.remote.dto.RemoteKeyType
+import ai.saniou.thread.data.source.discourse.remote.dto.toDomainComment
 import ai.saniou.thread.db.Database
+import ai.saniou.thread.domain.model.PagedResult
 import ai.saniou.thread.domain.model.forum.Author
 import ai.saniou.thread.domain.model.user.LoginStrategy
 import ai.saniou.thread.domain.repository.SettingsRepository
@@ -65,7 +66,7 @@ class DiscourseSource(
     override suspend fun fetchChannels(): Result<Unit> {
         val needUpdate = CacheStrategy.shouldFetch(
             db = db,
-            keyType = RemoteKeyType.FORUM_CATEGORY,
+            keyType = "forum_category",
             keyId = "${id}_forums",
             expiration = 1.days
         )
@@ -86,7 +87,7 @@ class DiscourseSource(
 
                     CacheStrategy.updateLastFetchTime(
                         db = db,
-                        keyType = RemoteKeyType.FORUM_CATEGORY,
+                        keyType = "forum_category",
                         keyId = "${id}_forums"
                     )
 
@@ -133,14 +134,17 @@ class DiscourseSource(
 
     override suspend fun getChannelTopics(
         channelId: String,
-        page: Int,
+        cursor: String?,
         isTimeline: Boolean,
-    ): Result<List<Topic>> {
+    ): Result<PagedResult<Topic>> {
         // Discourse API mapping
         // Assuming channelId is Category ID? Or 'latest' endpoint?
         // DiscourseRemoteMediator logic:
         // if (fid == "0" || fid == "latest") -> getLatestPosts
         // else -> getCategoryTopics
+        val page = cursor?.toIntOrNull() ?: 0 // Discourse pages start at 0? Or 1? Usually 0 for some APIs, but let's assume 0 based on previous code usage?
+        // Previous code used `page: Int` directly.
+        // Let's assume 0-based for now if not specified.
 
         return try {
             val result = if (channelId == "0" || channelId == "latest") {
@@ -156,7 +160,11 @@ class DiscourseSource(
                     val topics = result.data.topicList.topics.map { topic ->
                         topic.toPost(usersMap)
                     }
-                    Result.success(topics)
+
+                    val nextCursor = if (topics.isNotEmpty()) (page + 1).toString() else null
+                    val prevCursor = if (page > 0) (page - 1).toString() else null
+
+                    Result.success(PagedResult(topics, prevCursor, nextCursor))
                 }
 
                 is SaniouResult.Error -> Result.failure(result.ex)
@@ -169,11 +177,10 @@ class DiscourseSource(
 
     override suspend fun getTopicComments(
         threadId: String,
-        commentKey: Any,
+        cursor: String?,
         isPoOnly: Boolean,
-    ): Result<List<Comment>> {
-        commentKey as CommentKey
-        val page = (commentKey.floor / 20 + 1).toInt()
+    ): Result<PagedResult<Comment>> {
+        val page = cursor?.toIntOrNull() ?: 1
         if (isPoOnly) {
             // Discourse API doesn't support PO only easily in this endpoint?
             // Or we need to filter locally but that breaks pagination consistency if we rely on API pagination.
@@ -185,20 +192,24 @@ class DiscourseSource(
                 try {
                     val response = result.data
                     val comments = response.postStream.posts.map { discoursePost ->
-                        discoursePost.toComment(
+                        discoursePost.toDomainComment(
                             sourceId = id,
                             threadId = response.id.toString(),
                             page = page
                         ).copy(sourceId = id)
                     }
-                    Result.success(comments)
+
+                    val nextCursor = if (comments.isNotEmpty()) (page + 1).toString() else null
+                    val prevCursor = if (page > 1) (page - 1).toString() else null
+
+                    Result.success(PagedResult(comments, prevCursor, nextCursor))
                 } catch (e: Exception) {
                     Result.failure(e)
                 }
             }
 
             is SaniouResult.Error -> Result.failure(result.ex)
-        } as Result<List<Comment>>
+        }
     }
 
     override suspend fun getTopicDetail(threadId: String, page: Int): Result<Topic> {

@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS Topic (
     lastVisitedAt INTEGER,
     lastViewedCommentId TEXT,
     receiveDate INTEGER NOT NULL DEFAULT 0, -- 本地接收时间，用于缓存版本控制
-
+    receiveOrder INTEGER NOT NULL DEFAULT 0, -- 本地接收时间对应的顺序,
     PRIMARY KEY (sourceId, id)
 );
 
@@ -29,12 +29,13 @@ CREATE INDEX IF NOT EXISTS idx_topic_last_key ON Topic(lastReplyAt);
 CREATE INDEX IF NOT EXISTS idx_topic_last_access_time ON Topic(lastVisitedAt);
 CREATE INDEX IF NOT EXISTS idx_topic_channel_id ON Topic(sourceId, channelId);
 CREATE INDEX IF NOT EXISTS idx_topic_receive_date ON Topic(receiveDate);
+CREATE INDEX IF NOT EXISTS idx_topic_receive_order ON Topic(receiveOrder);
 
 -- 插入 Topic 数据 (无 Page)
 upsertTopicNoPage:
 INSERT INTO Topic (
     id, sourceId, channelId, commentCount, authorId, authorName, title, content, summary, page,
-    agreeCount, disagreeCount, isCollected, createdAt, lastReplyAt, receiveDate
+    agreeCount, disagreeCount, isCollected, createdAt, lastReplyAt, receiveDate, receiveOrder
 ) VALUES ?
 ON CONFLICT (sourceId, id) DO UPDATE SET
     commentCount = excluded.commentCount,
@@ -48,14 +49,15 @@ ON CONFLICT (sourceId, id) DO UPDATE SET
     isCollected = excluded.isCollected,
     createdAt = excluded.createdAt,
     lastReplyAt = excluded.lastReplyAt,
-    receiveDate = excluded.receiveDate;
+    receiveDate = excluded.receiveDate,
+    receiveOrder = excluded.receiveOrder;
     -- lastVisitedAt and lastViewedCommentId are preserved (not updated)
 
 -- 插入 Topic 数据
 upsertTopic:
 INSERT INTO Topic (
     id, sourceId, channelId, commentCount, authorId, authorName, title, content, summary, page,
-    agreeCount, disagreeCount, isCollected, createdAt, lastReplyAt, receiveDate
+    agreeCount, disagreeCount, isCollected, createdAt, lastReplyAt, receiveDate, receiveOrder
 ) VALUES ?
 ON CONFLICT (sourceId, id) DO UPDATE SET
     channelId = excluded.channelId,
@@ -71,7 +73,8 @@ ON CONFLICT (sourceId, id) DO UPDATE SET
     isCollected = excluded.isCollected,
     createdAt = excluded.createdAt,
     lastReplyAt = excluded.lastReplyAt,
-    receiveDate = excluded.receiveDate;
+    receiveDate = excluded.receiveDate,
+    receiveOrder = excluded.receiveOrder;
     -- lastVisitedAt and lastViewedCommentId are preserved (not updated)
 
 -- 查询 Topic 数据 (方法名保留原逻辑但改名)
@@ -157,12 +160,8 @@ WHERE Topic.sourceId = :sourceId
       OR
       (receiveDate = (SELECT MAX(receiveDate) FROM Topic WHERE sourceId = :sourceId AND channelId = :channelId))
   )
-  AND (
-      lastReplyAt < :lastReplyAt
-      OR (lastReplyAt = :lastReplyAt AND id < :lastId)
-  )
-ORDER BY lastReplyAt DESC, id DESC
-LIMIT :limit;
+ORDER BY receiveOrder ASC, id DESC
+LIMIT :limit OFFSET :offset;
 
 updateTopicLastAccessTime:
 UPDATE Topic SET lastVisitedAt = :last_access_time WHERE sourceId = :sourceId AND id = :id;

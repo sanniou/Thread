@@ -85,29 +85,24 @@ class SqlDelightSourceCache(
         sourceId: String,
         channelId: String,
         isFallback: Boolean,
-    ): PagingSource<TopicKey, Topic> {
-        return KeysetPagingSource(
+    ): PagingSource<Int, Topic> {
+        return QueryPagingSource(
             transacter = topicQueries,
             context = Dispatchers.IO,
-            countQueryProvider = {
+            countQuery =
                 topicQueries.countTopicsByChannel(
                     sourceId = sourceId,
                     channelId = channelId,
                     isFallback = if (isFallback) 1L else 0L
-                )
-            },
-            queryProvider = { key, limit ->
+                ),
+            queryProvider = { limit, offset ->
                 topicQueries.getTopicsInChannelKeyset(
                     sourceId = sourceId,
                     channelId = channelId,
                     isFallback = if (isFallback) 1L else 0L,
-                    lastReplyAt = key?.receiveDate ?: Long.MAX_VALUE,
-                    lastId = key?.topicId ?: "",
-                    limit = limit
+                    limit = limit,
+                    offset = offset,
                 )
-            },
-            keyExtractor = { topic ->
-                TopicKey(topic.lastReplyAt, topic.id)
             }
         )
     }
@@ -128,8 +123,9 @@ class SqlDelightSourceCache(
             // 0. Determine Receive Date
             // If receiveDate is provided (REFRESH), use it.
             // If not provided (APPEND), find the current MAX receiveDate for this channel to maintain consistency.
-            val effectiveReceiveDate = receiveDate ?: topicQueries.getMaxReceiveDate(sourceId, channelId)
-                .executeAsOneOrNull()?.MAX ?: 0L
+            val effectiveReceiveDate =
+                receiveDate ?: topicQueries.getMaxReceiveDate(sourceId, channelId)
+                    .executeAsOneOrNull()?.MAX ?: 0L
 
             // 1. 清理旧数据: 将数据库中 page >= 当前page 的数据全部 +1 ，用作于缓存
             // 新的缓存策略不基于 page， 而是 receiveDate，所以未来可以删除
@@ -140,7 +136,8 @@ class SqlDelightSourceCache(
             // 2. 保存新数据
             topics.forEach { topic ->
                 val topicPage = page ?: 1
-                val topicEntity = topic.toEntity(page = topicPage, receiveDate = effectiveReceiveDate)
+                val topicEntity =
+                    topic.toEntity(page = topicPage, receiveDate = effectiveReceiveDate)
                 topicQueries.upsertTopic(topicEntity)
 
                 // Save Tags
@@ -189,11 +186,14 @@ class SqlDelightSourceCache(
     }
 
 
-    override suspend fun saveComments(comments: List<DomainComment>, sourceId: String, cursor: CommentKey) {
+    override suspend fun saveComments(
+        comments: List<DomainComment>,
+        sourceId: String
+    ) {
         commentQueries.transaction {
             comments.forEach { comment ->
                 commentQueries.upsertComment(
-                    comment.toEntity(sourceId, cursor.floor)
+                    comment.toEntity(sourceId, comment.floor)
                 )
                 // Save Comment Images
                 comment.images.forEachIndexed { index, image ->

@@ -1,5 +1,6 @@
 package ai.saniou.thread.data.source.nga
 
+import ai.saniou.thread.domain.model.PagedResult
 import ai.saniou.thread.domain.model.forum.Channel
 import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.model.user.LoginStrategy
@@ -34,10 +35,10 @@ class NgaSource : Source {
 
     override suspend fun getChannelTopics(
         channelId: String,
-        page: Int,
-        isTimeline: Boolean
-    ): Result<List<Topic>> {
-        return Result.success(emptyList()) // Stub
+        cursor: String?,
+        isTimeline: Boolean,
+    ): Result<PagedResult<Topic>> {
+        return Result.failure(NotImplementedError("NGA channel topics not implemented"))
     }
 
 

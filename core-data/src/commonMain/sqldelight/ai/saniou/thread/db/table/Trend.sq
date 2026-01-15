@@ -113,9 +113,8 @@ FROM TrendDetailView
 WHERE sourceId = :sourceId
   AND tabId = :tabId
   AND date = :date
-  AND rank > :lastRank
 ORDER BY rank ASC
-LIMIT :limit;
+LIMIT :limit OFFSET :offset;
 
 -- 查询 2：使用 Keyset Paging (基于 ReceiveDate)
 getRealtimeTrendsKeyset:
@@ -123,9 +122,8 @@ SELECT *
 FROM TrendDetailView
 WHERE sourceId = :sourceId
   AND tabId = :tabId
-  AND receiveDate < :lastReceiveDate
 ORDER BY receiveDate DESC
-LIMIT :limit;
+LIMIT :limit OFFSET :offset;
 
 deleteTrendsByTabAndDate:
 DELETE FROM Trend WHERE sourceId = :sourceId AND tabId = :tabId AND date = :date;

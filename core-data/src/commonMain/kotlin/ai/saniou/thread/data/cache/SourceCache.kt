@@ -35,7 +35,7 @@ interface SourceCache {
         sourceId: String,
         channelId: String,
         isFallback: Boolean = false,
-    ): PagingSource<TopicKey, DbTopic>
+    ): PagingSource<Int, DbTopic>
 
     /**
      * 保存帖子详情
@@ -63,7 +63,7 @@ interface SourceCache {
     /**
      * 保存回复列表
      */
-    suspend fun saveComments(comments: List<DomainComment>, sourceId: String, cursor: CommentKey)
+    suspend fun saveComments(comments: List<DomainComment>, sourceId: String)
 
     /**
      * 清除指定板块的缓存

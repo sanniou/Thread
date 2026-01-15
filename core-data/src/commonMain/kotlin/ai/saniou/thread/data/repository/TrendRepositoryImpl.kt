@@ -5,16 +5,17 @@ import ai.saniou.thread.data.paging.DataPolicy
 import ai.saniou.thread.data.paging.DefaultRemoteKeyStrategy
 import ai.saniou.thread.data.paging.GenericRemoteMediator
 import ai.saniou.thread.data.paging.KeysetPagingSource
-import ai.saniou.thread.data.source.nmb.remote.dto.RemoteKeyType
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.db.table.Trend
 import ai.saniou.thread.db.table.TrendDetailView
+import ai.saniou.thread.domain.model.PagedResult
 import ai.saniou.thread.domain.model.TrendItem
 import ai.saniou.thread.domain.model.TrendParams
 import ai.saniou.thread.domain.model.TrendTab
 import ai.saniou.thread.domain.repository.TrendRepository
 import ai.saniou.thread.domain.source.TrendSource
 import androidx.paging.*
+import app.cash.sqldelight.paging3.QueryPagingSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
@@ -28,7 +29,7 @@ import kotlin.time.Clock
 
 class TrendRepositoryImpl(
     private val sources: Set<TrendSource>, // Injected by DI
-    private val db: Database
+    private val db: Database,
 ) : TrendRepository {
 
     private val sourceMap by lazy { sources.associateBy { it.id } }
@@ -42,7 +43,11 @@ class TrendRepositoryImpl(
     }
 
     @OptIn(ExperimentalPagingApi::class)
-    override fun getTrendPagingData(sourceId: String, tab: TrendTab, params: TrendParams): Flow<PagingData<TrendItem>> {
+    override fun getTrendPagingData(
+        sourceId: String,
+        tab: TrendTab,
+        params: TrendParams,
+    ): Flow<PagingData<TrendItem>> {
         val source = getTrendSource(sourceId) ?: return emptyFlow()
 
         val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
@@ -56,22 +61,44 @@ class TrendRepositoryImpl(
 
         val remoteKeyId = "${source.id}_${tab.id}_$targetDate"
 
-        val mediator = GenericRemoteMediator<Long, TrendDetailView, TrendItem>(
+        val mediator = GenericRemoteMediator<TrendDetailView, TrendItem>(
             db = db,
             dataPolicy = if (params.refreshId > 0) DataPolicy.NETWORK_ONLY else DataPolicy.CACHE_ELSE_NETWORK,
-            initialKey = if (isRankMode) 1L else Long.MAX_VALUE,
             remoteKeyStrategy = DefaultRemoteKeyStrategy(
                 db = db,
-                type = RemoteKeyType.TREND,
-                id = remoteKeyId,
-                serializer = { it.toString() },
-                deserializer = { it.toLong() }
+                type = "trend_$remoteKeyId",
+                itemTargetIdExtractor = { item -> item.topicId }
             ),
-            fetcher = { key ->
-                // Convert Long Key to String cursor for Source
-                source.fetchTrendData(tab, params, key.toString())
+            fetcher = { cursor ->
+                // Convert String cursor to Source fetch
+                // Note: TrendSource.fetchTrendData returns Result<List<TrendItem>> currently.
+                // We need to wrap it in PagedResult.
+                // And we need to manually calculate next cursor if source doesn't provide it.
+                source.fetchTrendData(tab, params, cursor).map { items ->
+                    // Calculate next cursor
+                    // If items is empty, next is null.
+                    // If items is not empty, we need to know how to get next key.
+                    // For Rank mode: next page = current page + 1? Or offset?
+                    // For Realtime mode: next key = last item receiveDate.
+
+                    val nextCursor = if (source.trendDataEnded(tab, params, items)) {
+                        null
+                    } else {
+                        if (isRankMode) {
+                            // Rank mode usually uses page or offset.
+                            // Assuming cursor is page number string.
+                            val page = cursor?.toIntOrNull() ?: 1
+                            (page + 1).toString()
+                        } else {
+                            // Realtime mode uses timestamp
+                            items.lastOrNull()?.receiveDate?.toString()
+                        }
+                    }
+
+                    PagedResult(items, null, nextCursor)
+                }
             },
-            saver = { items, key, loadType ->
+            saver = { items, loadType ->
                 if (loadType == LoadType.REFRESH) {
                     if (isRankMode) {
                         db.trendQueries.deleteTrendsByTabAndDate(source.id, tab.id, targetDate)
@@ -110,14 +137,12 @@ class TrendRepositoryImpl(
                     )
                 }
             },
-            itemsExtractor = { it },
-            endOfPaginationReached = { items ->
-                source.trendDataEnded(tab, params, items)
-            },
-            cacheChecker = { key ->
+            itemTargetIdExtractor = { item -> item.topicId },
+            cacheChecker = { cursor ->
                 if (isRankMode) {
                     // Check if we have data for this specific date
-                    val count = db.trendQueries.countTrends(source.id, tab.id, targetDate).executeAsOne()
+                    val count =
+                        db.trendQueries.countTrends(source.id, tab.id, targetDate).executeAsOne()
                     count > 0
                 } else {
                     // For realtime, check if we have data older than key
@@ -131,9 +156,6 @@ class TrendRepositoryImpl(
                     // unless we implement a specific count query.
                     false
                 }
-            },
-            keyExtractor = { item ->
-                if (isRankMode) item.rank?.toLong() ?: 0L else item.receiveDate
             }
         )
 
@@ -142,39 +164,39 @@ class TrendRepositoryImpl(
             remoteMediator = mediator,
             pagingSourceFactory = {
                 if (isRankMode) {
-                    KeysetPagingSource(
+                    QueryPagingSource(
                         transacter = db.trendQueries,
                         context = Dispatchers.IO,
-                        queryProvider = { key, limit ->
+                        queryProvider = { limit, offset ->
                             db.trendQueries.getTrendsKeyset(
                                 sourceId = source.id,
                                 tabId = tab.id,
                                 date = targetDate,
-                                lastRank = key?: 0,
+                                offset = offset,
                                 limit = limit
                             )
                         },
-                        countQueryProvider = {
+                        countQuery =
                             db.trendQueries.countTrends(source.id, tab.id, targetDate)
-                        },
-                        keyExtractor = { trend -> trend.rank.toLong() }
                     )
                 } else {
-                    KeysetPagingSource(
+                    QueryPagingSource(
                         transacter = db.trendQueries,
                         context = Dispatchers.IO,
-                        queryProvider = { key, limit ->
+                        queryProvider = { limit, offset ->
                             db.trendQueries.getRealtimeTrendsKeyset(
                                 sourceId = source.id,
                                 tabId = tab.id,
-                                lastReceiveDate = key ?: Long.MAX_VALUE,
+                                offset = offset,
                                 limit = limit
                             )
                         },
-                        countQueryProvider = {
-                            db.trendQueries.countTrends(source.id, tab.id, targetDate) // This count might be inaccurate for realtime but ok for invalidation
-                        },
-                        keyExtractor = { trend -> trend.receiveDate }
+                        countQuery =
+                            db.trendQueries.countTrends(
+                                source.id,
+                                tab.id,
+                                targetDate
+                            ), // This count might be inaccurate for realtime but ok for invalidation
                     )
                 }
             }

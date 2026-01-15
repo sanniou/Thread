@@ -168,9 +168,8 @@ getCommentsKeyset:
 SELECT * FROM Comment
 WHERE sourceId = :sourceId
   AND topicId = :topicId
-  AND floor > :lastFloor
 ORDER BY floor ASC
-LIMIT :limit;
+LIMIT :limit OFFSET :offset;
 
 getCommentsPoModeKeyset:
 SELECT Comment.*
@@ -179,9 +178,8 @@ JOIN Topic ON Comment.sourceId = Topic.sourceId AND Comment.topicId = Topic.id
 WHERE Comment.sourceId = :sourceId
   AND Comment.topicId = :topicId
   AND Comment.userHash = Topic.authorId
-  AND Comment.floor > :lastFloor
 ORDER BY Comment.floor ASC
-LIMIT :limit;
+LIMIT :limit OFFSET :offset;
 
 searchComments:
 SELECT * FROM Comment

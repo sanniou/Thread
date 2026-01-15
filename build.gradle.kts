@@ -12,9 +12,10 @@ plugins {
 
 allprojects {
     configurations.all {
-        resolutionStrategy {
-            cacheChangingModulesFor(365, "days")
-        }
+        resolutionStrategy.cacheChangingModulesFor(30, TimeUnit.DAYS) // Check once a month
+        // Or for SNAPSHOTS specifically (dynamic versions)
+        resolutionStrategy.cacheDynamicVersionsFor(30, TimeUnit.DAYS)
     }
 }
+
 

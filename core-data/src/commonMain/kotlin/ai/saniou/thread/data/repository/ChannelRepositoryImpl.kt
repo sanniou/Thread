@@ -7,7 +7,6 @@ import ai.saniou.thread.data.model.TopicKey
 import ai.saniou.thread.data.paging.DataPolicy
 import ai.saniou.thread.data.paging.DefaultRemoteKeyStrategy
 import ai.saniou.thread.data.paging.GenericRemoteMediator
-import ai.saniou.thread.data.source.nmb.remote.dto.RemoteKeyType
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.domain.model.forum.Channel
 import ai.saniou.thread.domain.model.forum.Topic
@@ -133,39 +132,30 @@ class ChannelRepositoryImpl(
 
         return Pager(
             config = PagingConfig(pageSize = pageSize),
-            initialKey = initialKey,
+            initialKey = initialPage,
             remoteMediator = GenericRemoteMediator(
                 db = db,
                 dataPolicy = DataPolicy.NETWORK_ELSE_CACHE,
-                initialKey = initialKey,
                 remoteKeyStrategy = DefaultRemoteKeyStrategy(
                     db = db,
-                    type = RemoteKeyType.CHANNEL,
-                    id = "${sourceId}_${channelId}_${isTimeline}",
-                    serializer = { it.toString() },
-                    deserializer = { TopicKey.fromString(it) }
+                    type = "channel_${sourceId}_${channelId}_${isTimeline}",
+                    itemTargetIdExtractor = { topic -> topic.id }
                 ),
-                fetcher = { key ->
-                    // Pass the key as cursor string to the source
-                    source.getChannelTopics(channelId, key, isTimeline)
+                fetcher = { cursor ->
+                    // Pass the cursor string to the source
+                    source.getChannelTopics(channelId, cursor, isTimeline)
                 },
-                saver = { topics, _, loadType ->
+                saver = { topics, loadType ->
                     cache.saveTopics(
                         topics = topics,
-                        clearPage = true,
+                        clearPage = loadType == LoadType.REFRESH,
                         sourceId = sourceId,
                         channelId = channelId,
                         page = null, // Keyset paging doesn't use page numbers
                         receiveDate = initialKey.receiveDate
                     )
                 },
-                itemsExtractor = { it },
-                endOfPaginationReached = {
-                    it.size < pageSize
-                },
-                keyExtractor = { topic ->
-                    TopicKey(topic.receiveDate, topic.id, topic.toEntity())
-                }
+                itemTargetIdExtractor = { topic -> topic.id }
             ),
             pagingSourceFactory = {
                 // Use the new KeysetPagingSource from Cache

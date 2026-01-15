@@ -11,6 +11,7 @@ import ai.saniou.thread.data.source.tieba.remote.TiebaProtoBuilder
 import ai.saniou.thread.data.source.tieba.remote.WebTiebaApi
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.domain.model.FeedType
+import ai.saniou.thread.domain.model.PagedResult
 import ai.saniou.thread.domain.model.forum.Channel
 import ai.saniou.thread.domain.model.forum.Comment
 import ai.saniou.thread.domain.model.forum.Topic
@@ -110,10 +111,16 @@ class TiebaSource(
 
     override suspend fun getChannelTopics(
         channelId: String,
-        page: Int,
+        cursor: String?,
         isTimeline: Boolean,
-    ): Result<List<Topic>> = runCatching {
-        fetchForumTopics(channelId, page)
+    ): Result<PagedResult<Topic>> {
+        val page = cursor?.toIntOrNull() ?: 1
+        return runCatching {
+            val topics = fetchForumTopics(channelId, page)
+            val nextCursor = if (topics.isNotEmpty()) (page + 1).toString() else null
+            val prevCursor = if (page > 1) (page - 1).toString() else null
+            PagedResult(topics, prevCursor, nextCursor)
+        }
     }
 
     private suspend fun fetchForumTopics(channelId: String, page: Int): List<Topic> {
@@ -162,9 +169,9 @@ class TiebaSource(
 
     override suspend fun getTopicComments(
         threadId: String,
-        cursor: Any,
+        cursor: String?,
         isPoOnly: Boolean,
-    ): Result<List<Comment>> = runCatching {
+    ): Result<PagedResult<Comment>> = runCatching {
         cursor as CommentKey
         val page = (cursor.floor / 20 + 1).toInt()
         val kz =
@@ -202,7 +209,10 @@ class TiebaSource(
             throw Exception("Failed to fetch topic comments: ${response.error?.error_msg} (Code: ${response.error?.error_code})")
         }
 
-        TiebaMapper.mapPbPageResponseToComments(response, threadId)
+        val comments = TiebaMapper.mapPbPageResponseToComments(response, threadId)
+        val nextCursor = if (comments.isNotEmpty()) (page + 1).toString() else null
+        val prevCursor = if (page > 1) (page - 1).toString() else null
+        PagedResult(comments, prevCursor, nextCursor)
     }
 
     override suspend fun getTopicDetail(threadId: String, page: Int): Result<Topic> = runCatching {
