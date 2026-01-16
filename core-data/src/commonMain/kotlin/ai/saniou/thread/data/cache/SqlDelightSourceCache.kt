@@ -84,48 +84,7 @@ class SqlDelightSourceCache(
         sourceId: String,
         channelId: String,
         isFallback: Boolean,
-    ): PagingSource<Int, Topic> {
-        // Note: getTopicsInChannelKeyset now returns a projection (GetTopicsInChannelKeyset)
-        // which contains Topic fields + receiveDate/Order.
-        // We need to map it back to Topic entity or a compatible type.
-        // Since PagingSource expects <Int, Topic>, and Topic entity no longer has receiveDate,
-        // we might need to change the return type of this method or map it.
-        // However, GenericRemoteMediator needs the metadata.
-        // The cleanest way is to let PagingSource return the Projection, and map it in Repository.
-        // But SourceCache interface defines PagingSource<Int, Topic>.
-        // We should change SourceCache interface to return PagingSource<Int, GetTopicsInChannelKeyset> or similar?
-        // Or, we map it to Topic here, but we lose metadata?
-        // Wait, we can construct a Topic entity (if it had the fields). It doesn't.
-        // So we MUST change the SourceCache interface or use a wrapper.
-        // Given the constraints, I will map it to Topic (Entity) and attach metadata via a side channel or
-        // assume the Repository handles the mapping from Projection to Domain.
-        // Actually, `ChannelRepositoryImpl` expects `PagingSource<Int, Topic>`.
-        // And `GenericRemoteMediator` uses `lastItemMetadataExtractor`.
-        // If `Topic` entity doesn't have the fields, we are stuck.
-        // I will change the return type of `getChannelTopicPagingSource` to `PagingSource<Int, GetTopicsInChannelKeyset>`
-        // But `GetTopicsInChannelKeyset` is generated code.
-        // I'll use `Any` or a custom interface? No.
-        // Let's map it to a new data class `TopicWithMetadata` in Domain or Data?
-        // For now, to minimize changes, I will map it to `Topic` entity and put `receiveDate` into `lastVisitedAt` (hack) or similar? No.
-        // I will change the SourceCache interface to return `PagingSource<Int, out Any>`.
-        // Or better: Update `SourceCache` to return `PagingSource<Int, TopicWithListing>`.
-        // Since I cannot easily change generated code, I will cast or change the interface.
-        // Let's assume I can change SourceCache.
-        // But wait, `Topic` in `PagingSource<Int, Topic>` refers to the Entity `ai.saniou.thread.db.table.forum.Topic`.
-        // I will change the query to return `Topic` and I will fetch metadata separately? No, performance.
-        // I will change `SourceCache` to return `PagingSource<Int, GetTopicsInChannelKeyset>`.
-        // But `GetTopicsInChannelKeyset` is internal to SqlDelight.
-        // I will use `QueryPagingSource` with a mapper.
-        // `topicQueries.getTopicsInChannelKeyset` returns `Query<GetTopicsInChannelKeyset>`.
-        // I can map it to `Topic` but I lose metadata.
-        // I will change `Topic` entity? No, it's generated.
-        // I will change `SourceCache` to return `PagingSource<Int, TopicWithListing>`.
-        // I need to define `TopicWithListing`.
-        // Let's define it in `SourceCache.kt` or `Topic.sq` (as a view?).
-        // Actually, `GetTopicsInChannelKeyset` IS the class I want.
-        // I will just use it.
-        // But I need to import it.
-        // It is generated in `ai.saniou.thread.db.table.forum`.
+    ): PagingSource<Int, GetTopicsInChannelKeyset> {
         return QueryPagingSource(
             transacter = topicQueries,
             context = Dispatchers.IO,
@@ -142,30 +101,9 @@ class SqlDelightSourceCache(
                     isFallback = if (isFallback) 1L else 0L,
                     limit = limit,
                     offset = offset,
-                    mapper = { id, sourceId_, channelId_, commentCount, authorId, authorName, title, content, summary, agreeCount, disagreeCount, isCollected, createdAt, lastReplyAt, lastVisitedAt, lastViewedCommentId, receiveDate, receiveOrder ->
-                        // We need to return something that holds all this.
-                        // Since we can't change Topic entity, let's return a custom data class or the generated one.
-                        // But QueryPagingSource expects a query that returns T.
-                        // `getTopicsInChannelKeyset` returns `GetTopicsInChannelKeyset`.
-                        // So T is `GetTopicsInChannelKeyset`.
-                        // But the function signature says `PagingSource<Int, Topic>`.
-                        // I must change the signature.
-                        // I will cast it for now to `Any` in the implementation and fix the interface.
-                        // Or I construct a `Topic` and lose metadata?
-                        // No, metadata is crucial for Paging.
-                        // I will return `Topic` but I will overload `Topic`? No.
-                        // I will change the interface `SourceCache` to `PagingSource<Int, TopicWithListing>`.
-                        // And `TopicWithListing` will be a data class wrapping Topic and metadata.
-                        // For this diff, I will just return the QueryPagingSource and let the compiler error guide me to change the interface.
-                        // Wait, I can't leave it broken.
-                        // I will define `data class TopicWithListing` in this file for now.
-                        ai.saniou.thread.db.table.forum.GetTopicsInChannelKeyset(
-                            id, sourceId_, channelId_, commentCount, authorId, authorName, title, content, summary, agreeCount, disagreeCount, isCollected, createdAt, lastReplyAt, lastVisitedAt, lastViewedCommentId, receiveDate, receiveOrder
-                        )
-                    }
                 )
             }
-        ) as PagingSource<Int, Topic> // This cast is wrong but I need to change interface first.
+        )
     }
 
     override suspend fun saveTopic(topic: DomainTopic) {
