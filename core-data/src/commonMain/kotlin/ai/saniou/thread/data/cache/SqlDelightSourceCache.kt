@@ -19,7 +19,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.withContext
 import ai.saniou.thread.domain.model.forum.Comment as DomainComment
 import ai.saniou.thread.domain.model.forum.Topic as DomainTopic
 
@@ -124,68 +123,65 @@ class SqlDelightSourceCache(
         receiveDate: Long,
         startOrder: Long,
     ) {
-        withContext(Dispatchers.IO) {
-            topicQueries.transaction {
-
-                // 2. 保存新数据
-                topics.forEachIndexed { index, topic ->
-                    // 1. Upsert Topic Content
-                    topicQueries.upsertTopic(
-                        topic.toEntityNoLastKey()
+        topicQueries.transaction {
+            // 2. 保存新数据
+            topics.forEachIndexed { index, topic ->
+                // 1. Upsert Topic Content
+                topicQueries.upsertTopic(
+                    topic.toEntityNoLastKey()
+                )
+                // 2. Upsert Topic Listing
+                topicQueries.upsertTopicListing(
+                    TopicListing(
+                        sourceId = sourceId,
+                        topicId = topic.id,
+                        listType = "channel",
+                        listId = channelId,
+                        page = -1,// no page
+                        receiveDate = receiveDate,
+                        receiveOrder = startOrder + index + 1
                     )
-                    // 2. Upsert Topic Listing
-                    topicQueries.upsertTopicListing(
-                        TopicListing(
-                            sourceId = sourceId,
+                )
+
+                // Save Tags
+                topic.tags.forEach { tag ->
+                    db.tagQueries.insert(tag.toEntity())
+                    topicTagQueries.insert(
+                        TopicTag(
+                            sourceId = topic.sourceId,
                             topicId = topic.id,
-                            listType = "channel",
-                            listId = channelId,
-                            page = -1,// no page
-                            receiveDate = receiveDate,
-                            receiveOrder = startOrder + index + 1
+                            tagId = tag.id
                         )
                     )
+                }
 
-                    // Save Tags
-                    topic.tags.forEach { tag ->
-                        db.tagQueries.insert(tag.toEntity())
-                        topicTagQueries.insert(
-                            TopicTag(
-                                sourceId = topic.sourceId,
-                                topicId = topic.id,
-                                tagId = tag.id
-                            )
+                // Save Images
+                topic.images.forEachIndexed { index, image ->
+                    db.imageQueries.upsertImage(
+                        image.toEntity(
+                            sourceId = sourceId,
+                            parentId = topic.id,
+                            parentType = ImageType.Topic,
+                            sortOrder = index.toLong()
                         )
-                    }
+                    )
+                }
 
-                    // Save Images
-                    topic.images.forEachIndexed { index, image ->
+                // Save Preview Comments
+                topic.comments.forEach { comment ->
+                    commentQueries.upsertComment(
+                        comment.toEntity(sourceId, Long.MIN_VALUE)
+                    )
+                    // Save Comment Images
+                    comment.images.forEachIndexed { index, image ->
                         db.imageQueries.upsertImage(
                             image.toEntity(
                                 sourceId = sourceId,
-                                parentId = topic.id,
-                                parentType = ImageType.Topic,
+                                parentId = comment.id,
+                                parentType = ImageType.Comment,
                                 sortOrder = index.toLong()
                             )
                         )
-                    }
-
-                    // Save Preview Comments
-                    topic.comments.forEach { comment ->
-                        commentQueries.upsertComment(
-                            comment.toEntity(sourceId, Long.MIN_VALUE)
-                        )
-                        // Save Comment Images
-                        comment.images.forEachIndexed { index, image ->
-                            db.imageQueries.upsertImage(
-                                image.toEntity(
-                                    sourceId = sourceId,
-                                    parentId = comment.id,
-                                    parentType = ImageType.Comment,
-                                    sortOrder = index.toLong()
-                                )
-                            )
-                        }
                     }
                 }
             }

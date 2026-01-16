@@ -159,28 +159,7 @@ class ChannelRepositoryImpl(
             }
         ).flow.map { pagingData ->
             pagingData.map { item ->
-                // Map the projection back to Domain Topic
-                // We need to construct a Topic Entity first or map directly.
-                // Since toDomain expects Entity + Queries, we can construct Entity.
-                val topicEntity = ai.saniou.thread.db.table.forum.Topic(
-                    id = item.id,
-                    sourceId = item.sourceId,
-                    channelId = item.channelId,
-                    commentCount = item.commentCount,
-                    authorId = item.authorId,
-                    authorName = item.authorName,
-                    title = item.title,
-                    content = item.content,
-                    summary = item.summary,
-                    agreeCount = item.agreeCount,
-                    disagreeCount = item.disagreeCount,
-                    isCollected = item.isCollected,
-                    createdAt = item.createdAt,
-                    lastReplyAt = item.lastReplyAt,
-                    lastVisitedAt = item.lastVisitedAt,
-                    lastViewedCommentId = item.lastViewedCommentId
-                )
-                topicEntity.toDomain(db.commentQueries, db.imageQueries)
+                item.toDomain(db.commentQueries, db.imageQueries)
             }
         }
     }

@@ -3,6 +3,7 @@ package ai.saniou.thread.data.mapper
 
 import ai.saniou.thread.db.table.TopicTagQueries
 import ai.saniou.thread.db.table.forum.CommentQueries
+import ai.saniou.thread.db.table.forum.GetTopicsInChannelKeyset
 import ai.saniou.thread.db.table.forum.ImageQueries
 import ai.saniou.thread.domain.model.SourceCapabilities
 import ai.saniou.thread.domain.model.forum.Author
@@ -14,6 +15,55 @@ import ai.saniou.thread.db.table.forum.Topic as EntityTopic
 
 
 fun EntityTopic.toDomain(
+    commentQueries: CommentQueries? = null,
+    imageQueries: ImageQueries? = null,
+    topicTagQueries: TopicTagQueries? = null,
+): Topic {
+    val author = Author(
+        id = authorId,
+        name = authorName,
+        sourceName = sourceId
+    )
+
+    val images = imageQueries?.getImagesByParent(
+        sourceId = sourceId,
+        parentId = id,
+        parentType = ImageType.Topic
+    )?.executeAsList()?.map { it.toDomain() }
+        ?: emptyList()
+
+    val tags =
+        topicTagQueries?.getTagsForTopic(sourceId, id)?.executeAsList()?.map { it.toDomain() }
+            ?: emptyList()
+
+    return Topic(
+        id = id,
+        sourceName = sourceId,
+        sourceId = sourceId,
+        sourceUrl = "https://nmb.ai/thread/$id", // TODO: Move URL generation to Source logic
+        title = title,
+        content = content ?: summary ?: "",
+        summary = summary,
+        author = author,
+        createdAt = Instant.fromEpochMilliseconds(createdAt),
+        channelId = channelId,
+        channelName = "", // DB Topic table usually doesn't store channel name, need Join or lookup
+        commentCount = commentCount,
+        agreeCount = agreeCount,
+        disagreeCount = disagreeCount,
+        isCollected = isCollected,
+        images = images,
+        isLocal = false,
+        lastViewedCommentId = lastViewedCommentId,
+        comments = commentQueries?.getLastFiveComments(sourceId, id)?.executeAsList()?.map {
+            it.toDomain()
+        } ?: emptyList(),
+        tags = tags,
+        lastReplyAt = lastReplyAt,
+    )
+}
+
+fun GetTopicsInChannelKeyset.toDomain(
     commentQueries: CommentQueries? = null,
     imageQueries: ImageQueries? = null,
     topicTagQueries: TopicTagQueries? = null,
