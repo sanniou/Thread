@@ -170,7 +170,7 @@ class SqlDelightSourceCache(
                 // Save Preview Comments
                 topic.comments.forEach { comment ->
                     commentQueries.upsertComment(
-                        comment.toEntity(sourceId, Long.MIN_VALUE)
+                        comment.toEntity(sourceId, -1, -1)
                     )
                     // Save Comment Images
                     comment.images.forEachIndexed { index, image ->
@@ -192,11 +192,13 @@ class SqlDelightSourceCache(
     override suspend fun saveComments(
         comments: List<DomainComment>,
         sourceId: String,
+        receiveDate: Long,
+        startOrder: Long,
     ) {
         commentQueries.transaction {
-            comments.forEach { comment ->
+            comments.forEachIndexed { index, comment ->
                 commentQueries.upsertComment(
-                    comment.toEntity(sourceId, comment.floor)
+                    comment.toEntity(sourceId, -1, startOrder + index + 1)
                 )
                 // Save Comment Images
                 comment.images.forEachIndexed { index, image ->

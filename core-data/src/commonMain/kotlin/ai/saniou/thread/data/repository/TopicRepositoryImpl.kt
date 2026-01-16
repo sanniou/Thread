@@ -113,7 +113,7 @@ class TopicRepositoryImpl(
                     // In the new design, we should rely on the data itself.
                     // Let's pass null for page if possible, or fix SourceCache later.
                     // For now, passing null.
-                    cache.saveComments(comments, sourceId)
+                    cache.saveComments(comments, sourceId, receiveDate, startOrder)
                 },
                 itemTargetIdExtractor = { comment -> comment.id },
                 cacheChecker = { cursor ->

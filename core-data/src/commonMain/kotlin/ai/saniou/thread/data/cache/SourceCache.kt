@@ -1,14 +1,11 @@
 package ai.saniou.thread.data.cache
 
-import ai.saniou.thread.data.model.CommentKey
-import ai.saniou.thread.data.model.TopicKey
 import ai.saniou.thread.db.table.forum.Channel
 import ai.saniou.thread.db.table.forum.Comment
 import ai.saniou.thread.db.table.forum.GetTopicsInChannelKeyset
 import ai.saniou.thread.domain.model.forum.Topic as Topic
 import androidx.paging.PagingSource
 import kotlinx.coroutines.flow.Flow
-import ai.saniou.thread.db.table.forum.Topic as DbTopic
 import ai.saniou.thread.domain.model.forum.Comment as DomainComment
 
 /**
@@ -63,7 +60,12 @@ interface SourceCache {
     /**
      * 保存回复列表
      */
-    suspend fun saveComments(comments: List<DomainComment>, sourceId: String)
+    suspend fun saveComments(
+        comments: List<DomainComment>,
+        sourceId: String,
+        receiveDate: Long,
+        startOrder: Long
+    )
 
     /**
      * 清除指定板块的缓存

@@ -7,7 +7,7 @@ import ai.saniou.thread.domain.model.forum.ImageType
 import kotlin.time.Instant
 import ai.saniou.thread.db.table.forum.Comment as EntityComment
 
-fun Comment.toEntity(sourceId: String, page: Long): EntityComment {
+fun Comment.toEntity(sourceId: String, page: Long, floor: Long): EntityComment {
     return EntityComment(
         id = id,
         sourceId = sourceId,
