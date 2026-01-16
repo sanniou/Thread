@@ -58,15 +58,12 @@ fun Feed.toTable(sourceId: String, topicQueries: TopicQueries): EntityTopic {
         title = title,
         content = content,
         summary = content, // NMB feed provides full content
-        page = topic?.page ?: -1,
         agreeCount = topic?.agreeCount,
         disagreeCount = topic?.disagreeCount,
         isCollected = topic?.isCollected,
         lastReplyAt = topic?.lastReplyAt ?: 0,
         lastVisitedAt = topic?.lastVisitedAt,
         lastViewedCommentId = topic?.lastViewedCommentId,
-        receiveDate = topic?.receiveDate ?: -1,
-        receiveOrder = topic?.receiveOrder ?: -1
     )
 }
 

@@ -61,9 +61,10 @@ SELECT count(*) FROM Subscription WHERE sourceId = :sourceId AND topicId = :topi
 
 -- 联表查询 key Topic 数据 (原 Thread)
 selectSubscriptionTopic:
-SELECT T.*, S.isLocal
+SELECT T.*,TL.*, S.isLocal
 FROM Subscription AS S
 JOIN Topic AS T ON S.topicId = T.id AND S.sourceId = T.sourceId
+JOIN TopicListing AS TL ON S.topicId = TL.topicId AND S.sourceId = TL.sourceId
 WHERE S.subscriptionKey = :subscriptionKey AND S.page = :page
 ORDER BY S.subscriptionTime DESC;
 

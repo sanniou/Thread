@@ -18,7 +18,6 @@ CREATE TABLE IF NOT EXISTS Topic (
     lastReplyAt INTEGER NOT NULL DEFAULT 0, -- 列表页最新评论时间戳 用来排序数据库 topic
     lastVisitedAt INTEGER,
     lastViewedCommentId TEXT,
-    -- receiveDate, receiveOrder 移除
     PRIMARY KEY (sourceId, id)
 );
 

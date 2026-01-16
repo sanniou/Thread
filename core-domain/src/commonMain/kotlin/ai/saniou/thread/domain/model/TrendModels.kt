@@ -4,8 +4,8 @@ package ai.saniou.thread.domain.model
 data class TrendItem(
     val topicId: String,
     val sourceId: String,
-    val title: String,
-    val contentPreview: String,
+    val title: String?,
+    val contentPreview: String?,
     val rank: Int?, // Optional ranking
     val hotness: String?, // e.g., "34.5k views"
     val channel: String?, // e.g., "综合版1"

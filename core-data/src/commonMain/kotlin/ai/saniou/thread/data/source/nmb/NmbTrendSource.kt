@@ -121,7 +121,6 @@ class NmbTrendSource(
                     hotness = trendNum,
                     channel = forum,
                     author = null,
-                    url = "", // TODO: Construct URL if needed
                     isNew = isNew
                 )
             )

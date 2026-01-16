@@ -93,15 +93,12 @@ fun Thread.toTable(sourceId: String, page: Long) = Topic(
     title = title,
     content = content,
     summary = content, // NMB detail provides full content
-    page = page,
     agreeCount = 0,
     disagreeCount = 0,
     isCollected = false,
     lastReplyAt = 0L,
     lastVisitedAt = null,
     lastViewedCommentId = null,
-    receiveDate = TODO(),
-    receiveOrder = TODO(),
 )
 
 fun Thread.toCommentEntity(sourceId: String) = Comment(

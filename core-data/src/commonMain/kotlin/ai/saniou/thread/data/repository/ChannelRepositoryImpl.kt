@@ -122,12 +122,10 @@ class ChannelRepositoryImpl(
         val source = sourceMap[sourceId] ?: return flowOf(PagingData.empty())
         val pageSize = 20
 
-        // We use GetTopicsInChannelKeyset as the Value type for Pager/Mediator
-        // because it contains both Topic data and Listing metadata (receiveDate/Order).
         return Pager(
             config = PagingConfig(pageSize = pageSize),
             initialKey = initialPage,
-            remoteMediator = GenericRemoteMediator<GetTopicsInChannelKeyset, GetTopicsInChannelKeyset>(
+            remoteMediator = GenericRemoteMediator(
                 db = db,
                 dataPolicy = DataPolicy.NETWORK_ELSE_CACHE,
                 remoteKeyStrategy = DefaultRemoteKeyStrategy(
@@ -145,7 +143,7 @@ class ChannelRepositoryImpl(
                         sourceId = sourceId,
                         channelId = channelId,
                         receiveDate = receiveDate,
-                        startOrder = startOrder.toLong(),
+                        startOrder = startOrder,
                     )
                 },
                 itemTargetIdExtractor = { item -> item.id },

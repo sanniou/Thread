@@ -57,7 +57,6 @@ class TiebaTrendSource(
                     hotness = topic.agreeCount.toString(),
                     channel = topic.channelName,
                     author = topic.author.name,
-                    url = "", // TODO
                     isNew = false,
                     payload = emptyMap()
                 )

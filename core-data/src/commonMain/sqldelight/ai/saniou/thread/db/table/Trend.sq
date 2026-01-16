@@ -64,8 +64,8 @@ SELECT
     Trend.updateDate,
     Trend.receiveDate
 FROM Trend
-LEFT JOIN Topic ON Trend.sourceId = Topic.sourceId AND Trend.topicId = Topic.id
-LEFT JOIN Channel ON Topic.sourceId = Channel.sourceId AND Topic.channelId = Channel.id;
+JOIN Topic ON Trend.sourceId = Topic.sourceId AND Trend.topicId = Topic.id
+JOIN Channel ON Topic.sourceId = Channel.sourceId AND Topic.channelId = Channel.id;
 
 -- 查询 1：使用 Keyser Paging (基于 Rank)
 getTrendsKeyset:

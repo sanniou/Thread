@@ -8,6 +8,7 @@ import ai.saniou.thread.data.paging.KeysetPagingSource
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.db.table.Trend
 import ai.saniou.thread.db.table.TrendDetailView
+import ai.saniou.thread.db.table.forum.Topic
 import ai.saniou.thread.domain.model.PagedResult
 import ai.saniou.thread.domain.model.TrendItem
 import ai.saniou.thread.domain.model.TrendParams
@@ -119,20 +120,24 @@ class TrendRepositoryImpl(
                     // Ideally TrendItem should map to DomainTopic, but it's a simplified model.
                     // We save to Topic table to satisfy FK constraint and provide content for View.
                     db.topicQueries.upsertTopic(
-                        id = item.topicId,
-                        sourceId = source.id,
-                        channelId = "trend", // Placeholder, or use item.channel if it was an ID
-                        commentCount = 0,
-                        authorId = "",
-                        authorName = item.author ?: "",
-                        title = item.title,
-                        content = null,
-                        summary = item.contentPreview,
-                        agreeCount = null,
-                        disagreeCount = null,
-                        isCollected = null,
-                        createdAt = 0, // Unknown
-                        lastReplyAt = 0
+                        Topic(
+                            id = item.topicId,
+                            sourceId = source.id,
+                            channelId = "trend", // Placeholder, or use item.channel if it was an ID
+                            commentCount = 0,
+                            authorId = "",
+                            authorName = item.author ?: "",
+                            title = item.title,
+                            content = null,
+                            summary = item.contentPreview,
+                            agreeCount = null,
+                            disagreeCount = null,
+                            isCollected = null,
+                            createdAt = 0, // Unknown
+                            lastReplyAt = 0,
+                            lastVisitedAt = null,
+                            lastViewedCommentId = null
+                        )
                     )
 
                     // 2. Upsert Trend Metadata

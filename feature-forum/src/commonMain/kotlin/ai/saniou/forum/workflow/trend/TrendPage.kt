@@ -367,7 +367,7 @@ data class TrendPage(
                         }
 
                         Text(
-                            text = if (item.title.startsWith("No.")) item.title else "No.${item.topicId}",
+                            text = if (item.title?.startsWith("No.")?:false) item.title!! else "No.${item.topicId}",
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.outline
                         )
@@ -388,9 +388,9 @@ data class TrendPage(
 
                     VerticalSpacerSmall()
 
-                    if (item.title.isNotEmpty() && !item.title.startsWith("No.")) {
+                    if (item.title.isNullOrEmpty().not() && !item.title!!.startsWith("No.")) {
                         Text(
-                            text = item.title,
+                            text = item.title!!,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
@@ -399,7 +399,7 @@ data class TrendPage(
                     }
 
                     RichText(
-                        text = item.contentPreview,
+                        text = item.contentPreview?:"",
                         blankLinePolicy = BlankLinePolicy.REMOVE,
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurface,
