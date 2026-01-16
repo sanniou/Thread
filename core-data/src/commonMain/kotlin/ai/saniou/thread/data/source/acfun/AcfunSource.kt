@@ -124,8 +124,6 @@ class AcfunSource(
                         channelId = data.channel?.id?.toString() ?: "0",
                         summary = null,
                         lastViewedCommentId = "",
-                        receiveDate = TODO(),
-                        receiveOrder = TODO(),
                     )
                     Result.success(post)
                 } else {

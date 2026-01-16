@@ -53,13 +53,11 @@ fun EntityTopic.toDomain(
         isCollected = isCollected,
         images = images,
         isLocal = false,
-        receiveDate = receiveDate,
         lastViewedCommentId = lastViewedCommentId,
         comments = commentQueries?.getLastFiveComments(sourceId, id)?.executeAsList()?.map {
             it.toDomain()
         } ?: emptyList(),
         tags = tags,
-        receiveOrder = receiveOrder,
         lastReplyAt = lastReplyAt,
     )
 }
@@ -136,7 +134,11 @@ fun Topic.toMetadata(): TopicMetadata {
     )
 }
 
-fun Topic.toEntity(page: Int = 1): EntityTopic {
+fun Topic.toEntity(
+    page: Int,
+    receiveDate: Long,
+    receiveOrder: Long,
+): EntityTopic {
     return EntityTopic(
         id = id,
         sourceId = sourceId,

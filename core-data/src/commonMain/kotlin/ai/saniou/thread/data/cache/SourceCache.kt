@@ -4,6 +4,7 @@ import ai.saniou.thread.data.model.CommentKey
 import ai.saniou.thread.data.model.TopicKey
 import ai.saniou.thread.db.table.forum.Channel
 import ai.saniou.thread.db.table.forum.Comment
+import ai.saniou.thread.db.table.forum.GetTopicsInChannelKeyset
 import ai.saniou.thread.domain.model.forum.Topic as Topic
 import androidx.paging.PagingSource
 import kotlinx.coroutines.flow.Flow
@@ -35,7 +36,7 @@ interface SourceCache {
         sourceId: String,
         channelId: String,
         isFallback: Boolean = false,
-    ): PagingSource<Int, DbTopic>
+    ): PagingSource<Int, GetTopicsInChannelKeyset>
 
     /**
      * 保存帖子详情
@@ -53,11 +54,10 @@ interface SourceCache {
      */
     suspend fun saveTopics(
         topics: List<Topic>,
-        clearPage: Boolean = false,
         sourceId: String,
         channelId: String,
-        page: Int? = null,
-        receiveDate: Long? = null,
+        receiveDate: Long,
+        startOrder: Long,
     )
 
     /**

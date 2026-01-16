@@ -2,12 +2,11 @@ package ai.saniou.thread.data.repository
 
 import ai.saniou.thread.data.cache.SourceCache
 import ai.saniou.thread.data.mapper.toDomain
-import ai.saniou.thread.data.mapper.toEntity
-import ai.saniou.thread.data.model.TopicKey
 import ai.saniou.thread.data.paging.DataPolicy
 import ai.saniou.thread.data.paging.DefaultRemoteKeyStrategy
 import ai.saniou.thread.data.paging.GenericRemoteMediator
 import ai.saniou.thread.db.Database
+import ai.saniou.thread.db.table.forum.GetTopicsInChannelKeyset
 import ai.saniou.thread.domain.model.forum.Channel
 import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.repository.ChannelRepository
@@ -16,7 +15,6 @@ import androidx.paging.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
-import kotlin.time.Clock
 
 class ChannelRepositoryImpl(
     private val db: Database,
@@ -105,7 +103,7 @@ class ChannelRepositoryImpl(
         // Actually, let's keep `source.observeChannels()` for `getChannels` as it is correct SSOT (DB-based) for complex sources.
         // But I MUST add `cache` to constructor for `getChannelTopicsPaging`.
         val source = sourceMap[sourceId]
-            ?: return kotlinx.coroutines.flow.flowOf(emptyList())
+            ?: return flowOf(emptyList())
         return source.observeChannels()
     }
 
@@ -124,38 +122,36 @@ class ChannelRepositoryImpl(
         val source = sourceMap[sourceId] ?: return flowOf(PagingData.empty())
         val pageSize = 20
 
-        // TopicKey: (lastReplyAt, id)
-        // Initial Key: Max Value (Latest)
-        // Note: For descending sort, we start with MAX_VALUE.
-        // The ID part doesn't matter for the very first page as long as lastReplyAt is larger than any real data.
-        val initialKey = TopicKey(Clock.System.now().toEpochMilliseconds(), "")
-
+        // We use GetTopicsInChannelKeyset as the Value type for Pager/Mediator
+        // because it contains both Topic data and Listing metadata (receiveDate/Order).
         return Pager(
             config = PagingConfig(pageSize = pageSize),
             initialKey = initialPage,
-            remoteMediator = GenericRemoteMediator(
+            remoteMediator = GenericRemoteMediator<GetTopicsInChannelKeyset, GetTopicsInChannelKeyset>(
                 db = db,
                 dataPolicy = DataPolicy.NETWORK_ELSE_CACHE,
                 remoteKeyStrategy = DefaultRemoteKeyStrategy(
                     db = db,
                     type = "channel_${sourceId}_${channelId}_${isTimeline}",
-                    itemTargetIdExtractor = { topic -> topic.id }
+                    itemTargetIdExtractor = { item -> item.id }
                 ),
                 fetcher = { cursor ->
                     // Pass the cursor string to the source
                     source.getChannelTopics(channelId, cursor, isTimeline)
                 },
-                saver = { topics, loadType ->
+                saver = { topics, loadType, receiveDate, startOrder ->
                     cache.saveTopics(
                         topics = topics,
-                        clearPage = loadType == LoadType.REFRESH,
                         sourceId = sourceId,
                         channelId = channelId,
-                        page = null, // Keyset paging doesn't use page numbers
-                        receiveDate = initialKey.receiveDate
+                        receiveDate = receiveDate,
+                        startOrder = startOrder.toLong(),
                     )
                 },
-                itemTargetIdExtractor = { topic -> topic.id }
+                itemTargetIdExtractor = { item -> item.id },
+                lastItemMetadataExtractor = { item ->
+                    item.receiveDate to item.receiveOrder
+                },
             ),
             pagingSourceFactory = {
                 // Use the new KeysetPagingSource from Cache
@@ -164,19 +160,40 @@ class ChannelRepositoryImpl(
                 cache.getChannelTopicPagingSource(sourceId, channelId, isFallback)
             }
         ).flow.map { pagingData ->
-            pagingData.map {
-                it.toDomain(db.commentQueries, db.imageQueries)
+            pagingData.map { item ->
+                // Map the projection back to Domain Topic
+                // We need to construct a Topic Entity first or map directly.
+                // Since toDomain expects Entity + Queries, we can construct Entity.
+                val topicEntity = ai.saniou.thread.db.table.forum.Topic(
+                    id = item.id,
+                    sourceId = item.sourceId,
+                    channelId = item.channelId,
+                    commentCount = item.commentCount,
+                    authorId = item.authorId,
+                    authorName = item.authorName,
+                    title = item.title,
+                    content = item.content,
+                    summary = item.summary,
+                    agreeCount = item.agreeCount,
+                    disagreeCount = item.disagreeCount,
+                    isCollected = item.isCollected,
+                    createdAt = item.createdAt,
+                    lastReplyAt = item.lastReplyAt,
+                    lastVisitedAt = item.lastVisitedAt,
+                    lastViewedCommentId = item.lastViewedCommentId
+                )
+                topicEntity.toDomain(db.commentQueries, db.imageQueries)
             }
         }
     }
 
     override fun getChannelName(sourceId: String, channelId: String): Flow<String?> {
-        val source = sourceMap[sourceId] ?: return kotlinx.coroutines.flow.flowOf(null)
+        val source = sourceMap[sourceId] ?: return flowOf(null)
         return source.getChannel(channelId).map { it?.name }
     }
 
     override fun getChannelDetail(sourceId: String, channelId: String): Flow<Channel?> {
-        val source = sourceMap[sourceId] ?: return kotlinx.coroutines.flow.flowOf(null)
+        val source = sourceMap[sourceId] ?: return flowOf(null)
         return source.getChannel(channelId)
     }
 

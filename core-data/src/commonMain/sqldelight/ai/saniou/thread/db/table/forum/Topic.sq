@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS Topic (
     title TEXT, -- 可为空
     content TEXT, -- 详情页 HTML 内容，可能为空 (列表页不返回)
     summary TEXT, -- 列表页摘要，可能为空
-    page INTEGER NOT NULL,
+    -- page 移除
     agreeCount INTEGER ,
     disagreeCount INTEGER ,
     isCollected INTEGER AS Boolean ,
@@ -19,45 +19,41 @@ CREATE TABLE IF NOT EXISTS Topic (
     lastReplyAt INTEGER NOT NULL DEFAULT 0, -- 列表页最新评论时间戳 用来排序数据库 topic
     lastVisitedAt INTEGER,
     lastViewedCommentId TEXT,
+    -- receiveDate, receiveOrder 移除
+    PRIMARY KEY (sourceId, id)
+);
+
+-- 2. 列表关联表：存储排序关系
+-- 联合主键确保：同一个 Topic 在 同一个列表 中只能出现一次
+CREATE TABLE TopicListing (
+    sourceId TEXT NOT NULL,
+    topicId TEXT NOT NULL,
+
+    -- 列表标识
+    listType TEXT NOT NULL, -- 枚举: "timeline", "trend", "channel"
+    listId TEXT NOT NULL,   -- 具体ID: "main", "daily", "12345"
+
+    page INTEGER NOT NULL DEFAULT 0,
     receiveDate INTEGER NOT NULL DEFAULT 0, -- 本地接收时间，用于缓存版本控制
     receiveOrder INTEGER NOT NULL DEFAULT 0, -- 本地接收时间对应的顺序,
-    PRIMARY KEY (sourceId, id)
+    PRIMARY KEY (sourceId, topicId, listType, listId),
+    FOREIGN KEY (sourceId, topicId) REFERENCES Topic(sourceId, id) ON DELETE CASCADE
 );
 
 -- 索引迁移
 CREATE INDEX IF NOT EXISTS idx_topic_last_key ON Topic(lastReplyAt);
 CREATE INDEX IF NOT EXISTS idx_topic_last_access_time ON Topic(lastVisitedAt);
 CREATE INDEX IF NOT EXISTS idx_topic_channel_id ON Topic(sourceId, channelId);
-CREATE INDEX IF NOT EXISTS idx_topic_receive_date ON Topic(receiveDate);
-CREATE INDEX IF NOT EXISTS idx_topic_receive_order ON Topic(receiveOrder);
 
--- 插入 Topic 数据 (无 Page)
-upsertTopicNoPage:
-INSERT INTO Topic (
-    id, sourceId, channelId, commentCount, authorId, authorName, title, content, summary, page,
-    agreeCount, disagreeCount, isCollected, createdAt, lastReplyAt, receiveDate, receiveOrder
-) VALUES ?
-ON CONFLICT (sourceId, id) DO UPDATE SET
-    commentCount = excluded.commentCount,
-    authorId = excluded.authorId,
-    authorName = excluded.authorName,
-    title = COALESCE(excluded.title, Topic.title),
-    content = COALESCE(excluded.content, Topic.content), -- 只有当新 content 非空时才更新
-    summary = COALESCE(excluded.summary, Topic.summary),
-    agreeCount = excluded.agreeCount,
-    disagreeCount = excluded.disagreeCount,
-    isCollected = excluded.isCollected,
-    createdAt = excluded.createdAt,
-    lastReplyAt = excluded.lastReplyAt,
-    receiveDate = excluded.receiveDate,
-    receiveOrder = excluded.receiveOrder;
-    -- lastVisitedAt and lastViewedCommentId are preserved (not updated)
+CREATE INDEX IF NOT EXISTS idx_listing_query ON TopicListing(sourceId, listType, listId, page);
+CREATE INDEX IF NOT EXISTS idx_listing_receive ON TopicListing(sourceId, listType, listId, receiveDate);
+CREATE INDEX IF NOT EXISTS idx_listing_order ON TopicListing(sourceId, listType, listId, receiveOrder);
 
--- 插入 Topic 数据
+-- 插入 Topic 数据 (仅内容)
 upsertTopic:
 INSERT INTO Topic (
-    id, sourceId, channelId, commentCount, authorId, authorName, title, content, summary, page,
-    agreeCount, disagreeCount, isCollected, createdAt, lastReplyAt, receiveDate, receiveOrder
+    id, sourceId, channelId, commentCount, authorId, authorName, title, content, summary,
+    agreeCount, disagreeCount, isCollected, createdAt, lastReplyAt
 ) VALUES ?
 ON CONFLICT (sourceId, id) DO UPDATE SET
     channelId = excluded.channelId,
@@ -67,27 +63,34 @@ ON CONFLICT (sourceId, id) DO UPDATE SET
     title = COALESCE(excluded.title, Topic.title),
     content = COALESCE(excluded.content, Topic.content), -- 只有当新 content 非空时才更新
     summary = COALESCE(excluded.summary, Topic.summary),
-    page = excluded.page,
     agreeCount = excluded.agreeCount,
     disagreeCount = excluded.disagreeCount,
     isCollected = excluded.isCollected,
     createdAt = excluded.createdAt,
-    lastReplyAt = excluded.lastReplyAt,
+    lastReplyAt = excluded.lastReplyAt;
+    -- lastVisitedAt and lastViewedCommentId are preserved (not updated)
+
+-- 插入 TopicListing 数据
+upsertTopicListing:
+INSERT INTO TopicListing (
+    sourceId, topicId, listType, listId, page, receiveDate, receiveOrder
+) VALUES ?
+ON CONFLICT (sourceId, topicId, listType, listId) DO UPDATE SET
+    page = excluded.page,
     receiveDate = excluded.receiveDate,
     receiveOrder = excluded.receiveOrder;
-    -- lastVisitedAt and lastViewedCommentId are preserved (not updated)
 
 -- 查询 Topic 数据 (方法名保留原逻辑但改名)
 countTopicsByChannelAndPage:
-SELECT count(1) FROM Topic WHERE sourceId = :sourceId AND channelId = :channelId AND page = :page;
+SELECT count(1) FROM TopicListing WHERE sourceId = :sourceId AND listType = 'channel' AND listId = :channelId AND page = :page;
 
 deleteTopicsByChannelAndPage:
-DELETE FROM Topic WHERE sourceId = :sourceId AND channelId = :channelId AND page = :page;
+DELETE FROM TopicListing WHERE sourceId = :sourceId AND listType = 'channel' AND listId = :channelId AND page = :page;
 
 incrementTopicPage:
-UPDATE Topic
+UPDATE TopicListing
 SET page = page + 1
-WHERE sourceId = :sourceId AND channelId = :channelId AND page >= :page;
+WHERE sourceId = :sourceId AND listType = 'channel' AND listId = :channelId AND page >= :page;
 
 -- 查询所有 Topic 数据
 getAllTopics:
@@ -118,7 +121,7 @@ WHERE sourceId = ? AND id = ?;
 
 -- 获取特定 Channel 的最大 receiveDate
 getMaxReceiveDate:
-SELECT MAX(receiveDate) FROM Topic WHERE sourceId = :sourceId AND channelId = :channelId;
+SELECT MAX(receiveDate) FROM TopicListing WHERE sourceId = :sourceId AND listType = 'channel' AND listId = :channelId;
 
 -- 删除 Topic 数据
 deleteTopic:
@@ -126,7 +129,7 @@ DELETE FROM Topic WHERE sourceId = ? AND id = ?;
 
 -- 删除 Topic 页的数据
 deleteTopicPage:
-DELETE FROM Topic WHERE sourceId = ? AND channelId = ?;
+DELETE FROM TopicListing WHERE sourceId = ? AND listType = 'channel' AND listId = :channelId;
 
 getTopic:
 SELECT *
@@ -134,33 +137,47 @@ FROM Topic
 WHERE Topic.sourceId = :sourceId AND Topic.id = :id;
 
 countTopicsByChannel:
-SELECT count(*) FROM Topic WHERE sourceId = :sourceId AND channelId = :channelId
+SELECT count(*) FROM TopicListing WHERE sourceId = :sourceId AND listType = 'channel' AND listId = :channelId
 AND (
     (:isFallback = 1)
     OR
-    (receiveDate = (SELECT MAX(receiveDate) FROM Topic WHERE sourceId = :sourceId AND channelId = :channelId))
+    (receiveDate = (SELECT MAX(receiveDate) FROM TopicListing WHERE sourceId = :sourceId AND listType = 'channel' AND listId = :channelId))
 );
 
 getTopicsInChannel:
-SELECT * FROM Topic WHERE Topic.sourceId = :sourceId AND channelId = :channelId AND page = :page ORDER BY lastReplyAt DESC;
+SELECT Topic.*
+FROM Topic
+JOIN TopicListing ON Topic.sourceId = TopicListing.sourceId AND Topic.id = TopicListing.topicId
+WHERE TopicListing.sourceId = :sourceId AND TopicListing.listType = 'channel' AND TopicListing.listId = :channelId AND TopicListing.page = :page
+ORDER BY Topic.lastReplyAt DESC;
 
 getTopicsByChannel:
-SELECT * FROM Topic WHERE sourceId = :sourceId AND channelId = :channelId AND page = :page;
+SELECT Topic.*
+FROM Topic
+JOIN TopicListing ON Topic.sourceId = TopicListing.sourceId AND Topic.id = TopicListing.topicId
+WHERE TopicListing.sourceId = :sourceId AND TopicListing.listType = 'channel' AND TopicListing.listId = :channelId AND TopicListing.page = :page;
 
 getTopicsInChannelOffset:
-SELECT * FROM Topic WHERE Topic.sourceId = :sourceId AND channelId = :channelId ORDER BY lastReplyAt DESC LIMIT :limit OFFSET :offset;
+SELECT Topic.*
+FROM Topic
+JOIN TopicListing ON Topic.sourceId = TopicListing.sourceId AND Topic.id = TopicListing.topicId
+WHERE TopicListing.sourceId = :sourceId AND TopicListing.listType = 'channel' AND TopicListing.listId = :channelId
+ORDER BY Topic.lastReplyAt DESC
+LIMIT :limit OFFSET :offset;
 
 getTopicsInChannelKeyset:
-SELECT *
+SELECT Topic.*, TopicListing.receiveDate, TopicListing.receiveOrder
 FROM Topic
-WHERE Topic.sourceId = :sourceId
-  AND channelId = :channelId
+JOIN TopicListing ON Topic.sourceId = TopicListing.sourceId AND Topic.id = TopicListing.topicId
+WHERE TopicListing.sourceId = :sourceId
+  AND TopicListing.listType = 'channel'
+  AND TopicListing.listId = :channelId
   AND (
       (:isFallback = 1)
       OR
-      (receiveDate = (SELECT MAX(receiveDate) FROM Topic WHERE sourceId = :sourceId AND channelId = :channelId))
+      (TopicListing.receiveDate = (SELECT MAX(receiveDate) FROM TopicListing WHERE sourceId = :sourceId AND listType = 'channel' AND listId = :channelId))
   )
-ORDER BY receiveOrder ASC, id DESC
+ORDER BY TopicListing.receiveOrder ASC, TopicListing.topicId DESC
 LIMIT :limit OFFSET :offset;
 
 updateTopicLastAccessTime:
@@ -190,6 +207,6 @@ SELECT count(*) FROM Topic WHERE authorId = :authorId;
 
 -- 触发通知 (不实际修改数据)
 touchChannelTopics:
-UPDATE Topic
+UPDATE TopicListing
 SET receiveDate = receiveDate
-WHERE sourceId = :sourceId AND channelId = :channelId;
+WHERE sourceId = :sourceId AND listType = 'channel' AND listId = :channelId;

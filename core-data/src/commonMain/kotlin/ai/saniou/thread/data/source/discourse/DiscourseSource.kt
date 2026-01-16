@@ -6,8 +6,6 @@ import ai.saniou.thread.data.mapper.flatten
 import ai.saniou.thread.data.mapper.toDomain
 import ai.saniou.thread.data.mapper.toDomainTree
 import ai.saniou.thread.data.mapper.toEntity
-import ai.saniou.thread.data.model.CommentKey
-import ai.saniou.thread.data.paging.DataPolicy
 import ai.saniou.thread.data.source.discourse.remote.DiscourseApi
 import ai.saniou.thread.data.source.discourse.remote.dto.DiscourseTopic
 import ai.saniou.thread.data.source.discourse.remote.dto.DiscourseUser
@@ -21,11 +19,6 @@ import ai.saniou.thread.domain.repository.SettingsRepository
 import ai.saniou.thread.domain.repository.Source
 import ai.saniou.thread.domain.repository.observeValue
 import ai.saniou.thread.network.SaniouResult
-import androidx.paging.ExperimentalPagingApi
-import androidx.paging.Pager
-import androidx.paging.PagingConfig
-import androidx.paging.PagingData
-import androidx.paging.map
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlin.time.Duration.Companion.days
@@ -142,7 +135,8 @@ class DiscourseSource(
         // DiscourseRemoteMediator logic:
         // if (fid == "0" || fid == "latest") -> getLatestPosts
         // else -> getCategoryTopics
-        val page = cursor?.toIntOrNull() ?: 0 // Discourse pages start at 0? Or 1? Usually 0 for some APIs, but let's assume 0 based on previous code usage?
+        val page = cursor?.toIntOrNull()
+            ?: 0 // Discourse pages start at 0? Or 1? Usually 0 for some APIs, but let's assume 0 based on previous code usage?
         // Previous code used `page: Int` directly.
         // Let's assume 0-based for now if not specified.
 
@@ -245,25 +239,6 @@ class DiscourseSource(
                         summary = null,
                         tags = emptyList() // TODO: Map tags
                     )
-
-                    // Update cache/DB
-                    db.topicQueries.transaction {
-                        // Upsert Topic
-                        val entity = post.toEntity(page)
-                        db.topicQueries.upsertTopic(entity)
-
-                        // Upsert Comments (including Post #1 as floor 1)
-                        response.postStream.posts.forEach { discoursePost ->
-                            db.commentQueries.upsertComment(
-                                discoursePost.toComment(
-                                    sourceId = id,
-                                    threadId = response.id.toString(),
-                                    page = page
-                                )
-                            )
-                        }
-                    }
-
                     Result.success(post)
                 } catch (e: Exception) {
                     Result.failure(e)

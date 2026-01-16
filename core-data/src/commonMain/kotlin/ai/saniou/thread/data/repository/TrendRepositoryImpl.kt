@@ -98,7 +98,7 @@ class TrendRepositoryImpl(
                     PagedResult(items, null, nextCursor)
                 }
             },
-            saver = { items, loadType ->
+            saver = { items, loadType, receiveDate, startOrder ->
                 if (loadType == LoadType.REFRESH) {
                     if (isRankMode) {
                         db.trendQueries.deleteTrendsByTabAndDate(source.id, tab.id, targetDate)
@@ -113,6 +113,29 @@ class TrendRepositoryImpl(
                 }
 
                 items.forEachIndexed { index, item ->
+                    // 1. Upsert Topic Content (if available)
+                    // Note: TrendItem might not have full Topic details, but we save what we have.
+                    // We use a dummy channelId if not provided, or try to infer.
+                    // Ideally TrendItem should map to DomainTopic, but it's a simplified model.
+                    // We save to Topic table to satisfy FK constraint and provide content for View.
+                    db.topicQueries.upsertTopic(
+                        id = item.topicId,
+                        sourceId = source.id,
+                        channelId = "trend", // Placeholder, or use item.channel if it was an ID
+                        commentCount = 0,
+                        authorId = "",
+                        authorName = item.author ?: "",
+                        title = item.title,
+                        content = null,
+                        summary = item.contentPreview,
+                        agreeCount = null,
+                        disagreeCount = null,
+                        isCollected = null,
+                        createdAt = 0, // Unknown
+                        lastReplyAt = 0
+                    )
+
+                    // 2. Upsert Trend Metadata
                     db.trendQueries.upsert(
                         Trend(
                             id = UuidUtils.randomUuid(), // Use UUID to support multiple occurrences
@@ -122,12 +145,7 @@ class TrendRepositoryImpl(
                             date = targetDate,
                             rank = item.rank?.toLong() ?: (index + 1).toLong(),
                             page = 0L, // Not used in Keyset
-                            title = item.title,
-                            contentPreview = item.contentPreview,
                             hotness = item.hotness,
-                            channel = item.channel,
-                            author = item.author,
-                            url = item.url,
                             isNew = item.isNew,
                             payload = null, // TODO: Serialize payload if needed
                             publishDate = null, // Source doesn't provide it yet
@@ -156,7 +174,10 @@ class TrendRepositoryImpl(
                     // unless we implement a specific count query.
                     false
                 }
-            }
+            },
+            lastItemMetadataExtractor = { topic ->
+                topic.receiveDate to topic.rank
+            },
         )
 
         return Pager(
@@ -211,7 +232,6 @@ class TrendRepositoryImpl(
                     hotness = trend.hotness,
                     channel = trend.channel,
                     author = trend.author,
-                    url = trend.url,
                     isNew = trend.isNew,
                     payload = emptyMap(),
                     receiveDate = trend.receiveDate

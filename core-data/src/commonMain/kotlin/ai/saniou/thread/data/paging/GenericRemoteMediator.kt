@@ -5,6 +5,7 @@ import ai.saniou.thread.domain.model.PagedResult
 import androidx.paging.LoadType
 import androidx.paging.PagingState
 import androidx.paging.RemoteMediator
+import kotlin.time.Clock
 
 /**
  * 通用 RemoteMediator 实现 (Keyset Paging 适配版)
@@ -30,7 +31,12 @@ class GenericRemoteMediator<PagerValue : Any, FetcherValue : Any>(
     private val dataPolicy: DataPolicy,
     private val remoteKeyStrategy: RemoteKeyStrategy<PagerValue>,
     private val fetcher: suspend (cursor: String?) -> Result<PagedResult<FetcherValue>>,
-    private val saver: suspend (List<FetcherValue>, LoadType) -> Unit,
+    // 【新增】: 用于从 PagerValue (上一页最后一个 Item) 中提取元数据
+    // 返回 Pair<receiveDate, receiveOrder>
+    // 如果 PagerValue 本身不包含这些字段，这个 lambda 内部可以去读数据库
+    private val lastItemMetadataExtractor: suspend (PagerValue) -> Pair<Long, Long>?,
+    // 【修改】: Saver 增加 batchTime 和 startOrder 参数
+    private val saver: suspend (items: List<FetcherValue>, loadType: LoadType, batchTime: Long, startOrder: Long) -> Unit,
     private val itemTargetIdExtractor: (FetcherValue) -> String,
     private val cacheChecker: (suspend (String?) -> Boolean)? = null,
 ) : RemoteMediator<Int, PagerValue>() {
@@ -48,8 +54,14 @@ class GenericRemoteMediator<PagerValue : Any, FetcherValue : Any>(
         state: PagingState<Int, PagerValue>,
     ): MediatorResult {
         return try {
+            // 临时变量，用于保存参考值
+            var batchTime: Long = 0L
+            var referenceOrder: Long = 0 // APPEND 时代表上一页最后一条，PREPEND 时代表当前页第一条
             val cursor: String? = when (loadType) {
                 LoadType.REFRESH -> {
+                    // REFRESH: 开启新批次
+                    batchTime = Clock.System.now().toEpochMilliseconds()
+                    referenceOrder = 0
                     // REFRESH 总是从头开始加载 (null)
                     // 如果需要支持 anchorPosition 刷新，逻辑会非常复杂且容易出错。
                     // 这里的策略是：下拉刷新 = 回到顶部并获取最新数据。
@@ -57,6 +69,18 @@ class GenericRemoteMediator<PagerValue : Any, FetcherValue : Any>(
                 }
 
                 LoadType.PREPEND -> {
+                    // 获取列表最顶部的 Item
+                    val firstItem = state.firstItemOrNull()
+                        ?: return MediatorResult.Success(endOfPaginationReached = true)
+
+                    val metadata = lastItemMetadataExtractor(firstItem)
+                        ?: return MediatorResult.Success(endOfPaginationReached = true)
+
+                    // 继承批次时间
+                    batchTime = metadata.first
+                    // 记录参考序号 (比如 20)
+                    referenceOrder = metadata.second
+
                     val remoteKey = remoteKeyStrategy.getKeyForFirstItem(state)
                     // 如果 remoteKey 为 null，说明没有上一页了 (endOfPaginationReached)
                     // 或者数据为空。
@@ -65,6 +89,16 @@ class GenericRemoteMediator<PagerValue : Any, FetcherValue : Any>(
                 }
 
                 LoadType.APPEND -> {
+                    // APPEND: 继承旧批次
+                    val lastItem = state.lastItemOrNull()
+                        ?: return MediatorResult.Success(endOfPaginationReached = true)
+
+                    val metadata = lastItemMetadataExtractor(lastItem)
+                        ?: return MediatorResult.Success(endOfPaginationReached = true)
+
+                    batchTime = metadata.first
+                    referenceOrder = metadata.second
+
                     val remoteKey = remoteKeyStrategy.getKeyForLastItem(state)
                     // 如果 remoteKey 为 null，说明没有下一页了
                     remoteKey ?: return MediatorResult.Success(endOfPaginationReached = true)
@@ -82,7 +116,6 @@ class GenericRemoteMediator<PagerValue : Any, FetcherValue : Any>(
             fetcher(cursor).fold(
                 onSuccess = { pagedResult ->
                     val items = pagedResult.data
-                    val endOfPagination = pagedResult.nextCursor == null
 
                     db.transaction {
                         // 如果是 REFRESH，清除旧数据和 Keys
@@ -95,7 +128,13 @@ class GenericRemoteMediator<PagerValue : Any, FetcherValue : Any>(
                             // 鉴于 saver 已经接收了 loadType，让 saver 决定是否清除是合理的。
                         }
 
-                        saver(items, loadType)
+                        val startOrder = when (loadType) {
+                            LoadType.REFRESH -> 0
+                            LoadType.APPEND -> referenceOrder + 1 // 接在后面：参考点 + 1
+                            LoadType.PREPEND -> referenceOrder - pagedResult.data.size // 插在前面：参考点 - 数据量
+                        }
+
+                        saver(pagedResult.data, loadType, batchTime, startOrder)
 
                         // 为每个 Item 插入 RemoteKey
                         items.forEach { item ->
@@ -107,7 +146,7 @@ class GenericRemoteMediator<PagerValue : Any, FetcherValue : Any>(
                         }
                     }
 
-                    MediatorResult.Success(endOfPaginationReached = endOfPagination)
+                    MediatorResult.Success(endOfPaginationReached = pagedResult.prevCursor == null && loadType == LoadType.PREPEND || pagedResult.nextCursor == null && loadType == LoadType.APPEND)
                 },
                 onFailure = { ex ->
                     MediatorResult.Error(ex)

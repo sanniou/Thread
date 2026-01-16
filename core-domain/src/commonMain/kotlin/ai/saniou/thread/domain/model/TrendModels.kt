@@ -10,7 +10,6 @@ data class TrendItem(
     val hotness: String?, // e.g., "34.5k views"
     val channel: String?, // e.g., "综合版1"
     val author: String?,
-    val url: String, // Direct URL to the item
     val isNew: Boolean = false,
     val payload: Map<String, Any> = emptyMap(), // For source-specific data
     val receiveDate: Long = 0L, // For realtime sorting

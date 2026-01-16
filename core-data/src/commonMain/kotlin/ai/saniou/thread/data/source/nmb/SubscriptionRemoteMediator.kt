@@ -40,14 +40,15 @@ class SubscriptionRemoteMediator(
                 PagedResult(feeds, prevCursor, nextCursor)
             }
         },
-        saver = { feedDetail, loadType ->
+        saver = { feedDetail, loadType, receiveDate, startOrder ->
             if (loadType == LoadType.REFRESH) {
                 db.subscriptionQueries.deleteCloudSubscriptions(subscriptionKey)
             }
 
             // Infer page from DB count for APPEND, 1 for REFRESH
             val page = if (loadType == LoadType.REFRESH) 1L else {
-                 (db.subscriptionQueries.countSubscriptionsBySubscriptionKey(subscriptionKey).executeAsOne() / 19) + 1
+                (db.subscriptionQueries.countSubscriptionsBySubscriptionKey(subscriptionKey)
+                    .executeAsOne() / 19) + 1
             }
 
             feedDetail.forEach { feed ->
@@ -71,6 +72,9 @@ class SubscriptionRemoteMediator(
                 .countSubscriptionsBySubscriptionKeyAndPage(subscriptionKey, page.toLong())
                 .executeAsOne()
             subscriptionsInDb > 0
+        },
+        lastItemMetadataExtractor = { topic ->
+            topic.receiveDate to topic.receiveOrder
         }
     )
 

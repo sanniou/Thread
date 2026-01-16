@@ -92,7 +92,7 @@ class TopicRepositoryImpl(
                 fetcher = { cursor ->
                     source.getTopicComments(topicId, cursor, isPoOnly)
                 },
-                saver = { comments, loadType ->
+                saver = { comments, loadType, receiveDate, startOrder ->
                     // Note: We don't have 'page' here anymore from GenericRemoteMediator saver callback
                     // But cache.saveComments needs it?
                     // Actually cache.saveComments uses page to calculate floor?
@@ -136,6 +136,10 @@ class TopicRepositoryImpl(
                             floorStart.toLong()
                         ).executeAsOne() > 0
                     }
+                },
+                lastItemMetadataExtractor = { topic ->
+                    // 用不到所以先随便写
+                    topic.floor to topic.floor
                 }
             ),
             pagingSourceFactory = {
