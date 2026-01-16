@@ -9,7 +9,6 @@ import ai.saniou.thread.data.mapper.toEntity
 import ai.saniou.thread.data.source.discourse.remote.DiscourseApi
 import ai.saniou.thread.data.source.discourse.remote.dto.DiscourseTopic
 import ai.saniou.thread.data.source.discourse.remote.dto.DiscourseUser
-import ai.saniou.thread.data.source.discourse.remote.dto.toComment
 import ai.saniou.thread.data.source.discourse.remote.dto.toDomainComment
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.domain.model.PagedResult

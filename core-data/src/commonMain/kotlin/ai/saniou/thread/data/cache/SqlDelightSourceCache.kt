@@ -2,12 +2,13 @@ package ai.saniou.thread.data.cache
 
 import ai.saniou.thread.data.mapper.toDomain
 import ai.saniou.thread.data.mapper.toEntity
+import ai.saniou.thread.data.mapper.toEntityNoLastKey
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.db.table.TopicTag
 import ai.saniou.thread.db.table.forum.Channel
 import ai.saniou.thread.db.table.forum.Comment
 import ai.saniou.thread.db.table.forum.GetTopicsInChannelKeyset
-import ai.saniou.thread.db.table.forum.Topic
+import ai.saniou.thread.db.table.forum.TopicListing
 import ai.saniou.thread.domain.model.forum.ImageType
 import androidx.paging.PagingSource
 import app.cash.sqldelight.coroutines.asFlow
@@ -130,31 +131,19 @@ class SqlDelightSourceCache(
                 topics.forEachIndexed { index, topic ->
                     // 1. Upsert Topic Content
                     topicQueries.upsertTopic(
-                        id = topic.id,
-                        sourceId = sourceId,
-                        channelId = channelId,
-                        commentCount = topic.commentCount?.toLong() ?: 0,
-                        authorId = topic.authorId ?: "",
-                        authorName = topic.authorName ?: "",
-                        title = topic.title,
-                        content = topic.content,
-                        summary = topic.summary,
-                        agreeCount = topic.agreeCount?.toLong(),
-                        disagreeCount = topic.disagreeCount?.toLong(),
-                        isCollected = topic.isCollected,
-                        createdAt = topic.createdAt,
-                        lastReplyAt = topic.lastReplyAt
+                        topic.toEntityNoLastKey()
                     )
-
                     // 2. Upsert Topic Listing
                     topicQueries.upsertTopicListing(
-                        sourceId = sourceId,
-                        topicId = topic.id,
-                        listType = "channel",
-                        listId = channelId,
-                        page = topic.page?.toLong() ?: 1,
-                        receiveDate = receiveDate,
-                        receiveOrder = startOrder + index + 1
+                        TopicListing(
+                            sourceId = sourceId,
+                            topicId = topic.id,
+                            listType = "channel",
+                            listId = channelId,
+                            page = -1,// no page
+                            receiveDate = receiveDate,
+                            receiveOrder = startOrder + index + 1
+                        )
                     )
 
                     // Save Tags

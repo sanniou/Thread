@@ -134,10 +134,7 @@ fun Topic.toMetadata(): TopicMetadata {
     )
 }
 
-fun Topic.toEntity(
-    page: Int,
-    receiveDate: Long,
-    receiveOrder: Long,
+fun Topic.toEntityNoLastKey(
 ): EntityTopic {
     return EntityTopic(
         id = id,
@@ -150,14 +147,11 @@ fun Topic.toEntity(
         title = title,
         content = content,
         summary = summary,
-        page = page.toLong(),
         agreeCount = agreeCount,
         disagreeCount = disagreeCount,
         isCollected = isCollected,
         lastReplyAt = lastReplyAt ?: 0L,
         lastVisitedAt = 0L, // Default value, will be preserved by upsert logic
         lastViewedCommentId = null, // Default value, will be preserved by upsert logic
-        receiveDate = receiveDate,
-        receiveOrder = receiveOrder,
     )
 }

@@ -11,7 +11,6 @@ CREATE TABLE IF NOT EXISTS Topic (
     title TEXT, -- 可为空
     content TEXT, -- 详情页 HTML 内容，可能为空 (列表页不返回)
     summary TEXT, -- 列表页摘要，可能为空
-    -- page 移除
     agreeCount INTEGER ,
     disagreeCount INTEGER ,
     isCollected INTEGER AS Boolean ,
