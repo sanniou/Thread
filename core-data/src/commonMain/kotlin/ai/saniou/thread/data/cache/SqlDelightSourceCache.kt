@@ -39,47 +39,6 @@ class SqlDelightSourceCache(
             .map { it.toDomain(commentQueries, db.imageQueries, topicTagQueries) }
     }
 
-    override fun getTopicCommentsPagingSource(
-        sourceId: String,
-        topicId: String,
-        userHash: String?,
-    ): PagingSource<Int, Comment> {
-        return if (userHash != null) {
-            QueryPagingSource(
-                transacter = commentQueries,
-                context = Dispatchers.IO,
-                countQuery = commentQueries.countCommentsByTopicIdAndUserHash(
-                    sourceId,
-                    topicId,
-                    userHash
-                ),
-                queryProvider = { limit, offset ->
-                    commentQueries.getCommentsByTopicIdAndUserHashOffset(
-                        sourceId,
-                        topicId,
-                        userHash,
-                        limit,
-                        offset
-                    )
-                }
-            )
-        } else {
-            QueryPagingSource(
-                transacter = commentQueries,
-                context = Dispatchers.IO,
-                countQuery = commentQueries.countCommentsByTopicId(sourceId, topicId),
-                queryProvider = { limit, offset ->
-                    commentQueries.getCommentsByTopicIdOffset(
-                        sourceId,
-                        topicId,
-                        limit,
-                        offset
-                    )
-                }
-            )
-        }
-    }
-
     override fun getChannelTopicPagingSource(
         sourceId: String,
         channelId: String,

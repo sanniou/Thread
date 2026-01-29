@@ -18,15 +18,6 @@ interface SourceCache {
     fun observeTopic(sourceId: String, topicId: String): Flow<Topic>
 
     /**
-     * 观察指定帖子的回复列表（分页）
-     */
-    fun getTopicCommentsPagingSource(
-        sourceId: String,
-        topicId: String,
-        userHash: String? = null,
-    ): PagingSource<Int, Comment>
-
-    /**
      * 观察指定板块的帖子列表（分页）
      */
     fun getChannelTopicPagingSource(
