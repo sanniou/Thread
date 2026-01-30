@@ -31,12 +31,10 @@ class GenericRemoteMediator<PagerValue : Any, FetcherValue : Any>(
     private val dataPolicy: DataPolicy,
     private val remoteKeyStrategy: RemoteKeyStrategy<PagerValue>,
     private val fetcher: suspend (cursor: String?) -> Result<PagedResult<FetcherValue>>,
-    // 【新增】: 用于从 PagerValue (上一页最后一个 Item) 中提取元数据
     // 返回 Pair<receiveDate, receiveOrder>
     // 如果 PagerValue 本身不包含这些字段，这个 lambda 内部可以去读数据库
     private val lastItemMetadataExtractor: suspend (PagerValue) -> Pair<Long, Long>?,
-    // 【修改】: Saver 增加 batchTime 和 startOrder 参数
-    private val saver: suspend (items: List<FetcherValue>, loadType: LoadType, batchTime: Long, startOrder: Long) -> Unit,
+    private val saver: suspend (items: List<FetcherValue>, loadType: LoadType, cursor: String?, batchTime: Long, startOrder: Long) -> Unit,
     private val itemTargetIdExtractor: (FetcherValue) -> String,
     private val cacheChecker: (suspend (String?) -> Boolean)? = null,
 ) : RemoteMediator<Int, PagerValue>() {
@@ -134,7 +132,7 @@ class GenericRemoteMediator<PagerValue : Any, FetcherValue : Any>(
                             LoadType.PREPEND -> referenceOrder - pagedResult.data.size // 插在前面：参考点 - 数据量
                         }
 
-                        saver(pagedResult.data, loadType, batchTime, startOrder)
+                        saver(pagedResult.data, loadType, cursor, batchTime, startOrder)
 
                         // 为每个 Item 插入 RemoteKey
                         items.forEach { item ->

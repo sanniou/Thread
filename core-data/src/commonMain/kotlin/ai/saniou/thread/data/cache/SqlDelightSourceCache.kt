@@ -7,6 +7,7 @@ import ai.saniou.thread.db.Database
 import ai.saniou.thread.db.table.TopicTag
 import ai.saniou.thread.db.table.forum.Channel
 import ai.saniou.thread.db.table.forum.GetTopicsInChannelKeyset
+import ai.saniou.thread.db.table.forum.CommentListing
 import ai.saniou.thread.db.table.forum.TopicListing
 import ai.saniou.thread.domain.model.forum.ImageType
 import androidx.paging.PagingSource
@@ -150,22 +151,38 @@ class SqlDelightSourceCache(
     override suspend fun saveComments(
         comments: List<DomainComment>,
         sourceId: String,
+        topicId: String,
+        viewMode: String,
+        page: Long,
         receiveDate: Long,
         startOrder: Long,
     ) {
         commentQueries.transaction {
             comments.forEachIndexed { index, comment ->
+                // 1. Upsert Comment Content
                 commentQueries.upsertComment(
-                    comment.toEntity(sourceId, -1, startOrder + index + 1)
+                    comment.toEntity(sourceId, page, startOrder + index + 1)
+                )
+                // 2. Upsert Comment Listing
+                commentQueries.upsertCommentListing(
+                    CommentListing(
+                        sourceId = sourceId,
+                        commentId = comment.id,
+                        topicId = topicId,
+                        viewMode = viewMode,
+                        page = page,
+                        receiveDate = receiveDate,
+                        receiveOrder = startOrder + index + 1
+                    )
                 )
                 // Save Comment Images
-                comment.images.forEachIndexed { index, image ->
+                comment.images.forEachIndexed { imgIndex, image ->
                     db.imageQueries.upsertImage(
                         image.toEntity(
                             sourceId = sourceId,
                             parentId = comment.id,
                             parentType = ImageType.Comment,
-                            sortOrder = index.toLong()
+                            sortOrder = imgIndex.toLong()
                         )
                     )
                 }

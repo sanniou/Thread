@@ -40,7 +40,7 @@ class SubscriptionRemoteMediator(
                 PagedResult(feeds, prevCursor, nextCursor)
             }
         },
-        saver = { feedDetail, loadType, receiveDate, startOrder ->
+        saver = { feedDetail, loadType, cursor, receiveDate, startOrder ->
             if (loadType == LoadType.REFRESH) {
                 db.subscriptionQueries.deleteCloudSubscriptions(subscriptionKey)
             }

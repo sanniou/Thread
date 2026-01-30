@@ -137,7 +137,7 @@ class ChannelRepositoryImpl(
                     // Pass the cursor string to the source
                     source.getChannelTopics(channelId, cursor, isTimeline)
                 },
-                saver = { topics, loadType, receiveDate, startOrder ->
+                saver = { topics, loadType, cursor, receiveDate, startOrder ->
                     cache.saveTopics(
                         topics = topics,
                         sourceId = sourceId,

@@ -26,6 +26,31 @@ CREATE TABLE IF NOT EXISTS Comment (
 -- 索引迁移
 CREATE INDEX IF NOT EXISTS idx_comment_topic_id ON Comment(sourceId, topicId);
 
+-- 2. 评论列表关联表：存储分页和排序关系
+-- 支持多种视图模式：all(全部), po(楼主), reply(回复), 以及未来可能的其他模式
+CREATE TABLE CommentListing (
+    sourceId TEXT NOT NULL,
+    commentId TEXT NOT NULL,
+    topicId TEXT NOT NULL,
+    
+    -- 视图模式标识
+    viewMode TEXT NOT NULL,  -- 枚举: "all", "po", "reply" 等
+    
+    -- 分页信息
+    page INTEGER NOT NULL DEFAULT 0,  -- 页码（用于API分页）
+    receiveDate INTEGER NOT NULL DEFAULT 0,  -- 本地接收时间，用于缓存版本控制
+    receiveOrder INTEGER NOT NULL DEFAULT 0,  -- 本地接收顺序，用于Keyset分页
+    
+    PRIMARY KEY (sourceId, commentId, topicId, viewMode),
+    FOREIGN KEY (sourceId, commentId) REFERENCES Comment(sourceId, id) ON DELETE CASCADE,
+    FOREIGN KEY (sourceId, topicId) REFERENCES Topic(sourceId, id) ON DELETE CASCADE
+);
+
+-- 索引：用于快速查询某topic某模式下的评论
+CREATE INDEX IF NOT EXISTS idx_comment_listing_query ON CommentListing(sourceId, topicId, viewMode, page);
+CREATE INDEX IF NOT EXISTS idx_comment_listing_receive ON CommentListing(sourceId, topicId, viewMode, receiveDate);
+CREATE INDEX IF NOT EXISTS idx_comment_listing_order ON CommentListing(sourceId, topicId, viewMode, receiveOrder);
+
 -- 插入 Comment 数据
 upsertComment:
 INSERT INTO Comment (
@@ -156,3 +181,61 @@ WHERE Comment.sourceId = :sourceId
   AND Comment.userHash = Topic.authorId
   AND Comment.page = :page
 ORDER BY Comment.id ASC;
+
+-- CommentListing 相关查询
+
+-- 插入或更新 CommentListing
+upsertCommentListing:
+INSERT INTO CommentListing (
+    sourceId, commentId, topicId, viewMode, page, receiveDate, receiveOrder
+) VALUES ?
+ON CONFLICT (sourceId, commentId, topicId, viewMode) DO UPDATE SET
+    page = excluded.page,
+    receiveDate = excluded.receiveDate,
+    receiveOrder = excluded.receiveOrder;
+
+-- 删除指定 topicId 和 viewMode 的 CommentListing
+deleteCommentListingsByTopicIdAndViewMode:
+DELETE FROM CommentListing WHERE sourceId = :sourceId AND topicId = :topicId AND viewMode = :viewMode;
+
+-- 检查指定 topicId、viewMode 和 page 是否存在 CommentListing（用于 cacheChecker）
+hasCommentListingForPage:
+SELECT EXISTS(
+    SELECT 1 FROM CommentListing
+    WHERE sourceId = :sourceId
+      AND topicId = :topicId
+      AND viewMode = :viewMode
+      AND page = :page
+) AS hasListing;
+
+-- 获取指定 topicId 和 viewMode 的最大 receiveDate
+getMaxReceiveDateByTopicAndViewMode:
+SELECT MAX(receiveDate) FROM CommentListing WHERE sourceId = :sourceId AND topicId = :topicId AND viewMode = :viewMode;
+
+-- PagingSource: 统计评论数量（全部模式）
+countCommentsByTopicIdAndViewMode:
+SELECT count(*) FROM CommentListing
+WHERE sourceId = :sourceId
+  AND topicId = :topicId
+  AND viewMode = :viewMode
+  AND (
+      (:isFallback = 1)
+      OR
+      (receiveDate = (SELECT MAX(receiveDate) FROM CommentListing WHERE sourceId = :sourceId AND topicId = :topicId AND viewMode = :viewMode))
+  );
+
+-- PagingSource: 查询评论（全部模式，带 receiveDate 和 receiveOrder）
+getCommentsByTopicIdAndViewModeKeyset:
+SELECT Comment.*, CommentListing.receiveDate, CommentListing.receiveOrder
+FROM Comment
+JOIN CommentListing ON Comment.sourceId = CommentListing.sourceId AND Comment.id = CommentListing.commentId
+WHERE CommentListing.sourceId = :sourceId
+  AND CommentListing.topicId = :topicId
+  AND CommentListing.viewMode = :viewMode
+  AND (
+      (:isFallback = 1)
+      OR
+      (CommentListing.receiveDate = (SELECT MAX(receiveDate) FROM CommentListing WHERE sourceId = :sourceId AND topicId = :topicId AND viewMode = :viewMode))
+  )
+ORDER BY CommentListing.receiveOrder ASC, CommentListing.commentId DESC
+LIMIT :limit OFFSET :offset;

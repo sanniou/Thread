@@ -92,18 +92,29 @@ class TopicRepositoryImpl(
                 fetcher = { cursor ->
                     source.getTopicComments(topicId, cursor, isPoOnly)
                 },
-                saver = { comments, loadType, receiveDate, startOrder ->
-                    cache.saveComments(comments, sourceId, receiveDate, startOrder)
+                saver = { comments, loadType, cursor, receiveDate, startOrder ->
+                    val viewMode = if (isPoOnly) "po" else "all"
+                    val page = cursor?.toLongOrNull() ?: 1
+                    cache.saveComments(
+                        comments = comments,
+                        sourceId = sourceId,
+                        topicId = topicId,
+                        viewMode = viewMode,
+                        page = page,
+                        receiveDate = receiveDate,
+                        startOrder = startOrder
+                    )
                 },
                 itemTargetIdExtractor = { comment -> comment.id },
                 cacheChecker = { cursor ->
-                    // 使用 RemoteKeys 检查指定 cursor 的数据是否已缓存
-                    // cursor 对应 prevKey 或 nextKey
-                    val remoteKeyType = "thread_${sourceId}_${topicId}_${if (isPoOnly) "po" else "all"}"
-                    db.remoteKeyQueries.hasRemoteKeyWithCursor(
-                        type = remoteKeyType,
-                        prevKey = cursor,
-                        nextKey = cursor
+                    // 使用 CommentListing 检查指定页码的数据是否已缓存
+                    val viewMode = if (isPoOnly) "po" else "all"
+                    val page = cursor?.toIntOrNull() ?: 1
+                    db.commentQueries.hasCommentListingForPage(
+                        sourceId = sourceId,
+                        topicId = topicId,
+                        viewMode = viewMode,
+                        page = page.toLong()
                     ).executeAsOne()
                 },
                 lastItemMetadataExtractor = { topic ->

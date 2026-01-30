@@ -49,11 +49,22 @@ interface SourceCache {
     )
 
     /**
-     * 保存回复列表
+     * 保存回复列表（带 CommentListing）
+     *
+     * @param comments 回复列表
+     * @param sourceId 来源ID
+     * @param topicId 帖子ID
+     * @param viewMode 视图模式 ("all", "po", "reply" 等)
+     * @param page 页码
+     * @param receiveDate 接收时间戳
+     * @param startOrder 起始顺序
      */
     suspend fun saveComments(
         comments: List<DomainComment>,
         sourceId: String,
+        topicId: String,
+        viewMode: String,
+        page: Long,
         receiveDate: Long,
         startOrder: Long
     )

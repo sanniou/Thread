@@ -99,7 +99,7 @@ class TrendRepositoryImpl(
                     PagedResult(items, null, nextCursor)
                 }
             },
-            saver = { items, loadType, receiveDate, startOrder ->
+            saver = { items, loadType, cursor, receiveDate, startOrder ->
                 if (loadType == LoadType.REFRESH) {
                     if (isRankMode) {
                         db.trendQueries.deleteTrendsByTabAndDate(source.id, tab.id, targetDate)
