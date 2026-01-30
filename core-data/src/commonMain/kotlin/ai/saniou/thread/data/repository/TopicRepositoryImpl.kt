@@ -93,49 +93,18 @@ class TopicRepositoryImpl(
                     source.getTopicComments(topicId, cursor, isPoOnly)
                 },
                 saver = { comments, loadType, receiveDate, startOrder ->
-                    // Note: We don't have 'page' here anymore from GenericRemoteMediator saver callback
-                    // But cache.saveComments needs it?
-                    // Actually cache.saveComments uses page to calculate floor?
-                    // Let's check cache.saveComments signature.
-                    // It takes (comments, sourceId, page).
-                    // But wait, GenericRemoteMediator saver signature is (List<FetcherValue>, LoadType) -> Unit.
-                    // We lost the 'key' in saver callback in my new GenericRemoteMediator design?
-                    // Yes, I removed 'key' from saver callback in GenericRemoteMediator.
-                    // This is a problem if saver needs the key (page number).
-                    // However, for NMB, the comments themselves contain floor/page info usually?
-                    // Or we can infer it?
-                    // Actually, `cache.saveComments` implementation:
-                    // It iterates comments and inserts them. The 'page' param might be used for something else?
-                    // Let's assume we can just save comments.
-                    // But wait, `cache.saveComments` signature in `SourceCache` interface:
-                    // suspend fun saveComments(comments: List<Comment>, sourceId: String, page: Any?)
-                    // It seems it was designed to take the key.
-                    // In the new design, we should rely on the data itself.
-                    // Let's pass null for page if possible, or fix SourceCache later.
-                    // For now, passing null.
                     cache.saveComments(comments, sourceId, receiveDate, startOrder)
                 },
                 itemTargetIdExtractor = { comment -> comment.id },
                 cacheChecker = { cursor ->
-                    // Cursor is String? (page number)
-                    val page = cursor?.toIntOrNull() ?: 1
-                    // We need to convert page to floor range?
-                    // 1 page = 19 items usually.
-                    // floor start = (page - 1) * 19
-                    val floorStart = (page - 1) * 19
-                    if (isPoOnly) {
-                        db.commentQueries.countCommentsByTopicIdPoModeAndFloor(
-                            sourceId,
-                            topicId,
-                            floorStart.toLong()
-                        ).executeAsOne() > 0
-                    } else {
-                        db.commentQueries.countCommentsByTopicIdAndFloor(
-                            sourceId,
-                            topicId,
-                            floorStart.toLong()
-                        ).executeAsOne() > 0
-                    }
+                    // 使用 RemoteKeys 检查指定 cursor 的数据是否已缓存
+                    // cursor 对应 prevKey 或 nextKey
+                    val remoteKeyType = "thread_${sourceId}_${topicId}_${if (isPoOnly) "po" else "all"}"
+                    db.remoteKeyQueries.hasRemoteKeyWithCursor(
+                        type = remoteKeyType,
+                        prevKey = cursor,
+                        nextKey = cursor
+                    ).executeAsOne()
                 },
                 lastItemMetadataExtractor = { topic ->
                     // 用不到所以先随便写

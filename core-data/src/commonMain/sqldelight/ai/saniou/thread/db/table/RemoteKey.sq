@@ -10,6 +10,18 @@ CREATE TABLE RemoteKeys (
 -- 索引：用于快速查找某个 Type 下的所有 Keys (例如清空缓存时)
 CREATE INDEX IF NOT EXISTS remote_keys_type_index ON RemoteKeys(type);
 
+-- 索引：用于通过 prevKey 或 nextKey 快速查找 (cacheChecker 使用)
+CREATE INDEX IF NOT EXISTS remote_keys_prev_key_index ON RemoteKeys(type, prevKey);
+CREATE INDEX IF NOT EXISTS remote_keys_next_key_index ON RemoteKeys(type, nextKey);
+
+-- 检查是否存在指定 cursor 的 RemoteKey
+-- 用于 cacheChecker 判断某页数据是否已缓存
+hasRemoteKeyWithCursor:
+SELECT EXISTS(
+    SELECT 1 FROM RemoteKeys
+    WHERE type = ? AND (prevKey = ? OR nextKey = ?)
+) AS hasKey;
+
 insertOrReplace:
 INSERT OR REPLACE INTO RemoteKeys(targetId, type, prevKey, nextKey, lastUpdated)
 VALUES (?, ?, ?, ?, ?);

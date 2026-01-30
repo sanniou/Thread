@@ -6,7 +6,6 @@ import ai.saniou.thread.data.mapper.toEntityNoLastKey
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.db.table.TopicTag
 import ai.saniou.thread.db.table.forum.Channel
-import ai.saniou.thread.db.table.forum.Comment
 import ai.saniou.thread.db.table.forum.GetTopicsInChannelKeyset
 import ai.saniou.thread.db.table.forum.TopicListing
 import ai.saniou.thread.domain.model.forum.ImageType
