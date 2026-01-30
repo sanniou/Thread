@@ -23,7 +23,7 @@ fun Image.toEntity(
     sortOrder: Long,
 ): EntityImage {
     return EntityImage(
-        id = "${sourceId}_${parentId}_${sortOrder}",
+        id = "${sourceId}_${parentType}_${parentId}_${sortOrder}",
         sourceId = sourceId,
         parentId = parentId,
         parentType = parentType,
