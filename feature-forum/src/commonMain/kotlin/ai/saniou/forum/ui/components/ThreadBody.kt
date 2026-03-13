@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.sp
 
 @OptIn(ExperimentalLayoutApi::class, ExperimentalFoundationApi::class)
 @Composable
@@ -29,13 +28,8 @@ fun ThreadBody(
             ForumRichText(
                 text = content,
                 maxLines = maxLines,
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    lineHeight = 24.sp,
-                    letterSpacing = 0.2.sp,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f)
-                ),
-                // ThreadBody uses onReferenceClick for everything (thread links and ref links)
-                // because it typically opens a preview sheet or navigates in a specific way.
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface,
                 onThreadClick = onReferenceClick,
                 onReferenceClick = onReferenceClick,
                 blankLinePolicy = BlankLinePolicy.COLLAPSE
