@@ -4,16 +4,15 @@ import ai.saniou.corecommon.utils.toRelativeTimeString
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.forum.ui.components.AnimatedIconButton
 import ai.saniou.forum.ui.components.Badge
+import ai.saniou.forum.ui.components.CollapsibleThreadBody
 import ai.saniou.forum.ui.components.LikeButton
 import ai.saniou.forum.ui.components.SubCommentPreview
 import ai.saniou.forum.ui.components.ThreadAuthor
-import ai.saniou.forum.ui.components.ThreadBody
 import ai.saniou.thread.domain.model.forum.Comment
 import ai.saniou.thread.domain.model.forum.Image
 import ai.saniou.thread.domain.model.forum.TopicMetadata
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,7 +34,6 @@ import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.filled.Reply
 import androidx.compose.material.icons.outlined.BookmarkBorder
-import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -53,16 +51,24 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.stringResource
 import thread.feature_forum.generated.resources.Res
-import thread.feature_forum.generated.resources.*
+import thread.feature_forum.generated.resources.bookmark
+import thread.feature_forum.generated.resources.bookmark_reply
+import thread.feature_forum.generated.resources.bookmark_thread
+import thread.feature_forum.generated.resources.copy_content
+import thread.feature_forum.generated.resources.empty_title
+import thread.feature_forum.generated.resources.flag_admin
+import thread.feature_forum.generated.resources.open_original_link
+import thread.feature_forum.generated.resources.poll_not_implemented
+import thread.feature_forum.generated.resources.reply
+import thread.feature_forum.generated.resources.reply_count
+import thread.feature_forum.generated.resources.share
+import thread.feature_forum.generated.resources.view_po_only
 
 @Composable
 fun HeroTopicCard(
@@ -76,27 +82,21 @@ fun HeroTopicCard(
     onBookmarkImage: (Image) -> Unit,
     onUpvote: () -> Unit,
     onUserClick: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val uriHandler = LocalUriHandler.current
     var showMenu by remember { mutableStateOf(false) }
 
-    // Card Style: Modern, clean, with subtle separation
     Column(
         modifier = modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surface)
             .padding(bottom = Dimens.padding_medium)
     ) {
-        // 1. Title Section (Large, Bold)
         if (!metadata.title.isNullOrBlank() && metadata.title != stringResource(Res.string.empty_title)) {
             Text(
                 text = metadata.title!!,
-                style = MaterialTheme.typography.headlineSmall.copy(
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = (-0.2).sp,
-                    lineHeight = 28.sp
-                ),
+                style = MaterialTheme.typography.headlineSmall,
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(
                     start = Dimens.padding_standard,
@@ -107,7 +107,6 @@ fun HeroTopicCard(
             )
         }
 
-        // 2. Metadata Row (Author, Time, Badges)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -124,7 +123,6 @@ fun HeroTopicCard(
                         horizontalArrangement = Arrangement.spacedBy(Dimens.padding_tiny),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Source Badge
                         if (metadata.sourceName.isNotBlank()) {
                             Badge(
                                 text = metadata.sourceName.uppercase(),
@@ -132,15 +130,13 @@ fun HeroTopicCard(
                                 contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                        // Tags
                         metadata.tags.forEach { tag ->
                             Badge(
                                 text = tag.name,
-                                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.8f),
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
                                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                         }
-                        // 楼主标识
                         Badge(
                             text = "楼主",
                             containerColor = MaterialTheme.colorScheme.primary,
@@ -154,40 +150,34 @@ fun HeroTopicCard(
 
         Spacer(modifier = Modifier.height(Dimens.padding_medium))
 
-        // 3. Content Body (If available)
         if (comment != null) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .combinedClickable(
-                        onClick = { /* Allow inner clicks */ },
-                        onLongClick = { showMenu = true }
-                    )
+                    .combinedClickable(onClick = {}, onLongClick = { showMenu = true })
                     .padding(horizontal = Dimens.padding_standard)
             ) {
-                ThreadBody(
+                CollapsibleThreadBody(
                     content = comment.content,
                     images = comment.images,
                     onReferenceClick = refClick,
                     onImageClick = onImageClick,
-                    onImageLongClick = { image -> onBookmarkImage(image) }
+                    onImageLongClick = onBookmarkImage
                 )
             }
         } else if (showContentPlaceholder) {
-            // Loading placeholder for content
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(100.dp)
                     .padding(horizontal = Dimens.padding_standard)
                     .background(
-                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                        RoundedCornerShape(8.dp)
+                        MaterialTheme.colorScheme.surfaceVariant,
+                        RoundedCornerShape(Dimens.corner_radius_medium)
                     )
             )
         }
 
-        // 4. Polls (Placeholder)
         if (metadata.capabilities.hasPoll && metadata.poll != null) {
             Spacer(modifier = Modifier.height(Dimens.padding_medium))
             Text(
@@ -200,7 +190,6 @@ fun HeroTopicCard(
 
         Spacer(modifier = Modifier.height(Dimens.padding_medium))
 
-        // 5. Action Bar (Integrated with Micro-interactions)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -208,25 +197,23 @@ fun HeroTopicCard(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Left Actions
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (metadata.capabilities.hasUpvote) {
                     LikeButton(
-                        isLiked = false, // TODO: Bind to real state
+                        isLiked = false,
                         count = metadata.agreeCount,
                         onClick = onUpvote
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(Dimens.padding_small))
                 }
-                
+
                 AnimatedIconButton(
-                    onClick = { /* TODO: Reply */ },
+                    onClick = { },
                     icon = Icons.Default.Reply,
                     contentDescription = stringResource(Res.string.reply)
                 )
             }
 
-            // Right Actions
             Row(verticalAlignment = Alignment.CenterVertically) {
                 AnimatedIconButton(
                     onClick = onBookmark,
@@ -243,7 +230,6 @@ fun HeroTopicCard(
             }
         }
 
-        // Dropdown Menu
         DropdownMenu(
             expanded = showMenu,
             onDismissRequest = { showMenu = false }
@@ -284,25 +270,23 @@ fun FilterBar(
     replyCount: String,
     isPoOnly: Boolean,
     onTogglePoOnly: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
-    // Glassmorphism / Sticky Header Style
     Surface(
         modifier = modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f), // Slightly transparent
-        shadowElevation = 1.dp, // Subtle shadow
-        tonalElevation = 2.dp
+        color = MaterialTheme.colorScheme.surface,
+        tonalElevation = Dimens.padding_tiny
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = Dimens.padding_standard, vertical = 12.dp),
+                .padding(horizontal = Dimens.padding_standard, vertical = Dimens.padding_medium),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
                 text = stringResource(Res.string.reply_count, replyCount),
-                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.onSurface
             )
 
@@ -321,9 +305,7 @@ fun FilterBar(
                 } else null,
                 colors = FilterChipDefaults.filterChipColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                    selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer
                 ),
                 border = null,
                 shape = CircleShape,
@@ -345,18 +327,23 @@ fun ThreadReply(
     onBookmark: () -> Unit,
     onBookmarkImage: (Image) -> Unit,
     onUserClick: (String) -> Unit,
-    modifier: Modifier = Modifier
+    isHighlighted: Boolean = false,
+    modifier: Modifier = Modifier,
 ) {
-    val isPo = remember(reply.author.id, poUserHash) {
-        reply.author.id == poUserHash
-    }
+    val isPo = remember(reply.author.id, poUserHash) { reply.author.id == poUserHash }
     var showMenu by remember { mutableStateOf(false) }
     val haptic = LocalHapticFeedback.current
 
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surface)
+            .background(
+                if (isHighlighted) {
+                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
+                } else {
+                    MaterialTheme.colorScheme.surface
+                }
+            )
             .combinedClickable(
                 onClick = { onReplyClicked(reply.id) },
                 onLongClick = {
@@ -369,7 +356,6 @@ fun ThreadReply(
                 vertical = Dimens.padding_medium
             )
     ) {
-        // Header: Author + Time + Floor/ID
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
@@ -392,26 +378,22 @@ fun ThreadReply(
             )
 
             Column(horizontalAlignment = Alignment.End) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    reply.floor?.let { floor ->
-                        Text(
-                            text = "#$floor",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                    }
+                reply.floor?.let { floor ->
+                    Text(
+                        text = "#$floor",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
                 Text(
-                     text = "ID:${reply.id}",
-                     style = MaterialTheme.typography.bodySmall.copy(fontSize = 10.sp),
-                     color = MaterialTheme.colorScheme.outline.copy(alpha = 0.6f)
+                    text = "ID:${reply.id}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.outline
                 )
             }
         }
 
-        // Optional Title (for replies)
         if (!reply.title.isNullOrBlank() && reply.title != stringResource(Res.string.empty_title)) {
             Spacer(modifier = Modifier.height(6.dp))
             Text(
@@ -424,27 +406,24 @@ fun ThreadReply(
 
         Spacer(modifier = Modifier.height(Dimens.padding_small))
 
-        // Content
-        ThreadBody(
+        CollapsibleThreadBody(
             content = reply.content,
             images = reply.images,
             onReferenceClick = refClick,
             onImageClick = onImageClick,
-            onImageLongClick = { image -> onBookmarkImage(image) }
+            onImageLongClick = onBookmarkImage
         )
 
-        // Sub-comments Preview (Twitter Style)
         if (reply.subCommentsPreview.isNotEmpty()) {
             Spacer(modifier = Modifier.height(Dimens.padding_small))
             SubCommentPreview(
                 subComments = reply.subCommentsPreview,
                 totalCount = reply.subCommentCount,
                 onViewMoreClick = { onReplyClicked(reply.id) },
-                onCommentClick = { /* TODO: Navigate to specific sub-comment? */ }
+                onCommentClick = {}
             )
         }
 
-        // Action Bar (Simplified for replies)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -465,12 +444,11 @@ fun ThreadReply(
             )
         }
 
-        // Menu
         DropdownMenu(
             expanded = showMenu,
             onDismissRequest = { showMenu = false }
         ) {
-             DropdownMenuItem(
+            DropdownMenuItem(
                 text = { Text(stringResource(Res.string.reply)) },
                 leadingIcon = { Icon(Icons.Filled.Reply, null) },
                 onClick = {
@@ -495,37 +473,5 @@ fun ThreadReply(
                 }
             )
         }
-    }
-}
-
-@Composable
-private fun ActionButton(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    text: String,
-    onClick: () -> Unit
-) {
-    // A more subtle button style, pill shape or text button
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .clip(RoundedCornerShape(50)) // Fully rounded for modern feel
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = text,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(20.dp)
-        )
-        // Optionally hide text on very small screens or make it an icon-only button if needed
-        // For now, keep text but make it small
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(
-            text = text,
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            fontWeight = FontWeight.Medium
-        )
     }
 }

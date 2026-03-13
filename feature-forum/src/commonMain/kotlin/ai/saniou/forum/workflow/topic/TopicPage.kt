@@ -27,9 +27,9 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -39,6 +39,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -108,14 +109,14 @@ data class TopicPage(
             TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
         val lazyListState = rememberLazyListState()
         val coroutineScope = rememberCoroutineScope()
-        var expandedFab by remember { mutableStateOf(true) }
+        var showQuickActionBar by remember { mutableStateOf(true) }
         val fabNestedScrollConnection = remember {
             object : NestedScrollConnection {
                 override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
                     if (available.y < -15f) {
-                        expandedFab = false
+                        showQuickActionBar = false
                     } else if (available.y > 15f) {
-                        expandedFab = true
+                        showQuickActionBar = true
                     }
                     return Offset.Zero
                 }
@@ -124,7 +125,7 @@ data class TopicPage(
 
         LaunchedEffect(lazyListState.firstVisibleItemIndex) {
             if (lazyListState.firstVisibleItemIndex == 0) {
-                expandedFab = true
+                showQuickActionBar = true
             }
         }
 
@@ -133,6 +134,12 @@ data class TopicPage(
                 when (effect) {
                     TopicContract.Effect.ScrollToTop -> lazyListState.animateScrollToItem(0)
                 }
+            }
+        }
+
+        val canRefresh by remember {
+            derivedStateOf {
+                lazyListState.firstVisibleItemIndex == 0 && lazyListState.firstVisibleItemScrollOffset == 0
             }
         }
 
@@ -252,19 +259,42 @@ data class TopicPage(
                     scrollBehavior = scrollBehavior
                 )
             },
-            floatingActionButton = {
-                ExtendedFloatingActionButton(
-                    onClick = {
-                        navigator.push(
-                            PostPage(
-                                fid = forumId.toInt(),
-                                forumName = state.channelName
-                            )
+            bottomBar = {
+                ai.saniou.coreui.widgets.UnifiedActionBar(
+                    visible = showQuickActionBar,
+                    actions = listOf(
+                        ai.saniou.coreui.widgets.ActionItem(
+                            label = stringResource(Res.string.topic_page_post),
+                            icon = Icons.Default.Add,
+                            emphasized = true,
+                            onClick = {
+                                navigator.push(
+                                    PostPage(
+                                        fid = forumId.toInt(),
+                                        forumName = state.channelName
+                                    )
+                                )
+                            }
+                        ),
+                        ai.saniou.coreui.widgets.ActionItem(
+                            label = stringResource(Res.string.refresh),
+                            icon = Icons.Default.Refresh,
+                            onClick = {
+                                if (canRefresh) {
+                                    threads.refresh()
+                                } else {
+                                    coroutineScope.launch {
+                                        lazyListState.animateScrollToItem(0)
+                                    }
+                                }
+                            }
+                        ),
+                        ai.saniou.coreui.widgets.ActionItem(
+                            label = stringResource(Res.string.topic_page_user_center),
+                            icon = Icons.Default.AccountCircle,
+                            onClick = { navigator.push(UserPage()) }
                         )
-                    },
-                    expanded = expandedFab,
-                    icon = { Icon(Icons.Default.Add, stringResource(Res.string.topic_page_post)) },
-                    text = { Text(stringResource(Res.string.topic_page_post)) }
+                    )
                 )
             }
         ) { innerPadding ->

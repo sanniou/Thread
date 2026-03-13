@@ -88,6 +88,7 @@ data class TopicDetailPage(
         var showReferencePopup by remember { mutableStateOf(false) }
         var currentReferenceId by remember { mutableStateOf(0L) }
         val referenceState by referenceViewModel.uiState.collectAsState()
+        var highlightedReplyId by remember { mutableStateOf<String?>(null) }
 
         // Scroll Behavior for TopAppBar
         val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
@@ -193,17 +194,33 @@ data class TopicDetailPage(
                 )
             },
             snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-            floatingActionButton = {
+            bottomBar = {
                 if (state.topicWrapper is UiStateWrapper.Success) {
-                    FloatingActionButton(
-                        onClick = {
-                            (state.topicWrapper as? UiStateWrapper.Success<TopicMetadata>)?.value?.let { metadata ->
-                                navigator.push(PostPage(resto = metadata.id.toInt()))
-                            }
-                        }
-                    ) {
-                        Icon(Icons.Default.Edit, contentDescription = stringResource(Res.string.reply))
-                    }
+                    ai.saniou.coreui.widgets.UnifiedActionBar(
+                        visible = true,
+                        actions = listOf(
+                            ai.saniou.coreui.widgets.ActionItem(
+                                label = stringResource(Res.string.reply),
+                                icon = Icons.Default.Edit,
+                                emphasized = true,
+                                onClick = {
+                                    (state.topicWrapper as? UiStateWrapper.Success<TopicMetadata>)?.value?.let { metadata ->
+                                        navigator.push(PostPage(resto = metadata.id.toInt()))
+                                    }
+                                }
+                            ),
+                            ai.saniou.coreui.widgets.ActionItem(
+                                label = stringResource(Res.string.refresh),
+                                icon = Icons.Default.Refresh,
+                                onClick = { viewModel.onEvent(Event.Refresh) }
+                            ),
+                            ai.saniou.coreui.widgets.ActionItem(
+                                label = stringResource(Res.string.subscribe),
+                                icon = if (state.isSubscribed) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                                onClick = { viewModel.onEvent(Event.ToggleSubscription) }
+                            )
+                        )
+                    )
                 }
             }
         ) { innerPadding ->
@@ -214,6 +231,7 @@ data class TopicDetailPage(
                 onRefresh = { viewModel.onEvent(Event.Refresh) },
                 onTogglePoOnly = { viewModel.onEvent(Event.TogglePoOnlyMode) },
                 onRefClick = { refId ->
+                    highlightedReplyId = refId.toString()
                     currentReferenceId = refId
                     referenceViewModel.onEvent(
                         ReferenceContract.Event.GetReference(
@@ -243,7 +261,8 @@ data class TopicDetailPage(
                 onBookmarkImage = { image -> viewModel.onEvent(Event.BookmarkImage(image)) },
                 onUpvote = { viewModel.onEvent(Event.UpvoteTopic) },
                 onUserClick = { userHash -> navigator.push(UserDetailPage(userHash)) },
-                onReplyClicked = { commentId -> viewModel.onEvent(Event.ShowSubComments(commentId)) }
+                onReplyClicked = { commentId -> viewModel.onEvent(Event.ShowSubComments(commentId)) },
+                highlightedReplyId = highlightedReplyId
             )
         }
 
@@ -307,6 +326,7 @@ private fun ThreadContentRouter(
     onUpvote: () -> Unit,
     onUserClick: (String) -> Unit,
     onReplyClicked: (String) -> Unit,
+    highlightedReplyId: String?,
 ) {
     StateLayout(
         state = state.topicWrapper,
@@ -334,7 +354,8 @@ private fun ThreadContentRouter(
             onBookmark = onBookmark,
             onBookmarkImage = onBookmarkImage,
             onUpvote = onUpvote,
-            onUserClick = onUserClick
+            onUserClick = onUserClick,
+            highlightedReplyId = highlightedReplyId
         )
     }
 }
@@ -480,6 +501,7 @@ fun ThreadSuccessContent(
     onBookmarkImage: (Image) -> Unit,
     onUpvote: () -> Unit,
     onUserClick: (String) -> Unit,
+    highlightedReplyId: String?,
 ) {
     val replies = state.replies.collectAsLazyPagingItems()
     val allImages by remember(replies.itemSnapshotList) {
@@ -547,7 +569,8 @@ fun ThreadSuccessContent(
             onBookmarkImage = onBookmarkImage,
             onUpvote = onUpvote,
             onUserClick = onUserClick,
-            onBookmark = onBookmark
+            onBookmark = onBookmark,
+            highlightedReplyId = highlightedReplyId
         )
     }
 }
@@ -568,6 +591,7 @@ private fun ThreadList(
     onBookmarkImage: (Image) -> Unit,
     onUpvote: () -> Unit,
     onUserClick: (String) -> Unit,
+    highlightedReplyId: String?,
 ) {
     val replies = state.replies.collectAsLazyPagingItems()
 
@@ -641,7 +665,8 @@ private fun ThreadList(
                     onCopy = { onCopy(reply.content) },
                     onBookmark = { onBookmark(reply) },
                     onBookmarkImage = onBookmarkImage,
-                    onUserClick = onUserClick
+                    onUserClick = onUserClick,
+                    isHighlighted = highlightedReplyId == reply.id
                 )
                 HorizontalDivider(
                     thickness = 0.5.dp,
