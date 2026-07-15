@@ -201,7 +201,7 @@ data class TopicDetailPage(
                         visible = true,
                         actions = buildList {
                             val metadata = (state.topicWrapper as? UiStateWrapper.Success<TopicMetadata>)?.value
-                            if (metadata?.capabilities?.supportsPosting == true) {
+                            if (metadata?.capabilities?.supportsReplies == true) {
                                 add(
                                     ai.saniou.coreui.widgets.ActionItem(
                                         label = stringResource(Res.string.reply),

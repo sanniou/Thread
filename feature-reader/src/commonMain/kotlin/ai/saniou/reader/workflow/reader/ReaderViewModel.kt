@@ -4,6 +4,8 @@ import ai.saniou.coreui.state.toAppError
 import ai.saniou.thread.domain.model.reader.Article
 import ai.saniou.thread.domain.model.reader.FeedSource
 import ai.saniou.thread.domain.usecase.reader.*
+import ai.saniou.thread.domain.refresh.RefreshStatus
+import ai.saniou.thread.domain.usecase.refresh.ObserveRefreshDiagnosticsUseCase
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import cafe.adriel.voyager.core.model.ScreenModel
@@ -20,7 +22,8 @@ class ReaderViewModel(
     private val markArticleAsReadUseCase: MarkArticleAsReadUseCase,
     private val refreshFeedSourceUseCase: RefreshFeedSourceUseCase,
     private val refreshAllFeedsUseCase: RefreshAllFeedsUseCase,
-    private val getArticleCountsUseCase: GetArticleCountsUseCase
+    private val getArticleCountsUseCase: GetArticleCountsUseCase,
+    private val observeRefreshDiagnostics: ObserveRefreshDiagnosticsUseCase,
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(ReaderContract.State())
@@ -28,6 +31,17 @@ class ReaderViewModel(
     val articles: Flow<PagingData<Article>>
 
     init {
+        screenModelScope.launch {
+            observeRefreshDiagnostics().collect { tasks ->
+                _state.update { current ->
+                    current.copy(
+                        refreshFailures = tasks.values
+                            .filter { it.status == RefreshStatus.FAILED && it.key.startsWith("reader:") }
+                            .sortedByDescending { it.finishedAtEpochMillis },
+                    )
+                }
+            }
+        }
         screenModelScope.launch {
             getFeedSourcesUseCase().collect { sources ->
                 _state.update { it.copy(feedSources = sources) }

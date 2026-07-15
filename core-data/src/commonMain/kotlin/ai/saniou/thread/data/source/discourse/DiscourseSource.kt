@@ -49,7 +49,8 @@ class DiscourseSource(
     override val name: String = "Linux.do"
     override val capabilities = ai.saniou.thread.domain.model.SourceCapabilities(
         supportsSearch = true,
-        supportsPosting = true,
+        supportsTopicCreation = true,
+        supportsReplies = true,
         supportsUserContent = true,
         supportsLogin = true,
         commentPageSize = 20,

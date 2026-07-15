@@ -58,7 +58,8 @@ class NmbSource(
 
     override val capabilities: SourceCapabilities = SourceCapabilities(
         supportsSearch = true,
-        supportsPosting = true,
+        supportsTopicCreation = true,
+        supportsReplies = true,
         supportsUserContent = true,
         supportsLogin = true,
         commentPageSize = 19,

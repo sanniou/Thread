@@ -22,7 +22,8 @@ class SourceCapabilitiesTest {
         val capabilities = SourceCapabilities.Tieba
 
         assertTrue(capabilities.supportsPagination)
-        assertTrue(capabilities.supportsPosting)
+        assertFalse(capabilities.supportsTopicCreation)
+        assertTrue(capabilities.supportsReplies)
         assertTrue(capabilities.supportsUserContent)
         assertTrue(capabilities.supportsLogin)
         assertTrue(capabilities.commentPageSize == 30)

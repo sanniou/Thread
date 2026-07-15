@@ -22,11 +22,6 @@ import ai.saniou.thread.data.repository.TopicRepositoryImpl
 import ai.saniou.thread.data.repository.AccountRepositoryImpl
 import ai.saniou.thread.data.repository.TagRepositoryImpl
 import ai.saniou.thread.data.repository.TrendRepositoryImpl
-import ai.saniou.thread.data.source.acfun.AcfunSource
-import ai.saniou.thread.data.source.acfun.remote.AcfunApi
-import ai.saniou.thread.data.source.acfun.remote.AcfunHeaderPlugin
-import ai.saniou.thread.data.source.acfun.remote.AcfunTokenManager
-import ai.saniou.thread.data.source.acfun.remote.createAcfunApi
 import ai.saniou.thread.data.source.tieba.remote.createNewTiebaApi
 import ai.saniou.thread.data.source.tieba.remote.createAppHybridTiebaApi
 import ai.saniou.thread.data.source.tieba.remote.createMiniTiebaApi
@@ -37,7 +32,8 @@ import ai.saniou.thread.data.source.tieba.remote.createSofireApi
 import ai.saniou.thread.data.source.tieba.remote.createOfficialProtobufTiebaApi
 import ai.saniou.thread.data.source.tieba.TiebaSource
 import ai.saniou.thread.data.source.tieba.TiebaTrendSource
-import ai.saniou.thread.data.source.nga.NgaSource
+import ai.saniou.thread.data.source.tieba.TiebaPostingConnector
+import ai.saniou.thread.data.source.tieba.TiebaUserContentConnector
 import ai.saniou.thread.data.source.nmb.NmbAccountProvider
 import ai.saniou.thread.data.source.nmb.NmbSource
 import ai.saniou.thread.data.source.nmb.NmbPostingConnector
@@ -83,9 +79,11 @@ import ai.saniou.thread.data.parser.HtmlParser
 import ai.saniou.thread.data.parser.JsonParser
 import ai.saniou.thread.data.parser.RssParser
 import ai.saniou.thread.data.repository.ReaderRepositoryImpl
+import ai.saniou.thread.data.refresh.DefaultRefreshCoordinator
 import ai.saniou.thread.domain.repository.AccountRepository
 import ai.saniou.thread.domain.repository.ReaderRepository
 import ai.saniou.thread.domain.repository.UserContentRepository
+import ai.saniou.thread.domain.refresh.RefreshCoordinator
 import ai.saniou.thread.domain.source.ConnectorRegistry
 import ai.saniou.thread.domain.source.DefaultConnectorRegistry
 import ai.saniou.thread.domain.source.ForumSearchConnector
@@ -161,20 +159,6 @@ val dataModule = DI.Module("dataModule") {
         }
         ktorfit.createDiscourseApi()
     }
-    bindConstant<String>(tag = "acfunBaseUrl") { "https://api-new.acfunchina.com/" }
-    bindSingleton<AcfunTokenManager> { AcfunTokenManager(instance()) }
-    bindSingleton<AcfunApi> {
-        val tokenManager = instance<AcfunTokenManager>()
-        val ktorfit = SaniouKtorfit(
-            baseUrl = instance("acfunBaseUrl")
-        ) {
-            install(AcfunHeaderPlugin) {
-                this.tokenManager = tokenManager
-            }
-        }
-        ktorfit.createAcfunApi()
-    }
-
     // cache
     bindSingleton<SourceCache> { SqlDelightSourceCache(instance()) }
 
@@ -189,38 +173,31 @@ val dataModule = DI.Module("dataModule") {
             instance()
         )
     }
-    bindSingleton<AcfunSource> { AcfunSource(instance(), instance()) }
     bindSingleton<TiebaSource> {
         TiebaSource(
-            instance(), // MiniTiebaApi
-            instance(), // OfficialTiebaApi
             instance(tag = "V11"), // OfficialProtobufTiebaApi V11
             instance(tag = "V12"), // OfficialProtobufTiebaApi V12
-            instance(), // WebTiebaApi
             instance(), // Database
-            instance(), // AccountRepository
             instance()  // TiebaParameterProvider
         )
     }
 
     bind<Source>(tag = "nmb") with singleton { instance<NmbSource>() }
-    bind<Source>(tag = "nga") with singleton { NgaSource() }
-    bind<Source>(tag = "acfun") with singleton { instance<AcfunSource>() }
     bind<Source>(tag = "discourse") with singleton { instance<DiscourseSource>() }
     bind<Source>(tag = "tieba") with singleton { instance<TiebaSource>() }
     bindSingleton { NmbPostingConnector(instance()) }
     bindSingleton { NmbLoginConnector(instance()) }
     bindSingleton { DiscoursePostingConnector(instance(), instance()) }
     bindSingleton { DiscourseLoginConnector(instance(), instance()) }
-    bindSingleton { TiebaLoginConnector(instance()) }
+    bindSingleton { TiebaUserContentConnector(instance(), instance()) }
+    bindSingleton { TiebaPostingConnector(instance(), instance(), instance(), instance(), instance()) }
+    bindSingleton { TiebaLoginConnector(instance(), instance(), instance()) }
 
     // "allInstance" only work in jvm current ,wait upgrade        val sources: Set<Source> = DI.allInstances()
     bind<Set<Source>>(tag = "allSources") with singleton {
         HashSet<Source>().apply {
             add(instance(tag = "nmb"))
-            add(instance(tag = "nga"))
             add(instance(tag = "discourse"))
-            add(instance(tag = "acfun"))
             add(instance(tag = "tieba"))
         }
     }
@@ -229,10 +206,18 @@ val dataModule = DI.Module("dataModule") {
         setOf(instance<NmbSource>(), instance<DiscourseSource>())
     }
     bind<Set<UserContentConnector>>(tag = "userContentConnectors") with singleton {
-        setOf(instance<NmbSource>(), instance<DiscourseSource>())
+        setOf(
+            instance<NmbSource>(),
+            instance<DiscourseSource>(),
+            instance<TiebaUserContentConnector>(),
+        )
     }
     bind<Set<PostingConnector>>(tag = "postingConnectors") with singleton {
-        setOf(instance<NmbPostingConnector>(), instance<DiscoursePostingConnector>())
+        setOf(
+            instance<NmbPostingConnector>(),
+            instance<DiscoursePostingConnector>(),
+            instance<TiebaPostingConnector>(),
+        )
     }
     bind<Set<LoginConnector>>(tag = "loginConnectors") with singleton {
         setOf(
@@ -263,6 +248,7 @@ val dataModule = DI.Module("dataModule") {
     bind<FavoriteRepository>() with singleton { FavoriteRepositoryImpl(instance()) }
     bind<FeedRepository>() with singleton {
         FeedRepositoryImpl(
+            instance(),
             instance(),
             instance(),
         )
@@ -321,7 +307,8 @@ val dataModule = DI.Module("dataModule") {
         ChannelRepositoryImpl(
             instance(),
             instance(tag = "allSources"),
-            instance()
+            instance(),
+            instance(),
         )
     }
 
@@ -352,8 +339,9 @@ val dataModule = DI.Module("dataModule") {
     bindSingleton { HtmlParser() }
     bindSingleton { FeedParserFactory(instance(), instance(), instance()) }
     bindSingleton { HttpClient() } // Use a basic HttpClient
+    bindSingleton<RefreshCoordinator> { DefaultRefreshCoordinator() }
     bind<ReaderRepository>() with singleton {
-        ReaderRepositoryImpl(instance(), instance(), instance())
+        ReaderRepositoryImpl(instance(), instance(), instance(), instance())
     }
 
     // Tieba Infrastructure

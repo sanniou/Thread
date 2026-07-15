@@ -5,6 +5,7 @@ import ai.saniou.coreui.composition.LocalAppDrawer
 import ai.saniou.coreui.state.PagingStateLayout
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.AppDrawerItem
+import ai.saniou.coreui.widgets.RefreshDiagnosticsBanner
 import ai.saniou.coreui.widgets.ArticleItem as ArticleListItem
 import ai.saniou.feature.feed.ui.components.FeedRichText
 import ai.saniou.thread.domain.model.feed.ArticleItem
@@ -254,6 +255,14 @@ private fun FeedScaffold(
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
+                if (state.refreshFailures.isNotEmpty()) {
+                    item {
+                        RefreshDiagnosticsBanner(
+                            failures = state.refreshFailures,
+                            modifier = Modifier.padding(horizontal = 12.dp),
+                        )
+                    }
+                }
                 item { Spacer(Modifier.height(2.dp)) }
                 items(timeline.itemCount) { index ->
                     when (val item = timeline[index]) {

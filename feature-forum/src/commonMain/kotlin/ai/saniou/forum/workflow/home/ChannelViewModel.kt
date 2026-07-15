@@ -19,6 +19,8 @@ import ai.saniou.thread.domain.usecase.notice.GetNoticeUseCase
 import ai.saniou.thread.domain.usecase.notice.MarkNoticeAsReadUseCase
 import ai.saniou.thread.domain.usecase.post.ToggleFavoriteUseCase
 import ai.saniou.thread.domain.usecase.source.GetAvailableSourcesUseCase
+import ai.saniou.thread.domain.refresh.RefreshStatus
+import ai.saniou.thread.domain.usecase.refresh.ObserveRefreshDiagnosticsUseCase
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.Job
@@ -41,6 +43,7 @@ class ChannelViewModel(
     private val fetchChannelsUseCase: FetchChannelsUseCase,
     private val getLastOpenedChannelUseCase: GetLastOpenedChannelUseCase,
     private val saveLastOpenedChannelUseCase: SaveLastOpenedChannelUseCase,
+    private val observeRefreshDiagnosticsUseCase: ObserveRefreshDiagnosticsUseCase,
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(ChannelUiState())
@@ -49,6 +52,18 @@ class ChannelViewModel(
     private var initCheckJob: Job? = null
 
     init {
+        screenModelScope.launch {
+            observeRefreshDiagnosticsUseCase().collect { tasks ->
+                _state.update { current ->
+                    current.copy(
+                        refreshFailures = tasks.values.filter {
+                            it.status == RefreshStatus.FAILED &&
+                                it.key == "forum:${current.currentSourceId}:catalog"
+                        },
+                    )
+                }
+            }
+        }
         loadSources()
         fetchNotice()
     }

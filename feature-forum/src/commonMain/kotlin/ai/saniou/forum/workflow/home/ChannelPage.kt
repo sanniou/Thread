@@ -3,6 +3,7 @@ package ai.saniou.forum.workflow.home
 import ai.saniou.coreui.composition.LocalAppDrawer
 import ai.saniou.coreui.state.StateLayout
 import ai.saniou.coreui.widgets.DrawerHeader
+import ai.saniou.coreui.widgets.RefreshDiagnosticsBanner
 import ai.saniou.coreui.widgets.RichText
 import ai.saniou.forum.workflow.home.ChannelContract.ChannelCategoryUiState
 import ai.saniou.forum.workflow.home.ChannelContract.Event
@@ -263,6 +264,11 @@ data class ChannelPage(
                         )
 
                         HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+
+                        RefreshDiagnosticsBanner(
+                            failures = state.refreshFailures,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        )
 
                         StateLayout(
                             state = state.categoriesState,

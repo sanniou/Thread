@@ -11,6 +11,7 @@ val feedModule = DI.Module("feedModule") {
             getTimeline = instance(),
             refreshTimeline = instance(),
             getAvailableSources = instance(),
+            observeRefreshDiagnostics = instance(),
         )
     }
 }

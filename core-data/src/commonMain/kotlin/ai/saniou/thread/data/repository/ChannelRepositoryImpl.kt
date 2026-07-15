@@ -12,6 +12,7 @@ import ai.saniou.thread.domain.model.forum.Channel
 import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.repository.ChannelRepository
 import ai.saniou.thread.domain.repository.Source
+import ai.saniou.thread.domain.refresh.RefreshCoordinator
 import androidx.paging.*
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
@@ -20,6 +21,7 @@ class ChannelRepositoryImpl(
     private val db: Database,
     private val sources: Set<Source>,
     private val cache: SourceCache,
+    private val refreshCoordinator: RefreshCoordinator,
 ) : ChannelRepository {
 
     private val sourceMap by lazy { sources.associateBy { it.id } }
@@ -30,7 +32,11 @@ class ChannelRepositoryImpl(
     override suspend fun fetchChannels(sourceId: String): Result<Unit> {
         val source = sourceMap[sourceId]
             ?: return Result.failure(IllegalArgumentException("Source not found: $sourceId"))
-        return source.fetchChannels()
+        return refreshCoordinator.execute(
+            key = "forum:$sourceId:catalog",
+            label = "${source.name} 版块",
+            operation = source::fetchChannels,
+        )
     }
 
     override fun getChannelTopicsPaging(

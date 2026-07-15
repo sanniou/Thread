@@ -261,7 +261,7 @@ data class TopicPage(
                 ai.saniou.coreui.widgets.UnifiedActionBar(
                     visible = showQuickActionBar,
                     actions = buildList {
-                        if (state.capabilities.supportsPosting) {
+                        if (state.capabilities.supportsTopicCreation) {
                             add(
                                 ai.saniou.coreui.widgets.ActionItem(
                                     label = stringResource(Res.string.topic_page_post),
@@ -355,5 +355,4 @@ data class TopicPage(
         }
     }
 }
-
 

@@ -9,7 +9,7 @@
 
 1.  **通用论坛 (Forum)**:
     -   专为“板块-帖子-回复”结构设计。
-    -   支持 **Tieba (贴吧)**, **NGA**, **Reddit**, **Discuz** 等社区型数据源。
+    -   当前运行目录支持 **Tieba (贴吧)**、**NMB/X 岛** 与 **Discourse**；实验性来源只有形成可用闭环后才会开放。
     -   统一的楼层浏览体验与交互。
 
 2.  **通用信息流 (Feed)**:
@@ -65,16 +65,16 @@
 
 -   [x] **架构重构**: 完成 Domain/Data 分层与 MVI 模式确立。
 -   [x] **核心抽象**: 定义 Source、Repository 等核心接口。
--   [ ] **Feature - Forum**: 构建通用论坛模块，接管原 `feature-nmb` 功能。
+-   [x] **Feature - Forum 基线**: 通用来源切换、登录、搜索、用户内容与按能力发帖/回复。
 -   [x] **Feature - Feed 基线**: 论坛与 Reader 聚合、筛选、分页、刷新和详情跳转闭环。
 -   [ ] **Social Connector**: 在统一 Feed 契约上接入 Mastodon/Bluesky 等来源。
--   [ ] **Feature - Reader**: 构建通用阅读模块，支持 RSS/URL 解析。
+-   [x] **Feature - Reader 基线**: RSS/Atom/JSON/HTML 来源、刷新诊断、阅读状态与收藏。
 -   [ ] **数据同步**: 支持 WebDAV 数据备份与同步。
 
 ## 🚀 构建与运行
 
 1.  **环境**: JDK 17+, Android Studio.
-2.  **当前验证**: `./gradlew :composeApp:compileKotlinJvm :core-domain:jvmTest`。
+2.  **当前验证**: `./gradlew :composeApp:compileKotlinJvm :core-domain:jvmTest :core-data:jvmTest`。
 3.  **运行**:
     -   Android: Run `androidApp`.
     -   Desktop: `./gradlew :composeApp:run`

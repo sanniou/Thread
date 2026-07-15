@@ -10,6 +10,7 @@ import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.repository.FeedRepository
 import ai.saniou.thread.domain.repository.ReaderRepository
 import ai.saniou.thread.domain.repository.SourceRepository
+import ai.saniou.thread.domain.refresh.RefreshCoordinator
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
@@ -24,6 +25,7 @@ import kotlinx.coroutines.supervisorScope
 class FeedRepositoryImpl(
     private val sourceRepository: SourceRepository,
     private val readerRepository: ReaderRepository,
+    private val refreshCoordinator: RefreshCoordinator,
 ) : FeedRepository {
 
     override fun getTimelinePaging(
@@ -55,7 +57,11 @@ class FeedRepositoryImpl(
         val sourceRefresh = async {
             selectedSources.map { source ->
                 async {
-                    source to runCatching { source.fetchChannels().getOrThrow() }
+                    source to refreshCoordinator.execute(
+                        key = "forum:${source.id}:catalog",
+                        label = "${source.name} 版块",
+                        operation = source::fetchChannels,
+                    )
                 }
             }.awaitAll()
         }

@@ -1,5 +1,7 @@
 package ai.saniou.feature.feed.workflow
 
+import ai.saniou.thread.domain.refresh.RefreshTaskState
+
 interface FeedContract {
     data class SourceOption(
         val id: String,
@@ -12,6 +14,7 @@ interface FeedContract {
         val includeReader: Boolean = true,
         val isRefreshing: Boolean = false,
         val message: String? = null,
+        val refreshFailures: List<RefreshTaskState> = emptyList(),
     )
 
     sealed interface Event {

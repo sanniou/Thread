@@ -5,6 +5,7 @@ import ai.saniou.coreui.state.PagingStateLayout
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.AppDrawerItem
 import ai.saniou.coreui.widgets.ArticleItem
+import ai.saniou.coreui.widgets.RefreshDiagnosticsBanner
 import ai.saniou.reader.workflow.articledetail.ArticleDetailPage
 import ai.saniou.thread.domain.model.reader.Article
 import ai.saniou.thread.domain.model.reader.FeedSource
@@ -193,6 +194,10 @@ private fun ReaderScaffold(
         }
     ) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize()) {
+            RefreshDiagnosticsBanner(
+                failures = state.refreshFailures,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            )
             FilterChips(
                 selectedFilter = state.articleFilter,
                 onFilterChange = onFilterChange

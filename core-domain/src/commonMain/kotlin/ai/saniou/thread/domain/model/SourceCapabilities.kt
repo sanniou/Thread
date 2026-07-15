@@ -7,7 +7,8 @@ data class SourceCapabilities(
     val supportsChannelCatalog: Boolean = true,
     val supportsFeedAggregation: Boolean = true,
     val supportsSearch: Boolean = false,
-    val supportsPosting: Boolean = false,
+    val supportsTopicCreation: Boolean = false,
+    val supportsReplies: Boolean = false,
     val supportsUserContent: Boolean = false,
     val supportsLogin: Boolean = false,
     val supportsPagination: Boolean = true,
@@ -27,7 +28,8 @@ data class SourceCapabilities(
         // 预定义常见源的能力 (可以在 Data 层根据 sourceId 动态匹配，也可以硬编码在这里作为参考)
         val Nmb = SourceCapabilities(
             supportsSearch = true,
-            supportsPosting = true,
+            supportsTopicCreation = true,
+            supportsReplies = true,
             supportsUserContent = true,
             supportsLogin = true,
             commentPageSize = 19,
@@ -39,7 +41,8 @@ data class SourceCapabilities(
         )
         
         val Tieba = SourceCapabilities(
-            supportsPosting = true,
+            supportsTopicCreation = false,
+            supportsReplies = true,
             supportsUserContent = true,
             supportsLogin = true,
             commentPageSize = 30,

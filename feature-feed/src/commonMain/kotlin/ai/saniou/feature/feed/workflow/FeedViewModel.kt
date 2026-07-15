@@ -4,6 +4,8 @@ import ai.saniou.thread.domain.model.feed.TimelineItem
 import ai.saniou.thread.domain.usecase.feed.GetTimelineUseCase
 import ai.saniou.thread.domain.usecase.feed.RefreshTimelineUseCase
 import ai.saniou.thread.domain.usecase.source.GetAvailableSourcesUseCase
+import ai.saniou.thread.domain.refresh.RefreshStatus
+import ai.saniou.thread.domain.usecase.refresh.ObserveRefreshDiagnosticsUseCase
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import cafe.adriel.voyager.core.model.ScreenModel
@@ -25,6 +27,7 @@ class FeedViewModel(
     private val getTimeline: GetTimelineUseCase,
     private val refreshTimeline: RefreshTimelineUseCase,
     getAvailableSources: GetAvailableSourcesUseCase,
+    observeRefreshDiagnostics: ObserveRefreshDiagnosticsUseCase,
 ) : ScreenModel {
 
     private val availableSources = getAvailableSources()
@@ -49,6 +52,21 @@ class FeedViewModel(
             getTimeline(sourceIds = sourceIds, includeReader = includeReader)
         }
         .cachedIn(screenModelScope)
+
+    init {
+        screenModelScope.launch {
+            observeRefreshDiagnostics().collect { tasks ->
+                _state.update { current ->
+                    current.copy(
+                        refreshFailures = tasks.values
+                            .filter { it.status == RefreshStatus.FAILED }
+                            .filter { it.key.startsWith("forum:") || it.key.startsWith("reader:") }
+                            .sortedByDescending { it.finishedAtEpochMillis },
+                    )
+                }
+            }
+        }
+    }
 
     fun onEvent(event: FeedContract.Event) {
         when (event) {

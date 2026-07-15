@@ -2,29 +2,17 @@ package ai.saniou.thread.data.source.tieba
 
 import ai.saniou.corecommon.coroutines.ioDispatcher
 import ai.saniou.thread.data.mapper.toDomain
-import ai.saniou.thread.data.model.CommentKey
-import ai.saniou.thread.data.model.TopicKey
 import ai.saniou.thread.data.source.tieba.remote.ClientVersion
-import ai.saniou.thread.data.source.tieba.remote.MiniTiebaApi
 import ai.saniou.thread.data.source.tieba.remote.OfficialProtobufTiebaApi
-import ai.saniou.thread.data.source.tieba.remote.OfficialTiebaApi
 import ai.saniou.thread.data.source.tieba.remote.TiebaProtoBuilder
-import ai.saniou.thread.data.source.tieba.remote.WebTiebaApi
 import ai.saniou.thread.db.Database
-import ai.saniou.thread.domain.model.FeedType
 import ai.saniou.thread.domain.model.PagedResult
 import ai.saniou.thread.domain.model.SourceCapabilities
 import ai.saniou.thread.domain.model.forum.Channel
 import ai.saniou.thread.domain.model.forum.Comment
 import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.model.user.LoginStrategy
-import ai.saniou.thread.domain.repository.AccountRepository
 import ai.saniou.thread.domain.repository.Source
-import androidx.paging.Pager
-import androidx.paging.PagingConfig
-import androidx.paging.PagingData
-import androidx.paging.PagingSource
-import androidx.paging.PagingState
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOneOrNull
@@ -36,26 +24,23 @@ import com.huanchengfly.tieba.post.api.models.protos.pbPage.PbPageRequest
 import com.huanchengfly.tieba.post.api.models.protos.pbPage.PbPageRequestData
 import io.ktor.http.encodeURLQueryComponent
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 
 class TiebaSource(
-    private val miniTiebaApi: MiniTiebaApi,
-    private val officialTiebaApi: OfficialTiebaApi,
     private val officialProtobufTiebaApiV11: OfficialProtobufTiebaApi,
     private val officialProtobufTiebaApiV12: OfficialProtobufTiebaApi,
-    private val webTiebaApi: WebTiebaApi,
     private val database: Database,
-    private val accountRepository: AccountRepository,
     private val tiebaParameterProvider: TiebaParameterProvider,
 ) : Source {
     override val id: String = TiebaMapper.SOURCE_ID
     override val name: String = TiebaMapper.SOURCE_NAME
     override val isInitialized: Flow<Boolean> = flowOf(true)
     override val capabilities: SourceCapabilities = SourceCapabilities(
-        supportsUserContent = false,
+        supportsUserContent = true,
         supportsLogin = true,
+        supportsTopicCreation = false,
+        supportsReplies = true,
         commentPageSize = 30,
         supportsPagination = true
     )
@@ -178,8 +163,7 @@ class TiebaSource(
         cursor: String?,
         isPoOnly: Boolean,
     ): Result<PagedResult<Comment>> = runCatching {
-        cursor as CommentKey
-        val page = (cursor.floor / 20 + 1).toInt()
+        val page = cursor?.toIntOrNull() ?: 1
         val kz =
             threadId.toLongOrNull() ?: throw IllegalArgumentException("Invalid threadId: $threadId")
 

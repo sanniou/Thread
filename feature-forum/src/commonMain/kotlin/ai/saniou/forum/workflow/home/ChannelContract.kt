@@ -4,6 +4,7 @@ import ai.saniou.coreui.state.UiStateWrapper
 import ai.saniou.thread.domain.model.forum.Channel
 import ai.saniou.thread.domain.model.forum.Notice
 import ai.saniou.thread.domain.repository.Source
+import ai.saniou.thread.domain.refresh.RefreshTaskState
 
 /**
  * 定义 Channel 功能模块的 UI 状态和事件
@@ -42,7 +43,8 @@ interface ChannelContract {
         val notice: Notice? = null,
         val currentSourceId: String = "",
         val availableSources: List<Source> = emptyList(),
-        val isCurrentSourceInitialized: Boolean = true
+        val isCurrentSourceInitialized: Boolean = true,
+        val refreshFailures: List<RefreshTaskState> = emptyList(),
     )
 
     /**

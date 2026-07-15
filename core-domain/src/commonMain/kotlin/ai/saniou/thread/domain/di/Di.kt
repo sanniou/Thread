@@ -45,6 +45,7 @@ import ai.saniou.thread.domain.usecase.thread.GetSubCommentsUseCase
 import ai.saniou.thread.domain.usecase.thread.GetTopicCommentsPagerUseCase
 import ai.saniou.thread.domain.usecase.thread.GetTopicMetadataUseCase
 import ai.saniou.thread.domain.usecase.user.LoginSourceUseCase
+import ai.saniou.thread.domain.usecase.refresh.ObserveRefreshDiagnosticsUseCase
 import org.kodein.di.DI
 import org.kodein.di.bindProvider
 import org.kodein.di.instance
@@ -55,6 +56,7 @@ val domainModule = DI.Module("domainModule") {
     bindProvider { GetTimelineUseCase(instance()) }
     bindProvider { RefreshTimelineUseCase(instance()) }
     bindProvider { GetAggregatedFeedUseCase(instance()) }
+    bindProvider { ObserveRefreshDiagnosticsUseCase(instance()) }
 
     // Reader
     bindProvider { GetFeedSourcesUseCase(instance()) }

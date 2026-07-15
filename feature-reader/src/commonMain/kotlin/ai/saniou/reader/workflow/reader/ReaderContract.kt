@@ -2,6 +2,7 @@ package ai.saniou.reader.workflow.reader
 
 import ai.saniou.coreui.state.AppError
 import ai.saniou.thread.domain.model.reader.FeedSource
+import ai.saniou.thread.domain.refresh.RefreshTaskState
 
 enum class ArticleFilter {
     ALL, UNREAD, BOOKMARKED
@@ -17,6 +18,7 @@ interface ReaderContract {
         val articleCounts: Map<String, Pair<Int, Int>> = emptyMap(),
         val searchQuery: String = "",
         val articleFilter: ArticleFilter = ArticleFilter.ALL,
+        val refreshFailures: List<RefreshTaskState> = emptyList(),
     )
 
     sealed interface Event {

@@ -38,6 +38,7 @@ kotlin {
         commonMain.dependencies {
             api(libs.kotlinx.datetime)
             api(libs.paging.common)
+            implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kodein.di)
         }
         commonTest.dependencies {

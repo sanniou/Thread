@@ -9,6 +9,7 @@ import ai.saniou.thread.domain.model.reader.FeedType
 import ai.saniou.thread.domain.model.reader.ArticleWithSource
 import ai.saniou.thread.domain.model.reader.ReaderRefreshReport
 import ai.saniou.thread.domain.repository.ReaderRepository
+import ai.saniou.thread.domain.refresh.RefreshCoordinator
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
@@ -34,7 +35,8 @@ import kotlin.time.Instant
 class ReaderRepositoryImpl(
     private val db: Database,
     private val parserFactory: FeedParserFactory,
-    private val httpClient: HttpClient
+    private val httpClient: HttpClient,
+    private val refreshCoordinator: RefreshCoordinator,
 ) : ReaderRepository {
 
     override fun getAllFeedSources(): Flow<List<FeedSource>> {
@@ -263,7 +265,11 @@ class ReaderRepositoryImpl(
         )
     }
 
-    override suspend fun refreshFeed(feedSourceId: String): Result<Unit> = runCatching {
+    override suspend fun refreshFeed(feedSourceId: String): Result<Unit> = refreshCoordinator.execute(
+        key = "reader:$feedSourceId",
+        label = getFeedSource(feedSourceId)?.name ?: feedSourceId,
+    ) {
+        runCatching {
             val source = getFeedSource(feedSourceId)
                 ?: throw IllegalArgumentException("Feed source not found: $feedSourceId")
             val response = httpClient.get(source.url)
@@ -298,4 +304,5 @@ class ReaderRepositoryImpl(
                 }
             }
         }
+    }
 }
