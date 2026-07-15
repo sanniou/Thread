@@ -2,16 +2,20 @@ package ai.saniou.thread.data.repository
 
 import ai.saniou.corecommon.coroutines.ioDispatcher
 import ai.saniou.thread.data.cache.SourceCache
+import ai.saniou.thread.data.cache.CacheFreshnessStore
 import ai.saniou.thread.data.mapper.toDomain
 import ai.saniou.thread.data.mapper.toMetadata
 import ai.saniou.thread.data.paging.DataPolicy
 import ai.saniou.thread.data.paging.DefaultRemoteKeyStrategy
 import ai.saniou.thread.data.paging.GenericRemoteMediator
-import ai.saniou.thread.data.source.tieba.TiebaSource
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.domain.model.forum.*
 import ai.saniou.thread.domain.repository.Source
 import ai.saniou.thread.domain.repository.TopicRepository
+import ai.saniou.thread.domain.source.SourceCatalog
+import ai.saniou.thread.domain.cache.CachePolicyProvider
+import ai.saniou.thread.domain.cache.CacheResource
+import ai.saniou.thread.domain.refresh.RefreshCoordinator
 import androidx.paging.*
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
@@ -21,27 +25,35 @@ import kotlinx.coroutines.withContext
 
 class TopicRepositoryImpl(
     private val db: Database,
-    private val sources: Set<Source>,
+    private val sourceCatalog: SourceCatalog,
     private val cache: SourceCache,
+    private val refreshCoordinator: RefreshCoordinator,
+    private val cachePolicyProvider: CachePolicyProvider,
+    private val freshnessStore: CacheFreshnessStore,
 ) : TopicRepository {
-
-    private val sourceMap by lazy { sources.associateBy { it.id } }
 
     override fun getTopicDetail(sourceId: String, id: String, forceRefresh: Boolean): Flow<Topic> {
         return cache.observeTopic(sourceId, id)
             .map { topic ->
-                topic.copy(sourceUrl = sourceMap[sourceId]?.topicUrl(id).orEmpty())
+                topic.copy(sourceUrl = sourceCatalog.source(sourceId)?.topicUrl(id).orEmpty())
             }
             .onStart {
-                val source = sourceMap[sourceId]
+                val source = sourceCatalog.source(sourceId)
                 if (source != null) {
                     val currentCache = db.topicQueries.getTopic(sourceId, id).executeAsOneOrNull()
-                    if (currentCache == null || forceRefresh) {
-                        val result = source.getTopicDetail(id, 1)
+                    val policy = cachePolicyProvider.policy(sourceId, CacheResource.TOPIC_DETAIL)
+                    val key = CacheFreshnessStore.topic(sourceId, id)
+                    if (currentCache == null || forceRefresh || !freshnessStore.isFresh(key, policy)) {
+                        val result = refreshCoordinator.execute(
+                            key = "forum:$sourceId:topic:$id",
+                            label = "${source.name} 主题",
+                            operation = { source.getTopicDetail(id, 1) },
+                        )
                         result.onSuccess { post ->
                             cache.saveTopic(post)
+                            freshnessStore.markFresh(key)
                         }.onFailure {
-                            throw it
+                            if (currentCache == null || !policy.serveStaleOnFailure) throw it
                         }
                     }
                 }
@@ -56,22 +68,29 @@ class TopicRepositoryImpl(
     ): Flow<TopicMetadata> {
         return cache.observeTopic(sourceId, id)
             .map { topic ->
-                val source = sourceMap[sourceId]
+                val source = sourceCatalog.source(sourceId)
                 topic.toMetadata(
                     capabilities = source?.capabilities ?: ai.saniou.thread.domain.model.SourceCapabilities.Default,
                     sourceUrl = source?.topicUrl(id).orEmpty(),
                 )
             }
             .onStart {
-                val source = sourceMap[sourceId]
+                val source = sourceCatalog.source(sourceId)
                 if (source != null) {
                     val currentCache = db.topicQueries.getTopic(sourceId, id).executeAsOneOrNull()
-                    if (currentCache == null || forceRefresh) {
-                        val result = source.getTopicDetail(id, 1)
+                    val policy = cachePolicyProvider.policy(sourceId, CacheResource.TOPIC_DETAIL)
+                    val key = CacheFreshnessStore.topic(sourceId, id)
+                    if (currentCache == null || forceRefresh || !freshnessStore.isFresh(key, policy)) {
+                        val result = refreshCoordinator.execute(
+                            key = "forum:$sourceId:topic:$id",
+                            label = "${source.name} 主题",
+                            operation = { source.getTopicDetail(id, 1) },
+                        )
                         result.onSuccess { post ->
                             cache.saveTopic(post)
+                            freshnessStore.markFresh(key)
                         }.onFailure {
-                            throw it
+                            if (currentCache == null || !policy.serveStaleOnFailure) throw it
                         }
                     }
                 }
@@ -85,7 +104,7 @@ class TopicRepositoryImpl(
         topicId: String,
         isPoOnly: Boolean,
     ): Flow<PagingData<Comment>> {
-        val source = sourceMap[sourceId]
+        val source = sourceCatalog.source(sourceId)
             ?: return flowOf(PagingData.empty())
 
         return Pager(
@@ -104,6 +123,9 @@ class TopicRepositoryImpl(
                 saver = { comments, loadType, cursor, receiveDate, startOrder ->
                     val viewMode = if (isPoOnly) "po" else "all"
                     val page = cursor?.toLongOrNull() ?: 1
+                    if (loadType == LoadType.REFRESH) {
+                        cache.clearTopicCommentsCache(sourceId, topicId)
+                    }
                     cache.saveComments(
                         comments = comments,
                         sourceId = sourceId,
@@ -125,6 +147,23 @@ class TopicRepositoryImpl(
                         viewMode = viewMode,
                         page = page.toLong()
                     ).executeAsOne()
+                },
+                initializeAction = {
+                    val hasCachedComments = db.commentQueries.countCommentsByTopicId(sourceId, topicId)
+                        .executeAsOne() > 0L
+                    val policy = cachePolicyProvider.policy(sourceId, CacheResource.TOPIC_COMMENTS)
+                    val isFresh = freshnessStore.isFresh(
+                        CacheFreshnessStore.comments(sourceId, topicId),
+                        policy,
+                    )
+                    if (hasCachedComments && isFresh) {
+                        RemoteMediator.InitializeAction.SKIP_INITIAL_REFRESH
+                    } else {
+                        RemoteMediator.InitializeAction.LAUNCH_INITIAL_REFRESH
+                    }
+                },
+                onRefreshSuccess = {
+                    freshnessStore.markFresh(CacheFreshnessStore.comments(sourceId, topicId))
                 },
                 lastItemMetadataExtractor = { topic ->
                     // 用不到所以先随便写
@@ -179,13 +218,9 @@ class TopicRepositoryImpl(
         commentId: String,
         page: Int,
     ): Result<List<Comment>> {
-        val source = sourceMap[sourceId]
-            ?: return Result.failure(Exception("Source not found: $sourceId"))
-
-        if (source !is TiebaSource) {
-            return Result.failure(Exception("getSubComments is not supported for source: $sourceId"))
-        }
-        return source.getSubComments(topicId, commentId, page)
+        val connector = sourceCatalog.subComments(sourceId)
+            ?: return Result.failure(UnsupportedOperationException("Source '$sourceId' has no sub-comments"))
+        return connector.getSubComments(topicId, commentId, page)
     }
 
     override fun getTopicImages(sourceId: String, threadId: Long): Flow<List<Image>> {

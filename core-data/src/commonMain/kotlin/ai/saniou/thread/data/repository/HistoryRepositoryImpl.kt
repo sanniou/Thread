@@ -8,6 +8,7 @@ import ai.saniou.thread.domain.model.history.HistoryItem
 import ai.saniou.thread.domain.model.history.HistoryPost
 import ai.saniou.thread.domain.repository.HistoryRepository
 import ai.saniou.thread.domain.repository.Source
+import ai.saniou.thread.domain.source.SourceCatalog
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
@@ -22,9 +23,8 @@ import kotlin.time.Instant
 
 class HistoryRepositoryImpl(
     private val db: Database,
-    sources: Set<Source>,
+    private val sourceCatalog: SourceCatalog,
 ) : HistoryRepository {
-    private val sourceMap = sources.associateBy(Source::id)
 
     override fun getHistory(typeFilter: String?): Flow<PagingData<HistoryItem>> {
         return Pager(
@@ -59,7 +59,7 @@ class HistoryRepositoryImpl(
                                 // 需要传入 imageQueries
                                 entity.toDomain(db.commentQueries,db.imageQueries,db.topicTagQueries)
                                     .copy(
-                                        sourceUrl = sourceMap[history.sourceId]
+                                        sourceUrl = sourceCatalog.source(history.sourceId)
                                             ?.topicUrl(history.itemId)
                                             .orEmpty(),
                                     )

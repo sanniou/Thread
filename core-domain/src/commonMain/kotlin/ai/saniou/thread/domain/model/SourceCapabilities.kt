@@ -22,35 +22,6 @@ data class SourceCapabilities(
     val hasHotReplies: Boolean = false,  // 是否支持热评
 ) {
     companion object {
-        // 默认能力 (最基础)
         val Default = SourceCapabilities()
-
-        // 预定义常见源的能力 (可以在 Data 层根据 sourceId 动态匹配，也可以硬编码在这里作为参考)
-        val Nmb = SourceCapabilities(
-            supportsSearch = true,
-            supportsTopicCreation = true,
-            supportsReplies = true,
-            supportsUserContent = true,
-            supportsLogin = true,
-            commentPageSize = 19,
-            hasSubComments = false, // A岛/X岛通常没有原生楼中楼，或者只是引用
-            hasUpvote = false,
-            hasDownvote = false,
-            hasPoOnly = true,
-            hasJumpPage = true
-        )
-        
-        val Tieba = SourceCapabilities(
-            supportsTopicCreation = false,
-            supportsReplies = true,
-            supportsUserContent = true,
-            supportsLogin = true,
-            commentPageSize = 30,
-            hasSubComments = true,
-            hasUpvote = true,
-            hasDownvote = true,
-            hasPoOnly = true,
-            hasJumpPage = true
-        )
     }
 }

@@ -22,9 +22,14 @@ import ai.saniou.thread.domain.usecase.post.CreateReplyUseCase
 import ai.saniou.thread.domain.usecase.post.CreateThreadUseCase
 import ai.saniou.thread.domain.usecase.post.GetReferenceUseCase
 import ai.saniou.thread.domain.usecase.post.ToggleFavoriteUseCase
+import ai.saniou.thread.domain.usecase.post.UpvoteTopicUseCase
 import ai.saniou.thread.domain.usecase.settings.GetSettingsUseCase
 import ai.saniou.thread.domain.usecase.settings.SaveSettingsUseCase
 import ai.saniou.thread.domain.usecase.source.GetAvailableSourcesUseCase
+import ai.saniou.thread.domain.usecase.source.ObserveSourceDescriptorsUseCase
+import ai.saniou.thread.domain.usecase.source.RemoveSourceDescriptorUseCase
+import ai.saniou.thread.domain.usecase.source.SetSourceEnabledUseCase
+import ai.saniou.thread.domain.usecase.source.UpsertSourceDescriptorUseCase
 import ai.saniou.thread.domain.usecase.subscription.GetSubscriptionFeedUseCase
 import ai.saniou.thread.domain.usecase.subscription.GetActiveSubscriptionKeyUseCase
 import ai.saniou.thread.domain.usecase.subscription.IsSubscribedUseCase
@@ -76,6 +81,10 @@ val domainModule = DI.Module("domainModule") {
 
     // Forum
     bindProvider { GetAvailableSourcesUseCase(instance()) }
+    bindProvider { ObserveSourceDescriptorsUseCase(instance()) }
+    bindProvider { UpsertSourceDescriptorUseCase(instance()) }
+    bindProvider { SetSourceEnabledUseCase(instance()) }
+    bindProvider { RemoveSourceDescriptorUseCase(instance()) }
     bindProvider { GetChannelsUseCase(instance()) }
     bindProvider { GetFavoriteChannelsUseCase(instance()) }
     bindProvider { GetChannelTopicsPagingUseCase(instance()) }
@@ -98,6 +107,7 @@ val domainModule = DI.Module("domainModule") {
     bindProvider { CreateReplyUseCase(instance()) }
     bindProvider { GetReferenceUseCase(instance()) }
     bindProvider { ToggleFavoriteUseCase(instance()) }
+    bindProvider { UpvoteTopicUseCase(instance()) }
 
     // Bookmark
     bindProvider { GetBookmarksUseCase(instance()) }

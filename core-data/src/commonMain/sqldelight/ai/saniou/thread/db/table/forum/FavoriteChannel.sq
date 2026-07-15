@@ -23,6 +23,9 @@ VALUES (?, ?, ?, ?);
 deleteFavoriteChannel:
 DELETE FROM FavoriteChannel WHERE sourceId = :sourceId AND id = :id;
 
+deleteFavoriteChannelsBySource:
+DELETE FROM FavoriteChannel WHERE sourceId = :sourceId;
+
 -- 查询所有 FavoriteChannel 数据 (关联 Channel 表)
 getAllFavoriteChannel:
 SELECT Channel.* FROM FavoriteChannel JOIN Channel ON FavoriteChannel.id = Channel.id AND FavoriteChannel.sourceId = Channel.sourceId WHERE FavoriteChannel.sourceId = :sourceId;

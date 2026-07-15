@@ -35,3 +35,9 @@ DELETE FROM RemoteKeys WHERE type = ?;
 
 deleteByTargetIdAndType:
 DELETE FROM RemoteKeys WHERE targetId = ? AND type = ?;
+
+deleteBySource:
+DELETE FROM RemoteKeys
+WHERE targetId GLOB ('source:' || :sourceId || ':*')
+   OR type GLOB ('thread_' || :sourceId || '_*')
+   OR type GLOB ('channel_' || :sourceId || '_*');

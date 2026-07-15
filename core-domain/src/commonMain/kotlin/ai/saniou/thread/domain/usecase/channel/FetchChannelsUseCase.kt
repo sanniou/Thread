@@ -5,7 +5,7 @@ import ai.saniou.thread.domain.repository.ChannelRepository
 class FetchChannelsUseCase(
     private val channelRepository: ChannelRepository
 ) {
-    suspend operator fun invoke(sourceId: String): Result<Unit> {
-        return channelRepository.fetchChannels(sourceId)
+    suspend operator fun invoke(sourceId: String, forceRefresh: Boolean = false): Result<Unit> {
+        return channelRepository.fetchChannels(sourceId, forceRefresh)
     }
 }

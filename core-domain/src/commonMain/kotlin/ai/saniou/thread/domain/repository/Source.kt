@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.first
 
 /**
- * 信息源的标准接口，所有具体的信息源（如NMB, NGA）都需要实现它
+ * 信息源的标准接口，所有论坛型 Connector 都通过它进入运行目录。
  */
 interface Source {
     /**

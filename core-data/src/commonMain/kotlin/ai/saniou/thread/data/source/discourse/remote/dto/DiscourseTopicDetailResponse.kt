@@ -16,5 +16,6 @@ data class DiscourseTopicDetailResponse(
     @SerialName("post_stream")
     val postStream: DiscoursePostStream,
     @SerialName("category_id")
-    val categoryId: Long
+    val categoryId: Long,
+    val tags: List<String> = emptyList(),
 )

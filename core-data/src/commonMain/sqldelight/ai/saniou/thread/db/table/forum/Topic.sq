@@ -125,9 +125,15 @@ SELECT MAX(receiveDate) FROM TopicListing WHERE sourceId = :sourceId AND listTyp
 deleteTopic:
 DELETE FROM Topic WHERE sourceId = ? AND id = ?;
 
+deleteTopicsBySource:
+DELETE FROM Topic WHERE sourceId = :sourceId;
+
 -- 删除 Topic 页的数据
 deleteTopicPage:
 DELETE FROM TopicListing WHERE sourceId = ? AND listType = 'channel' AND listId = :channelId;
+
+deleteTopicListingsBySource:
+DELETE FROM TopicListing WHERE sourceId = :sourceId;
 
 getTopic:
 SELECT *

@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 
 class UserViewModel(
     private val getAvailableSourcesUseCase: GetAvailableSourcesUseCase,
@@ -42,17 +43,22 @@ class UserViewModel(
 
     private fun loadData(sourceId: String) {
         accountCollection?.cancel()
-        val source = getAvailableSourcesUseCase().find { it.id == sourceId }
         _state.update {
             it.copy(
                 isLoading = true,
                 error = null,
                 sourceId = sourceId,
-                loginStrategy = source?.takeIf { it.capabilities.supportsLogin }?.loginStrategy,
+                loginStrategy = null,
             )
         }
         accountCollection = screenModelScope.launch {
             try {
+                val source = getAvailableSourcesUseCase().first().find { it.id == sourceId }
+                _state.update {
+                    it.copy(
+                        loginStrategy = source?.takeIf { it.capabilities.supportsLogin }?.loginStrategy
+                    )
+                }
                 accountRepository.getAccounts(sourceId).collectLatest { accounts ->
                     _state.update {
                         it.copy(

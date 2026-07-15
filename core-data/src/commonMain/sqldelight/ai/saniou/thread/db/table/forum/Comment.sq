@@ -82,6 +82,9 @@ DELETE FROM Comment WHERE sourceId = ? AND id = ?;
 deleteCommentsByTopicId:
 DELETE FROM Comment WHERE sourceId = ? AND topicId = ?;
 
+deleteCommentsBySource:
+DELETE FROM Comment WHERE sourceId = :sourceId;
+
 -- 获取指定 id 的 Comment
 getCommentById:
 SELECT * FROM Comment WHERE sourceId = :sourceId AND id = :id;
@@ -197,6 +200,9 @@ ON CONFLICT (sourceId, commentId, topicId, viewMode) DO UPDATE SET
 -- 删除指定 topicId 和 viewMode 的 CommentListing
 deleteCommentListingsByTopicIdAndViewMode:
 DELETE FROM CommentListing WHERE sourceId = :sourceId AND topicId = :topicId AND viewMode = :viewMode;
+
+deleteCommentListingsBySource:
+DELETE FROM CommentListing WHERE sourceId = :sourceId;
 
 -- 检查指定 topicId、viewMode 和 page 是否存在 CommentListing（用于 cacheChecker）
 hasCommentListingForPage:

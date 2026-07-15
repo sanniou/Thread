@@ -37,6 +37,8 @@ class GenericRemoteMediator<PagerValue : Any, FetcherValue : Any>(
     private val saver: suspend (items: List<FetcherValue>, loadType: LoadType, cursor: String?, batchTime: Long, startOrder: Long) -> Unit,
     private val itemTargetIdExtractor: (FetcherValue) -> String,
     private val cacheChecker: (suspend (String?) -> Boolean)? = null,
+    private val initializeAction: suspend () -> InitializeAction = { InitializeAction.LAUNCH_INITIAL_REFRESH },
+    private val onRefreshSuccess: suspend () -> Unit = {},
 ) : RemoteMediator<Int, PagerValue>() {
 
     init {
@@ -46,6 +48,8 @@ class GenericRemoteMediator<PagerValue : Any, FetcherValue : Any>(
             }
         }
     }
+
+    override suspend fun initialize(): InitializeAction = initializeAction()
 
     override suspend fun load(
         loadType: LoadType,
@@ -143,6 +147,8 @@ class GenericRemoteMediator<PagerValue : Any, FetcherValue : Any>(
                             )
                         }
                     }
+
+                    if (loadType == LoadType.REFRESH) onRefreshSuccess()
 
                     MediatorResult.Success(endOfPaginationReached = pagedResult.prevCursor == null && loadType == LoadType.PREPEND || pagedResult.nextCursor == null && loadType == LoadType.APPEND)
                 },

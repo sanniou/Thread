@@ -13,6 +13,7 @@ import ai.saniou.thread.domain.model.forum.Comment
 import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.model.user.LoginStrategy
 import ai.saniou.thread.domain.repository.Source
+import ai.saniou.thread.domain.source.SubCommentConnector
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOneOrNull
@@ -32,8 +33,9 @@ class TiebaSource(
     private val officialProtobufTiebaApiV12: OfficialProtobufTiebaApi,
     private val database: Database,
     private val tiebaParameterProvider: TiebaParameterProvider,
-) : Source {
+) : Source, SubCommentConnector {
     override val id: String = TiebaMapper.SOURCE_ID
+    override val sourceId: String get() = id
     override val name: String = TiebaMapper.SOURCE_NAME
     override val isInitialized: Flow<Boolean> = flowOf(true)
     override val capabilities: SourceCapabilities = SourceCapabilities(
@@ -42,7 +44,10 @@ class TiebaSource(
         supportsTopicCreation = false,
         supportsReplies = true,
         commentPageSize = 30,
-        supportsPagination = true
+        supportsPagination = true,
+        hasSubComments = true,
+        hasUpvote = true,
+        hasPoOnly = true,
     )
 
     override fun topicUrl(topicId: String): String = "https://tieba.baidu.com/p/$topicId"
@@ -251,14 +256,15 @@ class TiebaSource(
             .map { it?.toDomain(database.channelQueries) }
     }
 
-    suspend fun getSubComments(
+    override suspend fun getSubComments(
         topicId: String,
-        postId: String,
+        commentId: String,
         page: Int,
     ): Result<List<Comment>> = runCatching {
         val kz =
             topicId.toLongOrNull() ?: throw IllegalArgumentException("Invalid topicId: $topicId")
-        val pid = postId.toLongOrNull() ?: throw IllegalArgumentException("Invalid postId: $postId")
+        val pid = commentId.toLongOrNull()
+            ?: throw IllegalArgumentException("Invalid commentId: $commentId")
 
         val request = PbFloorRequest(
             PbFloorRequestData(

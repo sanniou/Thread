@@ -10,6 +10,7 @@ import ai.saniou.forum.workflow.home.ChannelContract.Event
 import ai.saniou.forum.workflow.init.SourceInitScreen
 import ai.saniou.forum.workflow.search.SearchPage
 import ai.saniou.forum.workflow.subscription.SubscriptionPage
+import ai.saniou.forum.workflow.source.SourceManagerPage
 import ai.saniou.forum.workflow.topic.TopicPage
 import ai.saniou.forum.workflow.topicdetail.TopicDetailPage
 import ai.saniou.forum.workflow.trend.TrendPage
@@ -42,6 +43,7 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -350,6 +352,10 @@ data class ChannelPage(
                     onCloseDrawer()
                 })
             }
+            add(DrawerItemData("来源管理", Icons.Default.Settings, false) {
+                navigator.push(SourceManagerPage())
+                onCloseDrawer()
+            })
         }
 
         FlowRow(

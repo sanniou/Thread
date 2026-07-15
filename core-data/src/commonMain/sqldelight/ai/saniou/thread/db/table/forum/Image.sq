@@ -33,3 +33,6 @@ SELECT * FROM Image WHERE sourceId = :sourceId AND parentId = :parentId AND pare
 -- 删除指定 Parent 的所有图片
 deleteImagesByParent:
 DELETE FROM Image WHERE sourceId = :sourceId AND parentId = :parentId AND parentType = :parentType;
+
+deleteImagesBySource:
+DELETE FROM Image WHERE sourceId = :sourceId;

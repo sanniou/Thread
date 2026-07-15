@@ -18,4 +18,8 @@ data class DiscoursePost(
     val postNumber: Int,
     @SerialName("reply_to_post_number")
     val replyToPostNumber: Int? = null,
+    val admin: Boolean = false,
+    val moderator: Boolean = false,
+    @SerialName("trust_level")
+    val trustLevel: Int? = null,
 )

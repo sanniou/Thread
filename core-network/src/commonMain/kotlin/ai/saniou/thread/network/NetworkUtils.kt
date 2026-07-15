@@ -16,3 +16,15 @@ fun HttpClientConfig<*>.installCookieAuth(getCookie: suspend () -> String?) {
         }
     })
 }
+
+/** Resolves an authentication header for every request so runtime login changes take effect. */
+fun HttpClientConfig<*>.installDynamicHeader(
+    name: String,
+    getValue: suspend () -> String?,
+) {
+    install(createClientPlugin("DynamicHeaderAuth") {
+        onRequest { request, _ ->
+            getValue()?.takeIf(String::isNotBlank)?.let { request.headers[name] = it }
+        }
+    })
+}

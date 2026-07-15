@@ -2,6 +2,7 @@ package ai.saniou.thread.data.repository
 
 import ai.saniou.corecommon.coroutines.ioDispatcher
 import ai.saniou.thread.data.cache.SourceCache
+import ai.saniou.thread.data.cache.CacheFreshnessStore
 import ai.saniou.thread.data.mapper.toDomain
 import ai.saniou.thread.data.paging.DataPolicy
 import ai.saniou.thread.data.paging.DefaultRemoteKeyStrategy
@@ -13,30 +14,40 @@ import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.repository.ChannelRepository
 import ai.saniou.thread.domain.repository.Source
 import ai.saniou.thread.domain.refresh.RefreshCoordinator
+import ai.saniou.thread.domain.source.SourceCatalog
+import ai.saniou.thread.domain.cache.CachePolicyProvider
+import ai.saniou.thread.domain.cache.CacheResource
 import androidx.paging.*
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
 
 class ChannelRepositoryImpl(
     private val db: Database,
-    private val sources: Set<Source>,
+    private val sourceCatalog: SourceCatalog,
     private val cache: SourceCache,
     private val refreshCoordinator: RefreshCoordinator,
+    private val cachePolicyProvider: CachePolicyProvider,
+    private val freshnessStore: CacheFreshnessStore,
 ) : ChannelRepository {
 
-    private val sourceMap by lazy { sources.associateBy { it.id } }
     private val fallbackStates = MutableStateFlow<Map<String, Boolean>>(emptyMap())
 
     override fun getChannels(sourceId: String): Flow<List<Channel>> =
-        sourceMap[sourceId]?.observeChannels() ?: flowOf(emptyList())
-    override suspend fun fetchChannels(sourceId: String): Result<Unit> {
-        val source = sourceMap[sourceId]
+        sourceCatalog.source(sourceId)?.observeChannels() ?: flowOf(emptyList())
+    override suspend fun fetchChannels(sourceId: String, forceRefresh: Boolean): Result<Unit> {
+        val source = sourceCatalog.source(sourceId)
             ?: return Result.failure(IllegalArgumentException("Source not found: $sourceId"))
+        val freshnessKey = CacheFreshnessStore.channelCatalog(sourceId)
+        val policy = cachePolicyProvider.policy(sourceId, CacheResource.CHANNEL_CATALOG)
+        val hasCachedChannels = withContext(ioDispatcher) { cache.getChannels(sourceId).isNotEmpty() }
+        if (!forceRefresh && freshnessStore.isFresh(freshnessKey, policy) && hasCachedChannels) {
+            return Result.success(Unit)
+        }
         return refreshCoordinator.execute(
             key = "forum:$sourceId:catalog",
             label = "${source.name} 版块",
             operation = source::fetchChannels,
-        )
+        ).onSuccess { freshnessStore.markFresh(freshnessKey) }
     }
 
     override fun getChannelTopicsPaging(
@@ -45,7 +56,7 @@ class ChannelRepositoryImpl(
         isTimeline: Boolean,
         initialPage: Int,
     ): Flow<PagingData<Topic>> {
-        val source = sourceMap[sourceId] ?: return flowOf(PagingData.empty())
+        val source = sourceCatalog.source(sourceId) ?: return flowOf(PagingData.empty())
         val pageSize = 20
 
         return Pager(
@@ -64,6 +75,9 @@ class ChannelRepositoryImpl(
                     source.getChannelTopics(channelId, cursor, isTimeline)
                 },
                 saver = { topics, loadType, cursor, receiveDate, startOrder ->
+                    if (loadType == LoadType.REFRESH) {
+                        cache.clearChannelCache(sourceId, channelId)
+                    }
                     cache.saveTopics(
                         topics = topics,
                         sourceId = sourceId,
@@ -93,12 +107,12 @@ class ChannelRepositoryImpl(
     }
 
     override fun getChannelName(sourceId: String, channelId: String): Flow<String?> {
-        val source = sourceMap[sourceId] ?: return flowOf(null)
+        val source = sourceCatalog.source(sourceId) ?: return flowOf(null)
         return source.getChannel(channelId).map { it?.name }
     }
 
     override fun getChannelDetail(sourceId: String, channelId: String): Flow<Channel?> {
-        val source = sourceMap[sourceId] ?: return flowOf(null)
+        val source = sourceCatalog.source(sourceId) ?: return flowOf(null)
         return source.getChannel(channelId)
     }
 
@@ -127,7 +141,7 @@ class ChannelRepositoryImpl(
                 // 如果是 NMB，尝试从数据库获取完整信息
                 // 如果是其他源，可能需要通过 source.getForum 获取，或者仅仅返回一个只有 ID 的 Forum 对象
                 // 这里为了简单，如果数据库有就从数据库取（适用于 NMB），否则构造一个简单的对象
-                val source = sourceMap[sourceId]
+                val source = sourceCatalog.source(sourceId)
                 // 尝试从 Source 获取
                 if (source != null) {
                     try {

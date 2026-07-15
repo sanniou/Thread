@@ -16,8 +16,11 @@ expect class DriverFactory() {
 }
 
 fun createDatabase(driverFactory: DriverFactory): Database {
-    val driver = driverFactory.createDriver()
-    val database = Database(
+    return createDatabase(driverFactory.createDriver())
+}
+
+fun createDatabase(driver: SqlDriver): Database {
+    return Database(
         driver = driver,
         FavoriteChannelAdapter = FavoriteChannel.Adapter(EnumColumnAdapter()),
         ImageAdapter = Image.Adapter(EnumColumnAdapter()),
@@ -32,7 +35,6 @@ fun createDatabase(driverFactory: DriverFactory): Database {
             }
         }),
     )
-    return database
 }
 
 internal val DATABADE_FILE_NAME = "nmb.db"

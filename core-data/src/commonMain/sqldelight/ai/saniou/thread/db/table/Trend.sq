@@ -91,3 +91,6 @@ DELETE FROM Trend WHERE sourceId = :sourceId AND tabId = :tabId AND date = :date
 
 deleteTrendsByTabDateAndPage:
 DELETE FROM Trend WHERE sourceId = :sourceId AND tabId = :tabId AND date = :date AND page = :page;
+
+deleteTrendsBySource:
+DELETE FROM Trend WHERE sourceId = :sourceId;

@@ -46,6 +46,9 @@ DELETE FROM Account WHERE id = ?;
 deleteAccountByValue:
 DELETE FROM Account WHERE account = ?;
 
+deleteAccountsBySource:
+DELETE FROM Account WHERE source_id = :sourceId;
+
 -- 查询所有 Account 数据
 selectAll:
 SELECT * FROM Account;

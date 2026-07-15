@@ -103,6 +103,12 @@ DELETE FROM Channel WHERE sourceId = ? AND id = ?;
 deleteChannelCategory:
 DELETE FROM ChannelCategory WHERE sourceId = ? AND id = ?;
 
+deleteChannelsBySource:
+DELETE FROM Channel WHERE sourceId = :sourceId;
+
+deleteChannelCategoriesBySource:
+DELETE FROM ChannelCategory WHERE sourceId = :sourceId;
+
 -- 查询所有 Channel 数据
 getAllChannels:
 SELECT * FROM Channel;

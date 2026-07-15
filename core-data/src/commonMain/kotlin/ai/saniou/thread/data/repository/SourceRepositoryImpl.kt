@@ -4,18 +4,15 @@ import ai.saniou.thread.domain.model.feed.AggregatedFeedPage
 import ai.saniou.thread.domain.model.feed.SourceFeedFailure
 import ai.saniou.thread.domain.repository.Source
 import ai.saniou.thread.domain.repository.SourceRepository
+import ai.saniou.thread.domain.source.SourceCatalog
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.supervisorScope
 
 class SourceRepositoryImpl(
-    private val sources: Set<Source>,
+    private val catalog: SourceCatalog,
 ) : SourceRepository {
-
-    private val orderedSources = sources.sortedBy { it.id }
-    private val sourceMap = orderedSources.associateBy { it.id }.also { indexed ->
-        require(indexed.size == sources.size) { "Source ids must be unique" }
-    }
 
     override suspend fun getAggregatedFeed(
         page: Int,
@@ -23,7 +20,7 @@ class SourceRepositoryImpl(
     ): Result<AggregatedFeedPage> = supervisorScope {
         require(page > 0) { "page must be positive" }
 
-        val selectedSources = orderedSources.filter { source ->
+        val selectedSources = catalog.availableSources.value.filter { source ->
             source.capabilities.supportsFeedAggregation &&
                 (sourceIds == null || source.id in sourceIds)
         }
@@ -69,10 +66,12 @@ class SourceRepositoryImpl(
     }
 
     override fun getAvailableSources(): List<Source> {
-        return orderedSources
+        return catalog.availableSources.value
     }
 
+    override fun observeAvailableSources(): Flow<List<Source>> = catalog.availableSources
+
     override fun getSource(sourceId: String): Source? {
-        return sourceMap[sourceId]
+        return catalog.source(sourceId)
     }
 }

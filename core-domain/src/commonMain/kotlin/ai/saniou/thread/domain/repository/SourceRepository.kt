@@ -1,6 +1,7 @@
 package ai.saniou.thread.domain.repository
 
 import ai.saniou.thread.domain.model.feed.AggregatedFeedPage
+import kotlinx.coroutines.flow.Flow
 
 
 /**
@@ -20,6 +21,8 @@ interface SourceRepository {
      * 获取所有可用的信息源
      */
     fun getAvailableSources(): List<Source>
+
+    fun observeAvailableSources(): Flow<List<Source>>
 
     /**
      * 获取指定 ID 的 Source

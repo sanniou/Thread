@@ -16,3 +16,6 @@ WHERE TT.sourceId = ? AND TT.topicId = ?;
 
 deleteTagsForTopic:
 DELETE FROM TopicTag WHERE sourceId = ? AND topicId = ?;
+
+deleteTopicTagsBySource:
+DELETE FROM TopicTag WHERE sourceId = :sourceId;

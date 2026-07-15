@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS History (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     type TEXT NOT NULL, -- 'post' or 'article'
     itemId TEXT NOT NULL, -- Post ID or Article ID
-    sourceId TEXT NOT NULL, -- 'nmb', 'nga', or feedSourceId
+    sourceId TEXT NOT NULL, -- runtime Source id or feedSourceId
     accessTime INTEGER NOT NULL,
     UNIQUE(type, itemId, sourceId)
 );
@@ -23,6 +23,9 @@ DELETE FROM History WHERE id = ?;
 -- 清空历史记录
 clearHistory:
 DELETE FROM History;
+
+deleteHistoryBySource:
+DELETE FROM History WHERE sourceId = :sourceId;
 
 -- 查询历史记录 (Post)
 getPostHistory:

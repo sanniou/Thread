@@ -1,6 +1,5 @@
 package ai.saniou.thread.data.source.discourse
 
-import ai.saniou.thread.data.cache.CacheStrategy
 import ai.saniou.thread.data.cache.SourceCache
 import ai.saniou.thread.data.mapper.flatten
 import ai.saniou.thread.data.mapper.toDomain
@@ -11,6 +10,8 @@ import ai.saniou.thread.data.source.discourse.remote.dto.DiscourseTopic
 import ai.saniou.thread.data.source.discourse.remote.dto.DiscourseUser
 import ai.saniou.thread.data.source.discourse.remote.dto.DiscourseSearchPost
 import ai.saniou.thread.data.source.discourse.remote.dto.DiscourseUserAction
+import ai.saniou.thread.data.source.discourse.remote.dto.extractDiscourseImages
+import ai.saniou.thread.data.source.discourse.remote.dto.resolveDiscourseUrl
 import ai.saniou.thread.data.source.discourse.remote.dto.toDomainComment
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.domain.model.PagedResult
@@ -20,12 +21,12 @@ import ai.saniou.thread.domain.model.user.LoginField
 import ai.saniou.thread.domain.repository.SettingsRepository
 import ai.saniou.thread.domain.repository.Source
 import ai.saniou.thread.domain.repository.observeValue
+import ai.saniou.thread.domain.repository.saveValue
 import ai.saniou.thread.domain.source.ForumSearchConnector
 import ai.saniou.thread.domain.source.UserContentConnector
 import ai.saniou.thread.network.SaniouResult
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import kotlin.time.Duration.Companion.days
 import kotlin.time.Instant
 import ai.saniou.thread.domain.model.forum.Channel
 import ai.saniou.thread.domain.model.forum.Comment
@@ -46,7 +47,7 @@ class DiscourseSource(
 ) : Source, ForumSearchConnector, UserContentConnector {
     override val id: String = connection.sourceId
     override val sourceId: String = id
-    override val name: String = "Linux.do"
+    override val name: String = connection.displayName
     override val capabilities = ai.saniou.thread.domain.model.SourceCapabilities(
         supportsSearch = true,
         supportsTopicCreation = true,
@@ -60,7 +61,7 @@ class DiscourseSource(
     override fun getFeedCursor(page: Int): String? = if (page <= 1) null else (page - 1).toString()
 
     override val isInitialized: Flow<Boolean> =
-        settingsRepository.observeValue<Boolean>("discourse_initialized")
+        settingsRepository.observeValue<Boolean>("${id}_initialized")
             .map { it == true }
 
     override val loginStrategy: LoginStrategy = LoginStrategy.Api(
@@ -83,32 +84,16 @@ class DiscourseSource(
     }
 
     override suspend fun fetchChannels(): Result<Unit> {
-        val needUpdate = CacheStrategy.shouldFetch(
-            db = db,
-            keyType = "forum_category",
-            keyId = "${id}_forums",
-            expiration = 1.days
-        )
-
-        if (!needUpdate) {
-            return Result.success(Unit)
-        }
-
         return try {
             // 1. Try to fetch from network
             when (val response = api.getCategories()) {
                 is SaniouResult.Success -> {
-                    val forums = response.data.categoryList.categories.map { it.toDomainTree(id) }
+                    val forums = response.data.categoryList.categories.map { it.toDomainTree(id, name) }
 
                     // 2. Save to cache (flatten first)
                     val flatForums = forums.flatMap { it.flatten() }
                     cache.saveChannels(flatForums.map { it.toEntity() })
-
-                    CacheStrategy.updateLastFetchTime(
-                        db = db,
-                        keyType = "forum_category",
-                        keyId = "${id}_forums"
-                    )
+                    settingsRepository.saveValue("${id}_initialized", true)
 
                     Result.success(Unit)
                 }
@@ -147,7 +132,7 @@ class DiscourseSource(
 
         return rootChannels.map {
             // Discourse 没有 category ，这里硬编码
-            buildTree(it.copy(groupName = "Discourse"))
+            buildTree(it.copy(groupName = name))
         }.sortedBy { it.sort }
     }
 
@@ -177,8 +162,9 @@ class DiscourseSource(
                 is SaniouResult.Success -> {
                     // Similar logic to DiscourseRemoteMediator
                     val usersMap = result.data.users?.associateBy { it.id } ?: emptyMap()
+                    val categoryNames = cache.getChannels(id).associate { it.id to it.name }
                     val topics = result.data.topicList.topics.map { topic ->
-                        topic.toPost(usersMap, id, name, baseUrl)
+                        topic.toPost(usersMap, id, name, baseUrl, categoryNames)
                     }
 
                     val nextCursor = if (topics.isNotEmpty()) (page + 1).toString() else null
@@ -201,21 +187,20 @@ class DiscourseSource(
         isPoOnly: Boolean,
     ): Result<PagedResult<Comment>> {
         val page = cursor?.toIntOrNull() ?: 1
-        if (isPoOnly) {
-            // Discourse API doesn't support PO only easily in this endpoint?
-            // Or we need to filter locally but that breaks pagination consistency if we rely on API pagination.
-            // For now, return failure or ignore flag.
-            // Ideally: NotImplementedError or ignore.
-        }
         return when (val result = api.getTopic(threadId, page)) {
             is SaniouResult.Success -> {
                 try {
                     val response = result.data
+                    val postIdsByNumber = response.postStream.posts.associate {
+                        it.postNumber to it.id.toString()
+                    }
                     val comments = response.postStream.posts.map { discoursePost ->
                         discoursePost.toDomainComment(
                             sourceId = id,
+                            sourceName = name,
                             threadId = response.id.toString(),
-                            page = page
+                            sourceBaseUrl = baseUrl,
+                            replyTargetId = discoursePost.replyToPostNumber?.let(postIdsByNumber::get),
                         ).copy(sourceId = id)
                     }
 
@@ -243,11 +228,24 @@ class DiscourseSource(
                     } catch (e: Exception) {
                         Instant.fromEpochMilliseconds(0)
                     }
+                    val channel = cache.getChannels(id).firstOrNull { it.id == response.categoryId.toString() }
+                    val postIdsByNumber = response.postStream.posts.associate {
+                        it.postNumber to it.id.toString()
+                    }
+                    val comments = response.postStream.posts.drop(1).map { discoursePost ->
+                        discoursePost.toDomainComment(
+                            sourceId = id,
+                            sourceName = name,
+                            threadId = response.id.toString(),
+                            sourceBaseUrl = baseUrl,
+                            replyTargetId = discoursePost.replyToPostNumber?.let(postIdsByNumber::get),
+                        )
+                    }
                     val post = Topic(
                         id = response.id.toString(),
                         channelId = response.categoryId.toString(), // fid -> channelId
                         commentCount = response.replyCount.toLong(), // replyCount -> commentCount
-                        images = emptyList(), // TODO: parse images
+                        images = firstPost?.cooked.orEmpty().extractDiscourseImages(baseUrl),
                         createdAt = Instant.fromEpochMilliseconds(createdAt.toEpochMilliseconds()),
                         title = response.title,
                         content = firstPost?.cooked ?: "", // Use full content
@@ -256,14 +254,17 @@ class DiscourseSource(
                         sourceUrl = topicUrl(response.id.toString()),
                         author = Author(
                             id = firstPost?.username ?: "",
-                            name = firstPost?.name ?: firstPost?.username ?: "Anonymous"
-                        ), // author -> Author object
-                        channelName = "Discourse", // forumName -> channelName
+                            name = firstPost?.name ?: firstPost?.username ?: "Anonymous",
+                            avatar = firstPost?.avatarTemplate?.replace("{size}", "120")
+                                ?.resolveDiscourseUrl(baseUrl),
+                            sourceName = name,
+                        ),
+                        channelName = channel?.name ?: name,
                         isLocal = false,
                         lastViewedCommentId = "",
-                        comments = emptyList(),
+                        comments = comments,
                         summary = null,
-                        tags = emptyList() // TODO: Map tags
+                        tags = response.tags.map { tag -> discourseTag(id, baseUrl, tag) },
                     )
                     Result.success(post)
                 } catch (e: Exception) {
@@ -278,9 +279,12 @@ class DiscourseSource(
     }
 
     override fun getChannel(channelId: String): Flow<Channel?> {
-        // TODO: Implement proper forum detail fetching or caching
-        // For now, return null as we don't persist forums locally yet
-        return flowOf(null)
+        return cache.observeChannels(id).map { channels ->
+            channels.firstOrNull { it.id == channelId }?.let { selected ->
+                val children = channels.filter { it.parentId == selected.id }
+                selected.toDomain(db.channelQueries).copy(children = children.map { it.toDomain(db.channelQueries) })
+            }
+        }
     }
 
     override fun searchTopics(query: String): Flow<androidx.paging.PagingData<Topic>> = Pager(
@@ -298,7 +302,7 @@ class DiscourseSource(
         config = PagingConfig(pageSize = DISCOURSE_PAGE_SIZE),
         pagingSourceFactory = {
             DiscourseCapabilityPagingSource { page ->
-                api.search(query, page).dataOrThrow().posts.map { it.toDomainComment(id) }
+                api.search(query, page).dataOrThrow().posts.map { it.toDomainComment(id, name, baseUrl) }
             }
         },
     ).flow
@@ -324,7 +328,7 @@ class DiscourseSource(
                     username = userId,
                     filter = USER_ACTION_POSTS,
                     offset = (page - 1) * DISCOURSE_PAGE_SIZE,
-                ).dataOrThrow().userActions.map { it.toDomainComment(id) }
+                ).dataOrThrow().userActions.map { it.toDomainComment(id, name, baseUrl) }
             }
         },
     ).flow
@@ -335,6 +339,7 @@ internal fun DiscourseTopic.toPost(
     sourceId: String,
     sourceName: String,
     sourceBaseUrl: String,
+    categoryNames: Map<String, String> = emptyMap(),
 ): Topic {
 // 假设 topic 的第一个 poster 是楼主
     val originalPosterId =
@@ -352,25 +357,34 @@ internal fun DiscourseTopic.toPost(
         id = id.toString(),
         channelId = categoryId?.toString() ?: "0", // fid -> channelId
         commentCount = replyCount.toLong(), // replyCount -> commentCount
-        images = imageUrl?.let {
+        images = imageUrl?.resolveDiscourseUrl(sourceBaseUrl)?.let {
             listOf(Image(originalUrl = it, thumbnailUrl = it))
         } ?: emptyList(), // img/ext -> images
         title = title,
-        content = excerpt ?: fancyTitle,
+        content = excerpt.orEmpty(),
         createdAt = Instant.fromEpochMilliseconds(postCreatedAt.toEpochMilliseconds()), // now -> createdAt
         sourceName = sourceName,
         sourceId = sourceId,
         sourceUrl = "$sourceBaseUrl/t/$slug/$id",
         author = Author(
             id = user?.username ?: "Unknown",
-            name = user?.name ?: user?.username ?: "Anonymous"
+            name = user?.name ?: user?.username ?: "Anonymous",
+            avatar = user?.avatarTemplate?.replace("{size}", "80")?.resolveDiscourseUrl(sourceBaseUrl),
+            sourceName = sourceName,
         ),
-        channelName = "Discourse", // forumName -> channelName
+        channelName = categoryNames[categoryId.toString()] ?: sourceName,
         isLocal = false,
         lastViewedCommentId = "",
         comments = emptyList(),
-        summary = null,
-        tags = emptyList() // TODO: Map tags
+        summary = excerpt,
+        tags = tags.orEmpty().map { tag ->
+            ai.saniou.thread.domain.model.Tag(
+                id = "$sourceId:$tag",
+                name = tag,
+                url = "$sourceBaseUrl/tag/$tag",
+            )
+        },
+        lastReplyAt = lastPostedAt.parseInstant().toEpochMilliseconds(),
     )
 }
 
@@ -405,11 +419,20 @@ private class DiscourseCapabilityPagingSource<T : Any>(
     }
 }
 
-private fun DiscourseSearchPost.toDomainComment(sourceId: String): Comment = Comment(
+private fun DiscourseSearchPost.toDomainComment(
+    sourceId: String,
+    sourceName: String,
+    sourceBaseUrl: String,
+): Comment = Comment(
     id = id.toString(),
     sourceId = sourceId,
     topicId = topicId.toString(),
-    author = Author(id = username, name = name ?: username, avatar = avatarTemplate.avatarUrl()),
+    author = Author(
+        id = username,
+        name = name ?: username,
+        avatar = avatarTemplate.avatarUrl()?.resolveDiscourseUrl(sourceBaseUrl),
+        sourceName = sourceName,
+    ),
     createdAt = createdAt.parseInstant(),
     content = cooked.ifBlank { blurb },
     floor = postNumber.toLong(),
@@ -419,7 +442,7 @@ private fun DiscourseSearchPost.toDomainComment(sourceId: String): Comment = Com
     subCommentCount = 0,
     authorLevel = 0,
     isPo = false,
-    images = emptyList(),
+    images = cooked.extractDiscourseImages(sourceBaseUrl),
     isAdmin = false,
     title = null,
     subCommentsPreview = emptyList(),
@@ -433,14 +456,19 @@ private fun DiscourseUserAction.toDomainTopic(
     id = topicId.toString(),
     channelId = "0",
     commentCount = 0,
-    images = emptyList(),
+    images = excerpt.extractDiscourseImages(sourceBaseUrl),
     createdAt = createdAt.parseInstant(),
     title = title,
     content = excerpt,
     sourceName = sourceName,
     sourceId = sourceId,
     sourceUrl = "$sourceBaseUrl/t/$slug/$topicId",
-    author = Author(id = username, name = name ?: username, avatar = avatarTemplate.avatarUrl()),
+    author = Author(
+        id = username,
+        name = name ?: username,
+        avatar = avatarTemplate.avatarUrl()?.resolveDiscourseUrl(sourceBaseUrl),
+        sourceName = sourceId,
+    ),
     channelName = sourceName,
     isLocal = false,
     lastViewedCommentId = "",
@@ -449,11 +477,20 @@ private fun DiscourseUserAction.toDomainTopic(
     tags = emptyList(),
 )
 
-private fun DiscourseUserAction.toDomainComment(sourceId: String): Comment = Comment(
+private fun DiscourseUserAction.toDomainComment(
+    sourceId: String,
+    sourceName: String,
+    sourceBaseUrl: String,
+): Comment = Comment(
     id = (postId ?: topicId).toString(),
     sourceId = sourceId,
     topicId = topicId.toString(),
-    author = Author(id = username, name = name ?: username, avatar = avatarTemplate.avatarUrl()),
+    author = Author(
+        id = username,
+        name = name ?: username,
+        avatar = avatarTemplate.avatarUrl()?.resolveDiscourseUrl(sourceBaseUrl),
+        sourceName = sourceName,
+    ),
     createdAt = createdAt.parseInstant(),
     content = excerpt,
     floor = postNumber.toLong(),
@@ -463,7 +500,7 @@ private fun DiscourseUserAction.toDomainComment(sourceId: String): Comment = Com
     subCommentCount = 0,
     authorLevel = 0,
     isPo = postNumber == 1,
-    images = emptyList(),
+    images = excerpt.extractDiscourseImages(sourceBaseUrl),
     isAdmin = false,
     title = title,
     subCommentsPreview = emptyList(),
@@ -473,3 +510,9 @@ private fun String.parseInstant(): Instant = runCatching { Instant.parse(this) }
     .getOrElse { Instant.fromEpochMilliseconds(0) }
 
 private fun String.avatarUrl(): String? = takeIf { it.isNotBlank() }?.replace("{size}", "80")
+
+private fun discourseTag(sourceId: String, baseUrl: String, name: String) = ai.saniou.thread.domain.model.Tag(
+    id = "$sourceId:$name",
+    name = name,
+    url = "$baseUrl/tag/$name",
+)

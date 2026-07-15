@@ -10,7 +10,8 @@
 1.  **通用论坛 (Forum)**:
     -   专为“板块-帖子-回复”结构设计。
     -   当前运行目录支持 **Tieba (贴吧)**、**NMB/X 岛** 与 **Discourse**；实验性来源只有形成可用闭环后才会开放。
-    -   统一的楼层浏览体验与交互。
+    -   Discourse 支持在来源管理中新增多个独立实例、启停、编辑和删除。
+    -   统一的楼层浏览体验、缓存策略与按能力交互。
 
 2.  **通用信息流 (Feed)**:
     -   将论坛主题与 Reader 文章统一为按时间排序的跨来源时间线。
@@ -50,16 +51,16 @@
 ## 💻 开发指南 (Development Guide)
 
 ### 添加新的数据源 (Source)
-添加一个新源（例如 `Tieba`）不再需要创建新的 UI 模块，只需在 `core-data` 中实现数据适配：
+添加一个新源不需要创建新的 UI 模块，也不需要修改 Domain 枚举：
 
 1.  **数据层 (`core-data`)**:
-    -   在 `source/` 下新建 `tieba` 包。
-    -   实现 API 定义和 `TiebaSource`。
-    -   将数据映射为 Domain 层的通用模型 (`Post`, `Comment`)。
+    -   实现通用 `Source`，并按真实能力选择实现 Search、UserContent、Posting、Login、SubComment、Reaction Connector。
+    -   将远程 DTO 映射为 Domain 层的 `Topic`、`Comment`、`Channel`。
+    -   用户可创建多实例的来源再提供 `RuntimeSourceFactory`；固定来源直接提供 `RuntimeSourceRegistration`。
 2.  **注册**:
-    -   在 `SourceRepository` 中注册新源。
+    -   在组合根把固定来源或 factory 注册进 `SourceCatalog`；Repository 始终从实时目录查询，不保存 Source 快照。
 3.  **UI**:
-    -   `feature-forum` 会自动通过通用接口展示来自 `Tieba` 的内容。
+    -   `feature-forum`、`feature-feed` 会观察运行目录并按 `SourceCapabilities` 自动展示和降级。
 
 ## 📈 路线图 (Roadmap)
 
@@ -67,6 +68,7 @@
 -   [x] **核心抽象**: 定义 Source、Repository 等核心接口。
 -   [x] **Feature - Forum 基线**: 通用来源切换、登录、搜索、用户内容与按能力发帖/回复。
 -   [x] **Feature - Feed 基线**: 论坛与 Reader 聚合、筛选、分页、刷新和详情跳转闭环。
+-   [x] **运行时来源与缓存**: Discourse 多实例、来源管理、统一新鲜度/离线回退、Tieba 楼中楼与点赞。
 -   [ ] **Social Connector**: 在统一 Feed 契约上接入 Mastodon/Bluesky 等来源。
 -   [x] **Feature - Reader 基线**: RSS/Atom/JSON/HTML 来源、刷新诊断、阅读状态与收藏。
 -   [ ] **数据同步**: 支持 WebDAV 数据备份与同步。

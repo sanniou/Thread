@@ -41,6 +41,7 @@ interface TopicDetailContract {
         val lastReadCommentId: String? = null,
         val isPoOnlyMode: Boolean = false,
         val isTogglingSubscription: Boolean = false,
+        val isReacting: Boolean = false,
     )
 
     /**

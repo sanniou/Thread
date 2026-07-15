@@ -20,7 +20,7 @@ interface ChannelRepository {
      * 刷新板块列表
      * @param sourceId 信息源ID
      */
-    suspend fun fetchChannels(sourceId: String): Result<Unit>
+    suspend fun fetchChannels(sourceId: String, forceRefresh: Boolean = false): Result<Unit>
 
     /**
      * 获取板块下的帖子分页数据

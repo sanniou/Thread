@@ -63,7 +63,8 @@ class NmbSource(
         supportsUserContent = true,
         supportsLogin = true,
         commentPageSize = 19,
-        supportsPagination = true
+        supportsPagination = true,
+        hasPoOnly = true,
     )
 
     override fun topicUrl(topicId: String): String = "https://nmb.ai/thread/$topicId"

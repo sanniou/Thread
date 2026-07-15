@@ -15,6 +15,7 @@ import ai.saniou.forum.workflow.topicdetail.TopicDetailViewModelParams
 import ai.saniou.forum.workflow.trend.TrendViewModel
 import ai.saniou.forum.workflow.user.UserDetailViewModel
 import ai.saniou.forum.workflow.user.UserViewModel
+import ai.saniou.forum.workflow.source.SourceManagerViewModel
 import org.kodein.di.DI
 import org.kodein.di.bindFactory
 import org.kodein.di.bindProvider
@@ -44,6 +45,15 @@ val nmbFeatureModule = DI.Module("nmbFeatureModule") {
             instance(),
             instance(),
             instance(),
+            instance(),
+            instance(),
+            instance(),
+            instance(),
+        )
+    }
+
+    bindProvider {
+        SourceManagerViewModel(
             instance(),
             instance(),
             instance(),
@@ -84,6 +94,7 @@ val nmbFeatureModule = DI.Module("nmbFeatureModule") {
     bindFactory<TopicDetailViewModelParams, TopicDetailViewModel> { params ->
         TopicDetailViewModel(
             params = params,
+            instance(),
             instance(),
             instance(),
             instance(),

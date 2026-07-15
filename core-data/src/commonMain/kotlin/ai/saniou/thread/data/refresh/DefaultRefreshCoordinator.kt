@@ -1,5 +1,6 @@
 package ai.saniou.thread.data.refresh
 
+import ai.saniou.corecommon.coroutines.ioDispatcher
 import ai.saniou.thread.domain.refresh.RefreshCoordinator
 import ai.saniou.thread.domain.refresh.RefreshFailureKind
 import ai.saniou.thread.domain.refresh.RefreshPolicy
@@ -13,6 +14,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import kotlin.time.Clock
 
 class DefaultRefreshCoordinator : RefreshCoordinator {
@@ -46,7 +48,7 @@ class DefaultRefreshCoordinator : RefreshCoordinator {
                     )
                 )
                 val result = try {
-                    operation()
+                    withContext(ioDispatcher) { operation() }
                 } catch (cancellation: CancellationException) {
                     throw cancellation
                 } catch (error: Throwable) {

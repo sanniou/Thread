@@ -50,6 +50,7 @@ class ChannelViewModel(
     val state = _state.asStateFlow()
 
     private var initCheckJob: Job? = null
+    private var categoriesJob: Job? = null
 
     init {
         screenModelScope.launch {
@@ -70,21 +71,24 @@ class ChannelViewModel(
 
     private fun loadSources() {
         screenModelScope.launch {
-            val sources = getAvailableSourcesUseCase()
-            val lastSourceId =
-                settingsRepository.getValue("current_source_id") ?: sources.first().id
-            val initialSourceId =
-                if (sources.any { it.id == lastSourceId }) lastSourceId else sources.firstOrNull()?.id
-                    ?: "nmb"
-
-            _state.update {
-                it.copy(
-                    availableSources = sources,
-                    currentSourceId = initialSourceId
-                )
+            getAvailableSourcesUseCase().collect { sources ->
+                if (sources.isEmpty()) return@collect
+                val savedSourceId = settingsRepository.getValue<String>("current_source_id")
+                val currentId = state.value.currentSourceId
+                val targetId = when {
+                    sources.any { it.id == currentId } -> currentId
+                    sources.any { it.id == savedSourceId } -> savedSourceId.orEmpty()
+                    else -> sources.first().id
+                }
+                val sourceChanged = currentId != targetId
+                _state.update {
+                    it.copy(availableSources = sources, currentSourceId = targetId)
+                }
+                if (sourceChanged || state.value.categoriesState is UiStateWrapper.Loading) {
+                    observeSourceInitialization(targetId)
+                    loadCategories()
+                }
             }
-            observeSourceInitialization(initialSourceId)
-            onEvent(Event.LoadCategories)
         }
     }
 
@@ -138,7 +142,8 @@ class ChannelViewModel(
     }
 
     private fun loadCategories() {
-        screenModelScope.launch {
+        categoriesJob?.cancel()
+        categoriesJob = screenModelScope.launch {
             _state.update { it.copy(categoriesState = UiStateWrapper.Loading) }
             // App initialization should be handled globally, not here.
             // For now, we keep it to avoid breaking things.

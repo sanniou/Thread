@@ -70,8 +70,8 @@ fun Channel.toEntity(): EntityChannel {
     )
 }
 
-fun DiscourseCategory.toDomainTree(sourceName: String): Channel {
-    val children = subcategoryList?.map { it.toDomainTree(sourceName) } ?: emptyList()
+fun DiscourseCategory.toDomainTree(sourceName: String, groupLabel: String = "Discourse"): Channel {
+    val children = subcategoryList?.map { it.toDomainTree(sourceName, groupLabel) } ?: emptyList()
 
     return Channel(
         id = id.toString(),
@@ -80,7 +80,7 @@ fun DiscourseCategory.toDomainTree(sourceName: String): Channel {
         description = description ?: "",
         descriptionText = descriptionText,
         groupId = "discourse_group", // Unified group ID for Discourse
-        groupName = "Discourse",
+        groupName = groupLabel,
         sourceName = sourceName,
         sort = position?.toLong(),
         tag = null,

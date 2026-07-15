@@ -22,6 +22,7 @@ import ai.saniou.thread.domain.model.forum.Image
 import ai.saniou.thread.domain.usecase.thread.GetTopicMetadataUseCase
 import ai.saniou.thread.domain.usecase.thread.UpdateTopicLastAccessTimeUseCase
 import ai.saniou.thread.domain.usecase.thread.UpdateTopicLastReadCommentIdUseCase
+import ai.saniou.thread.domain.usecase.post.UpvoteTopicUseCase
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import cafe.adriel.voyager.core.model.ScreenModel
@@ -60,6 +61,7 @@ class TopicDetailViewModel(
     private val updateTopicLastAccessTimeUseCase: UpdateTopicLastAccessTimeUseCase,
     private val updateTopicLastReadCommentIdUseCase: UpdateTopicLastReadCommentIdUseCase,
     private val imageUrlResolver: ImageUrlResolver,
+    private val upvoteTopicUseCase: UpvoteTopicUseCase,
 ) : ScreenModel {
 
     private val sourceId = params.sourceId
@@ -165,7 +167,7 @@ class TopicDetailViewModel(
     private fun observeTopicDetail(forceRefresh: Boolean = false) {
         screenModelScope.launch {
             _state.update { it.copy(topicWrapper = UiStateWrapper.Loading) }
-            getTopicMetadataUseCase(sourceId, threadId, false)
+            getTopicMetadataUseCase(sourceId, threadId, forceRefresh)
                 .catch { e ->
                     _state.update {
                         it.copy(topicWrapper = UiStateWrapper.Error(e.toAppError {
@@ -255,11 +257,10 @@ class TopicDetailViewModel(
     private fun copyLink() {
         screenModelScope.launch {
             val metadata = (state.value.topicWrapper as? UiStateWrapper.Success)?.value
-            val url = if (metadata != null) {
-                // If we have topic info, use its source URL or construct one
-                metadata.sourceUrl.ifEmpty { "https://nmb.com/t/$threadId" }
-            } else {
-                "https://nmb.com/t/$threadId"
+            val url = metadata?.sourceUrl.orEmpty()
+            if (url.isBlank()) {
+                _effect.send(Effect.ShowSnackbar("当前来源未提供公开链接"))
+                return@launch
             }
             _effect.send(Effect.CopyToClipboard(url))
             _effect.send(Effect.ShowSnackbar("链接已复制到剪贴板"))
@@ -283,13 +284,13 @@ class TopicDetailViewModel(
 
             addBookmarkUseCase(
                 Bookmark.Quote(
-                    id = "nmb.Thread.${metadata.id}",
+                    id = "$sourceId.Topic.${metadata.id}",
                     createdAt = Clock.System.now(),
-                    tags = listOf(), // TODO: Convert metadata tags to bookmark tags if needed
+                    tags = metadata.tags,
                     content = metadata.title
                         ?: "", // Metadata doesn't have content, use title or empty
                     sourceId = metadata.id,
-                    sourceType = "nmb.Thread"
+                    sourceType = "$sourceId.Topic"
                 )
             )
             _effect.send(Effect.ShowSnackbar("帖子已收藏"))
@@ -300,12 +301,12 @@ class TopicDetailViewModel(
         screenModelScope.launch {
             addBookmarkUseCase(
                 Bookmark.Quote(
-                    id = "nmb.ThreadReply.${reply.id}",
+                    id = "$sourceId.Comment.${reply.id}",
                     createdAt = Clock.System.now(),
                     tags = listOf(),
                     content = reply.content,
                     sourceId = reply.id.toString(),
-                    sourceType = "nmb.ThreadReply"
+                    sourceType = "$sourceId.Comment"
                 )
             )
             _effect.send(Effect.ShowSnackbar("回复已收藏"))
@@ -315,7 +316,7 @@ class TopicDetailViewModel(
     private fun bookmarkImage(image: Image) {
         screenModelScope.launch {
             val fullUrl = imageUrlResolver.resolveOriginal(image)
-            val id = "nmb.Image.${fullUrl.hashCode()}"
+            val id = "$sourceId.Image.${fullUrl.hashCode()}"
             addBookmarkUseCase(
                 Bookmark.Image(
                     id = id,
@@ -331,9 +332,18 @@ class TopicDetailViewModel(
     }
 
     private fun upvoteTopic() {
-        // TODO: Implement actual upvote logic when API is available
+        if (state.value.isReacting) return
         screenModelScope.launch {
-            _effect.send(Effect.ShowSnackbar("点赞功能开发中"))
+            _state.update { it.copy(isReacting = true) }
+            upvoteTopicUseCase(sourceId, threadId)
+                .onSuccess {
+                    _effect.send(Effect.ShowSnackbar("点赞成功"))
+                    observeTopicDetail(forceRefresh = true)
+                }
+                .onFailure { error ->
+                    _effect.send(Effect.ShowSnackbar(error.message ?: "点赞失败"))
+                }
+            _state.update { it.copy(isReacting = false) }
         }
     }
 

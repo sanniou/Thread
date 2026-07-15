@@ -25,6 +25,18 @@ interface UserContentConnector : SourceConnector {
     fun getUserComments(userId: String): Flow<PagingData<Comment>>
 }
 
+interface SubCommentConnector : SourceConnector {
+    suspend fun getSubComments(
+        topicId: String,
+        commentId: String,
+        page: Int,
+    ): Result<List<Comment>>
+}
+
+interface ReactionConnector : SourceConnector {
+    suspend fun upvote(topicId: String, targetPostId: String): Result<Unit>
+}
+
 interface PostingConnector : SourceConnector {
     suspend fun createThread(channelId: String, draft: PostDraft): PostResult
     suspend fun createReply(topicId: String, draft: PostDraft): PostResult
@@ -45,6 +57,8 @@ interface ConnectorRegistry {
     fun userContent(sourceId: String): UserContentConnector?
     fun posting(sourceId: String): PostingConnector?
     fun login(sourceId: String): LoginConnector?
+    fun subComments(sourceId: String): SubCommentConnector?
+    fun reactions(sourceId: String): ReactionConnector?
 }
 
 class DefaultConnectorRegistry(
@@ -53,18 +67,24 @@ class DefaultConnectorRegistry(
     userContentConnectors: Set<UserContentConnector> = emptySet(),
     postingConnectors: Set<PostingConnector> = emptySet(),
     loginConnectors: Set<LoginConnector> = emptySet(),
+    subCommentConnectors: Set<SubCommentConnector> = emptySet(),
+    reactionConnectors: Set<ReactionConnector> = emptySet(),
 ) : ConnectorRegistry {
     private val sources = sources.uniqueBySourceId("source") { it.id }
     private val searches = searchConnectors.uniqueBySourceId("search") { it.sourceId }
     private val userContents = userContentConnectors.uniqueBySourceId("user content") { it.sourceId }
     private val postings = postingConnectors.uniqueBySourceId("posting") { it.sourceId }
     private val logins = loginConnectors.uniqueBySourceId("login") { it.sourceId }
+    private val subComments = subCommentConnectors.uniqueBySourceId("sub-comment") { it.sourceId }
+    private val reactions = reactionConnectors.uniqueBySourceId("reaction") { it.sourceId }
 
     override fun source(sourceId: String): Source? = sources[sourceId]
     override fun search(sourceId: String): ForumSearchConnector? = searches[sourceId]
     override fun userContent(sourceId: String): UserContentConnector? = userContents[sourceId]
     override fun posting(sourceId: String): PostingConnector? = postings[sourceId]
     override fun login(sourceId: String): LoginConnector? = logins[sourceId]
+    override fun subComments(sourceId: String): SubCommentConnector? = subComments[sourceId]
+    override fun reactions(sourceId: String): ReactionConnector? = reactions[sourceId]
 }
 
 private inline fun <T> Set<T>.uniqueBySourceId(

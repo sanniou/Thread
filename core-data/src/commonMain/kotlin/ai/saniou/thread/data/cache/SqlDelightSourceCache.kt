@@ -68,7 +68,7 @@ class SqlDelightSourceCache(
     override suspend fun saveTopic(topic: DomainTopic) {
         saveTopics(
             topics = listOf(element = topic),
-            sourceId = topic.sourceName,
+            sourceId = topic.sourceId,
             channelId = topic.channelId,
             receiveDate = 0, // Not used for single topic save usually, or should be passed
             startOrder = 0,

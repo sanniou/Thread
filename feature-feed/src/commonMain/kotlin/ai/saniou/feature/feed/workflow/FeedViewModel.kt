@@ -30,16 +30,7 @@ class FeedViewModel(
     observeRefreshDiagnostics: ObserveRefreshDiagnosticsUseCase,
 ) : ScreenModel {
 
-    private val availableSources = getAvailableSources()
-        .filter { it.capabilities.supportsFeedAggregation }
-        .sortedBy { it.name }
-
-    private val _state = MutableStateFlow(
-        FeedContract.State(
-            sources = availableSources.map { FeedContract.SourceOption(it.id, it.name) },
-            selectedSourceIds = availableSources.mapTo(mutableSetOf()) { it.id },
-        )
-    )
+    private val _state = MutableStateFlow(FeedContract.State())
     val state = _state.asStateFlow()
 
     private val _effect = MutableSharedFlow<FeedContract.Effect>(extraBufferCapacity = 1)
@@ -54,6 +45,25 @@ class FeedViewModel(
         .cachedIn(screenModelScope)
 
     init {
+        screenModelScope.launch {
+            getAvailableSources().collect { allSources ->
+                val sources = allSources
+                    .filter { it.capabilities.supportsFeedAggregation }
+                    .sortedBy { it.name }
+                _state.update { current ->
+                    val availableIds = sources.mapTo(mutableSetOf()) { it.id }
+                    val selected = if (current.sources.isEmpty()) {
+                        availableIds
+                    } else {
+                        current.selectedSourceIds.intersect(availableIds)
+                    }
+                    current.copy(
+                        sources = sources.map { FeedContract.SourceOption(it.id, it.name) },
+                        selectedSourceIds = selected,
+                    )
+                }
+            }
+        }
         screenModelScope.launch {
             observeRefreshDiagnostics().collect { tasks ->
                 _state.update { current ->

@@ -18,8 +18,17 @@ class SourceCapabilitiesTest {
     }
 
     @Test
-    fun tiebaPresetExposesConnectorFeatures() {
-        val capabilities = SourceCapabilities.Tieba
+    fun connectorCanDeclareOptionalFeaturesWithoutSourceSpecificDomainTypes() {
+        val capabilities = SourceCapabilities(
+            supportsTopicCreation = false,
+            supportsReplies = true,
+            supportsUserContent = true,
+            supportsLogin = true,
+            commentPageSize = 30,
+            hasSubComments = true,
+            hasUpvote = true,
+            hasJumpPage = true,
+        )
 
         assertTrue(capabilities.supportsPagination)
         assertFalse(capabilities.supportsTopicCreation)

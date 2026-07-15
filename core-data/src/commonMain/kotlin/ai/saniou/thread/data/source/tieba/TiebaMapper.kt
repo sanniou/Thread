@@ -690,6 +690,7 @@ object TiebaMapper {
 
             Comment(
                 id = post.id.toString(),
+                sourceId = SOURCE_ID,
                 topicId = topicId,
                 author = author,
                 createdAt = post.time.toLong().let { Instant.fromEpochSeconds(it) },
@@ -730,14 +731,24 @@ object TiebaMapper {
                 }
             }
 
+            val images = post.content.filter { it.type == 3 }.map { content ->
+                Image(
+                    originalUrl = content.bigCdnSrc,
+                    thumbnailUrl = content.cdnSrc,
+                    width = content.width,
+                    height = content.height,
+                )
+            }
+
             Comment(
                 id = post.id.toString(),
+                sourceId = SOURCE_ID,
                 topicId = topicId,
                 author = author,
                 createdAt = post.time.toLong().let { Instant.fromEpochSeconds(it) },
                 title = "",
                 content = content,
-                images = emptyList(),
+                images = images,
                 isAdmin = false,
                 floor = post.floor.toLong(),
                 replyToId = null,
