@@ -40,7 +40,7 @@ fun EntityTopic.toDomain(
         id = id,
         sourceName = sourceId,
         sourceId = sourceId,
-        sourceUrl = "https://nmb.ai/thread/$id", // TODO: Move URL generation to Source logic
+        sourceUrl = "",
         title = title,
         content = content ?: summary ?: "",
         summary = summary,
@@ -89,7 +89,7 @@ fun GetTopicsInChannelKeyset.toDomain(
         id = id,
         sourceName = sourceId,
         sourceId = sourceId,
-        sourceUrl = "https://nmb.ai/thread/$id", // TODO: Move URL generation to Source logic
+        sourceUrl = "",
         title = title,
         content = content ?: summary ?: "",
         summary = summary,
@@ -116,6 +116,8 @@ fun EntityTopic.toMetadata(
     query: CommentQueries? = null,
     imageQueries: ImageQueries? = null,
     topicTagQueries: TopicTagQueries? = null,
+    capabilities: SourceCapabilities = SourceCapabilities.Default,
+    sourceUrl: String = "",
 ): TopicMetadata {
     val author = Author(
         id = authorId,
@@ -130,7 +132,7 @@ fun EntityTopic.toMetadata(
     return TopicMetadata(
         id = id,
         sourceName = sourceId,
-        sourceUrl = "https://nmb.ai/thread/$id", // TODO: Move URL generation to Source logic
+        sourceUrl = sourceUrl,
         title = title,
         author = author,
         createdAt = Instant.fromEpochMilliseconds(createdAt),
@@ -139,23 +141,20 @@ fun EntityTopic.toMetadata(
         commentCount = commentCount,
         tags = tags,
         lastViewedCommentId = lastViewedCommentId,
-        totalPages = when (sourceId) {
-            "nmb" -> (commentCount / 19).toInt() + if (commentCount % 19 > 0) 1 else 0
-            "tieba" -> (commentCount / 30).toInt() + if (commentCount % 30 > 0) 1 else 0
-            else -> null
+        totalPages = capabilities.commentPageSize?.let { size ->
+            (commentCount / size).toInt() + if (commentCount % size > 0) 1 else 0
         },
         agreeCount = agreeCount,
         disagreeCount = disagreeCount,
         isCollected = isCollected,
-        capabilities = when (sourceId) {
-            "nmb" -> SourceCapabilities.Nmb
-            "tieba" -> SourceCapabilities.Tieba
-            else -> SourceCapabilities.Default
-        }
+        capabilities = capabilities,
     )
 }
 
-fun Topic.toMetadata(): TopicMetadata {
+fun Topic.toMetadata(
+    capabilities: SourceCapabilities = SourceCapabilities.Default,
+    sourceUrl: String = this.sourceUrl,
+): TopicMetadata {
     return TopicMetadata(
         id = id,
         channelId = channelId,
@@ -168,19 +167,13 @@ fun Topic.toMetadata(): TopicMetadata {
         sourceName = sourceId,
         sourceUrl = sourceUrl,
         lastViewedCommentId = lastViewedCommentId,
-        totalPages = when (sourceId) {
-            "nmb" -> (commentCount / 19).toInt() + if (commentCount % 19 > 0) 1 else 0
-            "tieba" -> (commentCount / 30).toInt() + if (commentCount % 30 > 0) 1 else 0
-            else -> null
+        totalPages = capabilities.commentPageSize?.let { size ->
+            (commentCount / size).toInt() + if (commentCount % size > 0) 1 else 0
         },
         agreeCount = agreeCount,
         disagreeCount = disagreeCount,
         isCollected = isCollected,
-        capabilities = when (sourceId) {
-            "nmb" -> SourceCapabilities.Nmb
-            "tieba" -> SourceCapabilities.Tieba
-            else -> SourceCapabilities.Default
-        }
+        capabilities = capabilities,
     )
 }
 

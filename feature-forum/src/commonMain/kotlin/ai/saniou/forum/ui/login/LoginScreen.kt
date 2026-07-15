@@ -20,13 +20,20 @@ fun LoginScreen(
         is LoginStrategy.WebView -> {
             LoginWebView(
                 strategy = strategy,
-                onCookieCaptured = { cookie ->
-                    onLoginSuccess(mapOf("cookie" to cookie))
-                }
+                onDismissRequest = onDismissRequest,
+                onCookieCaptured = onLoginSuccess,
             )
         }
         is LoginStrategy.Api -> {
-            // TODO: Implement API login UI
+            ManualLoginDialog(
+                strategy = LoginStrategy.Manual(
+                    title = strategy.title,
+                    description = strategy.description,
+                    fields = strategy.fields,
+                ),
+                onDismissRequest = onDismissRequest,
+                onConfirm = onLoginSuccess,
+            )
         }
     }
 }

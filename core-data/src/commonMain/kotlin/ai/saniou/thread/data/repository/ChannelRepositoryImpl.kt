@@ -79,7 +79,9 @@ class ChannelRepositoryImpl(
             }
         ).flow.map { pagingData ->
             pagingData.map { item ->
-                item.toDomain(db.commentQueries, db.imageQueries)
+                item.toDomain(db.commentQueries, db.imageQueries).copy(
+                    sourceUrl = source.topicUrl(item.id),
+                )
             }
         }
     }

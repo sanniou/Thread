@@ -1,16 +1,16 @@
 package ai.saniou.thread.data.source.nmb
 
-import ai.saniou.thread.db.Database
-import app.cash.sqldelight.coroutines.asFlow
-import app.cash.sqldelight.coroutines.mapToList
-import kotlinx.coroutines.Dispatchers
+import ai.saniou.thread.domain.repository.AccountRepository
 import kotlinx.coroutines.flow.first
 
 class NmbAccountProvider(
-    private val database: Database
+    private val accountRepository: AccountRepository,
 ) {
     suspend fun getAccountValue(): String? {
-        val cookie = database.accountQueries.getSortedAccounts().asFlow().mapToList(Dispatchers.Default).first().firstOrNull()?.account
-        return cookie?.let { "userhash=$it" }
+        val account = accountRepository.getCurrentAccount(NMBSourceId).first()
+            ?: accountRepository.getAccounts(NMBSourceId).first().firstOrNull()
+        return account?.value?.let { value ->
+            if (value.startsWith("userhash=")) value else "userhash=$value"
+        }
     }
 }

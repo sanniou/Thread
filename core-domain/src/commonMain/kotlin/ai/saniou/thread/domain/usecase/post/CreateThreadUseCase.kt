@@ -2,12 +2,14 @@ package ai.saniou.thread.domain.usecase.post
 
 import ai.saniou.thread.domain.model.forum.PostDraft
 import ai.saniou.thread.domain.repository.PostRepository
+import ai.saniou.thread.domain.repository.PostResult
 
 class CreateThreadUseCase(private val postRepository: PostRepository) {
     suspend operator fun invoke(
-        fid: Int,
+        sourceId: String,
+        channelId: String,
         draft: PostDraft,
-    ): String {
-        return postRepository.post(fid, draft)
+    ): PostResult {
+        return postRepository.createThread(sourceId, channelId, draft)
     }
 }

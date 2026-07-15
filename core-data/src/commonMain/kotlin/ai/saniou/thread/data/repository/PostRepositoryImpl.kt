@@ -1,42 +1,25 @@
 package ai.saniou.thread.data.repository
 
-import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
 import ai.saniou.thread.domain.model.forum.PostDraft
+import ai.saniou.thread.domain.repository.PostResult
 import ai.saniou.thread.domain.repository.PostRepository
-import io.ktor.client.request.forms.formData
-import io.ktor.http.Headers
-import io.ktor.http.HttpHeaders
+import ai.saniou.thread.domain.source.ConnectorRegistry
 
 class PostRepositoryImpl(
-    private val nmbXdApi: NmbXdApi
+    private val registry: ConnectorRegistry,
 ) : PostRepository {
-    override suspend fun post(
-        fid: Int,
+    override suspend fun createThread(
+        sourceId: String,
+        channelId: String,
         draft: PostDraft,
-    ): String {
-        return nmbXdApi.postThread(fid, draft.content, draft.toOptionalParts())
-    }
+    ): PostResult = registry.requirePosting(sourceId).createThread(channelId, draft)
 
-    override suspend fun reply(
-        resto: Int,
+    override suspend fun createReply(
+        sourceId: String,
+        topicId: String,
         draft: PostDraft,
-    ): String {
-        return nmbXdApi.postReply(resto, draft.content, draft.toOptionalParts())
-    }
-
-    private fun PostDraft.toOptionalParts() = formData {
-        name?.let { append("name", it) }
-        title?.let { append("title", it) }
-        if (water) append("water", "true")
-        attachment?.let { file ->
-            append(
-                key = "image",
-                value = file.bytes,
-                headers = Headers.build {
-                    append(HttpHeaders.ContentType, file.contentType)
-                    append(HttpHeaders.ContentDisposition, "filename=\"${file.fileName}\"")
-                },
-            )
-        }
-    }
+    ): PostResult = registry.requirePosting(sourceId).createReply(topicId, draft)
 }
+
+private fun ConnectorRegistry.requirePosting(sourceId: String) = posting(sourceId)
+    ?: throw UnsupportedOperationException("Source '$sourceId' does not support posting")

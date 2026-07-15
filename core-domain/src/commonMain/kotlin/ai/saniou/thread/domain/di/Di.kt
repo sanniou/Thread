@@ -37,9 +37,6 @@ import ai.saniou.thread.domain.usecase.thread.GetTopicImagesUseCase
 import ai.saniou.thread.domain.usecase.thread.GetTopicCommentsUseCase
 import ai.saniou.thread.domain.usecase.thread.UpdateTopicLastAccessTimeUseCase
 import ai.saniou.thread.domain.usecase.thread.UpdateTopicLastReadCommentIdUseCase
-import ai.saniou.thread.domain.usecase.user.AddAccountUseCase
-import ai.saniou.thread.domain.usecase.user.DeleteAccountUseCase
-import ai.saniou.thread.domain.usecase.user.GetAccountsUseCase
 import ai.saniou.thread.domain.usecase.reader.AddFeedSourceUseCase
 import ai.saniou.thread.domain.usecase.reader.GetArticlesUseCase
 import ai.saniou.thread.domain.usecase.reader.DeleteFeedSourceUseCase
@@ -47,8 +44,7 @@ import ai.saniou.thread.domain.usecase.reader.*
 import ai.saniou.thread.domain.usecase.thread.GetSubCommentsUseCase
 import ai.saniou.thread.domain.usecase.thread.GetTopicCommentsPagerUseCase
 import ai.saniou.thread.domain.usecase.thread.GetTopicMetadataUseCase
-import ai.saniou.thread.domain.usecase.user.LoginTiebaUseCase
-import ai.saniou.thread.domain.usecase.user.UpdateAccountSortUseCase
+import ai.saniou.thread.domain.usecase.user.LoginSourceUseCase
 import org.kodein.di.DI
 import org.kodein.di.bindProvider
 import org.kodein.di.instance
@@ -117,11 +113,7 @@ val domainModule = DI.Module("domainModule") {
     bindProvider { ObserveActiveSubscriptionKeyUseCase(instance()) }
 
     // User
-    bindProvider { GetAccountsUseCase(instance()) }
-    bindProvider { AddAccountUseCase(instance()) }
-    bindProvider { DeleteAccountUseCase(instance()) }
-    bindProvider { UpdateAccountSortUseCase(instance()) }
-    bindProvider { LoginTiebaUseCase(instance()) }
+    bindProvider { LoginSourceUseCase(instance()) }
 
     // Notice
     bindProvider { GetNoticeUseCase(instance()) }

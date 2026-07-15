@@ -9,7 +9,9 @@ data class SourceCapabilities(
     val supportsSearch: Boolean = false,
     val supportsPosting: Boolean = false,
     val supportsUserContent: Boolean = false,
+    val supportsLogin: Boolean = false,
     val supportsPagination: Boolean = true,
+    val commentPageSize: Int? = null,
     val hasSubComments: Boolean = false, // 是否支持楼中楼
     val hasUpvote: Boolean = false,      // 是否支持点赞
     val hasDownvote: Boolean = false,    // 是否支持点踩
@@ -27,6 +29,8 @@ data class SourceCapabilities(
             supportsSearch = true,
             supportsPosting = true,
             supportsUserContent = true,
+            supportsLogin = true,
+            commentPageSize = 19,
             hasSubComments = false, // A岛/X岛通常没有原生楼中楼，或者只是引用
             hasUpvote = false,
             hasDownvote = false,
@@ -37,6 +41,8 @@ data class SourceCapabilities(
         val Tieba = SourceCapabilities(
             supportsPosting = true,
             supportsUserContent = true,
+            supportsLogin = true,
+            commentPageSize = 30,
             hasSubComments = true,
             hasUpvote = true,
             hasDownvote = true,

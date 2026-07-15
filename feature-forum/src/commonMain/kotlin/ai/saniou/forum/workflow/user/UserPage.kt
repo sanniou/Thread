@@ -36,7 +36,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
@@ -126,19 +125,9 @@ private fun UserScreenContent(
     listState: androidx.compose.foundation.lazy.LazyListState,
     modifier: Modifier = Modifier
 ) {
-    val uriHandler = LocalUriHandler.current
-
     Column(
         modifier = modifier
     ) {
-        if (state.sourceId == "nmb") {
-            // Only show NMB guide for NMB source
-            UserGuideCard(
-                onOpenUri = { uriHandler.openUri("https://www.nmbxd.com/Member/User/Index/home.html") },
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-            )
-        }
-
         when {
             state.isLoading -> {
                 Box(

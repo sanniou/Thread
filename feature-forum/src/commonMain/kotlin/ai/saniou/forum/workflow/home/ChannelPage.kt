@@ -328,20 +328,23 @@ data class ChannelPage(
         viewModel: ChannelViewModel,
         onCloseDrawer: () -> Unit
     ) {
-        val items = listOf(
-            DrawerItemData("综合趋势", Icons.Default.Home, state.currentChannel == null) {
+        val items = buildList {
+            add(DrawerItemData("综合趋势", Icons.Default.Home, state.currentChannel == null) {
                 viewModel.onEvent(Event.SelectHome)
                 onCloseDrawer()
-            },
-            DrawerItemData(stringResource(Res.string.drawer_subscribe), Icons.Default.Favorite, false) {
+            })
+            add(DrawerItemData(stringResource(Res.string.drawer_subscribe), Icons.Default.Favorite, false) {
                 navigator.push(SubscriptionPage { threadId -> navigator.push(TopicDetailPage(threadId)) })
                 onCloseDrawer()
-            },
-            DrawerItemData(stringResource(Res.string.drawer_search), Icons.Default.Search, false) {
-                navigator.push(SearchPage())
-                onCloseDrawer()
+            })
+            val currentSource = state.availableSources.firstOrNull { it.id == state.currentSourceId }
+            if (currentSource?.capabilities?.supportsSearch == true) {
+                add(DrawerItemData(stringResource(Res.string.drawer_search), Icons.Default.Search, false) {
+                    navigator.push(SearchPage(state.currentSourceId))
+                    onCloseDrawer()
+                })
             }
-        )
+        }
 
         FlowRow(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),

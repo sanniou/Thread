@@ -24,6 +24,8 @@ class SourceCapabilitiesTest {
         assertTrue(capabilities.supportsPagination)
         assertTrue(capabilities.supportsPosting)
         assertTrue(capabilities.supportsUserContent)
+        assertTrue(capabilities.supportsLogin)
+        assertTrue(capabilities.commentPageSize == 30)
         assertTrue(capabilities.hasSubComments)
         assertTrue(capabilities.hasUpvote)
         assertTrue(capabilities.hasJumpPage)

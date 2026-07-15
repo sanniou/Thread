@@ -66,14 +66,24 @@ class NmbRichTextStrategy : ForumRichTextStrategy {
     }
 }
 
+object DefaultForumRichTextStrategy : ForumRichTextStrategy {
+    override fun getPlugins(
+        onThreadClick: ((Long) -> Unit)?,
+        onReferenceClick: ((Long) -> Unit)?,
+    ): List<RichTextPlugin> = emptyList()
+
+    override fun handleUrlClick(url: String, onThreadClick: ((Long) -> Unit)?): Boolean = false
+}
+
 /**
  * Factory to get the appropriate strategy for a source ID.
  */
 object ForumRichTextStrategyFactory {
+    private val strategies: Map<String, ForumRichTextStrategy> = mapOf(
+        "nmb" to NmbRichTextStrategy(),
+    )
+
     fun getStrategy(sourceId: String?): ForumRichTextStrategy {
-        return when (sourceId) {
-            "nmb" -> NmbRichTextStrategy()
-            else -> NmbRichTextStrategy() // Default to NMB for now, or could be a NoOpStrategy
-        }
+        return sourceId?.let(strategies::get) ?: DefaultForumRichTextStrategy
     }
 }

@@ -19,6 +19,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(FlowPreview::class)
 class SearchViewModel(
+    private val sourceId: String,
     private val repository: ForumSearchRepository,
 ) : ScreenModel {
 
@@ -71,11 +72,11 @@ class SearchViewModel(
 
         val currentState = _state.value
         if (currentState.searchType == SearchType.THREAD) {
-            val pager = repository.searchTopics(query)
+            val pager = repository.searchTopics(sourceId, query)
                 .cachedIn(screenModelScope)
             _state.update { it.copy(threadPagingData = pager) }
         } else {
-            val pager = repository.searchComments(query)
+            val pager = repository.searchComments(sourceId, query)
                 .cachedIn(screenModelScope)
             _state.update { it.copy(replyPagingData = pager) }
         }

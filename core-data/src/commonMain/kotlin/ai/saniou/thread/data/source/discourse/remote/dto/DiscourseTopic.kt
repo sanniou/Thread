@@ -8,40 +8,40 @@ data class DiscourseTopic(
     val id: Long,
     val title: String,
     @SerialName("fancy_title")
-    val fancyTitle: String,
-    val slug: String,
+    val fancyTitle: String = title,
+    val slug: String = "",
     @SerialName("posts_count")
-    val postsCount: Int,
+    val postsCount: Int = 0,
     @SerialName("reply_count")
-    val replyCount: Int,
+    val replyCount: Int = 0,
     @SerialName("highest_post_number")
-    val highestPostNumber: Int,
+    val highestPostNumber: Int = 0,
     @SerialName("image_url")
     val imageUrl: String? = null,
     val excerpt: String? = null,
     @SerialName("created_at")
-    val createdAt: String,
+    val createdAt: String = "",
     @SerialName("last_posted_at")
-    val lastPostedAt: String,
-    val bumped: Boolean,
+    val lastPostedAt: String = "",
+    val bumped: Boolean = false,
     @SerialName("bumped_at")
-    val bumpedAt: String,
+    val bumpedAt: String = "",
     @SerialName("archetype")
-    val archetype: String,
-    val unseen: Boolean,
-    val pinned: Boolean,
+    val archetype: String = "regular",
+    val unseen: Boolean = false,
+    val pinned: Boolean = false,
     val unpinned: Boolean? = null,
-    val visible: Boolean,
-    val closed: Boolean,
-    val archived: Boolean,
+    val visible: Boolean = true,
+    val closed: Boolean = false,
+    val archived: Boolean = false,
     val bookmarked: Boolean? = null,
     val liked: Boolean? = null,
     val tags: List<String>? = null,
     @SerialName("category_id")
-    val categoryId: Long,
+    val categoryId: Long = 0,
     @SerialName("has_summary")
     val hasSummary: Boolean? = null,
     @SerialName("last_poster_username")
     val lastPosterUsername: String? = null,
-    val posters: List<DiscourseTopicPoster>
+    val posters: List<DiscourseTopicPoster> = emptyList(),
 )

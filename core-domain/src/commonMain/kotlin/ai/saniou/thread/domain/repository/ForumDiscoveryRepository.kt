@@ -5,16 +5,16 @@ import ai.saniou.thread.domain.model.forum.Topic
 import androidx.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 
-/** Common local discovery contract implemented by connectors with searchable content. */
+/** Source-aware discovery facade consumed by feature modules. */
 interface ForumSearchRepository {
-    fun searchTopics(query: String): Flow<PagingData<Topic>>
+    fun searchTopics(sourceId: String, query: String): Flow<PagingData<Topic>>
 
-    fun searchComments(query: String): Flow<PagingData<Comment>>
+    fun searchComments(sourceId: String, query: String): Flow<PagingData<Comment>>
 }
 
-/** Common user-content contract implemented by connectors that expose author history. */
+/** Source-aware author-content facade consumed by feature modules. */
 interface UserContentRepository {
-    fun getUserTopics(userId: String): Flow<PagingData<Topic>>
+    fun getUserTopics(sourceId: String, userId: String): Flow<PagingData<Topic>>
 
-    fun getUserComments(userId: String): Flow<PagingData<Comment>>
+    fun getUserComments(sourceId: String, userId: String): Flow<PagingData<Comment>>
 }

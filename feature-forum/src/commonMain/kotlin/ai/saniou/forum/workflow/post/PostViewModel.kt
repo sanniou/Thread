@@ -19,9 +19,7 @@ import kotlinx.coroutines.launch
 class PostViewModel(
     private val createThreadUseCase: CreateThreadUseCase,
     private val createReplyUseCase: CreateReplyUseCase,
-    private val fid: Int?,
-    private val resto: Int?,
-    private val forumName: String?,
+    private val params: PostViewModelParams,
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(State())
@@ -31,7 +29,7 @@ class PostViewModel(
     val effect = _effect.asSharedFlow()
 
     init {
-        _state.update { it.copy(forumName = forumName ?: "回复") }
+        _state.update { it.copy(forumName = params.forumName ?: "回复") }
     }
 
     fun onEvent(event: Event) {
@@ -100,27 +98,29 @@ class PostViewModel(
             _state.update { it.copy(isLoading = true, showConfirmDialog = false) }
             try {
                 val s = _state.value
-                val responseHtml = if (resto != null) {
+                val result = if (params.topicId != null) {
                     createReplyUseCase(
-                        resto = resto,
+                        sourceId = params.sourceId,
+                        topicId = params.topicId,
                         draft = s.postBody.copy(
                             attachment = s.image,
                             water = s.water,
                         ),
                     )
-                } else if (fid != null) {
+                } else if (params.channelId != null) {
                     createThreadUseCase(
-                        fid = fid,
+                        sourceId = params.sourceId,
+                        channelId = params.channelId,
                         draft = s.postBody.copy(
                             attachment = s.image,
                             water = s.water,
                         ),
                     )
                 } else {
-                    throw IllegalStateException("fid and resto cannot both be null")
+                    throw IllegalStateException("channelId and topicId cannot both be null")
                 }
 
-                val error = extractError(responseHtml)
+                val error = result.message
                 if (error != null) {
                     _state.update { it.copy(isLoading = false, error = error) }
                     // Error is now handled by State and Dialog, removing duplicate snackbar
@@ -135,16 +135,11 @@ class PostViewModel(
         }
     }
 
-    private fun extractError(html: String): String? {
-        val errorTag = "<p class=\"error\">"
-        val errorIndex = html.indexOf(errorTag)
-        if (errorIndex != -1) {
-            val startIndex = errorIndex + errorTag.length
-            val endIndex = html.indexOf("</p>", startIndex)
-            if (endIndex != -1) {
-                return html.substring(startIndex, endIndex)
-            }
-        }
-        return null
-    }
 }
+
+data class PostViewModelParams(
+    val sourceId: String,
+    val channelId: String? = null,
+    val topicId: String? = null,
+    val forumName: String? = null,
+)

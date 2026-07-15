@@ -10,6 +10,7 @@ import ai.saniou.thread.domain.usecase.channel.GetChannelDetailUseCase
 import ai.saniou.thread.domain.usecase.channel.GetChannelNameUseCase
 import ai.saniou.thread.domain.usecase.channel.GetChannelTopicsPagingUseCase
 import ai.saniou.thread.domain.usecase.channel.SetChannelFallbackModeUseCase
+import ai.saniou.thread.domain.repository.SourceRepository
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import cafe.adriel.voyager.core.model.ScreenModel
@@ -36,6 +37,7 @@ class TopicViewModel(
     private val setChannelFallbackModeUseCase: SetChannelFallbackModeUseCase,
     getChannelDetailUseCase: GetChannelDetailUseCase,
     getChannelNameUseCase: GetChannelNameUseCase,
+    sourceRepository: SourceRepository,
     private val sourceId: String,
     private val channelId: String,
     private val channelCategoryId: String,
@@ -52,6 +54,8 @@ class TopicViewModel(
 
     private val loadParams = MutableStateFlow(LoadRequest(channelId = channelId, channelCategory = channelCategoryId))
     private val showInfoDialog = MutableStateFlow(false)
+    private val capabilities = sourceRepository.getSource(sourceId)?.capabilities
+        ?: ai.saniou.thread.domain.model.SourceCapabilities.Default
 
     val topics: Flow<PagingData<Topic>> =
         loadParams.flatMapLatest { request ->
@@ -77,6 +81,7 @@ class TopicViewModel(
             channelName = forumName ?: "",
             channelDetail = forumDetail,
             topics = topics,
+            capabilities = capabilities,
             showInfoDialog = showDialog
         )
     }.stateIn(screenModelScope, SharingStarted.WhileSubscribed(5000), State(topics = topics))

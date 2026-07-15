@@ -1,11 +1,8 @@
 package ai.saniou.forum.workflow.user
 
 import ai.saniou.corecommon.utils.toRelativeTimeString
-import ai.saniou.coreui.composition.LocalForumSourceId
-import ai.saniou.thread.domain.model.SourceIds
 import ai.saniou.thread.domain.model.forum.Account
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,12 +18,10 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -39,12 +34,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import kotlin.time.Instant
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
-import kotlin.time.ExperimentalTime
 
 @Composable
 fun CookieListContent(
@@ -94,7 +85,7 @@ fun CookieItem(
     modifier: Modifier = Modifier,
 ) {
     val elevation by animateDpAsState(if (isDragging) 8.dp else 2.dp)
-    val displayValue = if (cookie.sourceId == "tieba") cookie.alias ?: cookie.uid else cookie.value
+    val displayValue = cookie.uid?.let { "账号 ID: $it" } ?: "凭据已保存"
 
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -116,7 +107,7 @@ fun CookieItem(
             }
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = displayValue ?: "",
+                text = displayValue,
                 style = MaterialTheme.typography.bodyMedium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -132,45 +123,6 @@ fun CookieItem(
         }
     }
 }
-
-
-@Composable
-fun UserGuideCard(onOpenUri: () -> Unit, modifier: Modifier = Modifier) {
-    val sourceId = LocalForumSourceId.current
-
-    if (sourceId != SourceIds.TIEBA) {
-        Card(modifier = modifier.fillMaxWidth()) {
-            ListItem(
-                modifier = Modifier.clickable(onClick = onOpenUri),
-                headlineContent = { Text("如何获取饼干？") },
-                supportingContent = { Text("在网页端登录后，请访问指定页面获取。") },
-                leadingContent = {
-                    Icon(
-                        imageVector = Icons.Default.Info,
-                        contentDescription = "信息"
-                    )
-                }
-            )
-        }
-    }
-}
-
-@OptIn(ExperimentalTime::class)
-private fun formatEpochSeconds(epochSeconds: Long): String {
-    return try {
-        val instant = Instant.fromEpochSeconds(epochSeconds)
-        val localDateTime = instant.toLocalDateTime(TimeZone.currentSystemDefault())
-        val year = localDateTime.year
-        val month = localDateTime.monthNumber.toString().padStart(2, '0')
-        val day = localDateTime.dayOfMonth.toString().padStart(2, '0')
-        val hour = localDateTime.hour.toString().padStart(2, '0')
-        val minute = localDateTime.minute.toString().padStart(2, '0')
-        "$year-$month-$day $hour:$minute"
-    } catch (e: Exception) {
-        "Invalid Date"
-    }
-}
-
 @Composable
 fun EmptyCookieList(modifier: Modifier = Modifier) {
     Box(

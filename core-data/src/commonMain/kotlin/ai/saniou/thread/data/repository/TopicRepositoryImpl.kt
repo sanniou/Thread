@@ -29,6 +29,9 @@ class TopicRepositoryImpl(
 
     override fun getTopicDetail(sourceId: String, id: String, forceRefresh: Boolean): Flow<Topic> {
         return cache.observeTopic(sourceId, id)
+            .map { topic ->
+                topic.copy(sourceUrl = sourceMap[sourceId]?.topicUrl(id).orEmpty())
+            }
             .onStart {
                 val source = sourceMap[sourceId]
                 if (source != null) {
@@ -52,7 +55,13 @@ class TopicRepositoryImpl(
         forceRefresh: Boolean,
     ): Flow<TopicMetadata> {
         return cache.observeTopic(sourceId, id)
-            .map { it.toMetadata() }
+            .map { topic ->
+                val source = sourceMap[sourceId]
+                topic.toMetadata(
+                    capabilities = source?.capabilities ?: ai.saniou.thread.domain.model.SourceCapabilities.Default,
+                    sourceUrl = source?.topicUrl(id).orEmpty(),
+                )
+            }
             .onStart {
                 val source = sourceMap[sourceId]
                 if (source != null) {

@@ -260,39 +260,48 @@ data class TopicPage(
             bottomBar = {
                 ai.saniou.coreui.widgets.UnifiedActionBar(
                     visible = showQuickActionBar,
-                    actions = listOf(
-                        ai.saniou.coreui.widgets.ActionItem(
-                            label = stringResource(Res.string.topic_page_post),
-                            icon = Icons.Default.Add,
-                            emphasized = true,
-                            onClick = {
-                                navigator.push(
-                                    PostPage(
-                                        fid = forumId.toInt(),
-                                        forumName = state.channelName
-                                    )
+                    actions = buildList {
+                        if (state.capabilities.supportsPosting) {
+                            add(
+                                ai.saniou.coreui.widgets.ActionItem(
+                                    label = stringResource(Res.string.topic_page_post),
+                                    icon = Icons.Default.Add,
+                                    emphasized = true,
+                                    onClick = {
+                                        navigator.push(
+                                            PostPage(
+                                                sourceId = actualSourceId,
+                                                channelId = forumId,
+                                                forumName = state.channelName
+                                            )
+                                        )
+                                    }
                                 )
-                            }
-                        ),
-                        ai.saniou.coreui.widgets.ActionItem(
-                            label = stringResource(Res.string.refresh),
-                            icon = Icons.Default.Refresh,
-                            onClick = {
-                                if (canRefresh) {
-                                    threads.refresh()
-                                } else {
-                                    coroutineScope.launch {
-                                        lazyListState.animateScrollToItem(0)
+                            )
+                        }
+                        add(
+                            ai.saniou.coreui.widgets.ActionItem(
+                                label = stringResource(Res.string.refresh),
+                                icon = Icons.Default.Refresh,
+                                onClick = {
+                                    if (canRefresh) {
+                                        threads.refresh()
+                                    } else {
+                                        coroutineScope.launch {
+                                            lazyListState.animateScrollToItem(0)
+                                        }
                                     }
                                 }
-                            }
-                        ),
-                        ai.saniou.coreui.widgets.ActionItem(
-                            label = stringResource(Res.string.topic_page_user_center),
-                            icon = Icons.Default.AccountCircle,
-                            onClick = { navigator.push(UserPage()) }
+                            )
                         )
-                    )
+                        add(
+                            ai.saniou.coreui.widgets.ActionItem(
+                                label = stringResource(Res.string.topic_page_user_center),
+                                icon = Icons.Default.AccountCircle,
+                                onClick = { navigator.push(UserPage()) }
+                            )
+                        )
+                    }
                 )
             }
         ) { innerPadding ->
@@ -310,7 +319,7 @@ data class TopicPage(
                             )
                         )
                     },
-                    onUserClick = { userHash -> navigator.push(UserDetailPage(userHash)) },
+                    onUserClick = { userHash -> navigator.push(UserDetailPage(actualSourceId, userHash)) },
                     modifier = Modifier.weight(1f),
                     showChannelBadge = false,
                     onShowCache = { viewModel.onEvent(TopicContract.Event.ShowCache) },
@@ -346,7 +355,5 @@ data class TopicPage(
         }
     }
 }
-
-
 
 

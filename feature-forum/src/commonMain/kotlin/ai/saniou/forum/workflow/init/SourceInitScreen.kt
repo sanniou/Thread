@@ -31,9 +31,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import ai.saniou.thread.domain.repository.SettingsRepository
-import ai.saniou.thread.domain.repository.SubscriptionRepository
-import org.kodein.di.instance
 
 data class SourceInitScreen(
     val sourceId: String,
@@ -66,114 +63,24 @@ data class SourceInitScreen(
                         .verticalScroll(rememberScrollState())
                         .padding(16.dp)
                 ) {
-                    when (sourceId) {
-                        "nmb" -> NmbInitContent(
-                            state = state,
-                            onEvent = viewModel::onEvent
-                        )
-
-                        "discourse" -> DiscourseInitContent(
-                            state = state,
-                            onEvent = viewModel::onEvent
-                        )
-
-                        else -> {
-                            Text("未知的源: $sourceId")
-                            SaniouButton(
-                                text = "跳过初始化",
-                                onClick = { viewModel.onEvent(Event.CompleteInitialization) },
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
-                    }
+                    Text(
+                        text = "准备启用 ${state.sourceName}。账号凭据可在用户中心通过该来源声明的登录方式添加。",
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "初始化只创建通用订阅标识和来源状态，不在界面层保存平台专用配置。",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                    SaniouButton(
+                        text = "完成初始化",
+                        onClick = { viewModel.onEvent(Event.CompleteInitialization) },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
                 }
             }
         }
     }
-}
-
-@Composable
-private fun NmbInitContent(
-    state: State,
-    onEvent: (Event) -> Unit,
-) {
-    Text(
-        text = "欢迎使用 A岛 (NMB)。为了获得完整的体验，您可以配置订阅 ID 和饼干。",
-        style = MaterialTheme.typography.bodyMedium
-    )
-    Spacer(modifier = Modifier.height(16.dp))
-
-    OutlinedTextField(
-        value = state.nmbSubscriptionKey,
-        onValueChange = { onEvent(Event.UpdateNmbSubscriptionKey(it)) },
-        label = { Text("订阅 ID (UUID)") },
-        modifier = Modifier.fillMaxWidth(),
-        singleLine = true
-    )
-    Text(
-        text = "用于同步订阅列表。留空将自动生成。",
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant
-    )
-
-    Spacer(modifier = Modifier.height(16.dp))
-
-    OutlinedTextField(
-        value = state.nmbCookie,
-        onValueChange = { onEvent(Event.UpdateNmbCookie(it)) },
-        label = { Text("饼干 (Cookie)") },
-        modifier = Modifier.fillMaxWidth(),
-        singleLine = true
-    )
-    Text(
-        text = "用于发串和查看部分板块。格式通常为 userhash=xxx",
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant
-    )
-
-    Spacer(modifier = Modifier.height(24.dp))
-
-    SaniouButton(
-        text = "完成初始化",
-        onClick = { onEvent(Event.CompleteInitialization) },
-        modifier = Modifier.fillMaxWidth()
-    )
-}
-
-@Composable
-private fun DiscourseInitContent(
-    state: State,
-    onEvent: (Event) -> Unit,
-) {
-    Text(
-        text = "欢迎使用 Discourse。请输入您的 API Key 以访问受限内容。",
-        style = MaterialTheme.typography.bodyMedium
-    )
-    Spacer(modifier = Modifier.height(16.dp))
-
-    OutlinedTextField(
-        value = state.discourseApiKey,
-        onValueChange = { onEvent(Event.UpdateDiscourseApiKey(it)) },
-        label = { Text("API Key") },
-        modifier = Modifier.fillMaxWidth(),
-        singleLine = true
-    )
-
-    Spacer(modifier = Modifier.height(16.dp))
-
-    OutlinedTextField(
-        value = state.discourseUsername,
-        onValueChange = { onEvent(Event.UpdateDiscourseUsername(it)) },
-        label = { Text("用户名") },
-        modifier = Modifier.fillMaxWidth(),
-        singleLine = true
-    )
-
-    Spacer(modifier = Modifier.height(24.dp))
-
-    SaniouButton(
-        text = "完成初始化",
-        onClick = { onEvent(Event.CompleteInitialization) },
-        modifier = Modifier.fillMaxWidth()
-    )
 }

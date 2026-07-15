@@ -3,6 +3,7 @@ package ai.saniou.forum.workflow.topic
 import ai.saniou.coreui.state.UiStateWrapper
 import ai.saniou.thread.domain.model.forum.Channel
 import ai.saniou.thread.domain.model.forum.Topic
+import ai.saniou.thread.domain.model.SourceCapabilities
 import androidx.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
@@ -23,6 +24,7 @@ interface TopicContract {
         val channelName: String = "",
         val channelDetail: UiStateWrapper<Channel> = UiStateWrapper.Loading,
         val topics: Flow<PagingData<Topic>> = emptyFlow(),
+        val capabilities: SourceCapabilities = SourceCapabilities.Default,
         val showInfoDialog: Boolean = false
     )
 

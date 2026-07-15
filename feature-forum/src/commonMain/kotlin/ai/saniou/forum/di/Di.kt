@@ -5,8 +5,8 @@ import ai.saniou.forum.workflow.topic.TopicViewModel
 import ai.saniou.forum.workflow.home.ChannelViewModel
 import ai.saniou.forum.workflow.home.GreetImageViewModel
 import ai.saniou.forum.workflow.init.SourceInitViewModel
-import ai.saniou.forum.workflow.login.TiebaLoginViewModel
 import ai.saniou.forum.workflow.post.PostViewModel
+import ai.saniou.forum.workflow.post.PostViewModelParams
 import ai.saniou.forum.workflow.reference.ReferenceViewModel
 import ai.saniou.forum.workflow.search.SearchViewModel
 import ai.saniou.forum.workflow.subscription.SubscriptionViewModel
@@ -58,6 +58,7 @@ val nmbFeatureModule = DI.Module("nmbFeatureModule") {
             instance(),
             instance(),
             instance(),
+            instance(),
             "nmb",
             params.first.toString(),
             params.second.toString()
@@ -67,6 +68,7 @@ val nmbFeatureModule = DI.Module("nmbFeatureModule") {
     // New factory supporting SourceId
     bindFactory<Triple<String, String, String>, TopicViewModel> { params ->
         TopicViewModel(
+            instance(),
             instance(),
             instance(),
             instance(),
@@ -97,8 +99,8 @@ val nmbFeatureModule = DI.Module("nmbFeatureModule") {
 
 
     // 发帖和回复相关
-    bindFactory<Triple<Int?, Int?, String?>, PostViewModel> { params ->
-        PostViewModel(instance(), instance(), params.first, params.second, params.third)
+    bindFactory<PostViewModelParams, PostViewModel> { params ->
+        PostViewModel(instance(), instance(), params)
     }
 
     // 用户认证相关
@@ -107,9 +109,6 @@ val nmbFeatureModule = DI.Module("nmbFeatureModule") {
             instance(),
             instance(),
             instance(),
-            instance(),
-            instance(),
-            instance()
         )
     }
 
@@ -128,10 +127,11 @@ val nmbFeatureModule = DI.Module("nmbFeatureModule") {
         )
     }
     // 搜索相关
-    bindProvider { SearchViewModel(instance()) }
-    bindFactory<String, UserDetailViewModel> { userHash ->
+    bindFactory<String, SearchViewModel> { sourceId -> SearchViewModel(sourceId, instance()) }
+    bindFactory<Pair<String, String>, UserDetailViewModel> { params ->
         UserDetailViewModel(
-            userHash = userHash,
+            sourceId = params.first,
+            userHash = params.second,
             userContentRepository = instance()
         )
     }
@@ -146,13 +146,9 @@ val nmbFeatureModule = DI.Module("nmbFeatureModule") {
     bindFactory<String, SourceInitViewModel> { sourceId ->
         SourceInitViewModel(
             sourceId = sourceId,
+            sourceRepository = instance(),
             settingsRepository = instance(),
             subscriptionRepository = instance(),
-            getAccounts = instance(),
-            addAccount = instance(),
         )
     }
-
-    // Tieba Login
-    bindProvider { TiebaLoginViewModel(instance()) }
 }

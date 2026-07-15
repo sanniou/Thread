@@ -115,8 +115,9 @@ private const val BBCODE_CODE = "[code][/code]"
 private const val BBCODE_IMG = "[img][/img]"
 
 data class PostPage(
-    val fid: Int? = null,
-    val resto: Int? = null,
+    val sourceId: String,
+    val channelId: String? = null,
+    val topicId: String? = null,
     val forumName: String? = null,
 ) : Screen {
     @OptIn(ExperimentalMaterial3Api::class)
@@ -124,8 +125,10 @@ data class PostPage(
     override fun Content() {
         val di = localDI()
         val navigator = LocalNavigator.currentOrThrow
-        val viewModel: PostViewModel = rememberScreenModel(tag = "${fid}_${resto}") {
-            di.direct.instance(arg = Triple(fid, resto, forumName))
+        val viewModel: PostViewModel = rememberScreenModel(tag = "$sourceId:$channelId:$topicId") {
+            di.direct.instance(
+                arg = PostViewModelParams(sourceId, channelId, topicId, forumName)
+            )
         }
         val state by viewModel.state.collectAsStateWithLifecycle()
         val snackbarHostState = remember { SnackbarHostState() }
@@ -186,7 +189,7 @@ data class PostPage(
 
         Scaffold(
             topBar = {
-                val title = if (resto != null) stringResource(Res.string.post_page_reply)
+                val title = if (topicId != null) stringResource(Res.string.post_page_reply)
                 else stringResource(Res.string.post_page_new_post, state.forumName)
                 val canSend = state.content.text.isNotBlank() && !state.isLoading && !state.isSuccess
 
@@ -234,7 +237,7 @@ data class PostPage(
                                 .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
                                 .padding(Dimens.padding_medium)
                         ) {
-                            if (resto == null) { // New Thread Options
+                            if (topicId == null) { // New Thread Options
                                 OutlinedTextField(
                                     value = state.postBody.title ?: "",
                                     onValueChange = {

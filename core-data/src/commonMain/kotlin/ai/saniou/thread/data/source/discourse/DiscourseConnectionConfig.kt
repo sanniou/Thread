@@ -11,3 +11,15 @@ data class DiscourseConnectionConfig(
     val baseUrl: String,
     val developmentApiKey: String? = null,
 )
+
+/** Runtime credential overrides the reusable development credential without rebuilding the client. */
+class DiscourseCredentialProvider(
+    developmentApiKey: String?,
+) {
+    var apiKey: String? = developmentApiKey
+        private set
+
+    fun update(apiKey: String) {
+        this.apiKey = apiKey
+    }
+}

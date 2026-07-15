@@ -199,28 +199,35 @@ data class TopicDetailPage(
                 if (state.topicWrapper is UiStateWrapper.Success) {
                     ai.saniou.coreui.widgets.UnifiedActionBar(
                         visible = true,
-                        actions = listOf(
-                            ai.saniou.coreui.widgets.ActionItem(
-                                label = stringResource(Res.string.reply),
-                                icon = Icons.Default.Edit,
-                                emphasized = true,
-                                onClick = {
-                                    (state.topicWrapper as? UiStateWrapper.Success<TopicMetadata>)?.value?.let { metadata ->
-                                        navigator.push(PostPage(resto = metadata.id.toInt()))
-                                    }
-                                }
-                            ),
-                            ai.saniou.coreui.widgets.ActionItem(
-                                label = stringResource(Res.string.refresh),
-                                icon = Icons.Default.Refresh,
-                                onClick = { viewModel.onEvent(Event.Refresh) }
-                            ),
-                            ai.saniou.coreui.widgets.ActionItem(
-                                label = stringResource(Res.string.subscribe),
-                                icon = if (state.isSubscribed) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                                onClick = { viewModel.onEvent(Event.ToggleSubscription) }
+                        actions = buildList {
+                            val metadata = (state.topicWrapper as? UiStateWrapper.Success<TopicMetadata>)?.value
+                            if (metadata?.capabilities?.supportsPosting == true) {
+                                add(
+                                    ai.saniou.coreui.widgets.ActionItem(
+                                        label = stringResource(Res.string.reply),
+                                        icon = Icons.Default.Edit,
+                                        emphasized = true,
+                                        onClick = {
+                                            navigator.push(PostPage(sourceId = sourceId, topicId = metadata.id))
+                                        }
+                                    )
+                                )
+                            }
+                            add(
+                                ai.saniou.coreui.widgets.ActionItem(
+                                    label = stringResource(Res.string.refresh),
+                                    icon = Icons.Default.Refresh,
+                                    onClick = { viewModel.onEvent(Event.Refresh) }
+                                )
                             )
-                        )
+                            add(
+                                ai.saniou.coreui.widgets.ActionItem(
+                                    label = stringResource(Res.string.subscribe),
+                                    icon = if (state.isSubscribed) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                                    onClick = { viewModel.onEvent(Event.ToggleSubscription) }
+                                )
+                            )
+                        }
                     )
                 }
             }
@@ -261,7 +268,7 @@ data class TopicDetailPage(
                 onBookmark = { viewModel.onEvent(Event.BookmarkReply(it)) },
                 onBookmarkImage = { image -> viewModel.onEvent(Event.BookmarkImage(image)) },
                 onUpvote = { viewModel.onEvent(Event.UpvoteTopic) },
-                onUserClick = { userHash -> navigator.push(UserDetailPage(userHash)) },
+                onUserClick = { userHash -> navigator.push(UserDetailPage(sourceId, userHash)) },
                 onReplyClicked = { commentId -> viewModel.onEvent(Event.ShowSubComments(commentId)) },
                 highlightedReplyId = highlightedReplyId
             )

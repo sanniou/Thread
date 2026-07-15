@@ -114,6 +114,9 @@ interface Source {
     /** Maps the unified one-based timeline page to a connector cursor. */
     fun getFeedCursor(page: Int): String? = if (page <= 1) null else page.toString()
 
+    /** Public URL for a topic, if the connector has one. */
+    fun topicUrl(topicId: String): String = ""
+
     /**
      * 获取板块详情
      */

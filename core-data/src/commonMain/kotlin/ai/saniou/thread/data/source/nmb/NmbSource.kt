@@ -16,10 +16,10 @@ import ai.saniou.thread.domain.model.forum.*
 import ai.saniou.thread.domain.model.user.LoginField
 import ai.saniou.thread.domain.model.user.LoginStrategy
 import ai.saniou.thread.domain.repository.SettingsRepository
-import ai.saniou.thread.domain.repository.ForumSearchRepository
 import ai.saniou.thread.domain.repository.Source
-import ai.saniou.thread.domain.repository.UserContentRepository
 import ai.saniou.thread.domain.repository.observeValue
+import ai.saniou.thread.domain.source.ForumSearchConnector
+import ai.saniou.thread.domain.source.UserContentConnector
 import ai.saniou.thread.network.SaniouResult
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
@@ -51,16 +51,21 @@ class NmbSource(
     private val db: Database,
     private val settingsRepository: SettingsRepository,
     private val cdnManager: CdnManager,
-) : Source, ForumSearchRepository, UserContentRepository {
+) : Source, ForumSearchConnector, UserContentConnector {
     override val id: String = NMBSourceId
+    override val sourceId: String = id
     override val name: String = NMBSourceName
 
     override val capabilities: SourceCapabilities = SourceCapabilities(
         supportsSearch = true,
         supportsPosting = true,
         supportsUserContent = true,
+        supportsLogin = true,
+        commentPageSize = 19,
         supportsPagination = true
     )
+
+    override fun topicUrl(topicId: String): String = "https://nmb.ai/thread/$topicId"
 
     override val trendSource by lazy { NmbTrendSource(this) }
 
@@ -633,7 +638,11 @@ class NmbSource(
                 )
             }
         ).flow.map { pagingData ->
-            pagingData.map { it.toDomain(db.commentQueries, db.imageQueries) }
+            pagingData.map { entity ->
+                entity.toDomain(db.commentQueries, db.imageQueries).copy(
+                    sourceUrl = topicUrl(entity.id),
+                )
+            }
         }
     }
 
@@ -669,7 +678,11 @@ class NmbSource(
                 )
             }
         ).flow.map { pagingData ->
-            pagingData.map { it.toDomain(db.commentQueries, db.imageQueries) }
+            pagingData.map { entity ->
+                entity.toDomain(db.commentQueries, db.imageQueries).copy(
+                    sourceUrl = topicUrl(entity.id),
+                )
+            }
         }
     }
 

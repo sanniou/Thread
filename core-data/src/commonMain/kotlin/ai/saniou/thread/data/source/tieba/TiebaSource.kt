@@ -55,8 +55,12 @@ class TiebaSource(
     override val isInitialized: Flow<Boolean> = flowOf(true)
     override val capabilities: SourceCapabilities = SourceCapabilities(
         supportsUserContent = false,
+        supportsLogin = true,
+        commentPageSize = 30,
         supportsPagination = true
     )
+
+    override fun topicUrl(topicId: String): String = "https://tieba.baidu.com/p/$topicId"
 
     override val trendSource by lazy {
         TiebaTrendSource(
@@ -67,6 +71,7 @@ class TiebaSource(
 
     override val loginStrategy: LoginStrategy = LoginStrategy.WebView(
         url = "https://wappass.baidu.com/passport/?login",
+        cookieDomain = "https://baidu.com/",
         targetCookieKeys = listOf("BDUSS", "STOKEN")
     )
 

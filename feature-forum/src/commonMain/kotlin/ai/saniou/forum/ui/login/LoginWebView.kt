@@ -1,46 +1,54 @@
 package ai.saniou.forum.ui.login
 
 import ai.saniou.thread.domain.model.user.LoginStrategy
+import ai.saniou.coreui.widgets.SaniouTopAppBar
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.multiplatform.webview.web.WebView
+import com.multiplatform.webview.web.LoadingState
+import com.multiplatform.webview.web.rememberWebViewNavigator
 import com.multiplatform.webview.web.rememberWebViewState
 
 @Composable
 fun LoginWebView(
     strategy: LoginStrategy.WebView,
-    onCookieCaptured: (String) -> Unit
+    onDismissRequest: () -> Unit,
+    onCookieCaptured: (Map<String, String>) -> Unit,
 ) {
     val state = rememberWebViewState(url = strategy.url)
+    val navigator = rememberWebViewNavigator()
+    var captured by remember { mutableStateOf(false) }
 
-    // TODO: Implement actual cookie interception.
-    // The current WebView implementation in `core-ui` might not expose cookie interception callbacks easily
-    // across all platforms (Android/iOS/Desktop/Wasm).
-    // For now, this is a placeholder structure.
-    // In a real implementation, we would need to pass a CookieManager or equivalent to the WebView
-    // or use a platform-specific WebView implementation that allows monitoring cookies/URL changes.
-
-    // Assuming `state` or `WebView` exposes some way to get cookies or we need to update `core-ui`.
-    // Since `core-ui` WebView details are not fully visible here, I'll assume a basic implementation.
-
-    // Ideally, we'd use something like:
-    /*
-    WebView(
-        state = state,
-        modifier = Modifier.fillMaxSize(),
-        onUrlChanged = { url ->
-            // Check if cookies are present for the target domain
-            val cookies = CookieManager.getInstance().getCookie(strategy.cookieDomain)
-            if (strategy.targetCookieKeys.all { cookies.contains(it) }) {
-                onCookieCaptured(cookies)
+    LaunchedEffect(state.loadingState) {
+        if (!captured && state.loadingState is LoadingState.Finished) {
+            val cookies = state.cookieManager.getCookies(strategy.cookieDomain ?: strategy.url)
+            val values = cookies.associate { it.name to it.value }
+            if (strategy.targetCookieKeys.all(values::containsKey)) {
+                captured = true
+                onCookieCaptured(
+                    values + ("cookie" to cookies.joinToString("; ") { "${it.name}=${it.value}" })
+                )
             }
         }
-    )
-    */
+    }
 
-    WebView(
-        state = state,
-        modifier = Modifier.fillMaxSize()
-    )
+    Scaffold(
+        topBar = {
+            SaniouTopAppBar(title = "网页登录", onNavigationClick = onDismissRequest)
+        },
+    ) { padding ->
+        WebView(
+            state = state,
+            navigator = navigator,
+            modifier = Modifier.fillMaxSize().padding(padding),
+        )
+    }
 }

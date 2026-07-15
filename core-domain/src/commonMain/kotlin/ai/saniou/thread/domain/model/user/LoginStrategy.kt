@@ -15,7 +15,9 @@ sealed class LoginStrategy {
     ) : LoginStrategy()
     
     data class Api(
-        val title: String
+        val title: String,
+        val description: String = "",
+        val fields: List<LoginField> = emptyList(),
     ) : LoginStrategy()
 }
 

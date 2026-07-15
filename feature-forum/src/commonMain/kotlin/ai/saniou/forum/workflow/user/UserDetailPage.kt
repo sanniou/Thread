@@ -58,7 +58,8 @@ import org.kodein.di.instance
 import org.kodein.di.compose.localDI
 
 data class UserDetailPage(
-    val userHash: String
+    val sourceId: String,
+    val userHash: String,
 ) : Screen {
 
     @OptIn(ExperimentalMaterial3Api::class)
@@ -66,8 +67,8 @@ data class UserDetailPage(
     override fun Content() {
         val di = localDI()
         val navigator = LocalNavigator.currentOrThrow
-        val viewModel: UserDetailViewModel = rememberScreenModel(tag = userHash) {
-            di.direct.instance(arg = userHash)
+        val viewModel: UserDetailViewModel = rememberScreenModel(tag = "$sourceId:$userHash") {
+            di.direct.instance(arg = sourceId to userHash)
         }
 
         val state by viewModel.state.collectAsState()
@@ -231,7 +232,7 @@ data class UserDetailPage(
                                                 },
                                                 onCopy = {},
                                                 onBookmark = {},
-                                                onUserClick = { userHash -> navigator.push(UserDetailPage(userHash)) },
+                                                onUserClick = { userHash -> navigator.push(UserDetailPage(sourceId, userHash)) },
                                                 onBookmarkImage = { _ -> }
                                             )
                                         }

@@ -52,12 +52,19 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.kodein.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-class SearchPage : Screen {
+import org.kodein.di.direct
+import org.kodein.di.instance
+data class SearchPage(
+    val sourceId: String,
+) : Screen {
 
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val viewModel: SearchViewModel = rememberScreenModel()
+        val di = org.kodein.di.compose.localDI()
+        val viewModel: SearchViewModel = rememberScreenModel(tag = sourceId) {
+            di.direct.instance<String, SearchViewModel>(arg = sourceId)
+        }
         val state by viewModel.state.collectAsStateWithLifecycle()
 
         Scaffold(
@@ -124,7 +131,7 @@ class SearchPage : Screen {
                                     ),
                                 )
                             },
-                            onUserClick = { userHash -> navigator.push(UserDetailPage(userHash)) }
+                            onUserClick = { userHash -> navigator.push(UserDetailPage(sourceId, userHash)) }
                         )
                     } else {
                         ReplyResultList(

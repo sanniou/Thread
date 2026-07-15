@@ -11,6 +11,9 @@ import ai.saniou.thread.data.repository.ChannelRepositoryImpl
 import ai.saniou.thread.data.repository.HistoryRepositoryImpl
 import ai.saniou.thread.data.repository.NoticeRepositoryImpl
 import ai.saniou.thread.data.repository.PostRepositoryImpl
+import ai.saniou.thread.data.repository.ForumSearchRepositoryImpl
+import ai.saniou.thread.data.repository.UserContentRepositoryImpl
+import ai.saniou.thread.data.repository.LoginRepositoryImpl
 import ai.saniou.thread.data.repository.ReferenceRepositoryImpl
 import ai.saniou.thread.data.repository.SettingsRepositoryImpl
 import ai.saniou.thread.data.repository.SubscriptionRepositoryImpl
@@ -19,7 +22,6 @@ import ai.saniou.thread.data.repository.TopicRepositoryImpl
 import ai.saniou.thread.data.repository.AccountRepositoryImpl
 import ai.saniou.thread.data.repository.TagRepositoryImpl
 import ai.saniou.thread.data.repository.TrendRepositoryImpl
-import ai.saniou.thread.data.repository.UserRepositoryImpl
 import ai.saniou.thread.data.source.acfun.AcfunSource
 import ai.saniou.thread.data.source.acfun.remote.AcfunApi
 import ai.saniou.thread.data.source.acfun.remote.AcfunHeaderPlugin
@@ -38,6 +40,8 @@ import ai.saniou.thread.data.source.tieba.TiebaTrendSource
 import ai.saniou.thread.data.source.nga.NgaSource
 import ai.saniou.thread.data.source.nmb.NmbAccountProvider
 import ai.saniou.thread.data.source.nmb.NmbSource
+import ai.saniou.thread.data.source.nmb.NmbPostingConnector
+import ai.saniou.thread.data.source.nmb.NmbLoginConnector
 import ai.saniou.thread.data.source.nmb.NmbTrendSource
 import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
 import ai.saniou.thread.data.source.nmb.remote.createNmbXdApi
@@ -45,6 +49,10 @@ import ai.saniou.thread.data.cache.SourceCache
 import ai.saniou.thread.data.cache.SqlDelightSourceCache
 import ai.saniou.thread.data.source.discourse.DiscourseSource
 import ai.saniou.thread.data.source.discourse.DiscourseConnectionConfig
+import ai.saniou.thread.data.source.discourse.DiscourseCredentialProvider
+import ai.saniou.thread.data.source.discourse.DiscourseLoginConnector
+import ai.saniou.thread.data.source.discourse.DiscoursePostingConnector
+import ai.saniou.thread.data.source.tieba.TiebaLoginConnector
 import ai.saniou.thread.data.source.discourse.remote.DiscourseApi
 import ai.saniou.thread.data.source.discourse.remote.createDiscourseApi
 import ai.saniou.thread.domain.service.ImageUrlResolver
@@ -58,6 +66,7 @@ import ai.saniou.thread.domain.repository.SourceRepository
 import ai.saniou.thread.domain.repository.ChannelRepository
 import ai.saniou.thread.domain.repository.HistoryRepository
 import ai.saniou.thread.domain.repository.NoticeRepository
+import ai.saniou.thread.domain.repository.LoginRepository
 import ai.saniou.thread.domain.repository.PostRepository
 import ai.saniou.thread.domain.repository.ReferenceRepository
 import ai.saniou.thread.domain.repository.SettingsRepository
@@ -76,8 +85,13 @@ import ai.saniou.thread.data.parser.RssParser
 import ai.saniou.thread.data.repository.ReaderRepositoryImpl
 import ai.saniou.thread.domain.repository.AccountRepository
 import ai.saniou.thread.domain.repository.ReaderRepository
-import ai.saniou.thread.domain.repository.UserRepository
 import ai.saniou.thread.domain.repository.UserContentRepository
+import ai.saniou.thread.domain.source.ConnectorRegistry
+import ai.saniou.thread.domain.source.DefaultConnectorRegistry
+import ai.saniou.thread.domain.source.ForumSearchConnector
+import ai.saniou.thread.domain.source.LoginConnector
+import ai.saniou.thread.domain.source.PostingConnector
+import ai.saniou.thread.domain.source.UserContentConnector
 import ai.saniou.thread.domain.usecase.reader.GetArticleCountsUseCase
 import ai.saniou.thread.domain.usecase.subscription.GenerateRandomSubscriptionIdUseCase
 import ai.saniou.thread.domain.usecase.channel.FetchChannelsUseCase
@@ -104,10 +118,13 @@ val dataModule = DI.Module("dataModule") {
     bindConstant<String>(tag = "nmbBaseUrl") { "https://api.nmb.best/api/" }
     bindSingleton {
         DiscourseConnectionConfig(
-            sourceId = "linuxDo",
+            sourceId = "discourse",
             baseUrl = "https://linux.do/",
             developmentApiKey = "eebd35d4ca8e9c948cd8188f6ff9b440",
         )
+    }
+    bindSingleton<DiscourseCredentialProvider> {
+        DiscourseCredentialProvider(instance<DiscourseConnectionConfig>().developmentApiKey)
     }
     bindSingleton<NmbXdApi> {
         val nmbAccountProvider = instance<NmbAccountProvider>()
@@ -121,6 +138,7 @@ val dataModule = DI.Module("dataModule") {
 
     bindSingleton<DiscourseApi> {
         val connection = instance<DiscourseConnectionConfig>()
+        val credentialProvider = instance<DiscourseCredentialProvider>()
         // ChallengeHandler should be provided by the app module
         val challengeHandler = instanceOrNull<ChallengeHandler>()
         val cookieStore = instance<CookieStore>()
@@ -130,7 +148,7 @@ val dataModule = DI.Module("dataModule") {
         ) {
             installCookieAuth { cookieStore.getCookie(connection.sourceId) }
             install(io.ktor.client.plugins.DefaultRequest) {
-                connection.developmentApiKey?.let { header("User-Api-Key", it) }
+                credentialProvider.apiKey?.let { header("User-Api-Key", it) }
             }
 
             // Manually install CloudflareProtectionPlugin with sourceId if challengeHandler exists
@@ -167,6 +185,7 @@ val dataModule = DI.Module("dataModule") {
             instance(),
             instance(),
             instance(),
+            instance(),
             instance()
         )
     }
@@ -189,8 +208,11 @@ val dataModule = DI.Module("dataModule") {
     bind<Source>(tag = "acfun") with singleton { instance<AcfunSource>() }
     bind<Source>(tag = "discourse") with singleton { instance<DiscourseSource>() }
     bind<Source>(tag = "tieba") with singleton { instance<TiebaSource>() }
-    bind<ForumSearchRepository>() with singleton { instance<NmbSource>() }
-    bind<UserContentRepository>() with singleton { instance<NmbSource>() }
+    bindSingleton { NmbPostingConnector(instance()) }
+    bindSingleton { NmbLoginConnector(instance()) }
+    bindSingleton { DiscoursePostingConnector(instance(), instance()) }
+    bindSingleton { DiscourseLoginConnector(instance(), instance()) }
+    bindSingleton { TiebaLoginConnector(instance()) }
 
     // "allInstance" only work in jvm current ,wait upgrade        val sources: Set<Source> = DI.allInstances()
     bind<Set<Source>>(tag = "allSources") with singleton {
@@ -202,6 +224,34 @@ val dataModule = DI.Module("dataModule") {
             add(instance(tag = "tieba"))
         }
     }
+
+    bind<Set<ForumSearchConnector>>(tag = "searchConnectors") with singleton {
+        setOf(instance<NmbSource>(), instance<DiscourseSource>())
+    }
+    bind<Set<UserContentConnector>>(tag = "userContentConnectors") with singleton {
+        setOf(instance<NmbSource>(), instance<DiscourseSource>())
+    }
+    bind<Set<PostingConnector>>(tag = "postingConnectors") with singleton {
+        setOf(instance<NmbPostingConnector>(), instance<DiscoursePostingConnector>())
+    }
+    bind<Set<LoginConnector>>(tag = "loginConnectors") with singleton {
+        setOf(
+            instance<NmbLoginConnector>(),
+            instance<DiscourseLoginConnector>(),
+            instance<TiebaLoginConnector>(),
+        )
+    }
+    bind<ConnectorRegistry>() with singleton {
+        DefaultConnectorRegistry(
+            sources = instance(tag = "allSources"),
+            searchConnectors = instance(tag = "searchConnectors"),
+            userContentConnectors = instance(tag = "userContentConnectors"),
+            postingConnectors = instance(tag = "postingConnectors"),
+            loginConnectors = instance(tag = "loginConnectors"),
+        )
+    }
+    bind<ForumSearchRepository>() with singleton { ForumSearchRepositoryImpl(instance()) }
+    bind<UserContentRepository>() with singleton { UserContentRepositoryImpl(instance()) }
 
     bind<SourceRepository>() with singleton {
         val sources: Set<Source> = instance(tag = "allSources")
@@ -223,8 +273,8 @@ val dataModule = DI.Module("dataModule") {
             instance()
         )
     }
-    bind<UserRepository>() with singleton { UserRepositoryImpl(instance()) }
     bind<AccountRepository>() with singleton { AccountRepositoryImpl(instance()) }
+    bind<LoginRepository>() with singleton { LoginRepositoryImpl(instance(), instance()) }
     bind<SettingsRepository>() with singleton { SettingsRepositoryImpl(instance()) }
     bind<NoticeRepository>() with singleton {
         NoticeRepositoryImpl(
@@ -233,7 +283,9 @@ val dataModule = DI.Module("dataModule") {
             instance()
         )
     }
-    bind<HistoryRepository>() with singleton { HistoryRepositoryImpl(instance()) }
+    bind<HistoryRepository>() with singleton {
+        HistoryRepositoryImpl(instance(), instance(tag = "allSources"))
+    }
     bind<PostRepository>() with singleton { PostRepositoryImpl(instance()) }
 
     bind<TrendSource>(tag = "nmbTrend") with singleton { NmbTrendSource(instance()) }

@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class UserDetailViewModel(
+    private val sourceId: String,
     private val userHash: String,
     private val userContentRepository: UserContentRepository
 ) : ScreenModel {
@@ -30,8 +31,8 @@ class UserDetailViewModel(
     }
 
     private fun loadData() {
-        val threads = userContentRepository.getUserTopics(userHash)
-        val replies = userContentRepository.getUserComments(userHash)
+        val threads = userContentRepository.getUserTopics(sourceId, userHash)
+        val replies = userContentRepository.getUserComments(sourceId, userHash)
         _state.update {
             it.copy(
                 topics = threads,
