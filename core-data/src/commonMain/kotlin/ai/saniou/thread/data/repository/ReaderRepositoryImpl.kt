@@ -6,6 +6,8 @@ import ai.saniou.thread.data.parser.FeedParserFactory
 import ai.saniou.thread.domain.model.reader.Article
 import ai.saniou.thread.domain.model.reader.FeedSource
 import ai.saniou.thread.domain.model.reader.FeedType
+import ai.saniou.thread.domain.model.reader.ArticleWithSource
+import ai.saniou.thread.domain.model.reader.ReaderRefreshReport
 import ai.saniou.thread.domain.repository.ReaderRepository
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
@@ -21,6 +23,9 @@ import io.ktor.client.statement.bodyAsText
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlin.time.Clock
@@ -211,19 +216,56 @@ class ReaderRepositoryImpl(
         }
     }
 
-    override suspend fun refreshAllFeeds() {
-        val sources = withContext(ioDispatcher) {
-             db.feedSourceQueries.getAllFeedSources().executeAsList()
-        }
-        sources.forEach { sourceEntity ->
-             refreshFeed(sourceEntity.id)
+    override suspend fun getRecentArticles(limit: Long, offset: Long): List<ArticleWithSource> {
+        require(limit > 0) { "limit must be positive" }
+        require(offset >= 0) { "offset must not be negative" }
+        return withContext(ioDispatcher) {
+            db.articleQueries.getRecentArticlesWithSource(limit, offset).executeAsList().map { row ->
+                ArticleWithSource(
+                    article = Article(
+                        id = row.id,
+                        feedSourceId = row.feedSourceId,
+                        title = row.title,
+                        description = row.description,
+                        content = row.content,
+                        link = row.link,
+                        author = row.author,
+                        publishDate = Instant.fromEpochMilliseconds(row.publishDate),
+                        isRead = row.isRead == 1L,
+                        isBookmarked = row.isBookmarked == 1L,
+                        imageUrl = row.imageUrl,
+                        rawContent = row.rawContent,
+                    ),
+                    sourceName = row.sourceName,
+                    sourceIconUrl = row.sourceIconUrl,
+                )
+            }
         }
     }
 
-    override suspend fun refreshFeed(feedSourceId: String) {
-        val source = getFeedSource(feedSourceId) ?: return
+    override suspend fun refreshAllFeeds(): ReaderRefreshReport = supervisorScope {
+        val sources = withContext(ioDispatcher) {
+             db.feedSourceQueries.getAllFeedSources().executeAsList()
+        }
+        val results = sources.map { sourceEntity ->
+            async { sourceEntity.id to refreshFeed(sourceEntity.id) }
+        }.awaitAll()
 
-        try {
+        ReaderRefreshReport(
+            refreshedSourceIds = results.mapNotNullTo(mutableSetOf()) { (id, result) ->
+                id.takeIf { result.isSuccess }
+            },
+            failures = results.mapNotNull { (id, result) ->
+                result.exceptionOrNull()?.let { error ->
+                    id to (error.message ?: error::class.simpleName ?: "Unknown error")
+                }
+            }.toMap(),
+        )
+    }
+
+    override suspend fun refreshFeed(feedSourceId: String): Result<Unit> = runCatching {
+            val source = getFeedSource(feedSourceId)
+                ?: throw IllegalArgumentException("Feed source not found: $feedSourceId")
             val response = httpClient.get(source.url)
             val content = response.bodyAsText()
 
@@ -255,8 +297,5 @@ class ReaderRepositoryImpl(
                     db.feedSourceQueries.updateLastUpdate(Clock.System.now().toEpochMilliseconds(), feedSourceId)
                 }
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
         }
-    }
 }

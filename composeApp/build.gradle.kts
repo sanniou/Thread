@@ -70,6 +70,7 @@ kotlin {
             implementation(libs.voyager.navigator)
             implementation(project(":feature-forum"))
             implementation(project(":feature-reader"))
+            implementation(project(":feature-feed"))
             implementation(libs.paging.compose)
         }
         androidMain.dependencies {

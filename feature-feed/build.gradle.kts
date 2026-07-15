@@ -45,12 +45,25 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(project(":core-ui"))
+            implementation(project(":core-common"))
+            implementation(project(":core-domain"))
+            implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)
             implementation(libs.material3)
             implementation(libs.compose.ui)
+            implementation(libs.androidx.lifecycle.viewmodel)
+            implementation(libs.androidx.lifecycle.runtimeCompose)
+            implementation(libs.voyager.screenmodel)
+            implementation(libs.voyager.kodein)
+            implementation(libs.kodein.di.compose)
+            implementation(libs.paging.compose)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+        }
+        jvmMain.dependencies {
+            implementation(compose.desktop.currentOs)
+            implementation(libs.kotlinx.coroutinesSwing)
         }
     }
 }

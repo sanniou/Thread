@@ -136,7 +136,7 @@ class ReaderViewModel(
                 state.copy(feedSources = updatedSources)
             }
             try {
-                refreshFeedSourceUseCase(id)
+                refreshFeedSourceUseCase(id).getOrThrow()
             } catch (e: Exception) {
                 _state.update { it.copy(error = e.toAppError()) }
             } finally {
@@ -155,7 +155,13 @@ class ReaderViewModel(
                 state.copy(feedSources = updatedSources)
             }
             try {
-                refreshAllFeedsUseCase()
+                val report = refreshAllFeedsUseCase()
+                if (!report.isSuccess) {
+                    val message = report.failures.entries.joinToString { (sourceId, reason) ->
+                        "$sourceId: $reason"
+                    }
+                    throw IllegalStateException(message)
+                }
             } catch (e: Exception) {
                 _state.update { it.copy(error = e.toAppError()) }
             } finally {

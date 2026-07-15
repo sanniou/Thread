@@ -30,6 +30,16 @@ WHERE (:feedSourceId IS NULL OR feedSourceId = :feedSourceId)
   AND (:isRead IS NULL OR isRead = :isRead)
   AND (:isBookmarked IS NULL OR isBookmarked = :isBookmarked);
 
+getRecentArticlesWithSource:
+SELECT
+    article.*,
+    source.name AS sourceName,
+    source.iconUrl AS sourceIconUrl
+FROM ArticleEntity AS article
+JOIN FeedSourceEntity AS source ON source.id = article.feedSourceId
+ORDER BY article.publishDate DESC
+LIMIT :limit OFFSET :offset;
+
 getArticleById:
 SELECT * FROM ArticleEntity WHERE id = ?;
 

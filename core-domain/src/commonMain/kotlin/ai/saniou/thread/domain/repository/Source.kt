@@ -11,6 +11,7 @@ import ai.saniou.thread.domain.source.TrendSource
 import androidx.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.first
 
 /**
  * 信息源的标准接口，所有具体的信息源（如NMB, NGA）都需要实现它
@@ -62,7 +63,9 @@ interface Source {
         channelId: String,
         cursor: String?,
         isTimeline: Boolean,
-    ): Result<PagedResult<Topic>> = Result.failure(NotImplementedError("Not implemented"))
+    ): Result<PagedResult<Topic>> = Result.failure(
+        UnsupportedOperationException("$name does not expose channel topics")
+    )
 
     suspend fun getTopicDetail(threadId: String, page: Int): Result<Topic>
 
@@ -74,7 +77,42 @@ interface Source {
         threadId: String,
         cursor: String?,
         isPoOnly: Boolean = false,
-    ): Result<PagedResult<Comment>> = Result.failure(NotImplementedError("Not implemented"))
+    ): Result<PagedResult<Comment>> = Result.failure(
+        UnsupportedOperationException("$name does not expose topic comments")
+    )
+
+    /**
+     * Loads a connector-neutral feed page. Connectors may override this when their feed does not
+     * map to a channel, while channel-based sources get a useful common implementation.
+     */
+    suspend fun getFeedPage(cursor: String?): Result<PagedResult<Topic>> {
+        if (!capabilities.supportsFeedAggregation) {
+            return Result.failure(UnsupportedOperationException("$name does not expose an aggregate feed"))
+        }
+
+        val cachedChannels = observeChannels().first()
+        val channels = if (cachedChannels.isNotEmpty()) {
+            cachedChannels
+        } else {
+            fetchChannels().getOrElse { return Result.failure(it) }
+            observeChannels().first()
+        }
+
+        val candidates = channels.flattenChannels()
+        val channel = candidates.firstOrNull { it.tag == "timeline" }
+            ?: candidates.firstOrNull { it.id == "latest" }
+            ?: candidates.firstOrNull()
+            ?: return Result.failure(IllegalStateException("$name has no feed channel"))
+
+        return getChannelTopics(
+            channelId = channel.id,
+            cursor = cursor,
+            isTimeline = channel.tag == "timeline",
+        )
+    }
+
+    /** Maps the unified one-based timeline page to a connector cursor. */
+    fun getFeedCursor(page: Int): String? = if (page <= 1) null else page.toString()
 
     /**
      * 获取板块详情
@@ -91,4 +129,8 @@ interface Source {
      * 获取 Feed 流（分页）
      */
     fun getFeedFlow(feedType: FeedType): Flow<PagingData<Topic>> = emptyFlow()
+}
+
+private fun List<Channel>.flattenChannels(): List<Channel> = flatMap { channel ->
+    listOf(channel) + channel.children.flattenChannels()
 }

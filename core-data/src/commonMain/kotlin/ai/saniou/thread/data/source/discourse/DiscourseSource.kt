@@ -36,6 +36,7 @@ class DiscourseSource(
 ) : Source {
     override val id: String = "discourse"
     override val name: String = "Discourse"
+    override fun getFeedCursor(page: Int): String? = if (page <= 1) null else (page - 1).toString()
 
     override val isInitialized: Flow<Boolean> =
         settingsRepository.observeValue<Boolean>("discourse_initialized")

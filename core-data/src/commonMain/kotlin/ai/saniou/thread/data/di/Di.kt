@@ -214,6 +214,7 @@ val dataModule = DI.Module("dataModule") {
     bind<FeedRepository>() with singleton {
         FeedRepositoryImpl(
             instance(),
+            instance(),
         )
     }
     bind<SubscriptionRepository>() with singleton {

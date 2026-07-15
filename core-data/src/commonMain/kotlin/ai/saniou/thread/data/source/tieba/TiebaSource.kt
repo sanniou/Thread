@@ -54,6 +54,7 @@ class TiebaSource(
     override val name: String = TiebaMapper.SOURCE_NAME
     override val isInitialized: Flow<Boolean> = flowOf(true)
     override val capabilities: SourceCapabilities = SourceCapabilities(
+        supportsUserContent = false,
         supportsPagination = true
     )
 

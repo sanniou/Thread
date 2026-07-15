@@ -69,6 +69,8 @@ class AcfunSource(
     }
 
     override val capabilities: SourceCapabilities = SourceCapabilities(
+        supportsChannelCatalog = false,
+        supportsFeedAggregation = false,
         supportsPagination = false
     )
 

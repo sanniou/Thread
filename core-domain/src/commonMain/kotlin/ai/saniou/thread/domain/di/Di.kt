@@ -13,6 +13,9 @@ import ai.saniou.thread.domain.usecase.channel.GetChannelTopicsPagingUseCase
 import ai.saniou.thread.domain.usecase.history.AddHistoryUseCase
 import ai.saniou.thread.domain.usecase.history.GetHistoryUseCase
 import ai.saniou.thread.domain.usecase.misc.GetGreetImageUseCase
+import ai.saniou.thread.domain.usecase.feed.GetTimelineUseCase
+import ai.saniou.thread.domain.usecase.feed.RefreshTimelineUseCase
+import ai.saniou.thread.domain.usecase.feed.GetAggregatedFeedUseCase
 import ai.saniou.thread.domain.usecase.notice.GetNoticeUseCase
 import ai.saniou.thread.domain.usecase.notice.MarkNoticeAsReadUseCase
 import ai.saniou.thread.domain.usecase.post.CreateReplyUseCase
@@ -51,6 +54,11 @@ import org.kodein.di.bindProvider
 import org.kodein.di.instance
 
 val domainModule = DI.Module("domainModule") {
+
+    // Unified feed
+    bindProvider { GetTimelineUseCase(instance()) }
+    bindProvider { RefreshTimelineUseCase(instance()) }
+    bindProvider { GetAggregatedFeedUseCase(instance()) }
 
     // Reader
     bindProvider { GetFeedSourcesUseCase(instance()) }

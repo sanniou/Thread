@@ -4,6 +4,11 @@ package ai.saniou.thread.domain.model
  * 定义数据源的功能能力，用于 UI 层进行功能降级。
  */
 data class SourceCapabilities(
+    val supportsChannelCatalog: Boolean = true,
+    val supportsFeedAggregation: Boolean = true,
+    val supportsSearch: Boolean = false,
+    val supportsPosting: Boolean = false,
+    val supportsUserContent: Boolean = false,
     val supportsPagination: Boolean = true,
     val hasSubComments: Boolean = false, // 是否支持楼中楼
     val hasUpvote: Boolean = false,      // 是否支持点赞
@@ -19,6 +24,9 @@ data class SourceCapabilities(
 
         // 预定义常见源的能力 (可以在 Data 层根据 sourceId 动态匹配，也可以硬编码在这里作为参考)
         val Nmb = SourceCapabilities(
+            supportsSearch = true,
+            supportsPosting = true,
+            supportsUserContent = true,
             hasSubComments = false, // A岛/X岛通常没有原生楼中楼，或者只是引用
             hasUpvote = false,
             hasDownvote = false,
@@ -27,6 +35,8 @@ data class SourceCapabilities(
         )
         
         val Tieba = SourceCapabilities(
+            supportsPosting = true,
+            supportsUserContent = true,
             hasSubComments = true,
             hasUpvote = true,
             hasDownvote = true,

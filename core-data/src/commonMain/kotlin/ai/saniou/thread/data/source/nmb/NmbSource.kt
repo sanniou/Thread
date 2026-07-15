@@ -56,6 +56,9 @@ class NmbSource(
     override val name: String = NMBSourceName
 
     override val capabilities: SourceCapabilities = SourceCapabilities(
+        supportsSearch = true,
+        supportsPosting = true,
+        supportsUserContent = true,
         supportsPagination = true
     )
 

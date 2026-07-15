@@ -1,12 +1,11 @@
 package ai.saniou.thread.data.source.nga
 
 import ai.saniou.thread.domain.model.PagedResult
+import ai.saniou.thread.domain.model.SourceCapabilities
 import ai.saniou.thread.domain.model.forum.Channel
 import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.model.user.LoginStrategy
 import ai.saniou.thread.domain.repository.Source
-import ai.saniou.thread.domain.model.forum.Comment
-import androidx.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 
@@ -18,6 +17,11 @@ import kotlinx.coroutines.flow.flowOf
 class NgaSource : Source {
     override val id: String = "nga"
     override val name: String = "NGA"
+    override val capabilities: SourceCapabilities = SourceCapabilities(
+        supportsChannelCatalog = false,
+        supportsFeedAggregation = false,
+        supportsPagination = false,
+    )
 
     override val loginStrategy: LoginStrategy = LoginStrategy.Api(
         title = "NGA 登录"
@@ -38,15 +42,15 @@ class NgaSource : Source {
         cursor: String?,
         isTimeline: Boolean,
     ): Result<PagedResult<Topic>> {
-        return Result.failure(NotImplementedError("NGA channel topics not implemented"))
+        return Result.failure(UnsupportedOperationException("NGA channel topics are unavailable"))
     }
 
 
     override suspend fun getTopicDetail(threadId: String, page: Int): Result<Topic> {
-        return Result.failure(NotImplementedError("NGA source not implemented"))
+        return Result.failure(UnsupportedOperationException("NGA topic detail is unavailable"))
     }
 
     override fun getChannel(channelId: String): Flow<Channel?> {
-        TODO("Not yet implemented")
+        return flowOf(null)
     }
 }

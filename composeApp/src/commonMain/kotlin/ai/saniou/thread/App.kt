@@ -8,7 +8,12 @@ import ai.saniou.coreui.widgets.DrawerMenuRow
 import ai.saniou.forum.di.nmbFeatureModule
 import ai.saniou.forum.workflow.home.ChannelPage
 import ai.saniou.forum.workflow.image.nmbImagePreviewModule
+import ai.saniou.forum.workflow.topicdetail.TopicDetailPage
+import ai.saniou.feature.feed.di.feedModule
+import ai.saniou.feature.feed.workflow.UnifiedFeedPage
+import ai.saniou.feature.feed.workflow.FeedViewModel
 import ai.saniou.reader.di.readerModule
+import ai.saniou.reader.workflow.articledetail.ArticleDetailPage
 import ai.saniou.reader.workflow.reader.ReaderPage
 import ai.saniou.thread.data.di.dataModule
 import ai.saniou.thread.di.appModule
@@ -22,6 +27,7 @@ import ai.saniou.thread.feature.challenge.UiChallengeHandler
 import ai.saniou.thread.feature.history.HistoryPage
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.DynamicFeed
 import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.Games
 import androidx.compose.material.icons.filled.History
@@ -36,6 +42,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.core.model.rememberScreenModel
 import kotlinx.coroutines.launch
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
@@ -43,6 +50,8 @@ import cafe.adriel.voyager.navigator.NavigatorDisposeBehavior
 import cafe.adriel.voyager.navigator.currentOrThrow
 import org.kodein.di.DI
 import org.kodein.di.compose.withDI
+import org.kodein.di.compose.localDI
+import org.kodein.di.direct
 import org.kodein.di.instance
 
 @Composable
@@ -51,6 +60,7 @@ fun App() {
         import(domainModule)
         import(dataModule)
         import(readerModule)
+        import(feedModule)
         import(nmbImagePreviewModule)
         import(nmbFeatureModule)
         import(appModule)
@@ -103,6 +113,10 @@ fun App() {
                                 "阅读器"
                             ) { navigator.replaceAll(ReaderRoute) },
                             DrawerMenuItem(
+                                Icons.Default.DynamicFeed,
+                                "聚合信息流"
+                            ) { navigator.replaceAll(FeedRoute) },
+                            DrawerMenuItem(
                                 Icons.Default.Games,
                                 "元胞自动机"
                             ) { navigator.replaceAll(CellularAutomatonRoute) },
@@ -151,5 +165,35 @@ object ReaderRoute : Screen {
     @Composable
     override fun Content() {
         ReaderPage().Content()
+    }
+}
+
+object FeedRoute : Screen {
+    @Composable
+    override fun Content() {
+        val navigator = LocalNavigator.currentOrThrow
+        val di = localDI()
+        val viewModel = rememberScreenModel { di.direct.instance<FeedViewModel>() }
+        UnifiedFeedPage(
+            viewModel = viewModel,
+            onOpenTopic = { topic ->
+                navigator.push(FeedTopicRoute(topic.sourceId, topic.id))
+            },
+            onOpenArticle = { article ->
+                navigator.push(ArticleDetailPage(article.id))
+            },
+        )
+    }
+}
+
+data class FeedTopicRoute(
+    val sourceId: String,
+    val topicId: String,
+) : Screen {
+    @Composable
+    override fun Content() {
+        CompositionLocalProvider(LocalForumSourceId provides sourceId) {
+            TopicDetailPage(topicId).Content()
+        }
     }
 }

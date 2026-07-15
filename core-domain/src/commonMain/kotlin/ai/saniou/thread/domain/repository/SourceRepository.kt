@@ -1,6 +1,6 @@
 package ai.saniou.thread.domain.repository
 
-import ai.saniou.thread.domain.model.forum.Topic
+import ai.saniou.thread.domain.model.feed.AggregatedFeedPage
 
 
 /**
@@ -11,7 +11,10 @@ interface SourceRepository {
      * 获取聚合的信息流
      * @param page 页码
      */
-    suspend fun getAggregatedFeed(page: Int): Result<List<Topic>>
+    suspend fun getAggregatedFeed(
+        page: Int,
+        sourceIds: Set<String>? = null,
+    ): Result<AggregatedFeedPage>
 
     /**
      * 获取所有可用的信息源

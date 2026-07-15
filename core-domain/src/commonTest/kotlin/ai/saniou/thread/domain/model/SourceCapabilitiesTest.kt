@@ -10,6 +10,8 @@ class SourceCapabilitiesTest {
         val capabilities = SourceCapabilities.Default
 
         assertTrue(capabilities.supportsPagination)
+        assertTrue(capabilities.supportsChannelCatalog)
+        assertTrue(capabilities.supportsFeedAggregation)
         assertFalse(capabilities.hasSubComments)
         assertFalse(capabilities.hasUpvote)
         assertFalse(capabilities.hasPoll)
@@ -20,6 +22,8 @@ class SourceCapabilitiesTest {
         val capabilities = SourceCapabilities.Tieba
 
         assertTrue(capabilities.supportsPagination)
+        assertTrue(capabilities.supportsPosting)
+        assertTrue(capabilities.supportsUserContent)
         assertTrue(capabilities.hasSubComments)
         assertTrue(capabilities.hasUpvote)
         assertTrue(capabilities.hasJumpPage)

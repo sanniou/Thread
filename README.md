@@ -13,9 +13,9 @@
     -   统一的楼层浏览体验与交互。
 
 2.  **通用信息流 (Feed)**:
-    -   专为“社交动态/时间线”结构设计，侧重短内容与实时互动。
-    -   支持 **Twitter**, **Weibo (微博)**, **Mastodon**, **Bluesky** 等社交媒体流。
-    -   提供聚合时间线阅读体验。
+    -   将论坛主题与 Reader 文章统一为按时间排序的跨来源时间线。
+    -   支持来源筛选、并行分页、部分来源失败隔离和统一刷新反馈。
+    -   社交平台 Connector 可在统一 `TimelineItem` 契约上继续扩展。
 
 3.  **通用阅读器 (Reader)**:
     -   专为“内容订阅/沉浸式阅读”设计，侧重长文章与排版体验。
@@ -35,7 +35,7 @@
 -   **`core-network`**: 通用网络基础设施，不包含具体业务 UI。
 -   **`core-ui`**: **设计系统**。包含主题、通用组件、尺寸定义。
 -   **`feature-forum`**: 通用论坛业务 UI。
--   **`feature-feed`**: 通用社交流业务 UI。
+-   **`feature-feed`**: 统一聚合时间线、来源筛选与刷新状态 UI。
 -   **`feature-reader`**: 通用阅读器业务 UI。
 
 ### 2. 技术栈
@@ -66,17 +66,20 @@
 -   [x] **架构重构**: 完成 Domain/Data 分层与 MVI 模式确立。
 -   [x] **核心抽象**: 定义 Source、Repository 等核心接口。
 -   [ ] **Feature - Forum**: 构建通用论坛模块，接管原 `feature-nmb` 功能。
--   [ ] **Feature - Feed**: 构建通用社交流模块，支持 Mastodon/Twitter。
+-   [x] **Feature - Feed 基线**: 论坛与 Reader 聚合、筛选、分页、刷新和详情跳转闭环。
+-   [ ] **Social Connector**: 在统一 Feed 契约上接入 Mastodon/Bluesky 等来源。
 -   [ ] **Feature - Reader**: 构建通用阅读模块，支持 RSS/URL 解析。
 -   [ ] **数据同步**: 支持 WebDAV 数据备份与同步。
 
 ## 🚀 构建与运行
 
 1.  **环境**: JDK 17+, Android Studio.
-2.  **构建**: `./gradlew build`（本仓库使用 Gradle Wrapper 9.5.0）。
+2.  **当前验证**: `./gradlew :composeApp:compileKotlinJvm :core-domain:jvmTest`。
 3.  **运行**:
     -   Android: Run `androidApp`.
     -   Desktop: `./gradlew :composeApp:run`
+
+当前阶段采用 Desktop-first：先完成 common 架构和业务闭环，再按平台实现的实际价值补充 Android/iOS 验证。
 
 当前架构约束、版本基线和分阶段目标见 [`doc/ARCHITECTURE.md`](doc/ARCHITECTURE.md)。
 
