@@ -5,7 +5,6 @@ import ai.saniou.coreui.state.toAppError
 import ai.saniou.forum.workflow.topic.TopicContract.Effect
 import ai.saniou.forum.workflow.topic.TopicContract.Event
 import ai.saniou.forum.workflow.topic.TopicContract.State
-import ai.saniou.thread.data.paging.DataPolicy
 import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.usecase.channel.GetChannelDetailUseCase
 import ai.saniou.thread.domain.usecase.channel.GetChannelNameUseCase
@@ -45,7 +44,6 @@ class TopicViewModel(
     private data class LoadRequest(
         val channelId: String,
         val channelCategory: String,
-        val policy: DataPolicy = DataPolicy.NETWORK_ELSE_CACHE,
         val page: Int = 1,
     )
 

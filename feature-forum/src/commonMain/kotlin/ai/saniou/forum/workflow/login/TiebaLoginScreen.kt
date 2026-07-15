@@ -1,7 +1,6 @@
 package ai.saniou.forum.workflow.login
 
 import ai.saniou.coreui.widgets.SaniouTopAppBar
-import ai.saniou.forum.di.nmbdi
 import ai.saniou.forum.workflow.login.TiebaLoginContract.Effect
 import ai.saniou.forum.workflow.login.TiebaLoginContract.Event
 import androidx.compose.foundation.layout.Box
@@ -30,11 +29,7 @@ import com.multiplatform.webview.web.WebView
 import com.multiplatform.webview.web.rememberWebViewNavigator
 import com.multiplatform.webview.web.rememberWebViewState
 import kotlinx.coroutines.flow.collectLatest
-import org.kodein.di.DI
-
-data class TiebaLoginScreen(
-    val di: DI = nmbdi,
-) : Screen {
+class TiebaLoginScreen : Screen {
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable

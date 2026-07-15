@@ -2,7 +2,6 @@ package ai.saniou.forum.workflow.topic
 
 import ai.saniou.coreui.composition.LocalForumSourceId
 import ai.saniou.coreui.state.UiStateWrapper
-import ai.saniou.forum.di.nmbdi
 import ai.saniou.forum.ui.components.ForumRichText
 import ai.saniou.forum.workflow.home.ListThreadPage
 import ai.saniou.forum.workflow.image.ImagePreviewPage
@@ -61,7 +60,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
-import org.kodein.di.DI
+import org.kodein.di.compose.localDI
 import org.kodein.di.direct
 import org.kodein.di.instance
 import thread.feature_forum.generated.resources.Res
@@ -74,7 +73,6 @@ import thread.feature_forum.generated.resources.topic_page_thread_count
 import thread.feature_forum.generated.resources.topic_page_user_center
 
 data class TopicPage(
-    val di: DI = nmbdi,
     val forumId: String,
     val fgroupId: String,
     val sourceId: String? = null,
@@ -83,7 +81,6 @@ data class TopicPage(
 
     // Compatibility constructor for existing navigation calls (mostly NMB)
     constructor(forumId: Long, fgroupId: Long, onMenuClick: (() -> Unit)? = null) : this(
-        di = nmbdi,
         sourceId = null,
         forumId = forumId.toString(),
         fgroupId = fgroupId.toString(),
@@ -93,6 +90,7 @@ data class TopicPage(
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
+        val di = localDI()
         val navigator = LocalNavigator.currentOrThrow
         // Fallback to LocalSourceId if sourceId is not provided (legacy behavior)
         val actualSourceId = sourceId ?: LocalForumSourceId.current
@@ -348,7 +346,6 @@ data class TopicPage(
         }
     }
 }
-
 
 
 

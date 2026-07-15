@@ -4,7 +4,6 @@ import ai.saniou.forum.initializer.AppInitializer
 import ai.saniou.forum.workflow.topic.TopicViewModel
 import ai.saniou.forum.workflow.home.ChannelViewModel
 import ai.saniou.forum.workflow.home.GreetImageViewModel
-import ai.saniou.forum.workflow.image.nmbImagePreviewModule
 import ai.saniou.forum.workflow.init.SourceInitViewModel
 import ai.saniou.forum.workflow.login.TiebaLoginViewModel
 import ai.saniou.forum.workflow.post.PostViewModel
@@ -16,28 +15,11 @@ import ai.saniou.forum.workflow.topicdetail.TopicDetailViewModelParams
 import ai.saniou.forum.workflow.trend.TrendViewModel
 import ai.saniou.forum.workflow.user.UserDetailViewModel
 import ai.saniou.forum.workflow.user.UserViewModel
-import ai.saniou.thread.data.di.dataModule
-import ai.saniou.thread.domain.di.domainModule
-import ai.saniou.thread.network.SaniouKtorfit
-import de.jensklingenberg.ktorfit.Ktorfit
 import org.kodein.di.DI
 import org.kodein.di.bindFactory
-import org.kodein.di.bindMultiton
 import org.kodein.di.bindProvider
 import org.kodein.di.bindSingleton
 import org.kodein.di.instance
-
-val coreCommon by DI.Module {
-
-    bindMultiton<String, Ktorfit> { baseUrl ->
-        SaniouKtorfit(baseUrl)
-    }
-
-//    bindSingleton<Ktorfit> {
-//        ktorfit(this.instance<String>("baseUrl"))
-//    }
-
-}
 
 /**
  * NMB 功能模块的 DI 定义，只负责 UI (ViewModel) 层的依赖注入。
@@ -150,7 +132,7 @@ val nmbFeatureModule = DI.Module("nmbFeatureModule") {
     bindFactory<String, UserDetailViewModel> { userHash ->
         UserDetailViewModel(
             userHash = userHash,
-            nmbRepository = instance()
+            userContentRepository = instance()
         )
     }
 
@@ -166,18 +148,11 @@ val nmbFeatureModule = DI.Module("nmbFeatureModule") {
             sourceId = sourceId,
             settingsRepository = instance(),
             subscriptionRepository = instance(),
-            nmbSource = instance()
+            getAccounts = instance(),
+            addAccount = instance(),
         )
     }
 
     // Tieba Login
     bindProvider { TiebaLoginViewModel(instance()) }
-}
-
-val nmbdi = DI {
-    import(coreCommon)
-    import(domainModule)
-    import(dataModule)
-    import(nmbImagePreviewModule)
-    import(nmbFeatureModule)
 }

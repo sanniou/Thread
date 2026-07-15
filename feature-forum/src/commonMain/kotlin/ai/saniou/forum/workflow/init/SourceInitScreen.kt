@@ -3,7 +3,6 @@ package ai.saniou.forum.workflow.init
 import ai.saniou.coreui.state.StateLayout
 import ai.saniou.coreui.widgets.SaniouButton
 import ai.saniou.coreui.widgets.SaniouTopAppBar
-import ai.saniou.forum.di.nmbdi
 import ai.saniou.forum.workflow.init.SourceInitContract.Event
 import ai.saniou.forum.workflow.init.SourceInitContract.State
 import androidx.compose.foundation.layout.Column
@@ -32,10 +31,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import org.kodein.di.DI
 import ai.saniou.thread.domain.repository.SettingsRepository
 import ai.saniou.thread.domain.repository.SubscriptionRepository
-import ai.saniou.thread.data.source.nmb.NmbSource
 import org.kodein.di.instance
 
 data class SourceInitScreen(

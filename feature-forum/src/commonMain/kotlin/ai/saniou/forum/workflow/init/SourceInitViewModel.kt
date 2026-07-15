@@ -3,11 +3,12 @@ package ai.saniou.forum.workflow.init
 import ai.saniou.coreui.state.UiStateWrapper
 import ai.saniou.forum.workflow.init.SourceInitContract.Event
 import ai.saniou.forum.workflow.init.SourceInitContract.State
-import ai.saniou.thread.data.source.nmb.NmbSource
 import ai.saniou.thread.domain.repository.SettingsRepository
 import ai.saniou.thread.domain.repository.SubscriptionRepository
 import ai.saniou.thread.domain.repository.getValue
 import ai.saniou.thread.domain.repository.saveValue
+import ai.saniou.thread.domain.usecase.user.AddAccountUseCase
+import ai.saniou.thread.domain.usecase.user.GetAccountsUseCase
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,7 +22,8 @@ class SourceInitViewModel(
     private val sourceId: String,
     private val settingsRepository: SettingsRepository,
     private val subscriptionRepository: SubscriptionRepository,
-    private val nmbSource: NmbSource,
+    private val getAccounts: GetAccountsUseCase,
+    private val addAccount: AddAccountUseCase,
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(State(sourceName = getSourceName(sourceId)))
@@ -45,7 +47,7 @@ class SourceInitViewModel(
             when (sourceId) {
                 "nmb" -> {
                     val key = subscriptionRepository.getActiveSubscriptionKey()
-                    val accounts = nmbSource.getSortedAccounts()
+                    val accounts = getAccounts()
                     val firstCookie = accounts.firstOrNull()?.value ?: ""
                     _state.update {
                         it.copy(
@@ -100,7 +102,7 @@ class SourceInitViewModel(
                         subscriptionRepository.addSubscriptionKey(key)
 
                         if (state.value.nmbCookie.isNotBlank()) {
-                            nmbSource.insertAccount("Default", state.value.nmbCookie)
+                            addAccount("Default", state.value.nmbCookie)
                         }
 
                         settingsRepository.saveValue("nmb_initialized", true)

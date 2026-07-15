@@ -3,7 +3,7 @@ package ai.saniou.forum.workflow.search
 import ai.saniou.forum.workflow.search.SearchContract.Event
 import ai.saniou.forum.workflow.search.SearchContract.SearchType
 import ai.saniou.forum.workflow.search.SearchContract.State
-import ai.saniou.thread.data.source.nmb.NmbSource
+import ai.saniou.thread.domain.repository.ForumSearchRepository
 import androidx.paging.cachedIn
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
@@ -19,7 +19,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(FlowPreview::class)
 class SearchViewModel(
-    private val repository: NmbSource,
+    private val repository: ForumSearchRepository,
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(State())
@@ -71,11 +71,11 @@ class SearchViewModel(
 
         val currentState = _state.value
         if (currentState.searchType == SearchType.THREAD) {
-            val pager = repository.searchTopicsPager(query)
+            val pager = repository.searchTopics(query)
                 .cachedIn(screenModelScope)
             _state.update { it.copy(threadPagingData = pager) }
         } else {
-            val pager = repository.searchCommentsPager(query)
+            val pager = repository.searchComments(query)
                 .cachedIn(screenModelScope)
             _state.update { it.copy(replyPagingData = pager) }
         }

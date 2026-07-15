@@ -1,17 +1,13 @@
 package ai.saniou.thread.domain.usecase.post
 
+import ai.saniou.thread.domain.model.forum.PostDraft
 import ai.saniou.thread.domain.repository.PostRepository
-import io.ktor.http.content.PartData
 
 class CreateReplyUseCase(private val postRepository: PostRepository) {
     suspend operator fun invoke(
         resto: Int,
-        content: String,
-        name: String? = null,
-        title: String? = null,
-        water: Boolean = false,
-        image: PartData? = null
+        draft: PostDraft,
     ): String {
-        return postRepository.reply(resto, content, name, title, water, image)
+        return postRepository.reply(resto, draft)
     }
 }

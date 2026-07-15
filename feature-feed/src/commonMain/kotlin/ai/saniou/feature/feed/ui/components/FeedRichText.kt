@@ -1,6 +1,7 @@
 package ai.saniou.feature.feed.ui.components
 
 import ai.saniou.coreui.richtext.SmartRichText
+import ai.saniou.coreui.richtext.RichTextPlugin
 import ai.saniou.coreui.richtext.plugins.UrlPlugin
 import ai.saniou.coreui.widgets.BlankLinePolicy
 import ai.saniou.feature.feed.ui.richtext.FeedRichTextStrategyFactory
@@ -41,7 +42,7 @@ fun FeedRichText(
     }
 
     val plugins = remember(strategy, onHashtagClick, onMentionClick) {
-        val list = mutableListOf(
+        val list = mutableListOf<RichTextPlugin>(
             UrlPlugin(onUrlClick = { url -> 
                  val fullUrl = if (url.startsWith("www.", ignoreCase = true)) "http://$url" else url
                  uriHandler.openUri(fullUrl)

@@ -2,8 +2,6 @@ package ai.saniou.forum.workflow.post
 
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.SaniouTopAppBar
-import ai.saniou.thread.data.source.nmb.remote.dto.EmoticonData
-import ai.saniou.forum.di.nmbdi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -87,6 +85,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import org.jetbrains.compose.resources.stringResource
 import org.kodein.di.direct
 import org.kodein.di.instance
+import org.kodein.di.compose.localDI
 import thread.feature_forum.generated.resources.Res
 import thread.feature_forum.generated.resources.*
 import thread.feature_forum.generated.resources.post_page_add_image
@@ -123,9 +122,10 @@ data class PostPage(
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
+        val di = localDI()
         val navigator = LocalNavigator.currentOrThrow
         val viewModel: PostViewModel = rememberScreenModel(tag = "${fid}_${resto}") {
-            nmbdi.direct.instance(arg = Triple(fid, resto, forumName))
+            di.direct.instance(arg = Triple(fid, resto, forumName))
         }
         val state by viewModel.state.collectAsStateWithLifecycle()
         val snackbarHostState = remember { SnackbarHostState() }
@@ -581,7 +581,7 @@ data class PostPage(
     @Composable
     private fun EmoticonPicker(onEmoticonSelected: (String) -> Unit) {
         var selectedTabIndex by remember { mutableStateOf(0) }
-        val titles = EmoticonData.GROUPS.keys.toList()
+        val titles = EmoticonData.groups.keys.toList()
 
         Column(
             modifier = Modifier
@@ -602,7 +602,7 @@ data class PostPage(
                     columns = GridCells.Adaptive(minSize = 60.dp),
                     contentPadding = PaddingValues(Dimens.padding_small)
                 ) {
-                    items(EmoticonData.GROUPS.values.toList()[selectedTabIndex]) { emoticon ->
+                    items(EmoticonData.groups.values.toList()[selectedTabIndex]) { emoticon ->
                         Box(
                             contentAlignment = Alignment.Center,
                             modifier = Modifier

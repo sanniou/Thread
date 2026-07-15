@@ -4,6 +4,7 @@ package ai.saniou.thread.domain.model
  * 定义数据源的功能能力，用于 UI 层进行功能降级。
  */
 data class SourceCapabilities(
+    val supportsPagination: Boolean = true,
     val hasSubComments: Boolean = false, // 是否支持楼中楼
     val hasUpvote: Boolean = false,      // 是否支持点赞
     val hasDownvote: Boolean = false,    // 是否支持点踩

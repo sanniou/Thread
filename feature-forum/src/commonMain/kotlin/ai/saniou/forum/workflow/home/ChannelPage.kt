@@ -4,7 +4,6 @@ import ai.saniou.coreui.composition.LocalAppDrawer
 import ai.saniou.coreui.state.StateLayout
 import ai.saniou.coreui.widgets.DrawerHeader
 import ai.saniou.coreui.widgets.RichText
-import ai.saniou.forum.di.nmbdi
 import ai.saniou.forum.workflow.home.ChannelContract.ChannelCategoryUiState
 import ai.saniou.forum.workflow.home.ChannelContract.Event
 import ai.saniou.forum.workflow.init.SourceInitScreen
@@ -79,7 +78,6 @@ import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
-import org.kodein.di.DI
 import thread.feature_forum.generated.resources.Res
 import thread.feature_forum.generated.resources.*
 import thread.feature_forum.generated.resources.category_collapse
@@ -88,7 +86,6 @@ import thread.feature_forum.generated.resources.drawer_search
 import thread.feature_forum.generated.resources.drawer_subscribe
 
 data class ChannelPage(
-    val di: DI = nmbdi,
     val drawerState: DrawerState? = null,
 ) : Screen {
 

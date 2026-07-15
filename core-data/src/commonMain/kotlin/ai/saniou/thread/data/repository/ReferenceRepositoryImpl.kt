@@ -1,5 +1,6 @@
 package ai.saniou.thread.data.repository
 
+import ai.saniou.corecommon.coroutines.ioDispatcher
 import ai.saniou.corecommon.utils.toTime
 import ai.saniou.thread.data.mapper.toDomain
 import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
@@ -9,7 +10,6 @@ import ai.saniou.thread.domain.model.forum.Comment
 import ai.saniou.thread.domain.repository.ReferenceRepository
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToOneOrNull
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.mapNotNull
@@ -24,7 +24,7 @@ class ReferenceRepositoryImpl(
     override fun getReference(id: Long): Flow<Comment> =
         db.commentQueries.getCommentById("nmb", id.toString())
             .asFlow()
-            .mapToOneOrNull(Dispatchers.IO)
+            .mapToOneOrNull(ioDispatcher)
             .mapNotNull { it?.toDomain(db.imageQueries) }
             .onStart {
                 if (db.commentQueries.getCommentById("nmb", id.toString())
@@ -35,7 +35,7 @@ class ReferenceRepositoryImpl(
                     db.commentQueries.upsertComment(reply)
                 }
             }
-            .flowOn(Dispatchers.IO)
+            .flowOn(ioDispatcher)
 
     @OptIn(ExperimentalTime::class)
     private fun parseRefHtml(

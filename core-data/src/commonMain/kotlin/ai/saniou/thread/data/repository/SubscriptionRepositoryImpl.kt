@@ -1,5 +1,6 @@
 package ai.saniou.thread.data.repository
 
+import ai.saniou.corecommon.coroutines.ioDispatcher
 import ai.saniou.thread.data.paging.DataPolicy
 import ai.saniou.thread.data.paging.SqlDelightPagingSource
 import ai.saniou.thread.data.source.nmb.SubscriptionRemoteMediator
@@ -14,7 +15,6 @@ import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOne
 import app.cash.sqldelight.coroutines.mapToOneOrNull
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
@@ -30,7 +30,7 @@ class SubscriptionRepositoryImpl(
 ) : SubscriptionRepository {
 
     override suspend fun getActiveSubscriptionKey(): String? {
-        return withContext(Dispatchers.IO) {
+        return withContext(ioDispatcher) {
             db.keyValueQueries.getKeyValue("active_subscription_key").executeAsOneOrNull()?.content
         }
     }
@@ -38,7 +38,7 @@ class SubscriptionRepositoryImpl(
     override fun observeActiveSubscriptionKey(): Flow<String?> {
         return db.keyValueQueries.getKeyValue("active_subscription_key")
             .asFlow()
-            .mapToOneOrNull(Dispatchers.IO)
+            .mapToOneOrNull(ioDispatcher)
             .map { it?.content }
     }
 
@@ -58,7 +58,7 @@ class SubscriptionRepositoryImpl(
                         db.subscriptionQueries.countSubscriptionsBySubscriptionKey(subscriptionKey)
                     },
                     transacter = db.subscriptionQueries,
-                    context = Dispatchers.IO,
+                    context = ioDispatcher,
                     pageQueryProvider = { page ->
                         db.subscriptionQueries.selectSubscriptionTopic(
                             subscriptionKey = subscriptionKey,
@@ -107,7 +107,7 @@ class SubscriptionRepositoryImpl(
     }
 
     override suspend fun syncLocalSubscriptions(subscriptionKey: String) {
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             val localSubscriptions =
                 db.subscriptionQueries.getLocalSubscriptions(subscriptionKey).executeAsList()
             localSubscriptions.forEach {
@@ -118,14 +118,14 @@ class SubscriptionRepositoryImpl(
     }
 
     override suspend fun hasLocalSubscriptions(subscriptionKey: String): Boolean {
-        return withContext(Dispatchers.IO) {
+        return withContext(ioDispatcher) {
             db.subscriptionQueries.countLocalSubscriptions(subscriptionKey).executeAsOne() > 0
         }
     }
 
     @OptIn(ExperimentalTime::class)
     override suspend fun addSubscriptionKey(key: String) {
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             db.subscriptionKeyQueries.insertSubscriptionKey(key, Clock.System.now().toEpochMilliseconds())
             setActiveSubscriptionKey(key)
         }
@@ -134,12 +134,12 @@ class SubscriptionRepositoryImpl(
     override fun getSubscriptionKeys(): Flow<List<String>> {
         return db.subscriptionKeyQueries.getAllSubscriptionKeys()
             .asFlow()
-            .mapToList(Dispatchers.IO)
+            .mapToList(ioDispatcher)
             .map { list -> list.map { it.key } }
     }
 
     override suspend fun setActiveSubscriptionKey(key: String) {
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             db.keyValueQueries.insertKeyValue("active_subscription_key", key)
         }
     }

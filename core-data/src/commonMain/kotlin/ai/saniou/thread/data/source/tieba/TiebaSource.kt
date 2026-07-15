@@ -1,5 +1,6 @@
 package ai.saniou.thread.data.source.tieba
 
+import ai.saniou.corecommon.coroutines.ioDispatcher
 import ai.saniou.thread.data.mapper.toDomain
 import ai.saniou.thread.data.model.CommentKey
 import ai.saniou.thread.data.model.TopicKey
@@ -12,13 +13,13 @@ import ai.saniou.thread.data.source.tieba.remote.WebTiebaApi
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.domain.model.FeedType
 import ai.saniou.thread.domain.model.PagedResult
+import ai.saniou.thread.domain.model.SourceCapabilities
 import ai.saniou.thread.domain.model.forum.Channel
 import ai.saniou.thread.domain.model.forum.Comment
 import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.model.user.LoginStrategy
 import ai.saniou.thread.domain.repository.AccountRepository
 import ai.saniou.thread.domain.repository.Source
-import ai.saniou.thread.domain.repository.SourceCapabilities
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
@@ -34,7 +35,6 @@ import com.huanchengfly.tieba.post.api.models.protos.pbFloor.PbFloorRequestData
 import com.huanchengfly.tieba.post.api.models.protos.pbPage.PbPageRequest
 import com.huanchengfly.tieba.post.api.models.protos.pbPage.PbPageRequestData
 import io.ktor.http.encodeURLQueryComponent
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
@@ -72,7 +72,7 @@ class TiebaSource(
     override fun observeChannels(): Flow<List<Channel>> {
         return database.channelQueries.getChannelsBySource(id)
             .asFlow()
-            .mapToList(Dispatchers.IO)
+            .mapToList(ioDispatcher)
             .map { entities ->
                 entities.map { it.toDomain(database.channelQueries) }
             }
@@ -257,7 +257,7 @@ class TiebaSource(
     override fun getChannel(channelId: String): Flow<Channel?> {
         return database.channelQueries.getChannel(id, channelId)
             .asFlow()
-            .mapToOneOrNull(Dispatchers.IO)
+            .mapToOneOrNull(ioDispatcher)
             .map { it?.toDomain(database.channelQueries) }
     }
 
@@ -296,4 +296,3 @@ class TiebaSource(
         TiebaMapper.mapPbFloorResponseToComments(response, topicId)
     }
 }
-

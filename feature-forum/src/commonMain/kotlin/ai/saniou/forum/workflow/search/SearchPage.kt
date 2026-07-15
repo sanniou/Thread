@@ -4,7 +4,6 @@ import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.BlankLinePolicy
 import ai.saniou.coreui.widgets.RichText
 import ai.saniou.coreui.widgets.SaniouSearchAppBar
-import ai.saniou.forum.di.nmbdi
 import ai.saniou.forum.ui.components.TopicCard
 import ai.saniou.forum.ui.components.LoadEndIndicator
 import ai.saniou.forum.ui.components.LoadingFailedIndicator
@@ -53,11 +52,7 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.kodein.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import org.kodein.di.DI
-
-data class SearchPage(
-    val di: DI = nmbdi,
-) : Screen {
+class SearchPage : Screen {
 
     @Composable
     override fun Content() {

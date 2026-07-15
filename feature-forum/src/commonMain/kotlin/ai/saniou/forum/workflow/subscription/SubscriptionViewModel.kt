@@ -4,7 +4,6 @@ import ai.saniou.coreui.state.toAppError
 import ai.saniou.forum.workflow.subscription.SubscriptionContract.Effect
 import ai.saniou.forum.workflow.subscription.SubscriptionContract.Event
 import ai.saniou.forum.workflow.subscription.SubscriptionContract.State
-import ai.saniou.thread.data.paging.DataPolicy
 import ai.saniou.thread.domain.usecase.subscription.GenerateRandomSubscriptionIdUseCase
 import ai.saniou.thread.domain.usecase.subscription.GetSubscriptionFeedUseCase
 import ai.saniou.thread.domain.usecase.subscription.ObserveActiveSubscriptionKeyUseCase
@@ -56,7 +55,7 @@ class SubscriptionViewModel(
         }
     }
 
-    private suspend fun loadFeeds(id: String, policy: DataPolicy = DataPolicy.CACHE_ELSE_NETWORK) {
+    private suspend fun loadFeeds(id: String) {
         _state.update { it.copy(subscriptionId = id, isLoading = true) }
         try {
             val feeds = getSubscriptionFeedUseCase(id)
@@ -69,7 +68,7 @@ class SubscriptionViewModel(
             }
         } catch (e: Exception) {
             _state.update {
-                it.copy(isLoading = false, error = e.toAppError { screenModelScope.launch { loadFeeds(id, policy) } })
+                it.copy(isLoading = false, error = e.toAppError { screenModelScope.launch { loadFeeds(id) } })
             }
         }
     }
@@ -90,7 +89,7 @@ class SubscriptionViewModel(
     private fun pull() {
         val id = state.value.subscriptionId ?: return
         screenModelScope.launch {
-            loadFeeds(id, DataPolicy.NETWORK_ELSE_CACHE)
+            loadFeeds(id)
         }
     }
 
@@ -100,7 +99,7 @@ class SubscriptionViewModel(
             try {
                 syncLocalSubscriptionsUseCase(id)
                 _effect.send(Effect.OnPushResult(true, "推送成功"))
-                loadFeeds(id, DataPolicy.NETWORK_ELSE_CACHE)
+                loadFeeds(id)
             } catch (e: Exception) {
                 _effect.send(Effect.OnPushResult(false, "推送失败: ${e.message}"))
             }

@@ -24,13 +24,15 @@
 
 ## 🏛️ 架构 (Architecture)
 
-项目严格遵循 **Clean Architecture** (整洁架构) 与 **MVI** (Model-View-Intent) 模式。
+项目以 **Clean Architecture**（整洁架构）与 **MVI**（Model-View-Intent）为目标，优先复用 `commonMain`；只有系统入口、数据库驱动、文件目录等确实依赖平台能力的代码才放入平台 source set。
 
 ### 1. 模块化设计
 
--   **`composeApp`**: 应用主入口，负责导航与依赖注入初始化。
--   **`core-domain`**: **核心大脑**。定义 UseCase（业务逻辑）和 Repository 接口。纯 Kotlin，无平台依赖。
+-   **`androidApp`**: Android 应用壳，只负责 `Application`、`Activity` 和平台初始化。
+-   **`composeApp`**: 跨平台组合根，负责导航、主题与依赖注入装配，同时作为 Desktop 入口。
+-   **`core-domain`**: **核心大脑**。定义通用模型、能力契约、UseCase 和 Repository 接口，不引用 Ktor、SQLDelight 或具体数据源 DTO。
 -   **`core-data`**: **数据引擎**。负责实现 Repository，管理 API (Ktorfit) 和 数据库 (SQLDelight)。
+-   **`core-network`**: 通用网络基础设施，不包含具体业务 UI。
 -   **`core-ui`**: **设计系统**。包含主题、通用组件、尺寸定义。
 -   **`feature-forum`**: 通用论坛业务 UI。
 -   **`feature-feed`**: 通用社交流业务 UI。
@@ -71,10 +73,12 @@
 ## 🚀 构建与运行
 
 1.  **环境**: JDK 17+, Android Studio.
-2.  **构建**: `./gradlew build`
+2.  **构建**: `./gradlew build`（本仓库使用 Gradle Wrapper 9.5.0）。
 3.  **运行**:
-    -   Android: Run `composeApp`.
+    -   Android: Run `androidApp`.
     -   Desktop: `./gradlew :composeApp:run`
+
+当前架构约束、版本基线和分阶段目标见 [`doc/ARCHITECTURE.md`](doc/ARCHITECTURE.md)。
 
 ## 📚 参考资料 (References)
 

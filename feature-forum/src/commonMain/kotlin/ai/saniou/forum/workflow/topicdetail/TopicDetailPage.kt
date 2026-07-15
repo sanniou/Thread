@@ -6,7 +6,6 @@ import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.SaniouTopAppBar
 import ai.saniou.coreui.widgets.ShimmerContainer
 import ai.saniou.coreui.widgets.VerticalSpacerSmall
-import ai.saniou.forum.di.nmbdi
 import ai.saniou.forum.ui.components.*
 import ai.saniou.forum.workflow.image.ImagePreviewPage
 import ai.saniou.forum.workflow.image.ImagePreviewViewModelParams
@@ -56,6 +55,7 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import org.kodein.di.direct
 import org.kodein.di.instance
+import org.kodein.di.compose.localDI
 import thread.feature_forum.generated.resources.*
 
 data class TopicDetailPage(
@@ -68,6 +68,7 @@ data class TopicDetailPage(
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
+        val di = localDI()
         val navigator = LocalNavigator.currentOrThrow
         val snackbarHostState = remember { SnackbarHostState() }
         val lazyListState = rememberLazyListState()
@@ -76,7 +77,7 @@ data class TopicDetailPage(
         val sourceId = LocalForumSourceId.current
 
         val viewModel: TopicDetailViewModel = rememberScreenModel(tag = "$sourceId:$threadId") {
-            nmbdi.direct.instance(arg = TopicDetailViewModelParams(sourceId, threadId))
+            di.direct.instance(arg = TopicDetailViewModelParams(sourceId, threadId))
         }
         val state by viewModel.state.collectAsState()
 
@@ -247,7 +248,7 @@ data class TopicDetailPage(
                                 imageProvider = ThreadImageProvider(
                                     sourceId = sourceId,
                                     threadId = threadId.toLongOrNull() ?: 0L,
-                                    getTopicImagesUseCase = nmbdi.direct.instance()
+                                    getTopicImagesUseCase = di.direct.instance()
                                 ),
                                 initialImages = images,
                                 initialIndex = initialIndex

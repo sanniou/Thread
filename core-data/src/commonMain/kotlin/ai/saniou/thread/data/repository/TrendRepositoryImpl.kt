@@ -1,5 +1,6 @@
 package ai.saniou.thread.data.repository
 
+import ai.saniou.corecommon.coroutines.ioDispatcher
 import ai.saniou.corecommon.utils.UuidUtils
 import ai.saniou.thread.data.paging.DataPolicy
 import ai.saniou.thread.data.paging.DefaultRemoteKeyStrategy
@@ -17,8 +18,6 @@ import ai.saniou.thread.domain.repository.TrendRepository
 import ai.saniou.thread.domain.source.TrendSource
 import androidx.paging.*
 import app.cash.sqldelight.paging3.QueryPagingSource
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.map
@@ -192,7 +191,7 @@ class TrendRepositoryImpl(
                 if (isRankMode) {
                     QueryPagingSource(
                         transacter = db.trendQueries,
-                        context = Dispatchers.IO,
+                        context = ioDispatcher,
                         queryProvider = { limit, offset ->
                             db.trendQueries.getTrendsKeyset(
                                 sourceId = source.id,
@@ -208,7 +207,7 @@ class TrendRepositoryImpl(
                 } else {
                     QueryPagingSource(
                         transacter = db.trendQueries,
-                        context = Dispatchers.IO,
+                        context = ioDispatcher,
                         queryProvider = { limit, offset ->
                             db.trendQueries.getRealtimeTrendsKeyset(
                                 sourceId = source.id,

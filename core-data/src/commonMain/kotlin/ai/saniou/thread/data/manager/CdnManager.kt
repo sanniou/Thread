@@ -3,6 +3,8 @@ package ai.saniou.thread.data.manager
 import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
 import ai.saniou.thread.network.SaniouResult
 import ai.saniou.thread.data.source.nmb.remote.dto.CdnPath
+import ai.saniou.thread.domain.model.forum.Image
+import ai.saniou.thread.domain.service.ImageUrlResolver
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -10,7 +12,7 @@ import kotlinx.coroutines.flow.asStateFlow
 /**
  * CDN管理器，负责获取和管理图片CDN地址
  */
-class CdnManager(private val nmbXdApi: NmbXdApi) {
+class CdnManager(private val nmbXdApi: NmbXdApi) : ImageUrlResolver {
 
     // 默认CDN地址
     private val defaultCdnUrl = "https://image.nmb.best"
@@ -32,7 +34,7 @@ class CdnManager(private val nmbXdApi: NmbXdApi) {
      *
      * @return 是否初始化成功
      */
-    suspend fun initialize(): Boolean {
+    override suspend fun initialize(): Boolean {
         if (_initialized.value) {
             return true
         }
@@ -110,5 +112,16 @@ class CdnManager(private val nmbXdApi: NmbXdApi) {
         val cdnUrl = _currentCdnUrl.value.removeSuffix("/")
         val path = if (isThumb) "thumb" else "image"
         return "$cdnUrl/$path/$imgPath$ext"
+    }
+
+    override fun resolveOriginal(image: Image): String {
+        if (image.originalUrl.startsWith("http://") || image.originalUrl.startsWith("https://")) {
+            return image.originalUrl
+        }
+        return buildImageUrl(
+            imgPath = image.originalUrl,
+            ext = image.extension.orEmpty(),
+            isThumb = false,
+        )
     }
 }

@@ -1,5 +1,6 @@
 package ai.saniou.thread.data.repository
 
+import ai.saniou.corecommon.coroutines.ioDispatcher
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.data.parser.FeedParserFactory
 import ai.saniou.thread.domain.model.reader.Article
@@ -17,8 +18,6 @@ import app.cash.sqldelight.paging3.QueryPagingSource
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
@@ -36,7 +35,7 @@ class ReaderRepositoryImpl(
     override fun getAllFeedSources(): Flow<List<FeedSource>> {
         return db.feedSourceQueries.getAllFeedSources()
             .asFlow()
-            .mapToList(Dispatchers.IO)
+            .mapToList(ioDispatcher)
             .map { list ->
                 list.map { entity ->
                     FeedSource(
@@ -62,7 +61,7 @@ class ReaderRepositoryImpl(
     }
 
     override suspend fun getFeedSource(id: String): FeedSource? {
-        return withContext(Dispatchers.IO) {
+        return withContext(ioDispatcher) {
             db.feedSourceQueries.getFeedSourceById(id).executeAsOneOrNull()?.let { entity ->
                  FeedSource(
                         id = entity.id,
@@ -87,7 +86,7 @@ class ReaderRepositoryImpl(
     }
 
     override suspend fun addFeedSource(feedSource: FeedSource) {
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             db.feedSourceQueries.insertFeedSource(
                 id = feedSource.id,
                 name = feedSource.name,
@@ -108,7 +107,7 @@ class ReaderRepositoryImpl(
     }
 
     override suspend fun deleteFeedSource(id: String) {
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             db.feedSourceQueries.deleteFeedSource(id)
         }
     }
@@ -130,7 +129,7 @@ class ReaderRepositoryImpl(
                         isBookmarked = isBookmarked?.let { if (it) 1L else 0L }
                     ),
                     transacter = db.articleQueries,
-                    context = Dispatchers.IO,
+                    context = ioDispatcher,
                     queryProvider = { limit, offset ->
                         db.articleQueries.getArticlesPaging(
                             feedSourceId = feedSourceId,
@@ -164,7 +163,7 @@ class ReaderRepositoryImpl(
     }
 
     override suspend fun getArticle(id: String): Article? {
-        return withContext(Dispatchers.IO) {
+        return withContext(ioDispatcher) {
             db.articleQueries.getArticleById(id).executeAsOneOrNull()?.let { entity ->
                 Article(
                     id = entity.id,
@@ -185,13 +184,13 @@ class ReaderRepositoryImpl(
     }
 
     override suspend fun markArticleAsRead(id: String, isRead: Boolean) {
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             db.articleQueries.markArticleAsRead(if (isRead) 1L else 0L, id)
         }
     }
 
     override suspend fun markArticleAsBookmarked(id: String, isBookmarked: Boolean) {
-         withContext(Dispatchers.IO) {
+         withContext(ioDispatcher) {
             db.articleQueries.markArticleAsBookmarked(if (isBookmarked) 1L else 0L, id)
         }
     }
@@ -199,12 +198,12 @@ class ReaderRepositoryImpl(
     override fun getArticleCounts(feedSourceId: String): Flow<Pair<Int, Int>> {
         val totalFlow = db.articleQueries.countTotalArticlesByFeedSource(feedSourceId)
             .asFlow()
-            .mapToOne(Dispatchers.IO)
+            .mapToOne(ioDispatcher)
             .map { it.toInt() }
 
         val unreadFlow = db.articleQueries.countUnreadArticlesByFeedSource(feedSourceId)
             .asFlow()
-            .mapToOne(Dispatchers.IO)
+            .mapToOne(ioDispatcher)
             .map { it.toInt() }
 
         return combine(totalFlow, unreadFlow) { total, unread ->
@@ -213,7 +212,7 @@ class ReaderRepositoryImpl(
     }
 
     override suspend fun refreshAllFeeds() {
-        val sources = withContext(Dispatchers.IO) {
+        val sources = withContext(ioDispatcher) {
              db.feedSourceQueries.getAllFeedSources().executeAsList()
         }
         sources.forEach { sourceEntity ->
@@ -231,7 +230,7 @@ class ReaderRepositoryImpl(
             val parser = parserFactory.getParser(source.type)
             val articles = parser.parse(source, content)
 
-            withContext(Dispatchers.IO) {
+            withContext(ioDispatcher) {
                 db.transaction {
                     articles.forEach { article ->
                         val existing = db.articleQueries.getArticleById(article.id).executeAsOneOrNull()

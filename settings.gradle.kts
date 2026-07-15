@@ -14,7 +14,6 @@ pluginManagement {
         gradlePluginPortal()
         // Desktop target has to add this repo
         maven("https://jogamp.org/deployment/maven")
-        maven("https://central.sonatype.com/repository/maven-snapshots/")
     }
 }
 
@@ -30,7 +29,6 @@ dependencyResolutionManagement {
         mavenCentral()
         // Desktop target has to add this repo
         maven("https://jogamp.org/deployment/maven")
-        maven("https://central.sonatype.com/repository/maven-snapshots/")
     }
 }
 
@@ -39,6 +37,7 @@ plugins {
 }
 
 include(":composeApp")
+include(":androidApp")
 include(":core-ui")
 include(":core-common")
 include(":feature-forum")

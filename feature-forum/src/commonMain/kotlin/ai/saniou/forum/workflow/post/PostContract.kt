@@ -1,8 +1,8 @@
 package ai.saniou.forum.workflow.post
 
-import ai.saniou.thread.data.source.nmb.remote.dto.PostThreadRequest
+import ai.saniou.thread.domain.model.forum.PostAttachment
+import ai.saniou.thread.domain.model.forum.PostDraft
 import androidx.compose.ui.text.input.TextFieldValue
-import io.ktor.http.content.PartData
 
 interface PostContract {
     data class State(
@@ -10,9 +10,9 @@ interface PostContract {
         val isLoading: Boolean = false,
         val error: String? = null,
         val isSuccess: Boolean = false,
-        val postBody: PostThreadRequest = PostThreadRequest(),
+        val postBody: PostDraft = PostDraft(),
         val content: TextFieldValue = TextFieldValue(),
-        val image: PartData? = null,
+        val image: PostAttachment? = null,
         val water: Boolean = false,
         val showEmoticonPicker: Boolean = false,
         val showDiceInputs: Boolean = false,
@@ -25,7 +25,7 @@ interface PostContract {
         data class UpdateTitle(val title: String) : Event
         data class UpdateContent(val content: TextFieldValue) : Event
         data class InsertContent(val text: String) : Event
-        data class UpdateImage(val image: PartData?) : Event
+        data class UpdateImage(val image: PostAttachment?) : Event
         data class ToggleWater(val water: Boolean) : Event
         data object ToggleEmoticonPicker : Event
         data object ToggleDiceInputs : Event

@@ -5,7 +5,6 @@ import ai.saniou.coreui.composition.LocalForumSourceId
 import ai.saniou.coreui.theme.CupcakeTheme
 import ai.saniou.coreui.widgets.DrawerMenuItem
 import ai.saniou.coreui.widgets.DrawerMenuRow
-import ai.saniou.forum.di.coreCommon
 import ai.saniou.forum.di.nmbFeatureModule
 import ai.saniou.forum.workflow.home.ChannelPage
 import ai.saniou.forum.workflow.image.nmbImagePreviewModule
@@ -52,7 +51,6 @@ fun App() {
         import(domainModule)
         import(dataModule)
         import(readerModule)
-        import(coreCommon)
         import(nmbImagePreviewModule)
         import(nmbFeatureModule)
         import(appModule)

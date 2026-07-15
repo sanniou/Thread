@@ -2,7 +2,6 @@ package ai.saniou.forum.workflow.user
 
 import ai.saniou.coreui.composition.LocalForumSourceId
 import ai.saniou.coreui.widgets.SaniouTopAppBar
-import ai.saniou.forum.di.nmbdi
 import ai.saniou.forum.ui.login.LoginScreen
 import ai.saniou.forum.workflow.user.UserContract.Event
 import androidx.compose.animation.AnimatedVisibility
@@ -45,12 +44,7 @@ import cafe.adriel.voyager.kodein.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.flow.collectLatest
-import org.kodein.di.DI
-
-
-data class UserPage(
-    val di: DI = nmbdi,
-) : Screen {
+class UserPage : Screen {
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable

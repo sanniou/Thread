@@ -9,6 +9,7 @@ import com.multiplatform.webview.web.WebView
 import com.multiplatform.webview.web.rememberWebViewNavigator
 import com.multiplatform.webview.web.rememberWebViewState
 import kotlinx.coroutines.delay
+import platform.WebKit.WKWebView
 
 @Composable
 actual fun ChallengeWebView(
@@ -35,11 +36,11 @@ actual fun ChallengeWebView(
         state = state,
         navigator = navigator,
         modifier = modifier,
-        onCreated = {
-            it.settings.userAgentString = NetworkConstants.USER_AGENT
-            it.settings.javaScriptEnabled = true
+        onCreated = { webView: WKWebView ->
+            webView.customUserAgent = NetworkConstants.USER_AGENT
+            webView.configuration.defaultWebpagePreferences.allowsContentJavaScript = true
         },
-        onDispose = {}
+        onDispose = { _: WKWebView -> }
     )
 }
 

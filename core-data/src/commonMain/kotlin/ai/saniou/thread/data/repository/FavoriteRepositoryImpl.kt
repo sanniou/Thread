@@ -1,5 +1,6 @@
 package ai.saniou.thread.data.repository
 
+import ai.saniou.corecommon.coroutines.ioDispatcher
 import ai.saniou.thread.data.mapper.toDomain
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.data.source.nmb.remote.dto.FavoriteChannelType
@@ -7,8 +8,6 @@ import ai.saniou.thread.domain.model.forum.Channel
 import ai.saniou.thread.domain.repository.FavoriteRepository
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlin.time.Clock
@@ -21,7 +20,7 @@ class FavoriteRepositoryImpl(
     override fun getFavoriteChannels(sourceId: String): Flow<List<Channel>> {
         return db.favoriteChannelQueries.getAllFavoriteChannel(sourceId)
             .asFlow()
-            .mapToList(Dispatchers.IO)
+            .mapToList(ioDispatcher)
             .map { forums -> forums.map { it.toDomain(db.channelQueries) } }
     }
 
@@ -42,7 +41,7 @@ class FavoriteRepositoryImpl(
     override fun isFavorite(sourceId: String, channel: String): Flow<Boolean> {
         return db.favoriteChannelQueries.getFavoriteChannel(sourceId, channel)
             .asFlow()
-            .mapToList(Dispatchers.IO)
+            .mapToList(ioDispatcher)
             .map { it.isNotEmpty() }
     }
 }

@@ -1,7 +1,6 @@
 package ai.saniou.forum.workflow.user
 
 import ai.saniou.coreui.widgets.SaniouTopAppBar
-import ai.saniou.forum.di.nmbdi
 import ai.saniou.forum.ui.components.TopicCard
 import ai.saniou.forum.ui.components.LoadEndIndicator
 import ai.saniou.forum.ui.components.LoadingFailedIndicator
@@ -56,6 +55,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import org.kodein.di.direct
 import org.kodein.di.instance
+import org.kodein.di.compose.localDI
 
 data class UserDetailPage(
     val userHash: String
@@ -64,9 +64,10 @@ data class UserDetailPage(
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
+        val di = localDI()
         val navigator = LocalNavigator.currentOrThrow
         val viewModel: UserDetailViewModel = rememberScreenModel(tag = userHash) {
-            nmbdi.direct.instance(arg = userHash)
+            di.direct.instance(arg = userHash)
         }
 
         val state by viewModel.state.collectAsState()

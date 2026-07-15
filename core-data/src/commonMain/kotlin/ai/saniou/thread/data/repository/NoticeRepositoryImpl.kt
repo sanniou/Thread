@@ -1,5 +1,6 @@
 package ai.saniou.thread.data.repository
 
+import ai.saniou.corecommon.coroutines.ioDispatcher
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.data.mapper.toDomain
 import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
@@ -11,8 +12,6 @@ import ai.saniou.thread.domain.repository.saveValue
 import ai.saniou.thread.network.SaniouResult
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToOneOrNull
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlin.time.Clock
@@ -29,7 +28,7 @@ class NoticeRepositoryImpl(
     override suspend fun getLatestNotice(): Flow<Notice?> {
         return db.noticeQueries.getLatestNotice()
             .asFlow()
-            .mapToOneOrNull(Dispatchers.IO)
+            .mapToOneOrNull(ioDispatcher)
             .map { it?.toDomain() }
     }
 

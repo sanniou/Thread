@@ -1,6 +1,7 @@
 package ai.saniou.coreui.widgets
 
 import ai.saniou.coreui.widgets.palette.PhotoPalette
+import ai.saniou.coreui.widgets.palette.toSimplePalette
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -11,6 +12,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import com.github.panpf.sketch.AsyncImage
+import com.github.panpf.sketch.BitmapImage
 import com.github.panpf.sketch.cache.CachePolicy
 import com.github.panpf.sketch.rememberAsyncImageState
 import com.github.panpf.sketch.request.ComposableImageRequest
@@ -20,6 +22,9 @@ import com.github.panpf.sketch.resize.Precision
 import com.github.panpf.sketch.transform.BlurTransformation
 import com.github.panpf.sketch.util.toSketchSize
 import com.github.panpf.sketch.util.windowContainerSize
+import com.kmpalette.palette.graphics.Palette
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @Composable
 fun PhotoPagerBackground(
@@ -28,12 +33,14 @@ fun PhotoPagerBackground(
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val imageState = rememberAsyncImageState()
-    LaunchedEffect(Unit) {
-        snapshotFlow { imageState.result }.collect {
-            if (it is ImageResult.Success) {
-                photoPaletteState.value =
-                    PhotoPalette(it.simplePalette, colorScheme = colorScheme)
+    LaunchedEffect(imageState, colorScheme) {
+        snapshotFlow { imageState.result }.collect { result ->
+            val bitmap = ((result as? ImageResult.Success)?.image as? BitmapImage)?.bitmap
+                ?: return@collect
+            val palette = withContext(Dispatchers.Default) {
+                runCatching { Palette.Builder(bitmap).generate().toSimplePalette() }.getOrNull()
             }
+            photoPaletteState.value = PhotoPalette(palette, colorScheme)
         }
     }
     val windowsSize = windowContainerSize()
@@ -46,9 +53,6 @@ fun PhotoPagerBackground(
         disallowAnimatedImage()
         crossfade(alwaysUse = true, durationMillis = 400)
         resizeOnDraw()
-        components {
-            addDecodeInterceptor(PaletteDecodeInterceptor())
-        }
     }
     AsyncImage(
         request = request,

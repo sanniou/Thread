@@ -2,6 +2,7 @@ package ai.saniou.thread.domain.repository
 
 import ai.saniou.thread.domain.model.FeedType
 import ai.saniou.thread.domain.model.PagedResult
+import ai.saniou.thread.domain.model.SourceCapabilities
 import ai.saniou.thread.domain.model.forum.Channel
 import ai.saniou.thread.domain.model.forum.Comment
 import ai.saniou.thread.domain.model.forum.Topic
@@ -10,10 +11,6 @@ import ai.saniou.thread.domain.source.TrendSource
 import androidx.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
-
-data class SourceCapabilities(
-    val supportsPagination: Boolean = true,
-)
 
 /**
  * 信息源的标准接口，所有具体的信息源（如NMB, NGA）都需要实现它

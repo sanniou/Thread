@@ -3,9 +3,7 @@ package ai.saniou.forum.workflow.image
 import ai.saniou.coreui.widgets.PhotoPagerBackground
 import ai.saniou.coreui.widgets.ZoomAsyncImage
 import ai.saniou.coreui.widgets.palette.PhotoPalette
-import ai.saniou.forum.di.nmbdi
 import ai.saniou.forum.workflow.image.ImagePreviewContract.Event
-import ai.saniou.thread.data.manager.CdnManager
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -53,18 +51,18 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.launch
-import org.kodein.di.DI
+import org.kodein.di.compose.localDI
 import org.kodein.di.direct
 import org.kodein.di.instance
 
 data class ImagePreviewPage(
     val params: ImagePreviewViewModelParams,
-    val di: DI = nmbdi,
 ) : Screen {
 
     @OptIn(ExperimentalFoundationApi::class)
     @Composable
     override fun Content() {
+        val di = localDI()
         val viewModel: ImagePreviewViewModel =
             rememberScreenModel(tag = params.toString()) {
                 di.direct.instance(arg = params)

@@ -5,7 +5,6 @@ import ai.saniou.coreui.state.DefaultError
 import ai.saniou.coreui.state.PagingStateLayout
 import ai.saniou.coreui.widgets.PullToRefreshWrapper
 import ai.saniou.coreui.widgets.SaniouTopAppBar
-import ai.saniou.forum.di.nmbdi
 import ai.saniou.forum.ui.components.TopicCard
 import ai.saniou.forum.ui.components.LoadEndIndicator
 import ai.saniou.forum.ui.components.LoadingFailedIndicator
@@ -73,7 +72,6 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.flow.collectLatest
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
-import org.kodein.di.DI
 import thread.feature_forum.generated.resources.Res
 import thread.feature_forum.generated.resources.subscription_cancel
 import thread.feature_forum.generated.resources.subscription_confirm
@@ -95,7 +93,6 @@ import thread.feature_forum.generated.resources.subscription_unknown_error
 import thread.feature_forum.generated.resources.subscription_unsubscribe
 
 data class SubscriptionPage(
-    val di: DI = nmbdi,
     val onUpdateTitle: ((String) -> Unit)? = null,
     val onThreadClicked: (Long) -> Unit,
 ) : Screen {

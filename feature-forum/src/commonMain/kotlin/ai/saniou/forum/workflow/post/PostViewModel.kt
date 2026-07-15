@@ -102,21 +102,19 @@ class PostViewModel(
                 val s = _state.value
                 val responseHtml = if (resto != null) {
                     createReplyUseCase(
-                        content = s.postBody.content!!,
                         resto = resto,
-                        name = s.postBody.name,
-                        title = s.postBody.title,
-                        image = s.image,
-                        water = s.water
+                        draft = s.postBody.copy(
+                            attachment = s.image,
+                            water = s.water,
+                        ),
                     )
                 } else if (fid != null) {
                     createThreadUseCase(
                         fid = fid,
-                        content = s.postBody.content!!,
-                        name = s.postBody.name,
-                        title = s.postBody.title,
-                        image = s.image,
-                        water = s.water
+                        draft = s.postBody.copy(
+                            attachment = s.image,
+                            water = s.water,
+                        ),
                     )
                 } else {
                     throw IllegalStateException("fid and resto cannot both be null")

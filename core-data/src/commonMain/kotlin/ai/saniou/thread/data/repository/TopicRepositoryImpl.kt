@@ -1,5 +1,6 @@
 package ai.saniou.thread.data.repository
 
+import ai.saniou.corecommon.coroutines.ioDispatcher
 import ai.saniou.thread.data.cache.SourceCache
 import ai.saniou.thread.data.mapper.toDomain
 import ai.saniou.thread.data.mapper.toMetadata
@@ -15,7 +16,6 @@ import androidx.paging.*
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.paging3.QueryPagingSource
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
 
@@ -43,7 +43,7 @@ class TopicRepositoryImpl(
                     }
                 }
             }
-            .flowOn(Dispatchers.IO)
+            .flowOn(ioDispatcher)
     }
 
     override fun getTopicMetadata(
@@ -67,7 +67,7 @@ class TopicRepositoryImpl(
                     }
                 }
             }
-            .flowOn(Dispatchers.IO)
+            .flowOn(ioDispatcher)
     }
 
     @OptIn(ExperimentalPagingApi::class)
@@ -126,7 +126,7 @@ class TopicRepositoryImpl(
                 if (isPoOnly) {
                     QueryPagingSource(
                         transacter = db,
-                        context = Dispatchers.IO,
+                        context = ioDispatcher,
                         countQuery =
                             db.commentQueries.countCommentsByTopicIdPoMode(
                                 sourceId = sourceId,
@@ -144,7 +144,7 @@ class TopicRepositoryImpl(
                 } else {
                     QueryPagingSource(
                         transacter = db,
-                        context = Dispatchers.IO,
+                        context = ioDispatcher,
                         countQuery =
                             db.commentQueries.countCommentsByTopicId(
                                 sourceId,
@@ -186,7 +186,7 @@ class TopicRepositoryImpl(
             parentType = ImageType.Comment
         )
             .asFlow()
-            .mapToList(Dispatchers.IO)
+            .mapToList(ioDispatcher)
             .map { list ->
                 list.map { it.toDomain() }
             }
@@ -205,7 +205,7 @@ class TopicRepositoryImpl(
 
         return query
             .asFlow()
-            .mapToList(Dispatchers.IO)
+            .mapToList(ioDispatcher)
             .map { list ->
                 list.map { it.toDomain(db.imageQueries) }
             }
@@ -217,7 +217,7 @@ class TopicRepositoryImpl(
         threadId: String,
         replyId: String,
     ) {
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             cache.updateTopicLastReadCommentId(sourceId, threadId, replyId)
         }
     }

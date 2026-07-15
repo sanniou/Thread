@@ -84,9 +84,6 @@ fun ZoomAsyncImage(
             request = ComposableImageRequest(uri) {
                 placeholder(ThumbnailMemoryCacheStateImage(thumbnailUrl))
                 crossfade(fadeStart = false)
-                components {
-                    addDecodeInterceptor(PaletteDecodeInterceptor())
-                }
             },
             contentDescription = contentDescription,
             contentScale = contentScale,

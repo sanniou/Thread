@@ -1,10 +1,10 @@
 package ai.saniou.thread.data.repository
 
+import ai.saniou.corecommon.coroutines.ioDispatcher
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.domain.repository.SettingsRepository
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToOneOrNull
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
@@ -35,7 +35,7 @@ class SettingsRepositoryImpl(
 
     @Suppress("UNCHECKED_CAST")
     override suspend fun <T : Any> saveValue(key: String, value: T?, type: KType) {
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             value?.let {
                 val serializer = Json.serializersModule.serializer(type) as KSerializer<T>
                 val stringValue = Json.encodeToString(serializer, it)
@@ -46,7 +46,7 @@ class SettingsRepositoryImpl(
 
     @Suppress("UNCHECKED_CAST")
     override suspend fun <T : Any> getValue(key: String, type: KType): T? {
-        return withContext(Dispatchers.IO) {
+        return withContext(ioDispatcher) {
             db.keyValueQueries.getKeyValue(key).executeAsOneOrNull()?.content?.let {
                 val serializer = Json.serializersModule.serializer(type) as KSerializer<T>
                 Json.decodeFromString(serializer, it)
@@ -58,7 +58,7 @@ class SettingsRepositoryImpl(
     override fun <T : Any> observeValue(key: String, type: KType): Flow<T?> {
         return db.keyValueQueries.getKeyValue(key)
             .asFlow()
-            .mapToOneOrNull(Dispatchers.IO)
+            .mapToOneOrNull(ioDispatcher)
             .map { entity ->
                 entity?.content?.let {
                     val serializer = Json.serializersModule.serializer(type) as KSerializer<T>

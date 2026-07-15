@@ -1,6 +1,6 @@
 package ai.saniou.forum.initializer
 
-import ai.saniou.thread.data.manager.CdnManager
+import ai.saniou.thread.domain.service.ImageUrlResolver
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -13,7 +13,7 @@ import kotlinx.coroutines.launch
  * 应用初始化器，负责应用启动时的初始化工作
  */
 class AppInitializer(
-    private val cdnManager: CdnManager
+    private val imageUrlResolver: ImageUrlResolver
 ) {
     private val initializerScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
@@ -35,7 +35,7 @@ class AppInitializer(
         initializerScope.launch {
             try {
                 // 初始化CDN
-                val cdnInitialized = cdnManager.initialize()
+                imageUrlResolver.initialize()
 
                 // 可以在这里添加其他初始化逻辑
 

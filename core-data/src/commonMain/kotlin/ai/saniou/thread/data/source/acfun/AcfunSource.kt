@@ -1,9 +1,11 @@
 package ai.saniou.thread.data.source.acfun
 
+import ai.saniou.corecommon.coroutines.ioDispatcher
 import ai.saniou.thread.data.model.CommentKey
 import ai.saniou.thread.data.source.acfun.remote.AcfunApi
 import ai.saniou.thread.data.source.acfun.remote.AcfunTokenManager
 import ai.saniou.thread.domain.model.PagedResult
+import ai.saniou.thread.domain.model.SourceCapabilities
 import ai.saniou.thread.domain.model.forum.Author
 import ai.saniou.thread.domain.model.forum.Channel
 import ai.saniou.thread.domain.model.forum.Comment
@@ -12,11 +14,8 @@ import ai.saniou.thread.domain.model.forum.Trend
 import ai.saniou.thread.domain.model.forum.TrendResult
 import ai.saniou.thread.domain.model.user.LoginStrategy
 import ai.saniou.thread.domain.repository.Source
-import ai.saniou.thread.domain.repository.SourceCapabilities
 import ai.saniou.thread.network.SaniouResult
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
@@ -35,7 +34,7 @@ class AcfunSource(
     override val isInitialized: Flow<Boolean> = _isInitialized
 
     init {
-        CoroutineScope(Dispatchers.IO).launch {
+        CoroutineScope(ioDispatcher).launch {
             initialize()
         }
     }

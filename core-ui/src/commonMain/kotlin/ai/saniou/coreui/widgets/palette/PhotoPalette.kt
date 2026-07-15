@@ -1,30 +1,23 @@
 package ai.saniou.coreui.widgets.palette
 
-import ai.saniou.coreui.widgets.SimplePalette
 import androidx.compose.material3.ColorScheme
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
-
-fun PhotoPalette(palette: SimplePalette): PhotoPalette {
-    return PhotoPalette(
-        palette = palette,
-        primaryColor = 0xFFFFFF,
-        primaryContainerColor = 0xFFFFFF
-    )
-}
+import com.kmpalette.palette.graphics.Palette
 
 fun PhotoPalette(palette: SimplePalette?, colorScheme: ColorScheme): PhotoPalette {
     return PhotoPalette(
         palette = palette,
         primaryColor = colorScheme.primary.toArgb(),
-        primaryContainerColor = colorScheme.primaryContainer.toArgb()
+        primaryContainerColor = colorScheme.primaryContainer.toArgb(),
     )
 }
 
 fun PhotoPalette(colorScheme: ColorScheme): PhotoPalette {
     return PhotoPalette(
         palette = null,
-        colorScheme = colorScheme
+        primaryColor = colorScheme.primary.toArgb(),
+        primaryContainerColor = colorScheme.primaryContainer.toArgb(),
     )
 }
 
@@ -32,11 +25,11 @@ fun PhotoPalette(colorScheme: ColorScheme): PhotoPalette {
 data class PhotoPalette(
     private val palette: SimplePalette?,
     private val primaryColor: Int,
-    private val primaryContainerColor: Int
+    private val primaryContainerColor: Int,
 ) {
 
     val containerColor: Color by lazy {
-        val preferredSwatch = palette?.run {
+        val swatch = palette?.run {
             listOfNotNull(
                 darkMutedSwatch,
                 mutedSwatch,
@@ -46,17 +39,13 @@ data class PhotoPalette(
                 lightVibrantSwatch,
             ).firstOrNull()
         }
-        if (preferredSwatch != null) {
-            Color(preferredSwatch.rgb)
-        } else {
-            Color(primaryContainerColor)
-        }.copy(0.6f)
+        Color(swatch?.rgb ?: primaryContainerColor).copy(alpha = 0.6f)
     }
 
     val containerColorInt: Int by lazy { containerColor.toArgb() }
 
     val accentColor: Color by lazy {
-        val preferredSwatch = palette?.run {
+        val swatch = palette?.run {
             listOfNotNull(
                 lightVibrantSwatch,
                 vibrantSwatch,
@@ -66,11 +55,7 @@ data class PhotoPalette(
                 darkMutedSwatch,
             ).firstOrNull()
         }
-        if (preferredSwatch != null) {
-            Color(preferredSwatch.rgb)
-        } else {
-            Color(primaryColor)
-        }.copy(0.6f)
+        Color(swatch?.rgb ?: primaryColor).copy(alpha = 0.6f)
     }
 
     val accentColorInt: Int by lazy { accentColor.toArgb() }
@@ -78,3 +63,23 @@ data class PhotoPalette(
     val contentColor: Color = Color.White
     val contentColorInt: Int = contentColor.toArgb()
 }
+
+data class SimplePalette(
+    val dominantSwatch: Palette.Swatch?,
+    val darkMutedSwatch: Palette.Swatch?,
+    val mutedSwatch: Palette.Swatch?,
+    val lightMutedSwatch: Palette.Swatch?,
+    val darkVibrantSwatch: Palette.Swatch?,
+    val vibrantSwatch: Palette.Swatch?,
+    val lightVibrantSwatch: Palette.Swatch?,
+)
+
+fun Palette.toSimplePalette(): SimplePalette = SimplePalette(
+    dominantSwatch = dominantSwatch,
+    darkMutedSwatch = darkMutedSwatch,
+    mutedSwatch = mutedSwatch,
+    lightMutedSwatch = lightMutedSwatch,
+    darkVibrantSwatch = darkVibrantSwatch,
+    vibrantSwatch = vibrantSwatch,
+    lightVibrantSwatch = lightVibrantSwatch,
+)

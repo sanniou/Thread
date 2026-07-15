@@ -17,7 +17,7 @@ import ai.saniou.thread.domain.usecase.subscription.ToggleSubscriptionUseCase
 import ai.saniou.thread.domain.usecase.thread.GetTopicCommentsPagerUseCase
 import ai.saniou.thread.domain.usecase.thread.GetTopicDetailUseCase
 import ai.saniou.thread.domain.usecase.thread.GetSubCommentsUseCase
-import ai.saniou.thread.data.manager.CdnManager
+import ai.saniou.thread.domain.service.ImageUrlResolver
 import ai.saniou.thread.domain.model.forum.Image
 import ai.saniou.thread.domain.usecase.thread.GetTopicMetadataUseCase
 import ai.saniou.thread.domain.usecase.thread.UpdateTopicLastAccessTimeUseCase
@@ -59,7 +59,7 @@ class TopicDetailViewModel(
     private val getChannelNameUseCase: GetChannelNameUseCase,
     private val updateTopicLastAccessTimeUseCase: UpdateTopicLastAccessTimeUseCase,
     private val updateTopicLastReadCommentIdUseCase: UpdateTopicLastReadCommentIdUseCase,
-    private val cdnManager: CdnManager,
+    private val imageUrlResolver: ImageUrlResolver,
 ) : ScreenModel {
 
     private val sourceId = params.sourceId
@@ -314,7 +314,7 @@ class TopicDetailViewModel(
 
     private fun bookmarkImage(image: Image) {
         screenModelScope.launch {
-            val fullUrl = cdnManager.buildImageUrl(image.originalUrl, "", isThumb = false)
+            val fullUrl = imageUrlResolver.resolveOriginal(image)
             val id = "nmb.Image.${fullUrl.hashCode()}"
             addBookmarkUseCase(
                 Bookmark.Image(

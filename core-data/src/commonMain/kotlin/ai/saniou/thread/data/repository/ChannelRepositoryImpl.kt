@@ -1,5 +1,6 @@
 package ai.saniou.thread.data.repository
 
+import ai.saniou.corecommon.coroutines.ioDispatcher
 import ai.saniou.thread.data.cache.SourceCache
 import ai.saniou.thread.data.mapper.toDomain
 import ai.saniou.thread.data.paging.DataPolicy
@@ -12,7 +13,6 @@ import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.repository.ChannelRepository
 import ai.saniou.thread.domain.repository.Source
 import androidx.paging.*
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
 
@@ -175,7 +175,7 @@ class ChannelRepositoryImpl(
     }
 
     override suspend fun saveLastOpenedChannel(channel: Channel?) {
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             if (channel != null) {
                 db.keyValueQueries.insertKeyValue("last_opened_forum_id", channel.id)
                 db.keyValueQueries.insertKeyValue("last_opened_forum_source", channel.sourceName)
@@ -187,7 +187,7 @@ class ChannelRepositoryImpl(
     }
 
     override suspend fun getLastOpenedChannel(): Channel? {
-        return withContext(Dispatchers.IO) {
+        return withContext(ioDispatcher) {
             val fid =
                 db.keyValueQueries.getKeyValue("last_opened_forum_id").executeAsOneOrNull()?.content
             val sourceId =
@@ -241,7 +241,7 @@ class ChannelRepositoryImpl(
             // How about: UPDATE Topic SET receiveDate = receiveDate WHERE sourceId = :sid AND channelId = :cid LIMIT 1;
             // Sqldelight triggers on Table change, not specific row.
             // So any update to Topic table works.
-            withContext(Dispatchers.IO) {
+            withContext(ioDispatcher) {
                 // This query doesn't change data but triggers notification
                 // We need to define a 'touch' query in .sq or reuse an existing one with same values.
                 // Re-setting lastVisitedAt for any topic in this channel?

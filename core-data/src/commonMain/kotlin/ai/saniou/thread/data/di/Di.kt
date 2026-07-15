@@ -44,13 +44,16 @@ import ai.saniou.thread.data.source.nmb.remote.createNmbXdApi
 import ai.saniou.thread.data.cache.SourceCache
 import ai.saniou.thread.data.cache.SqlDelightSourceCache
 import ai.saniou.thread.data.source.discourse.DiscourseSource
+import ai.saniou.thread.data.source.discourse.DiscourseConnectionConfig
 import ai.saniou.thread.data.source.discourse.remote.DiscourseApi
 import ai.saniou.thread.data.source.discourse.remote.createDiscourseApi
+import ai.saniou.thread.domain.service.ImageUrlResolver
 import ai.saniou.thread.data.sync.local.LocalSyncProvider
 import ai.saniou.thread.data.sync.webdav.WebDavSyncProvider
 import ai.saniou.thread.domain.repository.BookmarkRepository
 import ai.saniou.thread.domain.repository.FavoriteRepository
 import ai.saniou.thread.domain.repository.FeedRepository
+import ai.saniou.thread.domain.repository.ForumSearchRepository
 import ai.saniou.thread.domain.repository.SourceRepository
 import ai.saniou.thread.domain.repository.ChannelRepository
 import ai.saniou.thread.domain.repository.HistoryRepository
@@ -74,6 +77,7 @@ import ai.saniou.thread.data.repository.ReaderRepositoryImpl
 import ai.saniou.thread.domain.repository.AccountRepository
 import ai.saniou.thread.domain.repository.ReaderRepository
 import ai.saniou.thread.domain.repository.UserRepository
+import ai.saniou.thread.domain.repository.UserContentRepository
 import ai.saniou.thread.domain.usecase.reader.GetArticleCountsUseCase
 import ai.saniou.thread.domain.usecase.subscription.GenerateRandomSubscriptionIdUseCase
 import ai.saniou.thread.domain.usecase.channel.FetchChannelsUseCase
@@ -98,8 +102,13 @@ import kotlin.time.Clock
 
 val dataModule = DI.Module("dataModule") {
     bindConstant<String>(tag = "nmbBaseUrl") { "https://api.nmb.best/api/" }
-    bindConstant<String>(tag = "metaDiscourseBaseUrl") { "https://meta.discourse.org/" }
-    bindConstant<String>(tag = "linuxDoDiscourseBaseUrl") { "https://linux.do/" }
+    bindSingleton {
+        DiscourseConnectionConfig(
+            sourceId = "linuxDo",
+            baseUrl = "https://linux.do/",
+            developmentApiKey = "eebd35d4ca8e9c948cd8188f6ff9b440",
+        )
+    }
     bindSingleton<NmbXdApi> {
         val nmbAccountProvider = instance<NmbAccountProvider>()
         val ktorfit = SaniouKtorfit(
@@ -111,25 +120,24 @@ val dataModule = DI.Module("dataModule") {
     }
 
     bindSingleton<DiscourseApi> {
-        val baseUrl = instance<String>("linuxDoDiscourseBaseUrl")
+        val connection = instance<DiscourseConnectionConfig>()
         // ChallengeHandler should be provided by the app module
         val challengeHandler = instanceOrNull<ChallengeHandler>()
         val cookieStore = instance<CookieStore>()
-        val sourceId = "linuxDo"
 
         val ktorfit = SaniouKtorfit(
-            baseUrl = baseUrl
+            baseUrl = connection.baseUrl
         ) {
-            installCookieAuth { cookieStore.getCookie(sourceId) }
+            installCookieAuth { cookieStore.getCookie(connection.sourceId) }
             install(io.ktor.client.plugins.DefaultRequest) {
-                header("User-Api-Key", "eebd35d4ca8e9c948cd8188f6ff9b440")
+                connection.developmentApiKey?.let { header("User-Api-Key", it) }
             }
 
             // Manually install CloudflareProtectionPlugin with sourceId if challengeHandler exists
             if (challengeHandler != null) {
                 install(CloudflareProtectionPlugin) {
                     this.challengeHandler = challengeHandler
-                    this.sourceId = sourceId
+                    this.sourceId = connection.sourceId
                 }
             }
         }
@@ -181,6 +189,8 @@ val dataModule = DI.Module("dataModule") {
     bind<Source>(tag = "acfun") with singleton { instance<AcfunSource>() }
     bind<Source>(tag = "discourse") with singleton { instance<DiscourseSource>() }
     bind<Source>(tag = "tieba") with singleton { instance<TiebaSource>() }
+    bind<ForumSearchRepository>() with singleton { instance<NmbSource>() }
+    bind<UserContentRepository>() with singleton { instance<NmbSource>() }
 
     // "allInstance" only work in jvm current ,wait upgrade        val sources: Set<Source> = DI.allInstances()
     bind<Set<Source>>(tag = "allSources") with singleton {
@@ -279,6 +289,7 @@ val dataModule = DI.Module("dataModule") {
     bindSingleton<CookieStore> { SettingsCookieStore(instance()) }
     // CDN管理器
     bindSingleton<CdnManager> { CdnManager(instance()) }
+    bind<ImageUrlResolver>() with singleton { instance<CdnManager>() }
     // 数据库
     bindSingleton { createDatabase(DriverFactory()) }
 

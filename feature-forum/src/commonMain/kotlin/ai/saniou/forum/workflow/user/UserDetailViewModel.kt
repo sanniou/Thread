@@ -1,6 +1,6 @@
 package ai.saniou.forum.workflow.user
 
-import ai.saniou.thread.data.source.nmb.NmbSource
+import ai.saniou.thread.domain.repository.UserContentRepository
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.channels.Channel
@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 
 class UserDetailViewModel(
     private val userHash: String,
-    private val nmbRepository: NmbSource
+    private val userContentRepository: UserContentRepository
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(
@@ -30,8 +30,8 @@ class UserDetailViewModel(
     }
 
     private fun loadData() {
-        val threads = nmbRepository.getUserTopicsPager(userHash)
-        val replies = nmbRepository.getUserCommentsPager(userHash)
+        val threads = userContentRepository.getUserTopics(userHash)
+        val replies = userContentRepository.getUserComments(userHash)
         _state.update {
             it.copy(
                 topics = threads,

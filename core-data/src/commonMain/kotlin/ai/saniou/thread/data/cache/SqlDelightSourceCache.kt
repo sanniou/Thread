@@ -1,5 +1,6 @@
 package ai.saniou.thread.data.cache
 
+import ai.saniou.corecommon.coroutines.ioDispatcher
 import ai.saniou.thread.data.mapper.toDomain
 import ai.saniou.thread.data.mapper.toEntity
 import ai.saniou.thread.data.mapper.toEntityNoLastKey
@@ -15,7 +16,6 @@ import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOneOrNull
 import app.cash.sqldelight.paging3.QueryPagingSource
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
@@ -34,7 +34,7 @@ class SqlDelightSourceCache(
     override fun observeTopic(sourceId: String, topicId: String): Flow<DomainTopic> {
         return topicQueries.getTopic(sourceId, topicId)
             .asFlow()
-            .mapToOneOrNull(Dispatchers.IO)
+            .mapToOneOrNull(ioDispatcher)
             .filterNotNull()
             .map { it.toDomain(commentQueries, db.imageQueries, topicTagQueries) }
     }
@@ -46,7 +46,7 @@ class SqlDelightSourceCache(
     ): PagingSource<Int, GetTopicsInChannelKeyset> {
         return QueryPagingSource(
             transacter = topicQueries,
-            context = Dispatchers.IO,
+            context = ioDispatcher,
             countQuery =
                 topicQueries.countTopicsByChannel(
                     sourceId = sourceId,
@@ -222,7 +222,7 @@ class SqlDelightSourceCache(
     override fun observeChannels(sourceId: String): Flow<List<Channel>> {
         return channelQueries.getChannelsBySource(sourceId)
             .asFlow()
-            .mapToList(Dispatchers.IO)
+            .mapToList(ioDispatcher)
             .map { sortChannels(it) }
     }
 

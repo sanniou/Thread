@@ -2,6 +2,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
+    alias(libs.plugins.androidMultiplatformLibrary)
 }
 
 
@@ -9,7 +10,20 @@ kotlin {
     sourceSets.all {
         languageSettings.optIn("kotlin.time.ExperimentalTime")
     }
-    jvm()
+    android {
+        namespace = "ai.saniou.thread.domain"
+        compileSdk = libs.versions.android.compileSdk.get().toInt()
+        minSdk = libs.versions.android.minSdk.get().toInt()
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_17)
+        }
+    }
+
+    jvm {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_17)
+        }
+    }
     listOf(
         iosArm64(),
         iosSimulatorArm64()
@@ -20,23 +34,14 @@ kotlin {
         }
     }
 
-    js {
-        browser()
-        binaries.executable()
-    }
-
     sourceSets {
         commonMain.dependencies {
             api(libs.kotlinx.datetime)
-            api(libs.kodein.di.compose)
-            implementation(libs.sqldelight.paging3)
-
-            implementation(libs.ktor.client.core)
-            implementation(libs.ktor.client.content.negotiation)
-            implementation(libs.ktor.serialization.kotlinx.json)
-            implementation(libs.ktor.client.logging)
-            implementation(libs.ktor.client.encoding)
-            implementation(libs.ktor.client.cio)
+            api(libs.paging.common)
+            implementation(libs.kodein.di)
+        }
+        commonTest.dependencies {
+            implementation(libs.kotlin.test)
         }
         jvmMain.dependencies {
             implementation(libs.kotlinx.coroutinesSwing)

@@ -1,10 +1,7 @@
 package ai.saniou.thread.data.storage
 
-import android.content.Context
-import ai.saniou.forum.ForumApplication
-
+import ai.saniou.thread.data.platform.AndroidPlatformContext
 
 actual fun getStorageDirectory(): String {
-    val context = NmbApplication.instance
-    return context.filesDir.absolutePath
+    return AndroidPlatformContext.requireContext().filesDir.absolutePath
 }

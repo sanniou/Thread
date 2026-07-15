@@ -1,23 +1,15 @@
 package ai.saniou.thread.domain.repository
 
-import io.ktor.http.content.PartData
+import ai.saniou.thread.domain.model.forum.PostDraft
 
 interface PostRepository {
     suspend fun post(
         fid: Int,
-        content: String,
-        name: String? = null,
-        title: String? = null,
-        water: Boolean = false,
-        image: PartData? = null
+        draft: PostDraft,
     ): String
 
     suspend fun reply(
         resto: Int,
-        content: String,
-        name: String? = null,
-        title: String? = null,
-        water: Boolean = false,
-        image: PartData? = null
+        draft: PostDraft,
     ): String
 }

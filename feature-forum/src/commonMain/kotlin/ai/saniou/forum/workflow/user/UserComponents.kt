@@ -2,7 +2,7 @@ package ai.saniou.forum.workflow.user
 
 import ai.saniou.corecommon.utils.toRelativeTimeString
 import ai.saniou.coreui.composition.LocalForumSourceId
-import ai.saniou.thread.data.source.tieba.TiebaMapper
+import ai.saniou.thread.domain.model.SourceIds
 import ai.saniou.thread.domain.model.forum.Account
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.clickable
@@ -24,7 +24,6 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -47,7 +46,6 @@ import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 import kotlin.time.ExperimentalTime
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun CookieListContent(
     cookies: List<Account>,
@@ -140,7 +138,7 @@ fun CookieItem(
 fun UserGuideCard(onOpenUri: () -> Unit, modifier: Modifier = Modifier) {
     val sourceId = LocalForumSourceId.current
 
-    if (sourceId != TiebaMapper.SOURCE_ID) {
+    if (sourceId != SourceIds.TIEBA) {
         Card(modifier = modifier.fillMaxWidth()) {
             ListItem(
                 modifier = Modifier.clickable(onClick = onOpenUri),

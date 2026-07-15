@@ -11,12 +11,14 @@ import ai.saniou.thread.data.source.nmb.remote.dto.*
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.db.table.forum.Image
 import ai.saniou.thread.domain.model.PagedResult
+import ai.saniou.thread.domain.model.SourceCapabilities
 import ai.saniou.thread.domain.model.forum.*
 import ai.saniou.thread.domain.model.user.LoginField
 import ai.saniou.thread.domain.model.user.LoginStrategy
 import ai.saniou.thread.domain.repository.SettingsRepository
+import ai.saniou.thread.domain.repository.ForumSearchRepository
 import ai.saniou.thread.domain.repository.Source
-import ai.saniou.thread.domain.repository.SourceCapabilities
+import ai.saniou.thread.domain.repository.UserContentRepository
 import ai.saniou.thread.domain.repository.observeValue
 import ai.saniou.thread.network.SaniouResult
 import androidx.paging.Pager
@@ -49,7 +51,7 @@ class NmbSource(
     private val db: Database,
     private val settingsRepository: SettingsRepository,
     private val cdnManager: CdnManager,
-) : Source {
+) : Source, ForumSearchRepository, UserContentRepository {
     override val id: String = NMBSourceId
     override val name: String = NMBSourceName
 
@@ -614,7 +616,7 @@ class NmbSource(
         ).executeAsOneOrNull()?.toDomain(db.imageQueries)
     }
 
-    fun searchTopicsPager(query: String): Flow<PagingData<Topic>> {
+    override fun searchTopics(query: String): Flow<PagingData<Topic>> {
         return Pager(
             config = PagingConfig(pageSize = 20),
             pagingSourceFactory = {
@@ -632,7 +634,7 @@ class NmbSource(
         }
     }
 
-    fun searchCommentsPager(query: String): Flow<PagingData<Comment>> {
+    override fun searchComments(query: String): Flow<PagingData<Comment>> {
         return Pager(
             config = PagingConfig(pageSize = 20),
             pagingSourceFactory = {
@@ -650,16 +652,16 @@ class NmbSource(
         }
     }
 
-    fun getUserTopicsPager(userHash: String): Flow<PagingData<Topic>> {
+    override fun getUserTopics(userId: String): Flow<PagingData<Topic>> {
         return Pager(
             config = PagingConfig(pageSize = 20),
             pagingSourceFactory = {
                 QueryPagingSource(
                     transacter = db.topicQueries,
                     context = Dispatchers.Default,
-                    countQuery = db.topicQueries.countTopicsByUserHash(userHash),
+                    countQuery = db.topicQueries.countTopicsByUserHash(userId),
                     queryProvider = { limit, offset ->
-                        db.topicQueries.getTopicsByUserHashOffset(userHash, limit, offset)
+                        db.topicQueries.getTopicsByUserHashOffset(userId, limit, offset)
                     }
                 )
             }
@@ -668,16 +670,16 @@ class NmbSource(
         }
     }
 
-    fun getUserCommentsPager(userHash: String): Flow<PagingData<Comment>> {
+    override fun getUserComments(userId: String): Flow<PagingData<Comment>> {
         return Pager(
             config = PagingConfig(pageSize = 20),
             pagingSourceFactory = {
                 QueryPagingSource(
                     transacter = db.commentQueries,
                     context = Dispatchers.Default,
-                    countQuery = db.commentQueries.countCommentsByUserHashNoTopic(userHash),
+                    countQuery = db.commentQueries.countCommentsByUserHashNoTopic(userId),
                     queryProvider = { limit, offset ->
-                        db.commentQueries.getCommentsByUserHashOffset(userHash, limit, offset)
+                        db.commentQueries.getCommentsByUserHashOffset(userId, limit, offset)
                     }
                 )
             }
