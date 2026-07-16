@@ -3,10 +3,12 @@ package ai.saniou.thread.data.repository
 import ai.saniou.corecommon.coroutines.ioDispatcher
 import ai.saniou.corecommon.utils.toTime
 import ai.saniou.thread.data.mapper.toDomain
+import ai.saniou.thread.data.mapper.toEntity
 import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
-import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.domain.model.forum.Comment
+import ai.saniou.thread.domain.model.forum.Image
+import ai.saniou.thread.domain.model.forum.ImageType
 import ai.saniou.thread.domain.repository.ReferenceRepository
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToOneOrNull
@@ -25,23 +27,39 @@ class ReferenceRepositoryImpl(
         db.commentQueries.getCommentById("nmb", id.toString())
             .asFlow()
             .mapToOneOrNull(ioDispatcher)
-            .mapNotNull { it?.toDomain(db.imageQueries) }
+            .mapNotNull { it?.toDomain(db.imageQueries, db.commentQueries) }
             .onStart {
                 if (db.commentQueries.getCommentById("nmb", id.toString())
                         .executeAsOneOrNull() == null
                 ) {
                     val html = api.refHtml(id)
-                    val reply = parseRefHtml(html, id)
-                    db.commentQueries.upsertComment(reply)
+                    val parsed = NmbReferenceParser.parse(html, id)
+                    db.transaction {
+                        db.commentQueries.upsertComment(parsed.comment)
+                        db.imageQueries.deleteImagesByParent("nmb", parsed.comment.id, ImageType.Comment)
+                        parsed.images.forEachIndexed { index, image ->
+                            db.imageQueries.upsertImage(
+                                image.toEntity("nmb", parsed.comment.id, ImageType.Comment, index.toLong())
+                            )
+                        }
+                    }
                 }
             }
             .flowOn(ioDispatcher)
 
+}
+
+internal data class ParsedNmbReference(
+    val comment: ai.saniou.thread.db.table.forum.Comment,
+    val images: List<Image>,
+)
+
+internal object NmbReferenceParser {
     @OptIn(ExperimentalTime::class)
-    private fun parseRefHtml(
+    fun parse(
         html: String,
         refId: Long,
-    ): ai.saniou.thread.db.table.forum.Comment {
+    ): ParsedNmbReference {
         val idRegex = """href="([^"]*)"[^>]*class="h-threads-info-id">No\.(\d+)""".toRegex()
         val titleRegex = """<span class="h-threads-info-title">(.*?)</span>""".toRegex()
         val nameRegex = """<span class="h-threads-info-email"[^>]*>(.*?)</span>""".toRegex()
@@ -70,11 +88,16 @@ class ReferenceRepositoryImpl(
         val now = timeRegex.find(html)?.groupValues?.get(1) ?: ""
         val content = contentRegex.find(html)?.groupValues?.get(1)?.trim() ?: ""
 
-        // TODO: Handle image parsing and saving to Image table
-        // For now, we only populate the fields available in the new Comment table
-        // img/ext columns are removed from Comment table
+        val images = imgRegex.findAll(html).map { match ->
+            val url = normalizeUrl(match.groupValues[1])
+            Image(
+                originalUrl = url,
+                thumbnailUrl = url,
+                extension = url.substringBefore('?').substringAfterLast('.', "").takeIf(String::isNotBlank),
+            )
+        }.distinctBy(Image::originalUrl).toList()
 
-        return ai.saniou.thread.db.table.forum.Comment(
+        val comment = ai.saniou.thread.db.table.forum.Comment(
             id = parsedId.toString(),
             sourceId = "nmb",
             topicId = threadId.toString(),
@@ -94,5 +117,12 @@ class ReferenceRepositoryImpl(
             authorLevel = null,
             isPo = false
         )
+        return ParsedNmbReference(comment, images)
+    }
+
+    private fun normalizeUrl(url: String): String = when {
+        url.startsWith("//") -> "https:$url"
+        url.startsWith('/') -> "https://www.nmbxd1.com$url"
+        else -> url
     }
 }

@@ -12,7 +12,7 @@ class DatabaseMigrationTest {
     fun migratesVersionOneReaderStateWithoutRecreatingDatabase() = runBlocking {
         val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
 
-        Database.Schema.synchronous().migrate(driver, oldVersion = 1L, newVersion = 2L)
+        Database.Schema.synchronous().migrate(driver, oldVersion = 1L, newVersion = 3L)
         val database = createDatabase(driver)
         database.articleQueries.upsertArticleUserState(
             articleId = "migrated",
@@ -25,6 +25,8 @@ class DatabaseMigrationTest {
         assertEquals(1L, state.isRead)
         assertEquals(1L, state.isBookmarked)
         assertEquals(42L, state.updatedAt)
+        database.channelQueries.upsertChannelVisit("nmb", "4", 99L)
+        assertEquals(99L, database.channelQueries.getChannelVisit("nmb", "4").executeAsOne().visitedAt)
         driver.close()
     }
 }

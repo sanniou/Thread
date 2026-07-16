@@ -1,6 +1,7 @@
 package ai.saniou.thread.data.source.tieba
 
 import ai.saniou.thread.data.source.tieba.model.UserPostBean
+import ai.saniou.thread.data.source.tieba.model.ThreadContentBean
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -41,5 +42,34 @@ class TiebaCapabilityConnectorsTest {
         assertEquals("100", comment.topicId)
         assertEquals("正文", comment.content)
         assertEquals(2, comment.agreeCount)
+    }
+
+    @Test
+    fun mapsInlineSubPostsToCommonPreview() {
+        val child = ThreadContentBean.PostListItemBean(
+            id = "child",
+            floor = "2",
+            time = "1700000001",
+            author = ThreadContentBean.UserInfoBean(id = "8", nameShow = "楼中楼"),
+            content = listOf(ThreadContentBean.ContentBean(type = "0", text = "子回复")),
+        )
+        val parent = ThreadContentBean.PostListItemBean(
+            id = "parent",
+            floor = "2",
+            time = "1700000000",
+            author = ThreadContentBean.UserInfoBean(id = "7", nameShow = "层主"),
+            content = listOf(ThreadContentBean.ContentBean(type = "0", text = "主回复")),
+            subPostNumber = "1",
+            subPostList = ThreadContentBean.SubPostListBean(subPostList = listOf(child)),
+        )
+
+        val mapped = TiebaMapper.mapThreadContentToComments(
+            ThreadContentBean(postList = listOf(parent)),
+            topicId = "topic",
+        ).single()
+
+        assertEquals(1, mapped.subCommentCount)
+        assertEquals("parent", mapped.subCommentsPreview.single().replyToId)
+        assertEquals("子回复", mapped.subCommentsPreview.single().content)
     }
 }

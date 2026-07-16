@@ -607,7 +607,7 @@ class NmbSource(
         return db.commentQueries.getLastFiveComments(id, threadId.toString())
             .executeAsList()
             .maxByOrNull { it.id.toLong() }
-            ?.toDomain(db.imageQueries)
+            ?.toDomain(db.imageQueries, db.commentQueries)
     }
 
     suspend fun getLocalReplyByDate(
@@ -624,7 +624,7 @@ class NmbSource(
             topicId = threadId.toString(),
             start = startOfDay,
             end = endOfDay
-        ).executeAsOneOrNull()?.toDomain(db.imageQueries)
+        ).executeAsOneOrNull()?.toDomain(db.imageQueries, db.commentQueries)
     }
 
     override fun searchTopics(query: String): Flow<PagingData<Topic>> {
@@ -663,7 +663,7 @@ class NmbSource(
                 )
             }
         ).flow.map { pagingData ->
-            pagingData.map { it.toDomain(db.imageQueries) }
+            pagingData.map { it.toDomain(db.imageQueries, db.commentQueries) }
         }
     }
 
@@ -703,7 +703,7 @@ class NmbSource(
                 )
             }
         ).flow.map { pagingData ->
-            pagingData.map { it.toDomain(db.imageQueries) }
+            pagingData.map { it.toDomain(db.imageQueries, db.commentQueries) }
         }
     }
 }

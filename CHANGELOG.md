@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.10.0 - 2026-07-16
+
+Forum depth and offline-readiness release.
+
+- Tieba and Discourse image attachments now use real source upload protocols before publishing.
+- Recent channel visits, bookmark tag intersections and card-level tag filtering are common flows.
+- Reference images and sub-comment previews persist across Desktop restarts.
+- Cached paging content remains usable during refresh and source failures, with an inline retry path.
+- Desktop runtime images carry application metadata and are launch-tested with a headless startup probe.
+- Database schema v3 adds source-local recent channel visits without discarding existing reader state.
+
 ## 0.9.0 - 2026-07-16
 
 Desktop-first product baseline before the first public release.

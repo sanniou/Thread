@@ -38,6 +38,16 @@ jobs:
           :composeApp:jvmTest
           :composeApp:compileKotlinJvm
 
+      - name: Build and launch-test Desktop runtime image
+        run: |
+          ./gradlew --no-daemon :composeApp:createDistributable
+          binary="$(find composeApp/build/compose/binaries/main/app -type f -path '*/bin/ai.saniou.thread' -print -quit)"
+          test -n "$binary"
+          binary="$(realpath "$binary")"
+          probe_dir="$(mktemp -d)"
+          trap 'rm -rf "$probe_dir"' EXIT
+          (cd "$probe_dir" && "$binary" --smoke-check)
+
       - name: Build Debian package
         run: ./gradlew --no-daemon :composeApp:packageDeb
 
@@ -48,3 +58,11 @@ jobs:
           path: composeApp/build/compose/binaries/main/deb/*.deb
           if-no-files-found: error
           retention-days: 14
+
+      - name: Upload launch-tested runtime image
+        uses: actions/upload-artifact@v7
+        with:
+          name: thread-desktop-runtime
+          path: composeApp/build/compose/binaries/main/app/**
+          if-no-files-found: error
+          retention-days: 7

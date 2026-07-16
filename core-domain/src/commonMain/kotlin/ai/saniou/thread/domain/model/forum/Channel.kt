@@ -51,4 +51,6 @@ data class Channel(
     val slug: String? = null,
     val canCreateTopic: Boolean? = null,
     val children: List<Channel> = emptyList(),
+    /** Stable runtime source key. [sourceName] remains a user-facing label. */
+    val sourceId: String = sourceName,
 )

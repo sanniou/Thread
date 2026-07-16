@@ -56,7 +56,7 @@ fun EntityTopic.toDomain(
         isLocal = false,
         lastViewedCommentId = lastViewedCommentId,
         comments = commentQueries?.getLastFiveComments(sourceId, id)?.executeAsList()?.map {
-            it.toDomain()
+            it.toDomain(imageQueries, commentQueries)
         } ?: emptyList(),
         tags = tags,
         lastReplyAt = lastReplyAt,
@@ -105,7 +105,7 @@ fun GetTopicsInChannelKeyset.toDomain(
         isLocal = false,
         lastViewedCommentId = lastViewedCommentId,
         comments = commentQueries?.getLastFiveComments(sourceId, id)?.executeAsList()?.map {
-            it.toDomain()
+            it.toDomain(imageQueries, commentQueries)
         } ?: emptyList(),
         tags = tags,
         lastReplyAt = lastReplyAt,

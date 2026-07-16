@@ -209,7 +209,7 @@ class TopicRepositoryImpl(
                     )
                 }
             }
-        ).flow.map { it.map { it.toDomain(db.imageQueries) } }
+        ).flow.map { it.map { it.toDomain(db.imageQueries, db.commentQueries) } }
     }
 
     override suspend fun getSubComments(
@@ -251,7 +251,7 @@ class TopicRepositoryImpl(
             .asFlow()
             .mapToList(ioDispatcher)
             .map { list ->
-                list.map { it.toDomain(db.imageQueries) }
+                list.map { it.toDomain(db.imageQueries, db.commentQueries) }
             }
     }
 

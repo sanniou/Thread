@@ -5,6 +5,7 @@ import ai.saniou.coreui.widgets.SaniouTopAppBar
 import ai.saniou.forum.workflow.topicdetail.TopicDetailPage
 import ai.saniou.reader.workflow.articledetail.ArticleDetailPage
 import ai.saniou.thread.domain.model.bookmark.Bookmark
+import ai.saniou.thread.domain.model.Tag
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -165,7 +166,16 @@ object BookmarkPage : Screen {
                                             )
                                         )
                                     }
-                                }
+                                },
+                                selectedTagIds = state.selectedTags.mapTo(mutableSetOf()) { it.id },
+                                onTagClick = { tag ->
+                                    val event = if (tag in state.selectedTags) {
+                                        BookmarkContract.Event.OnTagDeselected(tag)
+                                    } else {
+                                        BookmarkContract.Event.OnTagSelected(tag)
+                                    }
+                                    viewModel.onEvent(event)
+                                },
                             )
                         }
                     }
@@ -236,6 +246,8 @@ fun BookmarkItem(
     isSelected: Boolean,
     onBookmarkClick: (Bookmark) -> Unit,
     onLongClick: () -> Unit,
+    selectedTagIds: Set<String>,
+    onTagClick: (Tag) -> Unit,
 ) {
     Card(
         modifier = Modifier
@@ -280,12 +292,14 @@ fun BookmarkItem(
 
                     is Bookmark.Link -> {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            NetworkImage(
-                                bookmark.favicon!!,
-                                contentDescription = "Favicon",
-                                modifier = Modifier.size(24.dp),
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
+                            bookmark.favicon?.takeIf(String::isNotBlank)?.let { favicon ->
+                                NetworkImage(
+                                    favicon,
+                                    contentDescription = "Favicon",
+                                    modifier = Modifier.size(24.dp),
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                            }
                             Text(
                                 text = bookmark.title ?: bookmark.url,
                                 style = MaterialTheme.typography.titleMedium,
@@ -328,8 +342,9 @@ fun BookmarkItem(
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         bookmark.tags.forEach { tag ->
-                            SuggestionChip(
-                                onClick = { /* TODO: Handle tag click */ },
+                            FilterChip(
+                                selected = tag.id in selectedTagIds,
+                                onClick = { onTagClick(tag) },
                                 label = { Text(tag.name) }
                             )
                         }

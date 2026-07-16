@@ -2,8 +2,17 @@ package ai.saniou.coreui.state
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.dp
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.paging.LoadState.Error
 import androidx.paging.LoadState.Loading
 import androidx.paging.compose.LazyPagingItems
@@ -34,6 +43,35 @@ fun <T : Any> PagingStateLayout(
         val refreshState = items.loadState.refresh
 
         when {
+            // Cached content is the primary offline surface. A refresh must never replace usable
+            // rows with a full-screen spinner or error page.
+            items.itemCount > 0 -> {
+                content(items)
+                if (refreshState is Error) {
+                    val appError = refreshState.error.toAppError(onRetry)
+                    Surface(
+                        modifier = Modifier.align(Alignment.TopCenter).padding(12.dp),
+                        shape = MaterialTheme.shapes.medium,
+                        color = MaterialTheme.colorScheme.errorContainer,
+                        tonalElevation = 4.dp,
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(start = 16.dp, end = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            Text(
+                                text = "正在显示缓存：${appError.message}",
+                                modifier = Modifier.weight(1f),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onErrorContainer,
+                            )
+                            TextButton(onClick = onRetry) { Text("重试") }
+                        }
+                    }
+                }
+            }
+
             refreshState is Loading -> {
                 if (loading != null) {
                     loading()

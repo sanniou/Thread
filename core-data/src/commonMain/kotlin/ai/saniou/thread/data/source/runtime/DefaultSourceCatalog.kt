@@ -177,6 +177,7 @@ class DefaultSourceCatalog(
 
     private suspend fun clearSourceNamespace(sourceId: String) = withContext(ioDispatcher) {
         database.transaction {
+            database.channelQueries.deleteChannelVisitsBySource(sourceId)
             database.favoriteChannelQueries.deleteFavoriteChannelsBySource(sourceId)
             database.historyQueries.deleteHistoryBySource(sourceId)
             database.trendQueries.deleteTrendsBySource(sourceId)

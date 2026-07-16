@@ -89,6 +89,12 @@ DELETE FROM Comment WHERE sourceId = :sourceId;
 getCommentById:
 SELECT * FROM Comment WHERE sourceId = :sourceId AND id = :id;
 
+getSubCommentPreviews:
+SELECT * FROM Comment
+WHERE sourceId = :sourceId AND replyToId = :parentId
+ORDER BY createdAt ASC
+LIMIT :limit;
+
 -- 获取指定 topicId 的最后五条回复
 getLastFiveComments:
 SELECT * FROM Comment WHERE sourceId = :sourceId AND topicId = :topicId AND (floor != 1 || floor ISNULL ) ORDER BY createdAt DESC LIMIT 5;

@@ -1,6 +1,7 @@
 package ai.saniou.thread.data.mapper
 
 import ai.saniou.thread.db.table.forum.ImageQueries
+import ai.saniou.thread.db.table.forum.CommentQueries
 import ai.saniou.thread.domain.model.forum.Author
 import ai.saniou.thread.domain.model.forum.Comment
 import ai.saniou.thread.domain.model.forum.ImageType
@@ -29,7 +30,11 @@ fun Comment.toEntity(sourceId: String, page: Long, floor: Long): EntityComment {
     )
 }
 
-fun EntityComment.toDomain(imageQueries: ImageQueries? = null): Comment {
+fun EntityComment.toDomain(
+    imageQueries: ImageQueries? = null,
+    commentQueries: CommentQueries? = null,
+    includeSubComments: Boolean = true,
+): Comment {
     val images = imageQueries?.getImagesByParent(
         sourceId = sourceId,
         parentId = id,
@@ -43,7 +48,7 @@ fun EntityComment.toDomain(imageQueries: ImageQueries? = null): Comment {
         author = Author(
             id = userHash,
             name = authorName,
-            sourceName = "nmb" // fixme
+            sourceName = sourceId,
         ),
         createdAt = Instant.fromEpochMilliseconds(createdAt),
         title = title,
@@ -58,6 +63,13 @@ fun EntityComment.toDomain(imageQueries: ImageQueries? = null): Comment {
         subCommentCount = subCommentCount.toInt(),
         authorLevel = authorLevel?.toInt(),
         isPo = isPo,
-        subCommentsPreview = emptyList() // TODO: 从 DB 或 API 映射楼中楼预览
+        subCommentsPreview = if (includeSubComments) {
+            commentQueries?.getSubCommentPreviews(sourceId, id, 3)
+                ?.executeAsList()
+                ?.map { it.toDomain(imageQueries, commentQueries = null, includeSubComments = false) }
+                .orEmpty()
+        } else {
+            emptyList()
+        }
     )
 }

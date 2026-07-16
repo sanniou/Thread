@@ -34,6 +34,7 @@ class AppCompositionSmokeTest {
         assertNotNull(catalog.login("nmb"))
 
         val tieba = catalog.source("tieba")!!
+        assertTrue(tieba.capabilities.supportsAttachments)
         assertTrue(tieba.capabilities.hasSubComments)
         assertTrue(tieba.capabilities.hasUpvote)
         assertNull(catalog.search("tieba"))
@@ -44,6 +45,7 @@ class AppCompositionSmokeTest {
         assertNotNull(catalog.reactions("tieba"))
 
         val discourse = catalog.source("discourse")!!
+        assertTrue(discourse.capabilities.supportsAttachments)
         assertTrue(discourse.capabilities.supportsTopicCreation)
         assertNotNull(catalog.search("discourse"))
         assertNotNull(catalog.userContent("discourse"))

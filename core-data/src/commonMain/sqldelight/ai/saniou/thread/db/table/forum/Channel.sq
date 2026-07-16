@@ -40,9 +40,17 @@ CREATE TABLE IF NOT EXISTS ChannelCategory (
     PRIMARY KEY (sourceId, id)
 );
 
+CREATE TABLE IF NOT EXISTS ChannelVisit (
+    sourceId TEXT NOT NULL,
+    channelId TEXT NOT NULL,
+    visitedAt INTEGER NOT NULL,
+    PRIMARY KEY (sourceId, channelId)
+);
+
 -- 索引迁移
 CREATE INDEX IF NOT EXISTS idx_channel_id ON Channel(sourceId, id);
 CREATE INDEX IF NOT EXISTS idx_channel_category_id ON ChannelCategory(sourceId, id);
+CREATE INDEX IF NOT EXISTS idx_channel_visit_recent ON ChannelVisit(sourceId, visitedAt DESC);
 
 -- 插入 Channel 数据
 insertChannel:
@@ -109,6 +117,17 @@ DELETE FROM Channel WHERE sourceId = :sourceId;
 deleteChannelCategoriesBySource:
 DELETE FROM ChannelCategory WHERE sourceId = :sourceId;
 
+deleteChannelVisitsBySource:
+DELETE FROM ChannelVisit WHERE sourceId = :sourceId;
+
+upsertChannelVisit:
+INSERT INTO ChannelVisit(sourceId, channelId, visitedAt)
+VALUES (:sourceId, :channelId, :visitedAt)
+ON CONFLICT(sourceId, channelId) DO UPDATE SET visitedAt = excluded.visitedAt;
+
+getChannelVisit:
+SELECT * FROM ChannelVisit WHERE sourceId = :sourceId AND channelId = :channelId;
+
 -- 查询所有 Channel 数据
 getAllChannels:
 SELECT * FROM Channel;
@@ -116,6 +135,15 @@ SELECT * FROM Channel;
 -- 查询指定源的所有 Channel 数据
 getChannelsBySource:
 SELECT * FROM Channel WHERE sourceId = :sourceId;
+
+getRecentChannels:
+SELECT Channel.*
+FROM Channel
+INNER JOIN ChannelVisit
+    ON Channel.sourceId = ChannelVisit.sourceId AND Channel.id = ChannelVisit.channelId
+WHERE Channel.sourceId = :sourceId
+ORDER BY ChannelVisit.visitedAt DESC
+LIMIT :limit;
 
 -- 查询所有 ChannelCategory 数据
 getAllChannelCategories:

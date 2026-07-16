@@ -16,6 +16,7 @@ fun EntityChannel.toDomain(channelQueries: ChannelQueries): Channel {
         groupName = channelQueries.getChannelCategory(sourceId, fGroup).executeAsOneOrNull()?.name
             ?: fGroup,
         sourceName = sourceId,
+        sourceId = sourceId,
         sort = sort,
         tag = null, // Not in DB
         topicCount = topicCount,
@@ -41,7 +42,7 @@ fun EntityChannel.toDomain(channelQueries: ChannelQueries): Channel {
 fun Channel.toEntity(): EntityChannel {
     return EntityChannel(
         id = id,
-        sourceId = sourceName,
+        sourceId = sourceId,
         fGroup = groupId,
         sort = sort,
         name = name,
@@ -70,8 +71,8 @@ fun Channel.toEntity(): EntityChannel {
     )
 }
 
-fun DiscourseCategory.toDomainTree(sourceName: String, groupLabel: String = "Discourse"): Channel {
-    val children = subcategoryList?.map { it.toDomainTree(sourceName, groupLabel) } ?: emptyList()
+fun DiscourseCategory.toDomainTree(sourceId: String, groupLabel: String = "Discourse"): Channel {
+    val children = subcategoryList?.map { it.toDomainTree(sourceId, groupLabel) } ?: emptyList()
 
     return Channel(
         id = id.toString(),
@@ -81,7 +82,8 @@ fun DiscourseCategory.toDomainTree(sourceName: String, groupLabel: String = "Dis
         descriptionText = descriptionText,
         groupId = "discourse_group", // Unified group ID for Discourse
         groupName = groupLabel,
-        sourceName = sourceName,
+        sourceName = groupLabel,
+        sourceId = sourceId,
         sort = position?.toLong(),
         tag = null,
         topicCount = topicCount.toLong(),

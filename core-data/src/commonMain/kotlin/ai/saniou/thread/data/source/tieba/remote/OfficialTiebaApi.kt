@@ -26,6 +26,7 @@ import de.jensklingenberg.ktorfit.http.FormUrlEncoded
 import de.jensklingenberg.ktorfit.http.Header
 import de.jensklingenberg.ktorfit.http.Headers
 import de.jensklingenberg.ktorfit.http.POST
+import io.ktor.client.request.forms.MultiPartFormDataContent
 import kotlin.time.Clock
 
 /**
@@ -530,7 +531,7 @@ interface OfficialTiebaApi {
     )
     @POST("c/s/uploadPicture")
     suspend fun uploadPicture(
-        @Body body: Any, // Requires multipart
+        @Body body: MultiPartFormDataContent,
         @Header("Cookie") cookie: String,
     ): UploadPictureResultBean
 

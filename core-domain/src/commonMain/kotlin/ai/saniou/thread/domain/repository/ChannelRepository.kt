@@ -16,6 +16,9 @@ interface ChannelRepository {
      */
     fun getChannels(sourceId: String): Flow<List<Channel>>
 
+    /** Most recently opened channels for fast, source-local navigation. */
+    fun getRecentChannels(sourceId: String, limit: Long = 5): Flow<List<Channel>>
+
     /**
      * 刷新板块列表
      * @param sourceId 信息源ID

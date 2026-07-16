@@ -128,20 +128,7 @@ class SqlDelightSourceCache(
 
                 // Save Preview Comments
                 topic.comments.forEach { comment ->
-                    commentQueries.upsertComment(
-                        comment.toEntity(sourceId, -1, -1)
-                    )
-                    // Save Comment Images
-                    comment.images.forEachIndexed { index, image ->
-                        db.imageQueries.upsertImage(
-                            image.toEntity(
-                                sourceId = sourceId,
-                                parentId = comment.id,
-                                parentType = ImageType.Comment,
-                                sortOrder = index.toLong()
-                            )
-                        )
-                    }
+                    saveCommentContent(comment, sourceId, page = -1, floor = -1)
                 }
             }
         }
@@ -160,9 +147,7 @@ class SqlDelightSourceCache(
         commentQueries.transaction {
             comments.forEachIndexed { index, comment ->
                 // 1. Upsert Comment Content
-                commentQueries.upsertComment(
-                    comment.toEntity(sourceId, page, startOrder + index + 1)
-                )
+                saveCommentContent(comment, sourceId, page, startOrder + index + 1)
                 // 2. Upsert Comment Listing
                 commentQueries.upsertCommentListing(
                     CommentListing(
@@ -175,18 +160,34 @@ class SqlDelightSourceCache(
                         receiveOrder = startOrder + index + 1
                     )
                 )
-                // Save Comment Images
-                comment.images.forEachIndexed { imgIndex, image ->
-                    db.imageQueries.upsertImage(
-                        image.toEntity(
-                            sourceId = sourceId,
-                            parentId = comment.id,
-                            parentType = ImageType.Comment,
-                            sortOrder = imgIndex.toLong()
-                        )
-                    )
-                }
             }
+        }
+    }
+
+    private suspend fun saveCommentContent(
+        comment: DomainComment,
+        sourceId: String,
+        page: Long,
+        floor: Long,
+    ) {
+        commentQueries.upsertComment(comment.toEntity(sourceId, page, floor))
+        db.imageQueries.deleteImagesByParent(sourceId, comment.id, ImageType.Comment)
+        comment.images.forEachIndexed { index, image ->
+            db.imageQueries.upsertImage(
+                image.toEntity(sourceId, comment.id, ImageType.Comment, index.toLong())
+            )
+        }
+        comment.subCommentsPreview.forEachIndexed { index, subComment ->
+            saveCommentContent(
+                comment = if (subComment.replyToId == null) {
+                    subComment.copy(replyToId = comment.id)
+                } else {
+                    subComment
+                },
+                sourceId = sourceId,
+                page = -1,
+                floor = subComment.floor.takeIf { it >= 0 } ?: index.toLong(),
+            )
         }
     }
 

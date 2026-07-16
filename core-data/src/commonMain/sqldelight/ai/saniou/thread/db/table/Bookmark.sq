@@ -66,38 +66,56 @@ WHERE content LIKE '%' || :query || '%' OR title LIKE '%' || :query || '%';
 searchByTags:
 SELECT B.*
 FROM Bookmark B
-LEFT JOIN BookmarkTag BT ON B.id = BT.bookmarkId
-LEFT JOIN Tag T ON BT.tagId = T.id
-WHERE T.name IN :tags
-GROUP BY B.id
+WHERE B.id IN (
+    SELECT BT.bookmarkId
+    FROM BookmarkTag BT
+    JOIN Tag T ON BT.tagId = T.id
+    WHERE T.name IN :tags
+    GROUP BY BT.bookmarkId
+    HAVING count(DISTINCT T.name) = :tagCount
+)
 ORDER BY B.createdAt DESC
 LIMIT :limit OFFSET :offset;
 
 searchByTagsCount:
-SELECT count(DISTINCT B.id)
+SELECT count(*)
 FROM Bookmark B
-LEFT JOIN BookmarkTag BT ON B.id = BT.bookmarkId
-LEFT JOIN Tag T ON BT.tagId = T.id
-WHERE T.name IN :tags;
+WHERE B.id IN (
+    SELECT BT.bookmarkId
+    FROM BookmarkTag BT
+    JOIN Tag T ON BT.tagId = T.id
+    WHERE T.name IN :tags
+    GROUP BY BT.bookmarkId
+    HAVING count(DISTINCT T.name) = :tagCount
+);
 
 searchByQueryAndTags:
 SELECT B.*
 FROM Bookmark B
-LEFT JOIN BookmarkTag BT ON B.id = BT.bookmarkId
-LEFT JOIN Tag T ON BT.tagId = T.id
 WHERE (B.content LIKE '%' || :query || '%' OR B.title LIKE '%' || :query || '%')
-  AND T.name IN :tags
-GROUP BY B.id
+  AND B.id IN (
+      SELECT BT.bookmarkId
+      FROM BookmarkTag BT
+      JOIN Tag T ON BT.tagId = T.id
+      WHERE T.name IN :tags
+      GROUP BY BT.bookmarkId
+      HAVING count(DISTINCT T.name) = :tagCount
+  )
 ORDER BY B.createdAt DESC
 LIMIT :limit OFFSET :offset;
 
 searchByQueryAndTagsCount:
-SELECT count(DISTINCT B.id)
+SELECT count(*)
 FROM Bookmark B
-LEFT JOIN BookmarkTag BT ON B.id = BT.bookmarkId
-LEFT JOIN Tag T ON BT.tagId = T.id
 WHERE (B.content LIKE '%' || :query || '%' OR B.title LIKE '%' || :query || '%')
-  AND T.name IN :tags;
+  AND B.id IN (
+      SELECT BT.bookmarkId
+      FROM BookmarkTag BT
+      JOIN Tag T ON BT.tagId = T.id
+      WHERE T.name IN :tags
+      GROUP BY BT.bookmarkId
+      HAVING count(DISTINCT T.name) = :tagCount
+  );
 
 insert:
 INSERT OR REPLACE INTO Bookmark(

@@ -1,0 +1,8 @@
+CREATE TABLE ChannelVisit (
+    sourceId TEXT NOT NULL,
+    channelId TEXT NOT NULL,
+    visitedAt INTEGER NOT NULL,
+    PRIMARY KEY (sourceId, channelId)
+);
+
+CREATE INDEX idx_channel_visit_recent ON ChannelVisit(sourceId, visitedAt DESC);

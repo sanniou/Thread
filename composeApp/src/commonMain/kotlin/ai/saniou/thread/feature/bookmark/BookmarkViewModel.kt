@@ -37,33 +37,6 @@ class BookmarkViewModel(
     private val _effect = Channel<Effect>()
     val effect = _effect.receiveAsFlow()
 
-    init {
-        screenModelScope.launch {
-            _state
-                // Watch for changes in searchQuery or selectedTags
-                // We use a simplified flow here to trigger reload
-                .let { flow ->
-                    // Combine isn't strictly needed if we just trigger off state updates inside the flatMap
-                    // But to be safe and clean:
-                    combine(
-                        flow.map { it.searchQuery }.distinctUntilChanged(),
-                        flow.map { it.selectedTags }.distinctUntilChanged()
-                    ) { query, tags -> query to tags }
-                }
-                .debounce(300)
-                .flatMapLatest { (query, tags) ->
-                    getBookmarksUseCase(query, tags.map { it.name }).cachedIn(screenModelScope)
-                }.collect { pagingData ->
-                     _state.update { it.copy(bookmarks = kotlinx.coroutines.flow.flowOf(pagingData)) }
-                }
-        }
-
-        // Correct way: The paging flow itself should be collected in the UI.
-        // The VM should expose a Flow<PagingData>.
-        // Let's refactor to standard Paging pattern.
-    }
-
-    // Standard Paging Pattern Implementation
     val bookmarksFlow = combine(
         _state.map { it.searchQuery }.distinctUntilChanged(),
         _state.map { it.selectedTags }.distinctUntilChanged()
@@ -86,7 +59,9 @@ class BookmarkViewModel(
     fun onEvent(event: Event) {
         when (event) {
             is Event.OnSearchQueryChanged -> _state.update { it.copy(searchQuery = event.query) }
-            is Event.OnTagSelected -> _state.update { it.copy(selectedTags = it.selectedTags + event.tag) }
+            is Event.OnTagSelected -> _state.update {
+                if (event.tag in it.selectedTags) it else it.copy(selectedTags = it.selectedTags + event.tag)
+            }
             is Event.OnTagDeselected -> _state.update { it.copy(selectedTags = it.selectedTags - event.tag) }
             is Event.DeleteBookmark -> deleteBookmark(event.bookmark)
             Event.ToggleSelectionMode -> _state.update {

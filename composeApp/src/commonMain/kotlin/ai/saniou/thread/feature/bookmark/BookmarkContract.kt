@@ -2,13 +2,9 @@ package ai.saniou.thread.feature.bookmark
 
 import ai.saniou.thread.domain.model.bookmark.Bookmark
 import ai.saniou.thread.domain.model.Tag
-import androidx.paging.PagingData
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emptyFlow
 
 interface BookmarkContract {
     data class State(
-        val bookmarks: Flow<PagingData<Bookmark>> = emptyFlow(),
         val searchQuery: String = "",
         val selectedTags: List<Tag> = emptyList(),
         val allTags: List<Tag> = emptyList(),

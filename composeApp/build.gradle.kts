@@ -103,6 +103,14 @@ compose.desktop {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "ai.saniou.thread"
             packageVersion = providers.gradleProperty("thread.version").get()
+            description = "Desktop-first multi-source forum and feed reader"
+            vendor = "Saniou"
+            copyright = "Copyright © 2026 Saniou"
+            linux {
+                iconFile.set(project.file("src/androidMain/res/mipmap-xxxhdpi/ic_launcher.png"))
+                shortcut = true
+                menuGroup = "Network"
+            }
         }
 
         buildTypes.release.proguard {

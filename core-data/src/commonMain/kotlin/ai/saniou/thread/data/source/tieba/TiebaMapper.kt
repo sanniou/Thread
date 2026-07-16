@@ -38,6 +38,7 @@ object TiebaMapper {
                 groupId = "tieba_fav",
                 groupName = "关注的吧",
                 sourceName = SOURCE_NAME,
+                sourceId = SOURCE_ID,
                 sort = 0,
                 topicCount = null,
                 postCount = null,
@@ -60,6 +61,7 @@ object TiebaMapper {
                 groupId = "tieba_fav",
                 groupName = "关注的吧",
                 sourceName = SOURCE_NAME,
+                sourceId = SOURCE_ID,
                 sort = 0,
                 topicCount = null,
                 postCount = null,
@@ -80,6 +82,7 @@ object TiebaMapper {
             groupId = entity.fGroup,
             groupName = "", // TODO: Join with ChannelCategory if needed
             sourceName = SOURCE_NAME,
+            sourceId = SOURCE_ID,
             sort = entity.sort,
             topicCount = entity.topicCount,
             postCount = entity.postCount,
@@ -250,54 +253,59 @@ object TiebaMapper {
     }
 
     fun mapThreadContentToComments(response: ThreadContentBean, topicId: String): List<Comment> {
-        // Filter out the first post (floor 1) as it is the topic content, unless we are paging and this page doesn't contain floor 1
-        // But typically floor 1 is handled in Topic.
-        // Let's include all posts for now, maybe filtered by caller or UI.
-
-        return response.postList?.map { post: ThreadContentBean.PostListItemBean ->
-            val author = Author(
-                id = post.authorId ?: post.author?.id ?: "0",
-                name = post.author?.nameShow ?: post.author?.name ?: "Unknown",
-                avatar = post.author?.portrait?.let { "https://tb.himg.baidu.com/sys/portrait/item/$it" },
-                sourceName = SOURCE_NAME
+        return response.postList.orEmpty().map { post ->
+            val parentId = post.id.orEmpty()
+            post.toComment(topicId, replyToId = null).copy(
+                subCommentCount = post.subPostNumber?.toIntOrNull() ?: 0,
+                subCommentsPreview = post.subPostList?.subPostList.orEmpty().map { subPost ->
+                    subPost.toComment(topicId, replyToId = parentId)
+                },
             )
+        }
+    }
 
-            val content =
-                post.content?.joinToString("") { contentBean: ThreadContentBean.ContentBean ->
-                    when (contentBean.type) {
-                        "0" -> contentBean.text ?: ""
-                        "1" -> "<a href=\"${contentBean.link}\">${contentBean.text}</a>"
-                        "2" -> if (contentBean.text == "#") "" else contentBean.text ?: ""
-                        "3" -> "<img src=\"${contentBean.bigCdnSrc ?: contentBean.cdnSrc ?: contentBean.src}\" />"
-                        else -> contentBean.text ?: ""
-                    }
-                } ?: ""
-
-            val images = post.content?.filter { it.type == "3" }
-                ?.map { contentBean: ThreadContentBean.ContentBean ->
-                    Image(
-                        originalUrl = contentBean.bigCdnSrc ?: contentBean.cdnSrc ?: contentBean.src
-                        ?: "",
-                        thumbnailUrl = contentBean.cdnSrc ?: contentBean.src ?: "",
-                        width = contentBean.width?.toIntOrNull(),
-                        height = contentBean.height?.toIntOrNull()
-                    )
-                } ?: emptyList()
-
-            Comment(
-                id = post.id ?: "",
-                topicId = topicId,
-                author = author,
-                createdAt = post.time?.toLongOrNull()?.let { Instant.fromEpochSeconds(it) }
-                    ?: Instant.fromEpochSeconds(0),
-                title = post.title,
-                content = content,
-                images = images,
-                isAdmin = post.author?.isBawu == "1",
-                floor = post.floor!!.toLong(),
-                replyToId = null // Tieba main floor replies don't have direct parent usually, unless sub-post
-            )
-        } ?: emptyList()
+    private fun ThreadContentBean.PostListItemBean.toComment(
+        topicId: String,
+        replyToId: String?,
+    ): Comment {
+        val contentItems = content.orEmpty()
+        return Comment(
+            id = id.orEmpty(),
+            topicId = topicId,
+            author = Author(
+                id = authorId ?: author?.id ?: "0",
+                name = author?.nameShow ?: author?.name ?: "Unknown",
+                avatar = author?.portrait?.let { "https://tb.himg.baidu.com/sys/portrait/item/$it" },
+                sourceName = SOURCE_NAME,
+            ),
+            createdAt = time?.toLongOrNull()?.let(Instant::fromEpochSeconds)
+                ?: Instant.fromEpochSeconds(0),
+            title = title,
+            content = contentItems.joinToString("") { item ->
+                when (item.type) {
+                    "0" -> item.text.orEmpty()
+                    "1" -> "<a href=\"${item.link}\">${item.text}</a>"
+                    "2" -> if (item.text == "#") "" else item.text.orEmpty()
+                    "3" -> "<img src=\"${item.bigCdnSrc ?: item.cdnSrc ?: item.src}\" />"
+                    else -> item.text.orEmpty()
+                }
+            },
+            images = contentItems.filter { it.type == "3" }.map { item ->
+                Image(
+                    originalUrl = item.bigCdnSrc ?: item.cdnSrc ?: item.src.orEmpty(),
+                    thumbnailUrl = item.cdnSrc ?: item.src.orEmpty(),
+                    width = item.width?.toIntOrNull(),
+                    height = item.height?.toIntOrNull(),
+                )
+            },
+            isAdmin = author?.isBawu == "1",
+            floor = floor?.toLongOrNull() ?: 0,
+            replyToId = replyToId,
+            sourceId = SOURCE_ID,
+            agreeCount = agree?.agreeNum?.toLongOrNull(),
+            disagreeCount = agree?.disagreeNum?.toLongOrNull(),
+            authorLevel = author?.levelId?.toIntOrNull(),
+        )
     }
 
     fun mapSubFloorListToComments(response: SubFloorListBean, topicId: String): List<Comment> {

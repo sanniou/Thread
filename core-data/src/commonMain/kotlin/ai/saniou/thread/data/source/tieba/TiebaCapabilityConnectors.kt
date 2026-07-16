@@ -46,29 +46,53 @@ class TiebaUserContentConnector(
     }
 }
 
-class TiebaPostingConnector(
+class TiebaPostingConnector internal constructor(
     private val source: TiebaSource,
     private val api: OfficialTiebaApi,
     private val webApi: WebTiebaApi,
     private val database: Database,
     private val parameterProvider: TiebaParameterProvider,
+    private val imageUploader: TiebaImageUploader,
 ) : PostingConnector {
+    constructor(
+        source: TiebaSource,
+        api: OfficialTiebaApi,
+        webApi: WebTiebaApi,
+        database: Database,
+        parameterProvider: TiebaParameterProvider,
+    ) : this(
+        source = source,
+        api = api,
+        webApi = webApi,
+        database = database,
+        parameterProvider = parameterProvider,
+        imageUploader = TiebaImageUploader(
+            client = TiebaPictureUploadClient { body ->
+                api.uploadPicture(body = body, cookie = "ka=open")
+            },
+        ),
+    )
     override val sourceId: String = source.id
 
     override suspend fun createThread(channelId: String, draft: PostDraft): PostResult =
         throw UnsupportedOperationException("贴吧发主题尚未开放；当前只支持回复已有主题")
 
     override suspend fun createReply(topicId: String, draft: PostDraft): PostResult {
-        require(draft.content.isNotBlank()) { "回复内容不能为空" }
-        require(draft.attachment == null) { "贴吧图片上传尚未开放" }
+        require(draft.content.isNotBlank() || draft.attachment != null) { "回复内容和图片不能同时为空" }
 
         val topic = database.topicQueries.getTopic(sourceId, topicId).executeAsOneOrNull()
             ?: throw IllegalStateException("本地未找到贴吧主题 $topicId，请先打开主题详情")
         val channel = database.channelQueries.getChannel(sourceId, topic.channelId).executeAsOneOrNull()
             ?: throw IllegalStateException("本地未找到贴吧版块 ${topic.channelId}")
         val tbs = ensureTbs()
+        val content = buildList {
+            draft.content.trim().takeIf(String::isNotBlank)?.let(::add)
+            draft.attachment?.let { attachment ->
+                add(imageUploader.upload(attachment, channel.name).markup)
+            }
+        }.joinToString("\n")
         val response = api.addPost(
-            content = draft.content,
+            content = content,
             forumId = topic.channelId,
             forumName = channel.name,
             tbs = tbs,

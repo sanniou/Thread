@@ -43,6 +43,7 @@ class TiebaSource(
         supportsLogin = true,
         supportsTopicCreation = false,
         supportsReplies = true,
+        supportsAttachments = true,
         commentPageSize = 30,
         supportsPagination = true,
         hasSubComments = true,

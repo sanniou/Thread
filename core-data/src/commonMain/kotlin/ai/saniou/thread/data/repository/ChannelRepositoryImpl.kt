@@ -18,8 +18,11 @@ import ai.saniou.thread.domain.source.SourceCatalog
 import ai.saniou.thread.domain.cache.CachePolicyProvider
 import ai.saniou.thread.domain.cache.CacheResource
 import androidx.paging.*
+import app.cash.sqldelight.coroutines.asFlow
+import app.cash.sqldelight.coroutines.mapToList
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
+import kotlin.time.Clock
 
 class ChannelRepositoryImpl(
     private val db: Database,
@@ -34,6 +37,13 @@ class ChannelRepositoryImpl(
 
     override fun getChannels(sourceId: String): Flow<List<Channel>> =
         sourceCatalog.source(sourceId)?.observeChannels() ?: flowOf(emptyList())
+
+    override fun getRecentChannels(sourceId: String, limit: Long): Flow<List<Channel>> =
+        db.channelQueries.getRecentChannels(sourceId, limit)
+            .asFlow()
+            .mapToList(ioDispatcher)
+            .map { channels -> channels.map { it.toDomain(db.channelQueries) } }
+
     override suspend fun fetchChannels(sourceId: String, forceRefresh: Boolean): Result<Unit> {
         val source = sourceCatalog.source(sourceId)
             ?: return Result.failure(IllegalArgumentException("Source not found: $sourceId"))
@@ -120,7 +130,12 @@ class ChannelRepositoryImpl(
         withContext(ioDispatcher) {
             if (channel != null) {
                 db.keyValueQueries.insertKeyValue("last_opened_forum_id", channel.id)
-                db.keyValueQueries.insertKeyValue("last_opened_forum_source", channel.sourceName)
+                db.keyValueQueries.insertKeyValue("last_opened_forum_source", channel.sourceId)
+                db.channelQueries.upsertChannelVisit(
+                    sourceId = channel.sourceId,
+                    channelId = channel.id,
+                    visitedAt = Clock.System.now().toEpochMilliseconds(),
+                )
             } else {
                 db.keyValueQueries.deleteKeyValue("last_opened_forum_id")
                 db.keyValueQueries.deleteKeyValue("last_opened_forum_source")

@@ -14,6 +14,7 @@ import ai.saniou.thread.domain.usecase.channel.FetchChannelsUseCase
 import ai.saniou.thread.domain.usecase.channel.GetChannelsUseCase
 import ai.saniou.thread.domain.usecase.channel.GetFavoriteChannelsUseCase
 import ai.saniou.thread.domain.usecase.channel.GetLastOpenedChannelUseCase
+import ai.saniou.thread.domain.usecase.channel.GetRecentChannelsUseCase
 import ai.saniou.thread.domain.usecase.channel.SaveLastOpenedChannelUseCase
 import ai.saniou.thread.domain.usecase.notice.GetNoticeUseCase
 import ai.saniou.thread.domain.usecase.notice.MarkNoticeAsReadUseCase
@@ -42,6 +43,7 @@ class ChannelViewModel(
     private val getAvailableSourcesUseCase: GetAvailableSourcesUseCase,
     private val fetchChannelsUseCase: FetchChannelsUseCase,
     private val getLastOpenedChannelUseCase: GetLastOpenedChannelUseCase,
+    private val getRecentChannelsUseCase: GetRecentChannelsUseCase,
     private val saveLastOpenedChannelUseCase: SaveLastOpenedChannelUseCase,
     private val observeRefreshDiagnosticsUseCase: ObserveRefreshDiagnosticsUseCase,
 ) : ScreenModel {
@@ -152,12 +154,13 @@ class ChannelViewModel(
             val lastOpenedForum = getLastOpenedChannelUseCase()
             // 如果最后打开的板块不是当前源的，则不选中
             val lastOpenedForumId =
-                if (lastOpenedForum?.sourceName == state.value.currentSourceId) lastOpenedForum.id else null
+                if (lastOpenedForum?.sourceId == state.value.currentSourceId) lastOpenedForum.id else null
             val currentSourceId = state.value.currentSourceId
 
             // Use Dispatchers.IO for database/network calls
             val forumsFlow = getChannelsUseCase(currentSourceId)
             val favoritesFlow = getFavoriteChannelsUseCase(currentSourceId)
+            val recentFlow = getRecentChannelsUseCase(currentSourceId)
 
             // Trigger fetch
             launch {
@@ -176,19 +179,24 @@ class ChannelViewModel(
                     }
             }
 
-            forumsFlow.combine(favoritesFlow) { forums, favorites ->
-                Pair(forums, favorites)
+            combine(forumsFlow, favoritesFlow, recentFlow) { forums, favorites, recent ->
+                Triple(forums, favorites, recent)
             }.catch { e ->
                 _state.update {
                     it.copy(
                         categoriesState = UiStateWrapper.Error(e.toAppError { loadCategories() })
                     )
                 }
-            }.collect { (forums, favorites) ->
+            }.collect { (forums, favorites, recent) ->
                 val favoriteGroup = ChannelCategoryUiState(
                     id = "-2", // Special ID for favorites
                     name = "收藏",
                     channels = favorites
+                )
+                val recentGroup = ChannelCategoryUiState(
+                    id = "-3",
+                    name = "最近访问",
+                    channels = recent,
                 )
 
                 val forumGroups = forums
@@ -203,7 +211,11 @@ class ChannelViewModel(
                         )
                     }
 
-                val combined = listOf(favoriteGroup) + forumGroups
+                val combined = buildList {
+                    if (recent.isNotEmpty()) add(recentGroup)
+                    add(favoriteGroup)
+                    addAll(forumGroups)
+                }
                 val favoriteIds = favorites.map { it.id }.toSet()
 
                 _state.update {

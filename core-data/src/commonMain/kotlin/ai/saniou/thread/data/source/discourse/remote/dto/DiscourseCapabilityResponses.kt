@@ -48,3 +48,15 @@ data class DiscourseCreatePostResponse(
     @SerialName("topic_id") val topicId: Long,
     @SerialName("post_number") val postNumber: Int,
 )
+
+@Serializable
+data class DiscourseUploadResponse(
+    val id: Long,
+    val url: String,
+    @SerialName("short_url") val shortUrl: String? = null,
+    @SerialName("original_filename") val originalFilename: String = "",
+    val filesize: Long = 0,
+    val width: Int? = null,
+    val height: Int? = null,
+    @SerialName("retain_hours") val retainHours: String? = null,
+)

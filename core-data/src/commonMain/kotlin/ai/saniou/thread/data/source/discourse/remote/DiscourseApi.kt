@@ -10,9 +10,12 @@ import ai.saniou.thread.network.SaniouResult
 import de.jensklingenberg.ktorfit.http.Field
 import de.jensklingenberg.ktorfit.http.FormUrlEncoded
 import de.jensklingenberg.ktorfit.http.GET
+import de.jensklingenberg.ktorfit.http.Multipart
 import de.jensklingenberg.ktorfit.http.POST
+import de.jensklingenberg.ktorfit.http.Part
 import de.jensklingenberg.ktorfit.http.Path
 import de.jensklingenberg.ktorfit.http.Query
+import io.ktor.http.content.PartData
 
 interface DiscourseApi {
 
@@ -75,4 +78,13 @@ interface DiscourseApi {
         @Field("category") category: String? = null,
         @Field("topic_id") topicId: String? = null,
     ): SaniouResult<DiscourseCreatePostResponse>
+
+    /** Upload a temporary composer asset and return its Markdown-compatible URL. */
+    @POST("uploads.json")
+    @Multipart
+    suspend fun upload(
+        @Part("upload_type") uploadType: String = "composer",
+        @Part("synchronous") synchronous: Boolean = true,
+        @Part("") parts: List<PartData>,
+    ): SaniouResult<ai.saniou.thread.data.source.discourse.remote.dto.DiscourseUploadResponse>
 }

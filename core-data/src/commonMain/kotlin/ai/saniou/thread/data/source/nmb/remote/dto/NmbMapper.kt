@@ -15,6 +15,7 @@ fun TimeLine.toDomain(): Channel = Channel(
     id = id.toString(),
     name = name,
     sourceName = "nmb",
+    sourceId = "nmb",
     tag = "timeline",
     displayName = displayName,
     description = notice,

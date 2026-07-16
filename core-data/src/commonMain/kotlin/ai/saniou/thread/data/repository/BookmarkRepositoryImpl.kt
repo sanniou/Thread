@@ -24,9 +24,13 @@ class BookmarkRepositoryImpl(
         val hasTags = !tags.isNullOrEmpty()
 
         val countQuery = when {
-            hasQuery && hasTags -> db.bookmarkQueries.searchByQueryAndTagsCount(query!!, tags!!)
+            hasQuery && hasTags -> db.bookmarkQueries.searchByQueryAndTagsCount(
+                query = query!!,
+                tags = tags!!,
+                tagCount = tags.size.toLong(),
+            )
             hasQuery -> db.bookmarkQueries.searchByQueryCount(query!!)
-            hasTags -> db.bookmarkQueries.searchByTagsCount(tags!!)
+            hasTags -> db.bookmarkQueries.searchByTagsCount(tags!!, tags.size.toLong())
             else -> db.bookmarkQueries.searchAllCount()
         }
 
@@ -39,6 +43,7 @@ class BookmarkRepositoryImpl(
                     hasQuery && hasTags -> db.bookmarkQueries.searchByQueryAndTags(
                         query!!,
                         tags!!,
+                        tags.size.toLong(),
                         limit,
                         offset,
                         ::mapBookmark
@@ -49,7 +54,13 @@ class BookmarkRepositoryImpl(
                         offset,
                         ::mapBookmark
                     )
-                    hasTags -> db.bookmarkQueries.searchByTags(tags!!, limit, offset, ::mapBookmark)
+                    hasTags -> db.bookmarkQueries.searchByTags(
+                        tags!!,
+                        tags.size.toLong(),
+                        limit,
+                        offset,
+                        ::mapBookmark,
+                    )
                     else -> db.bookmarkQueries.searchAll(limit, offset, ::mapBookmark)
                 }
             }
