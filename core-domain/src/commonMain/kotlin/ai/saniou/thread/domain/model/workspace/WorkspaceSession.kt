@@ -8,8 +8,8 @@ enum class WorkspaceDestination(val key: String) {
     SEARCH("search"),
     BOOKMARKS("bookmarks"),
     HISTORY("history"),
+    ACTIVITY("activity"),
     OPERATIONS("operations"),
-    LAB("lab"),
     SETTINGS("settings");
 
     companion object {

@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.19.0 - 2026-07-17
+
+Unified activity, explicit identity and serialized-action release.
+
+- The low-value Lab primary destination is replaced by an adaptive Activity Center. The nine stable workspaces now lead with Forum/Reader/Feed and provide a first-class queue for refreshes, authentication, drafts, transfers and source lifecycle events.
+- Source identity is a credential-free, persistent domain fact with anonymous, valid, expired, disabled and not-applicable states. Successful login/refresh and classified authentication failure update the same state instead of leaving pages to infer validity from error strings.
+- A single `ProductActionExecutor` owns source refresh, Reader refresh, connector enable/disable, diagnostic export, Reader JSON/OPML transfer, user-data export/import, WebDAV backup/restore and draft deletion. Conflict keys reject overlapping work while unrelated sources remain concurrent.
+- Action history survives process death, redacts failure text and converts interrupted running work into an explicit retryable activity on restart. Dangerous command-palette and Activity Center actions require confirmation.
+- Forum drafts maintain a bounded observable index, appear in the Activity Center and command palette, and deep-link back into the correct composer. Drafts whose source was removed remain preserved but no longer expose an invalid navigation action.
+- Reader, Settings, Operations and the global command palette now execute through the same action boundary. Dynamic commands include both Reader formats, local user-data transfer, WebDAV operations, draft resume/discard, identity recovery and activity navigation.
+- A platform-neutral Social/stream contract fixes opaque bidirectional cursors, author identity, interaction capabilities, content warnings and bounded media grids without naming a provider in common UI.
+- Desktop tests cover explicit identity expiry, action conflict rejection, interrupted-action restart recovery, orphan draft fallback, a 154-item mixed activity seed and the Social connector contract.
+
 ## 0.18.0 - 2026-07-17
 
 Continuous workspace, durable operations and safe-diagnostics release.

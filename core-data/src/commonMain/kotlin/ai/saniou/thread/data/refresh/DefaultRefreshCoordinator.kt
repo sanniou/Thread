@@ -9,6 +9,7 @@ import ai.saniou.thread.domain.refresh.RefreshTaskState
 import ai.saniou.thread.domain.refresh.FailureClassifier
 import ai.saniou.thread.domain.refresh.DiagnosticSanitizer
 import ai.saniou.thread.domain.refresh.RefreshHistoryRepository
+import ai.saniou.thread.domain.repository.IdentityRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,6 +23,7 @@ import kotlin.time.Clock
 
 class DefaultRefreshCoordinator(
     private val historyRepository: RefreshHistoryRepository? = null,
+    private val identityRepository: IdentityRepository? = null,
 ) : RefreshCoordinator {
     private val mutableStates = MutableStateFlow<Map<String, RefreshTaskState>>(emptyMap())
     override val states: StateFlow<Map<String, RefreshTaskState>> = mutableStates.asStateFlow()
@@ -72,6 +74,7 @@ class DefaultRefreshCoordinator(
                         )
                     )
                     historyRepository?.recordSuccess(key, label, finishedAt)
+                    key.forumSourceId()?.let { identityRepository?.markAuthenticated(it, finishedAt) }
                     return result
                 }
 
@@ -88,6 +91,11 @@ class DefaultRefreshCoordinator(
                         kind = kind,
                         message = error.message ?: error::class.simpleName ?: "Unknown error",
                     )
+                    if (kind == RefreshFailureKind.AUTHENTICATION) {
+                        key.forumSourceId()?.let { sourceId ->
+                            identityRepository?.markExpired(sourceId, error.message, finishedAt)
+                        }
+                    }
                     return Result.failure(error)
                 }
                 delay(delayMillis)
@@ -132,6 +140,12 @@ class DefaultRefreshCoordinator(
 
     private fun now(): Long = Clock.System.now().toEpochMilliseconds()
 }
+
+private fun String.forumSourceId(): String? =
+    takeIf { it.startsWith("forum:") }
+        ?.removePrefix("forum:")
+        ?.substringBefore(':')
+        ?.takeIf(String::isNotBlank)
 
 private val RefreshFailureKind.isRetryable: Boolean
     get() = this == RefreshFailureKind.OFFLINE ||

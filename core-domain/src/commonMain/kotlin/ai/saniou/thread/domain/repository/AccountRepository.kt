@@ -4,6 +4,7 @@ import ai.saniou.thread.domain.model.forum.Account
 import kotlinx.coroutines.flow.Flow
 
 interface AccountRepository {
+    fun getCurrentAccounts(): Flow<List<Account>>
     fun getAccounts(sourceId: String): Flow<List<Account>>
     fun getCurrentAccount(sourceId: String): Flow<Account?>
     suspend fun addAccount(account: Account)

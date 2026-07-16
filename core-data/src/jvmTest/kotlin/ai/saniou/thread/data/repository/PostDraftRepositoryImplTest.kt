@@ -10,6 +10,8 @@ import ai.saniou.thread.domain.model.forum.SavedPostDraft
 import app.cash.sqldelight.async.coroutines.synchronous
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withTimeout
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -44,9 +46,11 @@ class PostDraftRepositoryImplTest {
         assertEquals("draft.png", restored.draft.attachment?.fileName)
         assertContentEquals(bytes, restored.draft.attachment?.bytes)
         assertEquals(42, restored.updatedAtEpochMillis)
+        assertEquals(key, withTimeout(5_000) { repository.observeAll().first { it.isNotEmpty() } }.single().key)
 
         repository.discard(key)
         assertNull(repository.get(key))
+        assertEquals(emptyList(), withTimeout(5_000) { repository.observeAll().first() })
         driver.close()
     }
 }

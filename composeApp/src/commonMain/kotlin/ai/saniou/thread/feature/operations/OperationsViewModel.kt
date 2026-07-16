@@ -2,11 +2,10 @@ package ai.saniou.thread.feature.operations
 
 import ai.saniou.thread.domain.model.operations.ContentSourceKind
 import ai.saniou.thread.domain.model.operations.SourceHealth
-import ai.saniou.thread.domain.usecase.channel.FetchChannelsUseCase
-import ai.saniou.thread.domain.usecase.operations.ClearSourceDiagnosticUseCase
+import ai.saniou.thread.domain.model.activity.ProductActionRequest
+import ai.saniou.thread.domain.model.activity.ProductActionType
+import ai.saniou.thread.domain.usecase.activity.ExecuteProductActionUseCase
 import ai.saniou.thread.domain.usecase.operations.ObserveOperationsUseCase
-import ai.saniou.thread.domain.usecase.operations.ExportDiagnosticUseCase
-import ai.saniou.thread.domain.usecase.reader.RefreshFeedSourceUseCase
 import ai.saniou.thread.feature.operations.OperationsContract.Event
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
@@ -17,10 +16,7 @@ import kotlinx.coroutines.launch
 
 class OperationsViewModel(
     observeOperations: ObserveOperationsUseCase,
-    private val refreshFeedSource: RefreshFeedSourceUseCase,
-    private val fetchChannels: FetchChannelsUseCase,
-    private val clearSourceDiagnostic: ClearSourceDiagnosticUseCase,
-    private val exportDiagnostic: ExportDiagnosticUseCase,
+    private val executeProductAction: ExecuteProductActionUseCase,
 ) : ScreenModel {
     private val mutableState = MutableStateFlow(OperationsContract.State())
     val state = mutableState.asStateFlow()
@@ -31,13 +27,26 @@ class OperationsViewModel(
                 mutableState.update { it.copy(snapshot = snapshot) }
             }
         }
+        screenModelScope.launch {
+            executeProductAction.runningConflictKeys.collect { keys ->
+                mutableState.update { state ->
+                    state.copy(
+                        workingSourceIds = state.snapshot.sources
+                            .filter { "source:${it.id}" in keys }
+                            .mapTo(mutableSetOf(), SourceHealth::id)
+                    )
+                }
+            }
+        }
     }
 
     fun onEvent(event: Event) {
         when (event) {
             is Event.FilterChanged -> mutableState.update { it.copy(filter = event.filter) }
             is Event.Retry -> retry(event.source)
-            is Event.ClearDiagnostic -> screenModelScope.launch { clearSourceDiagnostic(event.sourceId) }
+            is Event.ClearDiagnostic -> execute(
+                ProductActionRequest(ProductActionType.CLEAR_SOURCE_DIAGNOSTIC, sourceId = event.sourceId)
+            )
             Event.ExportDiagnostic -> exportDiagnostic()
             Event.DiagnosticDismissed -> mutableState.update { it.copy(diagnosticPayload = null) }
             Event.MessageShown -> mutableState.update { it.copy(message = null) }
@@ -48,12 +57,12 @@ class OperationsViewModel(
         if (mutableState.value.isExportingDiagnostic) return
         screenModelScope.launch {
             mutableState.update { it.copy(isExportingDiagnostic = true) }
-            runCatching { exportDiagnostic.invoke() }
-                .onSuccess { export ->
+            executeProductAction(ProductActionRequest(ProductActionType.EXPORT_DIAGNOSTIC))
+                .onSuccess { result ->
                     mutableState.update {
                         it.copy(
-                            diagnosticPayload = export.payload,
-                            message = "已生成 ${export.sourceCount} 个来源的脱敏诊断",
+                            diagnosticPayload = result.output,
+                            message = result.message,
                         )
                     }
                 }
@@ -65,22 +74,21 @@ class OperationsViewModel(
     }
 
     private fun retry(source: SourceHealth) {
-        if (source.id in mutableState.value.workingSourceIds) return
-        screenModelScope.launch {
-            mutableState.update { it.copy(workingSourceIds = it.workingSourceIds + source.id) }
-            val result = when (source.kind) {
-                ContentSourceKind.FORUM -> fetchChannels(source.id, forceRefresh = true)
-                ContentSourceKind.READER -> refreshFeedSource(source.id, forceRefresh = true)
-            }
-            result.fold(
-                onSuccess = {
-                    mutableState.update { it.copy(message = "${source.name} 已刷新") }
-                },
-                onFailure = { error ->
-                    mutableState.update { it.copy(message = error.message ?: "${source.name} 刷新失败") }
-                },
+        execute(
+            ProductActionRequest(
+                ProductActionType.REFRESH_SOURCE,
+                sourceId = source.id,
+                sourceKind = source.kind,
             )
-            mutableState.update { it.copy(workingSourceIds = it.workingSourceIds - source.id) }
+        )
+    }
+
+    private fun execute(request: ProductActionRequest) {
+        screenModelScope.launch {
+            executeProductAction(request).fold(
+                onSuccess = { result -> mutableState.update { it.copy(message = result.message) } },
+                onFailure = { error -> mutableState.update { it.copy(message = error.message ?: "动作执行失败") } },
+            )
         }
     }
 }

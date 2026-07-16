@@ -9,6 +9,10 @@ import ai.saniou.thread.domain.usecase.refresh.ObserveRefreshDiagnosticsUseCase
 import ai.saniou.thread.domain.model.workspace.ListAnchor
 import ai.saniou.thread.domain.usecase.workspace.ObserveWorkspaceSessionUseCase
 import ai.saniou.thread.domain.usecase.workspace.UpdateWorkspaceSessionUseCase
+import ai.saniou.thread.domain.model.activity.ProductActionRequest
+import ai.saniou.thread.domain.model.activity.ProductActionType
+import ai.saniou.thread.domain.model.operations.ContentSourceKind
+import ai.saniou.thread.domain.usecase.activity.ExecuteProductActionUseCase
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import cafe.adriel.voyager.core.model.ScreenModel
@@ -26,12 +30,9 @@ class ReaderViewModel(
     private val updateFeedSourceUseCase: UpdateFeedSourceUseCase,
     private val deleteFeedSourceUseCase: DeleteFeedSourceUseCase,
     private val markArticleAsReadUseCase: MarkArticleAsReadUseCase,
-    private val refreshFeedSourceUseCase: RefreshFeedSourceUseCase,
-    private val refreshAllFeedsUseCase: RefreshAllFeedsUseCase,
+    private val executeProductAction: ExecuteProductActionUseCase,
     private val getArticleCountsUseCase: GetArticleCountsUseCase,
     private val observeRefreshDiagnostics: ObserveRefreshDiagnosticsUseCase,
-    private val exportSubscriptionsUseCase: ExportReaderSubscriptionsUseCase,
-    private val importSubscriptionsUseCase: ImportReaderSubscriptionsUseCase,
     private val observeScheduler: ObserveReaderSchedulerUseCase,
     observeWorkspaceSession: ObserveWorkspaceSessionUseCase,
     private val updateWorkspaceSession: UpdateWorkspaceSessionUseCase,
@@ -219,7 +220,13 @@ class ReaderViewModel(
                 state.copy(feedSources = updatedSources)
             }
             try {
-                refreshFeedSourceUseCase(id).getOrThrow()
+                executeProductAction(
+                    ProductActionRequest(
+                        ProductActionType.REFRESH_SOURCE,
+                        sourceId = id,
+                        sourceKind = ContentSourceKind.READER,
+                    )
+                ).getOrThrow()
             } catch (e: Exception) {
                 _state.update { it.copy(error = e.toAppError()) }
             } finally {
@@ -238,13 +245,7 @@ class ReaderViewModel(
                 state.copy(feedSources = updatedSources)
             }
             try {
-                val report = refreshAllFeedsUseCase()
-                if (!report.isSuccess) {
-                    val message = report.failures.entries.joinToString { (sourceId, reason) ->
-                        "$sourceId: $reason"
-                    }
-                    throw IllegalStateException(message)
-                }
+                executeProductAction(ProductActionRequest(ProductActionType.REFRESH_ALL_READERS)).getOrThrow()
             } catch (e: Exception) {
                 _state.update { it.copy(error = e.toAppError()) }
             } finally {
@@ -259,12 +260,14 @@ class ReaderViewModel(
     private fun exportSubscriptions(format: ai.saniou.thread.domain.model.reader.ReaderSubscriptionFormat) {
         screenModelScope.launch {
             _state.update { it.copy(isTransferWorking = true) }
-            exportSubscriptionsUseCase(format).fold(
-                onSuccess = { payload ->
+            executeProductAction(
+                ProductActionRequest(ProductActionType.EXPORT_READER_SUBSCRIPTIONS, readerFormat = format)
+            ).fold(
+                onSuccess = { result ->
                     _state.update {
                         it.copy(
                             isTransferWorking = false,
-                            transferDialog = ReaderTransferDialog(format, isImport = false, payload = payload),
+                            transferDialog = ReaderTransferDialog(format, isImport = false, payload = result.output.orEmpty()),
                         )
                     }
                 },
@@ -281,13 +284,19 @@ class ReaderViewModel(
     ) {
         screenModelScope.launch {
             _state.update { it.copy(isTransferWorking = true) }
-            importSubscriptionsUseCase(payload, format).fold(
-                onSuccess = { report ->
+            executeProductAction(
+                ProductActionRequest(
+                    ProductActionType.IMPORT_READER_SUBSCRIPTIONS,
+                    readerFormat = format,
+                    payload = payload,
+                )
+            ).fold(
+                onSuccess = { result ->
                     _state.update {
                         it.copy(
                             isTransferWorking = false,
                             transferDialog = null,
-                            message = "导入完成：新增 ${report.added}，更新 ${report.updated}，跳过 ${report.skipped}",
+                            message = result.message,
                         )
                     }
                 },

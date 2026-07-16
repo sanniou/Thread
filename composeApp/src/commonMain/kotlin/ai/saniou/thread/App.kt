@@ -16,6 +16,7 @@ import ai.saniou.feature.feed.workflow.FeedViewModel
 import ai.saniou.reader.di.readerModule
 import ai.saniou.reader.workflow.articledetail.ArticleDetailPage
 import ai.saniou.reader.workflow.reader.ReaderPage
+import ai.saniou.forum.workflow.post.PostPage
 import ai.saniou.thread.data.di.dataModule
 import ai.saniou.thread.di.appModule
 import ai.saniou.thread.domain.di.domainModule
@@ -28,20 +29,15 @@ import ai.saniou.thread.domain.model.search.GlobalSearchType
 import ai.saniou.thread.domain.model.workspace.WorkspaceDestination
 import ai.saniou.thread.domain.model.workspace.WorkspaceSession
 import ai.saniou.thread.domain.model.workspace.RestorableContentKind
-import ai.saniou.thread.domain.model.operations.ContentSourceKind
-import ai.saniou.thread.domain.model.operations.OperationsSnapshot
+import ai.saniou.thread.domain.model.activity.ActivityCenterSnapshot
+import ai.saniou.thread.domain.model.activity.ProductActionDanger
 import ai.saniou.thread.domain.model.operations.ProductCommandAction
 import ai.saniou.thread.domain.model.operations.ProductCommandDescriptor
 import ai.saniou.thread.domain.usecase.search.SearchLocalContentUseCase
 import ai.saniou.thread.domain.usecase.workspace.ValidateRestorableContentUseCase
 import ai.saniou.thread.domain.usecase.operations.BuildProductCommandsUseCase
-import ai.saniou.thread.domain.usecase.operations.ExportDiagnosticUseCase
-import ai.saniou.thread.domain.usecase.operations.ObserveOperationsUseCase
-import ai.saniou.thread.domain.usecase.channel.FetchChannelsUseCase
-import ai.saniou.thread.domain.usecase.reader.RefreshAllFeedsUseCase
-import ai.saniou.thread.domain.usecase.reader.RefreshFeedSourceUseCase
-import ai.saniou.thread.domain.usecase.source.SetSourceEnabledUseCase
-import ai.saniou.thread.feature.cellularautomaton.CellularAutomatonScreen
+import ai.saniou.thread.domain.usecase.activity.ObserveActivityCenterUseCase
+import ai.saniou.thread.domain.usecase.activity.ExecuteProductActionUseCase
 import ai.saniou.thread.feature.challenge.CloudflareVerificationDialog
 import ai.saniou.thread.feature.bookmark.BookmarkPage
 import ai.saniou.thread.feature.challenge.UiChallengeHandler
@@ -49,6 +45,7 @@ import ai.saniou.thread.feature.history.HistoryPage
 import ai.saniou.thread.feature.settings.SyncSettingsPage
 import ai.saniou.thread.feature.search.GlobalSearchPage
 import ai.saniou.thread.feature.operations.OperationsPage
+import ai.saniou.thread.feature.activity.ActivityCenterPage
 import ai.saniou.thread.feature.commands.CommandPalette
 import ai.saniou.thread.feature.commands.ProductCommand
 import ai.saniou.thread.domain.reader.ReaderRefreshScheduler
@@ -60,7 +57,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.DynamicFeed
 import androidx.compose.material.icons.filled.Forum
-import androidx.compose.material.icons.filled.Games
+import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.MonitorHeart
 import androidx.compose.material.icons.filled.RssFeed
@@ -71,6 +68,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.runtime.Composable
@@ -122,18 +123,15 @@ fun App(attachmentPicker: AttachmentPicker? = null) {
         var workspaceSession by remember { mutableStateOf<WorkspaceSession?>(null) }
         val searchLocalContent: SearchLocalContentUseCase by di.instance()
         val validateRestorableContent: ValidateRestorableContentUseCase by di.instance()
-        val observeOperations: ObserveOperationsUseCase by di.instance()
+        val observeActivityCenter: ObserveActivityCenterUseCase by di.instance()
+        val executeProductAction: ExecuteProductActionUseCase by di.instance()
         val buildProductCommands: BuildProductCommandsUseCase by di.instance()
-        val fetchChannels: FetchChannelsUseCase by di.instance()
-        val refreshFeedSource: RefreshFeedSourceUseCase by di.instance()
-        val refreshAllFeeds: RefreshAllFeedsUseCase by di.instance()
-        val setSourceEnabled: SetSourceEnabledUseCase by di.instance()
-        val exportDiagnostic: ExportDiagnosticUseCase by di.instance()
-        val operationsSnapshot by observeOperations().collectAsState(initial = OperationsSnapshot())
+        val activitySnapshot by observeActivityCenter().collectAsState(initial = ActivityCenterSnapshot())
 
         val challengeHandler: UiChallengeHandler by di.instance()
         var challengeRequest by remember { mutableStateOf<UiChallengeHandler.ChallengeRequest?>(null) }
         var showCommandPalette by remember { mutableStateOf(false) }
+        var pendingProductCommand by remember { mutableStateOf<ProductCommandDescriptor?>(null) }
         val scope = rememberCoroutineScope()
         val readerScheduler: ReaderRefreshScheduler by di.instance()
         val appSnackbar = remember { SnackbarHostState() }
@@ -242,52 +240,58 @@ fun App(attachmentPicker: AttachmentPicker? = null) {
                         }
                     }
                 }
-                val productCommands = remember(operationsSnapshot) {
-                    buildProductCommands(operationsSnapshot).map(::ProductCommand)
+                val productCommands = remember(activitySnapshot) {
+                    buildProductCommands(activitySnapshot).map(::ProductCommand)
                 }
                 fun notifyCommand(message: String) {
                     scope.launch { appSnackbar.showSnackbar(message) }
                 }
-                fun performProductCommand(command: ProductCommandDescriptor) {
+                fun performProductCommand(command: ProductCommandDescriptor, confirmed: Boolean = false) {
+                    if (!confirmed && command.action == ProductCommandAction.EXECUTE_PRODUCT_ACTION &&
+                        command.danger != ProductActionDanger.NORMAL
+                    ) {
+                        pendingProductCommand = command
+                        return
+                    }
                     when (command.action) {
+                        ProductCommandAction.OPEN_ACTIVITY_CENTER ->
+                            navigateTo(WorkspaceDestination.ACTIVITY, ActivityCenterPage)
                         ProductCommandAction.OPEN_SOURCE_LOGIN -> {
                             val sourceId = command.sourceId ?: return
                             navigateTo(WorkspaceDestination.FORUM, ForumRoute)
                             navigator.push(ForumUserRoute(sourceId))
                         }
-                        ProductCommandAction.REFRESH_SOURCE -> scope.launch {
-                            val sourceId = command.sourceId ?: return@launch
-                            val result = when (command.sourceKind) {
-                                ContentSourceKind.FORUM -> fetchChannels(sourceId, forceRefresh = true)
-                                ContentSourceKind.READER -> refreshFeedSource(sourceId, forceRefresh = true)
-                                null -> Result.failure(IllegalArgumentException("缺少来源类型"))
-                            }
-                            notifyCommand(result.fold(
-                                onSuccess = { "${command.label}完成" },
-                                onFailure = { it.message ?: "${command.label}失败" },
-                            ))
-                        }
-                        ProductCommandAction.SET_SOURCE_ENABLED -> scope.launch {
-                            val sourceId = command.sourceId ?: return@launch
-                            val enabled = command.enabledValue ?: return@launch
-                            runCatching { setSourceEnabled(sourceId, enabled) }
-                                .onSuccess { notifyCommand("已${if (enabled) "启用" else "停用"} $sourceId") }
-                                .onFailure { notifyCommand(it.message ?: "来源状态更新失败") }
-                        }
-                        ProductCommandAction.REFRESH_ALL_READERS -> scope.launch {
-                            val report = refreshAllFeeds()
-                            notifyCommand(
-                                "Reader 刷新完成：${report.refreshedSourceIds.size} 成功" +
-                                    if (report.failures.isEmpty()) "" else "，${report.failures.size} 失败"
+                        ProductCommandAction.EXECUTE_PRODUCT_ACTION -> scope.launch {
+                            val request = command.request ?: return@launch
+                            executeProductAction(request).fold(
+                                onSuccess = { result ->
+                                    result.output?.let(clipboard::copyText)
+                                    notifyCommand(result.message + if (result.output == null) "" else "，内容已复制")
+                                },
+                                onFailure = { notifyCommand(it.message ?: "${command.label}失败") },
                             )
                         }
-                        ProductCommandAction.EXPORT_DIAGNOSTIC -> scope.launch {
-                            runCatching { exportDiagnostic() }
-                                .onSuccess {
-                                    clipboard.copyText(it.payload)
-                                    notifyCommand("脱敏诊断已复制（${it.sourceCount} 个来源）")
-                                }
-                                .onFailure { notifyCommand(it.message ?: "诊断导出失败") }
+                        ProductCommandAction.OPEN_READER_IMPORT ->
+                            navigateTo(
+                                WorkspaceDestination.READER,
+                                ReaderPage(command.request?.readerFormat),
+                            )
+                        ProductCommandAction.OPEN_USER_DATA_IMPORT ->
+                            navigateTo(WorkspaceDestination.SETTINGS, SyncSettingsPage(showImportOnOpen = true))
+                        ProductCommandAction.RESUME_DRAFT -> {
+                            val key = command.draftKey ?: return
+                            navigateTo(WorkspaceDestination.FORUM, ForumRoute)
+                            navigator.push(
+                                PostPage(
+                                    sourceId = key.sourceId,
+                                    channelId = key.targetId.takeIf {
+                                        key.targetKind == ai.saniou.thread.domain.model.forum.PostDraftTargetKind.CHANNEL
+                                    },
+                                    topicId = key.targetId.takeIf {
+                                        key.targetKind == ai.saniou.thread.domain.model.forum.PostDraftTargetKind.TOPIC
+                                    },
+                                )
+                            )
                         }
                     }
                 }
@@ -313,11 +317,11 @@ fun App(attachmentPicker: AttachmentPicker? = null) {
                         WorkspaceNavigationItem(Icons.Default.History, "历史", selectedWorkspace == WorkspaceDestination.HISTORY) {
                             navigateTo(WorkspaceDestination.HISTORY, HistoryPage())
                         },
+                        WorkspaceNavigationItem(Icons.Default.NotificationsActive, "活动", selectedWorkspace == WorkspaceDestination.ACTIVITY, bottom = true) {
+                            navigateTo(WorkspaceDestination.ACTIVITY, ActivityCenterPage)
+                        },
                         WorkspaceNavigationItem(Icons.Default.MonitorHeart, "运维", selectedWorkspace == WorkspaceDestination.OPERATIONS, bottom = true) {
                             navigateTo(WorkspaceDestination.OPERATIONS, OperationsPage)
-                        },
-                        WorkspaceNavigationItem(Icons.Default.Games, "实验室", selectedWorkspace == WorkspaceDestination.LAB, bottom = true) {
-                            navigateTo(WorkspaceDestination.LAB, CellularAutomatonRoute)
                         },
                         WorkspaceNavigationItem(Icons.Default.Settings, "设置", selectedWorkspace == WorkspaceDestination.SETTINGS, bottom = true) {
                             navigateTo(WorkspaceDestination.SETTINGS, SyncSettingsPage())
@@ -347,8 +351,24 @@ fun App(attachmentPicker: AttachmentPicker? = null) {
                         productCommands = productCommands,
                         onDismiss = { showCommandPalette = false },
                         onCommand = { command -> navigateTo(command.destination, screenFor(command.destination)) },
-                        onProductCommand = ::performProductCommand,
+                        onProductCommand = { performProductCommand(it) },
                         onResult = ::openSearchResult,
+                    )
+                }
+                pendingProductCommand?.let { command ->
+                    AlertDialog(
+                        onDismissRequest = { pendingProductCommand = null },
+                        title = { Text(if (command.danger == ProductActionDanger.DESTRUCTIVE) "确认永久操作" else "确认数据变更") },
+                        text = { Text(command.description) },
+                        confirmButton = {
+                            Button(onClick = {
+                                pendingProductCommand = null
+                                performProductCommand(command, confirmed = true)
+                            }) { Text("继续") }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { pendingProductCommand = null }) { Text("取消") }
+                        },
                     )
                 }
             }
@@ -363,8 +383,8 @@ private fun screenFor(destination: WorkspaceDestination): Screen = when (destina
     WorkspaceDestination.SEARCH -> GlobalSearchPage
     WorkspaceDestination.BOOKMARKS -> BookmarkPage
     WorkspaceDestination.HISTORY -> HistoryPage()
+    WorkspaceDestination.ACTIVITY -> ActivityCenterPage
     WorkspaceDestination.OPERATIONS -> OperationsPage
-    WorkspaceDestination.LAB -> CellularAutomatonRoute
     WorkspaceDestination.SETTINGS -> SyncSettingsPage()
 }
 
@@ -372,13 +392,6 @@ object ForumRoute : Screen {
     @Composable
     override fun Content() {
         ChannelPage().Content()
-    }
-}
-
-object CellularAutomatonRoute : Screen {
-    @Composable
-    override fun Content() {
-        CellularAutomatonScreen()
     }
 }
 

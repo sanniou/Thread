@@ -13,6 +13,9 @@ import ai.saniou.thread.domain.model.workspace.RestorableContentKind
 import ai.saniou.thread.domain.model.workspace.RestorableContentReference
 import ai.saniou.thread.domain.model.workspace.ReaderWorkspaceState
 import ai.saniou.thread.domain.model.operations.ProductCommandAction
+import ai.saniou.thread.domain.model.activity.IdentityValidity
+import ai.saniou.thread.domain.model.activity.ProductActionType
+import ai.saniou.thread.domain.repository.ActivityCenterRepository
 import ai.saniou.thread.domain.reader.ReaderRefreshScheduler
 import ai.saniou.thread.domain.refresh.RefreshCoordinator
 import ai.saniou.thread.domain.refresh.RefreshPolicy
@@ -62,10 +65,15 @@ class ProductOperationsIntegrationTest {
         assertEquals(4, cached.sources.size)
         assertTrue(cached.sources.any { it.id == "nmb" && it.primaryItemCount == 1L && it.secondaryItemCount == 1L })
         assertTrue(cached.sources.any { it.id == "reader-news" && it.primaryItemCount == 1L })
-        val commands = di.direct.instance<BuildProductCommandsUseCase>()(cached)
-        assertTrue(commands.any { it.action == ProductCommandAction.REFRESH_ALL_READERS })
-        assertTrue(commands.any { it.sourceId == "nmb" && it.action == ProductCommandAction.REFRESH_SOURCE })
-        assertTrue(commands.any { it.sourceId == "nmb" && it.action == ProductCommandAction.SET_SOURCE_ENABLED })
+        val activityCenter = di.direct.instance<ActivityCenterRepository>()
+        val activity = activityCenter.observe().awaitState("activity source projection") {
+            it.operations.cachedItemCount == 3L
+        }
+        val commands = di.direct.instance<BuildProductCommandsUseCase>()(activity)
+        assertTrue(commands.any { it.request?.type == ProductActionType.REFRESH_ALL_READERS })
+        assertTrue(commands.any { it.sourceId == "nmb" && it.request?.type == ProductActionType.REFRESH_SOURCE })
+        assertTrue(commands.any { it.sourceId == "nmb" && it.request?.type == ProductActionType.SET_SOURCE_ENABLED })
+        assertTrue(commands.any { it.action == ProductCommandAction.OPEN_ACTIVITY_CENTER })
 
         val restoration = di.direct.instance<WorkspaceRestorationRepository>()
         assertTrue(restoration.isAvailable(RestorableContentReference(
@@ -100,6 +108,12 @@ class ProductOperationsIntegrationTest {
             degraded.sources.first { it.id == "nmb" }.state,
         )
         assertEquals(1, degraded.sources.first { it.id == "nmb" }.consecutiveFailureCount)
+        assertEquals(
+            IdentityValidity.EXPIRED,
+            activityCenter.observe().awaitState("explicit expired identity") {
+                it.identities.any { identity -> identity.sourceId == "nmb" && identity.validity == IdentityValidity.EXPIRED }
+            }.identities.first { it.sourceId == "nmb" }.validity,
+        )
         val diagnostic = withTimeout(10_000) { operations.exportDiagnostic() }
         assertTrue(diagnostic.redacted)
         assertTrue("[REDACTED]" in diagnostic.payload)

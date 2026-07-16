@@ -1,14 +1,13 @@
 package ai.saniou.thread.feature.settings
 
 import ai.saniou.thread.domain.model.sync.WebDavConfig
+import ai.saniou.thread.domain.model.activity.ProductActionRequest
+import ai.saniou.thread.domain.model.activity.ProductActionType
+import ai.saniou.thread.domain.usecase.activity.ExecuteProductActionUseCase
 import ai.saniou.thread.domain.refresh.RefreshStatus
 import ai.saniou.thread.domain.usecase.reader.ObserveReaderSchedulerUseCase
 import ai.saniou.thread.domain.usecase.refresh.ObserveRefreshDiagnosticsUseCase
-import ai.saniou.thread.domain.usecase.sync.BackupToWebDavUseCase
-import ai.saniou.thread.domain.usecase.sync.ExportUserDataUseCase
-import ai.saniou.thread.domain.usecase.sync.ImportUserDataUseCase
 import ai.saniou.thread.domain.usecase.sync.ObserveWebDavConfigUseCase
-import ai.saniou.thread.domain.usecase.sync.RestoreFromWebDavUseCase
 import ai.saniou.thread.domain.usecase.sync.SaveWebDavConfigUseCase
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
@@ -19,12 +18,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class SyncSettingsViewModel(
-    private val exportUserData: ExportUserDataUseCase,
-    private val importUserData: ImportUserDataUseCase,
+    private val executeProductAction: ExecuteProductActionUseCase,
     private val observeWebDavConfig: ObserveWebDavConfigUseCase,
     private val saveWebDavConfig: SaveWebDavConfigUseCase,
-    private val backupToWebDav: BackupToWebDavUseCase,
-    private val restoreFromWebDav: RestoreFromWebDavUseCase,
     private val observeReaderScheduler: ObserveReaderSchedulerUseCase,
     private val observeRefreshDiagnostics: ObserveRefreshDiagnosticsUseCase,
 ) : ScreenModel {
@@ -85,9 +81,9 @@ class SyncSettingsViewModel(
     private fun exportLocal() {
         screenModelScope.launch {
             _state.update { it.copy(isWorking = true) }
-            exportUserData().fold(
-                onSuccess = { export ->
-                    _state.update { it.copy(isWorking = false, dialog = UserDataDialog(false, export.payload)) }
+            executeProductAction(ProductActionRequest(ProductActionType.EXPORT_USER_DATA)).fold(
+                onSuccess = { result ->
+                    _state.update { it.copy(isWorking = false, dialog = UserDataDialog(false, result.output.orEmpty())) }
                 },
                 onFailure = ::showFailure,
             )
@@ -97,13 +93,13 @@ class SyncSettingsViewModel(
     private fun importLocal(payload: String) {
         screenModelScope.launch {
             _state.update { it.copy(isWorking = true) }
-            importUserData(payload).fold(
-                onSuccess = { report ->
+            executeProductAction(ProductActionRequest(ProductActionType.IMPORT_USER_DATA, payload = payload)).fold(
+                onSuccess = { result ->
                     _state.update {
                         it.copy(
                             isWorking = false,
                             dialog = null,
-                            message = "恢复完成：${report.summary.sourceCount} 个站点、${report.summary.feedSourceCount} 个订阅、${report.summary.bookmarkCount} 个收藏",
+                            message = result.message,
                         )
                     }
                 },
@@ -115,10 +111,10 @@ class SyncSettingsViewModel(
     private fun backup() {
         screenModelScope.launch {
             _state.update { it.copy(isWorking = true) }
-            backupToWebDav().fold(
-                onSuccess = { export ->
+            executeProductAction(ProductActionRequest(ProductActionType.BACKUP_TO_WEBDAV)).fold(
+                onSuccess = { result ->
                     _state.update {
-                        it.copy(isWorking = false, message = "WebDAV 备份完成：${export.summary.bookmarkCount} 个收藏")
+                        it.copy(isWorking = false, message = result.message)
                     }
                 },
                 onFailure = ::showFailure,
@@ -129,10 +125,10 @@ class SyncSettingsViewModel(
     private fun restore() {
         screenModelScope.launch {
             _state.update { it.copy(isWorking = true) }
-            restoreFromWebDav().fold(
-                onSuccess = { report ->
+            executeProductAction(ProductActionRequest(ProductActionType.RESTORE_FROM_WEBDAV)).fold(
+                onSuccess = { result ->
                     _state.update {
-                        it.copy(isWorking = false, message = "WebDAV 恢复完成：${report.summary.feedSourceCount} 个订阅")
+                        it.copy(isWorking = false, message = result.message)
                     }
                 },
                 onFailure = ::showFailure,

@@ -57,7 +57,9 @@ import org.kodein.di.compose.localDI
 import org.kodein.di.direct
 import org.kodein.di.instance
 
-class SyncSettingsPage : Screen {
+class SyncSettingsPage(
+    private val showImportOnOpen: Boolean = false,
+) : Screen {
     @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
     @Composable
     override fun Content() {
@@ -66,6 +68,10 @@ class SyncSettingsPage : Screen {
         val viewModel = rememberScreenModel { di.direct.instance<SyncSettingsViewModel>() }
         val state by viewModel.state.collectAsState()
         val snackbar = remember { SnackbarHostState() }
+
+        LaunchedEffect(showImportOnOpen) {
+            if (showImportOnOpen) viewModel.onEvent(SyncSettingsContract.Event.ShowImportLocal)
+        }
 
         LaunchedEffect(state.message) {
             state.message?.let {

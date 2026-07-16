@@ -20,6 +20,10 @@ import ai.saniou.thread.data.repository.SettingsRepositoryImpl
 import ai.saniou.thread.data.repository.GlobalSearchRepositoryImpl
 import ai.saniou.thread.data.repository.OperationsRepositoryImpl
 import ai.saniou.thread.data.repository.PostDraftRepositoryImpl
+import ai.saniou.thread.data.repository.IdentityRepositoryImpl
+import ai.saniou.thread.data.repository.ProductActionHistoryRepositoryImpl
+import ai.saniou.thread.data.repository.DefaultProductActionExecutor
+import ai.saniou.thread.data.repository.ActivityCenterRepositoryImpl
 import ai.saniou.thread.data.repository.WorkspaceSessionRepositoryImpl
 import ai.saniou.thread.data.repository.WorkspaceRestorationRepositoryImpl
 import ai.saniou.thread.data.repository.SubscriptionRepositoryImpl
@@ -76,6 +80,10 @@ import ai.saniou.thread.domain.repository.SettingsRepository
 import ai.saniou.thread.domain.repository.GlobalSearchRepository
 import ai.saniou.thread.domain.repository.OperationsRepository
 import ai.saniou.thread.domain.repository.PostDraftRepository
+import ai.saniou.thread.domain.repository.IdentityRepository
+import ai.saniou.thread.domain.repository.ProductActionHistoryRepository
+import ai.saniou.thread.domain.repository.ProductActionExecutor
+import ai.saniou.thread.domain.repository.ActivityCenterRepository
 import ai.saniou.thread.domain.repository.WorkspaceSessionRepository
 import ai.saniou.thread.domain.repository.WorkspaceRestorationRepository
 import ai.saniou.thread.domain.repository.Source
@@ -241,8 +249,9 @@ val dataModule = DI.Module("dataModule") {
         )
     }
     bind<AccountRepository>() with singleton { AccountRepositoryImpl(instance()) }
-    bind<LoginRepository>() with singleton { LoginRepositoryImpl(instance(), instance()) }
     bind<SettingsRepository>() with singleton { SettingsRepositoryImpl(instance()) }
+    bind<IdentityRepository>() with singleton { IdentityRepositoryImpl(instance(), instance(), instance()) }
+    bind<LoginRepository>() with singleton { LoginRepositoryImpl(instance(), instance(), instance()) }
     bind<WorkspaceSessionRepository>() with singleton { WorkspaceSessionRepositoryImpl(instance()) }
     bind<WorkspaceRestorationRepository>() with singleton { WorkspaceRestorationRepositoryImpl(instance()) }
     bind<GlobalSearchRepository>() with singleton { GlobalSearchRepositoryImpl(instance(), instance()) }
@@ -323,7 +332,7 @@ val dataModule = DI.Module("dataModule") {
     bindSingleton { ReaderSubscriptionCodec() }
     bindSingleton { HttpClient() } // Use a basic HttpClient
     bindSingleton<RefreshHistoryRepository> { PersistentRefreshHistoryRepository(instance()) }
-    bindSingleton<RefreshCoordinator> { DefaultRefreshCoordinator(instance()) }
+    bindSingleton<RefreshCoordinator> { DefaultRefreshCoordinator(instance(), instance()) }
     bind<ReaderRepository>() with singleton {
         ReaderRepositoryImpl(instance(), instance(), instance(), instance(), instance(), instance(), instance())
     }
@@ -331,6 +340,21 @@ val dataModule = DI.Module("dataModule") {
         OperationsRepositoryImpl(instance(), instance(), instance(), instance(), instance())
     }
     bind<PostDraftRepository>() with singleton { PostDraftRepositoryImpl(instance()) }
+    bind<ProductActionHistoryRepository>() with singleton { ProductActionHistoryRepositoryImpl(instance()) }
+    bind<ProductActionExecutor>() with singleton {
+        DefaultProductActionExecutor(
+            instance(),
+            instance(),
+            instance(),
+            instance(),
+            instance(),
+            instance(),
+            instance(),
+        )
+    }
+    bind<ActivityCenterRepository>() with singleton {
+        ActivityCenterRepositoryImpl(instance(), instance(), instance(), instance(), instance())
+    }
     bind<ReaderRefreshScheduler>() with singleton { DefaultReaderRefreshScheduler(instance()) }
 
     // Tieba Infrastructure

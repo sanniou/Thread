@@ -6,6 +6,7 @@ import ai.saniou.coreui.widgets.AdaptiveModal
 import ai.saniou.thread.domain.model.search.GlobalSearchResult
 import ai.saniou.thread.domain.model.operations.ProductCommandAction
 import ai.saniou.thread.domain.model.operations.ProductCommandDescriptor
+import ai.saniou.thread.domain.model.activity.ProductActionType
 import ai.saniou.thread.domain.model.workspace.WorkspaceDestination
 import ai.saniou.thread.domain.usecase.search.SearchLocalContentUseCase
 import ai.saniou.thread.feature.search.GlobalSearchResultRow
@@ -26,7 +27,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.DynamicFeed
 import androidx.compose.material.icons.filled.Forum
-import androidx.compose.material.icons.filled.Games
+import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.MonitorHeart
 import androidx.compose.material.icons.filled.RssFeed
@@ -37,6 +38,12 @@ import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Sync
+import androidx.compose.material.icons.filled.CloudUpload
+import androidx.compose.material.icons.filled.CloudDownload
+import androidx.compose.material.icons.filled.FileDownload
+import androidx.compose.material.icons.filled.FileUpload
+import androidx.compose.material.icons.filled.EditNote
+import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -75,11 +82,26 @@ data class WorkspaceCommand(
 data class ProductCommand(
     val descriptor: ProductCommandDescriptor,
     val icon: ImageVector = when (descriptor.action) {
-        ProductCommandAction.REFRESH_SOURCE -> Icons.Default.Refresh
-        ProductCommandAction.SET_SOURCE_ENABLED -> Icons.Default.PowerSettingsNew
+        ProductCommandAction.EXECUTE_PRODUCT_ACTION -> when (descriptor.request?.type) {
+            ProductActionType.REFRESH_SOURCE -> Icons.Default.Refresh
+            ProductActionType.REFRESH_ALL_READERS -> Icons.Default.Sync
+            ProductActionType.SET_SOURCE_ENABLED -> Icons.Default.PowerSettingsNew
+            ProductActionType.CLEAR_SOURCE_DIAGNOSTIC,
+            ProductActionType.EXPORT_DIAGNOSTIC -> Icons.Default.BugReport
+            ProductActionType.EXPORT_READER_SUBSCRIPTIONS,
+            ProductActionType.EXPORT_USER_DATA -> Icons.Default.FileDownload
+            ProductActionType.IMPORT_READER_SUBSCRIPTIONS,
+            ProductActionType.IMPORT_USER_DATA -> Icons.Default.FileUpload
+            ProductActionType.BACKUP_TO_WEBDAV -> Icons.Default.CloudUpload
+            ProductActionType.RESTORE_FROM_WEBDAV -> Icons.Default.CloudDownload
+            ProductActionType.DISCARD_DRAFT -> Icons.Default.DeleteOutline
+            null -> Icons.Default.Sync
+        }
         ProductCommandAction.OPEN_SOURCE_LOGIN -> Icons.AutoMirrored.Filled.Login
-        ProductCommandAction.REFRESH_ALL_READERS -> Icons.Default.Sync
-        ProductCommandAction.EXPORT_DIAGNOSTIC -> Icons.Default.BugReport
+        ProductCommandAction.OPEN_ACTIVITY_CENTER -> Icons.Default.NotificationsActive
+        ProductCommandAction.OPEN_READER_IMPORT,
+        ProductCommandAction.OPEN_USER_DATA_IMPORT -> Icons.Default.FileUpload
+        ProductCommandAction.RESUME_DRAFT -> Icons.Default.EditNote
     },
 )
 
@@ -90,8 +112,8 @@ val defaultWorkspaceCommands = listOf(
     WorkspaceCommand(WorkspaceDestination.SEARCH, "全局发现", "搜索全部离线内容缓存", Icons.Default.Search, "⌘4"),
     WorkspaceCommand(WorkspaceDestination.BOOKMARKS, "打开收藏", "继续保存的阅读上下文", Icons.Default.Bookmark, "⌘5"),
     WorkspaceCommand(WorkspaceDestination.HISTORY, "打开历史", "回到最近浏览的主题", Icons.Default.History, "⌘6"),
-    WorkspaceCommand(WorkspaceDestination.OPERATIONS, "来源运维", "检查缓存、刷新与连接器健康", Icons.Default.MonitorHeart, "⌘7"),
-    WorkspaceCommand(WorkspaceDestination.LAB, "打开实验室", "探索实验性体验", Icons.Default.Games, "⌘8"),
+    WorkspaceCommand(WorkspaceDestination.ACTIVITY, "活动中心", "处理刷新、认证、草稿与数据任务", Icons.Default.NotificationsActive, "⌘7"),
+    WorkspaceCommand(WorkspaceDestination.OPERATIONS, "来源运维", "检查缓存、刷新与连接器健康", Icons.Default.MonitorHeart, "⌘8"),
     WorkspaceCommand(WorkspaceDestination.SETTINGS, "数据与同步", "备份、恢复与 WebDAV", Icons.Default.Settings, "⌘9"),
 )
 
@@ -144,6 +166,7 @@ fun CommandPalette(
     }
 
     fun activate(entry: PaletteEntry) {
+        if (entry is PaletteEntry.ProductAction && !entry.value.descriptor.enabled) return
         when (entry) {
             is PaletteEntry.Command -> onCommand(entry.value)
             is PaletteEntry.ProductAction -> onProductCommand(entry.value.descriptor)
@@ -243,6 +266,7 @@ fun CommandPalette(
 private fun ProductCommandRow(command: ProductCommand, selected: Boolean, onClick: () -> Unit) {
     Surface(
         onClick = onClick,
+        enabled = command.descriptor.enabled,
         modifier = Modifier.fillMaxWidth().semantics {
             contentDescription = "${command.descriptor.label}，全局操作"
         },
@@ -254,7 +278,11 @@ private fun ProductCommandRow(command: ProductCommand, selected: Boolean, onClic
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(13.dp),
         ) {
-            Icon(command.icon, null, tint = MaterialTheme.colorScheme.tertiary)
+            Icon(
+                command.icon,
+                null,
+                tint = if (command.descriptor.enabled) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.outline,
+            )
             Column(Modifier.weight(1f)) {
                 Text(command.descriptor.label, style = MaterialTheme.typography.titleSmall)
                 Text(
@@ -266,7 +294,11 @@ private fun ProductCommandRow(command: ProductCommand, selected: Boolean, onClic
                 )
             }
             Surface(shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.surfaceContainerHigh) {
-                Text("操作", Modifier.padding(horizontal = 8.dp, vertical = 4.dp), style = MaterialTheme.typography.labelSmall)
+                Text(
+                    if (command.descriptor.enabled) "操作" else "执行中",
+                    Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                    style = MaterialTheme.typography.labelSmall,
+                )
             }
         }
     }

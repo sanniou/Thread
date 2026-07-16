@@ -7,6 +7,8 @@ data class PostDraftKey(
     val targetKind: PostDraftTargetKind,
     val targetId: String,
 ) {
+    val stableKey: String get() = "$sourceId:${targetKind.name.lowercase()}:$targetId"
+
     init {
         require(sourceId.isNotBlank())
         require(targetId.isNotBlank())

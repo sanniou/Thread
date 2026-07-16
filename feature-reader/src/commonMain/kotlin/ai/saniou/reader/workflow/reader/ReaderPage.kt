@@ -56,7 +56,9 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.launch
 
-class ReaderPage : Screen {
+class ReaderPage(
+    private val initialImportFormat: ReaderSubscriptionFormat? = null,
+) : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
@@ -69,6 +71,10 @@ class ReaderPage : Screen {
         var previewArticle by remember { mutableStateOf<Article?>(null) }
         val snackbarHostState = remember { SnackbarHostState() }
         val searchFocusRequester = remember { FocusRequester() }
+
+        LaunchedEffect(initialImportFormat) {
+            initialImportFormat?.let { viewModel.onEvent(ReaderContract.Event.OnShowImport(it)) }
+        }
 
         LaunchedEffect(isSearchActive) {
             if (isSearchActive) searchFocusRequester.requestFocus()

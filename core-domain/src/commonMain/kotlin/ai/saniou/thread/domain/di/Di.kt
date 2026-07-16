@@ -25,6 +25,10 @@ import ai.saniou.thread.domain.usecase.post.UpvoteTopicUseCase
 import ai.saniou.thread.domain.usecase.post.GetPostDraftUseCase
 import ai.saniou.thread.domain.usecase.post.SavePostDraftUseCase
 import ai.saniou.thread.domain.usecase.post.DiscardPostDraftUseCase
+import ai.saniou.thread.domain.usecase.post.ObservePostDraftsUseCase
+import ai.saniou.thread.domain.usecase.activity.ObserveActivityCenterUseCase
+import ai.saniou.thread.domain.usecase.activity.ExecuteProductActionUseCase
+import ai.saniou.thread.domain.usecase.activity.ClearCompletedActivitiesUseCase
 import ai.saniou.thread.domain.usecase.settings.GetSettingsUseCase
 import ai.saniou.thread.domain.usecase.settings.SaveSettingsUseCase
 import ai.saniou.thread.domain.usecase.source.GetAvailableSourcesUseCase
@@ -86,6 +90,10 @@ val domainModule = DI.Module("domainModule") {
     bindProvider { GetPostDraftUseCase(instance()) }
     bindProvider { SavePostDraftUseCase(instance()) }
     bindProvider { DiscardPostDraftUseCase(instance()) }
+    bindProvider { ObservePostDraftsUseCase(instance()) }
+    bindProvider { ObserveActivityCenterUseCase(instance()) }
+    bindProvider { ExecuteProductActionUseCase(instance()) }
+    bindProvider { ClearCompletedActivitiesUseCase(instance()) }
 
     // Reader
     bindProvider { GetFeedSourcesUseCase(instance()) }

@@ -70,6 +70,9 @@ SELECT * FROM Account WHERE source_id = ? ORDER BY sort ASC;
 getCurrentAccount:
 SELECT * FROM Account WHERE source_id = ? AND is_current = 1 LIMIT 1;
 
+getCurrentAccounts:
+SELECT * FROM Account WHERE is_current = 1 ORDER BY lastUsedAt DESC;
+
 -- Set all accounts of a source to not current
 clearCurrentAccount:
 UPDATE Account SET is_current = 0 WHERE source_id = ?;

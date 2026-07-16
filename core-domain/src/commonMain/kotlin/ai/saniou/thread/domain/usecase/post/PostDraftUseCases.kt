@@ -4,6 +4,10 @@ import ai.saniou.thread.domain.model.forum.PostDraftKey
 import ai.saniou.thread.domain.model.forum.SavedPostDraft
 import ai.saniou.thread.domain.repository.PostDraftRepository
 
+class ObservePostDraftsUseCase(private val repository: PostDraftRepository) {
+    operator fun invoke() = repository.observeAll()
+}
+
 class GetPostDraftUseCase(private val repository: PostDraftRepository) {
     suspend operator fun invoke(key: PostDraftKey) = repository.get(key)
 }

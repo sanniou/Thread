@@ -19,6 +19,12 @@ class AccountRepositoryImpl(
     private val db: Database,
 ) : AccountRepository {
 
+    override fun getCurrentAccounts(): Flow<List<Account>> =
+        db.accountQueries.getCurrentAccounts()
+            .asFlow()
+            .mapToList(Dispatchers.Default)
+            .map { it.toDomain() }
+
     override fun getAccounts(sourceId: String): Flow<List<Account>> {
         return db.accountQueries.getAccountsBySource(sourceId)
             .asFlow()
