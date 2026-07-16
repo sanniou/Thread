@@ -97,6 +97,26 @@ Feed 复用相同 Feature 侧栏和 Context Hero。侧栏负责论坛来源与 R
 - Reader 来源分析、订阅 JSON/OPML 传输、Forum 手动登录、引用内容、楼中楼、订阅 ID、Discourse 来源和全量用户数据包都复用该行为。
 - AlertDialog 只保留短确认和短错误；长表单、长 JSON、可滚动内容必须使用 `AdaptiveModal`。
 
+## 键盘、焦点与辅助技术
+
+键盘能力是 common 交互契约，不是 Desktop 专用页面。`ThreadShortcut` 同时识别 Ctrl 与 Command，并只处理 KeyDown；命令键必需的快捷键不会吞掉输入框中的普通字符。
+
+- Ctrl/Command+1–9 切换全局工作区，目标语义同时公布选中状态和对应快捷键。
+- Ctrl/Command+B 打开或关闭 Compact/Medium 的 Feature 侧栏；永久侧栏只暴露 pane 语义，不执行无意义的开关动画。
+- Ctrl/Command+K 聚焦 Reader 搜索，Ctrl/Command+R 刷新当前 Reader、Feed 或 Forum 上下文；Forum 详情额外支持 Ctrl/Command+G 跳页、Ctrl/Command+Home 回到顶部。
+- Escape 由最内层模态任务优先关闭；没有模态任务时，`ThreadDetailScaffold` 执行返回。搜索和 Large 文章预览具有显式清理路径。
+- 工作区根获得初始焦点，搜索打开后主动转移到输入框。侧栏条目至少 48dp，并向辅助技术提供 button role、selected、pane title 与 state description。
+
+Compose 动画遵循平台 `MotionDurationScale`；本项目不绕过该缩放创建自行计时的导航动画。系统请求 reduced motion 时，过渡和滚动动画由 Compose 统一降速或关闭，不新增平台分支。
+
+## 长列表与性能预算
+
+Reader 为每个“来源 + 全部/未读/收藏”组合保存独立 `LazyListState`，Feed 为每组论坛来源与 Reader 开关保存独立状态；返回任务或切换筛选不会把用户送回顶部。Article、Topic、Timeline 和 Subscription 项使用来源隔离的稳定 key，刷新只更新变化行。
+
+所有生产 Pager 使用 `threadPagingConfig`：默认页大小 20，初始两页、半页预取、关闭 placeholder、最多保留十页。特殊页只调整业务页大小或明确的一页初始窗口，不能自行创建无限缓存配置。
+
+schema v4 为文章来源/时间、未读/收藏时间、订阅键/接收时间、主题/楼层、来源/用户时间添加组合索引。Desktop 测试使用 `EXPLAIN QUERY PLAN` 固定关键列表必须命中指定索引；性能门禁比较查询结构和内存窗口，不使用易受机器负载影响的墙钟阈值。
+
 ## 缓存优先与来源隔离
 
 可靠性状态不是每个页面临时判断的视觉细节。`resolvePagingContentState` 定义全产品顺序：
@@ -146,4 +166,4 @@ PATH=/usr/lib/jvm/java-21-openjdk/bin:$PATH \
   :composeApp:jvmTest :composeApp:compileKotlinJvm
 ```
 
-该门禁覆盖录制式 Connector 合约、缓存与刷新不变量、离线种子启动探针、common Forum/Reader/Feed/core-ui、AndroidX Paging、SQLDelight 代码生成与 Desktop 组合根。Android/iOS 不在每轮重复编译；平台回归在 common 架构和产品功能完成后集中执行。
+该门禁覆盖录制式 Connector 合约、缓存与刷新不变量、schema v4 迁移/查询计划、有界 Paging 策略、交互快捷键、离线种子启动探针、common Forum/Reader/Feed/core-ui、SQLDelight 代码生成与 Desktop 组合根。最终候选轮追加 `:composeApp:createReleaseDistributable`，并实际运行发行 launcher 的 `--smoke-check`。Android/iOS 不在每轮重复编译；平台回归在 common 架构和产品功能完成后集中执行。

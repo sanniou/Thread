@@ -2,6 +2,8 @@ package ai.saniou.corecommon.utils
 
 import kotlin.time.Instant
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.daysUntil
+import kotlinx.datetime.number
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
 import kotlin.time.Duration
@@ -29,12 +31,12 @@ fun Instant.toRelativeTimeString(timeZone: TimeZone = TimeZone.currentSystemDefa
         duration < 2.days -> {
             val localThis = this.toLocalDateTime(timeZone)
             val localNow = now.toLocalDateTime(timeZone)
-            if (localThis.dayOfMonth == localNow.dayOfMonth - 1) "昨天" else "${duration.inWholeDays} 天前"
+            if (localThis.date.daysUntil(localNow.date) == 1) "昨天" else "${duration.inWholeDays} 天前"
         }
         duration < 30.days -> "${duration.inWholeDays} 天前"
         else -> {
             val localDate = this.toLocalDateTime(timeZone)
-            "${localDate.year}-${localDate.monthNumber.toString().padStart(2, '0')}-${localDate.dayOfMonth.toString().padStart(2, '0')}"
+            "${localDate.year}-${localDate.month.number.toString().padStart(2, '0')}-${localDate.day.toString().padStart(2, '0')}"
         }
     }
 }

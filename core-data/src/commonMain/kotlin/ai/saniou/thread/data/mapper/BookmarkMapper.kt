@@ -89,26 +89,29 @@ fun Bookmark.toEntity(): ai.saniou.thread.db.table.Bookmark {
 }
 
 fun ai.saniou.thread.db.table.Bookmark.toDomain(tags: List<Tag>): Bookmark {
+    fun <T : Any> T?.required(field: String): T =
+        requireNotNull(this) { "Malformed $type bookmark $id: missing $field" }
+
     return when (type) {
         "TEXT" -> Bookmark.Text(
             id = id,
             createdAt = createdAt,
             tags = tags,
-            content = content!!
+            content = content.required("content")
         )
         "QUOTE" -> Bookmark.Quote(
             id = id,
             createdAt = createdAt,
             tags = tags,
-            content = content!!,
-            sourceId = sourceId!!,
-            sourceType = sourceType!!
+            content = content.required("content"),
+            sourceId = sourceId.required("sourceId"),
+            sourceType = sourceType.required("sourceType")
         )
         "LINK" -> Bookmark.Link(
             id = id,
             createdAt = createdAt,
             tags = tags,
-            url = url!!,
+            url = url.required("url"),
             title = title,
             description = description,
             favicon = favicon
@@ -117,7 +120,7 @@ fun ai.saniou.thread.db.table.Bookmark.toDomain(tags: List<Tag>): Bookmark {
             id = id,
             createdAt = createdAt,
             tags = tags,
-            url = url!!,
+            url = url.required("url"),
             width = width?.toInt(),
             height = height?.toInt()
         )
@@ -125,8 +128,8 @@ fun ai.saniou.thread.db.table.Bookmark.toDomain(tags: List<Tag>): Bookmark {
             id = id,
             createdAt = createdAt,
             tags = tags,
-            url = url!!,
-            mimeType = mimeType!!,
+            url = url.required("url"),
+            mimeType = mimeType.required("mimeType"),
             duration = duration
         )
         else -> throw IllegalArgumentException("Unknown bookmark type: $type")

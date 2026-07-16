@@ -15,6 +15,9 @@ CREATE INDEX IF NOT EXISTS idx_subscription_topic_id ON Subscription(sourceId, t
 -- 为 subscriptionKey 字段创建索引
 CREATE INDEX IF NOT EXISTS idx_subscription_key ON Subscription(subscriptionKey);
 
+CREATE INDEX IF NOT EXISTS idx_subscription_key_time
+ON Subscription(subscriptionKey, subscriptionTime DESC, topicId DESC);
+
 -- 插入 Subscription 数据
 insertSubscription:
 INSERT OR REPLACE INTO Subscription (

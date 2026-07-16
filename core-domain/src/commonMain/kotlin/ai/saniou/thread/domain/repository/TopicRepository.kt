@@ -66,7 +66,7 @@ interface TopicRepository {
      * @param threadId 帖子ID
      * @return 包含图片列表的 Flow
      */
-    fun getTopicImages(sourceId: String, threadId: Long): Flow<List<Image>>
+    fun getTopicImages(sourceId: String, threadId: String): Flow<List<Image>>
 
     /**
      * 获取帖子的所有回复（非分页）

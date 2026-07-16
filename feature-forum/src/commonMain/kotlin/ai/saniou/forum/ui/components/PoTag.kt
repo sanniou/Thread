@@ -14,6 +14,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.number
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
@@ -42,9 +43,9 @@ fun PoTag(isPo: Boolean) {
 private fun getHolidayEmoji(): String? {
     val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
     return when {
-        now.monthNumber == 12 && now.dayOfMonth == 25 -> "🎄"
-        now.monthNumber == 1 && now.dayOfMonth == 1 -> "🎉"
-        now.monthNumber == 10 && now.dayOfMonth == 1 -> "🇨🇳"
+        now.month.number == 12 && now.day == 25 -> "🎄"
+        now.month.number == 1 && now.day == 1 -> "🎉"
+        now.month.number == 10 && now.day == 1 -> "🇨🇳"
         else -> null
     }
 }

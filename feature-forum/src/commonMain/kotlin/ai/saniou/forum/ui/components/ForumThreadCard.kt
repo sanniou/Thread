@@ -46,9 +46,9 @@ fun TopicCard(
                 showChannelBadge = showChannelBadge
             )
 
-            if (!topic.title.isNullOrBlank() && topic.title != "无标题") {
+            topic.title?.takeIf { it.isNotBlank() && it != "无标题" }?.let { title ->
                 Text(
-                    text = topic.title!!,
+                    text = title,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -106,7 +106,7 @@ fun TopicCard(
                         verticalArrangement = Arrangement.spacedBy(Dimens.padding_tiny)
                     ) {
                         RecentReplies(topic.comments.take(2))
-                        if ((topic.commentCount ?: 0) > 0) {
+                        if (topic.commentCount > 0) {
                             Text(
                                 text = "查看其余 ${topic.commentCount} 条回复...",
                                 style = MaterialTheme.typography.labelSmall,

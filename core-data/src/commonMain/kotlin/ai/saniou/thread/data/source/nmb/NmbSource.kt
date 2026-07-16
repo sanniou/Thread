@@ -12,6 +12,7 @@ import ai.saniou.thread.db.Database
 import ai.saniou.thread.db.table.forum.Image
 import ai.saniou.thread.domain.model.PagedResult
 import ai.saniou.thread.domain.model.SourceCapabilities
+import ai.saniou.thread.domain.paging.threadPagingConfig
 import ai.saniou.thread.domain.model.forum.*
 import ai.saniou.thread.domain.model.user.LoginField
 import ai.saniou.thread.domain.model.user.LoginStrategy
@@ -22,7 +23,6 @@ import ai.saniou.thread.domain.source.ForumSearchConnector
 import ai.saniou.thread.domain.source.UserContentConnector
 import ai.saniou.thread.network.SaniouResult
 import androidx.paging.Pager
-import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
 import app.cash.sqldelight.coroutines.asFlow
@@ -629,7 +629,7 @@ class NmbSource(
 
     override fun searchTopics(query: String): Flow<PagingData<Topic>> {
         return Pager(
-            config = PagingConfig(pageSize = 20),
+            config = threadPagingConfig(),
             pagingSourceFactory = {
                 QueryPagingSource(
                     transacter = db.topicQueries,
@@ -651,7 +651,7 @@ class NmbSource(
 
     override fun searchComments(query: String): Flow<PagingData<Comment>> {
         return Pager(
-            config = PagingConfig(pageSize = 20),
+            config = threadPagingConfig(),
             pagingSourceFactory = {
                 QueryPagingSource(
                     transacter = db.commentQueries,
@@ -669,14 +669,14 @@ class NmbSource(
 
     override fun getUserTopics(userId: String): Flow<PagingData<Topic>> {
         return Pager(
-            config = PagingConfig(pageSize = 20),
+            config = threadPagingConfig(),
             pagingSourceFactory = {
                 QueryPagingSource(
                     transacter = db.topicQueries,
                     context = Dispatchers.Default,
-                    countQuery = db.topicQueries.countTopicsByUserHash(userId),
+                    countQuery = db.topicQueries.countTopicsByUserHash(id, userId),
                     queryProvider = { limit, offset ->
-                        db.topicQueries.getTopicsByUserHashOffset(userId, limit, offset)
+                        db.topicQueries.getTopicsByUserHashOffset(id, userId, limit, offset)
                     }
                 )
             }
@@ -691,14 +691,14 @@ class NmbSource(
 
     override fun getUserComments(userId: String): Flow<PagingData<Comment>> {
         return Pager(
-            config = PagingConfig(pageSize = 20),
+            config = threadPagingConfig(),
             pagingSourceFactory = {
                 QueryPagingSource(
                     transacter = db.commentQueries,
                     context = Dispatchers.Default,
-                    countQuery = db.commentQueries.countCommentsByUserHashNoTopic(userId),
+                    countQuery = db.commentQueries.countCommentsByUserHashNoTopic(id, userId),
                     queryProvider = { limit, offset ->
-                        db.commentQueries.getCommentsByUserHashOffset(userId, limit, offset)
+                        db.commentQueries.getCommentsByUserHashOffset(id, userId, limit, offset)
                     }
                 )
             }

@@ -11,8 +11,11 @@ import androidx.paging.cachedIn
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 class ReaderViewModel(
     private val getFeedSourcesUseCase: GetFeedSourcesUseCase,
     private val getArticlesUseCase: GetArticlesUseCase,

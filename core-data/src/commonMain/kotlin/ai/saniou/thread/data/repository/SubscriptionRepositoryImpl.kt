@@ -7,6 +7,7 @@ import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
 import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.domain.model.forum.Topic
+import ai.saniou.thread.domain.paging.threadPagingConfig
 import ai.saniou.thread.domain.repository.SubscriptionRepository
 import androidx.paging.*
 import app.cash.sqldelight.paging3.QueryPagingSource
@@ -45,7 +46,7 @@ class SubscriptionRepositoryImpl(
     @OptIn(ExperimentalPagingApi::class)
     override fun getSubscriptionFeed(subscriptionKey: String): Flow<PagingData<Topic>> {
         return Pager(
-            config = PagingConfig(pageSize = 20),
+            config = threadPagingConfig(),
             remoteMediator = SubscriptionRemoteMediator(
                 subscriptionKey,
                 nmbXdApi,

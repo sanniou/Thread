@@ -1,6 +1,9 @@
 package ai.saniou.forum.workflow.topicdetail
 
 import ai.saniou.coreui.composition.LocalForumSourceId
+import ai.saniou.coreui.interaction.ThreadShortcut
+import ai.saniou.coreui.interaction.rememberThreadClipboard
+import ai.saniou.coreui.interaction.threadShortcutHost
 import ai.saniou.coreui.layout.LocalThreadWindowInfo
 import ai.saniou.coreui.layout.ReadingCanvas
 import ai.saniou.coreui.state.*
@@ -35,13 +38,13 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.paging.compose.collectAsLazyPagingItems
@@ -63,10 +66,6 @@ import thread.feature_forum.generated.resources.*
 data class TopicDetailPage(
     val threadId: String,
 ) : Screen {
-
-    // Secondary constructor for compatibility
-    constructor(threadId: Long) : this(threadId.toString())
-
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
@@ -75,7 +74,7 @@ data class TopicDetailPage(
         val snackbarHostState = remember { SnackbarHostState() }
         val lazyListState = rememberLazyListState()
         val coroutineScope = rememberCoroutineScope()
-        val clipboardManager = LocalClipboardManager.current
+        val clipboard = rememberThreadClipboard()
         val sourceId = LocalForumSourceId.current
 
         val viewModel: TopicDetailViewModel = rememberScreenModel(tag = "$sourceId:$threadId") {
@@ -83,8 +82,8 @@ data class TopicDetailPage(
         }
         val state by viewModel.state.collectAsState()
 
-        var showJumpDialog by remember { mutableStateOf(false) }
-        var showMenu by remember { mutableStateOf(false) }
+        var showJumpDialog by rememberSaveable { mutableStateOf(false) }
+        var showMenu by rememberSaveable { mutableStateOf(false) }
 
         // 引用弹窗状态
         val referenceViewModel: ReferenceViewModel = rememberScreenModel()
@@ -106,13 +105,22 @@ data class TopicDetailPage(
                     }
 
                     is Effect.CopyToClipboard -> {
-                        clipboardManager.setText(AnnotatedString(effect.text))
+                        clipboard.copyText(effect.text)
                     }
                 }
             }
         }
 
         ThreadDetailScaffold(
+            modifier = Modifier.threadShortcutHost(
+                ThreadShortcut(Key.R) { viewModel.onEvent(Event.Refresh) },
+                ThreadShortcut(Key.G) {
+                    if (state.totalPages > 1) showJumpDialog = true
+                },
+                ThreadShortcut(Key.MoveHome) {
+                    coroutineScope.launch { lazyListState.animateScrollToItem(0) }
+                },
+            ),
             title = state.forumName.ifBlank { "主题详情" },
             eyebrow = "FORUM THREAD",
             subtitle = "No.$threadId · 阅读、引用与回复",
@@ -224,7 +232,7 @@ data class TopicDetailPage(
                                 ImagePreviewViewModelParams(
                                     imageProvider = ThreadImageProvider(
                                         sourceId = sourceId,
-                                        threadId = threadId.toLongOrNull() ?: 0L,
+                                        threadId = threadId,
                                         getTopicImagesUseCase = di.direct.instance()
                                     ),
                                     initialImages = images,
@@ -487,7 +495,7 @@ fun ThreadSuccessContent(
     val replies = state.replies.collectAsLazyPagingItems()
     val allImages by remember(replies.itemSnapshotList) {
         derivedStateOf {
-            replies.itemSnapshotList.items.flatMap { it?.images ?: emptyList() }
+            replies.itemSnapshotList.items.flatMap(Comment::images)
         }
     }
 

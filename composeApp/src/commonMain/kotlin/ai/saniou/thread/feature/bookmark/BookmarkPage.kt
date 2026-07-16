@@ -123,7 +123,7 @@ object BookmarkPage : Screen {
                                                 if (it.sourceType == "article") {
                                                     navigator.push(ArticleDetailPage(it.sourceId))
                                                 } else {
-                                                    navigator.push(TopicDetailPage(it.sourceId.toLong()))
+                                                    navigator.push(TopicDetailPage(it.sourceId))
                                                 }
                                             }
 

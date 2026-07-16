@@ -76,7 +76,7 @@ class SubscriptionViewModel(
 
     fun onEvent(event: Event) {
         when (event) {
-            is Event.OnUnsubscribe -> unsubscribe(event.threadId.toString())
+            is Event.OnUnsubscribe -> unsubscribe(event.threadId)
             is Event.OnSetSubscriptionId -> setSubscriptionId(event.id)
             Event.OnGenerateRandomSubscriptionId -> generateRandomSubscriptionId()
             Event.OnShowSubscriptionIdDialog -> _state.update { it.copy(isShowSubscriptionIdDialog = true) }

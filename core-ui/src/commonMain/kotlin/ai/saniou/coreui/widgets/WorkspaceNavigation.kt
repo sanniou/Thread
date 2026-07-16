@@ -1,7 +1,9 @@
 package ai.saniou.coreui.widgets
 
+import ai.saniou.coreui.interaction.ThreadShortcut
+import ai.saniou.coreui.interaction.threadShortcutHost
 import ai.saniou.coreui.layout.LocalThreadWindowInfo
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,13 +28,22 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.paneTitle
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -58,10 +69,22 @@ fun WorkspaceNavigationSuite(
     content: @Composable () -> Unit,
 ) {
     val windowInfo = LocalThreadWindowInfo.current
+    val focusRequester = remember { FocusRequester() }
+    val shortcuts = items.mapIndexedNotNull { index, item ->
+        workspaceShortcutKeys.getOrNull(index)?.let { key ->
+            ThreadShortcut(key) { item.onClick() }
+        }
+    }.toTypedArray()
+    val hostModifier = modifier
+        .focusRequester(focusRequester)
+        .focusable()
+        .semantics { paneTitle = "Thread 工作区" }
+        .threadShortcutHost(*shortcuts)
+    LaunchedEffect(Unit) { focusRequester.requestFocus() }
     if (windowInfo.usesBottomNavigation) {
-        WorkspaceBottomNavigation(items = items, modifier = modifier, content = content)
+        WorkspaceBottomNavigation(items = items, modifier = hostModifier, content = content)
     } else {
-        Row(modifier.fillMaxSize()) {
+        Row(hostModifier.fillMaxSize()) {
             WorkspaceNavigationRail(items)
             Box(Modifier.weight(1f).fillMaxSize()) { content() }
         }
@@ -87,10 +110,12 @@ private fun WorkspaceBottomNavigation(
                 tonalElevation = 0.dp,
             ) {
                 primaryItems.forEach { item ->
+                    val index = items.indexOf(item)
                     NavigationBarItem(
+                        modifier = Modifier.workspaceDestinationSemantics(item, index),
                         selected = item.selected,
                         onClick = item.onClick,
-                        icon = { Icon(item.icon, contentDescription = item.label) },
+                        icon = { Icon(item.icon, contentDescription = null) },
                         label = { Text(item.label, maxLines = 1) },
                         colors = NavigationBarItemDefaults.colors(
                             indicatorColor = MaterialTheme.colorScheme.primaryContainer,
@@ -98,6 +123,10 @@ private fun WorkspaceBottomNavigation(
                     )
                 }
                 NavigationBarItem(
+                    modifier = Modifier.semantics {
+                        contentDescription = "更多工作区"
+                        stateDescription = if (overflowItems.any { it.selected }) "包含当前工作区" else "快捷键菜单"
+                    },
                     selected = overflowItems.any { it.selected },
                     onClick = { showOverflow = true },
                     icon = { Icon(Icons.Default.MoreHoriz, contentDescription = "更多") },
@@ -121,11 +150,11 @@ private fun WorkspaceBottomNavigation(
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp),
                 )
                 primaryItems.forEach { item ->
-                    CompactDestinationItem(item) { showOverflow = false }
+                    CompactDestinationItem(item, items.indexOf(item)) { showOverflow = false }
                 }
                 HorizontalDivider(Modifier.padding(vertical = 8.dp))
                 overflowItems.forEach { item ->
-                    CompactDestinationItem(item) { showOverflow = false }
+                    CompactDestinationItem(item, items.indexOf(item)) { showOverflow = false }
                 }
             }
         }
@@ -135,6 +164,7 @@ private fun WorkspaceBottomNavigation(
 @Composable
 private fun CompactDestinationItem(
     item: WorkspaceNavigationItem,
+    index: Int,
     onDismiss: () -> Unit,
 ) {
     Surface(
@@ -142,7 +172,7 @@ private fun CompactDestinationItem(
             item.onClick()
             onDismiss()
         },
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().workspaceDestinationSemantics(item, index),
         shape = MaterialTheme.shapes.large,
         color = if (item.selected) {
             MaterialTheme.colorScheme.primaryContainer
@@ -200,15 +230,19 @@ fun WorkspaceNavigationRail(
                 )
             }
             Spacer(Modifier.size(10.dp))
-            items.filterNot { it.bottom }.forEach { WorkspaceRailItem(it, windowInfo.showsNavigationLabels) }
+            items.filterNot { it.bottom }.forEach { item ->
+                WorkspaceRailItem(item, windowInfo.showsNavigationLabels, items.indexOf(item))
+            }
             Spacer(Modifier.weight(1f))
-            items.filter { it.bottom }.forEach { WorkspaceRailItem(it, windowInfo.showsNavigationLabels) }
+            items.filter { it.bottom }.forEach { item ->
+                WorkspaceRailItem(item, windowInfo.showsNavigationLabels, items.indexOf(item))
+            }
         }
     }
 }
 
 @Composable
-private fun WorkspaceRailItem(item: WorkspaceNavigationItem, showLabel: Boolean) {
+private fun WorkspaceRailItem(item: WorkspaceNavigationItem, showLabel: Boolean, index: Int) {
     val container = if (item.selected) {
         MaterialTheme.colorScheme.primaryContainer
     } else {
@@ -220,7 +254,8 @@ private fun WorkspaceRailItem(item: WorkspaceNavigationItem, showLabel: Boolean)
         MaterialTheme.colorScheme.onSurfaceVariant
     }
     Surface(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = item.onClick),
+        onClick = item.onClick,
+        modifier = Modifier.fillMaxWidth().workspaceDestinationSemantics(item, index),
         shape = MaterialTheme.shapes.large,
         color = container,
     ) {
@@ -229,7 +264,7 @@ private fun WorkspaceRailItem(item: WorkspaceNavigationItem, showLabel: Boolean)
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            Icon(item.icon, contentDescription = item.label, tint = content, modifier = Modifier.size(22.dp))
+            Icon(item.icon, contentDescription = null, tint = content, modifier = Modifier.size(22.dp))
             if (showLabel) {
                 Text(
                     item.label,
@@ -243,3 +278,28 @@ private fun WorkspaceRailItem(item: WorkspaceNavigationItem, showLabel: Boolean)
         }
     }
 }
+
+private fun Modifier.workspaceDestinationSemantics(
+    item: WorkspaceNavigationItem,
+    index: Int,
+): Modifier = semantics {
+    contentDescription = item.label
+    selected = item.selected
+    stateDescription = if (item.selected) {
+        "当前工作区"
+    } else {
+        "快捷键 Ctrl 或 Command + ${index + 1}"
+    }
+}
+
+private val workspaceShortcutKeys = listOf(
+    Key.One,
+    Key.Two,
+    Key.Three,
+    Key.Four,
+    Key.Five,
+    Key.Six,
+    Key.Seven,
+    Key.Eight,
+    Key.Nine,
+)

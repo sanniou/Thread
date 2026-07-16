@@ -10,6 +10,7 @@ import ai.saniou.thread.data.paging.DefaultRemoteKeyStrategy
 import ai.saniou.thread.data.paging.GenericRemoteMediator
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.domain.model.forum.*
+import ai.saniou.thread.domain.paging.threadPagingConfig
 import ai.saniou.thread.domain.repository.Source
 import ai.saniou.thread.domain.repository.TopicRepository
 import ai.saniou.thread.domain.source.SourceCatalog
@@ -108,7 +109,7 @@ class TopicRepositoryImpl(
             ?: return flowOf(PagingData.empty())
 
         return Pager(
-            config = PagingConfig(pageSize = 30),
+            config = threadPagingConfig(pageSize = 30),
             remoteMediator = GenericRemoteMediator(
                 db = db,
                 dataPolicy = DataPolicy.CACHE_ELSE_NETWORK,
@@ -223,10 +224,10 @@ class TopicRepositoryImpl(
         return connector.getSubComments(topicId, commentId, page)
     }
 
-    override fun getTopicImages(sourceId: String, threadId: Long): Flow<List<Image>> {
+    override fun getTopicImages(sourceId: String, threadId: String): Flow<List<Image>> {
         return db.imageQueries.getImagesByParent(
             sourceId = sourceId,
-            parentId = threadId.toString(),
+            parentId = threadId,
             parentType = ImageType.Comment
         )
             .asFlow()

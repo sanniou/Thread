@@ -1,0 +1,2 @@
+nl.adaptivity.xmlutil.util.DefaultSerializationProvider
+nl.adaptivity.xmlutil.serialization.KotlinxSerializationProvider

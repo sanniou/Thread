@@ -1,6 +1,8 @@
 package ai.saniou.feature.feed.workflow
 
 import ai.saniou.corecommon.utils.toRelativeTimeString
+import ai.saniou.coreui.interaction.ThreadShortcut
+import ai.saniou.coreui.interaction.threadShortcutHost
 import ai.saniou.coreui.layout.AdaptiveSidebarScaffold
 import ai.saniou.coreui.layout.LocalThreadWindowInfo
 import ai.saniou.coreui.state.PagingStateLayout
@@ -10,6 +12,7 @@ import ai.saniou.coreui.widgets.AppDrawerItem
 import ai.saniou.coreui.widgets.RefreshDiagnosticsBanner
 import ai.saniou.coreui.widgets.ModernEmptyState
 import ai.saniou.coreui.widgets.ContextHero
+import ai.saniou.coreui.widgets.KeyedLazyListState
 import ai.saniou.coreui.widgets.SidebarHeader
 import ai.saniou.coreui.widgets.ThreadCard
 import ai.saniou.coreui.widgets.ArticleItem as ArticleListItem
@@ -42,8 +45,6 @@ import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.RssFeed
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
@@ -56,8 +57,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -67,11 +66,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
 import kotlinx.coroutines.launch
 
 @Composable
@@ -107,6 +108,9 @@ fun UnifiedFeedPage(
             )
     }
     AdaptiveSidebarScaffold(
+        modifier = Modifier.threadShortcutHost(
+            ThreadShortcut(Key.R) { viewModel.onEvent(FeedContract.Event.Refresh) },
+        ),
         drawerState = drawerState,
         coroutineScope = scope,
         sidebar = drawerContent,
@@ -160,7 +164,7 @@ private fun FeedFilterDrawer(
                 trailingContent = {
                     Checkbox(
                         checked = selected,
-                        onCheckedChange = { onEvent(FeedContract.Event.ToggleSource(source.id)) },
+                        onCheckedChange = null,
                     )
                 },
             )
@@ -173,7 +177,7 @@ private fun FeedFilterDrawer(
             trailingContent = {
                 Checkbox(
                     checked = state.includeReader,
-                    onCheckedChange = { onEvent(FeedContract.Event.ToggleReader) },
+                    onCheckedChange = null,
                 )
             },
         )
@@ -237,34 +241,45 @@ private fun FeedScaffold(
                     )
                 },
             ) {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                        horizontal = LocalThreadWindowInfo.current.pageHorizontalPadding,
-                        vertical = 8.dp,
-                    ),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    if (state.refreshFailures.isNotEmpty()) {
-                        item {
-                            RefreshDiagnosticsBanner(
-                                failures = state.refreshFailures,
-                                onRetry = onRefresh,
-                            )
+                val listStateKey = buildString {
+                    append(state.selectedSourceIds.sorted().joinToString(","))
+                    append(":reader=")
+                    append(state.includeReader)
+                }
+                KeyedLazyListState(listStateKey) { listState ->
+                    LazyColumn(
+                        state = listState,
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                            horizontal = LocalThreadWindowInfo.current.pageHorizontalPadding,
+                            vertical = 8.dp,
+                        ),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        if (state.refreshFailures.isNotEmpty()) {
+                            item(key = "refresh-diagnostics") {
+                                RefreshDiagnosticsBanner(
+                                    failures = state.refreshFailures,
+                                    onRetry = onRefresh,
+                                )
+                            }
                         }
-                    }
-                    items(timeline.itemCount) { index ->
-                        when (val item = timeline[index]) {
-                            is PostItem -> TimelinePostCard(item.post, onOpenTopic)
-                            is ArticleItem -> ArticleListItem(
-                                article = item.article,
-                                sourceName = item.sourceName,
-                                onClick = { onOpenArticle(item.article) },
-                            )
-                            null -> Unit
+                        items(
+                            count = timeline.itemCount,
+                            key = timeline.itemKey { it.uniqueId },
+                        ) { index ->
+                            when (val item = timeline[index]) {
+                                is PostItem -> TimelinePostCard(item.post, onOpenTopic)
+                                is ArticleItem -> ArticleListItem(
+                                    article = item.article,
+                                    sourceName = item.sourceName,
+                                    onClick = { onOpenArticle(item.article) },
+                                )
+                                null -> Unit
+                            }
                         }
+                        item(key = "paging-append") { PagingAppendState(timeline, showEnd = false) }
                     }
-                    item { PagingAppendState(timeline, showEnd = false) }
                 }
             }
         }

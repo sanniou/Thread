@@ -1,5 +1,7 @@
 package ai.saniou.coreui.widgets
 
+import ai.saniou.coreui.interaction.ThreadShortcut
+import ai.saniou.coreui.interaction.threadShortcutHost
 import ai.saniou.coreui.layout.LocalThreadWindowInfo
 import ai.saniou.coreui.layout.ThreadWindowWidthClass
 import androidx.compose.foundation.BorderStroke
@@ -15,6 +17,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.semantics.paneTitle
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -24,12 +29,18 @@ import androidx.compose.ui.window.DialogProperties
 fun AdaptiveModal(
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
+    paneTitle: String = "对话框",
     content: @Composable () -> Unit,
 ) {
     val windowInfo = LocalThreadWindowInfo.current
+    val modalModifier = modifier
+        .semantics { this.paneTitle = paneTitle }
+        .threadShortcutHost(
+            ThreadShortcut(Key.Escape, command = false, action = onDismissRequest)
+        )
     if (windowInfo.widthClass == ThreadWindowWidthClass.Compact) {
         ModalBottomSheet(onDismissRequest = onDismissRequest) {
-            Box(Modifier.fillMaxWidth().padding(bottom = 16.dp)) { content() }
+            Box(modalModifier.fillMaxWidth().padding(bottom = 16.dp)) { content() }
         }
     } else {
         Dialog(
@@ -37,7 +48,7 @@ fun AdaptiveModal(
             properties = DialogProperties(usePlatformDefaultWidth = false),
         ) {
             Box(
-                modifier = modifier.fillMaxSize().padding(24.dp),
+                modifier = modalModifier.fillMaxSize().padding(24.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 Surface(

@@ -33,17 +33,7 @@ interface TrendSource {
         tab: TrendTab,
         params: TrendParams,
         cursor: String?,
-    ): Result<List<TrendItem>> {
-        // Default implementation for backward compatibility with page-based sources
-        return fetchTrendData(tab, params, cursor?.toIntOrNull() ?: 1)
-    }
-
-    @Deprecated("Use fetchTrendData(tab, params, cursor) instead")
-    suspend fun fetchTrendData(
-        tab: TrendTab,
-        params: TrendParams,
-        page: Int,
-    ): Result<List<TrendItem>> = Result.success(emptyList())
+    ): Result<List<TrendItem>>
 
     fun trendDataEnded(tab: TrendTab, params: TrendParams, trends: List<TrendItem>): Boolean
 }

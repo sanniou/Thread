@@ -305,7 +305,7 @@ class TopicDetailViewModel(
                     createdAt = Clock.System.now(),
                     tags = listOf(),
                     content = reply.content,
-                    sourceId = reply.id.toString(),
+                    sourceId = reply.id,
                     sourceType = "$sourceId.Comment"
                 )
             )

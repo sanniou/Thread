@@ -1,5 +1,7 @@
 package ai.saniou.coreui.layout
 
+import ai.saniou.coreui.interaction.ThreadShortcut
+import ai.saniou.coreui.interaction.threadShortcutHost
 import ai.saniou.coreui.theme.Dimens
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -24,6 +26,9 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.semantics.paneTitle
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
@@ -139,11 +144,17 @@ fun AdaptiveSidebarScaffold(
     val openSidebar: () -> Unit = {
         coroutineScope.launch { drawerState.open() }
     }
+    val toggleSidebar: () -> Unit = {
+        coroutineScope.launch {
+            if (drawerState.isOpen) drawerState.close() else drawerState.open()
+        }
+    }
 
     if (windowInfo.hasPermanentFeatureSidebar) {
         Row(modifier.fillMaxSize()) {
             Surface(
-                modifier = Modifier.width(windowInfo.featureSidebarWidth).fillMaxHeight(),
+                modifier = Modifier.width(windowInfo.featureSidebarWidth).fillMaxHeight()
+                    .semantics { paneTitle = "功能导航" },
                 color = MaterialTheme.colorScheme.surfaceContainerLow,
                 border = BorderStroke(
                     width = 0.5.dp,
@@ -158,11 +169,12 @@ fun AdaptiveSidebarScaffold(
         }
     } else {
         ModalNavigationDrawer(
-            modifier = modifier,
+            modifier = modifier.threadShortcutHost(ThreadShortcut(Key.B, action = toggleSidebar)),
             drawerState = drawerState,
             drawerContent = {
                 ModalDrawerSheet(
-                    modifier = Modifier.width(windowInfo.featureSidebarWidth),
+                    modifier = Modifier.width(windowInfo.featureSidebarWidth)
+                        .semantics { paneTitle = "功能导航" },
                     drawerContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
                 ) {
                     sidebar()

@@ -52,7 +52,7 @@ class TiebaTrendSource(
                     topicId = topic.id,
                     sourceId = id,
                     title = topic.title ?: "",
-                    contentPreview = topic.content ?: "",
+                    contentPreview = topic.content,
                     rank = null,
                     hotness = topic.agreeCount.toString(),
                     channel = topic.channelName,
@@ -96,8 +96,8 @@ class TiebaTrendSource(
             parameterProvider = tiebaParameterProvider
         )
         val response = officialProtobufTiebaApiV11.hotThreadListFlow(body)
-        if (response.error?.error_code != 0 && response.error?.error_code != null) {
-            throw Exception("Tieba Error: ${response.error?.error_msg}")
+        response.error?.let { error ->
+            if (error.error_code != 0) throw Exception("Tieba Error: ${error.error_msg}")
         }
         return TiebaMapper.mapHotThreadListResponseToTopics(response)
     }
@@ -118,8 +118,8 @@ class TiebaTrendSource(
             parameterProvider = tiebaParameterProvider
         )
         val response = officialProtobufTiebaApiV11.topicListFlow(body)
-        if (response.error?.error_code != 0 && response.error?.error_code != null) {
-            throw Exception("Tieba Error: ${response.error?.error_msg}")
+        response.error?.let { error ->
+            if (error.error_code != 0) throw Exception("Tieba Error: ${error.error_msg}")
         }
         return TiebaMapper.mapTopicListResponseToTopics(response)
     }
@@ -141,8 +141,8 @@ class TiebaTrendSource(
             parameterProvider = tiebaParameterProvider
         )
         val response = officialProtobufTiebaApiV11.userLikeFlow(body)
-        if (response.error?.error_code != 0 && response.error?.error_code != null) {
-            throw Exception("Tieba Error: ${response.error?.error_msg}")
+        response.error?.let { error ->
+            if (error.error_code != 0) throw Exception("Tieba Error: ${error.error_msg}")
         }
         return TiebaMapper.mapUserLikeResponseToTopics(response)
     }
@@ -164,8 +164,8 @@ class TiebaTrendSource(
             parameterProvider = tiebaParameterProvider
         )
         val response = officialProtobufTiebaApiV11.personalizedFlow(body)
-        if (response.error?.error_code != 0 && response.error?.error_code != null) {
-            throw Exception("Tieba Error: ${response.error?.error_msg}")
+        response.error?.let { error ->
+            if (error.error_code != 0) throw Exception("Tieba Error: ${error.error_msg}")
         }
         return TiebaMapper.mapPersonalizedResponseToTopics(response)
     }

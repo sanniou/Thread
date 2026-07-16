@@ -31,13 +31,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.paging.PagingData
 import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
 import kotlinx.coroutines.flow.Flow
 
 @Composable
 fun ListThreadPage(
     threadFlow: Flow<PagingData<Topic>>,
-    onThreadClicked: (Long) -> Unit,
-    onImageClick: (Long, Image) -> Unit,
+    onThreadClicked: (String) -> Unit,
+    onImageClick: (String, Image) -> Unit,
     onUserClick: (String) -> Unit,
     modifier: Modifier = Modifier,
     state: LazyListState = rememberLazyListState(),
@@ -93,21 +94,24 @@ fun ListThreadPage(
                     verticalArrangement = Arrangement.spacedBy(Dimens.padding_medium)
                 ) {
                     if (headerContent != null) {
-                        item { headerContent() }
+                        item(key = "channel-header") { headerContent() }
                     }
 
-                    items(threads.itemCount) { index ->
+                    items(
+                        count = threads.itemCount,
+                        key = threads.itemKey { "${it.sourceId}:${it.id}" },
+                    ) { index ->
                         val feed = threads[index] ?: return@items
                         TopicCard(
                             topic = feed,
-                            onClick = { onThreadClicked(feed.id.toLong()) },
-                            onImageClick = { img -> onImageClick(feed.id.toLong(), img) },
+                            onClick = { onThreadClicked(feed.id) },
+                            onImageClick = { img -> onImageClick(feed.id, img) },
                             onUserClick = onUserClick,
                             showChannelBadge = showChannelBadge
                         )
                     }
 
-                    item { PagingAppendState(threads) }
+                    item(key = "paging-append") { PagingAppendState(threads) }
                 }
             }
         }

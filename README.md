@@ -82,12 +82,13 @@
 -   [x] **全功能自适应任务流**: 搜索、筛选、收藏批量操作、账号、发帖、来源管理、同步及 Forum/Reader 模态任务共用命令层和宽度能力模型。
 -   [x] **缓存优先可靠性 UI**: 初始加载、空结果、缓存刷新失败、分页尾部失败和多来源局部失败使用统一可测试状态策略，已有内容不会被刷新错误覆盖。
 -   [x] **离线与连接器可靠性门禁**: 可录制 HTTP 合约、结构化状态错误、官方 SQLDelight PagingSource、数据库不变量和离线种子启动探针组成可重复 Desktop 回归。
--   [ ] **发布候选交互与性能**: 键盘/焦点/语义、长列表状态恢复、废弃 API 收敛、查询/图片性能预算与 Desktop 分发镜像终验。
+-   [x] **发布候选交互与性能**: 键盘/焦点/语义、长列表状态恢复、废弃 API 收敛、查询/Paging 性能预算与 Desktop 分发镜像终验。
+-   [ ] **产品完成度终验**: 统一命令面板、离线全局搜索、工作区会话恢复、来源健康中心与 Desktop 升级/诊断闭环。
 
 ## 🚀 构建与运行
 
 1.  **环境**: JDK 21；仓库通过 `.java-version` 与 CI 固定版本。
-2.  **当前验证**: 本地执行 `./gradlew :core-domain:jvmTest :core-data:jvmTest :composeApp:jvmTest :composeApp:compileKotlinJvm :composeApp:createDistributable`；Ubuntu CI 额外执行 `:composeApp:packageDeb`。
+2.  **当前验证**: 本地执行 `./gradlew :core-domain:jvmTest :core-data:jvmTest :composeApp:jvmTest :composeApp:compileKotlinJvm :composeApp:createReleaseDistributable`；Ubuntu CI 额外执行 `:composeApp:packageReleaseDeb`。release 镜像将依赖合并为单一应用 JAR，并携带 JDBC、HTTP、management 与 instrumentation 所需 JDK 模块。
 3.  **运行**:
     -   Android: Run `androidApp`.
     -   Desktop: `./gradlew :composeApp:run`

@@ -2,6 +2,8 @@ package ai.saniou.coreui.widgets
 
 import ai.saniou.coreui.layout.LocalThreadWindowInfo
 import ai.saniou.coreui.layout.ThreadWindowWidthClass
+import ai.saniou.coreui.interaction.ThreadShortcut
+import ai.saniou.coreui.interaction.threadShortcutHost
 import ai.saniou.coreui.theme.Dimens
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
@@ -27,6 +29,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.semantics.paneTitle
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -57,7 +62,11 @@ fun ThreadDetailScaffold(
 ) {
     val windowInfo = LocalThreadWindowInfo.current
     Scaffold(
-        modifier = modifier,
+        modifier = modifier
+            .semantics { paneTitle = title }
+            .threadShortcutHost(
+                ThreadShortcut(Key.Escape, command = false, action = onBack),
+            ),
         containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = snackbarHost,
         floatingActionButton = floatingActionButton,

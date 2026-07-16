@@ -9,7 +9,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.net.URL
+import java.net.URI
 import kotlin.time.Clock
 
 class ImageSaverImpl(
@@ -35,7 +35,7 @@ class ImageSaverImpl(
                 ?: error("Unable to create image in MediaStore")
             try {
                 resolver.openOutputStream(uri)?.use { output ->
-                    URL(url).openStream().use { input -> input.copyTo(output) }
+                    URI(url).toURL().openStream().use { input -> input.copyTo(output) }
                 } ?: error("Unable to open image output stream")
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                     values.clear()

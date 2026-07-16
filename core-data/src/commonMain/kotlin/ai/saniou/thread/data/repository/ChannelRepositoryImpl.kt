@@ -11,6 +11,7 @@ import ai.saniou.thread.db.Database
 import ai.saniou.thread.db.table.forum.GetTopicsInChannelKeyset
 import ai.saniou.thread.domain.model.forum.Channel
 import ai.saniou.thread.domain.model.forum.Topic
+import ai.saniou.thread.domain.paging.threadPagingConfig
 import ai.saniou.thread.domain.repository.ChannelRepository
 import ai.saniou.thread.domain.repository.Source
 import ai.saniou.thread.domain.refresh.RefreshCoordinator
@@ -70,7 +71,7 @@ class ChannelRepositoryImpl(
         val pageSize = 20
 
         return Pager(
-            config = PagingConfig(pageSize = pageSize),
+            config = threadPagingConfig(pageSize),
             initialKey = initialPage,
             remoteMediator = GenericRemoteMediator(
                 db = db,

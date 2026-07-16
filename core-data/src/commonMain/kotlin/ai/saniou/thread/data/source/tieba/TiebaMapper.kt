@@ -19,7 +19,7 @@ import com.huanchengfly.tieba.post.api.models.protos.personalized.PersonalizedRe
 import com.huanchengfly.tieba.post.api.models.protos.topicList.TopicListResponse
 import com.huanchengfly.tieba.post.api.models.protos.pbFloor.PbFloorResponse
 import com.huanchengfly.tieba.post.api.models.protos.userLike.UserLikeResponse
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 
 object TiebaMapper {
 
@@ -535,7 +535,7 @@ object TiebaMapper {
                 summary = topic.topicDesc,
                 author = Author(id = "0", name = "话题", avatar = null, sourceName = SOURCE_NAME),
                 createdAt = Instant.fromEpochSeconds(0), // No time in RecommendTopicList
-                commentCount = topic.discussNum.toLong(),
+                commentCount = topic.discussNum,
                 images = if (topic.topicPic.isNotEmpty()) listOf(
                     Image(
                         topic.topicPic,
@@ -625,11 +625,11 @@ object TiebaMapper {
 
         val content = mainPost?.content?.joinToString("") { content ->
             when (content.type) {
-                0 -> content.text ?: ""
+                0 -> content.text
                 1 -> "<a href=\"${content.link}\">${content.text}</a>"
-                2 -> if (content.text == "#") "" else content.text ?: ""
+                2 -> if (content.text == "#") "" else content.text
                 3 -> "<img src=\"${content.bigCdnSrc}\" />"
-                else -> content.text ?: ""
+                else -> content.text
             }
         } ?: ""
 
@@ -679,11 +679,11 @@ object TiebaMapper {
 
             val content = post.content.joinToString("") { content ->
                 when (content.type) {
-                    0 -> content.text ?: ""
+                    0 -> content.text
                     1 -> "<a href=\"${content.link}\">${content.text}</a>"
-                    2 -> if (content.text == "#") "" else content.text ?: ""
+                    2 -> if (content.text == "#") "" else content.text
                     3 -> "<img src=\"${content.bigCdnSrc}\" />"
-                    else -> content.text ?: ""
+                    else -> content.text
                 }
             }
 
@@ -731,11 +731,11 @@ object TiebaMapper {
 
             val content = post.content.joinToString("") { content ->
                 when (content.type) {
-                    0 -> content.text ?: ""
+                    0 -> content.text
                     1 -> "<a href=\"${content.link}\">${content.text}</a>"
-                    2 -> if (content.text == "#") "" else content.text ?: ""
+                    2 -> if (content.text == "#") "" else content.text
                     3 -> "<img src=\"${content.bigCdnSrc}\" />"
-                    else -> content.text ?: ""
+                    else -> content.text
                 }
             }
 

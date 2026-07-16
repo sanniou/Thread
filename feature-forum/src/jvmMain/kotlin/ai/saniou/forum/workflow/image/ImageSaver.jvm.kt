@@ -5,7 +5,7 @@ import androidx.compose.runtime.remember
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.net.URL
+import java.net.URI
 import javax.swing.JFileChooser
 
 class ImageSaverImpl : ImageSaver {
@@ -23,7 +23,7 @@ class ImageSaverImpl : ImageSaver {
             val target = chooser.selectedFile.let { file ->
                 if (file.extension.isBlank()) File(file.parentFile, "${file.name}.$extension") else file
             }
-            URL(url).openStream().use { input ->
+            URI(url).toURL().openStream().use { input ->
                 target.outputStream().use { output -> input.copyTo(output) }
             }
         }.isSuccess

@@ -21,6 +21,15 @@ CREATE TABLE ArticleUserState (
     updatedAt INTEGER NOT NULL
 );
 
+CREATE INDEX IF NOT EXISTS idx_article_source_published
+ON ArticleEntity(feedSourceId, publishDate DESC);
+
+CREATE INDEX IF NOT EXISTS idx_article_unread_published
+ON ArticleEntity(isRead, publishDate DESC);
+
+CREATE INDEX IF NOT EXISTS idx_article_bookmarked_published
+ON ArticleEntity(isBookmarked, publishDate DESC);
+
 getArticlesPaging:
 SELECT * FROM ArticleEntity
 WHERE (:feedSourceId IS NULL OR feedSourceId = :feedSourceId)

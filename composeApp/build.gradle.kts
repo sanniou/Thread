@@ -102,6 +102,13 @@ compose.desktop {
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
+            modules(
+                "java.instrument",
+                "java.management",
+                "java.net.http",
+                "java.sql",
+                "jdk.unsupported",
+            )
             packageName = "ai.saniou.thread"
             packageVersion = providers.gradleProperty("thread.version").get()
             description = "Desktop-first multi-source forum and feed reader"
@@ -116,6 +123,8 @@ compose.desktop {
 
         buildTypes.release.proguard {
             configurationFiles.from("compose-desktop.pro")
+            optimize.set(false)
+            joinOutputJars.set(true)
         }
     }
 }

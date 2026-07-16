@@ -46,7 +46,7 @@ class HtmlParser : FeedParser {
             val safelist = Safelist.relaxed()
                 .addTags("img", "figure", "figcaption")
                 .addAttributes("img", "src", "alt", "title")
-            return Ksoup.clean(html, safelist) ?: ""
+            return Ksoup.clean(html, safelist)
         }
 
         fun toPlainText(html: String): String {

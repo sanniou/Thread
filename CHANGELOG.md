@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.16.0 - 2026-07-17
+
+Release-candidate interaction and bounded-performance release.
+
+- Workspace destinations expose Ctrl/Command+1–9, feature sidebars expose Ctrl/Command+B, and Forum/Reader/Feed add contextual refresh, search, jump and scroll commands without intercepting ordinary text input.
+- Focus ownership, pane semantics, selected-state descriptions, 48dp sidebar targets, IME search actions and Escape handling are centralized in the common UI shell and adaptive modal/detail boundaries.
+- Reader retains an independent scroll position for every source/filter pair; Feed does the same for each source set, and both use stable Paging item keys so refreshes do not rebuild visible rows or move the viewport.
+- Generic Forum navigation, subscriptions and image lookup now carry opaque String topic IDs end to end. Numeric compatibility constructors and lossy `toLong()` routing are removed for future connectors.
+- Database schema v4 adds release query indexes for Reader articles, subscriptions, comments and topics. User-content cache queries include source identity, and deterministic query-plan tests prevent index regressions.
+- Every production Pager uses one bounded common policy: two initial pages, half-page prefetch, no placeholders and a ten-page maximum window. This is the shared SQLDelight 2.3.2 + AndroidX Paging 3.4.1 policy on Android, iOS and Desktop.
+- Material/Compose, kotlinx-datetime, XML, URL and coroutine deprecations are removed or isolated behind one cross-platform boundary; malformed bookmark rows now fail with field-specific diagnostics instead of null assertions.
+- Desktop remains the sole release gate for this phase and verifies tests, compilation, isolated startup smoke and the distributable runtime image.
+- The Linux release image joins its runtime classpath into one application JAR and explicitly includes the jdeps-required JDBC/HTTP/management modules, preventing long-classpath launcher corruption while preserving reflection-heavy WebView and connector code.
+- Consolidated release service descriptors retain all Ktor engines, Sketch GIF/WebP/SVG/resource/network components and both XML serialization providers after the one-JAR merge; a JVM invariant prevents silent provider loss.
+
 ## 0.15.0 - 2026-07-16
 
 Offline contract and paging-reliability release.

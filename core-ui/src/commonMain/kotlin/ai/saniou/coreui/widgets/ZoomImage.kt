@@ -17,10 +17,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.RotateRight
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.CameraAlt
-import androidx.compose.material.icons.filled.RotateRight
 import androidx.compose.material.icons.filled.ZoomIn
 import androidx.compose.material.icons.filled.ZoomOut
 import androidx.compose.material3.AlertDialog
@@ -254,7 +254,7 @@ private fun ButtonPad(
             modifier = Modifier.size(40.dp)
         ) {
             Icon(
-                imageVector = Icons.Default.RotateRight,
+                imageVector = Icons.AutoMirrored.Filled.RotateRight,
                 contentDescription = "旋转",
                 tint = contentColor
             )

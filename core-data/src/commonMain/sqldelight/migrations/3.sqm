@@ -1,0 +1,23 @@
+CREATE INDEX IF NOT EXISTS idx_article_source_published
+ON ArticleEntity(feedSourceId, publishDate DESC);
+
+CREATE INDEX IF NOT EXISTS idx_article_unread_published
+ON ArticleEntity(isRead, publishDate DESC);
+
+CREATE INDEX IF NOT EXISTS idx_article_bookmarked_published
+ON ArticleEntity(isBookmarked, publishDate DESC);
+
+CREATE INDEX IF NOT EXISTS idx_subscription_key_time
+ON Subscription(subscriptionKey, subscriptionTime DESC, topicId DESC);
+
+CREATE INDEX IF NOT EXISTS idx_comment_topic_floor
+ON Comment(sourceId, topicId, floor);
+
+CREATE INDEX IF NOT EXISTS idx_comment_source_user_created
+ON Comment(sourceId, userHash, createdAt DESC);
+
+CREATE INDEX IF NOT EXISTS idx_topic_source_channel_reply
+ON Topic(sourceId, channelId, lastReplyAt DESC);
+
+CREATE INDEX IF NOT EXISTS idx_topic_source_author_reply
+ON Topic(sourceId, authorId, lastReplyAt DESC);

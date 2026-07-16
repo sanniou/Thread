@@ -13,6 +13,7 @@ import ai.saniou.thread.domain.model.PagedResult
 import ai.saniou.thread.domain.model.TrendItem
 import ai.saniou.thread.domain.model.TrendParams
 import ai.saniou.thread.domain.model.TrendTab
+import ai.saniou.thread.domain.paging.threadPagingConfig
 import ai.saniou.thread.domain.repository.TrendRepository
 import ai.saniou.thread.domain.source.TrendSource
 import androidx.paging.*
@@ -184,7 +185,7 @@ class TrendRepositoryImpl(
         )
 
         return Pager(
-            config = PagingConfig(pageSize = 20, enablePlaceholders = false),
+            config = threadPagingConfig(),
             remoteMediator = mediator,
             pagingSourceFactory = {
                 if (isRankMode) {

@@ -25,6 +25,8 @@ CREATE TABLE IF NOT EXISTS Comment (
 
 -- 索引迁移
 CREATE INDEX IF NOT EXISTS idx_comment_topic_id ON Comment(sourceId, topicId);
+CREATE INDEX IF NOT EXISTS idx_comment_topic_floor ON Comment(sourceId, topicId, floor);
+CREATE INDEX IF NOT EXISTS idx_comment_source_user_created ON Comment(sourceId, userHash, createdAt DESC);
 
 -- 2. 评论列表关联表：存储分页和排序关系
 -- 支持多种视图模式：all(全部), po(楼主), reply(回复), 以及未来可能的其他模式
@@ -160,10 +162,13 @@ WHERE (content LIKE ('%' || :query || '%') OR title LIKE ('%' || :query || '%'))
 AND page >= 0;
 
 getCommentsByUserHashOffset:
-SELECT * FROM Comment WHERE userHash = :userHash  AND page >= 0 ORDER BY createdAt DESC LIMIT :limit OFFSET :offset;
+SELECT * FROM Comment
+WHERE sourceId = :sourceId AND userHash = :userHash AND page >= 0
+ORDER BY createdAt DESC
+LIMIT :limit OFFSET :offset;
 
 countCommentsByUserHashNoTopic:
-SELECT count(*) FROM Comment WHERE userHash = :userHash  AND page >= 0;
+SELECT count(*) FROM Comment WHERE sourceId = :sourceId AND userHash = :userHash AND page >= 0;
 
 -- 根据日期范围查找回复 (用于 Trend 缓存)
 getCommentByTopicIdAndDateRange:

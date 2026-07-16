@@ -13,7 +13,7 @@ sealed interface TimelineItem {
 data class PostItem(
     val post: Topic,
 ) : TimelineItem {
-    override val uniqueId: String = "post_${post.sourceName}_${post.id}"
+    override val uniqueId: String = "post_${post.sourceId}_${post.id}"
 
     @OptIn(ExperimentalTime::class)
     override val displayTime: Instant =

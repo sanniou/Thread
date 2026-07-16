@@ -1,6 +1,8 @@
 package ai.saniou.forum.workflow.topic
 
 import ai.saniou.coreui.composition.LocalForumSourceId
+import ai.saniou.coreui.interaction.ThreadShortcut
+import ai.saniou.coreui.interaction.threadShortcutHost
 import ai.saniou.coreui.state.UiStateWrapper
 import ai.saniou.coreui.widgets.ContextHero
 import ai.saniou.coreui.widgets.ThreadDetailScaffold
@@ -24,9 +26,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Forum
@@ -52,6 +54,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -81,21 +84,11 @@ data class TopicPage(
     val sourceId: String? = null,
     val onMenuClick: (() -> Unit)? = null,
 ) : Screen {
-
-    // Compatibility constructor for existing navigation calls (mostly NMB)
-    constructor(forumId: Long, fgroupId: Long, onMenuClick: (() -> Unit)? = null) : this(
-        sourceId = null,
-        forumId = forumId.toString(),
-        fgroupId = fgroupId.toString(),
-        onMenuClick = onMenuClick
-    )
-
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
         val di = localDI()
         val navigator = LocalNavigator.currentOrThrow
-        // Fallback to LocalSourceId if sourceId is not provided (legacy behavior)
         val actualSourceId = sourceId ?: LocalForumSourceId.current
 
         val viewModel: TopicViewModel =
@@ -155,7 +148,14 @@ data class TopicPage(
                 }.ifBlank { "主题、规则与子版块" }
             } ?: "主题、规则与子版块",
             onBack = navigator::pop,
-            modifier = Modifier.nestedScroll(fabNestedScrollConnection),
+            modifier = Modifier
+                .nestedScroll(fabNestedScrollConnection)
+                .threadShortcutHost(
+                    ThreadShortcut(Key.R) { threads.refresh() },
+                    ThreadShortcut(Key.MoveHome) {
+                        coroutineScope.launch { lazyListState.animateScrollToItem(0) }
+                    },
+                ),
             navigationIcon = {
                 if (onMenuClick != null) {
                     IconButton(onClick = onMenuClick) {
@@ -163,7 +163,10 @@ data class TopicPage(
                     }
                 } else {
                     IconButton(onClick = navigator::pop) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = stringResource(Res.string.topic_page_back))
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(Res.string.topic_page_back),
+                        )
                     }
                 }
             },
@@ -247,31 +250,29 @@ data class TopicPage(
                         val detailState = state.channelDetail
                         if (detailState is ai.saniou.coreui.state.UiStateWrapper.Success) {
                             val detail = detailState.value
-                            if (detail != null) {
-                                ContextHero(
-                                    icon = Icons.Default.Forum,
-                                    title = state.channelName,
-                                    subtitle = detail.description.replace(Regex("<[^>]*>"), "").trim()
-                                        .ifBlank { "浏览最新主题并参与讨论" },
-                                    metric = "${detail.topicCount ?: threads.itemCount} THREADS",
-                                )
+                            ContextHero(
+                                icon = Icons.Default.Forum,
+                                title = state.channelName,
+                                subtitle = detail.description.replace(Regex("<[^>]*>"), "").trim()
+                                    .ifBlank { "浏览最新主题并参与讨论" },
+                                metric = "${detail.topicCount ?: threads.itemCount} THREADS",
+                            )
 
-                                if (detail.children.isNotEmpty()) {
-                                    Spacer(modifier = Modifier.height(12.dp))
-                                    SubForumList(
-                                        subForums = detail.children,
-                                        listViewStyle = detail.listViewStyle,
-                                        onForumClick = { child ->
-                                            navigator.push(
-                                                TopicPage(
-                                                    sourceId = actualSourceId,
-                                                    forumId = child.id,
-                                                    fgroupId = child.groupId
-                                                )
+                            if (detail.children.isNotEmpty()) {
+                                Spacer(modifier = Modifier.height(12.dp))
+                                SubForumList(
+                                    subForums = detail.children,
+                                    listViewStyle = detail.listViewStyle,
+                                    onForumClick = { child ->
+                                        navigator.push(
+                                            TopicPage(
+                                                sourceId = actualSourceId,
+                                                forumId = child.id,
+                                                fgroupId = child.groupId
                                             )
-                                        }
-                                    )
-                                }
+                                        )
+                                    }
+                                )
                             }
                         }
                     }

@@ -15,6 +15,7 @@ import ai.saniou.thread.data.source.discourse.remote.dto.resolveDiscourseUrl
 import ai.saniou.thread.data.source.discourse.remote.dto.toDomainComment
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.domain.model.PagedResult
+import ai.saniou.thread.domain.paging.threadPagingConfig
 import ai.saniou.thread.domain.model.forum.Author
 import ai.saniou.thread.domain.model.user.LoginStrategy
 import ai.saniou.thread.domain.model.user.LoginField
@@ -34,7 +35,6 @@ import ai.saniou.thread.domain.model.forum.Image
 import ai.saniou.thread.domain.model.forum.Topic
 import kotlinx.coroutines.flow.flowOf
 import androidx.paging.Pager
-import androidx.paging.PagingConfig
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
 
@@ -162,7 +162,7 @@ class DiscourseSource(
             when (result) {
                 is SaniouResult.Success -> {
                     // Similar logic to DiscourseRemoteMediator
-                    val usersMap = result.data.users?.associateBy { it.id } ?: emptyMap()
+                    val usersMap = result.data.users.associateBy { it.id }
                     val categoryNames = cache.getChannels(id).associate { it.id to it.name }
                     val topics = result.data.topicList.topics.map { topic ->
                         topic.toPost(usersMap, id, name, baseUrl, categoryNames)
@@ -289,7 +289,7 @@ class DiscourseSource(
     }
 
     override fun searchTopics(query: String): Flow<androidx.paging.PagingData<Topic>> = Pager(
-        config = PagingConfig(pageSize = DISCOURSE_PAGE_SIZE),
+        config = threadPagingConfig(DISCOURSE_PAGE_SIZE),
         pagingSourceFactory = {
             DiscourseCapabilityPagingSource { page ->
                 api.search(query, page).dataOrThrow().topics.map { topic ->
@@ -300,7 +300,7 @@ class DiscourseSource(
     ).flow
 
     override fun searchComments(query: String): Flow<androidx.paging.PagingData<Comment>> = Pager(
-        config = PagingConfig(pageSize = DISCOURSE_PAGE_SIZE),
+        config = threadPagingConfig(DISCOURSE_PAGE_SIZE),
         pagingSourceFactory = {
             DiscourseCapabilityPagingSource { page ->
                 api.search(query, page).dataOrThrow().posts.map { it.toDomainComment(id, name, baseUrl) }
@@ -309,7 +309,7 @@ class DiscourseSource(
     ).flow
 
     override fun getUserTopics(userId: String): Flow<androidx.paging.PagingData<Topic>> = Pager(
-        config = PagingConfig(pageSize = DISCOURSE_PAGE_SIZE),
+        config = threadPagingConfig(DISCOURSE_PAGE_SIZE),
         pagingSourceFactory = {
             DiscourseCapabilityPagingSource { page ->
                 api.getUserActions(
@@ -322,7 +322,7 @@ class DiscourseSource(
     ).flow
 
     override fun getUserComments(userId: String): Flow<androidx.paging.PagingData<Comment>> = Pager(
-        config = PagingConfig(pageSize = DISCOURSE_PAGE_SIZE),
+        config = threadPagingConfig(DISCOURSE_PAGE_SIZE),
         pagingSourceFactory = {
             DiscourseCapabilityPagingSource { page ->
                 api.getUserActions(
@@ -344,8 +344,8 @@ internal fun DiscourseTopic.toPost(
 ): Topic {
 // 假设 topic 的第一个 poster 是楼主
     val originalPosterId =
-        posters?.firstOrNull { it.description.contains("Original Poster") }?.userId
-            ?: posters?.firstOrNull()?.userId
+        posters.firstOrNull { it.description.contains("Original Poster") }?.userId
+            ?: posters.firstOrNull()?.userId
     val user = originalPosterId?.let { usersMap[it] }
 
     val postCreatedAt = try {
@@ -356,7 +356,7 @@ internal fun DiscourseTopic.toPost(
 
     return Topic(
         id = id.toString(),
-        channelId = categoryId?.toString() ?: "0", // fid -> channelId
+        channelId = categoryId.toString(), // fid -> channelId
         commentCount = replyCount.toLong(), // replyCount -> commentCount
         images = imageUrl?.resolveDiscourseUrl(sourceBaseUrl)?.let {
             listOf(Image(originalUrl = it, thumbnailUrl = it))

@@ -42,6 +42,10 @@ CREATE TABLE TopicListing (
 CREATE INDEX IF NOT EXISTS idx_topic_last_key ON Topic(lastReplyAt);
 CREATE INDEX IF NOT EXISTS idx_topic_last_access_time ON Topic(lastVisitedAt);
 CREATE INDEX IF NOT EXISTS idx_topic_channel_id ON Topic(sourceId, channelId);
+CREATE INDEX IF NOT EXISTS idx_topic_source_channel_reply
+ON Topic(sourceId, channelId, lastReplyAt DESC);
+CREATE INDEX IF NOT EXISTS idx_topic_source_author_reply
+ON Topic(sourceId, authorId, lastReplyAt DESC);
 
 CREATE INDEX IF NOT EXISTS idx_listing_query ON TopicListing(sourceId, listType, listId, page);
 CREATE INDEX IF NOT EXISTS idx_listing_receive ON TopicListing(sourceId, listType, listId, receiveDate);
@@ -202,12 +206,12 @@ WHERE (CAST(id AS TEXT) LIKE ('%' || :query || '%') OR title LIKE ('%' || :query
 
 getTopicsByUserHashOffset:
 SELECT * FROM Topic
-WHERE authorId = :authorId
+WHERE sourceId = :sourceId AND authorId = :authorId
 ORDER BY lastReplyAt DESC
 LIMIT :limit OFFSET :offset;
 
 countTopicsByUserHash:
-SELECT count(*) FROM Topic WHERE authorId = :authorId;
+SELECT count(*) FROM Topic WHERE sourceId = :sourceId AND authorId = :authorId;
 
 -- 触发通知 (不实际修改数据)
 touchChannelTopics:

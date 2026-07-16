@@ -257,7 +257,9 @@ private fun Step_ConfirmSource(
                         readOnly = true,
                         label = { Text("类型") },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isTypeMenuExpanded) },
-                        modifier = Modifier.menuAnchor().fillMaxWidth()
+                        modifier = Modifier
+                            .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
+                            .fillMaxWidth()
                     )
                     ExposedDropdownMenu(
                         expanded = isTypeMenuExpanded,
@@ -309,7 +311,9 @@ private fun Step_ConfirmSource(
                             readOnly = true,
                             label = { Text("刷新间隔") },
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isIntervalMenuExpanded) },
-                            modifier = Modifier.menuAnchor().fillMaxWidth()
+                            modifier = Modifier
+                                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
+                                .fillMaxWidth()
                         )
                         ExposedDropdownMenu(
                             expanded = isIntervalMenuExpanded,

@@ -9,11 +9,11 @@ import ai.saniou.thread.domain.model.forum.Author
 import ai.saniou.thread.domain.model.forum.Comment
 import ai.saniou.thread.domain.model.forum.PostDraft
 import ai.saniou.thread.domain.model.forum.Topic
+import ai.saniou.thread.domain.paging.threadPagingConfig
 import ai.saniou.thread.domain.repository.PostResult
 import ai.saniou.thread.domain.source.PostingConnector
 import ai.saniou.thread.domain.source.UserContentConnector
 import androidx.paging.Pager
-import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
@@ -37,7 +37,7 @@ class TiebaUserContentConnector(
     }
 
     private fun <T : Any> pager(loadPage: suspend (Int) -> List<T>): Flow<PagingData<T>> = Pager(
-        config = PagingConfig(pageSize = PAGE_SIZE, enablePlaceholders = false),
+        config = threadPagingConfig(PAGE_SIZE),
         pagingSourceFactory = { TiebaUserContentPagingSource(loadPage) },
     ).flow
 

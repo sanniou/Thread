@@ -1,0 +1,5 @@
+com.github.panpf.sketch.util.GifComponentProvider
+com.github.panpf.sketch.util.AnimatedWebpComponentProvider
+com.github.panpf.sketch.util.ComposeResourceComponentProvider
+com.github.panpf.sketch.util.KtorHttpComponentProvider
+com.github.panpf.sketch.util.SvgComponentProvider

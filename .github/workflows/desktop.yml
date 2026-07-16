@@ -40,22 +40,26 @@ jobs:
 
       - name: Build and launch-test Desktop runtime image
         run: |
-          ./gradlew --no-daemon :composeApp:createDistributable
-          binary="$(find composeApp/build/compose/binaries/main/app -type f -path '*/bin/ai.saniou.thread' -print -quit)"
+          ./gradlew --no-daemon :composeApp:createReleaseDistributable
+          binary="$(find composeApp/build/compose/binaries/main-release/app -type f -path '*/bin/ai.saniou.thread' -print -quit)"
           test -n "$binary"
           binary="$(realpath "$binary")"
+          app_root="$(dirname "$(dirname "$binary")")"
+          cfg="$app_root/lib/app/ai.saniou.thread.cfg"
+          test "$(grep -c '^app.classpath=' "$cfg")" -eq 1
+          test "$(find "$app_root/lib/app" -maxdepth 1 -name '*.jar' | wc -l)" -eq 1
           probe_dir="$(mktemp -d)"
           trap 'rm -rf "$probe_dir"' EXIT
           (cd "$probe_dir" && "$binary" --smoke-check)
 
       - name: Build Debian package
-        run: ./gradlew --no-daemon :composeApp:packageDeb
+        run: ./gradlew --no-daemon :composeApp:packageReleaseDeb
 
       - name: Upload Desktop package
         uses: actions/upload-artifact@v7
         with:
           name: thread-desktop-deb
-          path: composeApp/build/compose/binaries/main/deb/*.deb
+          path: composeApp/build/compose/binaries/main-release/deb/*.deb
           if-no-files-found: error
           retention-days: 14
 
@@ -63,6 +67,6 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: thread-desktop-runtime
-          path: composeApp/build/compose/binaries/main/app/**
+          path: composeApp/build/compose/binaries/main-release/app/**
           if-no-files-found: error
           retention-days: 7

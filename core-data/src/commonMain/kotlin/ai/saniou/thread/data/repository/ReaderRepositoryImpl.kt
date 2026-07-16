@@ -11,13 +11,13 @@ import ai.saniou.thread.domain.model.reader.ArticleWithSource
 import ai.saniou.thread.domain.model.reader.ReaderRefreshReport
 import ai.saniou.thread.domain.model.reader.ReaderImportReport
 import ai.saniou.thread.domain.model.reader.ReaderSubscriptionFormat
+import ai.saniou.thread.domain.paging.threadPagingConfig
 import ai.saniou.thread.domain.repository.ReaderRepository
 import ai.saniou.thread.domain.refresh.RefreshCoordinator
 import ai.saniou.thread.data.cache.CacheFreshnessStore
 import ai.saniou.thread.domain.cache.CachePolicyProvider
 import ai.saniou.thread.domain.cache.CacheResource
 import androidx.paging.Pager
-import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
 import app.cash.sqldelight.coroutines.asFlow
@@ -140,7 +140,7 @@ class ReaderRepositoryImpl(
         isBookmarked: Boolean?
     ): Flow<PagingData<Article>> {
         return Pager(
-            config = PagingConfig(pageSize = 20),
+            config = threadPagingConfig(),
             pagingSourceFactory = {
                 QueryPagingSource(
                     countQuery = db.articleQueries.countArticles(

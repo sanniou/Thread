@@ -56,7 +56,4 @@ object Dimens {
     val size_56 = 56.dp
     val size_120 = 120.dp
 
-    // Legacy Aliases (Deprecated)
-    @Deprecated("Use padding_tiny")
-    val padding_extra_small = padding_tiny
 }

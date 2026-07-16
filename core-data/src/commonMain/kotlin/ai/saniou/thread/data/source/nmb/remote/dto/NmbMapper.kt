@@ -86,7 +86,7 @@ fun SelectSubscriptionTopic.toDomain(imageQueries: ImageQueries? = null): Topic 
         createdAt = Instant.fromEpochMilliseconds(createdAt),
         channelId = channelId,
         channelName = "", // DB doesn't store
-        commentCount = commentCount ?: 0,
+        commentCount = commentCount,
         images = images,
         isLocal = isLocal == 1L,
         comments = emptyList(),
@@ -103,7 +103,7 @@ fun Thread.toDomain(cdnUrl: String): Topic = Topic(
     sourceId = "nmb",
     sourceUrl = "https://nmb.ai/thread/$id",
     title = title,
-    content = content ?: "",
+    content = content,
     author = createAuthor(userHash, name),
     createdAt = now.toTime(), // DTO uses 'now' string
     channelId = fid.toString(),

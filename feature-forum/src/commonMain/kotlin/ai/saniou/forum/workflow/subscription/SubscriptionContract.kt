@@ -17,7 +17,7 @@ interface SubscriptionContract {
     )
 
     sealed interface Event {
-        data class OnUnsubscribe(val threadId: Long) : Event
+        data class OnUnsubscribe(val threadId: String) : Event
         data class OnSetSubscriptionId(val id: String) : Event
         object OnShowSubscriptionIdDialog : Event
         object OnHideSubscriptionIdDialog : Event

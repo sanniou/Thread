@@ -28,12 +28,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
+import androidx.compose.material.icons.automirrored.filled.Reply
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material.icons.filled.OpenInNew
-import androidx.compose.material.icons.filled.Reply
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.DropdownMenu
@@ -212,7 +212,7 @@ fun HeroTopicCard(
 
                 AnimatedIconButton(
                     onClick = { },
-                    icon = Icons.Default.Reply,
+                    icon = Icons.AutoMirrored.Filled.Reply,
                     contentDescription = stringResource(Res.string.reply)
                 )
             }
@@ -256,7 +256,7 @@ fun HeroTopicCard(
             if (metadata.sourceUrl.isNotBlank()) {
                 DropdownMenuItem(
                     text = { Text(stringResource(Res.string.open_original_link)) },
-                    leadingIcon = { Icon(Icons.Default.OpenInNew, null) },
+                    leadingIcon = { Icon(Icons.AutoMirrored.Filled.OpenInNew, null) },
                     onClick = {
                         uriHandler.openUri(metadata.sourceUrl)
                         showMenu = false
@@ -383,14 +383,12 @@ fun ThreadReply(
             )
 
             Column(horizontalAlignment = Alignment.End) {
-                reply.floor?.let { floor ->
-                    Text(
-                        text = "#$floor",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                Text(
+                    text = "#${reply.floor}",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold
+                )
                 Text(
                     text = "ID:${reply.id}",
                     style = MaterialTheme.typography.labelSmall,
@@ -437,7 +435,7 @@ fun ThreadReply(
         ) {
             AnimatedIconButton(
                 onClick = { onReplyClicked(reply.id) },
-                icon = Icons.Default.Reply,
+                icon = Icons.AutoMirrored.Filled.Reply,
                 contentDescription = stringResource(Res.string.reply),
                 modifier = Modifier.size(32.dp)
             )
@@ -455,7 +453,7 @@ fun ThreadReply(
         ) {
             DropdownMenuItem(
                 text = { Text(stringResource(Res.string.reply)) },
-                leadingIcon = { Icon(Icons.Filled.Reply, null) },
+                leadingIcon = { Icon(Icons.AutoMirrored.Filled.Reply, null) },
                 onClick = {
                     onReplyClicked(reply.id)
                     showMenu = false

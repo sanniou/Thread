@@ -2,6 +2,8 @@ package ai.saniou.reader.workflow.reader
 
 import ai.saniou.coreui.layout.AdaptiveSidebarScaffold
 import ai.saniou.coreui.layout.LocalThreadWindowInfo
+import ai.saniou.coreui.interaction.ThreadShortcut
+import ai.saniou.coreui.interaction.threadShortcutHost
 import ai.saniou.coreui.state.PagingStateLayout
 import ai.saniou.coreui.state.PagingAppendState
 import ai.saniou.coreui.theme.Dimens
@@ -9,12 +11,14 @@ import ai.saniou.coreui.widgets.AppDrawerItem
 import ai.saniou.coreui.widgets.AdaptiveModal
 import ai.saniou.coreui.widgets.ArticleItem
 import ai.saniou.coreui.widgets.ContextHero
+import ai.saniou.coreui.widgets.KeyedLazyListState
 import ai.saniou.coreui.widgets.ModernEmptyState
 import ai.saniou.coreui.widgets.NetworkImage
 import ai.saniou.coreui.widgets.RefreshDiagnosticsBanner
 import ai.saniou.coreui.widgets.RichText
 import ai.saniou.coreui.widgets.SectionLabel
 import ai.saniou.coreui.widgets.SidebarHeader
+import ai.saniou.coreui.widgets.ThreadSearchField
 import ai.saniou.reader.workflow.articledetail.ArticleDetailPage
 import ai.saniou.thread.domain.model.reader.Article
 import ai.saniou.thread.domain.model.reader.FeedSource
@@ -29,17 +33,23 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.kodein.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -53,11 +63,16 @@ class ReaderPage : Screen {
         val viewModel = rememberScreenModel<ReaderViewModel>()
         val state by viewModel.state.collectAsState()
         val articles = viewModel.articles.collectAsLazyPagingItems()
-        var isAddSheetShown by remember { mutableStateOf(false) }
+        var isAddSheetShown by rememberSaveable { mutableStateOf(false) }
         var editingSource by remember { mutableStateOf<FeedSource?>(null) }
-        var isSearchActive by remember { mutableStateOf(false) }
+        var isSearchActive by rememberSaveable { mutableStateOf(false) }
         var previewArticle by remember { mutableStateOf<Article?>(null) }
         val snackbarHostState = remember { SnackbarHostState() }
+        val searchFocusRequester = remember { FocusRequester() }
+
+        LaunchedEffect(isSearchActive) {
+            if (isSearchActive) searchFocusRequester.requestFocus()
+        }
 
         LaunchedEffect(state.message) {
             state.message?.let {
@@ -122,6 +137,19 @@ class ReaderPage : Screen {
         }
 
         AdaptiveSidebarScaffold(
+            modifier = Modifier.threadShortcutHost(
+                ThreadShortcut(Key.K) { isSearchActive = true },
+                ThreadShortcut(Key.R) { viewModel.onEvent(ReaderContract.Event.OnRefreshAll) },
+                ThreadShortcut(Key.Escape, command = false) {
+                    when {
+                        previewArticle != null -> previewArticle = null
+                        isSearchActive -> {
+                            isSearchActive = false
+                            viewModel.onEvent(ReaderContract.Event.OnSearchQueryChanged(""))
+                        }
+                    }
+                },
+            ),
             drawerState = drawerState,
             coroutineScope = scope,
             sidebar = navigationContent,
@@ -130,6 +158,7 @@ class ReaderPage : Screen {
                         state = state,
                         articles = articles,
                         isSearchActive = isSearchActive,
+                        searchFocusRequester = searchFocusRequester,
                         showMenu = showMenu,
                         onSearchActiveChange = { isSearchActive = it },
                         onSearchQueryChanged = {
@@ -172,6 +201,7 @@ private fun ReaderScaffold(
     state: ReaderContract.State,
     articles: LazyPagingItems<Article>,
     isSearchActive: Boolean,
+    searchFocusRequester: FocusRequester,
     showMenu: Boolean,
     onSearchActiveChange: (Boolean) -> Unit,
     onSearchQueryChanged: (String) -> Unit,
@@ -201,15 +231,16 @@ private fun ReaderScaffold(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 ReaderHeader(
-                state = state,
-                isSearchActive = isSearchActive,
+                    state = state,
+                    isSearchActive = isSearchActive,
+                    searchFocusRequester = searchFocusRequester,
                     showMenuIcon = showMenu,
-                onSearchActiveChange = onSearchActiveChange,
-                onSearchQueryChanged = onSearchQueryChanged,
-                onRefreshAll = onRefreshAll,
-                onMenuClick = onMenuClick,
-                onExport = onExport,
-                onImport = onImport,
+                    onSearchActiveChange = onSearchActiveChange,
+                    onSearchQueryChanged = onSearchQueryChanged,
+                    onRefreshAll = onRefreshAll,
+                    onMenuClick = onMenuClick,
+                    onExport = onExport,
+                    onImport = onImport,
                 )
                 RefreshDiagnosticsBanner(
                     failures = state.refreshFailures,
@@ -233,29 +264,37 @@ private fun ReaderScaffold(
                             )
                         }
                     ) {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(
-                                horizontal = LocalThreadWindowInfo.current.pageHorizontalPadding,
-                                vertical = 12.dp,
-                            ),
-                            verticalArrangement = Arrangement.spacedBy(12.dp),
-                        ) {
-                            items(articles.itemCount) { index ->
-                                val article = articles[index]
-                                if (article != null) {
-                                    val sourceName =
-                                        state.feedSources.find { it.id == article.feedSourceId }?.name
+                        val listStateKey = "${state.selectedFeedSourceId ?: "all"}:${state.articleFilter}"
+                        KeyedLazyListState(listStateKey) { listState ->
+                            LazyColumn(
+                                state = listState,
+                                modifier = Modifier.fillMaxSize(),
+                                contentPadding = PaddingValues(
+                                    horizontal = LocalThreadWindowInfo.current.pageHorizontalPadding,
+                                    vertical = 12.dp,
+                                ),
+                                verticalArrangement = Arrangement.spacedBy(12.dp),
+                            ) {
+                                items(
+                                    count = articles.itemCount,
+                                    key = articles.itemKey { it.id },
+                                ) { index ->
+                                    val article = articles[index]
+                                    if (article != null) {
+                                        val sourceName = state.feedSources
+                                            .find { it.id == article.feedSourceId }
+                                            ?.name
                                             ?: "未知来源"
-                                    ArticleItem(
-                                        article = article,
-                                        sourceName = sourceName,
-                                        onClick = { onArticleClick(article) },
-                                    )
+                                        ArticleItem(
+                                            article = article,
+                                            sourceName = sourceName,
+                                            onClick = { onArticleClick(article) },
+                                        )
+                                    }
                                 }
-                            }
 
-                            item { PagingAppendState(articles) }
+                                item(key = "paging-append") { PagingAppendState(articles) }
+                            }
                         }
                     }
                 }
@@ -367,6 +406,7 @@ private fun ArticlePreviewPane(
 private fun ReaderHeader(
     state: ReaderContract.State,
     isSearchActive: Boolean,
+    searchFocusRequester: FocusRequester,
     showMenuIcon: Boolean,
     onSearchActiveChange: (Boolean) -> Unit,
     onSearchQueryChanged: (String) -> Unit,
@@ -450,21 +490,11 @@ private fun ReaderHeader(
         )
 
         if (isSearchActive) {
-            OutlinedTextField(
-                value = state.searchQuery,
-                onValueChange = onSearchQueryChanged,
-                placeholder = { Text("搜索标题、作者或正文") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                shape = MaterialTheme.shapes.extraLarge,
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                trailingIcon = {
-                    if (state.searchQuery.isNotEmpty()) {
-                        IconButton(onClick = { onSearchQueryChanged("") }) {
-                            Icon(Icons.Default.Clear, contentDescription = "清空")
-                        }
-                    }
-                },
+            ThreadSearchField(
+                query = state.searchQuery,
+                onQueryChange = onSearchQueryChanged,
+                placeholder = "搜索标题、作者或正文",
+                modifier = Modifier.focusRequester(searchFocusRequester),
             )
         }
     }
@@ -673,7 +703,7 @@ fun FilterChips(
                 label = { Text(filter.name) },
                 leadingIcon = {
                     val icon = when (filter) {
-                        ArticleFilter.ALL -> Icons.Default.List
+                        ArticleFilter.ALL -> Icons.AutoMirrored.Filled.List
                         ArticleFilter.UNREAD -> Icons.Default.Inbox
                         ArticleFilter.BOOKMARKED -> Icons.Default.Bookmark
                     }

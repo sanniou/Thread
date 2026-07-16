@@ -20,17 +20,19 @@ class BookmarkRepositoryImpl(
     private val db: Database
 ) : BookmarkRepository {
     override fun getBookmarks(query: String?, tags: List<String>?): PagingSource<Int, Bookmark> {
-        val hasQuery = !query.isNullOrBlank()
-        val hasTags = !tags.isNullOrEmpty()
+        val normalizedQuery = query.orEmpty()
+        val normalizedTags = tags.orEmpty()
+        val hasQuery = normalizedQuery.isNotBlank()
+        val hasTags = normalizedTags.isNotEmpty()
 
         val countQuery = when {
             hasQuery && hasTags -> db.bookmarkQueries.searchByQueryAndTagsCount(
-                query = query!!,
-                tags = tags!!,
-                tagCount = tags.size.toLong(),
+                query = normalizedQuery,
+                tags = normalizedTags,
+                tagCount = normalizedTags.size.toLong(),
             )
-            hasQuery -> db.bookmarkQueries.searchByQueryCount(query!!)
-            hasTags -> db.bookmarkQueries.searchByTagsCount(tags!!, tags.size.toLong())
+            hasQuery -> db.bookmarkQueries.searchByQueryCount(normalizedQuery)
+            hasTags -> db.bookmarkQueries.searchByTagsCount(normalizedTags, normalizedTags.size.toLong())
             else -> db.bookmarkQueries.searchAllCount()
         }
 
@@ -41,22 +43,22 @@ class BookmarkRepositoryImpl(
             queryProvider = { limit, offset ->
                 when {
                     hasQuery && hasTags -> db.bookmarkQueries.searchByQueryAndTags(
-                        query!!,
-                        tags!!,
-                        tags.size.toLong(),
+                        normalizedQuery,
+                        normalizedTags,
+                        normalizedTags.size.toLong(),
                         limit,
                         offset,
                         ::mapBookmark
                     )
                     hasQuery -> db.bookmarkQueries.searchByQuery(
-                        query!!,
+                        normalizedQuery,
                         limit,
                         offset,
                         ::mapBookmark
                     )
                     hasTags -> db.bookmarkQueries.searchByTags(
-                        tags!!,
-                        tags.size.toLong(),
+                        normalizedTags,
+                        normalizedTags.size.toLong(),
                         limit,
                         offset,
                         ::mapBookmark,

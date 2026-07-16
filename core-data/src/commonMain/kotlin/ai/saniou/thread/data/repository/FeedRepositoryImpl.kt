@@ -7,12 +7,12 @@ import ai.saniou.thread.domain.model.feed.PostItem
 import ai.saniou.thread.domain.model.feed.SourceFeedFailure
 import ai.saniou.thread.domain.model.feed.TimelineItem
 import ai.saniou.thread.domain.model.forum.Topic
+import ai.saniou.thread.domain.paging.threadPagingConfig
 import ai.saniou.thread.domain.repository.FeedRepository
 import ai.saniou.thread.domain.repository.ReaderRepository
 import ai.saniou.thread.domain.repository.SourceRepository
 import ai.saniou.thread.domain.repository.ChannelRepository
 import androidx.paging.Pager
-import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
@@ -32,10 +32,9 @@ class FeedRepositoryImpl(
         sourceIds: Set<String>?,
         includeReader: Boolean,
     ): Flow<PagingData<TimelineItem>> = Pager(
-        config = PagingConfig(
+        config = threadPagingConfig(
             pageSize = TIMELINE_PAGE_SIZE,
-            initialLoadSize = TIMELINE_PAGE_SIZE,
-            enablePlaceholders = false,
+            initialLoadPages = 1,
         ),
         pagingSourceFactory = {
             TimelinePagingSource(

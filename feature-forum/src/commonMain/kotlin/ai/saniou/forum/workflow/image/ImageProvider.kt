@@ -18,7 +18,7 @@ interface ImageProvider {
  */
 class ThreadImageProvider(
     private val sourceId: String,
-    private val threadId: Long,
+    private val threadId: String,
     private val getTopicImagesUseCase: GetTopicImagesUseCase
 ) : ImageProvider {
     override fun load(): Flow<List<Image>> {

@@ -6,11 +6,11 @@ import ai.saniou.thread.db.Database
 import ai.saniou.thread.domain.model.history.HistoryArticle
 import ai.saniou.thread.domain.model.history.HistoryItem
 import ai.saniou.thread.domain.model.history.HistoryPost
+import ai.saniou.thread.domain.paging.threadPagingConfig
 import ai.saniou.thread.domain.repository.HistoryRepository
 import ai.saniou.thread.domain.repository.Source
 import ai.saniou.thread.domain.source.SourceCatalog
 import androidx.paging.Pager
-import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
 import app.cash.sqldelight.paging3.QueryPagingSource
@@ -28,7 +28,7 @@ class HistoryRepositoryImpl(
 
     override fun getHistory(typeFilter: String?): Flow<PagingData<HistoryItem>> {
         return Pager(
-            config = PagingConfig(pageSize = 20),
+            config = threadPagingConfig(),
             pagingSourceFactory = {
                 if (typeFilter != null) {
                     QueryPagingSource(

@@ -12,9 +12,8 @@ import kotlinx.datetime.UtcOffset
 import kotlinx.datetime.toInstant
 
 class RssParser : FeedParser {
-    private val xml = XML {
-        recommended()
-        defaultPolicy {
+    private val xml = XML.v1 {
+        policy {
             ignoreUnknownChildren()
         }
     }

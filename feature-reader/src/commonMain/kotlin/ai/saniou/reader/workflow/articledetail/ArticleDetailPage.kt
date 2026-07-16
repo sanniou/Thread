@@ -1,6 +1,7 @@
 package ai.saniou.reader.workflow.articledetail
 
 import ai.saniou.corecommon.utils.toRelativeTimeString
+import ai.saniou.coreui.interaction.rememberThreadClipboard
 import ai.saniou.coreui.layout.LocalThreadWindowInfo
 import ai.saniou.coreui.layout.ReadingCanvas
 import ai.saniou.coreui.state.toAppError
@@ -28,8 +29,6 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -48,7 +47,7 @@ data class ArticleDetailPage(val articleId: String) : Screen {
         val viewModel: ArticleDetailViewModel = rememberScreenModel(arg = articleId)
         val state by viewModel.state.collectAsState()
         val uriHandler = LocalUriHandler.current
-        val clipboard = LocalClipboardManager.current
+        val clipboard = rememberThreadClipboard()
         val scope = rememberCoroutineScope()
         val snackbar = remember { SnackbarHostState() }
         ThreadDetailScaffold(
@@ -62,7 +61,7 @@ data class ArticleDetailPage(val articleId: String) : Screen {
                     onToggleBookmark = { viewModel.onEvent(ArticleDetailContract.Event.OnToggleBookmark) },
                     onShare = {
                         state.article?.let { article ->
-                            clipboard.setText(AnnotatedString("${article.title}\n${article.link}"))
+                            clipboard.copyText("${article.title}\n${article.link}")
                             scope.launch { snackbar.showSnackbar("标题和链接已复制") }
                         }
                     },

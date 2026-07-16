@@ -64,6 +64,7 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.kodein.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -93,7 +94,7 @@ import thread.feature_forum.generated.resources.subscription_unsubscribe
 
 data class SubscriptionPage(
     val onUpdateTitle: ((String) -> Unit)? = null,
-    val onThreadClicked: (Long) -> Unit,
+    val onThreadClicked: (String) -> Unit,
 ) : Screen {
 
     @OptIn(ExperimentalMaterial3Api::class)
@@ -200,8 +201,8 @@ data class SubscriptionPage(
 private fun SubscriptionContent(
     state: SubscriptionContract.State,
     onEvent: (Event) -> Unit,
-    onThreadClicked: (Long) -> Unit,
-    onImageClick: (Long, Image) -> Unit,
+    onThreadClicked: (String) -> Unit,
+    onImageClick: (String, Image) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val feeds = state.feeds.collectAsLazyPagingItems()
@@ -226,28 +227,31 @@ private fun SubscriptionContent(
                 ),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(feeds.itemCount) { index ->
+                items(
+                    count = feeds.itemCount,
+                    key = feeds.itemKey { "${it.sourceId}:${it.id}" },
+                ) { index ->
                     val feed = feeds[index] ?: return@items
                     var showMenu by remember { mutableStateOf(false) }
                     var pressOffset by remember { mutableStateOf(DpOffset.Zero) }
 
                     Box(
-                        modifier = Modifier.pointerInput(Unit) {
+                        modifier = Modifier.pointerInput(feed.id) {
                             detectTapGestures(
                                 onLongPress = { offset ->
                                     showMenu = true
                                     pressOffset = DpOffset(offset.x.toDp(), offset.y.toDp())
                                 },
                                 onTap = {
-                                    onThreadClicked(feed.id.toLong())
+                                    onThreadClicked(feed.id)
                                 }
                             )
                         }
                     ) {
                         TopicCard(
                             topic = feed,
-                            onClick = { onThreadClicked(feed.id.toLong()) },
-                            onImageClick = { img -> onImageClick(feed.id.toLong(), img) },
+                            onClick = { onThreadClicked(feed.id) },
+                            onImageClick = { img -> onImageClick(feed.id, img) },
                         )
                         if (feed.isLocal) {
                             Icon(
@@ -265,7 +269,7 @@ private fun SubscriptionContent(
                             DropdownMenuItem(
                                 text = { Text(stringResource(Res.string.subscription_unsubscribe)) },
                                 onClick = {
-                                    onEvent(Event.OnUnsubscribe(feed.id.toLong()))
+                                    onEvent(Event.OnUnsubscribe(feed.id))
                                     showMenu = false
                                 }
                             )
@@ -273,7 +277,7 @@ private fun SubscriptionContent(
                     }
                 }
 
-                item { PagingAppendState(feeds) }
+                item(key = "paging-append") { PagingAppendState(feeds) }
             }
         }
     }
