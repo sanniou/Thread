@@ -3,12 +3,10 @@ package ai.saniou.forum.workflow.home
 import ai.saniou.coreui.state.DefaultError
 import ai.saniou.coreui.layout.LocalThreadWindowInfo
 import ai.saniou.coreui.state.PagingStateLayout
+import ai.saniou.coreui.state.PagingAppendState
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.ModernEmptyState
 import ai.saniou.coreui.widgets.PullToRefreshWrapper
-import ai.saniou.forum.ui.components.LoadEndIndicator
-import ai.saniou.forum.ui.components.LoadingFailedIndicator
-import ai.saniou.forum.ui.components.LoadingIndicator
 import ai.saniou.forum.ui.components.ThreadListSkeleton
 import ai.saniou.forum.ui.components.TopicCard
 import ai.saniou.thread.domain.model.forum.Image
@@ -31,8 +29,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.paging.LoadState.Error
-import androidx.paging.LoadState.Loading
 import androidx.paging.PagingData
 import androidx.paging.compose.collectAsLazyPagingItems
 import kotlinx.coroutines.flow.Flow
@@ -111,17 +107,7 @@ fun ListThreadPage(
                         )
                     }
 
-                    item {
-                        when (threads.loadState.append) {
-                            is Error -> LoadingFailedIndicator(
-                                onClick = { threads.retry() },
-                                onShowCache = onShowCache
-                            )
-
-                            is Loading -> LoadingIndicator()
-                            else -> LoadEndIndicator()
-                        }
-                    }
+                    item { PagingAppendState(threads) }
                 }
             }
         }

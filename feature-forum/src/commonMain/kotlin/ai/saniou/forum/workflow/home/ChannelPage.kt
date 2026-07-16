@@ -226,6 +226,7 @@ data class ChannelPage(
             RefreshDiagnosticsBanner(
                 failures = state.refreshFailures,
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                onRetry = { viewModel.onEvent(Event.LoadCategories) },
             )
 
             SectionLabel(

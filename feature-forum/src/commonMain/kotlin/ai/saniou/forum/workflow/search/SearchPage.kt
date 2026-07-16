@@ -2,6 +2,8 @@ package ai.saniou.forum.workflow.search
 
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.layout.LocalThreadWindowInfo
+import ai.saniou.coreui.state.PagingAppendState
+import ai.saniou.coreui.state.PagingStateLayout
 import ai.saniou.coreui.widgets.BlankLinePolicy
 import ai.saniou.coreui.widgets.ModernEmptyState
 import ai.saniou.coreui.widgets.RichText
@@ -11,9 +13,6 @@ import ai.saniou.coreui.widgets.ThreadDetailScaffold
 import ai.saniou.coreui.widgets.ThreadFilterBar
 import ai.saniou.coreui.widgets.ThreadSearchField
 import ai.saniou.forum.ui.components.TopicCard
-import ai.saniou.forum.ui.components.LoadEndIndicator
-import ai.saniou.forum.ui.components.LoadingFailedIndicator
-import ai.saniou.forum.ui.components.LoadingIndicator
 import ai.saniou.forum.workflow.image.ImagePreviewPage
 import ai.saniou.forum.workflow.image.ImagePreviewViewModelParams
 import ai.saniou.forum.workflow.search.SearchContract.Event
@@ -48,8 +47,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.paging.LoadState.Error
-import androidx.paging.LoadState.Loading
 import androidx.paging.compose.collectAsLazyPagingItems
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.kodein.rememberScreenModel
@@ -155,39 +152,39 @@ data class SearchPage(
         val threads =
             viewModel.state.collectAsStateWithLifecycle().value.threadPagingData.collectAsLazyPagingItems()
 
-        LazyColumn(
+        PagingStateLayout(
+            items = threads,
             modifier = Modifier.fillMaxSize().widthIn(max = Dimens.contentMaxWidth),
-            contentPadding = PaddingValues(
-                horizontal = LocalThreadWindowInfo.current.pageHorizontalPadding,
-                vertical = 8.dp,
-            ),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            items(threads.itemCount) { index ->
-                val thread = threads[index] ?: return@items
-                TopicCard(
-                    topic = thread,
-                    onClick = { onThreadClick(thread.id) },
-                    onImageClick = { img -> onImageClick(thread.id, img) },
-                    onUserClick = onUserClick
+            empty = {
+                ModernEmptyState(
+                    icon = Icons.Default.Search,
+                    title = "没有找到主题",
+                    description = "换一个关键词，或切换到回复搜索。",
+                    modifier = Modifier.align(Alignment.Center),
                 )
-            }
-
-            item {
-                when (threads.loadState.append) {
-                    is Error -> LoadingFailedIndicator()
-                    is Loading -> LoadingIndicator()
-                    else -> {
-                        if (threads.itemCount > 0) LoadEndIndicator()
-                    }
+            },
+        ) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(
+                    horizontal = LocalThreadWindowInfo.current.pageHorizontalPadding,
+                    vertical = 8.dp,
+                ),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                items(threads.itemCount) { index ->
+                    val thread = threads[index] ?: return@items
+                    TopicCard(
+                        topic = thread,
+                        onClick = { onThreadClick(thread.id) },
+                        onImageClick = { img -> onImageClick(thread.id, img) },
+                        onUserClick = onUserClick,
+                    )
+                }
+                item { PagingAppendState(threads) }
                 }
             }
-
-            if (threads.loadState.refresh is Loading) {
-                item { LoadingIndicator() }
-            }
         }
-    }
 
     @Composable
     private fun ReplyResultList(
@@ -198,35 +195,35 @@ data class SearchPage(
         val replies =
             viewModel.state.collectAsStateWithLifecycle().value.replyPagingData.collectAsLazyPagingItems()
 
-        LazyColumn(
+        PagingStateLayout(
+            items = replies,
             modifier = Modifier.fillMaxSize().widthIn(max = Dimens.contentMaxWidth),
-            contentPadding = PaddingValues(
-                horizontal = LocalThreadWindowInfo.current.pageHorizontalPadding,
-                vertical = 8.dp,
-            ),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            items(replies.itemCount) { index ->
-                val reply = replies[index] ?: return@items
-                SearchReplyCard(
-                    reply = reply,
-                    onClick = { onThreadClick(reply.topicId) },
-                    onImageClick = { img -> onImageClick(reply.topicId, img) }
+            empty = {
+                ModernEmptyState(
+                    icon = Icons.Default.Search,
+                    title = "没有找到回复",
+                    description = "尝试更短的关键词，或切换到主题搜索。",
+                    modifier = Modifier.align(Alignment.Center),
                 )
-            }
-
-            item {
-                when (replies.loadState.append) {
-                    is Error -> LoadingFailedIndicator()
-                    is Loading -> LoadingIndicator()
-                    else -> {
-                        if (replies.itemCount > 0) LoadEndIndicator()
-                    }
+            },
+        ) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(
+                    horizontal = LocalThreadWindowInfo.current.pageHorizontalPadding,
+                    vertical = 8.dp,
+                ),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                items(replies.itemCount) { index ->
+                    val reply = replies[index] ?: return@items
+                    SearchReplyCard(
+                        reply = reply,
+                        onClick = { onThreadClick(reply.topicId) },
+                        onImageClick = { img -> onImageClick(reply.topicId, img) },
+                    )
                 }
-            }
-
-            if (replies.loadState.refresh is Loading) {
-                item { LoadingIndicator() }
+                item { PagingAppendState(replies) }
             }
         }
     }

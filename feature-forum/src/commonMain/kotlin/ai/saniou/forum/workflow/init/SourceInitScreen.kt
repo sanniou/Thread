@@ -1,8 +1,11 @@
 package ai.saniou.forum.workflow.init
 
 import ai.saniou.coreui.state.StateLayout
+import ai.saniou.coreui.widgets.ContextHero
 import ai.saniou.coreui.widgets.SaniouButton
-import ai.saniou.coreui.widgets.SaniouTopAppBar
+import ai.saniou.coreui.widgets.ThreadCard
+import ai.saniou.coreui.widgets.ThreadContentColumn
+import ai.saniou.coreui.widgets.ThreadPage
 import ai.saniou.forum.workflow.init.SourceInitContract.Event
 import ai.saniou.forum.workflow.init.SourceInitContract.State
 import androidx.compose.foundation.layout.Column
@@ -14,8 +17,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Hub
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -47,22 +51,25 @@ data class SourceInitScreen(
             }
         }
 
-        Scaffold(
-            topBar = {
-                SaniouTopAppBar(title = "初始化 ${state.sourceName}")
-            }
-        ) { paddingValues ->
+        ThreadPage {
+          ThreadContentColumn(modifier = Modifier.fillMaxSize()) {
+            ContextHero(
+                icon = Icons.Default.Hub,
+                title = "启用 ${state.sourceName}",
+                subtitle = "建立跨平台订阅身份并准备该来源的本地状态",
+                metric = "ONE-TIME SETUP",
+            )
             StateLayout(
                 state = state.uiState,
-                onRetry = {},
-                modifier = Modifier.padding(paddingValues)
+                onRetry = { viewModel.onEvent(Event.CompleteInitialization) },
+                modifier = Modifier.weight(1f).fillMaxWidth(),
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
-                        .padding(16.dp)
-                ) {
+              Column(
+                  modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+                  verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
+              ) {
+                ThreadCard(modifier = Modifier.fillMaxWidth()) {
+                    Text("来源初始化", style = MaterialTheme.typography.titleLarge)
                     Text(
                         text = "准备启用 ${state.sourceName}。账号凭据可在用户中心通过该来源声明的登录方式添加。",
                         style = MaterialTheme.typography.bodyMedium,
@@ -80,7 +87,9 @@ data class SourceInitScreen(
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }
+              }
             }
+          }
         }
     }
 }

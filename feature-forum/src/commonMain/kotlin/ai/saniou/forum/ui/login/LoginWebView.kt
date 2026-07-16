@@ -1,10 +1,9 @@
 package ai.saniou.forum.ui.login
 
 import ai.saniou.thread.domain.model.user.LoginStrategy
-import ai.saniou.coreui.widgets.SaniouTopAppBar
+import ai.saniou.coreui.widgets.ThreadDetailScaffold
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -40,10 +39,11 @@ fun LoginWebView(
         }
     }
 
-    Scaffold(
-        topBar = {
-            SaniouTopAppBar(title = "网页登录", onNavigationClick = onDismissRequest)
-        },
+    ThreadDetailScaffold(
+        title = "网页登录",
+        eyebrow = "SECURE SESSION",
+        subtitle = strategy.url,
+        onBack = onDismissRequest,
     ) { padding ->
         WebView(
             state = state,

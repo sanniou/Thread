@@ -5,7 +5,7 @@ import ai.saniou.coreui.layout.LocalThreadWindowInfo
 import ai.saniou.coreui.layout.ReadingCanvas
 import ai.saniou.coreui.state.*
 import ai.saniou.coreui.theme.Dimens
-import ai.saniou.coreui.widgets.SaniouTopAppBar
+import ai.saniou.coreui.widgets.ThreadDetailScaffold
 import ai.saniou.coreui.widgets.ShimmerContainer
 import ai.saniou.coreui.widgets.VerticalSpacerSmall
 import ai.saniou.forum.ui.components.*
@@ -93,9 +93,6 @@ data class TopicDetailPage(
         val referenceState by referenceViewModel.uiState.collectAsState()
         var highlightedReplyId by remember { mutableStateOf<String?>(null) }
 
-        // Scroll Behavior for TopAppBar
-        val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
-
         // 处理副作用
         LaunchedEffect(Unit) {
             var snackbarJob: Job? = null
@@ -115,35 +112,13 @@ data class TopicDetailPage(
             }
         }
 
-        Scaffold(
-            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-            topBar = {
-                SaniouTopAppBar(
-                    title = {
-                        // Only show title if we have topic data or at least forum name
-                        if (state.topicWrapper is UiStateWrapper.Success) {
-                            Text(
-                                text = state.forumName,
-                                style = MaterialTheme.typography.titleLarge,
-                                modifier = Modifier.pointerInput(Unit) {
-                                    detectTapGestures(
-                                        onTap = {
-                                            coroutineScope.launch {
-                                                if (lazyListState.firstVisibleItemIndex == 0 && lazyListState.firstVisibleItemScrollOffset == 0) {
-                                                    viewModel.onEvent(Event.Refresh)
-                                                } else {
-                                                    lazyListState.animateScrollToItem(0)
-                                                }
-                                            }
-                                        }
-                                    )
-                                }
-                            )
-                        }
-                    },
-                    onNavigationClick = { navigator.pop() },
-                    actions = {
-                        if (state.topicWrapper is UiStateWrapper.Success) {
+        ThreadDetailScaffold(
+            title = state.forumName.ifBlank { "主题详情" },
+            eyebrow = "FORUM THREAD",
+            subtitle = "No.$threadId · 阅读、引用与回复",
+            onBack = navigator::pop,
+            actions = {
+                if (state.topicWrapper is UiStateWrapper.Success) {
                             IconButton(onClick = { viewModel.onEvent(Event.Refresh) }) {
                                 Icon(Icons.Default.Refresh, contentDescription = stringResource(Res.string.refresh))
                             }
@@ -191,10 +166,7 @@ data class TopicDetailPage(
                                     }
                                 )
                             }
-                        }
-                    },
-                    scrollBehavior = scrollBehavior
-                )
+                }
             },
             snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
             bottomBar = {
@@ -689,13 +661,7 @@ private fun ThreadList(
         }
 
         // Paging state footer
-        item {
-            if (replies.loadState.append.endOfPaginationReached) {
-                if (replies.itemCount > 0) { // Show only if there are replies
-                    LoadEndIndicator(onClick = { replies.refresh() })
-                }
-            }
-        }
+        item { PagingAppendState(replies, endLabel = "全部回复已加载") }
     }
 }
 

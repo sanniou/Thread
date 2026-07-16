@@ -1,21 +1,38 @@
 package ai.saniou.coreui.state
 
+import ai.saniou.coreui.widgets.ThreadStatusBanner
+import ai.saniou.coreui.widgets.ThreadStatusTone
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.paging.LoadState.Error
 import androidx.paging.LoadState.Loading
+import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
+
+enum class PagingContentState {
+    CachedContent,
+    InitialLoading,
+    BlockingError,
+    Empty,
+    Content,
+}
+
+/** Pure policy used by UI and Desktop tests: usable rows always beat refresh chrome. */
+fun resolvePagingContentState(itemCount: Int, refreshState: LoadState): PagingContentState = when {
+    itemCount > 0 -> PagingContentState.CachedContent
+    refreshState is Loading -> PagingContentState.InitialLoading
+    refreshState is Error -> PagingContentState.BlockingError
+    refreshState is LoadState.NotLoading -> PagingContentState.Empty
+    else -> PagingContentState.Content
+}
 
 /**
  * Paging 3 状态布局组件
@@ -42,37 +59,30 @@ fun <T : Any> PagingStateLayout(
     Box(modifier = modifier) {
         val refreshState = items.loadState.refresh
 
-        when {
+        when (resolvePagingContentState(items.itemCount, refreshState)) {
             // Cached content is the primary offline surface. A refresh must never replace usable
             // rows with a full-screen spinner or error page.
-            items.itemCount > 0 -> {
+            PagingContentState.CachedContent -> {
                 content(items)
                 if (refreshState is Error) {
                     val appError = refreshState.error.toAppError(onRetry)
-                    Surface(
-                        modifier = Modifier.align(Alignment.TopCenter).padding(12.dp),
-                        shape = MaterialTheme.shapes.medium,
-                        color = MaterialTheme.colorScheme.errorContainer,
-                        tonalElevation = 4.dp,
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(start = 16.dp, end = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        ) {
-                            Text(
-                                text = "正在显示缓存：${appError.message}",
-                                modifier = Modifier.weight(1f),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onErrorContainer,
-                            )
+                    ThreadStatusBanner(
+                        title = "正在显示本地缓存",
+                        message = appError.message,
+                        tone = if (appError.type == AppErrorType.NETWORK) {
+                            ThreadStatusTone.Warning
+                        } else {
+                            ThreadStatusTone.Error
+                        },
+                        modifier = Modifier.align(Alignment.TopCenter).padding(12.dp).widthIn(max = 720.dp),
+                        actions = {
                             TextButton(onClick = onRetry) { Text("重试") }
-                        }
-                    }
+                        },
+                    )
                 }
             }
 
-            refreshState is Loading -> {
+            PagingContentState.InitialLoading -> {
                 if (loading != null) {
                     loading()
                 } else {
@@ -80,7 +90,8 @@ fun <T : Any> PagingStateLayout(
                 }
             }
 
-            refreshState is Error -> {
+            PagingContentState.BlockingError -> {
+                check(refreshState is Error)
                 val appError = refreshState.error.toAppError(onRetry)
                 if (error != null) {
                     error(appError)
@@ -91,7 +102,7 @@ fun <T : Any> PagingStateLayout(
 
             // Empty State Handling
             // Only show empty state if not loading and itemCount is 0
-            items.itemCount == 0 && refreshState !is Loading -> {
+            PagingContentState.Empty -> {
                 if (empty != null) {
                     empty()
                 } else {
@@ -101,7 +112,7 @@ fun <T : Any> PagingStateLayout(
                 }
             }
 
-            else -> {
+            PagingContentState.Content -> {
                 content(items)
             }
         }

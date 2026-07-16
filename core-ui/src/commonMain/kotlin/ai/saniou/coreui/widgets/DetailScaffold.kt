@@ -48,6 +48,11 @@ fun ThreadDetailScaffold(
     floatingActionButtonPosition: FabPosition = FabPosition.End,
     bottomBar: @Composable () -> Unit = {},
     contentWindowInsets: WindowInsets = ScaffoldDefaults.contentWindowInsets,
+    navigationIcon: @Composable () -> Unit = {
+        IconButton(onClick = onBack) {
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+        }
+    },
     content: @Composable (PaddingValues) -> Unit,
 ) {
     val windowInfo = LocalThreadWindowInfo.current
@@ -80,9 +85,7 @@ fun ThreadDetailScaffold(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
-                        IconButton(onClick = onBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
-                        }
+                        navigationIcon()
                         androidx.compose.foundation.layout.Column(
                             modifier = Modifier.weight(1f),
                             verticalArrangement = Arrangement.spacedBy(2.dp),

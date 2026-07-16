@@ -56,7 +56,7 @@ import com.github.panpf.zoomimage.rememberSketchZoomState
 import kotlinx.coroutines.launch
 
 /**
- * 一个功能丰富的可缩放图片组件，提供了缩放、平移、旋转和截图等交互控件。
+ * 一个功能丰富的可缩放图片组件，提供缩放、平移、旋转和图片信息。
  *
  * @param uri 要显示的图片URI
  * @param thumbnailUrl 缩略图URL，用于在加载时占位
@@ -76,7 +76,6 @@ fun ZoomAsyncImage(
     contentScale: ContentScale = ContentScale.Fit,
     modifier: Modifier = Modifier,
 ) {
-    val capturableState = rememberCapturableState()
     val zoomState = rememberSketchZoomState()
     val imageState = rememberAsyncImageState()
     Box(modifier = modifier.fillMaxSize()) {
@@ -90,8 +89,7 @@ fun ZoomAsyncImage(
             alignment = alignment,
             modifier = Modifier
                 .fillMaxSize()
-                .progressIndicator(imageState, rememberSectorProgressPainter())
-                .capturable(capturableState),
+                .progressIndicator(imageState, rememberSectorProgressPainter()),
             state = imageState,
             zoomState = zoomState,
             scrollBar = ScrollBarSpec.Default, // 启用滚动条
@@ -102,10 +100,6 @@ fun ZoomAsyncImage(
                 uri = uri,
                 zoomableState = zoomState.zoomable,
                 photoPalette = photoPalette,
-                onCaptureClick = {
-                    // TODO: 实现截图保存逻辑，这部分是平台相关的
-                    // val imageBitmap = capturableState.capture()
-                }
             )
         }
     }
@@ -116,7 +110,6 @@ private fun ZoomImageTool(
     uri: String?,
     zoomableState: ZoomableState,
     photoPalette: PhotoPalette,
-    onCaptureClick: () -> Unit,
 ) {
     val coroutineScope = rememberCoroutineScope()
     var showInfoDialog by remember { mutableStateOf(false) }
@@ -208,7 +201,6 @@ private fun ZoomImageTool(
 
             ButtonPad(
                 zoomableState = zoomableState,
-                onCaptureClick = onCaptureClick,
                 onInfoClick = { showInfoDialog = true },
                 onClickMore = { moreShow = !moreShow },
                 photoPalette = photoPalette
@@ -240,7 +232,6 @@ private fun ZoomImageTool(
 @Composable
 private fun ButtonPad(
     zoomableState: ZoomableState,
-    onCaptureClick: () -> Unit,
     onInfoClick: () -> Unit,
     onClickMore: () -> Unit,
     photoPalette: PhotoPalette,
@@ -286,17 +277,6 @@ private fun ButtonPad(
             Icon(
                 imageVector = icon,
                 contentDescription = "缩放",
-                tint = contentColor
-            )
-        }
-
-        IconButton(
-            onClick = onCaptureClick,
-            modifier = Modifier.size(40.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Default.CameraAlt,
-                contentDescription = "截图",
                 tint = contentColor
             )
         }

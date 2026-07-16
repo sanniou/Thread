@@ -3,6 +3,7 @@ package ai.saniou.reader.workflow.reader
 import ai.saniou.coreui.layout.AdaptiveSidebarScaffold
 import ai.saniou.coreui.layout.LocalThreadWindowInfo
 import ai.saniou.coreui.state.PagingStateLayout
+import ai.saniou.coreui.state.PagingAppendState
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.AppDrawerItem
 import ai.saniou.coreui.widgets.AdaptiveModal
@@ -37,7 +38,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import androidx.paging.LoadState.Loading
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import cafe.adriel.voyager.core.screen.Screen
@@ -211,7 +211,10 @@ private fun ReaderScaffold(
                 onExport = onExport,
                 onImport = onImport,
                 )
-                RefreshDiagnosticsBanner(failures = state.refreshFailures)
+                RefreshDiagnosticsBanner(
+                    failures = state.refreshFailures,
+                    onRetry = onRefreshAll,
+                )
                 FilterChips(
                     selectedFilter = state.articleFilter,
                     onFilterChange = onFilterChange,
@@ -252,13 +255,7 @@ private fun ReaderScaffold(
                                 }
                             }
 
-                            if (articles.loadState.append is Loading) {
-                                item {
-                                    Box(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-                                        CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                                    }
-                                }
-                            }
+                            item { PagingAppendState(articles) }
                         }
                     }
                 }

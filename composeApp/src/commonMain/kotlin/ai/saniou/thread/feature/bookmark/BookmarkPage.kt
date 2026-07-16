@@ -8,6 +8,7 @@ import ai.saniou.coreui.widgets.ThreadCommandBar
 import ai.saniou.coreui.widgets.ThreadContentColumn
 import ai.saniou.coreui.widgets.ThreadPage
 import ai.saniou.coreui.widgets.ThreadSearchField
+import ai.saniou.coreui.state.PagingAppendState
 import ai.saniou.forum.workflow.topicdetail.TopicDetailPage
 import ai.saniou.reader.workflow.articledetail.ArticleDetailPage
 import ai.saniou.thread.domain.model.bookmark.Bookmark
@@ -156,10 +157,11 @@ object BookmarkPage : Screen {
                             )
                         }
                     }
+                    item { PagingAppendState(lazyPagingItems) }
 
                     lazyPagingItems.loadState.apply {
                         when {
-                            refresh is Loading || append is Loading -> {
+                            refresh is Loading -> {
                                 item {
                                     Box(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
                                         CircularProgressIndicator(
@@ -178,17 +180,6 @@ object BookmarkPage : Screen {
                                         text = "加载失败: ${e.error.message}",
                                         modifier = Modifier.fillParentMaxSize(),
                                         color = MaterialTheme.colorScheme.error
-                                    )
-                                }
-                            }
-
-                            append is Error -> {
-                                val e = lazyPagingItems.loadState.append as Error
-                                item {
-                                    Text(
-                                        text = "加载更多失败: ${e.error.message}",
-                                        color = MaterialTheme.colorScheme.error,
-                                        modifier = Modifier.clickable { lazyPagingItems.retry() }
                                     )
                                 }
                             }

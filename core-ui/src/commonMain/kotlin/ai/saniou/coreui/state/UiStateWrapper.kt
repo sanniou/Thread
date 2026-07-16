@@ -1,6 +1,9 @@
 package ai.saniou.coreui.state
 
+import ai.saniou.coreui.widgets.ThreadErrorState
+import ai.saniou.coreui.widgets.ThreadLoadingState
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 
@@ -64,4 +67,27 @@ fun <T> StateLayout(
             }
         }
     }
+}
+
+@Composable
+fun DefaultLoading(modifier: Modifier = Modifier) {
+    ThreadLoadingState(modifier)
+}
+
+@Composable
+fun DefaultError(
+    error: AppError? = null,
+    onRetry: () -> Unit,
+    action: @Composable () -> Unit = {},
+) {
+    ThreadErrorState(
+        error = error ?: AppError(message = "未知错误"),
+        onRetry = onRetry,
+        action = action,
+    )
+}
+
+@Composable
+inline fun DefaultError(crossinline onRetryClick: () -> Unit) {
+    DefaultError(null, { onRetryClick() }, {})
 }

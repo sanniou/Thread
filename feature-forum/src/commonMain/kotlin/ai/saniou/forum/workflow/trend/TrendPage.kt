@@ -5,8 +5,7 @@ import ai.saniou.coreui.state.PagingStateLayout
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.BlankLinePolicy
 import ai.saniou.coreui.widgets.RichText
-import ai.saniou.coreui.widgets.SaniouAppBarTitle
-import ai.saniou.coreui.widgets.SaniouTopAppBar
+import ai.saniou.coreui.widgets.ThreadDetailScaffold
 import ai.saniou.coreui.widgets.VerticalSpacerSmall
 import ai.saniou.forum.workflow.topicdetail.TopicDetailPage
 import ai.saniou.forum.workflow.trend.TrendContract.Effect
@@ -45,14 +44,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
-import androidx.compose.material3.TabRowDefaults
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -130,161 +126,89 @@ data class TrendPage(
             }
         }
 
-        Scaffold(
-            topBar = {
-                Column {
-                    SaniouTopAppBar(
-                        title = {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                SaniouAppBarTitle(
-                                    title = state.selectedSource?.name ?: "趋势",
-                                    subtitle = if (state.selectedTab?.supportsHistory == true) {
-                                        // TODO: Format date properly
-                                        if (state.trendParams.dayOffset == 0) "今天" else "${state.trendParams.dayOffset}天前"
-                                    } else {
-                                        null
-                                    }
-                                )
-                                // Source Switcher
-                                if (state.availableSources.size > 1) {
-                                    var expanded by remember { mutableStateOf(false) }
-                                    Box {
-                                        IconButton(onClick = { expanded = true }) {
-                                            Icon(
-                                                Icons.Default.ArrowDropDown,
-                                                contentDescription = "Switch Source"
-                                            )
-                                        }
-                                        DropdownMenu(
-                                            expanded = expanded,
-                                            onDismissRequest = { expanded = false }
-                                        ) {
-                                            state.availableSources.forEach { source ->
-                                                DropdownMenuItem(
-                                                    text = { Text(source.name) },
-                                                    onClick = {
-                                                        viewModel.onEvent(Event.SelectSource(source.id))
-                                                        expanded = false
-                                                    }
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        onNavigationClick = {
-                            if (onMenuClick != null) {
-                                onMenuClick.invoke()
-                            } else {
-                                navigator.pop()
-                            }
-                        },
-                        navigationIcon = {
-                            if (onMenuClick != null) {
-                                IconButton(onClick = { onMenuClick.invoke() }) {
-                                    Icon(Icons.Default.Menu, contentDescription = "Menu")
-                                }
-                            } else {
-                                IconButton(onClick = { navigator.pop() }) {
-                                    Icon(
-                                        Icons.AutoMirrored.Filled.ArrowBack,
-                                        contentDescription = "Back"
-                                    )
-                                }
-                            }
-                        },
-                        colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = MaterialTheme.colorScheme.background
-                        ),
-                        actions = {
-                            if (state.selectedTab?.supportsHistory == true) {
-                                IconButton(onClick = { viewModel.onEvent(Event.SelectDate(state.trendParams.dayOffset + 1)) }) {
-                                    Icon(
-                                        Icons.AutoMirrored.Filled.ArrowBack,
-                                        contentDescription = "前一天"
-                                    )
-                                }
-                                IconButton(
-                                    onClick = { viewModel.onEvent(Event.SelectDate(state.trendParams.dayOffset - 1)) },
-                                    enabled = state.trendParams.dayOffset > 0
-                                ) {
-                                    Icon(
-                                        Icons.AutoMirrored.Filled.ArrowForward,
-                                        contentDescription = "后一天"
-                                    )
-                                }
-                            } else {
-                                IconButton(onClick = { viewModel.onEvent(Event.Refresh) }) {
-                                    Icon(Icons.Default.Refresh, contentDescription = "刷新")
-                                }
-                            }
+        ThreadDetailScaffold(
+            title = state.selectedSource?.name ?: "趋势",
+            eyebrow = "FORUM PULSE",
+            subtitle = if (state.selectedTab?.supportsHistory == true) {
+                if (state.trendParams.dayOffset == 0) "今天 · ${state.selectedTab?.name.orEmpty()}"
+                else "${state.trendParams.dayOffset} 天前 · ${state.selectedTab?.name.orEmpty()}"
+            } else {
+                state.selectedTab?.name ?: "跨来源热门讨论"
+            },
+            onBack = navigator::pop,
+            navigationIcon = {
+                if (onMenuClick != null) {
+                    IconButton(onClick = onMenuClick) {
+                        Icon(Icons.Default.Menu, contentDescription = "打开社区导航")
+                    }
+                } else {
+                    IconButton(onClick = navigator::pop) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+                    }
+                }
+            },
+            actions = {
+                if (state.availableSources.size > 1) {
+                    var expanded by remember { mutableStateOf(false) }
+                    Box {
+                        IconButton(onClick = { expanded = true }) {
+                            Icon(Icons.Default.ArrowDropDown, contentDescription = "切换来源")
                         }
-                    )
-
-                    if (state.availableTabs.size > 1) {
-                        TabRow(
-                            selectedTabIndex = pagerState.currentPage,
-                            containerColor = MaterialTheme.colorScheme.background,
-                            contentColor = MaterialTheme.colorScheme.primary,
-                            indicator = { tabPositions ->
-                                TabRowDefaults.SecondaryIndicator(
-                                    Modifier.tabIndicatorOffset(tabPositions[pagerState.currentPage]),
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                            },
-                            divider = {}
-                        ) {
-                            state.availableTabs.forEachIndexed { index, tab ->
-                                Tab(
-                                    selected = pagerState.currentPage == index,
+                        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                            state.availableSources.forEach { source ->
+                                DropdownMenuItem(
+                                    text = { Text(source.name) },
                                     onClick = {
-                                        viewModel.onEvent(Event.SelectTab(tab.id))
+                                        viewModel.onEvent(Event.SelectSource(source.id))
+                                        expanded = false
                                     },
-                                    text = {
-                                        Text(
-                                            text = tab.name,
-                                            style = MaterialTheme.typography.labelLarge,
-                                            fontWeight = if (pagerState.currentPage == index) FontWeight.Bold else FontWeight.Normal
-                                        )
-                                    },
-                                    selectedContentColor = MaterialTheme.colorScheme.primary,
-                                    unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
                     }
                 }
+                if (state.selectedTab?.supportsHistory == true) {
+                    IconButton(onClick = { viewModel.onEvent(Event.SelectDate(state.trendParams.dayOffset + 1)) }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "前一天")
+                    }
+                    IconButton(
+                        onClick = { viewModel.onEvent(Event.SelectDate(state.trendParams.dayOffset - 1)) },
+                        enabled = state.trendParams.dayOffset > 0,
+                    ) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "后一天")
+                    }
+                } else {
+                    IconButton(onClick = { viewModel.onEvent(Event.Refresh) }) {
+                        Icon(Icons.Default.Refresh, contentDescription = "刷新")
+                    }
+                }
             },
-            snackbarHost = { SnackbarHost(snackbarHostState) }
+            snackbarHost = { SnackbarHost(snackbarHostState) },
         ) { innerPadding ->
-            HorizontalPager(
-                state = pagerState,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-            ) { page ->
-                // Ensure we are rendering the correct tab content
-                // Since HorizontalPager keeps pages alive, we need to make sure the content matches the tab
-                // But here we use a single PagingFlow in ViewModel that updates based on selection.
-                // This might cause issues with Pager preloading.
-                // Ideally, each page should have its own flow or we disable preloading/caching issues.
-                // Given the requirement, we will just render the list which observes the current flow.
-                // Note: This is a simplification. For robust Pager, we might need a map of flows.
-                // But since we want dynamic tabs, a single flow updated by selection is tricky with Pager.
-                // Let's assume the user switches tabs via tap, which updates VM state, which updates flow.
-                // The Pager swipe also updates VM state.
-
-                val tab = state.availableTabs.getOrNull(page) ?: return@HorizontalPager
-
-                // Only render content if this page corresponds to the selected tab to avoid mismatched data
-                // or accept that off-screen pages might show stale data until swiped to.
-                // Actually, we should probably just use the flow.
-
-                TrendList(
-                    viewModel = viewModel,
-                    onItemClick = { viewModel.onEvent(Event.OnTrendItemClick(it)) }
-                )
+            Column(Modifier.padding(innerPadding).fillMaxSize()) {
+                if (state.availableTabs.size > 1) {
+                    SecondaryTabRow(
+                        selectedTabIndex = pagerState.currentPage,
+                        modifier = Modifier.fillMaxWidth().widthIn(max = Dimens.contentMaxWidth)
+                            .align(Alignment.CenterHorizontally),
+                    ) {
+                        state.availableTabs.forEachIndexed { index, tab ->
+                            Tab(
+                                selected = pagerState.currentPage == index,
+                                onClick = { viewModel.onEvent(Event.SelectTab(tab.id)) },
+                                text = { Text(tab.name) },
+                            )
+                        }
+                    }
+                }
+                HorizontalPager(state = pagerState, modifier = Modifier.weight(1f)) { page ->
+                    if (state.availableTabs.getOrNull(page) != null) {
+                        TrendList(
+                            viewModel = viewModel,
+                            onItemClick = { viewModel.onEvent(Event.OnTrendItemClick(it)) },
+                        )
+                    }
+                }
             }
         }
     }

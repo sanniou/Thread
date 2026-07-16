@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.14.0 - 2026-07-16
+
+Reliable reading-state and detail-workflow release.
+
+- Paging presentation is now a tested policy: cached rows always remain readable during refresh failure, while initial failures, empty results and tail failures use distinct common states.
+- Forum, Reader, Feed, bookmarks, subscriptions, search and user activity share one append-loading/error/end component instead of feature-local indicators.
+- Refresh diagnostics identify offline and authentication failures, preserve successful sources, expose expandable per-source details and provide an in-context retry command.
+- Topic lists/details, trends, article details, source initialization and Web login use the same adaptive detail hierarchy; the complete legacy top-app-bar family is deleted.
+- Reader original-page mode now renders real URL or HTML content through the existing Compose Multiplatform WebView API instead of a placeholder.
+- The unused parallel LoadableState/error/loading stack, dead capture infrastructure, commented image sample and non-functional screenshot action are removed.
+- `:core-ui:jvmTest` covers cache-priority and error-vocabulary policy; `:composeApp:compileKotlinJvm` remains the Desktop product gate.
+
 ## 0.13.0 - 2026-07-16
 
 Adaptive workflow completion release.

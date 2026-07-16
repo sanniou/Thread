@@ -3,10 +3,12 @@ package ai.saniou.reader.workflow.articledetail
 import ai.saniou.corecommon.utils.toRelativeTimeString
 import ai.saniou.coreui.layout.LocalThreadWindowInfo
 import ai.saniou.coreui.layout.ReadingCanvas
+import ai.saniou.coreui.state.toAppError
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.NetworkImage
 import ai.saniou.coreui.widgets.RichText
-import ai.saniou.coreui.widgets.SaniouTopAppBar
+import ai.saniou.coreui.widgets.ThreadDetailScaffold
+import ai.saniou.coreui.widgets.ThreadErrorState
 import ai.saniou.thread.domain.model.reader.Article
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
@@ -49,15 +51,14 @@ data class ArticleDetailPage(val articleId: String) : Screen {
         val clipboard = LocalClipboardManager.current
         val scope = rememberCoroutineScope()
         val snackbar = remember { SnackbarHostState() }
-        val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
-
-        Scaffold(
-            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-            topBar = {
-                ArticleDetailTopAppBar(
+        ThreadDetailScaffold(
+            title = state.feedSourceName ?: "文章详情",
+            eyebrow = "READER",
+            subtitle = state.article?.title,
+            onBack = navigator::pop,
+            actions = {
+                ArticleDetailActions(
                     state = state,
-                    scrollBehavior = scrollBehavior,
-                    onBack = { navigator.pop() },
                     onToggleBookmark = { viewModel.onEvent(ArticleDetailContract.Event.OnToggleBookmark) },
                     onShare = {
                         state.article?.let { article ->
@@ -68,7 +69,7 @@ data class ArticleDetailPage(val articleId: String) : Screen {
                     onOpenInBrowser = { state.article?.link?.let { uriHandler.openUri(it) } },
                     onShowWebView = { state.article?.id?.let { navigator.push(ArticleWebViewPage(it)) } },
                     onToggleMenu = { viewModel.onEvent(ArticleDetailContract.Event.OnToggleMenu(it)) },
-                    onFontSizeChange = { viewModel.onEvent(ArticleDetailContract.Event.OnChangeFontSize(it)) }
+                    onFontSizeChange = { viewModel.onEvent(ArticleDetailContract.Event.OnChangeFontSize(it)) },
                 )
             },
             snackbarHost = { SnackbarHost(snackbar) },
@@ -81,9 +82,9 @@ data class ArticleDetailPage(val articleId: String) : Screen {
                         }
                     }
                     state.error != null -> {
-                        ErrorState(
-                            error = state.error,
-                            onRetry = { viewModel.onEvent(ArticleDetailContract.Event.OnRetry) }
+                        ThreadErrorState(
+                            error = state.error!!.toAppError(),
+                            onRetry = { viewModel.onEvent(ArticleDetailContract.Event.OnRetry) },
                         )
                     }
                     state.article != null -> {
@@ -98,46 +99,10 @@ data class ArticleDetailPage(val articleId: String) : Screen {
     }
 }
 
-@Composable
-private fun ErrorState(error: Throwable?, onRetry: () -> Unit) {
-    Column(
-        modifier = Modifier.fillMaxSize().padding(24.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Icon(
-            imageVector = Icons.Default.ErrorOutline,
-            contentDescription = null,
-            modifier = Modifier.size(64.dp),
-            tint = MaterialTheme.colorScheme.error
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "加载失败",
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.error
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = error?.message ?: "未知错误",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Spacer(modifier = Modifier.height(24.dp))
-        Button(onClick = onRetry) {
-            Icon(Icons.Default.Refresh, contentDescription = null)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("重试")
-        }
-    }
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ArticleDetailTopAppBar(
+private fun ArticleDetailActions(
     state: ArticleDetailContract.State,
-    scrollBehavior: TopAppBarScrollBehavior,
-    onBack: () -> Unit,
     onToggleBookmark: () -> Unit,
     onShare: () -> Unit,
     onOpenInBrowser: () -> Unit,
@@ -145,11 +110,7 @@ private fun ArticleDetailTopAppBar(
     onToggleMenu: (Boolean) -> Unit,
     onFontSizeChange: (Float) -> Unit
 ) {
-    SaniouTopAppBar(
-        title = state.feedSourceName ?: "文章详情",
-        onNavigationClick = onBack,
-        actions = {
-            state.article?.let { article ->
+    state.article?.let { article ->
                 IconButton(onClick = onToggleBookmark) {
                     Icon(
                         imageVector = if (article.isBookmarked) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
@@ -213,9 +174,6 @@ private fun ArticleDetailTopAppBar(
                     }
                 }
             }
-        },
-        scrollBehavior = scrollBehavior
-    )
 }
 
 @Composable

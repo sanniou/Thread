@@ -4,9 +4,6 @@ import ai.saniou.coreui.layout.LocalThreadWindowInfo
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.ThreadDetailScaffold
 import ai.saniou.forum.ui.components.TopicCard
-import ai.saniou.forum.ui.components.LoadEndIndicator
-import ai.saniou.forum.ui.components.LoadingFailedIndicator
-import ai.saniou.forum.ui.components.LoadingIndicator
 import ai.saniou.forum.ui.components.ThreadListSkeleton
 import ai.saniou.forum.workflow.image.ImagePreviewPage
 import ai.saniou.forum.workflow.image.ImagePreviewViewModelParams
@@ -27,6 +24,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -47,6 +45,7 @@ import androidx.paging.LoadState
 import androidx.paging.LoadState.Error
 import androidx.paging.LoadState.Loading
 import androidx.paging.compose.collectAsLazyPagingItems
+import ai.saniou.coreui.state.PagingAppendState
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -174,15 +173,7 @@ data class UserDetailPage(
                                     else -> {}
                                 }
 
-                                when (topics.loadState.append) {
-                                    is Loading -> item { LoadingIndicator() }
-                                    is Error -> item { LoadingFailedIndicator() }
-                                    else -> {
-                                        if (topics.loadState.append.endOfPaginationReached && topics.itemCount > 0) {
-                                            item { LoadEndIndicator() }
-                                        }
-                                    }
-                                }
+                                item { PagingAppendState(topics) }
 
                                 if (topics.loadState.refresh !is Loading && topics.itemCount == 0) {
                                     item {
@@ -251,7 +242,11 @@ data class UserDetailPage(
                                 }
 
                                 when (replies.loadState.refresh) {
-                                    is Loading -> item { LoadingIndicator() }
+                                    is Loading -> item {
+                                        Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
+                                            CircularProgressIndicator()
+                                        }
+                                    }
                                     is Error -> item {
                                         Box(
                                             modifier = Modifier.fillMaxWidth().padding(32.dp),
@@ -266,15 +261,7 @@ data class UserDetailPage(
                                     else -> {}
                                 }
 
-                                when (replies.loadState.append) {
-                                    is Loading -> item { LoadingIndicator() }
-                                    is Error -> item { LoadingFailedIndicator() }
-                                    else -> {
-                                        if (replies.loadState.append.endOfPaginationReached && replies.itemCount > 0) {
-                                            item { LoadEndIndicator() }
-                                        }
-                                    }
-                                }
+                                item { PagingAppendState(replies) }
 
                                 if (replies.loadState.refresh !is Loading && replies.itemCount == 0) {
                                     item {

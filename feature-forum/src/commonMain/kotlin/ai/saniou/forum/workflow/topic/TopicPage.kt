@@ -2,6 +2,8 @@ package ai.saniou.forum.workflow.topic
 
 import ai.saniou.coreui.composition.LocalForumSourceId
 import ai.saniou.coreui.state.UiStateWrapper
+import ai.saniou.coreui.widgets.ContextHero
+import ai.saniou.coreui.widgets.ThreadDetailScaffold
 import ai.saniou.forum.ui.components.ForumRichText
 import ai.saniou.forum.workflow.home.ListThreadPage
 import ai.saniou.forum.workflow.image.ImagePreviewPage
@@ -27,6 +29,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Forum
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -102,9 +105,6 @@ data class TopicPage(
         val state by viewModel.state.collectAsStateWithLifecycle()
         val threads = viewModel.topics.collectAsLazyPagingItems()
 
-        // Use LargeTopAppBar for better design
-        val scrollBehavior =
-            TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
         val lazyListState = rememberLazyListState()
         val coroutineScope = rememberCoroutineScope()
         var showQuickActionBar by remember { mutableStateOf(true) }
@@ -141,110 +141,33 @@ data class TopicPage(
             }
         }
 
-        Scaffold(
-            modifier = Modifier
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
-                .nestedScroll(fabNestedScrollConnection),
-            topBar = {
-                ai.saniou.coreui.widgets.SaniouLargeTopAppBar(
-                    title = {
-                        Column {
-                            // Title
-                            Text(
-                                text = state.channelName,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.pointerInput(Unit) {
-                                    detectTapGestures(
-                                        onTap = {
-                                            if (lazyListState.firstVisibleItemIndex == 0 && lazyListState.firstVisibleItemScrollOffset == 0) {
-                                                threads.refresh()
-                                            } else {
-                                                coroutineScope.launch {
-                                                    lazyListState.animateScrollToItem(0)
-                                                }
-                                            }
-                                        }
-                                    )
-                                }
-                            )
-
-                            // Animated visibility for extended content to prevent jumpiness
-                            val showExtendedContent = scrollBehavior.state.collapsedFraction < 0.5f
-                            val channelDetail = state.channelDetail
-
-                            AnimatedVisibility(
-                                visible = showExtendedContent && channelDetail is UiStateWrapper.Success,
-                                enter = fadeIn() + expandVertically(),
-                                exit = fadeOut() + shrinkVertically()
-                            ) {
-                                val detail = (channelDetail as? UiStateWrapper.Success)?.value
-                                if (detail != null) {
-                                    Column {
-                                        // Rules Section (Collapsible in Title Area)
-                                        if (detail.description.isNotBlank()) {
-                                            Spacer(modifier = Modifier.height(8.dp))
-                                            ForumRichText(
-                                                text = detail.description,
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                maxLines = 3, // Reduced max lines to stabilize height
-                                                overflow = TextOverflow.Ellipsis,
-                                                sourceId = actualSourceId,
-                                                onThreadClick = { threadId ->
-                                                    navigator.push(TopicDetailPage(threadId))
-                                                }
-                                            )
-                                            Spacer(modifier = Modifier.height(4.dp))
-                                        }
-
-                                        // Metadata Section
-                                        val subtitle = buildString {
-                                            if (detail.topicCount != null) append(
-                                                stringResource(
-                                                    Res.string.topic_page_thread_count,
-                                                    detail.topicCount!!
-                                                )
-                                            )
-                                            if (detail.interval != null) append(
-                                                stringResource(
-                                                    Res.string.topic_page_interval,
-                                                    detail.interval!!
-                                                )
-                                            )
-                                        }
-                                        if (subtitle.isNotBlank()) {
-                                            Text(
-                                                text = subtitle,
-                                                style = MaterialTheme.typography.labelSmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(
-                                                    alpha = 0.7f
-                                                )
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    navigationIcon = {
-                        if (onMenuClick != null) {
-                            IconButton(onClick = onMenuClick) {
-                                Icon(
-                                    Icons.Default.Menu,
-                                    contentDescription = stringResource(Res.string.topic_page_menu)
-                                )
-                            }
-                        } else {
-                            IconButton(onClick = { navigator.pop() }) {
-                                Icon(
-                                    Icons.Default.ArrowBack,
-                                    contentDescription = stringResource(Res.string.topic_page_back)
-                                )
-                            }
-                        }
-                    },
-                    actions = {
+        val channelDetail = (state.channelDetail as? UiStateWrapper.Success)?.value
+        ThreadDetailScaffold(
+            title = state.channelName.ifBlank { "社区板块" },
+            eyebrow = "FORUM CHANNEL",
+            subtitle = channelDetail?.let { detail ->
+                buildString {
+                    detail.topicCount?.let { append("$it 个主题") }
+                    detail.interval?.let {
+                        if (isNotEmpty()) append(" · ")
+                        append("$it 秒刷新间隔")
+                    }
+                }.ifBlank { "主题、规则与子版块" }
+            } ?: "主题、规则与子版块",
+            onBack = navigator::pop,
+            modifier = Modifier.nestedScroll(fabNestedScrollConnection),
+            navigationIcon = {
+                if (onMenuClick != null) {
+                    IconButton(onClick = onMenuClick) {
+                        Icon(Icons.Default.Menu, contentDescription = stringResource(Res.string.topic_page_menu))
+                    }
+                } else {
+                    IconButton(onClick = navigator::pop) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = stringResource(Res.string.topic_page_back))
+                    }
+                }
+            },
+            actions = {
                         IconButton(onClick = {
                             navigator.push(UserPage())
                         }) {
@@ -253,9 +176,6 @@ data class TopicPage(
                                 contentDescription = stringResource(Res.string.topic_page_user_center)
                             )
                         }
-                    },
-                    scrollBehavior = scrollBehavior
-                )
             },
             bottomBar = {
                 ai.saniou.coreui.widgets.UnifiedActionBar(
@@ -324,15 +244,20 @@ data class TopicPage(
                     showChannelBadge = false,
                     onShowCache = { viewModel.onEvent(TopicContract.Event.ShowCache) },
                     headerContent = {
-                        // Integrated Forum Info
                         val detailState = state.channelDetail
                         if (detailState is ai.saniou.coreui.state.UiStateWrapper.Success) {
                             val detail = detailState.value
                             if (detail != null) {
-                                // Forum Rules now moved to TopBar Action
+                                ContextHero(
+                                    icon = Icons.Default.Forum,
+                                    title = state.channelName,
+                                    subtitle = detail.description.replace(Regex("<[^>]*>"), "").trim()
+                                        .ifBlank { "浏览最新主题并参与讨论" },
+                                    metric = "${detail.topicCount ?: threads.itemCount} THREADS",
+                                )
 
-                                // Render Sub-forums
                                 if (detail.children.isNotEmpty()) {
+                                    Spacer(modifier = Modifier.height(12.dp))
                                     SubForumList(
                                         subForums = detail.children,
                                         listViewStyle = detail.listViewStyle,
@@ -355,4 +280,3 @@ data class TopicPage(
         }
     }
 }
-

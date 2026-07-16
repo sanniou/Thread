@@ -97,6 +97,19 @@ Feed 复用相同 Feature 侧栏和 Context Hero。侧栏负责论坛来源与 R
 - Reader 来源分析、订阅 JSON/OPML 传输、Forum 手动登录、引用内容、楼中楼、订阅 ID、Discourse 来源和全量用户数据包都复用该行为。
 - AlertDialog 只保留短确认和短错误；长表单、长 JSON、可滚动内容必须使用 `AdaptiveModal`。
 
+## 缓存优先与来源隔离
+
+可靠性状态不是每个页面临时判断的视觉细节。`resolvePagingContentState` 定义全产品顺序：
+
+1. 只要 Paging 已有行，始终呈现内容；refresh error 只叠加“正在显示本地缓存”状态条。
+2. 没有行时，refresh loading 才使用页面级加载，refresh error 才使用阻断错误页。
+3. refresh 完成且无行进入业务 empty state；不会在首次加载过程中闪烁空页面。
+4. append loading/error/end 由 `PagingAppendState` 在列表尾部非阻断呈现，不覆盖用户已经阅读的位置。
+
+`RefreshDiagnosticsBanner` 聚合 RefreshCoordinator 的来源级状态。离线、认证、限流、超时和服务错误使用同一词汇；展开后逐来源显示尝试次数和消息。Forum、Reader、Feed 的重试只重新触发所属任务，不会隐藏仍然可读的成功来源。
+
+详情和原始内容也遵守该规则：文章原始页面通过 common Compose WebView 加载 URL/HTML；主题与文章的初始失败使用同一错误状态，成功后进入 ReadingCanvas。
+
 ## 设计系统
 
 `ThreadTheme` 提供 Material 3 颜色、字型、shape 与额外语义色：success、warning、reader surface、interactive surface。页面不得重新声明品牌色或使用来源图片制造不可预测的全屏背景。
@@ -110,6 +123,8 @@ Feed 复用相同 Feature 侧栏和 Context Hero。侧栏负责论坛来源与 R
 - `ThreadDetailScaffold`：次级工作流的返回导航、命令和 inset 边界。
 - `ThreadCommandBar` / `ThreadSearchField` / `ThreadFilterBar`：搜索、筛选与批量命令层。
 - `AdaptiveModal`：Compact bottom sheet 与宽窗口 dialog 的统一临时任务容器。
+- `ThreadLoadingState` / `ThreadErrorState` / `ThreadStatusBanner`：页面级与非阻断可靠性反馈。
+- `PagingStateLayout` / `PagingAppendState`：缓存优先刷新与列表尾部状态策略。
 - `ThreadCard`：统一列表 Surface 与响应式 padding。
 - `ReadingCanvas`：Forum/Reader 聚焦详情容器。
 - `PagingStateLayout`：缓存优先的 loading、empty、error 与 retry 状态。

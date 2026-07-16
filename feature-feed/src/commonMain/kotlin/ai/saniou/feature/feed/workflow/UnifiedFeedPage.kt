@@ -4,6 +4,7 @@ import ai.saniou.corecommon.utils.toRelativeTimeString
 import ai.saniou.coreui.layout.AdaptiveSidebarScaffold
 import ai.saniou.coreui.layout.LocalThreadWindowInfo
 import ai.saniou.coreui.state.PagingStateLayout
+import ai.saniou.coreui.state.PagingAppendState
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.AppDrawerItem
 import ai.saniou.coreui.widgets.RefreshDiagnosticsBanner
@@ -69,7 +70,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import kotlinx.coroutines.launch
@@ -246,7 +246,12 @@ private fun FeedScaffold(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     if (state.refreshFailures.isNotEmpty()) {
-                        item { RefreshDiagnosticsBanner(failures = state.refreshFailures) }
+                        item {
+                            RefreshDiagnosticsBanner(
+                                failures = state.refreshFailures,
+                                onRetry = onRefresh,
+                            )
+                        }
                     }
                     items(timeline.itemCount) { index ->
                         when (val item = timeline[index]) {
@@ -259,24 +264,7 @@ private fun FeedScaffold(
                             null -> Unit
                         }
                     }
-                    when (timeline.loadState.append) {
-                        is LoadState.Loading -> item {
-                            Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
-                                CircularProgressIndicator()
-                            }
-                        }
-                        is LoadState.Error -> item {
-                            Row(
-                                Modifier.fillMaxWidth().padding(16.dp),
-                                horizontalArrangement = Arrangement.Center,
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Text("加载更多失败", color = MaterialTheme.colorScheme.error)
-                                TextButton(onClick = timeline::retry) { Text("重试") }
-                            }
-                        }
-                        else -> Unit
-                    }
+                    item { PagingAppendState(timeline, showEnd = false) }
                 }
             }
         }

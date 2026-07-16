@@ -1,5 +1,7 @@
 package ai.saniou.thread.feature.cellularautomaton
 
+import ai.saniou.coreui.widgets.AdaptiveModal
+import ai.saniou.coreui.widgets.ContextHero
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -30,16 +32,6 @@ fun CellularAutomatonScreen() {
     var showSettings by remember { mutableStateOf(false) }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("元胞自动机 (代: ${state.generation})") },
-                actions = {
-                    IconButton(onClick = { showSettings = true }) {
-                        Icon(Icons.Default.Settings, contentDescription = "设置")
-                    }
-                }
-            )
-        },
         floatingActionButton = {
             Row {
                 FloatingActionButton(onClick = { viewModel.togglePlayPause() }) {
@@ -55,20 +47,33 @@ fun CellularAutomatonScreen() {
             }
         }
     ) { paddingValues ->
+        Column(Modifier.padding(paddingValues).fillMaxSize()) {
+            ContextHero(
+                icon = Icons.Default.Science,
+                title = "元胞实验室",
+                subtitle = "缩放、绘制并观察 Conway 生命游戏",
+                metric = "GEN ${state.generation}",
+                modifier = Modifier.padding(16.dp),
+                actions = {
+                    IconButton(onClick = { showSettings = true }) {
+                        Icon(Icons.Default.Settings, contentDescription = "设置")
+                    }
+                },
+            )
         val onBackgroundColor = MaterialTheme.colorScheme.onBackground
         
         // Zoom and Pan state
         var scale by remember { mutableStateOf(1f) }
         var offset by remember { mutableStateOf(Offset.Zero) }
-        val transformableState = rememberTransformableState { zoomChange, panChange, _ ->
+        val transformableState = rememberTransformableState { _, zoomChange, panChange, _ ->
             scale = (scale * zoomChange).coerceIn(0.5f, 5f)
             offset += panChange
         }
 
         Box(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
+                .weight(1f)
+                .fillMaxWidth()
                 .graphicsLayer(
                     scaleX = scale,
                     scaleY = scale,
@@ -78,39 +83,7 @@ fun CellularAutomatonScreen() {
                 .transformable(state = transformableState)
                 .pointerInput(state.gridSize, scale, offset) {
                     detectTapGestures { tapOffset ->
-                        // Calculate cell coordinates considering zoom and pan
-                        // The tapOffset is relative to the transformed content
-                        // We need to map it back to the grid coordinates
-                        // Note: pointerInput inside graphicsLayer receives transformed coordinates? 
-                        // Actually, pointerInput on the Box receives coordinates relative to the Box.
-                        // But since we applied graphicsLayer to the Box, the visual representation is transformed.
-                        // Wait, transformable handles the transformation of the visual layer.
-                        // The pointer input coordinates are relative to the Box's bounds (untransformed).
-                        // So we need to inverse transform the touch point.
-                        
-                        val localX = (tapOffset.x - size.width / 2) / scale + size.width / 2 - offset.x / scale
-                        val localY = (tapOffset.y - size.height / 2) / scale + size.height / 2 - offset.y / scale
-                        
-                        // However, simpler approach:
-                        // The Canvas size is fixed to the screen size.
-                        // We draw the grid scaled and translated inside the Canvas?
-                        // No, graphicsLayer transforms the whole composable.
-                        // Let's stick to transforming the touch input.
-                        
-                        // Actually, let's simplify. If we use graphicsLayer, the pointerInput receives coordinates
-                        // relative to the composable *before* transformation if placed *before* graphicsLayer?
-                        // No, modifiers are applied sequentially.
-                        
-                        // Let's try a different approach for touch handling that is robust.
-                        // We can calculate the cell size based on the screen size and grid size.
                         val cellSize = size.width / state.gridSize
-                        
-                        // Inverse transform:
-                        // 1. Translate back: point - offset
-                        // 2. Scale back: point / scale (relative to center?)
-                        // The graphicsLayer pivot is center by default.
-                        
-                        // Let's assume standard pivot (center).
                         val pivot = Offset(size.width / 2f, size.height / 2f)
                         val unscaledX = (tapOffset.x - pivot.x) / scale + pivot.x - offset.x / scale
                         val unscaledY = (tapOffset.y - pivot.y) / scale + pivot.y - offset.y / scale
@@ -139,30 +112,14 @@ fun CellularAutomatonScreen() {
             Canvas(modifier = Modifier.fillMaxSize()) {
                 val cellSize = size.width / state.gridSize
                 
-                // Optimization: Use drawPoints instead of Path
-                // We need to collect all points to draw
-                // Since we are using a 1D array, we can iterate efficiently
-                
                 val points = ArrayList<Offset>()
-                // Pre-allocate if possible, but ArrayList auto-grows. 
-                // For 64x64 grid, max 4096 points.
-                
                 val grid = state.grid
                 val gridSize = state.gridSize
-                
-                // Only iterate if grid is initialized
                 if (grid.isNotEmpty()) {
                     for (i in 0 until gridSize * gridSize) {
                         if (grid[i] == 1) {
                             val x = i % gridSize
                             val y = i / gridSize
-                            // Center of the cell for PointMode.Points with Cap.Square/Butt?
-                            // Actually drawPoints with PointMode.Points draws pixels or squares depending on Cap.
-                            // StrokeCap.Butt with strokeWidth = cellSize will draw a square centered at the point?
-                            // No, drawPoints draws a square centered at the point if Cap is Square.
-                            // If Cap is Butt, it might just be a dot.
-                            // Let's use offsets to center the point.
-                            
                             points.add(
                                 Offset(
                                     x * cellSize + cellSize / 2,
@@ -181,6 +138,7 @@ fun CellularAutomatonScreen() {
                     cap = StrokeCap.Square
                 )
             }
+        }
         }
     }
 
@@ -204,14 +162,9 @@ private fun SettingsSheet(
     onGridSizeChange: (Int) -> Unit,
     onLoadPreset: (List<Pair<Int, Int>>) -> Unit
 ) {
-    val sheetState = rememberModalBottomSheetState()
-    val scope = rememberCoroutineScope()
     var presetMenuExpanded by remember { mutableStateOf(false) }
 
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState
-    ) {
+    AdaptiveModal(onDismissRequest = onDismiss) {
         Column(
             modifier = Modifier.fillMaxWidth().padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -258,13 +211,7 @@ private fun SettingsSheet(
 
             Spacer(Modifier.height(16.dp))
 
-            Button(onClick = {
-                scope.launch { sheetState.hide() }.invokeOnCompletion {
-                    if (!sheetState.isVisible) {
-                        onDismiss()
-                    }
-                }
-            }) {
+            Button(onClick = onDismiss) {
                 Text("关闭")
             }
         }

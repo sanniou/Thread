@@ -4,14 +4,12 @@ import ai.saniou.coreui.state.AppError
 import ai.saniou.coreui.layout.LocalThreadWindowInfo
 import ai.saniou.coreui.state.DefaultError
 import ai.saniou.coreui.state.PagingStateLayout
+import ai.saniou.coreui.state.PagingAppendState
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.PullToRefreshWrapper
 import ai.saniou.coreui.widgets.AdaptiveModal
 import ai.saniou.coreui.widgets.ThreadDetailScaffold
 import ai.saniou.forum.ui.components.TopicCard
-import ai.saniou.forum.ui.components.LoadEndIndicator
-import ai.saniou.forum.ui.components.LoadingFailedIndicator
-import ai.saniou.forum.ui.components.LoadingIndicator
 import ai.saniou.forum.ui.components.ThreadListSkeleton
 import ai.saniou.forum.workflow.image.ImagePreviewPage
 import ai.saniou.forum.workflow.image.ImagePreviewViewModelParams
@@ -40,6 +38,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -64,8 +63,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.paging.LoadState.Error
-import androidx.paging.LoadState.Loading
 import androidx.paging.compose.collectAsLazyPagingItems
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.kodein.rememberScreenModel
@@ -216,7 +213,7 @@ private fun SubscriptionContent(
             items = feeds,
             loading = {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    LoadingIndicator()
+                    CircularProgressIndicator()
                 }
             },
             empty = { EmptyContent(hasId = state.subscriptionId != null) }
@@ -276,13 +273,7 @@ private fun SubscriptionContent(
                     }
                 }
 
-                item {
-                    when {
-                        feeds.loadState.append is Error -> LoadingFailedIndicator()
-                        feeds.loadState.append is Loading -> LoadingIndicator()
-                        feeds.loadState.append.endOfPaginationReached -> LoadEndIndicator()
-                    }
-                }
+                item { PagingAppendState(feeds) }
             }
         }
     }
