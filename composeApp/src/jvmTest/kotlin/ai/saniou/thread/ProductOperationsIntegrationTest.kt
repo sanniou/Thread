@@ -8,24 +8,37 @@ import ai.saniou.thread.domain.model.operations.SourceOperationalState
 import ai.saniou.thread.domain.model.search.GlobalSearchType
 import ai.saniou.thread.domain.model.workspace.WorkspaceDestination
 import ai.saniou.thread.domain.model.workspace.WorkspaceSession
+import ai.saniou.thread.domain.model.workspace.ListAnchor
+import ai.saniou.thread.domain.model.workspace.RestorableContentKind
+import ai.saniou.thread.domain.model.workspace.RestorableContentReference
+import ai.saniou.thread.domain.model.workspace.ReaderWorkspaceState
+import ai.saniou.thread.domain.model.operations.ProductCommandAction
 import ai.saniou.thread.domain.reader.ReaderRefreshScheduler
 import ai.saniou.thread.domain.refresh.RefreshCoordinator
 import ai.saniou.thread.domain.refresh.RefreshPolicy
+import ai.saniou.thread.domain.refresh.RefreshHistoryRepository
 import ai.saniou.thread.domain.repository.GlobalSearchRepository
 import ai.saniou.thread.domain.repository.OperationsRepository
 import ai.saniou.thread.domain.repository.WorkspaceSessionRepository
+import ai.saniou.thread.domain.repository.SettingsRepository
+import ai.saniou.thread.domain.repository.WorkspaceRestorationRepository
+import ai.saniou.thread.domain.repository.saveValue
+import ai.saniou.thread.domain.usecase.operations.BuildProductCommandsUseCase
 import app.cash.sqldelight.async.coroutines.synchronous
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import org.kodein.di.direct
 import org.kodein.di.instance
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlin.test.assertFalse
 
 class ProductOperationsIntegrationTest {
     @Test
@@ -45,31 +58,85 @@ class ProductOperationsIntegrationTest {
         assertEquals(1L, search.articleCount)
 
         val operations = di.direct.instance<OperationsRepository>()
-        val cached = operations.observe().first { it.cachedItemCount == 3L }
+        val cached = operations.observe().awaitState("cached source health") { it.cachedItemCount == 3L }
         assertEquals(4, cached.sources.size)
         assertTrue(cached.sources.any { it.id == "nmb" && it.primaryItemCount == 1L && it.secondaryItemCount == 1L })
         assertTrue(cached.sources.any { it.id == "reader-news" && it.primaryItemCount == 1L })
+        val commands = di.direct.instance<BuildProductCommandsUseCase>()(cached)
+        assertTrue(commands.any { it.action == ProductCommandAction.REFRESH_ALL_READERS })
+        assertTrue(commands.any { it.sourceId == "nmb" && it.action == ProductCommandAction.REFRESH_SOURCE })
+        assertTrue(commands.any { it.sourceId == "nmb" && it.action == ProductCommandAction.SET_SOURCE_ENABLED })
+
+        val restoration = di.direct.instance<WorkspaceRestorationRepository>()
+        assertTrue(restoration.isAvailable(RestorableContentReference(
+            RestorableContentKind.TOPIC, "topic-alpha", "nmb", WorkspaceDestination.FORUM,
+        )))
+        assertTrue(restoration.isAvailable(RestorableContentReference(
+            RestorableContentKind.ARTICLE, "article-alpha", workspace = WorkspaceDestination.READER,
+        )))
+        assertFalse(restoration.isAvailable(RestorableContentReference(
+            RestorableContentKind.ARTICLE, "missing", workspace = WorkspaceDestination.READER,
+        )))
 
         val coordinator = di.direct.instance<RefreshCoordinator>()
+        val settings = di.direct.instance<SettingsRepository>()
+        settings.saveValue("test.secret", "webdav-password-never-export")
         coordinator.execute<Unit>(
             key = "forum:nmb:catalog",
             label = "A岛版块",
             policy = RefreshPolicy(maxAttempts = 1),
-        ) { Result.failure(IllegalStateException("401 login expired")) }
-        val degraded = operations.observe().first { it.failedRefreshCount == 1 }
+        ) {
+            Result.failure(IllegalStateException(
+                "401 login expired token=super-secret-123 cookie=session-secret https://example.test/?api_key=query-secret"
+            ))
+        }
+        val durableFailure = di.direct.instance<RefreshHistoryRepository>().observe().first()
+            .getValue("forum:nmb:catalog")
+        assertEquals(1, durableFailure.consecutiveFailureCount)
+        val degraded = operations.observe().first()
+        assertEquals(1, degraded.failedRefreshCount)
         assertEquals(
             SourceOperationalState.AUTHENTICATION_REQUIRED,
             degraded.sources.first { it.id == "nmb" }.state,
         )
+        assertEquals(1, degraded.sources.first { it.id == "nmb" }.consecutiveFailureCount)
+        val diagnostic = withTimeout(10_000) { operations.exportDiagnostic() }
+        assertTrue(diagnostic.redacted)
+        assertTrue("[REDACTED]" in diagnostic.payload)
+        listOf("super-secret-123", "session-secret", "query-secret", "webdav-password-never-export")
+            .forEach { secret -> assertFalse(secret in diagnostic.payload, "Diagnostic leaked $secret") }
         operations.clearRefreshDiagnostic("nmb")
-        assertEquals(0, operations.observe().first { it.failedRefreshCount == 0 }.failedRefreshCount)
+        assertEquals(
+            0,
+            operations.observe().awaitState("cleared durable diagnostic") { it.failedRefreshCount == 0 }.failedRefreshCount,
+        )
 
         val sessions = di.direct.instance<WorkspaceSessionRepository>()
+        settings.saveValue(
+            "workspace_session_v1",
+            """{"version":1,"destination":"reader","forumSourceId":"tieba","globalSearchQuery":"legacy"}""",
+        )
+        val migrated = sessions.get()
+        assertEquals(WorkspaceSession.CURRENT_VERSION, migrated.version)
+        assertEquals(WorkspaceDestination.READER, migrated.destination)
+        assertEquals("tieba", migrated.forum.sourceId)
         sessions.save(WorkspaceSession(destination = WorkspaceDestination.FORUM))
         coroutineScope {
             listOf(
                 async { sessions.update { it.copy(destination = WorkspaceDestination.OPERATIONS) } },
-                async { sessions.update { it.copy(globalSearchQuery = "跨平台") } },
+                async {
+                    sessions.update {
+                        it.copy(
+                            globalSearchQuery = "跨平台",
+                            reader = ReaderWorkspaceState(
+                                feedSourceId = "reader-news",
+                                articleFilter = "UNREAD",
+                                searchQuery = "Compose",
+                                listAnchor = ListAnchor("reader-news:UNREAD:Compose", 42, 8),
+                            ),
+                        )
+                    }
+                },
                 async { sessions.update { it.copy(forumSourceId = "nmb") } },
             ).awaitAll()
         }
@@ -77,11 +144,16 @@ class ProductOperationsIntegrationTest {
         assertEquals(WorkspaceDestination.OPERATIONS, restored.destination)
         assertEquals("跨平台", restored.globalSearchQuery)
         assertEquals("nmb", restored.forumSourceId)
+        assertEquals(42, restored.reader.listAnchor?.index)
         assertEquals(WorkspaceSession.CURRENT_VERSION, restored.version)
 
         di.direct.instance<ReaderRefreshScheduler>().stop()
         driver.close()
     }
+
+    private suspend fun <T> Flow<T>.awaitState(label: String, predicate: suspend (T) -> Boolean): T =
+        runCatching { withTimeout(10_000) { first(predicate) } }
+            .getOrElse { error -> throw AssertionError("Timed out waiting for $label", error) }
 
     private suspend fun seedSearchableContent(database: Database) {
         database.topicQueries.upsertTopic(

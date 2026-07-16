@@ -19,7 +19,9 @@ import ai.saniou.thread.data.repository.ReferenceRepositoryImpl
 import ai.saniou.thread.data.repository.SettingsRepositoryImpl
 import ai.saniou.thread.data.repository.GlobalSearchRepositoryImpl
 import ai.saniou.thread.data.repository.OperationsRepositoryImpl
+import ai.saniou.thread.data.repository.PostDraftRepositoryImpl
 import ai.saniou.thread.data.repository.WorkspaceSessionRepositoryImpl
+import ai.saniou.thread.data.repository.WorkspaceRestorationRepositoryImpl
 import ai.saniou.thread.data.repository.SubscriptionRepositoryImpl
 import ai.saniou.thread.data.repository.SyncRepositoryImpl
 import ai.saniou.thread.data.repository.TopicRepositoryImpl
@@ -73,7 +75,9 @@ import ai.saniou.thread.domain.repository.ReferenceRepository
 import ai.saniou.thread.domain.repository.SettingsRepository
 import ai.saniou.thread.domain.repository.GlobalSearchRepository
 import ai.saniou.thread.domain.repository.OperationsRepository
+import ai.saniou.thread.domain.repository.PostDraftRepository
 import ai.saniou.thread.domain.repository.WorkspaceSessionRepository
+import ai.saniou.thread.domain.repository.WorkspaceRestorationRepository
 import ai.saniou.thread.domain.repository.Source
 import ai.saniou.thread.domain.model.source.SourceDescriptor
 import ai.saniou.thread.domain.model.source.SourceType
@@ -89,11 +93,13 @@ import ai.saniou.thread.data.parser.JsonParser
 import ai.saniou.thread.data.parser.RssParser
 import ai.saniou.thread.data.repository.ReaderRepositoryImpl
 import ai.saniou.thread.data.refresh.DefaultRefreshCoordinator
+import ai.saniou.thread.data.refresh.PersistentRefreshHistoryRepository
 import ai.saniou.thread.domain.repository.AccountRepository
 import ai.saniou.thread.domain.repository.ReaderRepository
 import ai.saniou.thread.domain.reader.ReaderRefreshScheduler
 import ai.saniou.thread.domain.repository.UserContentRepository
 import ai.saniou.thread.domain.refresh.RefreshCoordinator
+import ai.saniou.thread.domain.refresh.RefreshHistoryRepository
 import ai.saniou.thread.domain.cache.CachePolicyProvider
 import ai.saniou.thread.domain.cache.DefaultCachePolicyProvider
 import ai.saniou.thread.domain.source.ConnectorRegistry
@@ -238,6 +244,7 @@ val dataModule = DI.Module("dataModule") {
     bind<LoginRepository>() with singleton { LoginRepositoryImpl(instance(), instance()) }
     bind<SettingsRepository>() with singleton { SettingsRepositoryImpl(instance()) }
     bind<WorkspaceSessionRepository>() with singleton { WorkspaceSessionRepositoryImpl(instance()) }
+    bind<WorkspaceRestorationRepository>() with singleton { WorkspaceRestorationRepositoryImpl(instance()) }
     bind<GlobalSearchRepository>() with singleton { GlobalSearchRepositoryImpl(instance(), instance()) }
     bind<NoticeRepository>() with singleton {
         NoticeRepositoryImpl(
@@ -315,13 +322,15 @@ val dataModule = DI.Module("dataModule") {
     bindSingleton { FeedParserFactory(instance(), instance(), instance()) }
     bindSingleton { ReaderSubscriptionCodec() }
     bindSingleton { HttpClient() } // Use a basic HttpClient
-    bindSingleton<RefreshCoordinator> { DefaultRefreshCoordinator() }
+    bindSingleton<RefreshHistoryRepository> { PersistentRefreshHistoryRepository(instance()) }
+    bindSingleton<RefreshCoordinator> { DefaultRefreshCoordinator(instance()) }
     bind<ReaderRepository>() with singleton {
         ReaderRepositoryImpl(instance(), instance(), instance(), instance(), instance(), instance(), instance())
     }
     bind<OperationsRepository>() with singleton {
-        OperationsRepositoryImpl(instance(), instance(), instance(), instance())
+        OperationsRepositoryImpl(instance(), instance(), instance(), instance(), instance())
     }
+    bind<PostDraftRepository>() with singleton { PostDraftRepositoryImpl(instance()) }
     bind<ReaderRefreshScheduler>() with singleton { DefaultReaderRefreshScheduler(instance()) }
 
     // Tieba Infrastructure

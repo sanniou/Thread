@@ -187,6 +187,11 @@ class ReaderPage : Screen {
                         onDismissPreview = { previewArticle = null },
                         onOpenArticleDetail = { navigator.push(ArticleDetailPage(it.id)) },
                         onFilterChange = { viewModel.onEvent(ReaderContract.Event.OnFilterChanged(it)) },
+                        onListPositionChanged = { contextKey, index, offset ->
+                            viewModel.onEvent(
+                                ReaderContract.Event.OnListPositionChanged(contextKey, index, offset)
+                            )
+                        },
                         snackbarHostState = snackbarHostState,
                         onExport = { viewModel.onEvent(ReaderContract.Event.OnExportSubscriptions(it)) },
                         onImport = { viewModel.onEvent(ReaderContract.Event.OnShowImport(it)) },
@@ -212,6 +217,7 @@ private fun ReaderScaffold(
     onDismissPreview: () -> Unit,
     onOpenArticleDetail: (Article) -> Unit,
     onFilterChange: (ArticleFilter) -> Unit,
+    onListPositionChanged: (String, Int, Int) -> Unit,
     snackbarHostState: SnackbarHostState,
     onExport: (ReaderSubscriptionFormat) -> Unit,
     onImport: (ReaderSubscriptionFormat) -> Unit,
@@ -264,8 +270,22 @@ private fun ReaderScaffold(
                             )
                         }
                     ) {
-                        val listStateKey = "${state.selectedFeedSourceId ?: "all"}:${state.articleFilter}"
-                        KeyedLazyListState(listStateKey) { listState ->
+                        val listStateKey = buildString {
+                            append(state.selectedFeedSourceId ?: "all")
+                            append(':')
+                            append(state.articleFilter)
+                            append(':')
+                            append(state.searchQuery.trim())
+                        }
+                        val restoredAnchor = state.listAnchor?.takeIf { it.contextKey == listStateKey }
+                        KeyedLazyListState(
+                            stateKey = listStateKey,
+                            initialIndex = restoredAnchor?.index ?: 0,
+                            initialOffset = restoredAnchor?.offset ?: 0,
+                            onPositionChanged = { index, offset ->
+                                onListPositionChanged(listStateKey, index, offset)
+                            },
+                        ) { listState ->
                             LazyColumn(
                                 state = listState,
                                 modifier = Modifier.fillMaxSize(),

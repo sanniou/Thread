@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.18.0 - 2026-07-17
+
+Continuous workspace, durable operations and safe-diagnostics release.
+
+- Workspace session v2 restores Forum source/channel/group state, Reader source/filter/query state, Feed source selection, and stable list anchors across process restarts. The v1 payload remains readable and partial writers still merge under one mutex.
+- Topic and article details record a source-aware continuation reference. Startup validates that reference directly against SQLDelight before rebuilding the detail route, so deleted content falls back to its workspace without a recovery network call.
+- Forum composer drafts are independently versioned per source and channel/topic, debounce-save text/options/attachments, survive restart, and expose an explicit discard action. Successful publication removes only its own draft.
+- Refresh outcomes now retain last success, consecutive failures, cache age, failure class and rate-limit recovery across process death. Volatile retries and durable history feed the same source-health projection.
+- The command palette combines workspace navigation and cached search with capability-driven actions for per-source refresh, connector enable/disable, authentication recovery, all-Reader sync and safe diagnostic export.
+- Operations can preview and copy a redacted JSON diagnostic. Credential-shaped values are removed before persistence and export never reads account values, connector options, content bodies or the local absolute storage path.
+- Product tests cover v1-to-v2 session migration, cache-only detail restoration, persistent refresh recovery, diagnostic leak prevention, draft attachment round trips, dynamic-command availability and a 3,600-row mixed offline search seed.
+
 ## 0.17.0 - 2026-07-17
 
 Offline discovery, session continuity and source-operations release.

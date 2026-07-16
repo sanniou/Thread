@@ -7,6 +7,7 @@ import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.ContextHero
 import ai.saniou.coreui.widgets.PageHeader
 import ai.saniou.coreui.widgets.ThreadCard
+import ai.saniou.coreui.widgets.AdaptiveModal
 import ai.saniou.forum.workflow.source.SourceManagerPage
 import ai.saniou.thread.domain.model.operations.ContentSourceKind
 import ai.saniou.thread.domain.model.operations.SourceHealth
@@ -20,10 +21,14 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -39,6 +44,7 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -105,6 +111,18 @@ object OperationsPage : Screen {
                         eyebrow = "OPERATIONS",
                         subtitle = "连接器健康、缓存覆盖与刷新诊断集中在一个可恢复工作区",
                         actions = {
+                            OutlinedButton(
+                                onClick = { viewModel.onEvent(Event.ExportDiagnostic) },
+                                enabled = !state.isExportingDiagnostic,
+                            ) {
+                                if (state.isExportingDiagnostic) {
+                                    CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
+                                } else {
+                                    Icon(Icons.Default.BugReport, null)
+                                }
+                                Spacer(Modifier.width(8.dp))
+                                Text("脱敏诊断")
+                            }
                             OutlinedButton(onClick = { navigator.push(SourceManagerPage()) }) {
                                 Icon(Icons.Default.Hub, null)
                                 Spacer(Modifier.width(8.dp))
@@ -192,6 +210,47 @@ object OperationsPage : Screen {
                 }
             }
             SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter))
+        }
+        state.diagnosticPayload?.let { payload ->
+            AdaptiveModal(
+                onDismissRequest = { viewModel.onEvent(Event.DiagnosticDismissed) },
+                paneTitle = "脱敏诊断预览",
+            ) {
+                Column(
+                    Modifier.fillMaxWidth().padding(22.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                ) {
+                    Text("可安全分享的运行快照", style = MaterialTheme.typography.headlineSmall)
+                    Text(
+                        "仅包含来源状态、缓存计数与刷新结果；账号、Cookie、令牌、内容正文和本地绝对路径不会导出。",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Surface(
+                        modifier = Modifier.fillMaxWidth().weight(1f, fill = false),
+                        color = MaterialTheme.colorScheme.surfaceContainer,
+                        shape = MaterialTheme.shapes.large,
+                    ) {
+                        SelectionContainer {
+                            Text(
+                                payload,
+                                Modifier.padding(16.dp).heightIn(max = 420.dp).verticalScroll(rememberScrollState()),
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                        }
+                    }
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                        TextButton(onClick = { viewModel.onEvent(Event.DiagnosticDismissed) }) { Text("关闭") }
+                        Button(onClick = {
+                            clipboard.copyText(payload)
+                            viewModel.onEvent(Event.DiagnosticDismissed)
+                        }) {
+                            Icon(Icons.Default.ContentCopy, null)
+                            Spacer(Modifier.width(6.dp))
+                            Text("复制诊断")
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -290,6 +349,21 @@ private fun SourceHealthCard(
                 "最近内容 ${Instant.fromEpochMilliseconds(it).toRelativeTimeString()}",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        source.lastSuccessfulRefreshAtEpochMillis?.let {
+            Text(
+                "上次成功 ${Instant.fromEpochMilliseconds(it).toRelativeTimeString()}" +
+                    if (source.consecutiveFailureCount > 0) " · 连续失败 ${source.consecutiveFailureCount} 次" else "",
+                style = MaterialTheme.typography.labelSmall,
+                color = if (source.consecutiveFailureCount > 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        source.rateLimitUntilEpochMillis?.takeIf { it > kotlin.time.Clock.System.now().toEpochMilliseconds() }?.let {
+            Text(
+                "限流恢复 ${Instant.fromEpochMilliseconds(it).toRelativeTimeString()}",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.tertiary,
             )
         }
         source.message?.let { message ->

@@ -11,6 +11,9 @@ import ai.saniou.coreui.widgets.RichText
 import ai.saniou.coreui.widgets.ThreadDetailScaffold
 import ai.saniou.coreui.widgets.ThreadErrorState
 import ai.saniou.thread.domain.model.reader.Article
+import ai.saniou.thread.domain.model.workspace.RestorableContentKind
+import ai.saniou.thread.domain.model.workspace.RestorableContentReference
+import ai.saniou.thread.domain.usecase.workspace.UpdateWorkspaceSessionUseCase
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -37,6 +40,9 @@ import cafe.adriel.voyager.kodein.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.launch
+import org.kodein.di.compose.localDI
+import org.kodein.di.direct
+import org.kodein.di.instance
 
 data class ArticleDetailPage(val articleId: String) : Screen {
 
@@ -44,17 +50,52 @@ data class ArticleDetailPage(val articleId: String) : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
+        val di = localDI()
+        val updateWorkspaceSession = di.direct.instance<UpdateWorkspaceSessionUseCase>()
         val viewModel: ArticleDetailViewModel = rememberScreenModel(arg = articleId)
         val state by viewModel.state.collectAsState()
         val uriHandler = LocalUriHandler.current
         val clipboard = rememberThreadClipboard()
         val scope = rememberCoroutineScope()
         val snackbar = remember { SnackbarHostState() }
+        val contentReference = remember(articleId) {
+            RestorableContentReference(
+                kind = RestorableContentKind.ARTICLE,
+                id = articleId,
+                workspace = ai.saniou.thread.domain.model.workspace.WorkspaceDestination.READER,
+            )
+        }
+        LaunchedEffect(contentReference) {
+            updateWorkspaceSession { current ->
+                current.copy(
+                    lastContent = contentReference.copy(workspace = current.destination),
+                    updatedAtEpochMillis = kotlin.time.Clock.System.now().toEpochMilliseconds(),
+                )
+            }
+        }
+        fun closeDetail() {
+            scope.launch {
+                updateWorkspaceSession { current ->
+                    val lastContent = current.lastContent
+                    if (lastContent?.kind == contentReference.kind &&
+                        lastContent.id == contentReference.id
+                    ) {
+                        current.copy(
+                            lastContent = null,
+                            updatedAtEpochMillis = kotlin.time.Clock.System.now().toEpochMilliseconds(),
+                        )
+                    } else {
+                        current
+                    }
+                }
+                navigator.pop()
+            }
+        }
         ThreadDetailScaffold(
             title = state.feedSourceName ?: "文章详情",
             eyebrow = "READER",
             subtitle = state.article?.title,
-            onBack = navigator::pop,
+            onBack = ::closeDetail,
             actions = {
                 ArticleDetailActions(
                     state = state,

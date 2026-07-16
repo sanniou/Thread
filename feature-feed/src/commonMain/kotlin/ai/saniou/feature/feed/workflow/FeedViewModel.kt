@@ -6,6 +6,9 @@ import ai.saniou.thread.domain.usecase.feed.RefreshTimelineUseCase
 import ai.saniou.thread.domain.usecase.source.GetAvailableSourcesUseCase
 import ai.saniou.thread.domain.refresh.RefreshStatus
 import ai.saniou.thread.domain.usecase.refresh.ObserveRefreshDiagnosticsUseCase
+import ai.saniou.thread.domain.model.workspace.ListAnchor
+import ai.saniou.thread.domain.usecase.workspace.ObserveWorkspaceSessionUseCase
+import ai.saniou.thread.domain.usecase.workspace.UpdateWorkspaceSessionUseCase
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import cafe.adriel.voyager.core.model.ScreenModel
@@ -28,6 +31,8 @@ class FeedViewModel(
     private val refreshTimeline: RefreshTimelineUseCase,
     getAvailableSources: GetAvailableSourcesUseCase,
     observeRefreshDiagnostics: ObserveRefreshDiagnosticsUseCase,
+    observeWorkspaceSession: ObserveWorkspaceSessionUseCase,
+    private val updateWorkspaceSession: UpdateWorkspaceSessionUseCase,
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(FeedContract.State())
@@ -46,13 +51,19 @@ class FeedViewModel(
 
     init {
         screenModelScope.launch {
-            getAvailableSources().collect { allSources ->
+            kotlinx.coroutines.flow.combine(
+                getAvailableSources(),
+                observeWorkspaceSession(),
+            ) { allSources, session -> allSources to session.feed }
+                .collect { (allSources, restored) ->
                 val sources = allSources
                     .filter { it.capabilities.supportsFeedAggregation }
                     .sortedBy { it.name }
                 _state.update { current ->
                     val availableIds = sources.mapTo(mutableSetOf()) { it.id }
-                    val selected = if (current.sources.isEmpty()) {
+                    val selected = if (restored.hasExplicitSourceSelection) {
+                        restored.selectedSourceIds.intersect(availableIds)
+                    } else if (current.sources.isEmpty()) {
                         availableIds
                     } else {
                         current.selectedSourceIds.intersect(availableIds)
@@ -60,6 +71,8 @@ class FeedViewModel(
                     current.copy(
                         sources = sources.map { FeedContract.SourceOption(it.id, it.name) },
                         selectedSourceIds = selected,
+                        includeReader = restored.includeReader,
+                        listAnchor = restored.listAnchor,
                     )
                 }
             }
@@ -81,12 +94,18 @@ class FeedViewModel(
     fun onEvent(event: FeedContract.Event) {
         when (event) {
             is FeedContract.Event.ToggleSource -> toggleSource(event.sourceId)
-            FeedContract.Event.ToggleReader -> _state.update { it.copy(includeReader = !it.includeReader) }
-            FeedContract.Event.SelectAllSources -> _state.update { state ->
+            FeedContract.Event.ToggleReader -> mutateSelection { it.copy(includeReader = !it.includeReader) }
+            FeedContract.Event.SelectAllSources -> mutateSelection { state ->
                 state.copy(selectedSourceIds = state.sources.mapTo(mutableSetOf()) { it.id })
             }
-            FeedContract.Event.ClearForumSources -> _state.update { it.copy(selectedSourceIds = emptySet()) }
+            FeedContract.Event.ClearForumSources -> mutateSelection { it.copy(selectedSourceIds = emptySet()) }
             FeedContract.Event.Refresh -> refresh()
+            is FeedContract.Event.ListPositionChanged -> {
+                _state.update {
+                    it.copy(listAnchor = ListAnchor(event.contextKey, event.index, event.offset))
+                }
+                persistFeedState()
+            }
             FeedContract.Event.MessageShown -> _state.update { it.copy(message = null) }
         }
     }
@@ -97,6 +116,29 @@ class FeedViewModel(
                 if (!add(sourceId)) remove(sourceId)
             }
             state.copy(selectedSourceIds = next)
+        }
+        persistFeedState()
+    }
+
+    private fun mutateSelection(transform: (FeedContract.State) -> FeedContract.State) {
+        _state.update(transform)
+        persistFeedState()
+    }
+
+    private fun persistFeedState() {
+        val current = _state.value
+        screenModelScope.launch {
+            updateWorkspaceSession { session ->
+                session.copy(
+                    feed = session.feed.copy(
+                        selectedSourceIds = current.selectedSourceIds,
+                        hasExplicitSourceSelection = true,
+                        includeReader = current.includeReader,
+                        listAnchor = current.listAnchor,
+                    ),
+                    updatedAtEpochMillis = kotlin.time.Clock.System.now().toEpochMilliseconds(),
+                )
+            }
         }
     }
 

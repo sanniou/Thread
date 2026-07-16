@@ -5,6 +5,7 @@ import ai.saniou.thread.domain.model.reader.FeedSource
 import ai.saniou.thread.domain.model.reader.ReaderSchedulerState
 import ai.saniou.thread.domain.model.reader.ReaderSubscriptionFormat
 import ai.saniou.thread.domain.refresh.RefreshTaskState
+import ai.saniou.thread.domain.model.workspace.ListAnchor
 
 enum class ArticleFilter {
     ALL, UNREAD, BOOKMARKED
@@ -31,6 +32,7 @@ interface ReaderContract {
         val transferDialog: ReaderTransferDialog? = null,
         val isTransferWorking: Boolean = false,
         val message: String? = null,
+        val listAnchor: ListAnchor? = null,
     )
 
     sealed interface Event {
@@ -45,6 +47,7 @@ interface ReaderContract {
         data class OnMarkArticleAsRead(val id: String, val isRead: Boolean) : Event
         data class OnSearchQueryChanged(val query: String) : Event
         data class OnFilterChanged(val filter: ArticleFilter) : Event
+        data class OnListPositionChanged(val contextKey: String, val index: Int, val offset: Int) : Event
         data class OnExportSubscriptions(val format: ReaderSubscriptionFormat) : Event
         data class OnShowImport(val format: ReaderSubscriptionFormat) : Event
         data class OnImportSubscriptions(val payload: String, val format: ReaderSubscriptionFormat) : Event

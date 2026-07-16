@@ -9,6 +9,8 @@ interface OperationsContract {
         val filter: Filter = Filter.ALL,
         val workingSourceIds: Set<String> = emptySet(),
         val message: String? = null,
+        val diagnosticPayload: String? = null,
+        val isExportingDiagnostic: Boolean = false,
     ) {
         val visibleSources: List<SourceHealth> get() = snapshot.sources.filter { filter.accepts(it) }
     }
@@ -34,6 +36,8 @@ interface OperationsContract {
         data class FilterChanged(val filter: Filter) : Event
         data class Retry(val source: SourceHealth) : Event
         data class ClearDiagnostic(val sourceId: String) : Event
+        data object ExportDiagnostic : Event
+        data object DiagnosticDismissed : Event
         data object MessageShown : Event
     }
 }

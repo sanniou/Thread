@@ -48,7 +48,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
@@ -65,6 +67,9 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import org.jetbrains.compose.resources.stringResource
 import org.kodein.di.compose.localDI
 import org.kodein.di.direct
@@ -83,8 +88,11 @@ data class TopicPage(
     val fgroupId: String,
     val sourceId: String? = null,
     val onMenuClick: (() -> Unit)? = null,
+    val initialListIndex: Int = 0,
+    val initialListOffset: Int = 0,
+    val onListPositionChanged: ((index: Int, offset: Int) -> Unit)? = null,
 ) : Screen {
-    @OptIn(ExperimentalMaterial3Api::class)
+    @OptIn(ExperimentalMaterial3Api::class, FlowPreview::class)
     @Composable
     override fun Content() {
         val di = localDI()
@@ -98,8 +106,12 @@ data class TopicPage(
         val state by viewModel.state.collectAsStateWithLifecycle()
         val threads = viewModel.topics.collectAsLazyPagingItems()
 
-        val lazyListState = rememberLazyListState()
+        val lazyListState = rememberLazyListState(
+            initialFirstVisibleItemIndex = initialListIndex.coerceAtLeast(0),
+            initialFirstVisibleItemScrollOffset = initialListOffset.coerceAtLeast(0),
+        )
         val coroutineScope = rememberCoroutineScope()
+        val latestOnListPositionChanged by rememberUpdatedState(onListPositionChanged)
         var showQuickActionBar by remember { mutableStateOf(true) }
         val fabNestedScrollConnection = remember {
             object : NestedScrollConnection {
@@ -117,6 +129,14 @@ data class TopicPage(
         LaunchedEffect(lazyListState.firstVisibleItemIndex) {
             if (lazyListState.firstVisibleItemIndex == 0) {
                 showQuickActionBar = true
+            }
+        }
+        LaunchedEffect(lazyListState) {
+            if (latestOnListPositionChanged == null) return@LaunchedEffect
+            snapshotFlow {
+                lazyListState.firstVisibleItemIndex to lazyListState.firstVisibleItemScrollOffset
+            }.distinctUntilChanged().debounce(450L).collect { (index, offset) ->
+                latestOnListPositionChanged?.invoke(index, offset)
             }
         }
 

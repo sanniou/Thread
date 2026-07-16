@@ -5,6 +5,13 @@ import ai.saniou.forum.workflow.post.PostContract.Event
 import ai.saniou.forum.workflow.post.PostContract.State
 import ai.saniou.thread.domain.usecase.post.CreateReplyUseCase
 import ai.saniou.thread.domain.usecase.post.CreateThreadUseCase
+import ai.saniou.thread.domain.usecase.post.GetPostDraftUseCase
+import ai.saniou.thread.domain.usecase.post.SavePostDraftUseCase
+import ai.saniou.thread.domain.usecase.post.DiscardPostDraftUseCase
+import ai.saniou.thread.domain.model.forum.PostDraft
+import ai.saniou.thread.domain.model.forum.PostDraftKey
+import ai.saniou.thread.domain.model.forum.PostDraftTargetKind
+import ai.saniou.thread.domain.model.forum.SavedPostDraft
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import cafe.adriel.voyager.core.model.ScreenModel
@@ -15,10 +22,15 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 
 class PostViewModel(
     private val createThreadUseCase: CreateThreadUseCase,
     private val createReplyUseCase: CreateReplyUseCase,
+    private val getPostDraft: GetPostDraftUseCase,
+    private val savePostDraft: SavePostDraftUseCase,
+    private val discardPostDraft: DiscardPostDraftUseCase,
     private val params: PostViewModelParams,
 ) : ScreenModel {
 
@@ -27,9 +39,23 @@ class PostViewModel(
 
     private val _effect = MutableSharedFlow<Effect>()
     val effect = _effect.asSharedFlow()
+    private val draftKey = params.toDraftKey()
+    private var draftSaveJob: Job? = null
 
     init {
         _state.update { it.copy(forumName = params.forumName ?: "回复") }
+        screenModelScope.launch {
+            val saved = getPostDraft(draftKey)
+            _state.update { current ->
+                if (saved == null) current.copy(isDraftLoading = false) else current.copy(
+                    postBody = saved.draft,
+                    content = TextFieldValue(saved.draft.content),
+                    isDraftLoading = false,
+                    hasRestoredDraft = true,
+                    draftUpdatedAtEpochMillis = saved.updatedAtEpochMillis,
+                )
+            }
+        }
     }
 
     fun onEvent(event: Event) {
@@ -39,7 +65,7 @@ class PostViewModel(
                     content = event.content,
                     postBody = it.postBody.copy(content = event.content.text)
                 )
-            }
+            }.also { scheduleDraftSave() }
 
             is Event.InsertContent -> {
                 val currentState = _state.value
@@ -56,23 +82,23 @@ class PostViewModel(
                         ),
                         postBody = it.postBody.copy(content = newText)
                     )
-                }
+                }.also { scheduleDraftSave() }
             }
 
             is Event.UpdateName -> _state.update {
                 it.copy(postBody = it.postBody.copy(name = event.name))
-            }
+            }.also { scheduleDraftSave() }
 
             is Event.UpdateTitle -> _state.update {
                 it.copy(postBody = it.postBody.copy(title = event.title))
-            }
+            }.also { scheduleDraftSave() }
 
             is Event.UpdateImage -> _state.update {
                 it.copy(postBody = it.postBody.copy(attachment = event.image))
-            }
+            }.also { scheduleDraftSave() }
             is Event.ToggleWater -> _state.update {
                 it.copy(postBody = it.postBody.copy(water = event.water))
-            }
+            }.also { scheduleDraftSave() }
             Event.ToggleEmoticonPicker -> _state.update {
                 it.copy(showEmoticonPicker = !it.showEmoticonPicker)
             }
@@ -93,7 +119,62 @@ class PostViewModel(
                 it.copy(error = null)
             }
 
+            Event.DiscardDraft -> discardDraft()
+            Event.Close -> closeComposer()
+
             Event.Submit -> submit()
+        }
+    }
+
+    private fun scheduleDraftSave() {
+        draftSaveJob?.cancel()
+        draftSaveJob = screenModelScope.launch {
+            delay(DRAFT_SAVE_DEBOUNCE_MILLIS)
+            saveDraftNow()
+        }
+    }
+
+    private suspend fun saveDraftNow(): Boolean {
+        val draft = _state.value.postBody
+        val now = kotlin.time.Clock.System.now().toEpochMilliseconds()
+        _state.update { it.copy(isDraftSaving = true) }
+        return runCatching { savePostDraft(SavedPostDraft(key = draftKey, draft = draft, updatedAtEpochMillis = now)) }
+            .onSuccess {
+                _state.update {
+                    it.copy(
+                        isDraftSaving = false,
+                        hasRestoredDraft = draft.hasContent(),
+                        draftUpdatedAtEpochMillis = now.takeIf { draft.hasContent() },
+                    )
+                }
+            }
+            .onFailure { error ->
+                _state.update { it.copy(isDraftSaving = false, error = error.message ?: "草稿保存失败") }
+            }
+            .isSuccess
+    }
+
+    private fun discardDraft() {
+        draftSaveJob?.cancel()
+        screenModelScope.launch {
+            discardPostDraft(draftKey)
+            _state.update {
+                it.copy(
+                    postBody = PostDraft(),
+                    content = TextFieldValue(),
+                    hasRestoredDraft = false,
+                    draftUpdatedAtEpochMillis = null,
+                    isDraftSaving = false,
+                )
+            }
+            _effect.emit(Effect.ShowSnackbar("草稿已丢弃"))
+        }
+    }
+
+    private fun closeComposer() {
+        draftSaveJob?.cancel()
+        screenModelScope.launch {
+            if (saveDraftNow()) _effect.emit(Effect.NavigateBack)
         }
     }
 
@@ -121,10 +202,10 @@ class PostViewModel(
                 val error = result.message
                 if (error != null) {
                     _state.update { it.copy(isLoading = false, error = error) }
-                    // Error is now handled by State and Dialog, removing duplicate snackbar
                 } else {
+                    discardPostDraft(draftKey)
                     _state.update { it.copy(isLoading = false, isSuccess = true) }
-                    kotlinx.coroutines.delay(1500) // Keep success state for a while
+                    kotlinx.coroutines.delay(1500)
                     _effect.emit(Effect.NavigateBack)
                 }
             } catch (e: Exception) {
@@ -134,6 +215,17 @@ class PostViewModel(
     }
 
 }
+
+private const val DRAFT_SAVE_DEBOUNCE_MILLIS = 450L
+
+private fun PostViewModelParams.toDraftKey(): PostDraftKey = when {
+    topicId != null -> PostDraftKey(sourceId, PostDraftTargetKind.TOPIC, topicId)
+    channelId != null -> PostDraftKey(sourceId, PostDraftTargetKind.CHANNEL, channelId)
+    else -> throw IllegalArgumentException("channelId and topicId cannot both be null")
+}
+
+private fun PostDraft.hasContent() =
+    content.isNotBlank() || !name.isNullOrBlank() || !title.isNullOrBlank() || attachment != null
 
 data class PostViewModelParams(
     val sourceId: String,

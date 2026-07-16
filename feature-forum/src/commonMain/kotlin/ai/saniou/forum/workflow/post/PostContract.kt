@@ -16,6 +16,10 @@ interface PostContract {
         val showDiceInputs: Boolean = false,
         val showMoreOptions: Boolean = false,
         val showConfirmDialog: Boolean = false,
+        val isDraftLoading: Boolean = true,
+        val isDraftSaving: Boolean = false,
+        val hasRestoredDraft: Boolean = false,
+        val draftUpdatedAtEpochMillis: Long? = null,
     )
 
     sealed interface Event {
@@ -30,6 +34,8 @@ interface PostContract {
         data object ToggleMoreOptions : Event
         data object ToggleConfirmDialog : Event
         data object ClearError : Event
+        data object DiscardDraft : Event
+        data object Close : Event
         data object Submit : Event
     }
 

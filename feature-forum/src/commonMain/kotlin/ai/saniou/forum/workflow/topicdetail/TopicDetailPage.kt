@@ -24,6 +24,9 @@ import ai.saniou.forum.workflow.user.UserDetailPage
 import ai.saniou.thread.domain.model.forum.Comment
 import ai.saniou.thread.domain.model.forum.Image
 import ai.saniou.thread.domain.model.forum.TopicMetadata
+import ai.saniou.thread.domain.model.workspace.RestorableContentKind
+import ai.saniou.thread.domain.model.workspace.RestorableContentReference
+import ai.saniou.thread.domain.usecase.workspace.UpdateWorkspaceSessionUseCase
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -76,11 +79,47 @@ data class TopicDetailPage(
         val coroutineScope = rememberCoroutineScope()
         val clipboard = rememberThreadClipboard()
         val sourceId = LocalForumSourceId.current
+        val updateWorkspaceSession = di.direct.instance<UpdateWorkspaceSessionUseCase>()
 
         val viewModel: TopicDetailViewModel = rememberScreenModel(tag = "$sourceId:$threadId") {
             di.direct.instance(arg = TopicDetailViewModelParams(sourceId, threadId))
         }
         val state by viewModel.state.collectAsState()
+        val contentReference = remember(sourceId, threadId) {
+            RestorableContentReference(
+                kind = RestorableContentKind.TOPIC,
+                id = threadId,
+                sourceId = sourceId,
+                workspace = ai.saniou.thread.domain.model.workspace.WorkspaceDestination.FORUM,
+            )
+        }
+        LaunchedEffect(contentReference) {
+            updateWorkspaceSession { current ->
+                current.copy(
+                    lastContent = contentReference.copy(workspace = current.destination),
+                    updatedAtEpochMillis = kotlin.time.Clock.System.now().toEpochMilliseconds(),
+                )
+            }
+        }
+        fun closeDetail() {
+            coroutineScope.launch {
+                updateWorkspaceSession { current ->
+                    val lastContent = current.lastContent
+                    if (lastContent?.kind == contentReference.kind &&
+                        lastContent.id == contentReference.id &&
+                        lastContent.sourceId == contentReference.sourceId
+                    ) {
+                        current.copy(
+                            lastContent = null,
+                            updatedAtEpochMillis = kotlin.time.Clock.System.now().toEpochMilliseconds(),
+                        )
+                    } else {
+                        current
+                    }
+                }
+                navigator.pop()
+            }
+        }
 
         var showJumpDialog by rememberSaveable { mutableStateOf(false) }
         var showMenu by rememberSaveable { mutableStateOf(false) }
@@ -124,7 +163,7 @@ data class TopicDetailPage(
             title = state.forumName.ifBlank { "主题详情" },
             eyebrow = "FORUM THREAD",
             subtitle = "No.$threadId · 阅读、引用与回复",
-            onBack = navigator::pop,
+            onBack = ::closeDetail,
             actions = {
                 if (state.topicWrapper is UiStateWrapper.Success) {
                             IconButton(onClick = { viewModel.onEvent(Event.Refresh) }) {

@@ -9,6 +9,7 @@ import ai.saniou.forum.di.forumFeatureModule
 import ai.saniou.forum.workflow.home.ChannelPage
 import ai.saniou.forum.workflow.image.imagePreviewModule
 import ai.saniou.forum.workflow.topicdetail.TopicDetailPage
+import ai.saniou.forum.workflow.user.UserPage
 import ai.saniou.feature.feed.di.feedModule
 import ai.saniou.feature.feed.workflow.UnifiedFeedPage
 import ai.saniou.feature.feed.workflow.FeedViewModel
@@ -26,7 +27,20 @@ import ai.saniou.thread.domain.model.search.GlobalSearchResult
 import ai.saniou.thread.domain.model.search.GlobalSearchType
 import ai.saniou.thread.domain.model.workspace.WorkspaceDestination
 import ai.saniou.thread.domain.model.workspace.WorkspaceSession
+import ai.saniou.thread.domain.model.workspace.RestorableContentKind
+import ai.saniou.thread.domain.model.operations.ContentSourceKind
+import ai.saniou.thread.domain.model.operations.OperationsSnapshot
+import ai.saniou.thread.domain.model.operations.ProductCommandAction
+import ai.saniou.thread.domain.model.operations.ProductCommandDescriptor
 import ai.saniou.thread.domain.usecase.search.SearchLocalContentUseCase
+import ai.saniou.thread.domain.usecase.workspace.ValidateRestorableContentUseCase
+import ai.saniou.thread.domain.usecase.operations.BuildProductCommandsUseCase
+import ai.saniou.thread.domain.usecase.operations.ExportDiagnosticUseCase
+import ai.saniou.thread.domain.usecase.operations.ObserveOperationsUseCase
+import ai.saniou.thread.domain.usecase.channel.FetchChannelsUseCase
+import ai.saniou.thread.domain.usecase.reader.RefreshAllFeedsUseCase
+import ai.saniou.thread.domain.usecase.reader.RefreshFeedSourceUseCase
+import ai.saniou.thread.domain.usecase.source.SetSourceEnabledUseCase
 import ai.saniou.thread.feature.cellularautomaton.CellularAutomatonScreen
 import ai.saniou.thread.feature.challenge.CloudflareVerificationDialog
 import ai.saniou.thread.feature.bookmark.BookmarkPage
@@ -36,10 +50,12 @@ import ai.saniou.thread.feature.settings.SyncSettingsPage
 import ai.saniou.thread.feature.search.GlobalSearchPage
 import ai.saniou.thread.feature.operations.OperationsPage
 import ai.saniou.thread.feature.commands.CommandPalette
+import ai.saniou.thread.feature.commands.ProductCommand
 import ai.saniou.thread.domain.reader.ReaderRefreshScheduler
 import ai.saniou.thread.db.Database
 import ai.saniou.forum.workflow.post.AttachmentPicker
 import ai.saniou.forum.workflow.post.LocalAttachmentPicker
+import ai.saniou.coreui.interaction.rememberThreadClipboard
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.DynamicFeed
@@ -53,6 +69,8 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.runtime.Composable
@@ -103,12 +121,23 @@ fun App(attachmentPicker: AttachmentPicker? = null) {
         val workspaceSessionRepository: WorkspaceSessionRepository by di.instance()
         var workspaceSession by remember { mutableStateOf<WorkspaceSession?>(null) }
         val searchLocalContent: SearchLocalContentUseCase by di.instance()
+        val validateRestorableContent: ValidateRestorableContentUseCase by di.instance()
+        val observeOperations: ObserveOperationsUseCase by di.instance()
+        val buildProductCommands: BuildProductCommandsUseCase by di.instance()
+        val fetchChannels: FetchChannelsUseCase by di.instance()
+        val refreshFeedSource: RefreshFeedSourceUseCase by di.instance()
+        val refreshAllFeeds: RefreshAllFeedsUseCase by di.instance()
+        val setSourceEnabled: SetSourceEnabledUseCase by di.instance()
+        val exportDiagnostic: ExportDiagnosticUseCase by di.instance()
+        val operationsSnapshot by observeOperations().collectAsState(initial = OperationsSnapshot())
 
         val challengeHandler: UiChallengeHandler by di.instance()
         var challengeRequest by remember { mutableStateOf<UiChallengeHandler.ChallengeRequest?>(null) }
         var showCommandPalette by remember { mutableStateOf(false) }
         val scope = rememberCoroutineScope()
         val readerScheduler: ReaderRefreshScheduler by di.instance()
+        val appSnackbar = remember { SnackbarHostState() }
+        val clipboard = rememberThreadClipboard()
 
         DisposableEffect(readerScheduler) {
             readerScheduler.start()
@@ -159,12 +188,31 @@ fun App(attachmentPicker: AttachmentPicker? = null) {
                 return@ThreadTheme
             }
             val initialDestination = remember { restoredSession.destination }
+            val initialContentReference = remember { restoredSession.lastContent }
             Navigator(
                 screen = screenFor(initialDestination),
                 disposeBehavior = NavigatorDisposeBehavior(disposeSteps = false),
             ) { navigator ->
                 var selectedWorkspaceKey by rememberSaveable { mutableStateOf(initialDestination.key) }
                 val selectedWorkspace = WorkspaceDestination.fromKey(selectedWorkspaceKey)
+                LaunchedEffect(navigator, initialContentReference) {
+                    val reference = initialContentReference ?: return@LaunchedEffect
+                    if (reference.workspace != initialDestination || !validateRestorableContent(reference)) {
+                        workspaceSessionRepository.update { current ->
+                            if (current.lastContent == reference) current.copy(
+                                lastContent = null,
+                                updatedAtEpochMillis = kotlin.time.Clock.System.now().toEpochMilliseconds(),
+                            ) else current
+                        }
+                        return@LaunchedEffect
+                    }
+                    when (reference.kind) {
+                        RestorableContentKind.ARTICLE -> navigator.push(ArticleDetailPage(reference.id))
+                        RestorableContentKind.TOPIC -> navigator.push(
+                            FeedTopicRoute(checkNotNull(reference.sourceId), reference.id)
+                        )
+                    }
+                }
                 fun navigateTo(destination: WorkspaceDestination, screen: Screen) {
                     selectedWorkspaceKey = destination.key
                     navigator.replaceAll(screen)
@@ -172,6 +220,7 @@ fun App(attachmentPicker: AttachmentPicker? = null) {
                         workspaceSessionRepository.update { current ->
                             current.copy(
                                 destination = destination,
+                                lastContent = null,
                                 updatedAtEpochMillis = kotlin.time.Clock.System.now().toEpochMilliseconds(),
                             )
                         }
@@ -193,7 +242,57 @@ fun App(attachmentPicker: AttachmentPicker? = null) {
                         }
                     }
                 }
+                val productCommands = remember(operationsSnapshot) {
+                    buildProductCommands(operationsSnapshot).map(::ProductCommand)
+                }
+                fun notifyCommand(message: String) {
+                    scope.launch { appSnackbar.showSnackbar(message) }
+                }
+                fun performProductCommand(command: ProductCommandDescriptor) {
+                    when (command.action) {
+                        ProductCommandAction.OPEN_SOURCE_LOGIN -> {
+                            val sourceId = command.sourceId ?: return
+                            navigateTo(WorkspaceDestination.FORUM, ForumRoute)
+                            navigator.push(ForumUserRoute(sourceId))
+                        }
+                        ProductCommandAction.REFRESH_SOURCE -> scope.launch {
+                            val sourceId = command.sourceId ?: return@launch
+                            val result = when (command.sourceKind) {
+                                ContentSourceKind.FORUM -> fetchChannels(sourceId, forceRefresh = true)
+                                ContentSourceKind.READER -> refreshFeedSource(sourceId, forceRefresh = true)
+                                null -> Result.failure(IllegalArgumentException("缺少来源类型"))
+                            }
+                            notifyCommand(result.fold(
+                                onSuccess = { "${command.label}完成" },
+                                onFailure = { it.message ?: "${command.label}失败" },
+                            ))
+                        }
+                        ProductCommandAction.SET_SOURCE_ENABLED -> scope.launch {
+                            val sourceId = command.sourceId ?: return@launch
+                            val enabled = command.enabledValue ?: return@launch
+                            runCatching { setSourceEnabled(sourceId, enabled) }
+                                .onSuccess { notifyCommand("已${if (enabled) "启用" else "停用"} $sourceId") }
+                                .onFailure { notifyCommand(it.message ?: "来源状态更新失败") }
+                        }
+                        ProductCommandAction.REFRESH_ALL_READERS -> scope.launch {
+                            val report = refreshAllFeeds()
+                            notifyCommand(
+                                "Reader 刷新完成：${report.refreshedSourceIds.size} 成功" +
+                                    if (report.failures.isEmpty()) "" else "，${report.failures.size} 失败"
+                            )
+                        }
+                        ProductCommandAction.EXPORT_DIAGNOSTIC -> scope.launch {
+                            runCatching { exportDiagnostic() }
+                                .onSuccess {
+                                    clipboard.copyText(it.payload)
+                                    notifyCommand("脱敏诊断已复制（${it.sourceCount} 个来源）")
+                                }
+                                .onFailure { notifyCommand(it.message ?: "诊断导出失败") }
+                        }
+                    }
+                }
                 val currentScreen = navigator.lastItem
+                Box(Modifier.fillMaxSize()) {
                 ThreadAdaptiveWindow {
                     val navigationItems = listOf(
                         WorkspaceNavigationItem(Icons.Default.Forum, "社区", selectedWorkspace == WorkspaceDestination.FORUM) {
@@ -240,11 +339,15 @@ fun App(attachmentPicker: AttachmentPicker? = null) {
                             }
                     }
                 }
+                    SnackbarHost(appSnackbar, Modifier.align(Alignment.BottomCenter))
+                }
                 if (showCommandPalette) {
                     CommandPalette(
                         searchLocalContent = searchLocalContent,
+                        productCommands = productCommands,
                         onDismiss = { showCommandPalette = false },
                         onCommand = { command -> navigateTo(command.destination, screenFor(command.destination)) },
+                        onProductCommand = ::performProductCommand,
                         onResult = ::openSearchResult,
                     )
                 }
@@ -312,6 +415,15 @@ data class FeedTopicRoute(
     override fun Content() {
         CompositionLocalProvider(LocalForumSourceId provides sourceId) {
             TopicDetailPage(topicId).Content()
+        }
+    }
+}
+
+data class ForumUserRoute(val sourceId: String) : Screen {
+    @Composable
+    override fun Content() {
+        CompositionLocalProvider(LocalForumSourceId provides sourceId) {
+            UserPage().Content()
         }
     }
 }

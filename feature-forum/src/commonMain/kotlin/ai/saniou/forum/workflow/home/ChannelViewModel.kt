@@ -22,6 +22,10 @@ import ai.saniou.thread.domain.usecase.post.ToggleFavoriteUseCase
 import ai.saniou.thread.domain.usecase.source.GetAvailableSourcesUseCase
 import ai.saniou.thread.domain.refresh.RefreshStatus
 import ai.saniou.thread.domain.usecase.refresh.ObserveRefreshDiagnosticsUseCase
+import ai.saniou.thread.domain.model.workspace.ForumWorkspaceState
+import ai.saniou.thread.domain.model.workspace.ListAnchor
+import ai.saniou.thread.domain.usecase.workspace.ObserveWorkspaceSessionUseCase
+import ai.saniou.thread.domain.usecase.workspace.UpdateWorkspaceSessionUseCase
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.Job
@@ -30,6 +34,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class ChannelViewModel(
@@ -46,6 +51,8 @@ class ChannelViewModel(
     private val getRecentChannelsUseCase: GetRecentChannelsUseCase,
     private val saveLastOpenedChannelUseCase: SaveLastOpenedChannelUseCase,
     private val observeRefreshDiagnosticsUseCase: ObserveRefreshDiagnosticsUseCase,
+    private val observeWorkspaceSessionUseCase: ObserveWorkspaceSessionUseCase,
+    private val updateWorkspaceSessionUseCase: UpdateWorkspaceSessionUseCase,
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(ChannelUiState())
@@ -53,6 +60,7 @@ class ChannelViewModel(
 
     private var initCheckJob: Job? = null
     private var categoriesJob: Job? = null
+    private var restoredForum = ForumWorkspaceState()
 
     init {
         screenModelScope.launch {
@@ -67,7 +75,16 @@ class ChannelViewModel(
                 }
             }
         }
-        loadSources()
+        screenModelScope.launch {
+            restoredForum = observeWorkspaceSessionUseCase().first().forum
+            _state.update {
+                it.copy(
+                    expandedGroupId = restoredForum.expandedGroupId,
+                    listAnchor = restoredForum.listAnchor,
+                )
+            }
+            loadSources()
+        }
         fetchNotice()
     }
 
@@ -79,6 +96,7 @@ class ChannelViewModel(
                 val currentId = state.value.currentSourceId
                 val targetId = when {
                     sources.any { it.id == currentId } -> currentId
+                    sources.any { it.id == restoredForum.sourceId } -> restoredForum.sourceId.orEmpty()
                     sources.any { it.id == savedSourceId } -> savedSourceId.orEmpty()
                     else -> sources.first().id
                 }
@@ -114,6 +132,7 @@ class ChannelViewModel(
             Event.ToastShown -> onToastShown()
             Event.MarkNoticeRead -> markNoticeAsRead()
             is Event.SelectSource -> selectSource(event.sourceId)
+            is Event.ListPositionChanged -> persistListPosition(event)
         }
     }
 
@@ -123,6 +142,7 @@ class ChannelViewModel(
             settingsRepository.saveValue("current_source_id", sourceId)
         }
         _state.update { it.copy(currentSourceId = sourceId) }
+        persistForumState(sourceId = sourceId, channelId = null, listAnchor = null)
         observeSourceInitialization(sourceId)
         loadCategories()
     }
@@ -147,28 +167,23 @@ class ChannelViewModel(
         categoriesJob?.cancel()
         categoriesJob = screenModelScope.launch {
             _state.update { it.copy(categoriesState = UiStateWrapper.Loading) }
-            // App initialization should be handled globally, not here.
-            // For now, we keep it to avoid breaking things.
             appInitializer.initialize()
 
             val lastOpenedForum = getLastOpenedChannelUseCase()
-            // 如果最后打开的板块不是当前源的，则不选中
-            val lastOpenedForumId =
-                if (lastOpenedForum?.sourceId == state.value.currentSourceId) lastOpenedForum.id else null
+            val lastOpenedForumId = when {
+                restoredForum.sourceId == state.value.currentSourceId -> restoredForum.channelId
+                lastOpenedForum?.sourceId == state.value.currentSourceId -> lastOpenedForum.id
+                else -> null
+            }
             val currentSourceId = state.value.currentSourceId
 
-            // Use Dispatchers.IO for database/network calls
             val forumsFlow = getChannelsUseCase(currentSourceId)
             val favoritesFlow = getFavoriteChannelsUseCase(currentSourceId)
             val recentFlow = getRecentChannelsUseCase(currentSourceId)
 
-            // Trigger fetch
             launch {
                 fetchChannelsUseCase(currentSourceId)
                     .onFailure { e ->
-                        // Only show error if we don't have data yet? Or maybe show a toast?
-                        // For now, we rely on the flow to show data if available.
-                        // If flow is empty and fetch fails, we might want to show error state.
                         if (_state.value.categoriesState is UiStateWrapper.Loading) {
                             _state.update {
                                 it.copy(
@@ -222,13 +237,16 @@ class ChannelViewModel(
                     val isInitialLoad =
                         it.categoriesState is UiStateWrapper.Loading || it.categoriesState is UiStateWrapper.Error
                     val allForums = forums + favorites
-                    // 找到最后打开的板块对象，确保它在当前列表中
                     val lastOpenedForumObj =
                         if (isInitialLoad) allForums.find { f -> f.id == lastOpenedForumId } else null
 
                     it.copy(
                         categoriesState = UiStateWrapper.Success(combined),
-                        expandedGroupId = if (isInitialLoad) lastOpenedForumObj?.groupId else it.expandedGroupId,
+                        expandedGroupId = if (isInitialLoad) {
+                            lastOpenedForumObj?.groupId ?: it.expandedGroupId
+                        } else {
+                            it.expandedGroupId
+                        },
                         currentChannel = if (isInitialLoad) lastOpenedForumObj else it.currentChannel,
                         favoriteChannelIds = favoriteIds
                     )
@@ -247,6 +265,7 @@ class ChannelViewModel(
                 expandedGroupId = if (it.expandedGroupId == groupId) null else groupId
             )
         }
+        persistForumState(expandedGroupId = state.value.expandedGroupId)
     }
 
     private fun selectForum(forum: Channel) {
@@ -254,10 +273,45 @@ class ChannelViewModel(
             saveLastOpenedChannelUseCase(forum)
         }
         _state.update { it.copy(currentChannel = forum) }
+        persistForumState(
+            sourceId = forum.sourceId,
+            channelId = forum.id,
+            expandedGroupId = forum.groupId,
+            listAnchor = state.value.listAnchor?.takeIf { it.contextKey == "${forum.sourceId}:${forum.id}" },
+        )
     }
 
     private fun selectHome() {
         _state.update { it.copy(currentChannel = null) }
+        persistForumState(channelId = null, listAnchor = null)
+    }
+
+    private fun persistListPosition(event: Event.ListPositionChanged) {
+        val anchor = ListAnchor(event.contextKey, event.index, event.offset)
+        _state.update { it.copy(listAnchor = anchor) }
+        persistForumState(listAnchor = anchor)
+    }
+
+    private fun persistForumState(
+        sourceId: String? = state.value.currentSourceId.takeIf(String::isNotBlank),
+        channelId: String? = state.value.currentChannel?.id,
+        expandedGroupId: String? = state.value.expandedGroupId,
+        listAnchor: ListAnchor? = state.value.listAnchor,
+    ) {
+        screenModelScope.launch {
+            updateWorkspaceSessionUseCase { session ->
+                session.copy(
+                    forumSourceId = sourceId,
+                    forum = session.forum.copy(
+                        sourceId = sourceId,
+                        channelId = channelId,
+                        expandedGroupId = expandedGroupId,
+                        listAnchor = listAnchor,
+                    ),
+                    updatedAtEpochMillis = kotlin.time.Clock.System.now().toEpochMilliseconds(),
+                )
+            }
+        }
     }
 
     private fun toggleFavorite(forum: Channel) {

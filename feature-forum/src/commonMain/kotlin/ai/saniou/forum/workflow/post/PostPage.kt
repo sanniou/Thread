@@ -41,6 +41,7 @@ import androidx.compose.material.icons.filled.EmojiEmotions
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardHide
+import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -201,8 +202,18 @@ data class PostPage(
             title = title,
             eyebrow = "COMPOSER",
             subtitle = if (topicId == null) "发布到 ${state.forumName}" else "回复主题 $topicId",
-            onBack = navigator::pop,
+            onBack = { viewModel.onEvent(PostContract.Event.Close) },
             actions = {
+                if (state.hasRestoredDraft || state.postBody.content.isNotBlank() || state.postBody.attachment != null) {
+                    Text(
+                        if (state.isDraftSaving) "保存中…" else "草稿已保存",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    IconButton(onClick = { viewModel.onEvent(PostContract.Event.DiscardDraft) }) {
+                        Icon(Icons.Default.DeleteOutline, contentDescription = "丢弃草稿")
+                    }
+                }
                 if (!state.isLoading && !state.isSuccess) {
                     TextButton(
                         onClick = { viewModel.onEvent(PostContract.Event.ToggleConfirmDialog) },

@@ -22,6 +22,9 @@ import ai.saniou.thread.domain.usecase.post.CreateThreadUseCase
 import ai.saniou.thread.domain.usecase.post.GetReferenceUseCase
 import ai.saniou.thread.domain.usecase.post.ToggleFavoriteUseCase
 import ai.saniou.thread.domain.usecase.post.UpvoteTopicUseCase
+import ai.saniou.thread.domain.usecase.post.GetPostDraftUseCase
+import ai.saniou.thread.domain.usecase.post.SavePostDraftUseCase
+import ai.saniou.thread.domain.usecase.post.DiscardPostDraftUseCase
 import ai.saniou.thread.domain.usecase.settings.GetSettingsUseCase
 import ai.saniou.thread.domain.usecase.settings.SaveSettingsUseCase
 import ai.saniou.thread.domain.usecase.source.GetAvailableSourcesUseCase
@@ -54,9 +57,12 @@ import ai.saniou.thread.domain.usecase.sync.*
 import ai.saniou.thread.domain.usecase.search.SearchLocalContentUseCase
 import ai.saniou.thread.domain.usecase.operations.ClearSourceDiagnosticUseCase
 import ai.saniou.thread.domain.usecase.operations.ObserveOperationsUseCase
+import ai.saniou.thread.domain.usecase.operations.ExportDiagnosticUseCase
+import ai.saniou.thread.domain.usecase.operations.BuildProductCommandsUseCase
 import ai.saniou.thread.domain.usecase.workspace.ObserveWorkspaceSessionUseCase
 import ai.saniou.thread.domain.usecase.workspace.SaveWorkspaceSessionUseCase
 import ai.saniou.thread.domain.usecase.workspace.UpdateWorkspaceSessionUseCase
+import ai.saniou.thread.domain.usecase.workspace.ValidateRestorableContentUseCase
 import org.kodein.di.DI
 import org.kodein.di.bindProvider
 import org.kodein.di.instance
@@ -71,9 +77,15 @@ val domainModule = DI.Module("domainModule") {
     bindProvider { SearchLocalContentUseCase(instance()) }
     bindProvider { ObserveOperationsUseCase(instance()) }
     bindProvider { ClearSourceDiagnosticUseCase(instance()) }
+    bindProvider { ExportDiagnosticUseCase(instance()) }
+    bindProvider { BuildProductCommandsUseCase() }
     bindProvider { ObserveWorkspaceSessionUseCase(instance()) }
     bindProvider { SaveWorkspaceSessionUseCase(instance()) }
     bindProvider { UpdateWorkspaceSessionUseCase(instance()) }
+    bindProvider { ValidateRestorableContentUseCase(instance()) }
+    bindProvider { GetPostDraftUseCase(instance()) }
+    bindProvider { SavePostDraftUseCase(instance()) }
+    bindProvider { DiscardPostDraftUseCase(instance()) }
 
     // Reader
     bindProvider { GetFeedSourcesUseCase(instance()) }

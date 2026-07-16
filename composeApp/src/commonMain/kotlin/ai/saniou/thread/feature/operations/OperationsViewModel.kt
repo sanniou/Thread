@@ -5,6 +5,7 @@ import ai.saniou.thread.domain.model.operations.SourceHealth
 import ai.saniou.thread.domain.usecase.channel.FetchChannelsUseCase
 import ai.saniou.thread.domain.usecase.operations.ClearSourceDiagnosticUseCase
 import ai.saniou.thread.domain.usecase.operations.ObserveOperationsUseCase
+import ai.saniou.thread.domain.usecase.operations.ExportDiagnosticUseCase
 import ai.saniou.thread.domain.usecase.reader.RefreshFeedSourceUseCase
 import ai.saniou.thread.feature.operations.OperationsContract.Event
 import cafe.adriel.voyager.core.model.ScreenModel
@@ -19,6 +20,7 @@ class OperationsViewModel(
     private val refreshFeedSource: RefreshFeedSourceUseCase,
     private val fetchChannels: FetchChannelsUseCase,
     private val clearSourceDiagnostic: ClearSourceDiagnosticUseCase,
+    private val exportDiagnostic: ExportDiagnosticUseCase,
 ) : ScreenModel {
     private val mutableState = MutableStateFlow(OperationsContract.State())
     val state = mutableState.asStateFlow()
@@ -35,8 +37,30 @@ class OperationsViewModel(
         when (event) {
             is Event.FilterChanged -> mutableState.update { it.copy(filter = event.filter) }
             is Event.Retry -> retry(event.source)
-            is Event.ClearDiagnostic -> clearSourceDiagnostic(event.sourceId)
+            is Event.ClearDiagnostic -> screenModelScope.launch { clearSourceDiagnostic(event.sourceId) }
+            Event.ExportDiagnostic -> exportDiagnostic()
+            Event.DiagnosticDismissed -> mutableState.update { it.copy(diagnosticPayload = null) }
             Event.MessageShown -> mutableState.update { it.copy(message = null) }
+        }
+    }
+
+    private fun exportDiagnostic() {
+        if (mutableState.value.isExportingDiagnostic) return
+        screenModelScope.launch {
+            mutableState.update { it.copy(isExportingDiagnostic = true) }
+            runCatching { exportDiagnostic.invoke() }
+                .onSuccess { export ->
+                    mutableState.update {
+                        it.copy(
+                            diagnosticPayload = export.payload,
+                            message = "已生成 ${export.sourceCount} 个来源的脱敏诊断",
+                        )
+                    }
+                }
+                .onFailure { error ->
+                    mutableState.update { it.copy(message = error.message ?: "诊断生成失败") }
+                }
+            mutableState.update { it.copy(isExportingDiagnostic = false) }
         }
     }
 

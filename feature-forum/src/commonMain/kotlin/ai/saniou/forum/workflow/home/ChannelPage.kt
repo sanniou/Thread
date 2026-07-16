@@ -170,7 +170,18 @@ data class ChannelPage(
                     sourceId = state.currentSourceId,
                     forumId = forum.id,
                     fgroupId = forum.groupId,
-                    onMenuClick = onMenuClick
+                    onMenuClick = onMenuClick,
+                    initialListIndex = state.listAnchor
+                        ?.takeIf { it.contextKey == "${state.currentSourceId}:${forum.id}" }
+                        ?.index ?: 0,
+                    initialListOffset = state.listAnchor
+                        ?.takeIf { it.contextKey == "${state.currentSourceId}:${forum.id}" }
+                        ?.offset ?: 0,
+                    onListPositionChanged = { index, offset ->
+                        viewModel.onEvent(
+                            Event.ListPositionChanged("${state.currentSourceId}:${forum.id}", index, offset)
+                        )
+                    },
                 ).Content()
             } ?: run {
                 TrendPage(

@@ -7,5 +7,9 @@ class ObserveOperationsUseCase(private val repository: OperationsRepository) {
 }
 
 class ClearSourceDiagnosticUseCase(private val repository: OperationsRepository) {
-    operator fun invoke(sourceId: String) = repository.clearRefreshDiagnostic(sourceId)
+    suspend operator fun invoke(sourceId: String) = repository.clearRefreshDiagnostic(sourceId)
+}
+
+class ExportDiagnosticUseCase(private val repository: OperationsRepository) {
+    suspend operator fun invoke() = repository.exportDiagnostic()
 }

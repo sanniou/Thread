@@ -6,6 +6,9 @@ import ai.saniou.thread.domain.model.reader.FeedSource
 import ai.saniou.thread.domain.usecase.reader.*
 import ai.saniou.thread.domain.refresh.RefreshStatus
 import ai.saniou.thread.domain.usecase.refresh.ObserveRefreshDiagnosticsUseCase
+import ai.saniou.thread.domain.model.workspace.ListAnchor
+import ai.saniou.thread.domain.usecase.workspace.ObserveWorkspaceSessionUseCase
+import ai.saniou.thread.domain.usecase.workspace.UpdateWorkspaceSessionUseCase
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import cafe.adriel.voyager.core.model.ScreenModel
@@ -30,6 +33,8 @@ class ReaderViewModel(
     private val exportSubscriptionsUseCase: ExportReaderSubscriptionsUseCase,
     private val importSubscriptionsUseCase: ImportReaderSubscriptionsUseCase,
     private val observeScheduler: ObserveReaderSchedulerUseCase,
+    observeWorkspaceSession: ObserveWorkspaceSessionUseCase,
+    private val updateWorkspaceSession: UpdateWorkspaceSessionUseCase,
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(ReaderContract.State())
@@ -37,6 +42,18 @@ class ReaderViewModel(
     val articles: Flow<PagingData<Article>>
 
     init {
+        screenModelScope.launch {
+            val restored = observeWorkspaceSession().first().reader
+            _state.update {
+                it.copy(
+                    selectedFeedSourceId = restored.feedSourceId,
+                    searchQuery = restored.searchQuery,
+                    articleFilter = runCatching { ArticleFilter.valueOf(restored.articleFilter) }
+                        .getOrDefault(ArticleFilter.ALL),
+                    listAnchor = restored.listAnchor,
+                )
+            }
+        }
         screenModelScope.launch {
             observeScheduler().collect { scheduler ->
                 _state.update { it.copy(scheduler = scheduler) }
@@ -63,7 +80,17 @@ class ReaderViewModel(
                     }) { counts -> sources to counts.toMap() }
                 }
             }.collect { (sources, counts) ->
-                _state.update { it.copy(feedSources = sources, articleCounts = counts) }
+                _state.update { current ->
+                    val selected = current.selectedFeedSourceId?.takeIf { id -> sources.any { it.id == id } }
+                    current.copy(
+                        feedSources = sources,
+                        articleCounts = counts,
+                        selectedFeedSourceId = selected,
+                        listAnchor = current.listAnchor?.takeIf { anchor ->
+                            anchor.contextKey.startsWith("${selected ?: "all"}:")
+                        },
+                    )
+                }
             }
         }
         val sourceIdFlow = state.map { it.selectedFeedSourceId }.distinctUntilChanged()
@@ -92,6 +119,7 @@ class ReaderViewModel(
             is ReaderContract.Event.OnMarkArticleAsRead -> markArticleAsRead(event.id, event.isRead)
             is ReaderContract.Event.OnSearchQueryChanged -> onSearchQueryChanged(event.query)
             is ReaderContract.Event.OnFilterChanged -> onFilterChanged(event.filter)
+            is ReaderContract.Event.OnListPositionChanged -> persistListPosition(event)
             is ReaderContract.Event.OnExportSubscriptions -> exportSubscriptions(event.format)
             is ReaderContract.Event.OnShowImport -> _state.update {
                 it.copy(transferDialog = ReaderTransferDialog(event.format, isImport = true))
@@ -104,14 +132,40 @@ class ReaderViewModel(
 
     private fun onSearchQueryChanged(query: String) {
         _state.update { it.copy(searchQuery = query) }
+        persistReaderState()
     }
 
     private fun onFilterChanged(filter: ArticleFilter) {
         _state.update { it.copy(articleFilter = filter) }
+        persistReaderState()
     }
 
     private fun selectFeedSource(id: String?) {
         _state.update { it.copy(selectedFeedSourceId = id) }
+        persistReaderState()
+    }
+
+    private fun persistListPosition(event: ReaderContract.Event.OnListPositionChanged) {
+        val anchor = ListAnchor(event.contextKey, event.index, event.offset)
+        _state.update { it.copy(listAnchor = anchor) }
+        persistReaderState()
+    }
+
+    private fun persistReaderState() {
+        val current = _state.value
+        screenModelScope.launch {
+            updateWorkspaceSession { session ->
+                session.copy(
+                    reader = session.reader.copy(
+                        feedSourceId = current.selectedFeedSourceId,
+                        articleFilter = current.articleFilter.name,
+                        searchQuery = current.searchQuery,
+                        listAnchor = current.listAnchor,
+                    ),
+                    updatedAtEpochMillis = kotlin.time.Clock.System.now().toEpochMilliseconds(),
+                )
+            }
+        }
     }
 
     private fun showDialog(source: FeedSource?) {

@@ -4,6 +4,8 @@ import ai.saniou.coreui.interaction.ThreadShortcut
 import ai.saniou.coreui.interaction.threadShortcutHost
 import ai.saniou.coreui.widgets.AdaptiveModal
 import ai.saniou.thread.domain.model.search.GlobalSearchResult
+import ai.saniou.thread.domain.model.operations.ProductCommandAction
+import ai.saniou.thread.domain.model.operations.ProductCommandDescriptor
 import ai.saniou.thread.domain.model.workspace.WorkspaceDestination
 import ai.saniou.thread.domain.usecase.search.SearchLocalContentUseCase
 import ai.saniou.thread.feature.search.GlobalSearchResultRow
@@ -30,6 +32,11 @@ import androidx.compose.material.icons.filled.MonitorHeart
 import androidx.compose.material.icons.filled.RssFeed
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.BugReport
+import androidx.compose.material.icons.automirrored.filled.Login
+import androidx.compose.material.icons.filled.PowerSettingsNew
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -65,6 +72,17 @@ data class WorkspaceCommand(
     val shortcut: String,
 )
 
+data class ProductCommand(
+    val descriptor: ProductCommandDescriptor,
+    val icon: ImageVector = when (descriptor.action) {
+        ProductCommandAction.REFRESH_SOURCE -> Icons.Default.Refresh
+        ProductCommandAction.SET_SOURCE_ENABLED -> Icons.Default.PowerSettingsNew
+        ProductCommandAction.OPEN_SOURCE_LOGIN -> Icons.AutoMirrored.Filled.Login
+        ProductCommandAction.REFRESH_ALL_READERS -> Icons.Default.Sync
+        ProductCommandAction.EXPORT_DIAGNOSTIC -> Icons.Default.BugReport
+    },
+)
+
 val defaultWorkspaceCommands = listOf(
     WorkspaceCommand(WorkspaceDestination.FORUM, "打开社区", "浏览来源、版块与主题", Icons.Default.Forum, "⌘1"),
     WorkspaceCommand(WorkspaceDestination.READER, "打开 Reader", "订阅、筛选与沉浸阅读", Icons.Default.RssFeed, "⌘2"),
@@ -80,8 +98,10 @@ val defaultWorkspaceCommands = listOf(
 @Composable
 fun CommandPalette(
     searchLocalContent: SearchLocalContentUseCase,
+    productCommands: List<ProductCommand> = emptyList(),
     onDismiss: () -> Unit,
     onCommand: (WorkspaceCommand) -> Unit,
+    onProductCommand: (ProductCommandDescriptor) -> Unit = {},
     onResult: (GlobalSearchResult) -> Unit,
 ) {
     var query by remember { mutableStateOf("") }
@@ -95,8 +115,17 @@ fun CommandPalette(
             it.label.contains(needle, ignoreCase = true) || it.description.contains(needle, ignoreCase = true)
         }
     }
-    val entries = remember(filteredCommands, searchResults) {
-        filteredCommands.map(PaletteEntry::Command) + searchResults.map(PaletteEntry::Result)
+    val filteredProductCommands = remember(query, productCommands) {
+        val needle = query.trim()
+        if (needle.isEmpty()) productCommands else productCommands.filter {
+            it.descriptor.label.contains(needle, ignoreCase = true) ||
+                it.descriptor.description.contains(needle, ignoreCase = true)
+        }
+    }
+    val entries = remember(filteredCommands, filteredProductCommands, searchResults) {
+        filteredCommands.map(PaletteEntry::Command) +
+            filteredProductCommands.map(PaletteEntry::ProductAction) +
+            searchResults.map(PaletteEntry::Result)
     }
 
     LaunchedEffect(Unit) { focusRequester.requestFocus() }
@@ -117,6 +146,7 @@ fun CommandPalette(
     fun activate(entry: PaletteEntry) {
         when (entry) {
             is PaletteEntry.Command -> onCommand(entry.value)
+            is PaletteEntry.ProductAction -> onProductCommand(entry.value.descriptor)
             is PaletteEntry.Result -> onResult(entry.value)
         }
         onDismiss()
@@ -178,6 +208,11 @@ fun CommandPalette(
                                 selected = index == selectedIndex,
                                 onClick = { activate(entry) },
                             )
+                            is PaletteEntry.ProductAction -> ProductCommandRow(
+                                command = entry.value,
+                                selected = index == selectedIndex,
+                                onClick = { activate(entry) },
+                            )
                             is PaletteEntry.Result -> Surface(
                                 color = if (index == selectedIndex) {
                                     MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.55f)
@@ -199,6 +234,39 @@ fun CommandPalette(
                 Text("↑↓ 选择", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text("↵ 打开", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text("Esc 关闭", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+    }
+}
+
+@Composable
+private fun ProductCommandRow(command: ProductCommand, selected: Boolean, onClick: () -> Unit) {
+    Surface(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth().semantics {
+            contentDescription = "${command.descriptor.label}，全局操作"
+        },
+        color = if (selected) MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.surface,
+        shape = MaterialTheme.shapes.large,
+    ) {
+        Row(
+            Modifier.padding(horizontal = 14.dp, vertical = 11.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(13.dp),
+        ) {
+            Icon(command.icon, null, tint = MaterialTheme.colorScheme.tertiary)
+            Column(Modifier.weight(1f)) {
+                Text(command.descriptor.label, style = MaterialTheme.typography.titleSmall)
+                Text(
+                    command.descriptor.description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            Surface(shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.surfaceContainerHigh) {
+                Text("操作", Modifier.padding(horizontal = 8.dp, vertical = 4.dp), style = MaterialTheme.typography.labelSmall)
             }
         }
     }
@@ -246,5 +314,9 @@ private sealed interface PaletteEntry {
 
     data class Result(val value: GlobalSearchResult) : PaletteEntry {
         override val key = "result:${value.type}:${value.sourceId}:${value.id}"
+    }
+
+    data class ProductAction(val value: ProductCommand) : PaletteEntry {
+        override val key = "product:${value.descriptor.id}"
     }
 }

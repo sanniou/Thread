@@ -7,6 +7,8 @@ import ai.saniou.thread.domain.refresh.RefreshPolicy
 import ai.saniou.thread.domain.refresh.RefreshStatus
 import ai.saniou.thread.domain.refresh.RefreshTaskState
 import ai.saniou.thread.domain.refresh.FailureClassifier
+import ai.saniou.thread.domain.refresh.DiagnosticSanitizer
+import ai.saniou.thread.domain.refresh.RefreshHistoryRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,7 +20,9 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlin.time.Clock
 
-class DefaultRefreshCoordinator : RefreshCoordinator {
+class DefaultRefreshCoordinator(
+    private val historyRepository: RefreshHistoryRepository? = null,
+) : RefreshCoordinator {
     private val mutableStates = MutableStateFlow<Map<String, RefreshTaskState>>(emptyMap())
     override val states: StateFlow<Map<String, RefreshTaskState>> = mutableStates.asStateFlow()
 
@@ -56,6 +60,7 @@ class DefaultRefreshCoordinator : RefreshCoordinator {
                     Result.failure(error)
                 }
                 if (result.isSuccess) {
+                    val finishedAt = now()
                     publish(
                         RefreshTaskState(
                             key = key,
@@ -63,9 +68,10 @@ class DefaultRefreshCoordinator : RefreshCoordinator {
                             status = RefreshStatus.SUCCEEDED,
                             attempt = attempt,
                             startedAtEpochMillis = startedAt,
-                            finishedAtEpochMillis = now(),
+                            finishedAtEpochMillis = finishedAt,
                         )
                     )
+                    historyRepository?.recordSuccess(key, label, finishedAt)
                     return result
                 }
 
@@ -73,7 +79,15 @@ class DefaultRefreshCoordinator : RefreshCoordinator {
                 lastError = error
                 val kind = FailureClassifier.classify(error)
                 if (attempt == policy.maxAttempts || !kind.isRetryable) {
-                    publishFailure(key, label, attempt, startedAt, kind, error)
+                    val finishedAt = now()
+                    publishFailure(key, label, attempt, startedAt, finishedAt, kind, error)
+                    historyRepository?.recordFailure(
+                        key = key,
+                        label = label,
+                        finishedAtEpochMillis = finishedAt,
+                        kind = kind,
+                        message = error.message ?: error::class.simpleName ?: "Unknown error",
+                    )
                     return Result.failure(error)
                 }
                 delay(delayMillis)
@@ -98,6 +112,7 @@ class DefaultRefreshCoordinator : RefreshCoordinator {
         label: String,
         attempt: Int,
         startedAt: Long,
+        finishedAt: Long,
         kind: RefreshFailureKind,
         error: Throwable,
     ) {
@@ -108,9 +123,9 @@ class DefaultRefreshCoordinator : RefreshCoordinator {
                 status = RefreshStatus.FAILED,
                 attempt = attempt,
                 startedAtEpochMillis = startedAt,
-                finishedAtEpochMillis = now(),
+                finishedAtEpochMillis = finishedAt,
                 failureKind = kind,
-                message = error.message ?: error::class.simpleName ?: "Unknown error",
+                message = DiagnosticSanitizer.sanitize(error.message ?: error::class.simpleName) ?: "Unknown error",
             )
         )
     }

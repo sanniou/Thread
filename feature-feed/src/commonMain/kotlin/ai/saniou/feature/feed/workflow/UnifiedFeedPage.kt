@@ -124,6 +124,9 @@ fun UnifiedFeedPage(
                 onRefresh = { viewModel.onEvent(FeedContract.Event.Refresh) },
                 onOpenTopic = onOpenTopic,
                 onOpenArticle = onOpenArticle,
+                onListPositionChanged = { contextKey, index, offset ->
+                    viewModel.onEvent(FeedContract.Event.ListPositionChanged(contextKey, index, offset))
+                },
             )
     }
 }
@@ -197,6 +200,7 @@ private fun FeedScaffold(
     onRefresh: () -> Unit,
     onOpenTopic: (Topic) -> Unit,
     onOpenArticle: (Article) -> Unit,
+    onListPositionChanged: (String, Int, Int) -> Unit,
 ) {
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -246,7 +250,15 @@ private fun FeedScaffold(
                     append(":reader=")
                     append(state.includeReader)
                 }
-                KeyedLazyListState(listStateKey) { listState ->
+                val restoredAnchor = state.listAnchor?.takeIf { it.contextKey == listStateKey }
+                KeyedLazyListState(
+                    stateKey = listStateKey,
+                    initialIndex = restoredAnchor?.index ?: 0,
+                    initialOffset = restoredAnchor?.offset ?: 0,
+                    onPositionChanged = { index, offset ->
+                        onListPositionChanged(listStateKey, index, offset)
+                    },
+                ) { listState ->
                     LazyColumn(
                         state = listState,
                         modifier = Modifier.fillMaxSize(),

@@ -46,6 +46,8 @@ val forumFeatureModule = DI.Module("forumFeatureModule") {
             instance(),
             instance(),
             instance(),
+            instance(),
+            instance(),
         )
     }
 
@@ -94,7 +96,7 @@ val forumFeatureModule = DI.Module("forumFeatureModule") {
 
     // 发帖和回复相关
     bindFactory<PostViewModelParams, PostViewModel> { params ->
-        PostViewModel(instance(), instance(), params)
+        PostViewModel(instance(), instance(), instance(), instance(), instance(), params)
     }
 
     // 用户认证相关

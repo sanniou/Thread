@@ -18,7 +18,7 @@ val appModule = DI.Module("appModule") {
     bindProvider { HistoryViewModel(instance()) }
     bindProvider { BookmarkViewModel(instance(), instance(), instance()) }
     bindProvider { GlobalSearchViewModel(instance(), instance(), instance()) }
-    bindProvider { OperationsViewModel(instance(), instance(), instance(), instance()) }
+    bindProvider { OperationsViewModel(instance(), instance(), instance(), instance(), instance()) }
     bindProvider {
         SyncSettingsViewModel(
             instance(),

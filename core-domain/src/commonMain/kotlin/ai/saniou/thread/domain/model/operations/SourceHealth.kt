@@ -24,7 +24,11 @@ data class SourceHealth(
     val secondaryItemCount: Long = 0,
     val lastContentAtEpochMillis: Long? = null,
     val lastRefreshAtEpochMillis: Long? = null,
+    val lastSuccessfulRefreshAtEpochMillis: Long? = null,
+    val cacheAgeMillis: Long? = null,
     val refreshAttempt: Int = 0,
+    val consecutiveFailureCount: Int = 0,
+    val rateLimitUntilEpochMillis: Long? = null,
     val failureKind: RefreshFailureKind? = null,
     val message: String? = null,
     val capabilities: Set<String> = emptySet(),
@@ -36,4 +40,11 @@ data class OperationsSnapshot(
     val failedRefreshCount: Int = 0,
     val cachedItemCount: Long = 0,
     val storageDirectory: String = "",
+)
+
+data class DiagnosticExport(
+    val payload: String,
+    val generatedAtEpochMillis: Long,
+    val sourceCount: Int,
+    val redacted: Boolean = true,
 )

@@ -1,6 +1,7 @@
 package ai.saniou.feature.feed.workflow
 
 import ai.saniou.thread.domain.refresh.RefreshTaskState
+import ai.saniou.thread.domain.model.workspace.ListAnchor
 
 interface FeedContract {
     data class SourceOption(
@@ -15,6 +16,7 @@ interface FeedContract {
         val isRefreshing: Boolean = false,
         val message: String? = null,
         val refreshFailures: List<RefreshTaskState> = emptyList(),
+        val listAnchor: ListAnchor? = null,
     )
 
     sealed interface Event {
@@ -23,6 +25,7 @@ interface FeedContract {
         data object SelectAllSources : Event
         data object ClearForumSources : Event
         data object Refresh : Event
+        data class ListPositionChanged(val contextKey: String, val index: Int, val offset: Int) : Event
         data object MessageShown : Event
     }
 
