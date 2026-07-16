@@ -47,7 +47,7 @@
 -   **Voyager**: 跨平台导航。
 -   **Kodein**: 依赖注入。
 -   **Ktorfit / Ktor**: 网络请求。
--   **SQLDelight**: 数据库与缓存。
+-   **SQLDelight 2.3.2 + AndroidX Paging 3.4.1**: Android/iOS/Desktop 共用数据库分页、远端协调与 Compose 分页 UI。
 
 ## 💻 开发指南 (Development Guide)
 
@@ -78,6 +78,7 @@
 -   [x] **数据同步**: 版本化用户数据包、本地文本导入导出与 WebDAV 备份恢复。
 -   [x] **Desktop 发布门禁**: Source 合约、数据库迁移/重启、真实组合根 smoke 与 Debian 包构建。
 -   [x] **Desktop 现代工作区**: common 设计系统、全局导航 rail、功能侧栏、居中内容画布与核心页面统一改造。
+-   [x] **全平台自适应工作区**: 手机底栏、平板紧凑 rail、Desktop 功能侧栏、超宽 Reader 三栏预览由同一 common 窗口能力模型驱动。
 
 ## 🚀 构建与运行
 
@@ -90,6 +91,7 @@
 当前阶段采用 Desktop-first：先完成 common 架构和业务闭环，再按平台实现的实际价值补充 Android/iOS 验证。
 
 当前架构约束、版本基线和分阶段目标见 [`doc/ARCHITECTURE.md`](doc/ARCHITECTURE.md)。
+自适应 UI 的窗口分级、导航职责和页面组合规则见 [`doc/ADAPTIVE_UI.md`](doc/ADAPTIVE_UI.md)。
 
 ## 📚 参考资料 (References)
 

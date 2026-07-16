@@ -1,6 +1,8 @@
 package ai.saniou.coreui.widgets
 
 import ai.saniou.coreui.theme.Dimens
+import ai.saniou.coreui.layout.LocalThreadWindowInfo
+import ai.saniou.coreui.layout.ThreadWindowWidthClass
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -16,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -47,15 +50,18 @@ fun ThreadPage(
 fun ThreadContentColumn(
     modifier: Modifier = Modifier,
     maxWidth: Dp = Dimens.contentMaxWidth,
-    contentPadding: PaddingValues = PaddingValues(
-        horizontal = Dimens.page_horizontal,
-        vertical = Dimens.page_vertical,
-    ),
+    contentPadding: PaddingValues? = null,
     verticalArrangement: Arrangement.Vertical = Arrangement.spacedBy(Dimens.section_gap),
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    val windowInfo = LocalThreadWindowInfo.current
     Column(
-        modifier = modifier.fillMaxWidth().widthIn(max = maxWidth).padding(contentPadding),
+        modifier = modifier.fillMaxWidth().widthIn(max = maxWidth).padding(
+            contentPadding ?: PaddingValues(
+                horizontal = windowInfo.pageHorizontalPadding,
+                vertical = Dimens.page_vertical,
+            ),
+        ),
         verticalArrangement = verticalArrangement,
         content = content,
     )
@@ -69,41 +75,77 @@ fun PageHeader(
     subtitle: String? = null,
     actions: @Composable RowScope.() -> Unit = {},
 ) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(20.dp),
-    ) {
+    val windowInfo = LocalThreadWindowInfo.current
+    if (windowInfo.widthClass == ThreadWindowWidthClass.Compact) {
         Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            eyebrow?.let {
-                Text(
-                    text = it.uppercase(),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold,
-                )
-            }
-            Text(
-                text = title,
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.onBackground,
+            PageHeaderCopy(
+                title = title,
+                eyebrow = eyebrow,
+                subtitle = subtitle,
+                modifier = Modifier.fillMaxWidth(),
             )
-            subtitle?.let {
-                Text(
-                    text = it,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.End,
+                content = actions,
+            )
         }
+    } else {
         Row(
+            modifier = modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            content = actions,
+            horizontalArrangement = Arrangement.spacedBy(20.dp),
+        ) {
+            PageHeaderCopy(
+                title = title,
+                eyebrow = eyebrow,
+                subtitle = subtitle,
+                modifier = Modifier.weight(1f),
+            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                content = actions,
+            )
+        }
+    }
+}
+
+@Composable
+private fun PageHeaderCopy(
+    title: String,
+    eyebrow: String?,
+    subtitle: String?,
+    modifier: Modifier,
+) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        eyebrow?.let {
+            Text(
+                text = it.uppercase(),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Bold,
+            )
+        }
+        Text(
+            text = title,
+            style = MaterialTheme.typography.headlineMedium,
+            color = MaterialTheme.colorScheme.onBackground,
         )
+        subtitle?.let {
+            Text(
+                text = it,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
     }
 }
 
@@ -111,9 +153,10 @@ fun PageHeader(
 fun ThreadCard(
     modifier: Modifier = Modifier,
     containerColor: Color = MaterialTheme.colorScheme.surface,
-    contentPadding: PaddingValues = PaddingValues(20.dp),
+    contentPadding: PaddingValues? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    val windowInfo = LocalThreadWindowInfo.current
     Surface(
         modifier = modifier,
         color = containerColor,
@@ -122,9 +165,115 @@ fun ThreadCard(
         tonalElevation = 0.dp,
     ) {
         Column(
-            modifier = Modifier.padding(contentPadding),
+            modifier = Modifier.padding(
+                contentPadding ?: PaddingValues(
+                    if (windowInfo.widthClass == ThreadWindowWidthClass.Compact) 16.dp else 20.dp,
+                ),
+            ),
             verticalArrangement = Arrangement.spacedBy(12.dp),
             content = content,
+        )
+    }
+}
+
+@Composable
+fun ContextHero(
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    modifier: Modifier = Modifier,
+    metric: String? = null,
+    actions: @Composable RowScope.() -> Unit = {},
+) {
+    val windowInfo = LocalThreadWindowInfo.current
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.extraLarge,
+        color = MaterialTheme.colorScheme.primaryContainer,
+        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+        tonalElevation = 0.dp,
+    ) {
+        if (windowInfo.widthClass == ThreadWindowWidthClass.Compact) {
+            Column(
+                modifier = Modifier.padding(horizontal = windowInfo.pageHorizontalPadding, vertical = 20.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                ) {
+                    ContextHeroIdentity(icon, title, subtitle, Modifier.weight(1f))
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.End,
+                ) {
+                    metric?.let { HeroMetric(it) }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(2.dp),
+                        content = actions,
+                    )
+                }
+            }
+        } else {
+            Row(
+                modifier = Modifier.padding(horizontal = windowInfo.pageHorizontalPadding, vertical = 26.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(18.dp),
+            ) {
+                ContextHeroIdentity(icon, title, subtitle, Modifier.weight(1f))
+                metric?.let { HeroMetric(it) }
+                Row(
+                    modifier = Modifier.wrapContentWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    content = actions,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ContextHeroIdentity(
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    modifier: Modifier,
+) {
+    Surface(
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.primary,
+        contentColor = MaterialTheme.colorScheme.onPrimary,
+    ) {
+        Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
+            Icon(icon, contentDescription = null, modifier = Modifier.size(24.dp))
+        }
+    }
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(5.dp)) {
+        Text(title, style = MaterialTheme.typography.headlineSmall)
+        Text(
+            subtitle,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.75f),
+        )
+    }
+}
+
+@Composable
+private fun HeroMetric(metric: String) {
+    Surface(
+        shape = MaterialTheme.shapes.extraLarge,
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.72f),
+    ) {
+        Text(
+            metric,
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.primary,
+            fontWeight = FontWeight.Bold,
         )
     }
 }

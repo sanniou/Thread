@@ -13,13 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ai.saniou.coreui.theme;
+package ai.saniou.coreui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.graphics.Color
 
 private val LightColors = lightColorScheme(
     primary = md_theme_light_primary,
@@ -85,11 +90,44 @@ private val DarkColors = darkColorScheme(
     scrim = md_theme_dark_scrim,
 )
 
+@Immutable
+data class ThreadSemanticColors(
+    val success: Color,
+    val onSuccess: Color,
+    val warning: Color,
+    val onWarning: Color,
+    val readerSurface: Color,
+    val interactiveSurface: Color,
+)
+
+private val LightSemanticColors = ThreadSemanticColors(
+    success = Color(0xFF13795B),
+    onSuccess = Color.White,
+    warning = Color(0xFF9A6700),
+    onWarning = Color.White,
+    readerSurface = Color(0xFFFFFEFA),
+    interactiveSurface = Color(0xFFF0F1FA),
+)
+
+private val DarkSemanticColors = ThreadSemanticColors(
+    success = Color(0xFF67D5AE),
+    onSuccess = Color(0xFF052E22),
+    warning = Color(0xFFFFCB6B),
+    onWarning = Color(0xFF3E2B00),
+    readerSurface = Color(0xFF181A20),
+    interactiveSurface = Color(0xFF252833),
+)
+
+private val LocalThreadSemanticColors = staticCompositionLocalOf { LightSemanticColors }
+
+val MaterialTheme.threadColors: ThreadSemanticColors
+    @Composable
+    @ReadOnlyComposable
+    get() = LocalThreadSemanticColors.current
+
 @Composable
-fun CupcakeTheme(
+fun ThreadTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+ but turned off for training purposes
-    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = if (darkTheme) {
@@ -98,10 +136,14 @@ fun CupcakeTheme(
         LightColors
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        shapes = Shapes,
-        typography = Typography,
-        content = content
-    )
+    CompositionLocalProvider(
+        LocalThreadSemanticColors provides if (darkTheme) DarkSemanticColors else LightSemanticColors,
+    ) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            shapes = Shapes,
+            typography = Typography,
+            content = content
+        )
+    }
 }

@@ -1,12 +1,16 @@
 package ai.saniou.reader.workflow.reader
 
-import ai.saniou.coreui.composition.LocalAppDrawer
+import ai.saniou.coreui.layout.AdaptiveSidebarScaffold
+import ai.saniou.coreui.layout.LocalThreadWindowInfo
 import ai.saniou.coreui.state.PagingStateLayout
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.AppDrawerItem
 import ai.saniou.coreui.widgets.ArticleItem
+import ai.saniou.coreui.widgets.ContextHero
 import ai.saniou.coreui.widgets.ModernEmptyState
+import ai.saniou.coreui.widgets.NetworkImage
 import ai.saniou.coreui.widgets.RefreshDiagnosticsBanner
+import ai.saniou.coreui.widgets.RichText
 import ai.saniou.coreui.widgets.SectionLabel
 import ai.saniou.coreui.widgets.SidebarHeader
 import ai.saniou.reader.workflow.articledetail.ArticleDetailPage
@@ -15,7 +19,11 @@ import ai.saniou.thread.domain.model.reader.FeedSource
 import ai.saniou.thread.domain.model.reader.ReaderSubscriptionFormat
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -24,7 +32,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.paging.LoadState.Loading
 import androidx.paging.compose.LazyPagingItems
@@ -45,6 +55,7 @@ class ReaderPage : Screen {
         var isAddSheetShown by remember { mutableStateOf(false) }
         var editingSource by remember { mutableStateOf<FeedSource?>(null) }
         var isSearchActive by remember { mutableStateOf(false) }
+        var previewArticle by remember { mutableStateOf<Article?>(null) }
         val snackbarHostState = remember { SnackbarHostState() }
 
         LaunchedEffect(state.message) {
@@ -84,24 +95,18 @@ class ReaderPage : Screen {
             )
         }
 
-        // Adaptive Layout Logic
-        BoxWithConstraints {
-            val isMobile = maxWidth < Dimens.MobileWidth
-            val drawerState = rememberDrawerState(DrawerValue.Closed)
-            val scope = rememberCoroutineScope()
+        val windowInfo = LocalThreadWindowInfo.current
+        val drawerState = rememberDrawerState(DrawerValue.Closed)
+        val scope = rememberCoroutineScope()
 
-            val onMenuClick = {
-                scope.launch { drawerState.open() }
-            }
-
-            val navigationContent = @Composable {
+        val navigationContent = @Composable {
                 FeedSourceList(
                     sources = state.feedSources,
                     articleCounts = state.articleCounts,
                     selectedSourceId = state.selectedFeedSourceId,
                     onSelect = {
                         viewModel.onEvent(ReaderContract.Event.OnSelectFeedSource(it))
-                        if (isMobile) scope.launch { drawerState.close() }
+                        if (!windowInfo.hasPermanentFeatureSidebar) scope.launch { drawerState.close() }
                     },
                     onEdit = { editingSource = it },
                     onDelete = { viewModel.onEvent(ReaderContract.Event.OnDeleteSource(it)) },
@@ -109,26 +114,22 @@ class ReaderPage : Screen {
                     onAdd = {
                         editingSource = null
                         isAddSheetShown = true
-                        if (isMobile) scope.launch { drawerState.close() }
+                        if (!windowInfo.hasPermanentFeatureSidebar) scope.launch { drawerState.close() }
                     },
                     schedulerState = state.scheduler,
                 )
-            }
+        }
 
-            if (isMobile) {
-                ModalNavigationDrawer(
-                    drawerState = drawerState,
-                    drawerContent = {
-                        ModalDrawerSheet {
-                            navigationContent()
-                        }
-                    }
-                ) {
-                    ReaderScaffold(
+        AdaptiveSidebarScaffold(
+            drawerState = drawerState,
+            coroutineScope = scope,
+            sidebar = navigationContent,
+        ) { showMenu, openSidebar ->
+            ReaderScaffold(
                         state = state,
                         articles = articles,
                         isSearchActive = isSearchActive,
-                        isMobile = true,
+                        showMenu = showMenu,
                         onSearchActiveChange = { isSearchActive = it },
                         onSearchQueryChanged = {
                             viewModel.onEvent(
@@ -138,7 +139,7 @@ class ReaderPage : Screen {
                             )
                         },
                         onRefreshAll = { viewModel.onEvent(ReaderContract.Event.OnRefreshAll) },
-                        onMenuClick = { scope.launch { drawerState.open() } },
+                        onMenuClick = openSidebar,
                         onArticleClick = { article ->
                             viewModel.onEvent(
                                 ReaderContract.Event.OnMarkArticleAsRead(
@@ -146,56 +147,20 @@ class ReaderPage : Screen {
                                     true
                                 )
                             )
-                            navigator.push(ArticleDetailPage(article.id))
+                            if (windowInfo.supportsListDetail) {
+                                previewArticle = article
+                            } else {
+                                navigator.push(ArticleDetailPage(article.id))
+                            }
                         },
+                        previewArticle = previewArticle,
+                        onDismissPreview = { previewArticle = null },
+                        onOpenArticleDetail = { navigator.push(ArticleDetailPage(it.id)) },
                         onFilterChange = { viewModel.onEvent(ReaderContract.Event.OnFilterChanged(it)) },
                         snackbarHostState = snackbarHostState,
                         onExport = { viewModel.onEvent(ReaderContract.Event.OnExportSubscriptions(it)) },
                         onImport = { viewModel.onEvent(ReaderContract.Event.OnShowImport(it)) },
-                    )
-                }
-            } else {
-                PermanentNavigationDrawer(
-                    drawerContent = {
-                        PermanentDrawerSheet(
-                            modifier = Modifier.width(Dimens.sidebarWidth),
-                            drawerContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                        ) {
-                            navigationContent()
-                        }
-                    }
-                ) {
-                    ReaderScaffold(
-                        state = state,
-                        articles = articles,
-                        isSearchActive = isSearchActive,
-                        isMobile = false,
-                        onSearchActiveChange = { isSearchActive = it },
-                        onSearchQueryChanged = {
-                            viewModel.onEvent(
-                                ReaderContract.Event.OnSearchQueryChanged(
-                                    it
-                                )
-                            )
-                        },
-                        onRefreshAll = { viewModel.onEvent(ReaderContract.Event.OnRefreshAll) },
-                        onMenuClick = {}, // No menu button on desktop
-                        onArticleClick = { article ->
-                            viewModel.onEvent(
-                                ReaderContract.Event.OnMarkArticleAsRead(
-                                    article.id,
-                                    true
-                                )
-                            )
-                            navigator.push(ArticleDetailPage(article.id))
-                        },
-                        onFilterChange = { viewModel.onEvent(ReaderContract.Event.OnFilterChanged(it)) },
-                        snackbarHostState = snackbarHostState,
-                        onExport = { viewModel.onEvent(ReaderContract.Event.OnExportSubscriptions(it)) },
-                        onImport = { viewModel.onEvent(ReaderContract.Event.OnShowImport(it)) },
-                    )
-                }
-            }
+            )
         }
     }
 }
@@ -206,94 +171,106 @@ private fun ReaderScaffold(
     state: ReaderContract.State,
     articles: LazyPagingItems<Article>,
     isSearchActive: Boolean,
-    isMobile: Boolean,
+    showMenu: Boolean,
     onSearchActiveChange: (Boolean) -> Unit,
     onSearchQueryChanged: (String) -> Unit,
     onRefreshAll: () -> Unit,
     onMenuClick: () -> Unit,
     onArticleClick: (Article) -> Unit,
+    previewArticle: Article?,
+    onDismissPreview: () -> Unit,
+    onOpenArticleDetail: (Article) -> Unit,
     onFilterChange: (ArticleFilter) -> Unit,
     snackbarHostState: SnackbarHostState,
     onExport: (ReaderSubscriptionFormat) -> Unit,
     onImport: (ReaderSubscriptionFormat) -> Unit,
 ) {
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        topBar = {
-            ReaderTopAppBar(
+    Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) { padding ->
+        Column(
+            modifier = Modifier.padding(padding).fillMaxSize()
+                .background(MaterialTheme.colorScheme.background),
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth().widthIn(max = Dimens.contentMaxWidth)
+                    .align(Alignment.CenterHorizontally)
+                    .padding(
+                        horizontal = LocalThreadWindowInfo.current.pageHorizontalPadding,
+                        vertical = 16.dp,
+                    ),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                ReaderHeader(
                 state = state,
                 isSearchActive = isSearchActive,
-                showMenuIcon = isMobile,
+                    showMenuIcon = showMenu,
                 onSearchActiveChange = onSearchActiveChange,
                 onSearchQueryChanged = onSearchQueryChanged,
                 onRefreshAll = onRefreshAll,
                 onMenuClick = onMenuClick,
                 onExport = onExport,
                 onImport = onImport,
-            )
-        }
-    ) { padding ->
-        Column(
-            modifier = Modifier.padding(padding).fillMaxSize()
-                .background(MaterialTheme.colorScheme.background),
-        ) {
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.TopCenter,
-            ) {
-                Column(Modifier.fillMaxWidth().widthIn(max = Dimens.contentMaxWidth)) {
-                    RefreshDiagnosticsBanner(
-                        failures = state.refreshFailures,
-                        modifier = Modifier.padding(horizontal = Dimens.page_horizontal, vertical = 8.dp),
-                    )
-                    FilterChips(
-                        selectedFilter = state.articleFilter,
-                        onFilterChange = onFilterChange,
-                        modifier = Modifier.padding(horizontal = Dimens.page_horizontal),
-                    )
-                }
+                )
+                RefreshDiagnosticsBanner(failures = state.refreshFailures)
+                FilterChips(
+                    selectedFilter = state.articleFilter,
+                    onFilterChange = onFilterChange,
+                )
             }
-            PagingStateLayout(
-                items = articles,
-                modifier = Modifier.weight(1f).fillMaxWidth().widthIn(max = Dimens.contentMaxWidth)
-                    .align(Alignment.CenterHorizontally),
-                loading = { CircularProgressIndicator(modifier = Modifier.align(Alignment.Center)) },
-                empty = {
-                    EmptyState(
-                        isSearchActive = state.searchQuery.isNotEmpty(),
-                        query = state.searchQuery
-                    )
-                }
-            ) {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(
-                        horizontal = Dimens.page_horizontal,
-                        vertical = 12.dp,
-                    ),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    items(articles.itemCount) { index ->
-                        val article = articles[index]
-                        if (article != null) {
-                            val sourceName =
-                                state.feedSources.find { it.id == article.feedSourceId }?.name
-                                    ?: "未知来源"
-                            ArticleItem(
-                                article = article,
-                                sourceName = sourceName,
-                                onClick = { onArticleClick(article) }
+            Row(Modifier.weight(1f).fillMaxWidth()) {
+                Box(Modifier.weight(1f).fillMaxHeight(), contentAlignment = Alignment.TopCenter) {
+                    PagingStateLayout(
+                        items = articles,
+                        modifier = Modifier.fillMaxSize().widthIn(max = Dimens.articleListMaxWidth),
+                        loading = { CircularProgressIndicator(modifier = Modifier.align(Alignment.Center)) },
+                        empty = {
+                            EmptyState(
+                                isSearchActive = state.searchQuery.isNotEmpty(),
+                                query = state.searchQuery
                             )
                         }
-                    }
+                    ) {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(
+                                horizontal = LocalThreadWindowInfo.current.pageHorizontalPadding,
+                                vertical = 12.dp,
+                            ),
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            items(articles.itemCount) { index ->
+                                val article = articles[index]
+                                if (article != null) {
+                                    val sourceName =
+                                        state.feedSources.find { it.id == article.feedSourceId }?.name
+                                            ?: "未知来源"
+                                    ArticleItem(
+                                        article = article,
+                                        sourceName = sourceName,
+                                        onClick = { onArticleClick(article) },
+                                    )
+                                }
+                            }
 
-                    if (articles.loadState.append is Loading) {
-                        item {
-                            Box(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-                                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                            if (articles.loadState.append is Loading) {
+                                item {
+                                    Box(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+                                        CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                                    }
+                                }
                             }
                         }
                     }
+                }
+                if (previewArticle != null && LocalThreadWindowInfo.current.supportsListDetail) {
+                    VerticalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f))
+                    ArticlePreviewPane(
+                        article = previewArticle,
+                        sourceName = state.feedSources.firstOrNull { it.id == previewArticle.feedSourceId }?.name
+                            ?: "未知来源",
+                        onDismiss = onDismissPreview,
+                        onOpenFull = { onOpenArticleDetail(previewArticle) },
+                        modifier = Modifier.widthIn(min = 440.dp, max = 600.dp).fillMaxHeight(),
+                    )
                 }
             }
         }
@@ -311,9 +288,85 @@ private fun EmptyState(isSearchActive: Boolean, query: String) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ReaderTopAppBar(
+private fun ArticlePreviewPane(
+    article: Article,
+    sourceName: String,
+    onDismiss: () -> Unit,
+    onOpenFull: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier.background(MaterialTheme.colorScheme.surface)) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Surface(
+                shape = MaterialTheme.shapes.extraLarge,
+                color = MaterialTheme.colorScheme.secondaryContainer,
+            ) {
+                Text(
+                    sourceName,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                )
+            }
+            Spacer(Modifier.weight(1f))
+            IconButton(onClick = onOpenFull) {
+                Icon(Icons.Default.OpenInFull, contentDescription = "打开完整阅读页")
+            }
+            IconButton(onClick = onDismiss) {
+                Icon(Icons.Default.Close, contentDescription = "关闭预览")
+            }
+        }
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f))
+        Column(
+            modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())
+                .padding(horizontal = 32.dp, vertical = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp),
+        ) {
+            article.imageUrl?.takeIf { it.isNotBlank() }?.let { imageUrl ->
+                NetworkImage(
+                    imageUrl = imageUrl,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxWidth().height(220.dp).clip(MaterialTheme.shapes.extraLarge),
+                )
+            }
+            Text(
+                "QUICK READ",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+            )
+            SelectionContainer {
+                Text(
+                    article.title,
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+            }
+            Text(
+                listOfNotNull(article.author, article.publishDate.toString()).joinToString("  ·  "),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            HorizontalDivider()
+            SelectionContainer {
+                RichText(
+                    text = article.content,
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+            Spacer(Modifier.height(48.dp))
+        }
+    }
+}
+
+@Composable
+private fun ReaderHeader(
     state: ReaderContract.State,
     isSearchActive: Boolean,
     showMenuIcon: Boolean,
@@ -324,58 +377,30 @@ private fun ReaderTopAppBar(
     onExport: (ReaderSubscriptionFormat) -> Unit,
     onImport: (ReaderSubscriptionFormat) -> Unit,
 ) {
-    // 搜索状态下的 TopBar
-    if (isSearchActive) {
-        TopAppBar(
-            title = {
-                TextField(
-                    value = state.searchQuery,
-                    onValueChange = onSearchQueryChanged,
-                    placeholder = { Text("搜索文章标题或内容...") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent,
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent
-                    ),
-                    trailingIcon = {
-                        if (state.searchQuery.isNotEmpty()) {
-                            IconButton(onClick = { onSearchQueryChanged("") }) {
-                                Icon(Icons.Default.Clear, contentDescription = "清空")
-                            }
-                        }
-                    }
-                )
+    var transferMenuExpanded by remember { mutableStateOf(false) }
+    val selectedSource = state.feedSources.firstOrNull { it.id == state.selectedFeedSourceId }
+    val unreadCount = state.articleCounts.values.sumOf { it.second }
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        ContextHero(
+            icon = Icons.Default.AutoStories,
+            title = selectedSource?.name ?: "今日阅读",
+            subtitle = if (selectedSource == null) {
+                "汇集 ${state.feedSources.size} 个订阅源，按你的节奏专注阅读"
+            } else {
+                "当前订阅源的文章、未读内容与收藏"
             },
-            navigationIcon = {
-                IconButton(onClick = {
-                    onSearchActiveChange(false)
-                    onSearchQueryChanged("") // 退出时清空搜索？或者保留？通常保留状态较好，但这里根据交互需求重置
-                }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "退出搜索")
-                }
-            },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = MaterialTheme.colorScheme.background,
-                scrolledContainerColor = MaterialTheme.colorScheme.surface,
-            )
-        )
-    } else {
-        var transferMenuExpanded by remember { mutableStateOf(false) }
-        TopAppBar(
-            title = { Text("阅读器") },
-            navigationIcon = {
+            metric = "$unreadCount 未读",
+            actions = {
                 if (showMenuIcon) {
                     IconButton(onClick = onMenuClick) {
-                        Icon(Icons.Default.Menu, contentDescription = "菜单")
+                        Icon(Icons.Default.Menu, contentDescription = "订阅源")
                     }
                 }
-            },
-            actions = {
-                IconButton(onClick = { onSearchActiveChange(true) }) {
-                    Icon(Icons.Default.Search, contentDescription = "搜索")
+                IconButton(onClick = { onSearchActiveChange(!isSearchActive) }) {
+                    Icon(
+                        if (isSearchActive) Icons.Default.Close else Icons.Default.Search,
+                        contentDescription = if (isSearchActive) "关闭搜索" else "搜索",
+                    )
                 }
                 IconButton(onClick = onRefreshAll) {
                     Icon(Icons.Default.Refresh, contentDescription = "全部刷新")
@@ -424,11 +449,26 @@ private fun ReaderTopAppBar(
                     }
                 }
             },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = MaterialTheme.colorScheme.background,
-                scrolledContainerColor = MaterialTheme.colorScheme.surface,
-            ),
         )
+
+        if (isSearchActive) {
+            OutlinedTextField(
+                value = state.searchQuery,
+                onValueChange = onSearchQueryChanged,
+                placeholder = { Text("搜索标题、作者或正文") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                shape = MaterialTheme.shapes.extraLarge,
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                trailingIcon = {
+                    if (state.searchQuery.isNotEmpty()) {
+                        IconButton(onClick = { onSearchQueryChanged("") }) {
+                            Icon(Icons.Default.Clear, contentDescription = "清空")
+                        }
+                    }
+                },
+            )
+        }
     }
 }
 
@@ -450,8 +490,6 @@ private fun FeedSourceList(
             title = "阅读器",
             subtitle = "${sources.size} 个订阅源",
         )
-        val globalDrawer = LocalAppDrawer.current
-        globalDrawer()
         SectionLabel(
             text = "订阅源",
             modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
@@ -620,11 +658,12 @@ fun FilterChips(
     onFilterChange: (ArticleFilter) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier = modifier.fillMaxWidth().padding(vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    LazyRow(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        contentPadding = PaddingValues(vertical = 2.dp),
     ) {
-        ArticleFilter.entries.forEach { filter ->
+        items(ArticleFilter.entries) { filter ->
             FilterChip(
                 selected = selectedFilter == filter,
                 onClick = { onFilterChange(filter) },

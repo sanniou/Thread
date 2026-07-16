@@ -1,13 +1,10 @@
 package ai.saniou.thread
 
-import ai.saniou.coreui.composition.LocalAppDrawer
 import ai.saniou.coreui.composition.LocalForumSourceId
-import ai.saniou.coreui.theme.CupcakeTheme
-import ai.saniou.coreui.theme.Dimens
-import ai.saniou.coreui.widgets.DrawerMenuItem
-import ai.saniou.coreui.widgets.DrawerMenuRow
+import ai.saniou.coreui.layout.ThreadAdaptiveWindow
+import ai.saniou.coreui.theme.ThreadTheme
 import ai.saniou.coreui.widgets.WorkspaceNavigationItem
-import ai.saniou.coreui.widgets.WorkspaceNavigationRail
+import ai.saniou.coreui.widgets.WorkspaceNavigationSuite
 import ai.saniou.forum.di.nmbFeatureModule
 import ai.saniou.forum.workflow.home.ChannelPage
 import ai.saniou.forum.workflow.image.nmbImagePreviewModule
@@ -49,13 +46,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.ui.Modifier
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import kotlinx.coroutines.launch
@@ -107,7 +100,7 @@ fun App(attachmentPicker: AttachmentPicker? = null) {
             }
         }
 
-        CupcakeTheme {
+        ThreadTheme {
             if (challengeRequest != null) {
                 CloudflareVerificationDialog(
                     url = challengeRequest!!.url,
@@ -128,57 +121,14 @@ fun App(attachmentPicker: AttachmentPicker? = null) {
                 screen = ForumRoute,
                 disposeBehavior = NavigatorDisposeBehavior(disposeSteps = false),
             ) { navigator ->
-                var selectedWorkspace by remember { mutableStateOf(WorkspaceDestination.FORUM) }
+                var selectedWorkspace by rememberSaveable { mutableStateOf(WorkspaceDestination.FORUM) }
                 fun navigateTo(destination: WorkspaceDestination, screen: Screen) {
                     selectedWorkspace = destination
                     navigator.replaceAll(screen)
                 }
-                val appDrawer = @Composable {
-                    DrawerMenuRow(
-                        menuItems = listOf(
-                            DrawerMenuItem(
-                                Icons.Default.Forum,
-                                "社区",
-                                selectedWorkspace == WorkspaceDestination.FORUM,
-                            ) { navigateTo(WorkspaceDestination.FORUM, ForumRoute) },
-                            DrawerMenuItem(
-                                Icons.Default.RssFeed,
-                                "阅读",
-                                selectedWorkspace == WorkspaceDestination.READER,
-                            ) { navigateTo(WorkspaceDestination.READER, ReaderRoute) },
-                            DrawerMenuItem(
-                                Icons.Default.DynamicFeed,
-                                "动态",
-                                selectedWorkspace == WorkspaceDestination.FEED,
-                            ) { navigateTo(WorkspaceDestination.FEED, FeedRoute) },
-                            DrawerMenuItem(
-                                Icons.Default.Games,
-                                "实验室",
-                                selectedWorkspace == WorkspaceDestination.LAB,
-                            ) { navigateTo(WorkspaceDestination.LAB, CellularAutomatonRoute) },
-                            DrawerMenuItem(
-                                Icons.Default.Bookmark,
-                                "收藏",
-                                selectedWorkspace == WorkspaceDestination.BOOKMARKS,
-                            ) { navigateTo(WorkspaceDestination.BOOKMARKS, BookmarkPage) },
-                            DrawerMenuItem(
-                                Icons.Default.History,
-                                "历史",
-                                selectedWorkspace == WorkspaceDestination.HISTORY,
-                            ) { navigateTo(WorkspaceDestination.HISTORY, HistoryPage()) },
-                            DrawerMenuItem(
-                                Icons.Default.Settings,
-                                "设置",
-                                selectedWorkspace == WorkspaceDestination.SETTINGS,
-                            ) { navigateTo(WorkspaceDestination.SETTINGS, SyncSettingsPage()) },
-                        )
-                    )
-                }
                 val currentScreen = navigator.lastItem
-
-                BoxWithConstraints(Modifier.fillMaxSize()) {
-                    val showWorkspaceRail = maxWidth >= Dimens.DesktopWidth
-                    val railItems = listOf(
+                ThreadAdaptiveWindow {
+                    val navigationItems = listOf(
                         WorkspaceNavigationItem(Icons.Default.Forum, "社区", selectedWorkspace == WorkspaceDestination.FORUM) {
                             navigateTo(WorkspaceDestination.FORUM, ForumRoute)
                         },
@@ -201,13 +151,8 @@ fun App(attachmentPicker: AttachmentPicker? = null) {
                             navigateTo(WorkspaceDestination.SETTINGS, SyncSettingsPage())
                         },
                     )
-                    Row(Modifier.fillMaxSize()) {
-                        if (showWorkspaceRail) {
-                            WorkspaceNavigationRail(railItems)
-                        }
-                        Box(Modifier.weight(1f).fillMaxSize()) {
+                    WorkspaceNavigationSuite(navigationItems) {
                             CompositionLocalProvider(
-                                LocalAppDrawer provides if (showWorkspaceRail) ({}) else appDrawer,
                                 LocalForumSourceId provides (currentSource ?: "nmb"),
                                 LocalAttachmentPicker provides attachmentPicker,
                             ) {
@@ -215,7 +160,6 @@ fun App(attachmentPicker: AttachmentPicker? = null) {
                                     currentScreen.Content()
                                 }
                             }
-                        }
                     }
                 }
             }

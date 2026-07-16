@@ -1,6 +1,7 @@
 package ai.saniou.forum.workflow.home
 
 import ai.saniou.coreui.state.DefaultError
+import ai.saniou.coreui.layout.LocalThreadWindowInfo
 import ai.saniou.coreui.state.PagingStateLayout
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.ModernEmptyState
@@ -49,6 +50,7 @@ fun ListThreadPage(
     onShowCache: (() -> Unit)? = null,
 ) {
     val threads = threadFlow.collectAsLazyPagingItems()
+    val windowInfo = LocalThreadWindowInfo.current
 
     PullToRefreshWrapper(
         onRefreshTrigger = { threads.refresh() },
@@ -87,8 +89,8 @@ fun ListThreadPage(
                 LazyColumn(
                     state = state,
                     contentPadding = PaddingValues(
-                        start = Dimens.page_horizontal,
-                        end = Dimens.page_horizontal,
+                        start = windowInfo.pageHorizontalPadding,
+                        end = windowInfo.pageHorizontalPadding,
                         top = Dimens.padding_medium,
                         bottom = Dimens.page_vertical
                     ),

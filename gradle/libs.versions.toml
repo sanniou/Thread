@@ -20,8 +20,7 @@ kodeinDi = "7.32.0"
 ktorfit = "2.7.5"
 ktor = "3.5.1"
 navigationCompose = "2.9.2"
-pagingRuntime = "3.5.0"
-pagingComposeCommon = "3.5.0"
+paging = "3.4.1"
 material = "1.7.3"
 material3 = "1.9.0"
 material3Adaptive = "1.2.0"
@@ -34,7 +33,6 @@ sqlite = "2.5.1"
 sqlDelight = "2.3.2"
 sketch = "4.6.0"
 zoomimage = "1.6.0"
-cashPaging = "3.3.0-alpha02-0.5.1"
 reorderable = "3.1.0"
 kmpalette = "3.1.0"
 ksoup = "0.2.6"
@@ -89,9 +87,9 @@ ktorfit-converters-call = { module = "de.jensklingenberg.ktorfit:ktorfit-convert
 ktorfit-converters-flow = { module = "de.jensklingenberg.ktorfit:ktorfit-converters-flow", version.ref = "ktorfit" }
 ktorfit-converters-response = { module = "de.jensklingenberg.ktorfit:ktorfit-converters-response", version.ref = "ktorfit" }
 navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
-paging-runtime = { module = "androidx.paging:paging-runtime", version.ref = "pagingRuntime" }
-paging-common = { module = "androidx.paging:paging-common", version.ref = "pagingRuntime" }
-paging-compose = { module = "androidx.paging:paging-compose", version.ref = "pagingComposeCommon" }
+paging-runtime = { module = "androidx.paging:paging-runtime", version.ref = "paging" }
+paging-common = { module = "androidx.paging:paging-common", version.ref = "paging" }
+paging-compose = { module = "androidx.paging:paging-compose", version.ref = "paging" }
 material-icons = { group = "org.jetbrains.compose.material", name = "material-icons-core", version.ref = "material" }
 material-icons-extended = { group = "org.jetbrains.compose.material", name = "material-icons-extended", version.ref = "material" }
 material3 = { group = "org.jetbrains.compose.material3", name = "material3", version.ref = "material3" }
@@ -138,10 +136,6 @@ sketch-extensions-compose-resources = { group = "io.github.panpf.sketch4", name 
 sketch-extensions-compose = { group = "io.github.panpf.sketch4", name = 'sketch-extensions-compose', version.ref = "sketch" }
 sketch-ktor = { group = "io.github.panpf.sketch4", name = 'sketch-http-ktor3', version.ref = "sketch" }
 sketch-svg = { group = "io.github.panpf.sketch4", name = 'sketch-svg', version.ref = "sketch" }
-#cash paging
-cash-paging-common = { group = "app.cash.paging", name = "paging-common", version.ref = "cashPaging" }
-cash-paging-compose-common = { group = "app.cash.paging", name = "paging-compose-common", version.ref = "cashPaging" }
-
 # zoom
 zoom = { group = "io.github.panpf.zoomimage", name = "zoomimage-compose", version.ref = "zoomimage" }
 zoom-sketch = { group = "io.github.panpf.zoomimage", name = "zoomimage-compose-sketch4", version.ref = "zoomimage" }

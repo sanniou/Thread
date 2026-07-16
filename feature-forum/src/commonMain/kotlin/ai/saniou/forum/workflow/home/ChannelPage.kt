@@ -1,6 +1,7 @@
 package ai.saniou.forum.workflow.home
 
-import ai.saniou.coreui.composition.LocalAppDrawer
+import ai.saniou.coreui.layout.AdaptiveSidebarScaffold
+import ai.saniou.coreui.layout.LocalThreadWindowInfo
 import ai.saniou.coreui.state.StateLayout
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.RefreshDiagnosticsBanner
@@ -25,7 +26,7 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -54,10 +55,6 @@ import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalDrawerSheet
-import androidx.compose.material3.ModalNavigationDrawer
-import androidx.compose.material3.PermanentDrawerSheet
-import androidx.compose.material3.PermanentNavigationDrawer
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
@@ -113,8 +110,8 @@ data class ChannelPage(
             }
         }
 
-        BoxWithConstraints {
-            val isMobile = maxWidth < ai.saniou.coreui.theme.Dimens.MobileWidth
+        val windowInfo = LocalThreadWindowInfo.current
+        Box(Modifier.fillMaxSize()) {
 
             val drawerContent = @Composable {
                 ForumDrawerContent(
@@ -122,56 +119,31 @@ data class ChannelPage(
                     viewModel = viewModel,
                     navigator = navigator,
                     onCloseDrawer = {
-                        if (isMobile) {
+                        if (!windowInfo.hasPermanentFeatureSidebar) {
                             scope.launch { actualDrawerState.close() }
                         }
                     },
-                    snackbarHostState = snackbarHostState
                 )
             }
 
-            val onMenuClick = {
-                scope.launch { actualDrawerState.open() }
-                Unit
+            AdaptiveSidebarScaffold(
+                drawerState = actualDrawerState,
+                coroutineScope = scope,
+                sidebar = drawerContent,
+            ) { showMenu, openSidebar ->
+                MainContent(state, if (showMenu) openSidebar else null)
             }
-
-            if (isMobile) {
-                ModalNavigationDrawer(
-                    drawerState = actualDrawerState,
-                    drawerContent = {
-                        ModalDrawerSheet(
-                            modifier = Modifier.width(Dimens.sidebarWidth),
-                            drawerContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                            drawerContentColor = MaterialTheme.colorScheme.onSurface
-                        ) {
-                            drawerContent()
-                        }
-                    }
-                ) {
-                    MainContent(state, onMenuClick)
-                }
-            } else {
-                PermanentNavigationDrawer(
-                    drawerContent = {
-                        PermanentDrawerSheet(
-                            modifier = Modifier.width(Dimens.sidebarWidth),
-                            drawerContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                            drawerContentColor = MaterialTheme.colorScheme.onSurface
-                        ) {
-                            drawerContent()
-                        }
-                    }
-                ) {
-                    MainContent(state, onMenuClick)
-                }
-            }
+            SnackbarHost(
+                hostState = snackbarHostState,
+                modifier = Modifier.align(Alignment.BottomCenter),
+            )
         }
     }
 
     @Composable
     private fun MainContent(
         state: ChannelContract.ChannelUiState,
-        onMenuClick: () -> Unit
+        onMenuClick: (() -> Unit)?
     ) {
         val viewModel: ChannelViewModel = rememberScreenModel()
 
@@ -225,7 +197,6 @@ data class ChannelPage(
         viewModel: ChannelViewModel,
         navigator: Navigator,
         onCloseDrawer: () -> Unit,
-        snackbarHostState: SnackbarHostState
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             val currentSource = state.availableSources.firstOrNull { it.id == state.currentSourceId }
@@ -234,9 +205,6 @@ data class ChannelPage(
                 title = "社区",
                 subtitle = currentSource?.name ?: "选择内容来源",
             )
-
-            val globalDrawer = LocalAppDrawer.current
-            globalDrawer()
 
             SectionLabel(
                 text = "内容来源",
@@ -307,10 +275,6 @@ data class ChannelPage(
                     }
                 }
             }
-            SnackbarHost(
-                hostState = snackbarHostState,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            )
         }
     }
 

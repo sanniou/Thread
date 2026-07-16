@@ -1,21 +1,35 @@
 package ai.saniou.coreui.widgets
 
-import ai.saniou.coreui.theme.Dimens
+import ai.saniou.coreui.layout.LocalThreadWindowInfo
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreHoriz
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -32,18 +46,135 @@ data class WorkspaceNavigationItem(
     val onClick: () -> Unit,
 )
 
+/**
+ * Product-level navigation that becomes a bottom bar on phones, a compact rail
+ * on tablets and a labelled rail on desktop. Every destination remains
+ * reachable in compact mode through the overflow sheet.
+ */
+@Composable
+fun WorkspaceNavigationSuite(
+    items: List<WorkspaceNavigationItem>,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    val windowInfo = LocalThreadWindowInfo.current
+    if (windowInfo.usesBottomNavigation) {
+        WorkspaceBottomNavigation(items = items, modifier = modifier, content = content)
+    } else {
+        Row(modifier.fillMaxSize()) {
+            WorkspaceNavigationRail(items)
+            Box(Modifier.weight(1f).fillMaxSize()) { content() }
+        }
+    }
+}
+
+@Composable
+private fun WorkspaceBottomNavigation(
+    items: List<WorkspaceNavigationItem>,
+    modifier: Modifier,
+    content: @Composable () -> Unit,
+) {
+    var showOverflow by remember { mutableStateOf(false) }
+    val primaryItems = items.filterNot { it.bottom }.take(4)
+    val overflowItems = items.filterNot { it in primaryItems }
+
+    Scaffold(
+        modifier = modifier,
+        containerColor = MaterialTheme.colorScheme.background,
+        bottomBar = {
+            NavigationBar(
+                containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                tonalElevation = 0.dp,
+            ) {
+                primaryItems.forEach { item ->
+                    NavigationBarItem(
+                        selected = item.selected,
+                        onClick = item.onClick,
+                        icon = { Icon(item.icon, contentDescription = item.label) },
+                        label = { Text(item.label, maxLines = 1) },
+                        colors = NavigationBarItemDefaults.colors(
+                            indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                        ),
+                    )
+                }
+                NavigationBarItem(
+                    selected = overflowItems.any { it.selected },
+                    onClick = { showOverflow = true },
+                    icon = { Icon(Icons.Default.MoreHoriz, contentDescription = "更多") },
+                    label = { Text("更多") },
+                )
+            }
+        },
+    ) { padding ->
+        Box(Modifier.padding(padding).fillMaxSize()) { content() }
+    }
+
+    if (showOverflow) {
+        ModalBottomSheet(onDismissRequest = { showOverflow = false }) {
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 28.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                Text(
+                    text = "工作区",
+                    style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp),
+                )
+                primaryItems.forEach { item ->
+                    CompactDestinationItem(item) { showOverflow = false }
+                }
+                HorizontalDivider(Modifier.padding(vertical = 8.dp))
+                overflowItems.forEach { item ->
+                    CompactDestinationItem(item) { showOverflow = false }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CompactDestinationItem(
+    item: WorkspaceNavigationItem,
+    onDismiss: () -> Unit,
+) {
+    Surface(
+        onClick = {
+            item.onClick()
+            onDismiss()
+        },
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        color = if (item.selected) {
+            MaterialTheme.colorScheme.primaryContainer
+        } else {
+            MaterialTheme.colorScheme.surface
+        },
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Icon(item.icon, contentDescription = null)
+            Text(item.label, style = MaterialTheme.typography.titleMedium)
+        }
+    }
+}
+
 @Composable
 fun WorkspaceNavigationRail(
     items: List<WorkspaceNavigationItem>,
     modifier: Modifier = Modifier,
 ) {
+    val windowInfo = LocalThreadWindowInfo.current
     Surface(
-        modifier = modifier.width(Dimens.workspaceRailWidth).fillMaxHeight(),
+        modifier = modifier.width(windowInfo.navigationRailWidth).fillMaxHeight(),
         color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 1.dp,
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp,
     ) {
         Column(
-            modifier = Modifier.fillMaxHeight().padding(horizontal = 10.dp, vertical = 16.dp),
+            modifier = Modifier.fillMaxHeight().padding(horizontal = 9.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
@@ -51,31 +182,33 @@ fun WorkspaceNavigationRail(
                 shape = MaterialTheme.shapes.large,
                 color = MaterialTheme.colorScheme.primary,
             ) {
-                Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
+                Box(Modifier.size(46.dp), contentAlignment = Alignment.Center) {
                     Text(
                         "T",
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onPrimary,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.Black,
                     )
                 }
             }
-            Text(
-                "THREAD",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontWeight = FontWeight.Bold,
-            )
+            if (windowInfo.showsNavigationLabels) {
+                Text(
+                    "THREAD",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
             Spacer(Modifier.size(10.dp))
-            items.filterNot { it.bottom }.forEach { WorkspaceRailItem(it) }
+            items.filterNot { it.bottom }.forEach { WorkspaceRailItem(it, windowInfo.showsNavigationLabels) }
             Spacer(Modifier.weight(1f))
-            items.filter { it.bottom }.forEach { WorkspaceRailItem(it) }
+            items.filter { it.bottom }.forEach { WorkspaceRailItem(it, windowInfo.showsNavigationLabels) }
         }
     }
 }
 
 @Composable
-private fun WorkspaceRailItem(item: WorkspaceNavigationItem) {
+private fun WorkspaceRailItem(item: WorkspaceNavigationItem, showLabel: Boolean) {
     val container = if (item.selected) {
         MaterialTheme.colorScheme.primaryContainer
     } else {
@@ -88,23 +221,25 @@ private fun WorkspaceRailItem(item: WorkspaceNavigationItem) {
     }
     Surface(
         modifier = Modifier.fillMaxWidth().clickable(onClick = item.onClick),
-        shape = MaterialTheme.shapes.medium,
+        shape = MaterialTheme.shapes.large,
         color = container,
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 4.dp, vertical = 10.dp),
+            modifier = Modifier.padding(horizontal = 4.dp, vertical = if (showLabel) 9.dp else 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(5.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Icon(item.icon, contentDescription = item.label, tint = content, modifier = Modifier.size(22.dp))
-            Text(
-                item.label,
-                style = MaterialTheme.typography.labelSmall,
-                color = content,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                textAlign = TextAlign.Center,
-            )
+            if (showLabel) {
+                Text(
+                    item.label,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = content,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.Center,
+                )
+            }
         }
     }
 }

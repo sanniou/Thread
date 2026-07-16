@@ -2,21 +2,21 @@ package ai.saniou.forum.ui.components
 
 import ai.saniou.corecommon.utils.toRelativeTimeString
 import ai.saniou.coreui.theme.Dimens
+import ai.saniou.coreui.widgets.ThreadCard
 import ai.saniou.thread.domain.model.forum.Image
 import ai.saniou.thread.domain.model.forum.Topic
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ChatBubbleOutline
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -35,21 +35,11 @@ fun TopicCard(
     onUserClick: ((String) -> Unit)? = null,
     showChannelBadge: Boolean = true,
 ) {
-    Card(
+    ThreadCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        shape = MaterialTheme.shapes.large,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f)),
     ) {
-        Column(
-            modifier = Modifier.padding(Dimens.padding_large),
-            verticalArrangement = Arrangement.spacedBy(Dimens.padding_medium)
-        ) {
             TopicMetaSection(
                 topic = topic,
                 onUserClick = onUserClick,
@@ -128,10 +118,10 @@ fun TopicCard(
                     }
                 }
             }
-        }
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun TopicMetaSection(
     topic: Topic,
@@ -157,13 +147,6 @@ private fun TopicMetaSection(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            topic.tags.forEach { tag ->
-                Badge(
-                    text = tag.name,
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                )
-            }
         }
 
         Row(
@@ -185,6 +168,20 @@ private fun TopicMetaSection(
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+        }
+        if (topic.tags.isNotEmpty()) {
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(Dimens.padding_tiny),
+                verticalArrangement = Arrangement.spacedBy(Dimens.padding_tiny),
+            ) {
+                topic.tags.forEach { tag ->
+                    Badge(
+                        text = tag.name,
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                    )
+                }
+            }
         }
     }
 }

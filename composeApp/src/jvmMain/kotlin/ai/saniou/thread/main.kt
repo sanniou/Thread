@@ -1,6 +1,5 @@
 package ai.saniou.thread
 
-import ai.saniou.coreui.theme.CupcakeTheme
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.DpSize
@@ -28,16 +27,14 @@ fun main(args: Array<String>) {
             position = WindowPosition(Alignment.Center),
             size = DpSize(1240.dp, 820.dp),
         )
-        CupcakeTheme {
-            val attachmentPicker = remember { DesktopAttachmentPicker() }
-            Window(
-                onCloseRequest = ::exitApplication,
-                title = "Thread · Forum & Reader",
-                undecorated = false,
-                state = windowState
-            ) {
-                App(attachmentPicker = attachmentPicker)
-            }
+        val attachmentPicker = remember { DesktopAttachmentPicker() }
+        Window(
+            onCloseRequest = ::exitApplication,
+            title = "Thread · Forum & Reader",
+            undecorated = false,
+            state = windowState
+        ) {
+            App(attachmentPicker = attachmentPicker)
         }
     }
 }

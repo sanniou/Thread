@@ -3,16 +3,21 @@ package ai.saniou.coreui.theme
 import androidx.compose.ui.unit.dp
 
 object Dimens {
-    /**
-     * The width at which the reader page switches to mobile layout.
-     */
-    val MobileWidth = 720.dp
-    val DesktopWidth = 960.dp
-    val ExpandedWidth = 1280.dp
+    val CompactWidth = 700.dp
+    val MobileWidth = CompactWidth
+    val DesktopWidth = 1100.dp
+    val ExpandedWidth = 1440.dp
+    val LargeWidth = 1600.dp
+    val CompactHeight = 560.dp
+    val compactRailWidth = 72.dp
     val workspaceRailWidth = 92.dp
+    val compactSidebarWidth = 300.dp
+    val mediumSidebarWidth = 320.dp
     val sidebarWidth = 304.dp
-    val contentMaxWidth = 1040.dp
-    val readingMaxWidth = 820.dp
+    val largeSidebarWidth = 328.dp
+    val contentMaxWidth = 1120.dp
+    val readingMaxWidth = 880.dp
+    val articleListMaxWidth = 960.dp
 
     // Padding (Semantic)
     val padding_tiny = 4.dp

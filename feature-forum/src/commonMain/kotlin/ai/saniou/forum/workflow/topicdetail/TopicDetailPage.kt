@@ -1,6 +1,8 @@
 package ai.saniou.forum.workflow.topicdetail
 
 import ai.saniou.coreui.composition.LocalForumSourceId
+import ai.saniou.coreui.layout.LocalThreadWindowInfo
+import ai.saniou.coreui.layout.ReadingCanvas
 import ai.saniou.coreui.state.*
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.SaniouTopAppBar
@@ -232,46 +234,43 @@ data class TopicDetailPage(
                 }
             }
         ) { innerPadding ->
-            ThreadContentRouter(
-                modifier = Modifier.padding(innerPadding),
-                state = state,
-                lazyListState = lazyListState,
-                onRefresh = { viewModel.onEvent(Event.Refresh) },
-                onTogglePoOnly = { viewModel.onEvent(Event.TogglePoOnlyMode) },
-                onRefClick = { refId ->
-                    highlightedReplyId = refId.toString()
-                    currentReferenceId = refId
-                    referenceViewModel.onEvent(
-                        ReferenceContract.Event.GetReference(
-                            refId
-                        )
-                    )
-                    showReferencePopup = true
-                },
-                onImageClick = { initialIndex, images ->
-                    navigator.push(
-                        ImagePreviewPage(
-                            ImagePreviewViewModelParams(
-                                imageProvider = ThreadImageProvider(
-                                    sourceId = sourceId,
-                                    threadId = threadId.toLongOrNull() ?: 0L,
-                                    getTopicImagesUseCase = di.direct.instance()
-                                ),
-                                initialImages = images,
-                                initialIndex = initialIndex
+            ReadingCanvas(modifier = Modifier.padding(innerPadding)) {
+                ThreadContentRouter(
+                    state = state,
+                    lazyListState = lazyListState,
+                    onRefresh = { viewModel.onEvent(Event.Refresh) },
+                    onTogglePoOnly = { viewModel.onEvent(Event.TogglePoOnlyMode) },
+                    onRefClick = { refId ->
+                        highlightedReplyId = refId.toString()
+                        currentReferenceId = refId
+                        referenceViewModel.onEvent(ReferenceContract.Event.GetReference(refId))
+                        showReferencePopup = true
+                    },
+                    onImageClick = { initialIndex, images ->
+                        navigator.push(
+                            ImagePreviewPage(
+                                ImagePreviewViewModelParams(
+                                    imageProvider = ThreadImageProvider(
+                                        sourceId = sourceId,
+                                        threadId = threadId.toLongOrNull() ?: 0L,
+                                        getTopicImagesUseCase = di.direct.instance()
+                                    ),
+                                    initialImages = images,
+                                    initialIndex = initialIndex
+                                )
                             )
                         )
-                    )
-                },
-                onUpdateLastReadId = { id -> viewModel.onEvent(Event.UpdateLastReadReplyId(id)) },
-                onCopy = { viewModel.onEvent(Event.CopyContent(it)) },
-                onBookmark = { viewModel.onEvent(Event.BookmarkReply(it)) },
-                onBookmarkImage = { image -> viewModel.onEvent(Event.BookmarkImage(image)) },
-                onUpvote = { viewModel.onEvent(Event.UpvoteTopic) },
-                onUserClick = { userHash -> navigator.push(UserDetailPage(sourceId, userHash)) },
-                onReplyClicked = { commentId -> viewModel.onEvent(Event.ShowSubComments(commentId)) },
-                highlightedReplyId = highlightedReplyId
-            )
+                    },
+                    onUpdateLastReadId = { id -> viewModel.onEvent(Event.UpdateLastReadReplyId(id)) },
+                    onCopy = { viewModel.onEvent(Event.CopyContent(it)) },
+                    onBookmark = { viewModel.onEvent(Event.BookmarkReply(it)) },
+                    onBookmarkImage = { image -> viewModel.onEvent(Event.BookmarkImage(image)) },
+                    onUpvote = { viewModel.onEvent(Event.UpvoteTopic) },
+                    onUserClick = { userHash -> navigator.push(UserDetailPage(sourceId, userHash)) },
+                    onReplyClicked = { commentId -> viewModel.onEvent(Event.ShowSubComments(commentId)) },
+                    highlightedReplyId = highlightedReplyId
+                )
+            }
         }
 
         // 跳页对话框
@@ -337,7 +336,7 @@ private fun ThreadContentRouter(
     highlightedReplyId: String?,
 ) {
     Box(
-        modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
+        modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface),
         contentAlignment = Alignment.TopCenter,
     ) {
         StateLayout(
@@ -603,15 +602,16 @@ private fun ThreadList(
     onUserClick: (String) -> Unit,
     highlightedReplyId: String?,
 ) {
+    val windowInfo = LocalThreadWindowInfo.current
     val replies = state.replies.collectAsLazyPagingItems()
 
     LazyColumn(
         state = lazyListState,
         modifier = Modifier,
         contentPadding = PaddingValues(
-            start = Dimens.page_horizontal,
+            start = windowInfo.pageHorizontalPadding,
             top = 12.dp,
-            end = Dimens.page_horizontal,
+            end = windowInfo.pageHorizontalPadding,
             bottom = 80.dp,
         ),
         verticalArrangement = Arrangement.spacedBy(12.dp)

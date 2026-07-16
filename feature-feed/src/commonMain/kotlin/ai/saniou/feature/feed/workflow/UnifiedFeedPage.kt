@@ -1,13 +1,14 @@
 package ai.saniou.feature.feed.workflow
 
 import ai.saniou.corecommon.utils.toRelativeTimeString
-import ai.saniou.coreui.composition.LocalAppDrawer
+import ai.saniou.coreui.layout.AdaptiveSidebarScaffold
+import ai.saniou.coreui.layout.LocalThreadWindowInfo
 import ai.saniou.coreui.state.PagingStateLayout
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.AppDrawerItem
 import ai.saniou.coreui.widgets.RefreshDiagnosticsBanner
 import ai.saniou.coreui.widgets.ModernEmptyState
-import ai.saniou.coreui.widgets.PageHeader
+import ai.saniou.coreui.widgets.ContextHero
 import ai.saniou.coreui.widgets.SidebarHeader
 import ai.saniou.coreui.widgets.ThreadCard
 import ai.saniou.coreui.widgets.ArticleItem as ArticleListItem
@@ -21,7 +22,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -51,10 +51,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalDrawerSheet
-import androidx.compose.material3.ModalNavigationDrawer
-import androidx.compose.material3.PermanentDrawerSheet
-import androidx.compose.material3.PermanentNavigationDrawer
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -102,53 +98,29 @@ fun UnifiedFeedPage(
         }
     }
 
-    BoxWithConstraints {
-        val isMobile = maxWidth < Dimens.MobileWidth
-        val drawerState = rememberDrawerState(DrawerValue.Closed)
-        val scope = rememberCoroutineScope()
-        val drawerContent = @Composable {
+    val drawerState = rememberDrawerState(DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
+    val drawerContent = @Composable {
             FeedFilterDrawer(
                 state = state,
                 onEvent = viewModel::onEvent,
             )
-        }
-        val content = @Composable {
+    }
+    AdaptiveSidebarScaffold(
+        drawerState = drawerState,
+        coroutineScope = scope,
+        sidebar = drawerContent,
+    ) { showMenu, openSidebar ->
             FeedScaffold(
                 state = state,
                 timeline = timeline,
                 snackbarHostState = snackbarHostState,
-                showMenu = isMobile,
-                onMenu = { scope.launch { drawerState.open() } },
+                showMenu = showMenu,
+                onMenu = openSidebar,
                 onRefresh = { viewModel.onEvent(FeedContract.Event.Refresh) },
                 onOpenTopic = onOpenTopic,
                 onOpenArticle = onOpenArticle,
             )
-        }
-
-        if (isMobile) {
-            ModalNavigationDrawer(
-                drawerState = drawerState,
-                drawerContent = {
-                    ModalDrawerSheet(
-                        modifier = Modifier.width(Dimens.sidebarWidth),
-                        drawerContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                    ) { drawerContent() }
-                },
-                content = content,
-            )
-        } else {
-            PermanentNavigationDrawer(
-                drawerContent = {
-                    PermanentDrawerSheet(
-                        modifier = Modifier.width(Dimens.sidebarWidth),
-                        drawerContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                    ) {
-                        drawerContent()
-                    }
-                },
-                content = content,
-            )
-        }
     }
 }
 
@@ -157,7 +129,6 @@ private fun FeedFilterDrawer(
     state: FeedContract.State,
     onEvent: (FeedContract.Event) -> Unit,
 ) {
-    val globalDrawer = LocalAppDrawer.current
     Column(modifier = Modifier.fillMaxSize()) {
         SidebarHeader(
             icon = Icons.Default.DynamicFeed,
@@ -209,7 +180,6 @@ private fun FeedFilterDrawer(
 
         Spacer(Modifier.weight(1f))
         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-        globalDrawer()
     }
 }
 
@@ -232,12 +202,16 @@ private fun FeedScaffold(
                 .background(MaterialTheme.colorScheme.background),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            PageHeader(
+            ContextHero(
+                icon = Icons.Default.DynamicFeed,
                 title = "聚合信息流",
-                eyebrow = "TIMELINE",
-                subtitle = "论坛主题与订阅文章组成的一条时间线",
+                subtitle = "论坛讨论与订阅文章，合并为一条可控时间线",
+                metric = "${state.selectedSourceIds.size + if (state.includeReader) 1 else 0} 个范围",
                 modifier = Modifier.fillMaxWidth().widthIn(max = Dimens.contentMaxWidth)
-                    .padding(horizontal = Dimens.page_horizontal, vertical = 20.dp),
+                    .padding(
+                        horizontal = LocalThreadWindowInfo.current.pageHorizontalPadding,
+                        vertical = 18.dp,
+                    ),
                 actions = {
                     if (showMenu) {
                         IconButton(onClick = onMenu) {
@@ -266,7 +240,7 @@ private fun FeedScaffold(
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                        horizontal = Dimens.page_horizontal,
+                        horizontal = LocalThreadWindowInfo.current.pageHorizontalPadding,
                         vertical = 8.dp,
                     ),
                     verticalArrangement = Arrangement.spacedBy(12.dp),

@@ -1,7 +1,10 @@
 package ai.saniou.reader.workflow.articledetail
 
 import ai.saniou.corecommon.utils.toRelativeTimeString
+import ai.saniou.coreui.layout.LocalThreadWindowInfo
+import ai.saniou.coreui.layout.ReadingCanvas
 import ai.saniou.coreui.theme.Dimens
+import ai.saniou.coreui.widgets.NetworkImage
 import ai.saniou.coreui.widgets.RichText
 import ai.saniou.coreui.widgets.SaniouTopAppBar
 import ai.saniou.thread.domain.model.reader.Article
@@ -20,6 +23,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
@@ -215,68 +220,73 @@ private fun ArticleDetailTopAppBar(
 
 @Composable
 private fun ArticleContent(article: Article, fontSizeScale: Float) {
-  Box(
-    modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
-    contentAlignment = Alignment.TopCenter,
-  ) {
-    Column(
-        modifier = Modifier.fillMaxHeight().fillMaxWidth().widthIn(max = Dimens.readingMaxWidth)
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = Dimens.page_horizontal, vertical = 32.dp)
-    ) {
-        // 标题区
-        SelectionContainer {
-            Column {
-                Text(
-                    text = article.title,
-                    style = MaterialTheme.typography.headlineLarge.copy(
-                        fontWeight = FontWeight.Bold
-                    ),
-                    color = MaterialTheme.colorScheme.onSurface
+    val windowInfo = LocalThreadWindowInfo.current
+    ReadingCanvas {
+        Column(
+            modifier = Modifier.fillMaxHeight().fillMaxWidth().widthIn(max = Dimens.readingMaxWidth)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = windowInfo.pageHorizontalPadding, vertical = 32.dp)
+        ) {
+            article.imageUrl?.takeIf { it.isNotBlank() }?.let { imageUrl ->
+                NetworkImage(
+                    imageUrl = imageUrl,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 220.dp, max = 360.dp)
+                        .clip(MaterialTheme.shapes.extraLarge),
                 )
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(Modifier.height(32.dp))
+            }
 
-                // 元数据区 (作者、时间、来源)
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    if (article.author != null) {
-                        AssistChip(
-                            onClick = {},
-                            label = { Text(article.author!!) },
-                            leadingIcon = { Icon(Icons.Default.Person, null, Modifier.size(16.dp)) }
+            SelectionContainer {
+                Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                    Text(
+                        text = "READER  ·  ${article.publishDate.toRelativeTimeString()}",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Text(
+                        text = article.title,
+                        style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        article.author?.takeIf { it.isNotBlank() }?.let { author ->
+                            AssistChip(
+                                onClick = {},
+                                label = { Text(author) },
+                                leadingIcon = { Icon(Icons.Default.Person, null, Modifier.size(16.dp)) },
+                            )
+                        }
+                        Text(
+                            text = if (article.isBookmarked) "已收藏到稍后阅读" else "沉浸阅读模式",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
-                    Text(
-                        text = article.publishDate.toRelativeTimeString(),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
                 }
             }
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 28.dp))
+
+            SelectionContainer {
+                val baseStyle = MaterialTheme.typography.bodyLarge
+                val scaledStyle = baseStyle.copy(
+                    fontSize = baseStyle.fontSize * fontSizeScale,
+                    lineHeight = baseStyle.lineHeight * fontSizeScale,
+                )
+                RichText(
+                    text = article.content,
+                    style = scaledStyle,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+            Spacer(modifier = Modifier.height(80.dp))
         }
-
-        HorizontalDivider(modifier = Modifier.padding(vertical = 24.dp))
-
-        // 正文内容
-        SelectionContainer {
-            // 注意：这里假设 RichText 支持 modifier 或 style 调整。
-            // 如果 RichText 是第三方库且不完全支持 textStyle scale，可能需要调整 RichText 实现。
-            // 这里我们传递放大后的 style。
-            val baseStyle = MaterialTheme.typography.bodyLarge
-            val scaledStyle = baseStyle.copy(fontSize = baseStyle.fontSize * fontSizeScale)
-
-            RichText(
-                text = article.content,
-                style = scaledStyle,
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-
-        // 底部留白
-        Spacer(modifier = Modifier.height(64.dp))
     }
-  }
 }

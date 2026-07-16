@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.12.0 - 2026-07-16
+
+Cross-platform adaptive workspace release.
+
+- SQLDelight 2.3.2 and AndroidX Paging 3.4.1 are the explicit shared pagination baseline for Android, iOS and Desktop; obsolete Cash Paging catalog aliases are removed.
+- A single common window capability model replaces page-local width checks and drives compact, medium, expanded and large layouts.
+- Global navigation now becomes a bottom bar with an overflow sheet on phones, a compact rail on medium windows and a labelled workspace rail on desktop.
+- Forum, Reader and Feed share one adaptive feature-sidebar scaffold; the old injected global drawer hierarchy and its unused components are deleted.
+- Reader gains a large-window three-pane flow with inline article preview, responsive image summaries, search hero and a dedicated immersive reading canvas.
+- Forum topic cards, timeline surfaces and thread detail share responsive padding, tag wrapping and the same focused reading canvas.
+- `:composeApp:compileKotlinJvm` passes under JDK 21 as the single Desktop verification gate for this phase.
+
 ## 0.11.0 - 2026-07-16
 
 Desktop workspace redesign release.
