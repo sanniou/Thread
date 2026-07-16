@@ -47,6 +47,13 @@ class DefaultSourceCatalog(
     override val availableSources: StateFlow<List<Source>> = mutableSources.asStateFlow()
 
     init {
+        require(builtInRegistrations.size == builtIns.size) { "Duplicate built-in source id" }
+        require(factoryByType.size == factories.size) { "Duplicate runtime source factory type" }
+        builtIns.forEach { (descriptor, registration) ->
+            require(descriptor.id == registration.source.id) {
+                "Built-in descriptor '${descriptor.id}' does not match source '${registration.source.id}'"
+            }
+        }
         rebuild(mutableDescriptors.value)
         scope.launch {
             val restored = loadDescriptors()
@@ -126,6 +133,9 @@ class DefaultSourceCatalog(
                     ?: cached
                     ?: factoryByType[descriptor.type]?.create(descriptor)?.also { newlyCreated += it }
                     ?: error("No source implementation for ${descriptor.type}")
+                check(registration.source.id == descriptor.id) {
+                    "Runtime factory created '${registration.source.id}' for descriptor '${descriptor.id}'"
+                }
                 if (descriptor.id !in builtInRegistrations) {
                     nextDynamic[descriptor.id] = descriptor to registration
                 }

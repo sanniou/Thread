@@ -67,8 +67,12 @@ class PostViewModel(
                 it.copy(postBody = it.postBody.copy(title = event.title))
             }
 
-            is Event.UpdateImage -> _state.update { it.copy(image = event.image) }
-            is Event.ToggleWater -> _state.update { it.copy(water = event.water) }
+            is Event.UpdateImage -> _state.update {
+                it.copy(postBody = it.postBody.copy(attachment = event.image))
+            }
+            is Event.ToggleWater -> _state.update {
+                it.copy(postBody = it.postBody.copy(water = event.water))
+            }
             Event.ToggleEmoticonPicker -> _state.update {
                 it.copy(showEmoticonPicker = !it.showEmoticonPicker)
             }
@@ -102,19 +106,13 @@ class PostViewModel(
                     createReplyUseCase(
                         sourceId = params.sourceId,
                         topicId = params.topicId,
-                        draft = s.postBody.copy(
-                            attachment = s.image,
-                            water = s.water,
-                        ),
+                        draft = s.postBody,
                     )
                 } else if (params.channelId != null) {
                     createThreadUseCase(
                         sourceId = params.sourceId,
                         channelId = params.channelId,
-                        draft = s.postBody.copy(
-                            attachment = s.image,
-                            water = s.water,
-                        ),
+                        draft = s.postBody,
                     )
                 } else {
                     throw IllegalStateException("channelId and topicId cannot both be null")

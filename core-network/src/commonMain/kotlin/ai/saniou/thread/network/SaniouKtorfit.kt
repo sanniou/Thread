@@ -53,8 +53,13 @@ fun SaniouKtorfit(
                         println(message)
                     }
                 }
-                level = LogLevel.ALL
-                sanitizeHeader { header -> header == HttpHeaders.Authorization }
+                level = LogLevel.INFO
+                sanitizeHeader { header ->
+                    header == HttpHeaders.Authorization ||
+                        header == HttpHeaders.Cookie ||
+                        header == HttpHeaders.SetCookie ||
+                        header.equals("User-Api-Key", ignoreCase = true)
+                }
             }
             clientConfig()
         }

@@ -1,11 +1,16 @@
 package ai.saniou.coreui.state
 
+import ai.saniou.thread.domain.refresh.FailureClassifier
+import ai.saniou.thread.domain.refresh.RefreshFailureKind
+
 /**
  * 错误类型枚举
  */
 enum class AppErrorType {
     NETWORK,
     SERVER,
+    AUTHENTICATION,
+    RATE_LIMIT,
     UNKNOWN
 }
 
@@ -25,35 +30,22 @@ data class AppError(
     val onRetry: (() -> Unit)? = null
 )
 
-/**
- * 将 Throwable 转换为 AppError
- *
- * 这里可以根据具体的异常类型进行映射，例如：
- * - IOException -> AppErrorType.NETWORK
- * - HttpException -> AppErrorType.SERVER
- */
 fun Throwable.toAppError(onRetry: (() -> Unit)? = null): AppError {
-    // TODO: 根据实际使用的网络库（如 Ktor/Retrofit）添加具体的异常判断
-    // 目前简单粗暴地根据是否是 IO 异常来判断是否是网络错误
-    // 实际项目中应该根据项目依赖的具体异常类型进行判断
-    val isNetworkError = this::class.simpleName?.contains("UnknownHostException") == true ||
-            this::class.simpleName?.contains("ConnectException") == true ||
-            this::class.simpleName?.contains("SocketTimeoutException") == true ||
-            this.message?.contains("Failed to connect") == true
-
-    return if (isNetworkError) {
-        AppError(
-            type = AppErrorType.NETWORK,
-            message = "网络连接失败，请检查您的网络设置",
-            throwable = this,
-            onRetry = onRetry
-        )
-    } else {
-        AppError(
-            type = AppErrorType.SERVER,
-            message = this.message ?: "服务器繁忙，请稍后再试",
-            throwable = this,
-            onRetry = onRetry
-        )
+    val kind = FailureClassifier.classify(this)
+    val type = when (kind) {
+        RefreshFailureKind.OFFLINE, RefreshFailureKind.TIMEOUT -> AppErrorType.NETWORK
+        RefreshFailureKind.AUTHENTICATION -> AppErrorType.AUTHENTICATION
+        RefreshFailureKind.RATE_LIMIT -> AppErrorType.RATE_LIMIT
+        RefreshFailureKind.REMOTE -> AppErrorType.SERVER
+        RefreshFailureKind.UNKNOWN -> AppErrorType.UNKNOWN
     }
+    val userMessage = when (kind) {
+        RefreshFailureKind.OFFLINE -> "网络不可用，请检查连接"
+        RefreshFailureKind.TIMEOUT -> "请求超时，请稍后重试"
+        RefreshFailureKind.AUTHENTICATION -> "登录状态已失效，请重新登录"
+        RefreshFailureKind.RATE_LIMIT -> "请求过于频繁，请稍后再试"
+        RefreshFailureKind.REMOTE -> message ?: "远端服务暂时不可用"
+        RefreshFailureKind.UNKNOWN -> message ?: "操作失败，请稍后重试"
+    }
+    return AppError(type, userMessage, this, onRetry)
 }

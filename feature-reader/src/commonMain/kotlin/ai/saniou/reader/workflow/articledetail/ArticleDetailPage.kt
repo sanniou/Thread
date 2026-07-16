@@ -19,6 +19,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -26,6 +28,7 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.kodein.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import kotlinx.coroutines.launch
 
 data class ArticleDetailPage(val articleId: String) : Screen {
 
@@ -36,6 +39,9 @@ data class ArticleDetailPage(val articleId: String) : Screen {
         val viewModel: ArticleDetailViewModel = rememberScreenModel(arg = articleId)
         val state by viewModel.state.collectAsState()
         val uriHandler = LocalUriHandler.current
+        val clipboard = LocalClipboardManager.current
+        val scope = rememberCoroutineScope()
+        val snackbar = remember { SnackbarHostState() }
         val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
         Scaffold(
@@ -46,13 +52,19 @@ data class ArticleDetailPage(val articleId: String) : Screen {
                     scrollBehavior = scrollBehavior,
                     onBack = { navigator.pop() },
                     onToggleBookmark = { viewModel.onEvent(ArticleDetailContract.Event.OnToggleBookmark) },
-                    onShare = { /* TODO: Implement share */ },
+                    onShare = {
+                        state.article?.let { article ->
+                            clipboard.setText(AnnotatedString("${article.title}\n${article.link}"))
+                            scope.launch { snackbar.showSnackbar("标题和链接已复制") }
+                        }
+                    },
                     onOpenInBrowser = { state.article?.link?.let { uriHandler.openUri(it) } },
                     onShowWebView = { state.article?.id?.let { navigator.push(ArticleWebViewPage(it)) } },
                     onToggleMenu = { viewModel.onEvent(ArticleDetailContract.Event.OnToggleMenu(it)) },
                     onFontSizeChange = { viewModel.onEvent(ArticleDetailContract.Event.OnChangeFontSize(it)) }
                 )
-            }
+            },
+            snackbarHost = { SnackbarHost(snackbar) },
         ) { padding ->
             Box(modifier = Modifier.padding(padding).fillMaxSize()) {
                 when {

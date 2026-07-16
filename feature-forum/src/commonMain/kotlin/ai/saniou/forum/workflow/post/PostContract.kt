@@ -12,8 +12,6 @@ interface PostContract {
         val isSuccess: Boolean = false,
         val postBody: PostDraft = PostDraft(),
         val content: TextFieldValue = TextFieldValue(),
-        val image: PostAttachment? = null,
-        val water: Boolean = false,
         val showEmoticonPicker: Boolean = false,
         val showDiceInputs: Boolean = false,
         val showMoreOptions: Boolean = false,

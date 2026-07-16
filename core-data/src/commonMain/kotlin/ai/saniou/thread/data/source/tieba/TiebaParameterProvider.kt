@@ -2,14 +2,11 @@ package ai.saniou.thread.data.source.tieba
 
 import ai.saniou.corecommon.utils.DeviceUtils
 import ai.saniou.corecommon.coroutines.ioDispatcher
-import ai.saniou.thread.data.source.tieba.model.OAID
 import ai.saniou.thread.domain.repository.AccountRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.time.Clock
@@ -82,17 +79,10 @@ class TiebaParameterProvider(
     fun getClientId(): String = randomClientId
 
     fun getOaid(): String {
-        val oaid = OAID()
-        return try {
-            Json.encodeToString(oaid)
-            "{\"v\":\"GQYTOOLEGNTDCMLDG4ZTONJTGI4GMODEGBRWGYRXHBRDGMDEMY3TIODFGU2TEZRZGU4DQNRYGI4WKMRTGY2WMZBSMY3GKYTGGFRWIMA\",\"isTrackLimited\":0,\"sc\":0,\"sup\":1}"
-        } catch (e: Exception) {
-            e.printStackTrace()
-            "{\"v\":\"GQYTOOLEGNTDCMLDG4ZTONJTGI4GMODEGBRWGYRXHBRDGMDEMY3TIODFGU2TEZRZGU4DQNRYGI4WKMRTGY2WMZBSMY3GKYTGGFRWIMA\",\"isTrackLimited\":0,\"sc\":0,\"sup\":1}"
-        }
+        return "{\"v\":\"GQYTOOLEGNTDCMLDG4ZTONJTGI4GMODEGBRWGYRXHBRDGMDEMY3TIODFGU2TEZRZGU4DQNRYGI4WKMRTGY2WMZBSMY3GKYTGGFRWIMA\",\"isTrackLimited\":0,\"sc\":0,\"sup\":1}"
     }
 
-    // TODO: Need proper implementation for screen metrics
+    // The Tieba endpoint expects an Android client profile even when Thread runs on Desktop.
     fun getScreenDensity(): Double = 3.0
     fun getScreenHeight(): Int = 2400
     fun getScreenWidth(): Int = 1080

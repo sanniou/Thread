@@ -14,8 +14,8 @@ android {
         applicationId = "ai.saniou.thread"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = providers.gradleProperty("thread.versionCode").get().toInt()
+        versionName = providers.gradleProperty("thread.version").get()
     }
 
     packaging {

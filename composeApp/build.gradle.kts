@@ -84,6 +84,10 @@ kotlin {
             implementation(libs.kotlinx.coroutinesSwing)
             implementation(libs.compose.webview)
         }
+        jvmTest.dependencies {
+            implementation(libs.kotlin.test)
+            implementation(libs.sqldelight.sqlite.driver)
+        }
     }
 }
 
@@ -98,7 +102,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "ai.saniou.thread"
-            packageVersion = "1.0.0"
+            packageVersion = providers.gradleProperty("thread.version").get()
         }
 
         buildTypes.release.proguard {

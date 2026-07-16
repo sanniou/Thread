@@ -17,6 +17,28 @@ enum class RefreshFailureKind {
     UNKNOWN,
 }
 
+/** One common error vocabulary for retry policy, diagnostics and UI messaging. */
+object FailureClassifier {
+    fun classify(error: Throwable): RefreshFailureKind {
+        val description = generateSequence(error) { it.cause }
+            .joinToString(" ") { "${it::class.simpleName.orEmpty()} ${it.message.orEmpty()}" }
+            .lowercase()
+        return when {
+            "timeout" in description || "timed out" in description -> RefreshFailureKind.TIMEOUT
+            "429" in description || "too many requests" in description -> RefreshFailureKind.RATE_LIMIT
+            "401" in description || "403" in description || "unauthorized" in description ||
+                "forbidden" in description || "login" in description || "cookie" in description ->
+                RefreshFailureKind.AUTHENTICATION
+            "unknownhost" in description || "unresolved" in description ||
+                "network is unreachable" in description || "connectexception" in description ||
+                "connection refused" in description || "offline" in description -> RefreshFailureKind.OFFLINE
+            "500" in description || "502" in description || "503" in description ||
+                "504" in description || "server error" in description -> RefreshFailureKind.REMOTE
+            else -> RefreshFailureKind.UNKNOWN
+        }
+    }
+}
+
 data class RefreshPolicy(
     val maxAttempts: Int = 3,
     val initialDelayMillis: Long = 350,

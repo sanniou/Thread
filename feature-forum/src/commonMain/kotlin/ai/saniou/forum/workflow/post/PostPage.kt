@@ -65,6 +65,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -86,6 +87,8 @@ import org.jetbrains.compose.resources.stringResource
 import org.kodein.di.direct
 import org.kodein.di.instance
 import org.kodein.di.compose.localDI
+import ai.saniou.thread.domain.source.SourceCatalog
+import kotlinx.coroutines.launch
 import thread.feature_forum.generated.resources.Res
 import thread.feature_forum.generated.resources.*
 import thread.feature_forum.generated.resources.post_page_add_image
@@ -111,9 +114,6 @@ import thread.feature_forum.generated.resources.post_page_title_optional
 import thread.feature_forum.generated.resources.post_page_watermark
 
 
-private const val BBCODE_CODE = "[code][/code]"
-private const val BBCODE_IMG = "[img][/img]"
-
 data class PostPage(
     val sourceId: String,
     val channelId: String? = null,
@@ -134,6 +134,11 @@ data class PostPage(
         val snackbarHostState = remember { SnackbarHostState() }
         val scrollState = rememberScrollState()
         val contentFocusRequester = remember { FocusRequester() }
+        val scope = rememberCoroutineScope()
+        val attachmentPicker = LocalAttachmentPicker.current
+        val supportsAttachments = remember(sourceId) {
+            di.direct.instance<SourceCatalog>().source(sourceId)?.capabilities?.supportsAttachments == true
+        }
 
         LaunchedEffect(Unit) {
             viewModel.effect.collect { effect ->
@@ -217,7 +222,21 @@ data class PostPage(
                     showEmoticonPicker = state.showEmoticonPicker,
                     showDiceInputs = state.showDiceInputs,
                     showMoreOptions = state.showMoreOptions,
-                    onEvent = viewModel::onEvent
+                    canPickAttachment = supportsAttachments && attachmentPicker != null,
+                    onPickAttachment = onPickAttachment@{
+                        val picker = attachmentPicker ?: return@onPickAttachment
+                        scope.launch {
+                            runCatching { picker.pickImage() }.fold(
+                                onSuccess = { attachment ->
+                                    attachment?.let { viewModel.onEvent(PostContract.Event.UpdateImage(it)) }
+                                },
+                                onFailure = { error ->
+                                    snackbarHostState.showSnackbar(error.message ?: "无法读取图片")
+                                },
+                            )
+                        }
+                    },
+                    onEvent = viewModel::onEvent,
                 )
             },
             snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
@@ -278,10 +297,10 @@ data class PostPage(
                     )
 
                     // Image Preview Area
-                    if (state.image != null) {
+                    state.postBody.attachment?.let { attachment ->
                         ImagePreviewSection(
-                            hasImage = state.image != null,
-                            watermarkEnabled = state.water,
+                            attachment = attachment,
+                            watermarkEnabled = state.postBody.water,
                             onToggleWatermark = {
                                 viewModel.onEvent(
                                     PostContract.Event.ToggleWater(
@@ -379,7 +398,7 @@ data class PostPage(
     @OptIn(ExperimentalLayoutApi::class)
     @Composable
     private fun ImagePreviewSection(
-        hasImage: Boolean,
+        attachment: ai.saniou.thread.domain.model.forum.PostAttachment,
         watermarkEnabled: Boolean,
         onToggleWatermark: (Boolean) -> Unit,
         onRemoveImage: () -> Unit,
@@ -396,6 +415,12 @@ data class PostPage(
                     contentDescription = null,
                     modifier = Modifier.align(Alignment.Center),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = attachment.fileName,
+                    style = MaterialTheme.typography.labelSmall,
+                    maxLines = 2,
+                    modifier = Modifier.align(Alignment.BottomCenter).padding(4.dp),
                 )
                 IconButton(
                     onClick = onRemoveImage,
@@ -435,6 +460,8 @@ data class PostPage(
         showEmoticonPicker: Boolean,
         showDiceInputs: Boolean,
         showMoreOptions: Boolean,
+        canPickAttachment: Boolean,
+        onPickAttachment: () -> Unit,
         onEvent: (PostContract.Event) -> Unit,
     ) {
         val focusManager = LocalFocusManager.current
@@ -472,7 +499,8 @@ data class PostPage(
                                 )
                             }
                             IconButton(
-                                onClick = { /* TODO: Image Picker */ },
+                                onClick = onPickAttachment,
+                                enabled = canPickAttachment,
                                 colors = IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.onSurfaceVariant)
                             ) {
                                 Icon(

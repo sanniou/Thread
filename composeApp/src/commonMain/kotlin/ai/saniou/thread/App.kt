@@ -27,6 +27,9 @@ import ai.saniou.thread.feature.challenge.UiChallengeHandler
 import ai.saniou.thread.feature.history.HistoryPage
 import ai.saniou.thread.feature.settings.SyncSettingsPage
 import ai.saniou.thread.domain.reader.ReaderRefreshScheduler
+import ai.saniou.thread.db.Database
+import ai.saniou.forum.workflow.post.AttachmentPicker
+import ai.saniou.forum.workflow.post.LocalAttachmentPicker
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.DynamicFeed
@@ -57,20 +60,24 @@ import org.kodein.di.compose.withDI
 import org.kodein.di.compose.localDI
 import org.kodein.di.direct
 import org.kodein.di.instance
+import org.kodein.di.bindSingleton
+
+fun createAppDi(databaseOverride: Database? = null) = DI {
+    import(domainModule)
+    import(dataModule)
+    import(readerModule)
+    import(feedModule)
+    import(nmbImagePreviewModule)
+    import(nmbFeatureModule)
+    import(appModule)
+    if (databaseOverride != null) {
+        bindSingleton<Database>(overrides = true) { databaseOverride }
+    }
+}
 
 @Composable
-fun App() {
-    val di = remember {
-        DI {
-            import(domainModule)
-            import(dataModule)
-            import(readerModule)
-            import(feedModule)
-            import(nmbImagePreviewModule)
-            import(nmbFeatureModule)
-            import(appModule)
-        }
-    }
+fun App(attachmentPicker: AttachmentPicker? = null) {
+    val di = remember { createAppDi() }
     withDI(di) {
         val settingsRepository: SettingsRepository by di.instance()
         val currentSource by settingsRepository.observeValue<String>("current_source_id")
@@ -152,7 +159,8 @@ fun App() {
 
                 CompositionLocalProvider(
                     LocalAppDrawer provides appDrawer,
-                    LocalForumSourceId provides (currentSource ?: "nmb")
+                    LocalForumSourceId provides (currentSource ?: "nmb"),
+                    LocalAttachmentPicker provides attachmentPicker,
                 ) {
                     navigator.saveableState("currentScreen") {
                         currentScreen.Content()

@@ -9,6 +9,7 @@ data class SourceCapabilities(
     val supportsSearch: Boolean = false,
     val supportsTopicCreation: Boolean = false,
     val supportsReplies: Boolean = false,
+    val supportsAttachments: Boolean = false,
     val supportsUserContent: Boolean = false,
     val supportsLogin: Boolean = false,
     val supportsPagination: Boolean = true,

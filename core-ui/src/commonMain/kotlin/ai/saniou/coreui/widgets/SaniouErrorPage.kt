@@ -51,6 +51,13 @@ fun SaniouErrorPage(
     action: @Composable () -> Unit = {},
 ) {
     val isNetworkError = error.type == AppErrorType.NETWORK
+    val errorTitle = when (error.type) {
+        AppErrorType.NETWORK -> "网络连接失败"
+        AppErrorType.AUTHENTICATION -> "需要重新登录"
+        AppErrorType.RATE_LIMIT -> "请求过于频繁"
+        AppErrorType.SERVER -> "远端服务异常"
+        AppErrorType.UNKNOWN -> "出错了"
+    }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -95,7 +102,7 @@ fun SaniouErrorPage(
 
                 // 错误信息 (Title)
                 Text(
-                    text = if (isNetworkError) "网络连接失败" else "出错了",
+                    text = errorTitle,
                     style = MaterialTheme.typography.titleLarge,
                     textAlign = TextAlign.Center,
                     color = MaterialTheme.colorScheme.onSurface

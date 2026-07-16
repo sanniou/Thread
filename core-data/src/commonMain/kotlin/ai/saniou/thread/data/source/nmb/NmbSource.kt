@@ -60,6 +60,7 @@ class NmbSource(
         supportsSearch = true,
         supportsTopicCreation = true,
         supportsReplies = true,
+        supportsAttachments = true,
         supportsUserContent = true,
         supportsLogin = true,
         commentPageSize = 19,

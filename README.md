@@ -62,6 +62,9 @@
     -   在组合根把固定来源或 factory 注册进 `SourceCatalog`；Repository 始终从实时目录查询，不保存 Source 快照。
 3.  **UI**:
     -   `feature-forum`、`feature-feed` 会观察运行目录并按 `SourceCapabilities` 自动展示和降级。
+4.  **合约门禁**:
+    -   `RuntimeSourceRegistration` 会强制校验能力声明和 Connector 一一对应；虚假能力或隐藏 Connector 会在组合根创建时立即失败。
+    -   Desktop 组合测试必须解析 NMB、Tieba、Discourse 的真实运行注册，新增来源不能只提交空实现或样例入口。
 
 ## 📈 路线图 (Roadmap)
 
@@ -73,11 +76,12 @@
 -   [ ] **Social Connector**: 在统一 Feed 契约上接入 Mastodon/Bluesky 等来源。
 -   [x] **Feature - Reader 基线**: RSS/Atom/JSON/HTML 来源、刷新诊断、阅读状态与收藏。
 -   [x] **数据同步**: 版本化用户数据包、本地文本导入导出与 WebDAV 备份恢复。
+-   [x] **Desktop 发布门禁**: Source 合约、数据库迁移/重启、真实组合根 smoke 与 Debian 包构建。
 
 ## 🚀 构建与运行
 
-1.  **环境**: JDK 17+, Android Studio.
-2.  **当前验证**: `./gradlew :composeApp:compileKotlinJvm :core-domain:jvmTest :core-data:jvmTest`。
+1.  **环境**: JDK 21；仓库通过 `.java-version` 与 CI 固定版本。
+2.  **当前验证**: 本地执行 `./gradlew :core-domain:jvmTest :core-data:jvmTest :composeApp:jvmTest :composeApp:compileKotlinJvm :composeApp:createDistributable`；Ubuntu CI 额外执行 `:composeApp:packageDeb`。
 3.  **运行**:
     -   Android: Run `androidApp`.
     -   Desktop: `./gradlew :composeApp:run`

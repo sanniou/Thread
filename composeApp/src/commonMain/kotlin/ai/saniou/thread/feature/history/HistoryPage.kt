@@ -4,10 +4,10 @@ import ai.saniou.coreui.state.PagingStateLayout
 import ai.saniou.coreui.widgets.ArticleItem
 import ai.saniou.coreui.widgets.SaniouTopAppBar
 import ai.saniou.forum.ui.components.TopicCard
-import ai.saniou.forum.workflow.topicdetail.TopicDetailPage
 import ai.saniou.reader.workflow.articledetail.ArticleDetailPage
 import ai.saniou.thread.domain.model.history.HistoryArticle
 import ai.saniou.thread.domain.model.history.HistoryPost
+import ai.saniou.thread.FeedTopicRoute
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -128,9 +128,12 @@ class HistoryPage : Screen {
                                         is HistoryPost -> {
                                             TopicCard(
                                                 topic = history.post,
-                                                onClick = { navigator.push(TopicDetailPage(history.post.toString())) },
-                                                // Simplified for history list
-                                                onImageClick = { _ -> navigator.push(TopicDetailPage(history.post.toString())) },
+                                                onClick = {
+                                                    navigator.push(FeedTopicRoute(history.post.sourceId, history.post.id))
+                                                },
+                                                onImageClick = { _ ->
+                                                    navigator.push(FeedTopicRoute(history.post.sourceId, history.post.id))
+                                                },
                                                 onUserClick = { }
                                             )
                                         }
@@ -138,7 +141,7 @@ class HistoryPage : Screen {
                                         is HistoryArticle -> {
                                             ArticleItem(
                                                 article = history.article,
-                                                sourceName = history.article.feedSourceId, // TODO: Get real source name
+                                                sourceName = history.sourceName,
                                                 onClick = { navigator.push(ArticleDetailPage(history.article.id)) },
                                                 showUnreadIndicator = false
                                             )

@@ -18,7 +18,8 @@ data class HistoryPost(
 
 data class HistoryArticle(
     val article: Article,
+    val sourceName: String,
     override val accessTime: Instant,
 ) : HistoryItem {
-    override val uniqueId: String = "article_${article.id}"
+    override val uniqueId: String = "article_${article.feedSourceId}_${article.id}"
 }

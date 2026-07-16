@@ -18,7 +18,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
-import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
@@ -89,7 +88,8 @@ class HistoryViewModel(
         } else if (date.year == now.year && date.dayOfYear == now.dayOfYear - 1) {
             "昨天"
         } else {
-             "${date.year}-${date.monthNumber.toString().padStart(2, '0')}-${date.dayOfMonth.toString().padStart(2, '0')}"
+             val month = date.month.ordinal + 1
+             "${date.year}-${month.toString().padStart(2, '0')}-${date.day.toString().padStart(2, '0')}"
         }
     }
 }

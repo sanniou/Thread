@@ -75,7 +75,9 @@ class HistoryRepositoryImpl(
                         val article = db.articleQueries.getArticleById(history.itemId)
                             .executeAsOneOrNull()?.toDomain()
                         if (article != null) {
-                            HistoryArticle(article, accessTime)
+                            val sourceName = db.feedSourceQueries.getFeedSourceById(article.feedSourceId)
+                                .executeAsOneOrNull()?.name ?: article.feedSourceId
+                            HistoryArticle(article, sourceName, accessTime)
                         } else {
                             throw IllegalStateException("Article not found for history item: ${history.itemId}")
                         }

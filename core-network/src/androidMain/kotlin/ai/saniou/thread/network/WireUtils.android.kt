@@ -9,8 +9,7 @@ actual object WireUtils {
             val adapterField = kClass.java.getField("ADAPTER")
             @Suppress("UNCHECKED_CAST")
             adapterField.get(null) as? ProtoAdapter<T>
-        } catch (e: Exception) {
-            e.printStackTrace()
+        } catch (_: ReflectiveOperationException) {
             null
         }
     }

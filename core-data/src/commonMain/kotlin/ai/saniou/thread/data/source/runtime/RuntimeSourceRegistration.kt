@@ -8,6 +8,7 @@ import ai.saniou.thread.domain.source.PostingConnector
 import ai.saniou.thread.domain.source.ReactionConnector
 import ai.saniou.thread.domain.source.SubCommentConnector
 import ai.saniou.thread.domain.source.UserContentConnector
+import ai.saniou.thread.domain.source.SourceConformance
 
 data class RuntimeSourceRegistration(
     val source: Source,
@@ -25,6 +26,15 @@ data class RuntimeSourceRegistration(
                 "Connector '${connector::class.simpleName}' does not match source '${source.id}'"
             }
         }
+        SourceConformance.inspect(
+            source = source,
+            search = search,
+            userContent = userContent,
+            posting = posting,
+            login = login,
+            subComments = subComments,
+            reactions = reactions,
+        ).requireValid()
     }
 }
 

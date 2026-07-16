@@ -34,10 +34,7 @@ class GreetImageViewModel(
         screenModelScope.launch {
             _isLoading.value = true
             try {
-                _greetImageUrl.value = getGreetImageUseCase()
-            } catch (e: Exception) {
-                // Error handling can be improved
-                e.printStackTrace()
+                _greetImageUrl.value = runCatching { getGreetImageUseCase() }.getOrNull()
             } finally {
                 _isLoading.value = false
             }
