@@ -1,0 +1,5 @@
+{
+  "errors": ["You have performed this action too many times."],
+  "error_type": "rate_limit",
+  "extras": {"wait_seconds": 15}
+}

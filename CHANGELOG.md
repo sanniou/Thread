@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.15.0 - 2026-07-16
+
+Offline contract and paging-reliability release.
+
+- Production Ktor clients can run against an injected engine; checked-in Discourse exchanges replay success, expired authentication, rate limits, oversized uploads and partial service failure without contacting a live forum.
+- Non-success HTTP responses retain status, bounded response context and `Retry-After` metadata in one `HttpStatusException`, so retry policy, diagnostics and UI classify the same failure.
+- Subscription storage is now its own ordered listing and uses SQLDelight's official `QueryPagingSource`; it no longer depends on unrelated channel `TopicListing` rows or infers remote pages from row counts.
+- The unused home-grown offset/page/keyset PagingSource implementations and an unregistered Wire response-converter placeholder are deleted, leaving SQLDelight 2.3.2 plus AndroidX Paging 3.4.1 as the only pagination implementation.
+- Database invariants cover failed-refresh rollback, atomic row/key refresh, subscription cache paging, recursive comments, image replacement and dynamic-source namespace deletion across a real Desktop restart.
+- The packaged `--smoke-check` path now creates an isolated in-memory seed and resolves cached Forum and Reader content through the real DI graph without network or user-database mutation.
+- Historical NMB names on generic Forum/image modules, the obsolete numeric ViewModel factory and the unused greeting-image feature chain are removed.
+- The Desktop gate runs domain/data/UI/combination tests plus the full `composeApp` JVM compile; Android/iOS remain outside this phase as requested.
+
 ## 0.14.0 - 2026-07-16
 
 Reliable reading-state and detail-workflow release.

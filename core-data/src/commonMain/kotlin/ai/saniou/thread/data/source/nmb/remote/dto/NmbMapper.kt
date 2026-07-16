@@ -90,7 +90,7 @@ fun SelectSubscriptionTopic.toDomain(imageQueries: ImageQueries? = null): Topic 
         images = images,
         isLocal = isLocal == 1L,
         comments = emptyList(),
-        tags = emptyList(), // TODO: Map tags from DB if available
+        tags = emptyList(),
         summary = null,
         lastViewedCommentId = null
     )

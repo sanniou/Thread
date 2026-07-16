@@ -142,7 +142,8 @@ Android、iOS、Desktop 共用窗口模型、导航、Paging collector 和全部
 ```bash
 JAVA_HOME=/usr/lib/jvm/java-21-openjdk \
 PATH=/usr/lib/jvm/java-21-openjdk/bin:$PATH \
-./gradlew :composeApp:compileKotlinJvm
+./gradlew :core-domain:jvmTest :core-data:jvmTest :core-ui:jvmTest \
+  :composeApp:jvmTest :composeApp:compileKotlinJvm
 ```
 
-该门禁覆盖 common Forum、Reader、Feed、core-ui、AndroidX Paging、SQLDelight 代码生成与 Desktop 组合根。Android/iOS 不在每轮重复编译；平台回归在 common 架构和产品功能完成后集中执行。
+该门禁覆盖录制式 Connector 合约、缓存与刷新不变量、离线种子启动探针、common Forum/Reader/Feed/core-ui、AndroidX Paging、SQLDelight 代码生成与 Desktop 组合根。Android/iOS 不在每轮重复编译；平台回归在 common 架构和产品功能完成后集中执行。

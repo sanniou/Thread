@@ -70,6 +70,7 @@ kotlin {
         jvmTest.dependencies {
             implementation(libs.kotlin.test)
             implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.ktor.client.mock)
         }
         iosMain.dependencies {
             implementation(libs.sqldelight.native.driver)

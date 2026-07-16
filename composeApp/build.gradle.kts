@@ -83,6 +83,7 @@ kotlin {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutinesSwing)
             implementation(libs.compose.webview)
+            implementation(libs.sqldelight.sqlite.driver)
         }
         jvmTest.dependencies {
             implementation(libs.kotlin.test)

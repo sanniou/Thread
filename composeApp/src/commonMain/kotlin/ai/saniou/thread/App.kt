@@ -5,9 +5,9 @@ import ai.saniou.coreui.layout.ThreadAdaptiveWindow
 import ai.saniou.coreui.theme.ThreadTheme
 import ai.saniou.coreui.widgets.WorkspaceNavigationItem
 import ai.saniou.coreui.widgets.WorkspaceNavigationSuite
-import ai.saniou.forum.di.nmbFeatureModule
+import ai.saniou.forum.di.forumFeatureModule
 import ai.saniou.forum.workflow.home.ChannelPage
-import ai.saniou.forum.workflow.image.nmbImagePreviewModule
+import ai.saniou.forum.workflow.image.imagePreviewModule
 import ai.saniou.forum.workflow.topicdetail.TopicDetailPage
 import ai.saniou.feature.feed.di.feedModule
 import ai.saniou.feature.feed.workflow.UnifiedFeedPage
@@ -20,6 +20,7 @@ import ai.saniou.thread.di.appModule
 import ai.saniou.thread.domain.di.domainModule
 import ai.saniou.thread.domain.repository.SettingsRepository
 import ai.saniou.thread.domain.repository.observeValue
+import ai.saniou.thread.domain.model.source.DEFAULT_FORUM_SOURCE_ID
 import ai.saniou.thread.feature.cellularautomaton.CellularAutomatonScreen
 import ai.saniou.thread.feature.challenge.CloudflareVerificationDialog
 import ai.saniou.thread.feature.bookmark.BookmarkPage
@@ -68,8 +69,8 @@ fun createAppDi(databaseOverride: Database? = null) = DI {
     import(dataModule)
     import(readerModule)
     import(feedModule)
-    import(nmbImagePreviewModule)
-    import(nmbFeatureModule)
+    import(imagePreviewModule)
+    import(forumFeatureModule)
     import(appModule)
     if (databaseOverride != null) {
         bindSingleton<Database>(overrides = true) { databaseOverride }
@@ -82,7 +83,7 @@ fun App(attachmentPicker: AttachmentPicker? = null) {
     withDI(di) {
         val settingsRepository: SettingsRepository by di.instance()
         val currentSource by settingsRepository.observeValue<String>("current_source_id")
-            .collectAsState(initial = "nmb")
+            .collectAsState(initial = DEFAULT_FORUM_SOURCE_ID)
 
         val challengeHandler: UiChallengeHandler by di.instance()
         var challengeRequest by remember { mutableStateOf<UiChallengeHandler.ChallengeRequest?>(null) }
@@ -153,7 +154,7 @@ fun App(attachmentPicker: AttachmentPicker? = null) {
                     )
                     WorkspaceNavigationSuite(navigationItems) {
                             CompositionLocalProvider(
-                                LocalForumSourceId provides (currentSource ?: "nmb"),
+                                LocalForumSourceId provides (currentSource ?: DEFAULT_FORUM_SOURCE_ID),
                                 LocalAttachmentPicker provides attachmentPicker,
                             ) {
                                 navigator.saveableState("currentScreen") {

@@ -5,7 +5,6 @@ import ai.saniou.corecommon.utils.UuidUtils
 import ai.saniou.thread.data.paging.DataPolicy
 import ai.saniou.thread.data.paging.DefaultRemoteKeyStrategy
 import ai.saniou.thread.data.paging.GenericRemoteMediator
-import ai.saniou.thread.data.paging.KeysetPagingSource
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.db.table.Trend
 import ai.saniou.thread.db.table.TrendDetailView
@@ -151,7 +150,7 @@ class TrendRepositoryImpl(
                             page = 0L, // Not used in Keyset
                             hotness = item.hotness,
                             isNew = item.isNew,
-                            payload = null, // TODO: Serialize payload if needed
+                            payload = null,
                             publishDate = null, // Source doesn't provide it yet
                             updateDate = null,
                             receiveDate = Clock.System.now().toEpochMilliseconds()

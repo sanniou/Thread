@@ -2,6 +2,7 @@ package ai.saniou.forum.ui.richtext
 
 import ai.saniou.coreui.richtext.RichTextPlugin
 import ai.saniou.coreui.widgets.ClickablePattern
+import ai.saniou.thread.domain.model.source.DEFAULT_FORUM_SOURCE_ID
 
 /**
  * Strategy for providing source-specific RichText plugins and link handling logic.
@@ -80,7 +81,7 @@ object DefaultForumRichTextStrategy : ForumRichTextStrategy {
  */
 object ForumRichTextStrategyFactory {
     private val strategies: Map<String, ForumRichTextStrategy> = mapOf(
-        "nmb" to NmbRichTextStrategy(),
+        DEFAULT_FORUM_SOURCE_ID to NmbRichTextStrategy(),
     )
 
     fun getStrategy(sourceId: String?): ForumRichTextStrategy {

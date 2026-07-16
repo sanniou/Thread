@@ -102,7 +102,7 @@ class ChannelRepositoryImpl(
                 },
             ),
             pagingSourceFactory = {
-                // Use the new KeysetPagingSource from Cache
+                // SQLDelight's official QueryPagingSource is provided by the source cache.
                 val key = "${sourceId}_${channelId}"
                 val isFallback = fallbackStates.value[key] == true
                 cache.getChannelTopicPagingSource(sourceId, channelId, isFallback)
@@ -178,35 +178,9 @@ class ChannelRepositoryImpl(
         val current = fallbackStates.value
         if (current[key] != enabled) {
             fallbackStates.value = current + (key to enabled)
-            // Trigger DB notification to invalidate PagingSource
-            // Updating an unrelated table or a dummy field is enough.
-            // Here we use a safe side-effect: update lastVisitedAt of a non-existent topic or similar trick.
-            // Or better: Use the invalidationTracker if exposed. But we are in Repo.
-            // Simple hack: Update a dummy KeyValue or just let the PagingSource factory pick it up next time?
-            // No, we MUST invalidate the current PagingSource to force factory re-creation.
-            // Writing to `Topic` table is the surest way.
-            // We can update `receiveDate` of a dummy row, but that's messy.
-            // Actually, SqlDelight PagingSource listens to the table.
-            // Let's update `lastVisitedAt` of a dummy topic for this channel.
-            // Or update `Channel` table? PagingSource queries `Topic`, does it listen to `Channel`? No.
-            // It listens to `Topic`.
-            // So we must touch `Topic`.
-            // Let's execute a no-op update on Topic table for this channel.
-            // "UPDATE Topic SET receiveDate = receiveDate WHERE sourceId = ... AND id = 'DUMMY_TRIGGER'"
-            // But we don't have a dummy row.
-            // Update a row that definitely exists?
-            // How about: UPDATE Topic SET receiveDate = receiveDate WHERE sourceId = :sid AND channelId = :cid LIMIT 1;
-            // Sqldelight triggers on Table change, not specific row.
-            // So any update to Topic table works.
+            // Notify SQLDelight so the active PagingSource is recreated with the new fallback
+            // policy. The no-op table update preserves domain data and history ordering.
             withContext(ioDispatcher) {
-                // This query doesn't change data but triggers notification
-                // We need to define a 'touch' query in .sq or reuse an existing one with same values.
-                // Re-setting lastVisitedAt for any topic in this channel?
-                // Let's add a `touchTopics` query in Topic.sq later.
-                // For now, let's assume we can use `updateTopicLastAccessTime` with current time? No side effect?
-                // No, that changes sort order of history.
-                // Let's add `touchChannelTopics` to Topic.sq.
-                // For now, I will add a TODO and create the query.
                 db.topicQueries.touchChannelTopics(sourceId, channelId)
             }
         }

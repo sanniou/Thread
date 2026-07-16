@@ -7,6 +7,7 @@ import de.jensklingenberg.ktorfit.converter.TypeData
 import io.ktor.client.call.body
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsChannel
+import io.ktor.http.isSuccess
 import io.ktor.utils.io.toByteArray
 
 class SaniouResponseConverterFactory : Converter.Factory {
@@ -21,6 +22,9 @@ class SaniouResponseConverterFactory : Converter.Factory {
                 override suspend fun convert(result: KtorfitResult): Any {
                     return when (result) {
                         is KtorfitResult.Success -> {
+                            if (!result.response.status.isSuccess()) {
+                                return SaniouResult.error(result.response.toHttpStatusException())
+                            }
                             return try {
                                 SaniouResult.success(
                                     result.response.body<Any>(

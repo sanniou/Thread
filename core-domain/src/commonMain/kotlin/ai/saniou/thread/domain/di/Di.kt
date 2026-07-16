@@ -12,7 +12,6 @@ import ai.saniou.thread.domain.usecase.channel.GetChannelsUseCase
 import ai.saniou.thread.domain.usecase.channel.GetChannelTopicsPagingUseCase
 import ai.saniou.thread.domain.usecase.history.AddHistoryUseCase
 import ai.saniou.thread.domain.usecase.history.GetHistoryUseCase
-import ai.saniou.thread.domain.usecase.misc.GetGreetImageUseCase
 import ai.saniou.thread.domain.usecase.feed.GetTimelineUseCase
 import ai.saniou.thread.domain.usecase.feed.RefreshTimelineUseCase
 import ai.saniou.thread.domain.usecase.feed.GetAggregatedFeedUseCase
@@ -152,6 +151,4 @@ val domainModule = DI.Module("domainModule") {
     bindProvider { GetSettingsUseCase(instance()) }
     bindProvider { SaveSettingsUseCase(instance()) }
 
-    // Misc
-    bindProvider { GetGreetImageUseCase(instance()) }
 }

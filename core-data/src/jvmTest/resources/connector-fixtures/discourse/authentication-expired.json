@@ -1,0 +1,4 @@
+{
+  "errors": ["Your API credentials are no longer valid."],
+  "error_type": "invalid_access"
+}

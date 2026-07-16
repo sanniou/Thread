@@ -4,7 +4,6 @@ import ai.saniou.corecommon.utils.toMD5
 import io.ktor.client.plugins.api.createClientPlugin
 import io.ktor.client.request.forms.FormDataContent
 import io.ktor.client.request.forms.FormPart
-import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.formData
 import io.ktor.client.request.parameter
 import io.ktor.client.request.setBody
@@ -100,17 +99,6 @@ val TiebaCommonParamPlugin = createClientPlugin("TiebaCommonParamPlugin", ::Tieb
             }
 
             return@transformRequestBody FormDataContent(newParamsBuilder.build())
-        }
-
-        // Handle Multipart Body (simplified, assuming we can rebuild it)
-        if (content is MultiPartFormDataContent) {
-            // Handling Multipart is complex because we need to read parts.
-            // Ktor's MultiPartFormDataContent doesn't easily expose parts list for modification without reading stream.
-            // For now, we skip Multipart modification in this plugin or need a more complex approach.
-            // Given Tieba usage, FormUrlEncoded is most common for params.
-            // Retrofit implementation adds parts.
-
-            // TODO: Implement Multipart support if needed.
         }
 
         // If body is empty/null but method is POST, we might want to create a form body?

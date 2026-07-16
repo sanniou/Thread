@@ -150,7 +150,12 @@ class GenericRemoteMediator<PagerValue : Any, FetcherValue : Any>(
 
                     if (loadType == LoadType.REFRESH) onRefreshSuccess()
 
-                    MediatorResult.Success(endOfPaginationReached = pagedResult.prevCursor == null && loadType == LoadType.PREPEND || pagedResult.nextCursor == null && loadType == LoadType.APPEND)
+                    MediatorResult.Success(
+                        endOfPaginationReached = when (loadType) {
+                            LoadType.PREPEND -> pagedResult.prevCursor == null
+                            LoadType.REFRESH, LoadType.APPEND -> pagedResult.nextCursor == null
+                        }
+                    )
                 },
                 onFailure = { ex ->
                     MediatorResult.Error(ex)

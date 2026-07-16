@@ -156,7 +156,7 @@ object TiebaProtoBuilder {
                     cuid = cuid,
                     cuid_galaxy2 = cuid,
                     cuid_gid = "",
-                    event_day = "", // TODO: Date Formatting
+                    event_day = "",
                     extra = "",
                     first_install_time = parameterProvider.getAppFirstInstallTime().toLongOrNull() ?: timestamp,
                     framework_ver = "3340042",

@@ -2,7 +2,6 @@ package ai.saniou.thread.data.repository
 
 import ai.saniou.corecommon.coroutines.ioDispatcher
 import ai.saniou.thread.data.paging.DataPolicy
-import ai.saniou.thread.data.paging.SqlDelightPagingSource
 import ai.saniou.thread.data.source.nmb.SubscriptionRemoteMediator
 import ai.saniou.thread.data.source.nmb.remote.NmbXdApi
 import ai.saniou.thread.data.source.nmb.remote.dto.toDomain
@@ -10,6 +9,7 @@ import ai.saniou.thread.db.Database
 import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.repository.SubscriptionRepository
 import androidx.paging.*
+import app.cash.sqldelight.paging3.QueryPagingSource
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOne
@@ -53,16 +53,15 @@ class SubscriptionRepositoryImpl(
                 DataPolicy.CACHE_ELSE_NETWORK
             ),
             pagingSourceFactory = {
-                SqlDelightPagingSource(
-                    countQueryProvider = {
-                        db.subscriptionQueries.countSubscriptionsBySubscriptionKey(subscriptionKey)
-                    },
+                QueryPagingSource(
+                    countQuery = db.subscriptionQueries.countSubscriptionsBySubscriptionKey(subscriptionKey),
                     transacter = db.subscriptionQueries,
                     context = ioDispatcher,
-                    pageQueryProvider = { page ->
+                    queryProvider = { limit, offset ->
                         db.subscriptionQueries.selectSubscriptionTopic(
                             subscriptionKey = subscriptionKey,
-                            page = page.toLong()
+                            limit = limit,
+                            offset = offset,
                         )
                     }
                 )

@@ -1,0 +1,4 @@
+{
+  "errors": ["Upload is too large. Maximum file size is 10 MB."],
+  "error_type": "file_too_large"
+}

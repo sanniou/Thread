@@ -45,11 +45,9 @@ class SubscriptionRemoteMediator(
                 db.subscriptionQueries.deleteCloudSubscriptions(subscriptionKey)
             }
 
-            // Infer page from DB count for APPEND, 1 for REFRESH
-            val page = if (loadType == LoadType.REFRESH) 1L else {
-                (db.subscriptionQueries.countSubscriptionsBySubscriptionKey(subscriptionKey)
-                    .executeAsOne() / 19) + 1
-            }
+            // The server cursor is the authoritative page. Inferring it from row count breaks when
+            // a page is short, contains duplicates, or local-only subscriptions are present.
+            val page = cursor?.toLongOrNull() ?: 1L
 
             feedDetail.forEach { feed ->
                 val topic = feed.toTable("nmb", db.topicQueries)

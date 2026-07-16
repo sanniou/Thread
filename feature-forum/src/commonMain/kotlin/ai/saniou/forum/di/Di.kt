@@ -3,7 +3,6 @@ package ai.saniou.forum.di
 import ai.saniou.forum.initializer.AppInitializer
 import ai.saniou.forum.workflow.topic.TopicViewModel
 import ai.saniou.forum.workflow.home.ChannelViewModel
-import ai.saniou.forum.workflow.home.GreetImageViewModel
 import ai.saniou.forum.workflow.init.SourceInitViewModel
 import ai.saniou.forum.workflow.post.PostViewModel
 import ai.saniou.forum.workflow.post.PostViewModelParams
@@ -23,16 +22,13 @@ import org.kodein.di.bindSingleton
 import org.kodein.di.instance
 
 /**
- * NMB 功能模块的 DI 定义，只负责 UI (ViewModel) 层的依赖注入。
+ * Forum 功能模块的 DI 定义，只负责 UI (ViewModel) 层的依赖注入。
  * 所有业务逻辑和数据层的依赖都通过构造函数从外部传入。
  */
-val nmbFeatureModule = DI.Module("nmbFeatureModule") {
+val forumFeatureModule = DI.Module("forumFeatureModule") {
 
     // 应用初始化器
     bindSingleton<AppInitializer> { AppInitializer(instance()) }
-
-    // 欢迎图片ViewModel
-    bindProvider<GreetImageViewModel> { GreetImageViewModel(instance()) }
 
     // 论坛分类相关
     bindProvider<ChannelViewModel> {
@@ -62,22 +58,7 @@ val nmbFeatureModule = DI.Module("nmbFeatureModule") {
         )
     }
 
-    // 论坛相关
-    bindFactory<Pair<Long, Long>, TopicViewModel> { params ->
-        // Compatibility for old factory
-        TopicViewModel(
-            instance(),
-            instance(),
-            instance(),
-            instance(),
-            instance(),
-            "nmb",
-            params.first.toString(),
-            params.second.toString()
-        )
-    }
-
-    // New factory supporting SourceId
+    // Source-aware forum topic factory.
     bindFactory<Triple<String, String, String>, TopicViewModel> { params ->
         TopicViewModel(
             instance(),

@@ -2,6 +2,8 @@ package ai.saniou.thread.domain.model.source
 
 import kotlin.jvm.JvmInline
 
+const val DEFAULT_FORUM_SOURCE_ID = "nmb"
+
 /** Open connector kind identifier; adding a data connector must not require changing domain enums. */
 @JvmInline
 value class SourceType(val value: String) {
@@ -14,7 +16,7 @@ value class SourceType(val value: String) {
     override fun toString(): String = value
 
     companion object {
-        val NMB = SourceType("nmb")
+        val NMB = SourceType(DEFAULT_FORUM_SOURCE_ID)
         val TIEBA = SourceType("tieba")
         val DISCOURSE = SourceType("discourse")
     }

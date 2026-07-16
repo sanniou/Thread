@@ -1,12 +1,17 @@
 package ai.saniou.thread.data.source.runtime
 
 import ai.saniou.thread.data.database.createDatabase
+import ai.saniou.thread.data.cache.SqlDelightSourceCache
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.domain.model.source.SourceDescriptor
 import ai.saniou.thread.domain.model.source.SourceType
 import ai.saniou.thread.domain.model.user.LoginStrategy
 import ai.saniou.thread.domain.model.forum.Channel
 import ai.saniou.thread.domain.model.forum.Topic
+import ai.saniou.thread.domain.model.forum.Author
+import ai.saniou.thread.domain.model.forum.Comment
+import ai.saniou.thread.domain.model.forum.Image
+import ai.saniou.thread.domain.model.forum.ImageType
 import ai.saniou.thread.domain.repository.Source
 import app.cash.sqldelight.async.coroutines.synchronous
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
@@ -19,6 +24,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Instant
 
 class DefaultSourceCatalogTest {
     @Test
@@ -61,8 +67,59 @@ class DefaultSourceCatalogTest {
             restored.descriptors.first { values -> values.any { it.id == "tech_forum" } }
         }
         assertEquals("Tech Forum", restored.source("tech_forum")?.name)
+        val cache = SqlDelightSourceCache(database)
+        val author = Author("author", "Author", sourceName = "Tech Forum")
+        cache.saveTopic(
+            Topic(
+                id = "cached-topic",
+                channelId = "cached-channel",
+                channelName = "Cached",
+                title = "Cached topic",
+                content = "body",
+                summary = null,
+                author = author,
+                createdAt = Instant.fromEpochMilliseconds(1),
+                commentCount = 1,
+                images = listOf(Image("https://forum.example/topic.png", "https://forum.example/topic.png")),
+                sourceId = "tech_forum",
+                sourceName = "Tech Forum",
+                sourceUrl = "https://forum.example/t/cached-topic",
+            )
+        )
+        cache.saveComments(
+            comments = listOf(
+                Comment(
+                    id = "cached-comment",
+                    topicId = "cached-topic",
+                    author = author,
+                    createdAt = Instant.fromEpochMilliseconds(2),
+                    title = null,
+                    content = "reply",
+                    images = listOf(Image("https://forum.example/reply.png", "https://forum.example/reply.png")),
+                    isAdmin = false,
+                    floor = 2,
+                    sourceId = "tech_forum",
+                )
+            ),
+            sourceId = "tech_forum",
+            topicId = "cached-topic",
+            viewMode = "all",
+            page = 1,
+            receiveDate = 2,
+            startOrder = 0,
+        )
         restored.remove("tech_forum")
         assertNull(restored.descriptors.value.firstOrNull { it.id == "tech_forum" })
+        assertNull(database.topicQueries.getTopic("tech_forum", "cached-topic").executeAsOneOrNull())
+        assertNull(database.commentQueries.getCommentById("tech_forum", "cached-comment").executeAsOneOrNull())
+        assertEquals(
+            emptyList(),
+            database.imageQueries.getImagesByParent("tech_forum", "cached-topic", ImageType.Topic).executeAsList(),
+        )
+        assertEquals(
+            emptyList(),
+            database.imageQueries.getImagesByParent("tech_forum", "cached-comment", ImageType.Comment).executeAsList(),
+        )
         assertTrue(factory.created >= 3)
         assertTrue(factory.disposed >= 2)
         driver.close()

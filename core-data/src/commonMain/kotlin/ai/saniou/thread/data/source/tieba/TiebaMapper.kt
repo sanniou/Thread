@@ -80,7 +80,7 @@ object TiebaMapper {
             description = entity.description,
             descriptionText = entity.descriptionText,
             groupId = entity.fGroup,
-            groupName = "", // TODO: Join with ChannelCategory if needed
+            groupName = "",
             sourceName = SOURCE_NAME,
             sourceId = SOURCE_ID,
             sort = entity.sort,

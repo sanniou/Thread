@@ -382,10 +382,7 @@ val dataModule = DI.Module("dataModule") {
                     "Sec-Fetch-Mode" to { "cors" },
                     "Sec-Fetch-Dest" to { "empty" },
                     "Cookie" to {
-                        // TODO: Construct full cookie string from provider
-                        // e.g. "CUID=${paramProvider.getCuid()}; BDUSS=${paramProvider.getBduss()}..."
-                        // Since provider returns single values, we need a helper to join them.
-                        // For now, using a simplified version or delegate to CookieStore if available.
+                        // Hybrid endpoints require both device identity and authenticated session.
                         "CUID=${paramProvider.getCuid()}; BDUSS=${paramProvider.getBduss()}"
                     }
                 )

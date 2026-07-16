@@ -24,6 +24,6 @@ interface ImagePreviewContract {
     }
 }
 
-val nmbImagePreviewModule = org.kodein.di.DI.Module("NmbImagePreviewModule") {
+val imagePreviewModule = org.kodein.di.DI.Module("ImagePreviewModule") {
     import(imagePreviewViewModelModule)
 }
