@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -95,6 +96,23 @@ object GlobalSearchPage : Screen {
                     metric = state.response?.let { "${it.totalCount} 条命中" } ?: "本地优先",
                 )
                 ThreadCard(Modifier.fillMaxWidth()) {
+                    if (state.smartCollections.isNotEmpty()) {
+                        Text("智能集合", style = MaterialTheme.typography.labelLarge)
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            state.smartCollections.forEach { collection ->
+                                FilterChip(
+                                    selected = state.activeCollectionId == collection.id,
+                                    onClick = {
+                                        viewModel.onEvent(Event.ApplyCollection(
+                                            collection.id.takeUnless { state.activeCollectionId == collection.id }
+                                        ))
+                                    },
+                                    label = { Text(collection.name) },
+                                    leadingIcon = { Icon(Icons.Default.AutoAwesome, null) },
+                                )
+                            }
+                        }
+                    }
                     OutlinedTextField(
                         value = state.query,
                         onValueChange = { viewModel.onEvent(Event.QueryChanged(it)) },
@@ -126,7 +144,7 @@ object GlobalSearchPage : Screen {
                 }
                 when {
                     state.isSearching -> CircularProgressIndicator(Modifier.align(Alignment.CenterHorizontally))
-                    state.query.trim().length < 2 -> SearchGuidance()
+                    state.activeCollectionId == null && state.query.trim().length < 2 -> SearchGuidance()
                     state.response?.results.isNullOrEmpty() -> SearchEmptyState(state.query)
                     else -> GlobalSearchResults(
                         results = state.response!!.results,

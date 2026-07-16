@@ -1,6 +1,7 @@
 package ai.saniou.forum.ui.components
 
 import ai.saniou.coreui.composition.LocalForumSourceId
+import ai.saniou.coreui.composition.LocalContentLinkHandler
 import ai.saniou.coreui.richtext.RichTextPlugin
 import ai.saniou.coreui.richtext.SmartRichText
 import ai.saniou.coreui.richtext.plugins.UrlPlugin
@@ -38,17 +39,18 @@ fun ForumRichText(
 ) {
     val actualSourceId = sourceId ?: LocalForumSourceId.current
     val uriHandler = LocalUriHandler.current
+    val rootLinkHandler = LocalContentLinkHandler.current
 
     val strategy = remember(actualSourceId) {
         ForumRichTextStrategyFactory.getStrategy(actualSourceId)
     }
 
-    val handleLinkClick = remember(strategy, onThreadClick, uriHandler) {
+    val handleLinkClick = remember(strategy, onThreadClick, uriHandler, rootLinkHandler) {
         { url: String ->
             if (!strategy.handleUrlClick(url, onThreadClick)) {
                 val fullUrl =
                     if (url.startsWith("www.", ignoreCase = true)) "http://$url" else url
-                uriHandler.openUri(fullUrl)
+                rootLinkHandler?.invoke(fullUrl) ?: uriHandler.openUri(fullUrl)
             }
         }
     }

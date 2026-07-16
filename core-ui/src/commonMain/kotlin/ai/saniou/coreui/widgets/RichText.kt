@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion
 import androidx.compose.ui.platform.LocalUriHandler
+import ai.saniou.coreui.composition.LocalContentLinkHandler
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.LinkInteractionListener
@@ -82,7 +83,8 @@ fun RichText(
 ) {
     val linkColor = MaterialTheme.colorScheme.primary
     val uriHandler = LocalUriHandler.current
-    val linkClickHandler = onLinkClick ?: { url -> uriHandler.openUri(url) }
+    val rootLinkHandler = LocalContentLinkHandler.current
+    val linkClickHandler = onLinkClick ?: rootLinkHandler ?: { url -> uriHandler.openUri(url) }
 
     val revealedSpoilers = remember { mutableStateListOf<Int>() }
 

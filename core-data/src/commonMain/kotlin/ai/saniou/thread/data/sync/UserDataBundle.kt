@@ -28,7 +28,7 @@ internal data class UserDataBundle(
 
     companion object {
         const val FORMAT = "thread-user-data"
-        const val CURRENT_VERSION = 1
+        const val CURRENT_VERSION = 2
     }
 }
 

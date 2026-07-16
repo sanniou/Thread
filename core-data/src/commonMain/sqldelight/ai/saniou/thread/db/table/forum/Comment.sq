@@ -161,6 +161,12 @@ SELECT count(*) FROM Comment
 WHERE (content LIKE ('%' || :query || '%') OR title LIKE ('%' || :query || '%'))
 AND page >= 0;
 
+getRecentCommentsForCollection:
+SELECT * FROM Comment
+WHERE page >= 0
+ORDER BY createdAt DESC
+LIMIT :limit OFFSET :offset;
+
 getForumCommentCacheStats:
 SELECT sourceId, count(*) AS commentCount
 FROM Comment

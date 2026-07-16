@@ -90,7 +90,31 @@ class DatabaseMigrationTest {
             "idx_topic_source_author_reply",
         )
         assertTrue(driver.indexNames().containsAll(expected))
-        assertEquals(4L, Database.Schema.version)
+        assertEquals(5L, Database.Schema.version)
+        driver.close()
+    }
+
+    @Test
+    fun addsVersionFiveInboxWithoutTouchingExistingTables() = runBlocking {
+        val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
+        Database.Schema.synchronous().migrate(driver, oldVersion = 4L, newVersion = 5L)
+        driver.executeStatement(
+            """
+            INSERT INTO InboxEventEntity(
+                id, kind, sourceId, title, summary, occurredAt, muted, priority
+            ) VALUES ('migration', 'SYSTEM', 'thread', 'Ready', '', 1, 0, 0)
+            """.trimIndent(),
+        )
+        val count = driver.executeQuery(
+            identifier = null,
+            sql = "SELECT count(*) FROM InboxEventEntity",
+            mapper = { cursor ->
+                cursor.next()
+                QueryResult.Value(cursor.getLong(0) ?: 0L)
+            },
+            parameters = 0,
+        ).value
+        assertEquals(1L, count)
         driver.close()
     }
 

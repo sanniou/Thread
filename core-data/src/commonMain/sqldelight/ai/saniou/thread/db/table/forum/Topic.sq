@@ -204,6 +204,11 @@ countSearchTopics:
 SELECT count(*) FROM Topic
 WHERE (CAST(id AS TEXT) LIKE ('%' || :query || '%') OR title LIKE ('%' || :query || '%') OR content LIKE ('%' || :query || '%'));
 
+getRecentTopicsForCollection:
+SELECT * FROM Topic
+ORDER BY lastReplyAt DESC, createdAt DESC
+LIMIT :limit OFFSET :offset;
+
 getForumTopicCacheStats:
 SELECT
     sourceId,

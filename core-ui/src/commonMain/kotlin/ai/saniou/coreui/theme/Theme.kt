@@ -25,6 +25,10 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 
 private val LightColors = lightColorScheme(
     primary = md_theme_light_primary,
@@ -120,6 +124,31 @@ private val DarkSemanticColors = ThreadSemanticColors(
 
 private val LocalThreadSemanticColors = staticCompositionLocalOf { LightSemanticColors }
 
+enum class ThreadInterfaceDensity { COMPACT, COMFORTABLE, SPACIOUS }
+
+@Immutable
+data class ThreadUiPreferences(
+    val interfaceDensity: ThreadInterfaceDensity = ThreadInterfaceDensity.COMFORTABLE,
+    val reducedMotion: Boolean = false,
+    val readerWidth: Dp = 760.dp,
+    val readerLineHeightMultiplier: Float = 1.65f,
+) {
+    val sectionSpacing: Dp
+        get() = when (interfaceDensity) {
+            ThreadInterfaceDensity.COMPACT -> 12.dp
+            ThreadInterfaceDensity.COMFORTABLE -> 20.dp
+            ThreadInterfaceDensity.SPACIOUS -> 28.dp
+        }
+    val itemSpacing: Dp
+        get() = when (interfaceDensity) {
+            ThreadInterfaceDensity.COMPACT -> 6.dp
+            ThreadInterfaceDensity.COMFORTABLE -> 10.dp
+            ThreadInterfaceDensity.SPACIOUS -> 16.dp
+        }
+}
+
+val LocalThreadUiPreferences = staticCompositionLocalOf { ThreadUiPreferences() }
+
 val MaterialTheme.threadColors: ThreadSemanticColors
     @Composable
     @ReadOnlyComposable
@@ -128,6 +157,11 @@ val MaterialTheme.threadColors: ThreadSemanticColors
 @Composable
 fun ThreadTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
+    interfaceDensity: ThreadInterfaceDensity = ThreadInterfaceDensity.COMFORTABLE,
+    fontScale: Float = 1f,
+    reducedMotion: Boolean = false,
+    readerWidth: Dp = 760.dp,
+    readerLineHeightMultiplier: Float = 1.65f,
     content: @Composable () -> Unit
 ) {
     val colorScheme = if (darkTheme) {
@@ -136,8 +170,17 @@ fun ThreadTheme(
         LightColors
     }
 
+    val currentDensity = LocalDensity.current
+    val uiPreferences = ThreadUiPreferences(
+        interfaceDensity = interfaceDensity,
+        reducedMotion = reducedMotion,
+        readerWidth = readerWidth,
+        readerLineHeightMultiplier = readerLineHeightMultiplier,
+    )
     CompositionLocalProvider(
         LocalThreadSemanticColors provides if (darkTheme) DarkSemanticColors else LightSemanticColors,
+        LocalThreadUiPreferences provides uiPreferences,
+        LocalDensity provides Density(currentDensity.density, currentDensity.fontScale * fontScale.coerceIn(0.85f, 1.4f)),
     ) {
         MaterialTheme(
             colorScheme = colorScheme,

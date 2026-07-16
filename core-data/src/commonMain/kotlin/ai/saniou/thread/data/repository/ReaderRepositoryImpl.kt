@@ -351,6 +351,26 @@ class ReaderRepositoryImpl(
                             imageUrl = article.imageUrl,
                             rawContent = article.rawContent
                         )
+                        if (existing == null) {
+                            val muted = db.inboxEventQueries.getInboxSourcePreference(feedSourceId)
+                                .executeAsOneOrNull()?.muted ?: 0L
+                            db.inboxEventQueries.upsertInboxEvent(
+                                id = "reader:$feedSourceId:${article.id}",
+                                kind = "READER_UPDATE",
+                                sourceId = feedSourceId,
+                                title = article.title,
+                                summary = article.description.take(320),
+                                contentKind = "ARTICLE",
+                                contentId = article.id,
+                                contentSourceId = feedSourceId,
+                                parentId = null,
+                                canonicalUrl = article.link,
+                                occurredAt = article.publishDate.toEpochMilliseconds(),
+                                readAt = null,
+                                muted = muted,
+                                priority = 0,
+                            )
+                        }
                     }
                     db.feedSourceQueries.updateLastUpdate(Clock.System.now().toEpochMilliseconds(), feedSourceId)
                 }

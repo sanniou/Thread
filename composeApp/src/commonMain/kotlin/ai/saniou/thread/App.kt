@@ -1,8 +1,10 @@
 package ai.saniou.thread
 
 import ai.saniou.coreui.composition.LocalForumSourceId
+import ai.saniou.coreui.composition.LocalContentLinkHandler
 import ai.saniou.coreui.layout.ThreadAdaptiveWindow
 import ai.saniou.coreui.theme.ThreadTheme
+import ai.saniou.coreui.theme.ThreadInterfaceDensity
 import ai.saniou.coreui.widgets.WorkspaceNavigationItem
 import ai.saniou.coreui.widgets.WorkspaceNavigationSuite
 import ai.saniou.forum.di.forumFeatureModule
@@ -46,6 +48,7 @@ import ai.saniou.thread.feature.settings.SyncSettingsPage
 import ai.saniou.thread.feature.search.GlobalSearchPage
 import ai.saniou.thread.feature.operations.OperationsPage
 import ai.saniou.thread.feature.activity.ActivityCenterPage
+import ai.saniou.thread.feature.inbox.InboxPage
 import ai.saniou.thread.feature.commands.CommandPalette
 import ai.saniou.thread.feature.commands.ProductCommand
 import ai.saniou.thread.domain.reader.ReaderRefreshScheduler
@@ -59,6 +62,7 @@ import androidx.compose.material.icons.filled.DynamicFeed
 import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Inbox
 import androidx.compose.material.icons.filled.MonitorHeart
 import androidx.compose.material.icons.filled.RssFeed
 import androidx.compose.material.icons.filled.Search
@@ -85,6 +89,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.ui.unit.dp
+import ai.saniou.thread.domain.repository.AppearanceRepository
+import ai.saniou.thread.domain.repository.ContentLinkRepository
+import ai.saniou.thread.domain.model.content.ContentReferenceKind
+import ai.saniou.thread.domain.model.content.LinkResolution
+import ai.saniou.thread.domain.model.settings.AppearancePreferences
+import ai.saniou.thread.domain.model.settings.InterfaceDensity
+import ai.saniou.thread.domain.model.settings.MotionMode
+import ai.saniou.thread.domain.model.settings.ThemeMode
+import androidx.compose.ui.platform.LocalUriHandler
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import kotlinx.coroutines.launch
@@ -127,6 +142,9 @@ fun App(attachmentPicker: AttachmentPicker? = null) {
         val executeProductAction: ExecuteProductActionUseCase by di.instance()
         val buildProductCommands: BuildProductCommandsUseCase by di.instance()
         val activitySnapshot by observeActivityCenter().collectAsState(initial = ActivityCenterSnapshot())
+        val appearanceRepository: AppearanceRepository by di.instance()
+        val appearance by appearanceRepository.observe().collectAsState(initial = AppearancePreferences())
+        val contentLinkRepository: ContentLinkRepository by di.instance()
 
         val challengeHandler: UiChallengeHandler by di.instance()
         var challengeRequest by remember { mutableStateOf<UiChallengeHandler.ChallengeRequest?>(null) }
@@ -136,6 +154,7 @@ fun App(attachmentPicker: AttachmentPicker? = null) {
         val readerScheduler: ReaderRefreshScheduler by di.instance()
         val appSnackbar = remember { SnackbarHostState() }
         val clipboard = rememberThreadClipboard()
+        val uriHandler = LocalUriHandler.current
 
         DisposableEffect(readerScheduler) {
             readerScheduler.start()
@@ -161,7 +180,23 @@ fun App(attachmentPicker: AttachmentPicker? = null) {
             }
         }
 
-        ThreadTheme {
+        val systemDark = isSystemInDarkTheme()
+        ThreadTheme(
+            darkTheme = when (appearance.themeMode) {
+                ThemeMode.SYSTEM -> systemDark
+                ThemeMode.LIGHT -> false
+                ThemeMode.DARK -> true
+            },
+            interfaceDensity = when (appearance.density) {
+                InterfaceDensity.COMPACT -> ThreadInterfaceDensity.COMPACT
+                InterfaceDensity.COMFORTABLE -> ThreadInterfaceDensity.COMFORTABLE
+                InterfaceDensity.SPACIOUS -> ThreadInterfaceDensity.SPACIOUS
+            },
+            fontScale = appearance.fontScale,
+            reducedMotion = appearance.motionMode == MotionMode.REDUCED,
+            readerWidth = appearance.readerWidthDp.dp,
+            readerLineHeightMultiplier = appearance.readerLineHeight,
+        ) {
             if (challengeRequest != null) {
                 CloudflareVerificationDialog(
                     url = challengeRequest!!.url,
@@ -221,6 +256,36 @@ fun App(attachmentPicker: AttachmentPicker? = null) {
                                 lastContent = null,
                                 updatedAtEpochMillis = kotlin.time.Clock.System.now().toEpochMilliseconds(),
                             )
+                        }
+                    }
+                }
+                fun openContentUrl(url: String) {
+                    scope.launch {
+                        when (val resolution = contentLinkRepository.resolveUrl(url)) {
+                            is LinkResolution.External -> uriHandler.openUri(resolution.url)
+                            is LinkResolution.Unsupported -> appSnackbar.showSnackbar(resolution.reason)
+                            is LinkResolution.Internal -> when (resolution.reference.kind) {
+                                ContentReferenceKind.TOPIC -> {
+                                    navigateTo(WorkspaceDestination.FORUM, ForumRoute)
+                                    navigator.push(FeedTopicRoute(checkNotNull(resolution.reference.sourceId), resolution.reference.id))
+                                }
+                                ContentReferenceKind.COMMENT -> {
+                                    navigateTo(WorkspaceDestination.FORUM, ForumRoute)
+                                    navigator.push(FeedTopicRoute(
+                                        checkNotNull(resolution.reference.sourceId),
+                                        checkNotNull(resolution.reference.parentId),
+                                    ))
+                                }
+                                ContentReferenceKind.ARTICLE -> {
+                                    navigateTo(WorkspaceDestination.READER, ReaderRoute)
+                                    navigator.push(ArticleDetailPage(resolution.reference.id))
+                                }
+                                ContentReferenceKind.SOCIAL_POST -> resolution.reference.canonicalUrl
+                                    ?.let(uriHandler::openUri)
+                                    ?: appSnackbar.showSnackbar("该社交内容尚无可打开的平台路由")
+                                ContentReferenceKind.EXTERNAL_URL -> resolution.reference.canonicalUrl
+                                    ?.let(uriHandler::openUri)
+                            }
                         }
                     }
                 }
@@ -314,8 +379,8 @@ fun App(attachmentPicker: AttachmentPicker? = null) {
                         WorkspaceNavigationItem(Icons.Default.Bookmark, "收藏", selectedWorkspace == WorkspaceDestination.BOOKMARKS) {
                             navigateTo(WorkspaceDestination.BOOKMARKS, BookmarkPage)
                         },
-                        WorkspaceNavigationItem(Icons.Default.History, "历史", selectedWorkspace == WorkspaceDestination.HISTORY) {
-                            navigateTo(WorkspaceDestination.HISTORY, HistoryPage())
+                        WorkspaceNavigationItem(Icons.Default.Inbox, "收件箱", selectedWorkspace == WorkspaceDestination.INBOX) {
+                            navigateTo(WorkspaceDestination.INBOX, InboxPage)
                         },
                         WorkspaceNavigationItem(Icons.Default.NotificationsActive, "活动", selectedWorkspace == WorkspaceDestination.ACTIVITY, bottom = true) {
                             navigateTo(WorkspaceDestination.ACTIVITY, ActivityCenterPage)
@@ -336,6 +401,7 @@ fun App(attachmentPicker: AttachmentPicker? = null) {
                                     currentSource ?: restoredSession.forumSourceId ?: DEFAULT_FORUM_SOURCE_ID
                                 ),
                                 LocalAttachmentPicker provides attachmentPicker,
+                                LocalContentLinkHandler provides ::openContentUrl,
                             ) {
                                 navigator.saveableState("currentScreen") {
                                     currentScreen.Content()
@@ -382,6 +448,7 @@ private fun screenFor(destination: WorkspaceDestination): Screen = when (destina
     WorkspaceDestination.FEED -> FeedRoute
     WorkspaceDestination.SEARCH -> GlobalSearchPage
     WorkspaceDestination.BOOKMARKS -> BookmarkPage
+    WorkspaceDestination.INBOX -> InboxPage
     WorkspaceDestination.HISTORY -> HistoryPage()
     WorkspaceDestination.ACTIVITY -> ActivityCenterPage
     WorkspaceDestination.OPERATIONS -> OperationsPage

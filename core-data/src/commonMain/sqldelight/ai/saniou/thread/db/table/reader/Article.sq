@@ -90,6 +90,9 @@ LIMIT :limit OFFSET :offset;
 getArticleById:
 SELECT * FROM ArticleEntity WHERE id = ?;
 
+getArticleByLink:
+SELECT * FROM ArticleEntity WHERE link = :link LIMIT 1;
+
 insertArticle:
 INSERT OR REPLACE INTO ArticleEntity(id, feedSourceId, title, description, content, link, author, publishDate, isRead, isBookmarked, imageUrl, rawContent)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);

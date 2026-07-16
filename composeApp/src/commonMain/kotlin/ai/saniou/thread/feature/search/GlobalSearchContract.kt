@@ -3,6 +3,7 @@ package ai.saniou.thread.feature.search
 import ai.saniou.thread.domain.model.search.GlobalSearchResponse
 import ai.saniou.thread.domain.model.search.GlobalSearchResult
 import ai.saniou.thread.domain.model.search.GlobalSearchType
+import ai.saniou.thread.domain.model.collection.SmartCollection
 
 interface GlobalSearchContract {
     data class State(
@@ -11,6 +12,8 @@ interface GlobalSearchContract {
         val response: GlobalSearchResponse? = null,
         val isSearching: Boolean = false,
         val message: String? = null,
+        val smartCollections: List<SmartCollection> = emptyList(),
+        val activeCollectionId: String? = null,
     )
 
     sealed interface Event {
@@ -19,6 +22,7 @@ interface GlobalSearchContract {
         data object Retry : Event
         data object Clear : Event
         data object MessageShown : Event
+        data class ApplyCollection(val id: String?) : Event
     }
 
     sealed interface Effect {

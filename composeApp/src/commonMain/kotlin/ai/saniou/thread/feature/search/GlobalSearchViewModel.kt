@@ -4,6 +4,9 @@ import ai.saniou.thread.domain.model.workspace.WorkspaceSession
 import ai.saniou.thread.domain.usecase.search.SearchLocalContentUseCase
 import ai.saniou.thread.domain.usecase.workspace.ObserveWorkspaceSessionUseCase
 import ai.saniou.thread.domain.usecase.workspace.UpdateWorkspaceSessionUseCase
+import ai.saniou.thread.domain.repository.SmartCollectionRepository
+import ai.saniou.thread.domain.model.search.GlobalSearchResponse
+import ai.saniou.thread.domain.model.search.GlobalSearchType
 import ai.saniou.thread.feature.search.GlobalSearchContract.Event
 import ai.saniou.thread.feature.search.GlobalSearchContract.State
 import cafe.adriel.voyager.core.model.ScreenModel
@@ -22,6 +25,7 @@ class GlobalSearchViewModel(
     private val searchLocalContent: SearchLocalContentUseCase,
     observeWorkspaceSession: ObserveWorkspaceSessionUseCase,
     private val updateWorkspaceSession: UpdateWorkspaceSessionUseCase,
+    private val smartCollectionRepository: SmartCollectionRepository,
 ) : ScreenModel {
     private val mutableState = MutableStateFlow(State())
     val state = mutableState.asStateFlow()
@@ -42,12 +46,17 @@ class GlobalSearchViewModel(
                 }
             }
         }
+        screenModelScope.launch {
+            smartCollectionRepository.observeCollections().collect { collections ->
+                mutableState.update { it.copy(smartCollections = collections) }
+            }
+        }
     }
 
     fun onEvent(event: Event) {
         when (event) {
             is Event.QueryChanged -> {
-                mutableState.update { it.copy(query = event.value.take(MAX_QUERY_LENGTH), message = null) }
+                mutableState.update { it.copy(query = event.value.take(MAX_QUERY_LENGTH), message = null, activeCollectionId = null) }
                 persistQuery()
                 scheduleSearch()
             }
@@ -65,10 +74,45 @@ class GlobalSearchViewModel(
             Event.Retry -> scheduleSearch(immediate = true)
             Event.Clear -> {
                 searchJob?.cancel()
-                mutableState.value = State()
+                mutableState.update { current -> State(smartCollections = current.smartCollections) }
                 persistQuery()
             }
             Event.MessageShown -> mutableState.update { it.copy(message = null) }
+            is Event.ApplyCollection -> applyCollection(event.id)
+        }
+    }
+
+    private fun applyCollection(id: String?) {
+        searchJob?.cancel()
+        if (id == null) {
+            mutableState.update { it.copy(activeCollectionId = null, response = null) }
+            scheduleSearch(immediate = true)
+            return
+        }
+        val collection = mutableState.value.smartCollections.firstOrNull { it.id == id } ?: return
+        screenModelScope.launch {
+            mutableState.update {
+                it.copy(activeCollectionId = id, query = collection.rules.query, isSearching = true, message = null)
+            }
+            runCatching { smartCollectionRepository.resolve(id) }.fold(
+                onSuccess = { results ->
+                    mutableState.update {
+                        it.copy(
+                            isSearching = false,
+                            response = GlobalSearchResponse(
+                                query = collection.name,
+                                results = results,
+                                topicCount = results.count { result -> result.type == GlobalSearchType.TOPIC }.toLong(),
+                                commentCount = results.count { result -> result.type == GlobalSearchType.COMMENT }.toLong(),
+                                articleCount = results.count { result -> result.type == GlobalSearchType.ARTICLE }.toLong(),
+                            ),
+                        )
+                    }
+                },
+                onFailure = { error ->
+                    mutableState.update { it.copy(isSearching = false, message = error.message ?: "智能集合解析失败") }
+                },
+            )
         }
     }
 
@@ -79,6 +123,7 @@ class GlobalSearchViewModel(
     private fun scheduleSearch(immediate: Boolean = false) {
         searchJob?.cancel()
         val snapshot = mutableState.value
+        if (snapshot.activeCollectionId != null) return
         if (snapshot.query.trim().length < MIN_QUERY_LENGTH || snapshot.selectedTypes.isEmpty()) {
             mutableState.update { it.copy(response = null, isSearching = false) }
             return

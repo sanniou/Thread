@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.20.0 - 2026-07-17
+
+Unified content-routing, notification-inbox and portable-appearance release.
+
+- `ContentReference` gives Forum topics/comments, Reader articles, future Social posts and external URLs one source-aware routing contract. Rich text delegates links to the root cache-safe resolver; unsupported protocols never reach a platform launcher.
+- Database schema v5 adds a durable Inbox event log and source mute preferences. Forum announcements and newly cached Reader articles feed the same SQLDelight `QueryPagingSource` timeline with live totals, unread/source counts, search, filters, batch read, mute and delete actions.
+- Inbox replaces History in primary navigation while History remains available from the command palette. The adaptive page uses the same common Compose layout and Paging collector on Android, iOS and Desktop.
+- Cross-source smart collections persist source, author, tag, query, unread, bookmark, media and content-kind rules. Discovery can execute a saved collection against bounded Forum/Comment/Reader caches and route every result back to its original context.
+- Theme mode, interface density, font scale, reduced motion, Reader width and line height are live portable preferences. Reader consumes the shared typography tokens, and user-data bundle v2 carries appearance and smart collections through local/WebDAV transfer.
+- A deterministic fixture Social runtime supports opaque bidirectional cursors, capability validation, content warnings, bounded media and idempotent interactions without adding provider-specific UI.
+- Desktop gates cover schema v5 migration/indexes, 240-event Inbox behavior, inherited mute state, concurrent bounded collection writes, saved-view resolution and a 154-post Social timeline.
+
 ## 0.19.0 - 2026-07-17
 
 Unified activity, explicit identity and serialized-action release.

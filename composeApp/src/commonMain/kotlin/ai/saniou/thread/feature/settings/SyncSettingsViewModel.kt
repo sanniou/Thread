@@ -3,6 +3,10 @@ package ai.saniou.thread.feature.settings
 import ai.saniou.thread.domain.model.sync.WebDavConfig
 import ai.saniou.thread.domain.model.activity.ProductActionRequest
 import ai.saniou.thread.domain.model.activity.ProductActionType
+import ai.saniou.thread.domain.model.collection.SmartCollection
+import ai.saniou.thread.domain.model.collection.SmartCollectionRules
+import ai.saniou.thread.domain.repository.AppearanceRepository
+import ai.saniou.thread.domain.repository.SmartCollectionRepository
 import ai.saniou.thread.domain.usecase.activity.ExecuteProductActionUseCase
 import ai.saniou.thread.domain.refresh.RefreshStatus
 import ai.saniou.thread.domain.usecase.reader.ObserveReaderSchedulerUseCase
@@ -23,6 +27,8 @@ class SyncSettingsViewModel(
     private val saveWebDavConfig: SaveWebDavConfigUseCase,
     private val observeReaderScheduler: ObserveReaderSchedulerUseCase,
     private val observeRefreshDiagnostics: ObserveRefreshDiagnosticsUseCase,
+    private val appearanceRepository: AppearanceRepository,
+    private val smartCollectionRepository: SmartCollectionRepository,
 ) : ScreenModel {
     private val _state = MutableStateFlow(SyncSettingsContract.State())
     val state: StateFlow<SyncSettingsContract.State> = _state.asStateFlow()
@@ -52,6 +58,16 @@ class SyncSettingsViewModel(
                 }
             }
         }
+        screenModelScope.launch {
+            appearanceRepository.observe().collect { appearance ->
+                _state.update { it.copy(appearance = appearance) }
+            }
+        }
+        screenModelScope.launch {
+            smartCollectionRepository.observeCollections().collect { collections ->
+                _state.update { it.copy(smartCollections = collections) }
+            }
+        }
     }
 
     fun onEvent(event: SyncSettingsContract.Event) {
@@ -68,6 +84,47 @@ class SyncSettingsViewModel(
             SyncSettingsContract.Event.RestoreWebDav -> restore()
             SyncSettingsContract.Event.DismissDialog -> _state.update { it.copy(dialog = null) }
             SyncSettingsContract.Event.MessageShown -> _state.update { it.copy(message = null) }
+            is SyncSettingsContract.Event.AppearanceChanged -> screenModelScope.launch {
+                appearanceRepository.save(event.value)
+            }
+            SyncSettingsContract.Event.ResetAppearance -> screenModelScope.launch {
+                appearanceRepository.reset()
+            }
+            is SyncSettingsContract.Event.SaveSmartCollection -> saveSmartCollection(event)
+            is SyncSettingsContract.Event.DeleteSmartCollection -> screenModelScope.launch {
+                smartCollectionRepository.delete(event.id)
+            }
+        }
+    }
+
+    private fun saveSmartCollection(event: SyncSettingsContract.Event.SaveSmartCollection) {
+        val name = event.name.trim()
+        val query = event.query.trim()
+        if (name.isBlank() || (query.isBlank() && !event.unreadOnly && !event.bookmarkedOnly)) {
+            _state.update { it.copy(message = "请填写名称，并至少设置一条筛选规则") }
+            return
+        }
+        screenModelScope.launch {
+            val now = kotlin.time.Clock.System.now().toEpochMilliseconds()
+            smartCollectionRepository.save(
+                SmartCollection(
+                    id = "collection-$now",
+                    name = name,
+                    description = buildList {
+                        if (query.isNotBlank()) add("关键词：$query")
+                        if (event.unreadOnly) add("仅未读")
+                        if (event.bookmarkedOnly) add("仅收藏")
+                    }.joinToString(" · "),
+                    rules = SmartCollectionRules(
+                        query = query,
+                        unreadOnly = event.unreadOnly,
+                        bookmarkedOnly = event.bookmarkedOnly,
+                    ),
+                    createdAtEpochMillis = now,
+                    updatedAtEpochMillis = now,
+                )
+            )
+            _state.update { it.copy(message = "智能集合已创建") }
         }
     }
 

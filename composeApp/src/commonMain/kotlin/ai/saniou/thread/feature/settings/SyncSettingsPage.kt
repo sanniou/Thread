@@ -25,11 +25,16 @@ import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Upload
+import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Slider
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -49,6 +54,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import ai.saniou.thread.domain.model.settings.InterfaceDensity
+import ai.saniou.thread.domain.model.settings.MotionMode
+import ai.saniou.thread.domain.model.settings.ThemeMode
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -68,6 +76,10 @@ class SyncSettingsPage(
         val viewModel = rememberScreenModel { di.direct.instance<SyncSettingsViewModel>() }
         val state by viewModel.state.collectAsState()
         val snackbar = remember { SnackbarHostState() }
+        var collectionName by remember { mutableStateOf("") }
+        var collectionQuery by remember { mutableStateOf("") }
+        var collectionUnread by remember { mutableStateOf(false) }
+        var collectionBookmarked by remember { mutableStateOf(false) }
 
         LaunchedEffect(showImportOnOpen) {
             if (showImportOnOpen) viewModel.onEvent(SyncSettingsContract.Event.ShowImportLocal)
@@ -108,6 +120,126 @@ class SyncSettingsPage(
                     ),
                 verticalArrangement = Arrangement.spacedBy(20.dp),
             ) {
+                ThreadCard(modifier = Modifier.fillMaxWidth()) {
+                    Text("外观与阅读", style = MaterialTheme.typography.titleLarge)
+                    Text(
+                        "主题、界面密度、字体、动效和正文版心会同步应用到 Android、iOS 与 Desktop。",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text("主题", style = MaterialTheme.typography.labelLarge)
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        ThemeMode.entries.forEach { mode ->
+                            FilterChip(
+                                selected = state.appearance.themeMode == mode,
+                                onClick = { viewModel.onEvent(SyncSettingsContract.Event.AppearanceChanged(state.appearance.copy(themeMode = mode))) },
+                                label = { Text(when (mode) { ThemeMode.SYSTEM -> "跟随系统"; ThemeMode.LIGHT -> "浅色"; ThemeMode.DARK -> "深色" }) },
+                            )
+                        }
+                    }
+                    Text("信息密度", style = MaterialTheme.typography.labelLarge)
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        InterfaceDensity.entries.forEach { density ->
+                            FilterChip(
+                                selected = state.appearance.density == density,
+                                onClick = { viewModel.onEvent(SyncSettingsContract.Event.AppearanceChanged(state.appearance.copy(density = density))) },
+                                label = { Text(when (density) { InterfaceDensity.COMPACT -> "紧凑"; InterfaceDensity.COMFORTABLE -> "舒适"; InterfaceDensity.SPACIOUS -> "宽松" }) },
+                            )
+                        }
+                    }
+                    PreferenceSlider(
+                        label = "字体缩放 ${(state.appearance.fontScale * 100).toInt()}%",
+                        value = state.appearance.fontScale,
+                        range = 0.85f..1.4f,
+                        onValue = { viewModel.onEvent(SyncSettingsContract.Event.AppearanceChanged(state.appearance.copy(fontScale = it))) },
+                    )
+                    PreferenceSlider(
+                        label = "Reader 版心 ${state.appearance.readerWidthDp} dp",
+                        value = state.appearance.readerWidthDp.toFloat(),
+                        range = 520f..1080f,
+                        onValue = { viewModel.onEvent(SyncSettingsContract.Event.AppearanceChanged(state.appearance.copy(readerWidthDp = it.toInt()))) },
+                    )
+                    PreferenceSlider(
+                        label = "正文行高 ${state.appearance.readerLineHeight}",
+                        value = state.appearance.readerLineHeight,
+                        range = 1.2f..2.2f,
+                        onValue = { viewModel.onEvent(SyncSettingsContract.Event.AppearanceChanged(state.appearance.copy(readerLineHeight = it))) },
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Column(Modifier.weight(1f)) {
+                            Text("减少动态效果", style = MaterialTheme.typography.titleSmall)
+                            Text("为未来平台和辅助功能保留统一动效策略", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        Switch(
+                            checked = state.appearance.motionMode == MotionMode.REDUCED,
+                            onCheckedChange = { reduced ->
+                                viewModel.onEvent(SyncSettingsContract.Event.AppearanceChanged(
+                                    state.appearance.copy(motionMode = if (reduced) MotionMode.REDUCED else MotionMode.SYSTEM)
+                                ))
+                            },
+                        )
+                    }
+                    TextButton(onClick = { viewModel.onEvent(SyncSettingsContract.Event.ResetAppearance) }) {
+                        Text("恢复外观默认值")
+                    }
+                }
+
+                ThreadCard(modifier = Modifier.fillMaxWidth()) {
+                    Text("跨源智能集合", style = MaterialTheme.typography.titleLarge)
+                    Text(
+                        "用同一组规则聚合社区主题、Reader 文章和未来社交流。集合随用户数据包同步。",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    OutlinedTextField(
+                        value = collectionName,
+                        onValueChange = { collectionName = it },
+                        label = { Text("集合名称") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    OutlinedTextField(
+                        value = collectionQuery,
+                        onValueChange = { collectionQuery = it },
+                        label = { Text("跨源关键词（可选）") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        FilterChip(collectionUnread, { collectionUnread = !collectionUnread }, { Text("仅未读") })
+                        FilterChip(collectionBookmarked, { collectionBookmarked = !collectionBookmarked }, { Text("仅收藏") })
+                    }
+                    Button(
+                        enabled = collectionName.isNotBlank() && (collectionQuery.isNotBlank() || collectionUnread || collectionBookmarked),
+                        onClick = {
+                            viewModel.onEvent(SyncSettingsContract.Event.SaveSmartCollection(
+                                collectionName, collectionQuery, collectionUnread, collectionBookmarked,
+                            ))
+                            collectionName = ""
+                            collectionQuery = ""
+                            collectionUnread = false
+                            collectionBookmarked = false
+                        },
+                    ) { Text("创建智能集合") }
+                    state.smartCollections.forEach { collection ->
+                        HorizontalDivider()
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Column(Modifier.weight(1f)) {
+                                Text(collection.name, style = MaterialTheme.typography.titleSmall)
+                                Text(collection.description, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            IconButton(onClick = { viewModel.onEvent(SyncSettingsContract.Event.DeleteSmartCollection(collection.id)) }) {
+                                Icon(Icons.Default.DeleteOutline, "删除 ${collection.name}")
+                            }
+                        }
+                    }
+                }
+
                 ThreadCard(modifier = Modifier.fillMaxWidth()) {
                     Text("本地数据包", style = MaterialTheme.typography.titleLarge)
                     Text(
@@ -188,6 +320,19 @@ class SyncSettingsPage(
             }
             }
         }
+    }
+}
+
+@Composable
+private fun PreferenceSlider(
+    label: String,
+    value: Float,
+    range: ClosedFloatingPointRange<Float>,
+    onValue: (Float) -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Text(label, style = MaterialTheme.typography.labelLarge)
+        Slider(value = value, onValueChange = onValue, valueRange = range)
     }
 }
 

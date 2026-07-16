@@ -5,7 +5,7 @@ import ai.saniou.coreui.interaction.rememberThreadClipboard
 import ai.saniou.coreui.layout.LocalThreadWindowInfo
 import ai.saniou.coreui.layout.ReadingCanvas
 import ai.saniou.coreui.state.toAppError
-import ai.saniou.coreui.theme.Dimens
+import ai.saniou.coreui.theme.LocalThreadUiPreferences
 import ai.saniou.coreui.widgets.NetworkImage
 import ai.saniou.coreui.widgets.RichText
 import ai.saniou.coreui.widgets.ThreadDetailScaffold
@@ -219,9 +219,10 @@ private fun ArticleDetailActions(
 @Composable
 private fun ArticleContent(article: Article, fontSizeScale: Float) {
     val windowInfo = LocalThreadWindowInfo.current
+    val uiPreferences = LocalThreadUiPreferences.current
     ReadingCanvas {
         Column(
-            modifier = Modifier.fillMaxHeight().fillMaxWidth().widthIn(max = Dimens.readingMaxWidth)
+            modifier = Modifier.fillMaxHeight().fillMaxWidth().widthIn(max = uiPreferences.readerWidth)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = windowInfo.pageHorizontalPadding, vertical = 32.dp)
         ) {
@@ -276,7 +277,7 @@ private fun ArticleContent(article: Article, fontSizeScale: Float) {
                 val baseStyle = MaterialTheme.typography.bodyLarge
                 val scaledStyle = baseStyle.copy(
                     fontSize = baseStyle.fontSize * fontSizeScale,
-                    lineHeight = baseStyle.lineHeight * fontSizeScale,
+                    lineHeight = baseStyle.fontSize * fontSizeScale * uiPreferences.readerLineHeightMultiplier,
                 )
                 RichText(
                     text = article.content,

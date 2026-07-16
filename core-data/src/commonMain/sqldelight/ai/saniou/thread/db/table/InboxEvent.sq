@@ -1,0 +1,111 @@
+CREATE TABLE InboxEventEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    kind TEXT NOT NULL,
+    sourceId TEXT NOT NULL,
+    title TEXT NOT NULL,
+    summary TEXT NOT NULL,
+    contentKind TEXT,
+    contentId TEXT,
+    contentSourceId TEXT,
+    parentId TEXT,
+    canonicalUrl TEXT,
+    occurredAt INTEGER NOT NULL,
+    readAt INTEGER,
+    muted INTEGER NOT NULL DEFAULT 0,
+    priority INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE InboxSourcePreferenceEntity (
+    sourceId TEXT NOT NULL PRIMARY KEY,
+    muted INTEGER NOT NULL DEFAULT 0,
+    updatedAt INTEGER NOT NULL
+);
+
+CREATE INDEX idx_inbox_occurred ON InboxEventEntity(priority DESC, occurredAt DESC);
+CREATE INDEX idx_inbox_unread ON InboxEventEntity(readAt, occurredAt DESC);
+CREATE INDEX idx_inbox_source ON InboxEventEntity(sourceId, occurredAt DESC);
+CREATE INDEX idx_inbox_kind ON InboxEventEntity(kind, occurredAt DESC);
+
+getInboxPaging:
+SELECT * FROM InboxEventEntity
+WHERE (:unreadOnly = 0 OR readAt IS NULL)
+  AND (:sourceIdFilter IS NULL OR sourceId = :sourceIdFilter)
+  AND (:kindFilter IS NULL OR kind = :kindFilter)
+  AND (:includeMuted = 1 OR muted = 0)
+  AND (:query = '' OR title LIKE '%' || :query || '%' OR summary LIKE '%' || :query || '%')
+ORDER BY priority DESC, occurredAt DESC
+LIMIT :limit OFFSET :offset;
+
+countInbox:
+SELECT count(*) FROM InboxEventEntity
+WHERE (:unreadOnly = 0 OR readAt IS NULL)
+  AND (:sourceIdFilter IS NULL OR sourceId = :sourceIdFilter)
+  AND (:kindFilter IS NULL OR kind = :kindFilter)
+  AND (:includeMuted = 1 OR muted = 0)
+  AND (:query = '' OR title LIKE '%' || :query || '%' OR summary LIKE '%' || :query || '%');
+
+getInboxSummary:
+SELECT
+    count(*) AS totalCount,
+    COALESCE(SUM(CASE WHEN readAt IS NULL AND muted = 0 THEN 1 ELSE 0 END), 0) AS unreadCount,
+    COALESCE(SUM(CASE WHEN muted = 1 THEN 1 ELSE 0 END), 0) AS mutedCount
+FROM InboxEventEntity;
+
+getInboxSourceCounts:
+SELECT
+    sourceId,
+    count(*) AS totalCount,
+    COALESCE(SUM(CASE WHEN readAt IS NULL AND muted = 0 THEN 1 ELSE 0 END), 0) AS unreadCount,
+    COALESCE(MAX(muted), 0) AS muted
+FROM InboxEventEntity
+GROUP BY sourceId
+ORDER BY unreadCount DESC, sourceId;
+
+getInboxEvent:
+SELECT * FROM InboxEventEntity WHERE id = :id;
+
+upsertInboxEvent:
+INSERT INTO InboxEventEntity(
+    id, kind, sourceId, title, summary, contentKind, contentId, contentSourceId,
+    parentId, canonicalUrl, occurredAt, readAt, muted, priority
+) VALUES (
+    :id, :kind, :sourceId, :title, :summary, :contentKind, :contentId, :contentSourceId,
+    :parentId, :canonicalUrl, :occurredAt, :readAt, :muted, :priority
+)
+ON CONFLICT(id) DO UPDATE SET
+    kind = excluded.kind,
+    sourceId = excluded.sourceId,
+    title = excluded.title,
+    summary = excluded.summary,
+    contentKind = excluded.contentKind,
+    contentId = excluded.contentId,
+    contentSourceId = excluded.contentSourceId,
+    parentId = excluded.parentId,
+    canonicalUrl = excluded.canonicalUrl,
+    occurredAt = excluded.occurredAt,
+    muted = excluded.muted,
+    priority = excluded.priority;
+
+markInboxRead:
+UPDATE InboxEventEntity SET readAt = :readAt WHERE id = :id;
+
+markAllInboxRead:
+UPDATE InboxEventEntity SET readAt = :readAt
+WHERE (:sourceIdFilter IS NULL OR sourceId = :sourceIdFilter)
+  AND (:kindFilter IS NULL OR kind = :kindFilter)
+  AND (:includeMuted = 1 OR muted = 0)
+  AND (:query = '' OR title LIKE '%' || :query || '%' OR summary LIKE '%' || :query || '%');
+
+setInboxSourceMuted:
+UPDATE InboxEventEntity SET muted = :muted WHERE sourceId = :sourceId;
+
+deleteInboxEvent:
+DELETE FROM InboxEventEntity WHERE id = :id;
+
+getInboxSourcePreference:
+SELECT * FROM InboxSourcePreferenceEntity WHERE sourceId = :sourceId;
+
+upsertInboxSourcePreference:
+INSERT INTO InboxSourcePreferenceEntity(sourceId, muted, updatedAt)
+VALUES (:sourceId, :muted, :updatedAt)
+ON CONFLICT(sourceId) DO UPDATE SET muted = excluded.muted, updatedAt = excluded.updatedAt;

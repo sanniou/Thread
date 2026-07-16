@@ -7,6 +7,7 @@ enum class WorkspaceDestination(val key: String) {
     FEED("feed"),
     SEARCH("search"),
     BOOKMARKS("bookmarks"),
+    INBOX("inbox"),
     HISTORY("history"),
     ACTIVITY("activity"),
     OPERATIONS("operations"),

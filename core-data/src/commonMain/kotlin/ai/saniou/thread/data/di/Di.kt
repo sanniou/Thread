@@ -26,6 +26,10 @@ import ai.saniou.thread.data.repository.DefaultProductActionExecutor
 import ai.saniou.thread.data.repository.ActivityCenterRepositoryImpl
 import ai.saniou.thread.data.repository.WorkspaceSessionRepositoryImpl
 import ai.saniou.thread.data.repository.WorkspaceRestorationRepositoryImpl
+import ai.saniou.thread.data.repository.InboxRepositoryImpl
+import ai.saniou.thread.data.repository.ContentLinkRepositoryImpl
+import ai.saniou.thread.data.repository.SmartCollectionRepositoryImpl
+import ai.saniou.thread.data.repository.AppearanceRepositoryImpl
 import ai.saniou.thread.data.repository.SubscriptionRepositoryImpl
 import ai.saniou.thread.data.repository.SyncRepositoryImpl
 import ai.saniou.thread.data.repository.TopicRepositoryImpl
@@ -78,6 +82,10 @@ import ai.saniou.thread.domain.repository.ReactionRepository
 import ai.saniou.thread.domain.repository.ReferenceRepository
 import ai.saniou.thread.domain.repository.SettingsRepository
 import ai.saniou.thread.domain.repository.GlobalSearchRepository
+import ai.saniou.thread.domain.repository.InboxRepository
+import ai.saniou.thread.domain.repository.ContentLinkRepository
+import ai.saniou.thread.domain.repository.SmartCollectionRepository
+import ai.saniou.thread.domain.repository.AppearanceRepository
 import ai.saniou.thread.domain.repository.OperationsRepository
 import ai.saniou.thread.domain.repository.PostDraftRepository
 import ai.saniou.thread.domain.repository.IdentityRepository
@@ -250,6 +258,10 @@ val dataModule = DI.Module("dataModule") {
     }
     bind<AccountRepository>() with singleton { AccountRepositoryImpl(instance()) }
     bind<SettingsRepository>() with singleton { SettingsRepositoryImpl(instance()) }
+    bind<InboxRepository>() with singleton { InboxRepositoryImpl(instance()) }
+    bind<ContentLinkRepository>() with singleton { ContentLinkRepositoryImpl(instance(), instance()) }
+    bind<SmartCollectionRepository>() with singleton { SmartCollectionRepositoryImpl(instance(), instance()) }
+    bind<AppearanceRepository>() with singleton { AppearanceRepositoryImpl(instance()) }
     bind<IdentityRepository>() with singleton { IdentityRepositoryImpl(instance(), instance(), instance()) }
     bind<LoginRepository>() with singleton { LoginRepositoryImpl(instance(), instance(), instance()) }
     bind<WorkspaceSessionRepository>() with singleton { WorkspaceSessionRepositoryImpl(instance()) }

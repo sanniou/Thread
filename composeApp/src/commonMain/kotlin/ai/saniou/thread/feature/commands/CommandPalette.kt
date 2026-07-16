@@ -111,10 +111,11 @@ val defaultWorkspaceCommands = listOf(
     WorkspaceCommand(WorkspaceDestination.FEED, "打开动态", "聚合社区与订阅时间线", Icons.Default.DynamicFeed, "⌘3"),
     WorkspaceCommand(WorkspaceDestination.SEARCH, "全局发现", "搜索全部离线内容缓存", Icons.Default.Search, "⌘4"),
     WorkspaceCommand(WorkspaceDestination.BOOKMARKS, "打开收藏", "继续保存的阅读上下文", Icons.Default.Bookmark, "⌘5"),
-    WorkspaceCommand(WorkspaceDestination.HISTORY, "打开历史", "回到最近浏览的主题", Icons.Default.History, "⌘6"),
+    WorkspaceCommand(WorkspaceDestination.INBOX, "通知收件箱", "查看公告、回复与 Reader 更新", Icons.Default.NotificationsActive, "⌘6"),
     WorkspaceCommand(WorkspaceDestination.ACTIVITY, "活动中心", "处理刷新、认证、草稿与数据任务", Icons.Default.NotificationsActive, "⌘7"),
     WorkspaceCommand(WorkspaceDestination.OPERATIONS, "来源运维", "检查缓存、刷新与连接器健康", Icons.Default.MonitorHeart, "⌘8"),
     WorkspaceCommand(WorkspaceDestination.SETTINGS, "数据与同步", "备份、恢复与 WebDAV", Icons.Default.Settings, "⌘9"),
+    WorkspaceCommand(WorkspaceDestination.HISTORY, "浏览历史", "回到最近浏览的主题和文章", Icons.Default.History, ""),
 )
 
 @Composable

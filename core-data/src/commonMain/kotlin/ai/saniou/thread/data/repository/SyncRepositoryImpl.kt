@@ -289,6 +289,8 @@ class SyncRepositoryImpl(
             "last_opened_forum_id",
             "last_opened_forum_source",
             "active_subscription_key",
+            "appearance_preferences_v1",
+            "smart_collections_v1",
         )
     }
 }

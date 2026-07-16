@@ -38,12 +38,34 @@ class NoticeRepositoryImpl(
             val response = api.notice()
             when (response) {
                 is SaniouResult.Success -> {
+                    val id = response.data.content.hashCode().toString()
+                    val now = Clock.System.now().toEpochMilliseconds()
                     db.noticeQueries.insertNotice(
-                        id = response.data.content.hashCode().toString(),
+                        id = id,
                         content = response.data.content,
-                        date = Clock.System.now().toEpochMilliseconds(),
+                        date = now,
                         enable = if (response.data.enable) 1 else 0,
                     )
+                    if (response.data.enable) {
+                        val muted = db.inboxEventQueries.getInboxSourcePreference("nmb")
+                            .executeAsOneOrNull()?.muted ?: 0L
+                        db.inboxEventQueries.upsertInboxEvent(
+                            id = "notice:nmb:$id",
+                            kind = "ANNOUNCEMENT",
+                            sourceId = "nmb",
+                            title = "社区公告",
+                            summary = response.data.content.take(320),
+                            contentKind = null,
+                            contentId = null,
+                            contentSourceId = null,
+                            parentId = null,
+                            canonicalUrl = null,
+                            occurredAt = now,
+                            readAt = null,
+                            muted = muted,
+                            priority = 2,
+                        )
+                    }
                     settingsRepository.saveValue(KEY_LAST_FETCH_TIME, Clock.System.now().toEpochMilliseconds())
                 }
 
@@ -55,6 +77,10 @@ class NoticeRepositoryImpl(
 
     override suspend fun markAsRead(id: String) {
         db.noticeQueries.markAsRead(id)
+        db.inboxEventQueries.markInboxRead(
+            readAt = Clock.System.now().toEpochMilliseconds(),
+            id = "notice:nmb:$id",
+        )
     }
 
     companion object {

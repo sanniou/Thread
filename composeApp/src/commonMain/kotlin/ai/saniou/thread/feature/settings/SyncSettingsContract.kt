@@ -1,6 +1,8 @@
 package ai.saniou.thread.feature.settings
 
 import ai.saniou.thread.domain.model.reader.ReaderSchedulerState
+import ai.saniou.thread.domain.model.collection.SmartCollection
+import ai.saniou.thread.domain.model.settings.AppearancePreferences
 
 data class UserDataDialog(
     val isImport: Boolean,
@@ -18,6 +20,8 @@ interface SyncSettingsContract {
         val scheduler: ReaderSchedulerState = ReaderSchedulerState(),
         val activeRefreshCount: Int = 0,
         val failedRefreshCount: Int = 0,
+        val appearance: AppearancePreferences = AppearancePreferences(),
+        val smartCollections: List<SmartCollection> = emptyList(),
     )
 
     sealed interface Event {
@@ -33,5 +37,14 @@ interface SyncSettingsContract {
         object RestoreWebDav : Event
         object DismissDialog : Event
         object MessageShown : Event
+        data class AppearanceChanged(val value: AppearancePreferences) : Event
+        object ResetAppearance : Event
+        data class SaveSmartCollection(
+            val name: String,
+            val query: String,
+            val unreadOnly: Boolean,
+            val bookmarkedOnly: Boolean,
+        ) : Event
+        data class DeleteSmartCollection(val id: String) : Event
     }
 }

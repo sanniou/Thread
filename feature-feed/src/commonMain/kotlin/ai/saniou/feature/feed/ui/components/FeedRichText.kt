@@ -4,6 +4,7 @@ import ai.saniou.coreui.richtext.SmartRichText
 import ai.saniou.coreui.richtext.RichTextPlugin
 import ai.saniou.coreui.richtext.plugins.UrlPlugin
 import ai.saniou.coreui.widgets.BlankLinePolicy
+import ai.saniou.coreui.composition.LocalContentLinkHandler
 import ai.saniou.feature.feed.ui.richtext.FeedRichTextStrategyFactory
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -36,16 +37,17 @@ fun FeedRichText(
     onMentionClick: ((String) -> Unit)? = null,
 ) {
     val uriHandler = LocalUriHandler.current
+    val rootLinkHandler = LocalContentLinkHandler.current
 
     val strategy = remember(sourceId) {
         FeedRichTextStrategyFactory.getStrategy(sourceId)
     }
 
-    val plugins = remember(strategy, onHashtagClick, onMentionClick) {
+    val plugins = remember(strategy, onHashtagClick, onMentionClick, rootLinkHandler, uriHandler) {
         val list = mutableListOf<RichTextPlugin>(
             UrlPlugin(onUrlClick = { url -> 
                  val fullUrl = if (url.startsWith("www.", ignoreCase = true)) "http://$url" else url
-                 uriHandler.openUri(fullUrl)
+                 rootLinkHandler?.invoke(fullUrl) ?: uriHandler.openUri(fullUrl)
             })
         )
         list.addAll(strategy.getPlugins(onHashtagClick, onMentionClick))

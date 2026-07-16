@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidMultiplatformLibrary)
+    alias(libs.plugins.kotlinxSerialization)
 }
 
 
@@ -39,6 +40,7 @@ kotlin {
             api(libs.kotlinx.datetime)
             api(libs.paging.common)
             implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.kotlinx.serialization.json)
             implementation(libs.kodein.di)
         }
         commonTest.dependencies {

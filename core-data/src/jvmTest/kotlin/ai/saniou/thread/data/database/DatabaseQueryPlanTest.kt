@@ -48,6 +48,14 @@ class DatabaseQueryPlanTest {
             ORDER BY lastReplyAt DESC LIMIT 20
             """.trimIndent(),
         )
+        driver.assertUsesIndex(
+            "idx_inbox_source",
+            """
+            SELECT * FROM InboxEventEntity
+            WHERE sourceId = 'reader'
+            ORDER BY occurredAt DESC LIMIT 40
+            """.trimIndent(),
+        )
         driver.close()
     }
 
