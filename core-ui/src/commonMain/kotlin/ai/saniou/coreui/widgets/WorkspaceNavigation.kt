@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreHoriz
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -66,6 +67,7 @@ data class WorkspaceNavigationItem(
 fun WorkspaceNavigationSuite(
     items: List<WorkspaceNavigationItem>,
     modifier: Modifier = Modifier,
+    onOpenCommandPalette: (() -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
     val windowInfo = LocalThreadWindowInfo.current
@@ -74,18 +76,25 @@ fun WorkspaceNavigationSuite(
         workspaceShortcutKeys.getOrNull(index)?.let { key ->
             ThreadShortcut(key) { item.onClick() }
         }
-    }.toTypedArray()
+    } + listOfNotNull(
+        onOpenCommandPalette?.let { ThreadShortcut(Key.P, shift = true, action = it) }
+    )
     val hostModifier = modifier
         .focusRequester(focusRequester)
         .focusable()
         .semantics { paneTitle = "Thread 工作区" }
-        .threadShortcutHost(*shortcuts)
+        .threadShortcutHost(*shortcuts.toTypedArray())
     LaunchedEffect(Unit) { focusRequester.requestFocus() }
     if (windowInfo.usesBottomNavigation) {
-        WorkspaceBottomNavigation(items = items, modifier = hostModifier, content = content)
+        WorkspaceBottomNavigation(
+            items = items,
+            modifier = hostModifier,
+            onOpenCommandPalette = onOpenCommandPalette,
+            content = content,
+        )
     } else {
         Row(hostModifier.fillMaxSize()) {
-            WorkspaceNavigationRail(items)
+            WorkspaceNavigationRail(items, onOpenCommandPalette = onOpenCommandPalette)
             Box(Modifier.weight(1f).fillMaxSize()) { content() }
         }
     }
@@ -95,6 +104,7 @@ fun WorkspaceNavigationSuite(
 private fun WorkspaceBottomNavigation(
     items: List<WorkspaceNavigationItem>,
     modifier: Modifier,
+    onOpenCommandPalette: (() -> Unit)?,
     content: @Composable () -> Unit,
 ) {
     var showOverflow by remember { mutableStateOf(false) }
@@ -149,6 +159,32 @@ private fun WorkspaceBottomNavigation(
                     style = MaterialTheme.typography.headlineSmall,
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp),
                 )
+                onOpenCommandPalette?.let { openPalette ->
+                    Surface(
+                        onClick = {
+                            showOverflow = false
+                            openPalette()
+                        },
+                        modifier = Modifier.fillMaxWidth().semantics {
+                            contentDescription = "打开命令与全局发现"
+                        },
+                        shape = MaterialTheme.shapes.large,
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        ) {
+                            Icon(Icons.Default.Search, contentDescription = null)
+                            Column(Modifier.weight(1f)) {
+                                Text("命令与发现", style = MaterialTheme.typography.titleMedium)
+                                Text("跳转工作区或搜索离线缓存", style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
+                    }
+                    HorizontalDivider(Modifier.padding(vertical = 8.dp))
+                }
                 primaryItems.forEach { item ->
                     CompactDestinationItem(item, items.indexOf(item)) { showOverflow = false }
                 }
@@ -195,6 +231,7 @@ private fun CompactDestinationItem(
 fun WorkspaceNavigationRail(
     items: List<WorkspaceNavigationItem>,
     modifier: Modifier = Modifier,
+    onOpenCommandPalette: (() -> Unit)? = null,
 ) {
     val windowInfo = LocalThreadWindowInfo.current
     Surface(
@@ -230,6 +267,33 @@ fun WorkspaceNavigationRail(
                 )
             }
             Spacer(Modifier.size(10.dp))
+            onOpenCommandPalette?.let { openPalette ->
+                Surface(
+                    onClick = openPalette,
+                    modifier = Modifier.fillMaxWidth().semantics {
+                        contentDescription = "打开命令与全局发现，快捷键 Ctrl 或 Command 加 Shift 加 P"
+                    },
+                    shape = MaterialTheme.shapes.large,
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                ) {
+                    Column(
+                        modifier = Modifier.padding(horizontal = 4.dp, vertical = if (windowInfo.showsNavigationLabels) 9.dp else 12.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(22.dp))
+                        if (windowInfo.showsNavigationLabels) {
+                            Text(
+                                "命令",
+                                style = MaterialTheme.typography.labelSmall,
+                                maxLines = 1,
+                                textAlign = TextAlign.Center,
+                            )
+                        }
+                    }
+                }
+                Spacer(Modifier.size(4.dp))
+            }
             items.filterNot { it.bottom }.forEach { item ->
                 WorkspaceRailItem(item, windowInfo.showsNavigationLabels, items.indexOf(item))
             }

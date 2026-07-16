@@ -17,6 +17,9 @@ import ai.saniou.thread.data.repository.UserContentRepositoryImpl
 import ai.saniou.thread.data.repository.LoginRepositoryImpl
 import ai.saniou.thread.data.repository.ReferenceRepositoryImpl
 import ai.saniou.thread.data.repository.SettingsRepositoryImpl
+import ai.saniou.thread.data.repository.GlobalSearchRepositoryImpl
+import ai.saniou.thread.data.repository.OperationsRepositoryImpl
+import ai.saniou.thread.data.repository.WorkspaceSessionRepositoryImpl
 import ai.saniou.thread.data.repository.SubscriptionRepositoryImpl
 import ai.saniou.thread.data.repository.SyncRepositoryImpl
 import ai.saniou.thread.data.repository.TopicRepositoryImpl
@@ -68,6 +71,9 @@ import ai.saniou.thread.domain.repository.PostRepository
 import ai.saniou.thread.domain.repository.ReactionRepository
 import ai.saniou.thread.domain.repository.ReferenceRepository
 import ai.saniou.thread.domain.repository.SettingsRepository
+import ai.saniou.thread.domain.repository.GlobalSearchRepository
+import ai.saniou.thread.domain.repository.OperationsRepository
+import ai.saniou.thread.domain.repository.WorkspaceSessionRepository
 import ai.saniou.thread.domain.repository.Source
 import ai.saniou.thread.domain.model.source.SourceDescriptor
 import ai.saniou.thread.domain.model.source.SourceType
@@ -231,6 +237,8 @@ val dataModule = DI.Module("dataModule") {
     bind<AccountRepository>() with singleton { AccountRepositoryImpl(instance()) }
     bind<LoginRepository>() with singleton { LoginRepositoryImpl(instance(), instance()) }
     bind<SettingsRepository>() with singleton { SettingsRepositoryImpl(instance()) }
+    bind<WorkspaceSessionRepository>() with singleton { WorkspaceSessionRepositoryImpl(instance()) }
+    bind<GlobalSearchRepository>() with singleton { GlobalSearchRepositoryImpl(instance(), instance()) }
     bind<NoticeRepository>() with singleton {
         NoticeRepositoryImpl(
             instance(),
@@ -310,6 +318,9 @@ val dataModule = DI.Module("dataModule") {
     bindSingleton<RefreshCoordinator> { DefaultRefreshCoordinator() }
     bind<ReaderRepository>() with singleton {
         ReaderRepositoryImpl(instance(), instance(), instance(), instance(), instance(), instance(), instance())
+    }
+    bind<OperationsRepository>() with singleton {
+        OperationsRepositoryImpl(instance(), instance(), instance(), instance())
     }
     bind<ReaderRefreshScheduler>() with singleton { DefaultReaderRefreshScheduler(instance()) }
 

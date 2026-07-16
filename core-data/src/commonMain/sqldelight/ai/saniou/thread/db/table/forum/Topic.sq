@@ -204,6 +204,14 @@ countSearchTopics:
 SELECT count(*) FROM Topic
 WHERE (CAST(id AS TEXT) LIKE ('%' || :query || '%') OR title LIKE ('%' || :query || '%') OR content LIKE ('%' || :query || '%'));
 
+getForumTopicCacheStats:
+SELECT
+    sourceId,
+    count(*) AS topicCount,
+    COALESCE(MAX(lastReplyAt), 0) AS lastContentAt
+FROM Topic
+GROUP BY sourceId;
+
 getTopicsByUserHashOffset:
 SELECT * FROM Topic
 WHERE sourceId = :sourceId AND authorId = :authorId

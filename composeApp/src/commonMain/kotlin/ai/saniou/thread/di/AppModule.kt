@@ -4,6 +4,8 @@ import ai.saniou.thread.feature.bookmark.BookmarkViewModel
 import ai.saniou.thread.feature.challenge.UiChallengeHandler
 import ai.saniou.thread.feature.history.HistoryViewModel
 import ai.saniou.thread.feature.settings.SyncSettingsViewModel
+import ai.saniou.thread.feature.search.GlobalSearchViewModel
+import ai.saniou.thread.feature.operations.OperationsViewModel
 import ai.saniou.thread.network.ChallengeHandler
 import org.kodein.di.DI
 import org.kodein.di.bindProvider
@@ -15,6 +17,8 @@ val appModule = DI.Module("appModule") {
     bindSingleton<ChallengeHandler> { instance<UiChallengeHandler>() }
     bindProvider { HistoryViewModel(instance()) }
     bindProvider { BookmarkViewModel(instance(), instance(), instance()) }
+    bindProvider { GlobalSearchViewModel(instance(), instance(), instance()) }
+    bindProvider { OperationsViewModel(instance(), instance(), instance(), instance()) }
     bindProvider {
         SyncSettingsViewModel(
             instance(),

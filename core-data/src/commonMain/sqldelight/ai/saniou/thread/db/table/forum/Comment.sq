@@ -161,6 +161,12 @@ SELECT count(*) FROM Comment
 WHERE (content LIKE ('%' || :query || '%') OR title LIKE ('%' || :query || '%'))
 AND page >= 0;
 
+getForumCommentCacheStats:
+SELECT sourceId, count(*) AS commentCount
+FROM Comment
+WHERE page >= 0
+GROUP BY sourceId;
+
 getCommentsByUserHashOffset:
 SELECT * FROM Comment
 WHERE sourceId = :sourceId AND userHash = :userHash AND page >= 0

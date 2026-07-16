@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.17.0 - 2026-07-17
+
+Offline discovery, session continuity and source-operations release.
+
+- The adaptive shell now exposes nine stable workspaces: Forum, Reader, Feed, Discovery, Bookmarks, History, Operations, Lab and Settings. Touch navigation and Ctrl/Command+1–9 resolve through the same destination model.
+- Ctrl/Command+Shift+P opens a global command palette with keyboard selection, shortcut discovery, workspace routing and immediate cached-content results.
+- A new offline discovery repository searches SQLDelight Topic, Comment and Article caches concurrently, preserves source identity and routes results back to forum topics or Reader articles without network access.
+- Versioned workspace sessions restore the last workspace, forum source and global query. Mutex-protected partial updates prevent navigation, source and search writers from overwriting one another, while detail stacks remain stable after settings writes.
+- The source operations workspace combines live forum registrations, Reader subscriptions, cache counts and refresh diagnostics into ready, disabled, refreshing, offline, authentication, rate-limit and degraded states with source-local retry and diagnostic clearing.
+- Desktop stores its database in the application data directory instead of the launch working directory. A first-run upgrader copies a legacy database and WAL/SHM sidecars only when no target database exists.
+- A product-graph JVM integration test covers all three search result types, health aggregation, authentication degradation, diagnostic clearing and concurrent session restoration; Desktop database-location tests prevent destructive upgrade regressions.
+
 ## 0.16.0 - 2026-07-17
 
 Release-candidate interaction and bounded-performance release.

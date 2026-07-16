@@ -51,6 +51,12 @@ import ai.saniou.thread.domain.usecase.thread.GetTopicMetadataUseCase
 import ai.saniou.thread.domain.usecase.user.LoginSourceUseCase
 import ai.saniou.thread.domain.usecase.refresh.ObserveRefreshDiagnosticsUseCase
 import ai.saniou.thread.domain.usecase.sync.*
+import ai.saniou.thread.domain.usecase.search.SearchLocalContentUseCase
+import ai.saniou.thread.domain.usecase.operations.ClearSourceDiagnosticUseCase
+import ai.saniou.thread.domain.usecase.operations.ObserveOperationsUseCase
+import ai.saniou.thread.domain.usecase.workspace.ObserveWorkspaceSessionUseCase
+import ai.saniou.thread.domain.usecase.workspace.SaveWorkspaceSessionUseCase
+import ai.saniou.thread.domain.usecase.workspace.UpdateWorkspaceSessionUseCase
 import org.kodein.di.DI
 import org.kodein.di.bindProvider
 import org.kodein.di.instance
@@ -62,6 +68,12 @@ val domainModule = DI.Module("domainModule") {
     bindProvider { RefreshTimelineUseCase(instance()) }
     bindProvider { GetAggregatedFeedUseCase(instance()) }
     bindProvider { ObserveRefreshDiagnosticsUseCase(instance()) }
+    bindProvider { SearchLocalContentUseCase(instance()) }
+    bindProvider { ObserveOperationsUseCase(instance()) }
+    bindProvider { ClearSourceDiagnosticUseCase(instance()) }
+    bindProvider { ObserveWorkspaceSessionUseCase(instance()) }
+    bindProvider { SaveWorkspaceSessionUseCase(instance()) }
+    bindProvider { UpdateWorkspaceSessionUseCase(instance()) }
 
     // Reader
     bindProvider { GetFeedSourcesUseCase(instance()) }

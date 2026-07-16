@@ -4,6 +4,9 @@ import ai.saniou.thread.data.database.createDatabase
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.domain.reader.ReaderRefreshScheduler
 import ai.saniou.thread.domain.repository.SyncRepository
+import ai.saniou.thread.domain.repository.GlobalSearchRepository
+import ai.saniou.thread.domain.repository.OperationsRepository
+import ai.saniou.thread.domain.repository.WorkspaceSessionRepository
 import ai.saniou.thread.domain.source.SourceCatalog
 import app.cash.sqldelight.async.coroutines.synchronous
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
@@ -54,6 +57,9 @@ class AppCompositionSmokeTest {
         assertNull(catalog.subComments("discourse"))
         assertNull(catalog.reactions("discourse"))
         assertNotNull(di.direct.instance<SyncRepository>())
+        assertNotNull(di.direct.instance<GlobalSearchRepository>())
+        assertNotNull(di.direct.instance<OperationsRepository>())
+        assertNotNull(di.direct.instance<WorkspaceSessionRepository>())
 
         di.direct.instance<ReaderRefreshScheduler>().stop()
     }

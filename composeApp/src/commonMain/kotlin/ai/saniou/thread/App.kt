@@ -20,13 +20,22 @@ import ai.saniou.thread.di.appModule
 import ai.saniou.thread.domain.di.domainModule
 import ai.saniou.thread.domain.repository.SettingsRepository
 import ai.saniou.thread.domain.repository.observeValue
+import ai.saniou.thread.domain.repository.WorkspaceSessionRepository
 import ai.saniou.thread.domain.model.source.DEFAULT_FORUM_SOURCE_ID
+import ai.saniou.thread.domain.model.search.GlobalSearchResult
+import ai.saniou.thread.domain.model.search.GlobalSearchType
+import ai.saniou.thread.domain.model.workspace.WorkspaceDestination
+import ai.saniou.thread.domain.model.workspace.WorkspaceSession
+import ai.saniou.thread.domain.usecase.search.SearchLocalContentUseCase
 import ai.saniou.thread.feature.cellularautomaton.CellularAutomatonScreen
 import ai.saniou.thread.feature.challenge.CloudflareVerificationDialog
 import ai.saniou.thread.feature.bookmark.BookmarkPage
 import ai.saniou.thread.feature.challenge.UiChallengeHandler
 import ai.saniou.thread.feature.history.HistoryPage
 import ai.saniou.thread.feature.settings.SyncSettingsPage
+import ai.saniou.thread.feature.search.GlobalSearchPage
+import ai.saniou.thread.feature.operations.OperationsPage
+import ai.saniou.thread.feature.commands.CommandPalette
 import ai.saniou.thread.domain.reader.ReaderRefreshScheduler
 import ai.saniou.thread.db.Database
 import ai.saniou.forum.workflow.post.AttachmentPicker
@@ -37,8 +46,15 @@ import androidx.compose.material.icons.filled.DynamicFeed
 import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.Games
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.MonitorHeart
 import androidx.compose.material.icons.filled.RssFeed
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
@@ -83,10 +99,14 @@ fun App(attachmentPicker: AttachmentPicker? = null) {
     withDI(di) {
         val settingsRepository: SettingsRepository by di.instance()
         val currentSource by settingsRepository.observeValue<String>("current_source_id")
-            .collectAsState(initial = DEFAULT_FORUM_SOURCE_ID)
+            .collectAsState(initial = null)
+        val workspaceSessionRepository: WorkspaceSessionRepository by di.instance()
+        var workspaceSession by remember { mutableStateOf<WorkspaceSession?>(null) }
+        val searchLocalContent: SearchLocalContentUseCase by di.instance()
 
         val challengeHandler: UiChallengeHandler by di.instance()
         var challengeRequest by remember { mutableStateOf<UiChallengeHandler.ChallengeRequest?>(null) }
+        var showCommandPalette by remember { mutableStateOf(false) }
         val scope = rememberCoroutineScope()
         val readerScheduler: ReaderRefreshScheduler by di.instance()
 
@@ -98,6 +118,19 @@ fun App(attachmentPicker: AttachmentPicker? = null) {
         LaunchedEffect(Unit) {
             challengeHandler.challengeEvents.collect {
                 challengeRequest = it
+            }
+        }
+        LaunchedEffect(workspaceSessionRepository) {
+            workspaceSessionRepository.observe().collect { workspaceSession = it }
+        }
+        LaunchedEffect(currentSource) {
+            currentSource?.let { sourceId ->
+                workspaceSessionRepository.update { current ->
+                    if (current.forumSourceId == sourceId) current else current.copy(
+                        forumSourceId = sourceId,
+                        updatedAtEpochMillis = kotlin.time.Clock.System.now().toEpochMilliseconds(),
+                    )
+                }
             }
         }
 
@@ -118,14 +151,47 @@ fun App(attachmentPicker: AttachmentPicker? = null) {
                     }
                 )
             }
+            val restoredSession = workspaceSession
+            if (restoredSession == null) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+                return@ThreadTheme
+            }
+            val initialDestination = remember { restoredSession.destination }
             Navigator(
-                screen = ForumRoute,
+                screen = screenFor(initialDestination),
                 disposeBehavior = NavigatorDisposeBehavior(disposeSteps = false),
             ) { navigator ->
-                var selectedWorkspace by rememberSaveable { mutableStateOf(WorkspaceDestination.FORUM) }
+                var selectedWorkspaceKey by rememberSaveable { mutableStateOf(initialDestination.key) }
+                val selectedWorkspace = WorkspaceDestination.fromKey(selectedWorkspaceKey)
                 fun navigateTo(destination: WorkspaceDestination, screen: Screen) {
-                    selectedWorkspace = destination
+                    selectedWorkspaceKey = destination.key
                     navigator.replaceAll(screen)
+                    scope.launch {
+                        workspaceSessionRepository.update { current ->
+                            current.copy(
+                                destination = destination,
+                                updatedAtEpochMillis = kotlin.time.Clock.System.now().toEpochMilliseconds(),
+                            )
+                        }
+                    }
+                }
+                fun openSearchResult(result: GlobalSearchResult) {
+                    when (result.type) {
+                        GlobalSearchType.ARTICLE -> {
+                            navigateTo(WorkspaceDestination.READER, ReaderRoute)
+                            navigator.push(ArticleDetailPage(result.id))
+                        }
+                        GlobalSearchType.TOPIC -> {
+                            navigateTo(WorkspaceDestination.FORUM, ForumRoute)
+                            navigator.push(FeedTopicRoute(result.sourceId, result.id))
+                        }
+                        GlobalSearchType.COMMENT -> {
+                            navigateTo(WorkspaceDestination.FORUM, ForumRoute)
+                            navigator.push(FeedTopicRoute(result.sourceId, result.contextId ?: result.id))
+                        }
+                    }
                 }
                 val currentScreen = navigator.lastItem
                 ThreadAdaptiveWindow {
@@ -139,11 +205,17 @@ fun App(attachmentPicker: AttachmentPicker? = null) {
                         WorkspaceNavigationItem(Icons.Default.DynamicFeed, "动态", selectedWorkspace == WorkspaceDestination.FEED) {
                             navigateTo(WorkspaceDestination.FEED, FeedRoute)
                         },
+                        WorkspaceNavigationItem(Icons.Default.Search, "发现", selectedWorkspace == WorkspaceDestination.SEARCH) {
+                            navigateTo(WorkspaceDestination.SEARCH, GlobalSearchPage)
+                        },
                         WorkspaceNavigationItem(Icons.Default.Bookmark, "收藏", selectedWorkspace == WorkspaceDestination.BOOKMARKS) {
                             navigateTo(WorkspaceDestination.BOOKMARKS, BookmarkPage)
                         },
                         WorkspaceNavigationItem(Icons.Default.History, "历史", selectedWorkspace == WorkspaceDestination.HISTORY) {
                             navigateTo(WorkspaceDestination.HISTORY, HistoryPage())
+                        },
+                        WorkspaceNavigationItem(Icons.Default.MonitorHeart, "运维", selectedWorkspace == WorkspaceDestination.OPERATIONS, bottom = true) {
+                            navigateTo(WorkspaceDestination.OPERATIONS, OperationsPage)
                         },
                         WorkspaceNavigationItem(Icons.Default.Games, "实验室", selectedWorkspace == WorkspaceDestination.LAB, bottom = true) {
                             navigateTo(WorkspaceDestination.LAB, CellularAutomatonRoute)
@@ -152,9 +224,14 @@ fun App(attachmentPicker: AttachmentPicker? = null) {
                             navigateTo(WorkspaceDestination.SETTINGS, SyncSettingsPage())
                         },
                     )
-                    WorkspaceNavigationSuite(navigationItems) {
+                    WorkspaceNavigationSuite(
+                        items = navigationItems,
+                        onOpenCommandPalette = { showCommandPalette = true },
+                    ) {
                             CompositionLocalProvider(
-                                LocalForumSourceId provides (currentSource ?: DEFAULT_FORUM_SOURCE_ID),
+                                LocalForumSourceId provides (
+                                    currentSource ?: restoredSession.forumSourceId ?: DEFAULT_FORUM_SOURCE_ID
+                                ),
                                 LocalAttachmentPicker provides attachmentPicker,
                             ) {
                                 navigator.saveableState("currentScreen") {
@@ -163,19 +240,29 @@ fun App(attachmentPicker: AttachmentPicker? = null) {
                             }
                     }
                 }
+                if (showCommandPalette) {
+                    CommandPalette(
+                        searchLocalContent = searchLocalContent,
+                        onDismiss = { showCommandPalette = false },
+                        onCommand = { command -> navigateTo(command.destination, screenFor(command.destination)) },
+                        onResult = ::openSearchResult,
+                    )
+                }
             }
         }
     }
 }
 
-private enum class WorkspaceDestination {
-    FORUM,
-    READER,
-    FEED,
-    BOOKMARKS,
-    HISTORY,
-    LAB,
-    SETTINGS,
+private fun screenFor(destination: WorkspaceDestination): Screen = when (destination) {
+    WorkspaceDestination.FORUM -> ForumRoute
+    WorkspaceDestination.READER -> ReaderRoute
+    WorkspaceDestination.FEED -> FeedRoute
+    WorkspaceDestination.SEARCH -> GlobalSearchPage
+    WorkspaceDestination.BOOKMARKS -> BookmarkPage
+    WorkspaceDestination.HISTORY -> HistoryPage()
+    WorkspaceDestination.OPERATIONS -> OperationsPage
+    WorkspaceDestination.LAB -> CellularAutomatonRoute
+    WorkspaceDestination.SETTINGS -> SyncSettingsPage()
 }
 
 object ForumRoute : Screen {
