@@ -1,88 +1,76 @@
 package ai.saniou.forum.ui.login
 
 import ai.saniou.coreui.theme.Dimens
-import ai.saniou.thread.domain.model.user.LoginField
+import ai.saniou.coreui.widgets.AdaptiveModal
 import ai.saniou.thread.domain.model.user.LoginStrategy
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 
 @Composable
 fun ManualLoginDialog(
     strategy: LoginStrategy.Manual,
     onDismissRequest: () -> Unit,
-    onConfirm: (Map<String, String>) -> Unit
+    onConfirm: (Map<String, String>) -> Unit,
 ) {
     val inputs = remember { mutableStateMapOf<String, String>() }
 
-    AlertDialog(
-        onDismissRequest = onDismissRequest,
-        title = {
-            Text(
-                text = strategy.title,
-                style = MaterialTheme.typography.titleLarge
-            )
-        },
-        text = {
+    AdaptiveModal(onDismissRequest = onDismissRequest) {
+        Column(modifier = Modifier.fillMaxWidth().padding(24.dp)) {
+            Text(strategy.title, style = MaterialTheme.typography.headlineSmall)
+            Spacer(modifier = Modifier.height(Dimens.padding_small))
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
+                modifier = Modifier.fillMaxWidth().heightIn(max = 560.dp)
+                    .verticalScroll(rememberScrollState()),
             ) {
                 Text(
                     text = strategy.description,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-
                 Spacer(modifier = Modifier.height(Dimens.padding_medium))
-
                 strategy.fields.forEach { field ->
                     OutlinedTextField(
-                        value = inputs[field.key] ?: "",
-                        onValueChange = {
-                            inputs[field.key] = it
-                        },
+                        value = inputs[field.key].orEmpty(),
+                        onValueChange = { inputs[field.key] = it },
                         label = { Text(field.label) },
                         placeholder = { Text(field.hint) },
-                        modifier = Modifier
-                            .fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth()
                             .height(if (field.isMultiline) Dimens.size_120 else Dimens.size_56),
                         singleLine = !field.isMultiline,
-                        maxLines = if (field.isMultiline) 5 else 1
+                        maxLines = if (field.isMultiline) 5 else 1,
                     )
                     Spacer(modifier = Modifier.height(Dimens.padding_small))
                 }
             }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    onConfirm(inputs.toMap())
-                },
-                enabled = strategy.fields.all { !it.isRequired || !inputs[it.key].isNullOrBlank() }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
             ) {
-                Text("保存")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismissRequest) {
-                Text("取消")
+                TextButton(onClick = onDismissRequest) { Text("取消") }
+                TextButton(
+                    onClick = { onConfirm(inputs.toMap()) },
+                    enabled = strategy.fields.all { !it.isRequired || !inputs[it.key].isNullOrBlank() },
+                ) {
+                    Text("保存")
+                }
             }
         }
-    )
+    }
 }

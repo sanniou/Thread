@@ -1,41 +1,35 @@
 package ai.saniou.forum.workflow.user
 
 import ai.saniou.coreui.composition.LocalForumSourceId
-import ai.saniou.coreui.widgets.SaniouTopAppBar
+import ai.saniou.coreui.theme.Dimens
+import ai.saniou.coreui.widgets.ThreadDetailScaffold
 import ai.saniou.forum.ui.login.LoginScreen
 import ai.saniou.forum.workflow.user.UserContract.Event
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.TopAppBarScrollBehavior
-import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
@@ -45,7 +39,6 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.flow.collectLatest
 class UserPage : Screen {
 
-    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
@@ -54,13 +47,7 @@ class UserPage : Screen {
         val state by userViewModel.state.collectAsStateWithLifecycle()
         var showLoginScreen by remember { mutableStateOf(false) }
         val snackbarHostState = remember { SnackbarHostState() }
-        val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
         val listState = rememberLazyListState()
-        val isFabVisible by remember {
-            derivedStateOf {
-                listState.firstVisibleItemIndex == 0 || listState.isScrollInProgress.not()
-            }
-        }
 
         LaunchedEffect(sourceId) {
             userViewModel.handleEvent(Event.LoadData(sourceId))
@@ -74,33 +61,31 @@ class UserPage : Screen {
             }
         }
 
-        Scaffold(
-            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        ThreadDetailScaffold(
+            title = "用户中心",
+            eyebrow = "IDENTITIES",
+            subtitle = "管理当前来源的登录身份 · $sourceId",
+            onBack = navigator::pop,
             snackbarHost = { SnackbarHost(snackbarHostState) },
-            topBar = {
-                SaniouTopAppBar(
-                    title = "用户中心",
-                    onNavigationClick = { navigator.pop() },
-                    scrollBehavior = scrollBehavior
-                )
-            },
-            floatingActionButton = {
-                AnimatedVisibility(visible = isFabVisible && state.loginStrategy != null) {
-                    FloatingActionButton(onClick = {
-                        showLoginScreen = true
-                    }) {
+            actions = {
+                if (state.loginStrategy != null) {
+                    IconButton(onClick = { showLoginScreen = true }) {
                         Icon(Icons.Default.Add, contentDescription = "登录/添加账号")
                     }
                 }
-            }
+            },
         ) { paddingValues ->
-            UserScreenContent(
-                modifier = Modifier.padding(paddingValues),
-                state = state,
-                onEvent = userViewModel::handleEvent,
-                scrollBehavior = scrollBehavior,
-                listState = listState,
-            )
+            Box(
+                modifier = Modifier.padding(paddingValues).fillMaxSize(),
+                contentAlignment = Alignment.TopCenter,
+            ) {
+                UserScreenContent(
+                    modifier = Modifier.fillMaxSize().widthIn(max = Dimens.contentMaxWidth),
+                    state = state,
+                    onEvent = userViewModel::handleEvent,
+                    listState = listState,
+                )
+            }
         }
 
         if (showLoginScreen && state.loginStrategy != null) {
@@ -116,12 +101,10 @@ class UserPage : Screen {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun UserScreenContent(
     state: UserContract.State,
     onEvent: (Event) -> Unit,
-    scrollBehavior: TopAppBarScrollBehavior,
     listState: androidx.compose.foundation.lazy.LazyListState,
     modifier: Modifier = Modifier
 ) {
@@ -165,7 +148,7 @@ private fun UserScreenContent(
                         )
                     },
                     listState = listState,
-                    modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
+                    modifier = Modifier.fillMaxSize()
                 )
             }
         }

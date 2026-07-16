@@ -76,6 +76,27 @@ Feed 复用相同 Feature 侧栏和 Context Hero。侧栏负责论坛来源与 R
 
 论坛主题与文章卡片仍使用各自的共享组件，因此 Reader 的未读/图片语义和 Forum 的回复/作者语义不会在聚合页面退化。
 
+## 辅助任务与命令层
+
+搜索、订阅、账号、用户动态、发帖、来源管理和同步不是独立的“手机版子页面”，而是工作区内的次级任务：
+
+- `ThreadDetailScaffold` 统一返回导航、eyebrow、标题、上下文说明、动作、Snackbar、底部工具栏和系统 inset；Compact 只压缩辅助文案，不删除必要命令。
+- `ThreadCommandBar` 在 Compact 纵向排列搜索与筛选，在其他宽度横向排列；`ThreadSearchField` 和 `ThreadFilterBar` 由 Forum 搜索、收藏和历史复用。
+- 发帖编辑器的正文限制在阅读宽度内，底部编辑工具栏独立于滚动内容，并由 IME inset 驱动，不依赖 Android Activity 或 Desktop Window。
+- 收藏选择模式通过 Hero 直接呈现选择数量和批量命令；历史用同一筛选条表达全部、帖子和文章，避免页面专属 segmented control。
+- 同步页在 Compact 纵向排列凭据，在更大窗口并排；按钮组允许换行，数据包编辑器使用大尺寸自适应模态层。
+
+旧 `ForumListPage` 与 `SubscriptionPaneScreen` 没有正式导航入口，且重复实现频道和 list-detail 逻辑，已经删除。ChannelPage、AdaptiveSidebarScaffold 与 Reader Large 三栏是唯一正式组合路径。
+
+## 自适应模态层
+
+`AdaptiveModal` 是跨 Feature 的临时任务边界：
+
+- Compact：使用底部 sheet，符合触控拇指区域和手机返回手势。
+- Medium/Expanded/Large：使用居中、限宽、限高的 dialog，避免 Desktop 上把表单拉成整屏。
+- Reader 来源分析、订阅 JSON/OPML 传输、Forum 手动登录、引用内容、楼中楼、订阅 ID、Discourse 来源和全量用户数据包都复用该行为。
+- AlertDialog 只保留短确认和短错误；长表单、长 JSON、可滚动内容必须使用 `AdaptiveModal`。
+
 ## 设计系统
 
 `ThreadTheme` 提供 Material 3 颜色、字型、shape 与额外语义色：success、warning、reader surface、interactive surface。页面不得重新声明品牌色或使用来源图片制造不可预测的全屏背景。
@@ -86,6 +107,9 @@ Feed 复用相同 Feature 侧栏和 Context Hero。侧栏负责论坛来源与 R
 - `WorkspaceNavigationSuite`：全局工作区导航。
 - `AdaptiveSidebarScaffold`：Feature 导航。
 - `ContextHero` / `PageHeader`：响应式页面层级与动作。
+- `ThreadDetailScaffold`：次级工作流的返回导航、命令和 inset 边界。
+- `ThreadCommandBar` / `ThreadSearchField` / `ThreadFilterBar`：搜索、筛选与批量命令层。
+- `AdaptiveModal`：Compact bottom sheet 与宽窗口 dialog 的统一临时任务容器。
 - `ThreadCard`：统一列表 Surface 与响应式 padding。
 - `ReadingCanvas`：Forum/Reader 聚焦详情容器。
 - `PagingStateLayout`：缓存优先的 loading、empty、error 与 retry 状态。

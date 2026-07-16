@@ -1,9 +1,13 @@
 package ai.saniou.thread.feature.settings
 
+import ai.saniou.coreui.layout.LocalThreadWindowInfo
+import ai.saniou.coreui.layout.ThreadWindowWidthClass
 import ai.saniou.coreui.theme.Dimens
-import ai.saniou.coreui.widgets.PageHeader
+import ai.saniou.coreui.widgets.AdaptiveModal
 import ai.saniou.coreui.widgets.ThreadCard
-import ai.saniou.coreui.widgets.ThreadPage
+import ai.saniou.coreui.widgets.ThreadDetailScaffold
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,28 +21,23 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Upload
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -59,7 +58,7 @@ import org.kodein.di.direct
 import org.kodein.di.instance
 
 class SyncSettingsPage : Screen {
-    @OptIn(ExperimentalMaterial3Api::class)
+    @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
@@ -83,34 +82,36 @@ class SyncSettingsPage : Screen {
             )
         }
 
-        Scaffold(
-            containerColor = MaterialTheme.colorScheme.background,
+        ThreadDetailScaffold(
+            title = "数据与同步",
+            eyebrow = "PORTABILITY",
+            subtitle = "本地数据包、WebDAV 备份与运行诊断",
+            onBack = navigator::pop,
             snackbarHost = { SnackbarHost(snackbar) },
         ) { padding ->
-          ThreadPage(modifier = Modifier.padding(padding)) {
-            Column(
+            androidx.compose.foundation.layout.Box(
+                modifier = Modifier.padding(padding).fillMaxSize(),
+                contentAlignment = Alignment.TopCenter,
+            ) {
+              Column(
                 modifier = Modifier.fillMaxSize().widthIn(max = Dimens.contentMaxWidth)
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = Dimens.page_horizontal, vertical = Dimens.page_vertical),
+                    .padding(
+                        horizontal = LocalThreadWindowInfo.current.pageHorizontalPadding,
+                        vertical = Dimens.page_vertical,
+                    ),
                 verticalArrangement = Arrangement.spacedBy(20.dp),
             ) {
-                PageHeader(
-                    title = "数据与同步",
-                    eyebrow = "PORTABILITY",
-                    subtitle = "管理本地数据包、WebDAV 备份与运行状态",
-                    actions = {
-                        IconButton(onClick = navigator::pop) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, "返回")
-                        }
-                    },
-                )
                 ThreadCard(modifier = Modifier.fillMaxWidth()) {
                     Text("本地数据包", style = MaterialTheme.typography.titleLarge)
                     Text(
                         "导出站点目录、Reader 订阅、收藏、阅读状态和必要设置。数据包带版本号，可在不同平台实现间复用。",
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
                         Button(
                             onClick = { viewModel.onEvent(SyncSettingsContract.Event.ExportLocal) },
                             enabled = !state.isWorking,
@@ -136,24 +137,17 @@ class SyncSettingsPage : Screen {
                       singleLine = true,
                       modifier = Modifier.fillMaxWidth(),
                   )
-                  Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                      OutlinedTextField(
-                          value = state.username,
-                          onValueChange = { viewModel.onEvent(SyncSettingsContract.Event.UsernameChanged(it)) },
-                          label = { Text("用户名") },
-                          singleLine = true,
-                          modifier = Modifier.weight(1f),
-                      )
-                      OutlinedTextField(
-                          value = state.password,
-                          onValueChange = { viewModel.onEvent(SyncSettingsContract.Event.PasswordChanged(it)) },
-                          label = { Text("密码") },
-                          singleLine = true,
-                          visualTransformation = PasswordVisualTransformation(),
-                          modifier = Modifier.weight(1f),
-                      )
-                  }
-                  Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                  WebDavCredentialFields(
+                      username = state.username,
+                      password = state.password,
+                      stacked = LocalThreadWindowInfo.current.widthClass == ThreadWindowWidthClass.Compact,
+                      onUsernameChange = { viewModel.onEvent(SyncSettingsContract.Event.UsernameChanged(it)) },
+                      onPasswordChange = { viewModel.onEvent(SyncSettingsContract.Event.PasswordChanged(it)) },
+                  )
+                  FlowRow(
+                      horizontalArrangement = Arrangement.spacedBy(12.dp),
+                      verticalArrangement = Arrangement.spacedBy(8.dp),
+                  ) {
                       Button(
                           onClick = { viewModel.onEvent(SyncSettingsContract.Event.SaveWebDav) },
                           enabled = state.endpoint.isNotBlank() && !state.isWorking,
@@ -163,7 +157,10 @@ class SyncSettingsPage : Screen {
                           enabled = !state.isWorking,
                       ) { Text("清除") }
                   }
-                  Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                  FlowRow(
+                      horizontalArrangement = Arrangement.spacedBy(12.dp),
+                      verticalArrangement = Arrangement.spacedBy(8.dp),
+                  ) {
                       OutlinedButton(
                           onClick = { viewModel.onEvent(SyncSettingsContract.Event.BackupWebDav) },
                           enabled = state.endpoint.isNotBlank() && !state.isWorking,
@@ -183,11 +180,52 @@ class SyncSettingsPage : Screen {
                 }
                 if (state.isWorking) CircularProgressIndicator(Modifier.align(Alignment.CenterHorizontally))
             }
-          }
+            }
         }
     }
 }
 
+@Composable
+private fun WebDavCredentialFields(
+    username: String,
+    password: String,
+    stacked: Boolean,
+    onUsernameChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit,
+) {
+    val usernameField: @Composable (Modifier) -> Unit = { modifier ->
+        OutlinedTextField(
+            value = username,
+            onValueChange = onUsernameChange,
+            label = { Text("用户名") },
+            singleLine = true,
+            modifier = modifier,
+        )
+    }
+    val passwordField: @Composable (Modifier) -> Unit = { modifier ->
+        OutlinedTextField(
+            value = password,
+            onValueChange = onPasswordChange,
+            label = { Text("密码") },
+            singleLine = true,
+            visualTransformation = PasswordVisualTransformation(),
+            modifier = modifier,
+        )
+    }
+    if (stacked) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            usernameField(Modifier.fillMaxWidth())
+            passwordField(Modifier.fillMaxWidth())
+        }
+    } else {
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            usernameField(Modifier.weight(1f))
+            passwordField(Modifier.weight(1f))
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun UserDataTransferDialog(
     dialog: UserDataDialog,
@@ -196,29 +234,48 @@ private fun UserDataTransferDialog(
     onImport: (String) -> Unit,
 ) {
     var payload by remember(dialog) { mutableStateOf(dialog.payload) }
-    AlertDialog(
+    AdaptiveModal(
         onDismissRequest = { if (!isWorking) onDismiss() },
-        title = { Text(if (dialog.isImport) "导入用户数据" else "导出用户数据") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(if (dialog.isImport) "粘贴 Thread JSON 数据包。数据通过校验后才会合并。" else "复制并妥善保存以下 JSON 数据包。")
-                OutlinedTextField(
-                    value = payload,
-                    onValueChange = { if (dialog.isImport) payload = it },
-                    readOnly = !dialog.isImport,
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 260.dp, max = 480.dp),
-                )
-            }
-        },
-        confirmButton = {
-            if (dialog.isImport) {
-                Button(onClick = { onImport(payload) }, enabled = payload.isNotBlank() && !isWorking) {
-                    Text(if (isWorking) "导入中…" else "确认导入")
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(
+                if (dialog.isImport) "导入用户数据" else "导出用户数据",
+                style = MaterialTheme.typography.headlineSmall,
+            )
+            Text(
+                if (dialog.isImport) {
+                    "粘贴 Thread JSON 数据包。数据通过校验后才会合并。"
+                } else {
+                    "复制并妥善保存以下 JSON 数据包。"
+                },
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            OutlinedTextField(
+                value = payload,
+                onValueChange = { if (dialog.isImport) payload = it },
+                readOnly = !dialog.isImport,
+                modifier = Modifier.fillMaxWidth().heightIn(min = 260.dp, max = 480.dp),
+            )
+            FlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                if (dialog.isImport) {
+                    TextButton(onClick = onDismiss, enabled = !isWorking) { Text("取消") }
+                    Button(
+                        onClick = { onImport(payload) },
+                        enabled = payload.isNotBlank() && !isWorking,
+                    ) {
+                        Text(if (isWorking) "导入中…" else "确认导入")
+                    }
+                } else {
+                    Button(onClick = onDismiss) { Text("完成") }
                 }
-            } else Button(onClick = onDismiss) { Text("完成") }
-        },
-        dismissButton = {
-            if (dialog.isImport) TextButton(onClick = onDismiss, enabled = !isWorking) { Text("取消") }
-        },
-    )
+            }
+        }
+    }
 }

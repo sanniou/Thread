@@ -1,10 +1,13 @@
 package ai.saniou.forum.workflow.subscription
 
 import ai.saniou.coreui.state.AppError
+import ai.saniou.coreui.layout.LocalThreadWindowInfo
 import ai.saniou.coreui.state.DefaultError
 import ai.saniou.coreui.state.PagingStateLayout
+import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.PullToRefreshWrapper
-import ai.saniou.coreui.widgets.SaniouTopAppBar
+import ai.saniou.coreui.widgets.AdaptiveModal
+import ai.saniou.coreui.widgets.ThreadDetailScaffold
 import ai.saniou.forum.ui.components.TopicCard
 import ai.saniou.forum.ui.components.LoadEndIndicator
 import ai.saniou.forum.ui.components.LoadingFailedIndicator
@@ -25,6 +28,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -43,10 +47,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -123,14 +125,17 @@ data class SubscriptionPage(
             }
         }
 
-        Surface(color = MaterialTheme.colorScheme.background) {
-            Scaffold(
+        ThreadDetailScaffold(
+                title = stringResource(Res.string.subscription_title),
+                eyebrow = "FOLLOWING",
+                subtitle = if (state.subscriptionId.isNullOrBlank()) {
+                    "本地关注列表"
+                } else {
+                    "本地与云端订阅同步"
+                },
+                onBack = navigator::pop,
                 snackbarHost = { SnackbarHost(snackbarHostState) },
-                topBar = {
-                    SaniouTopAppBar(
-                        title = stringResource(Res.string.subscription_title),
-                        onNavigationClick = { navigator.pop() },
-                        actions = {
+                actions = {
                             IconButton(onClick = { viewModel.onEvent(Event.OnPull) }) {
                                 Icon(
                                     imageVector = Icons.Default.CloudDownload,
@@ -152,9 +157,7 @@ data class SubscriptionPage(
                                     contentDescription = stringResource(Res.string.subscription_set_id)
                                 )
                             }
-                        }
-                    )
-                }
+                },
             ) { innerPadding ->
                 when {
                     state.isLoading -> Box(modifier = Modifier.padding(innerPadding)) {
@@ -183,7 +186,6 @@ data class SubscriptionPage(
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
-            }
         }
 
         if (state.isShowSubscriptionIdDialog) {
@@ -220,7 +222,11 @@ private fun SubscriptionContent(
             empty = { EmptyContent(hasId = state.subscriptionId != null) }
         ) {
             LazyColumn(
-                contentPadding = PaddingValues(8.dp),
+                modifier = Modifier.fillMaxSize().widthIn(max = Dimens.contentMaxWidth),
+                contentPadding = PaddingValues(
+                    horizontal = LocalThreadWindowInfo.current.pageHorizontalPadding,
+                    vertical = 12.dp,
+                ),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(feeds.itemCount) { index ->
@@ -337,40 +343,46 @@ private fun SubscriptionIdDialog(
     var subscriptionId by remember { mutableStateOf(currentId) }
     var isError by remember { mutableStateOf(false) }
 
-    AlertDialog(
+    AdaptiveModal(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(Res.string.subscription_id_dialog_title)) },
-        text = {
-            Column {
-                Text(
-                    stringResource(Res.string.subscription_id_dialog_message),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                OutlinedTextField(
-                    value = subscriptionId,
-                    onValueChange = {
-                        subscriptionId = it
-                        isError = false
-                    },
-                    label = { Text(stringResource(Res.string.subscription_id_label)) },
-                    modifier = Modifier.fillMaxWidth(),
-                    isError = isError,
-                    supportingText = if (isError) {
-                        { Text(stringResource(Res.string.subscription_id_empty_error)) }
-                    } else null,
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                    keyboardActions = KeyboardActions(onDone = {
-                        if (subscriptionId.isBlank()) {
-                            isError = true
-                        } else {
-                            onConfirm(subscriptionId)
-                        }
-                    })
-                )
-            }
-        },
-        confirmButton = {
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(
+                stringResource(Res.string.subscription_id_dialog_title),
+                style = MaterialTheme.typography.headlineSmall,
+            )
+            Text(
+                stringResource(Res.string.subscription_id_dialog_message),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            OutlinedTextField(
+                value = subscriptionId,
+                onValueChange = {
+                    subscriptionId = it
+                    isError = false
+                },
+                label = { Text(stringResource(Res.string.subscription_id_label)) },
+                modifier = Modifier.fillMaxWidth(),
+                isError = isError,
+                supportingText = if (isError) {
+                    { Text(stringResource(Res.string.subscription_id_empty_error)) }
+                } else null,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = {
+                    if (subscriptionId.isBlank()) isError = true else onConfirm(subscriptionId)
+                }),
+            )
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                TextButton(onClick = onGenerateRandom) {
+                    Text(stringResource(Res.string.subscription_generate_random))
+                }
+                TextButton(onClick = onDismiss) {
+                    Text(stringResource(Res.string.subscription_cancel))
+                }
             Button(onClick = {
                 if (subscriptionId.isBlank()) {
                     isError = true
@@ -380,17 +392,7 @@ private fun SubscriptionIdDialog(
             }) {
                 Text(stringResource(Res.string.subscription_confirm))
             }
-        },
-        dismissButton = {
-            Row {
-                TextButton(onClick = onGenerateRandom) {
-                    Text(stringResource(Res.string.subscription_generate_random))
-                }
-                Spacer(modifier = Modifier.weight(1f))
-                TextButton(onClick = onDismiss) {
-                    Text(stringResource(Res.string.subscription_cancel))
-                }
             }
         }
-    )
+    }
 }

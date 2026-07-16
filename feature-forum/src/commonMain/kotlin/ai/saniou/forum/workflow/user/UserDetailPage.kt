@@ -1,6 +1,8 @@
 package ai.saniou.forum.workflow.user
 
-import ai.saniou.coreui.widgets.SaniouTopAppBar
+import ai.saniou.coreui.layout.LocalThreadWindowInfo
+import ai.saniou.coreui.theme.Dimens
+import ai.saniou.coreui.widgets.ThreadDetailScaffold
 import ai.saniou.forum.ui.components.TopicCard
 import ai.saniou.forum.ui.components.LoadEndIndicator
 import ai.saniou.forum.ui.components.LoadingFailedIndicator
@@ -18,6 +20,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -28,11 +31,9 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -40,7 +41,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.paging.LoadState
@@ -72,7 +72,6 @@ data class UserDetailPage(
         }
 
         val state by viewModel.state.collectAsState()
-        val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
         val pagerState = rememberPagerState(pageCount = { UserDetailContract.Tab.entries.size })
         val coroutineScope = rememberCoroutineScope()
 
@@ -92,48 +91,51 @@ data class UserDetailPage(
             viewModel.handleEvent(UserDetailContract.Event.SwitchTab(UserDetailContract.Tab.entries[pagerState.currentPage]))
         }
 
-        Scaffold(
-            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-            topBar = {
-                Column {
-                    SaniouTopAppBar(
-                        title = "用户: $userHash",
-                        onNavigationClick = { viewModel.handleEvent(UserDetailContract.Event.Back) },
-                        scrollBehavior = scrollBehavior
-                    )
-                    SecondaryTabRow(selectedTabIndex = state.currentTab.ordinal) {
-                        UserDetailContract.Tab.entries.forEachIndexed { index, tab ->
-                            Tab(
-                                selected = state.currentTab.ordinal == index,
-                                onClick = {
-                                    coroutineScope.launch {
-                                        pagerState.animateScrollToPage(index)
-                                    }
-                                },
-                                text = {
-                                    Text(
-                                        text = when (tab) {
-                                            UserDetailContract.Tab.Topics -> "串"
-                                            UserDetailContract.Tab.Comments -> "回复"
-                                        }
-                                    )
+        ThreadDetailScaffold(
+            title = userHash,
+            eyebrow = "MEMBER ACTIVITY",
+            subtitle = "查看该用户在当前来源发布的主题与回复",
+            onBack = { viewModel.handleEvent(UserDetailContract.Event.Back) },
+        ) { paddingValues ->
+            Column(Modifier.padding(paddingValues).fillMaxSize()) {
+                SecondaryTabRow(
+                    selectedTabIndex = state.currentTab.ordinal,
+                    modifier = Modifier.fillMaxWidth().widthIn(max = Dimens.contentMaxWidth)
+                        .align(Alignment.CenterHorizontally),
+                ) {
+                    UserDetailContract.Tab.entries.forEachIndexed { index, tab ->
+                        Tab(
+                            selected = state.currentTab.ordinal == index,
+                            onClick = {
+                                coroutineScope.launch {
+                                    pagerState.animateScrollToPage(index)
                                 }
-                            )
-                        }
+                            },
+                            text = {
+                                Text(
+                                    text = when (tab) {
+                                        UserDetailContract.Tab.Topics -> "串"
+                                        UserDetailContract.Tab.Comments -> "回复"
+                                    }
+                                )
+                            }
+                        )
                     }
                 }
-            }
-        ) { paddingValues ->
-            HorizontalPager(
-                state = pagerState,
-                modifier = Modifier.padding(paddingValues).fillMaxSize()
-            ) { page ->
-                when (UserDetailContract.Tab.entries[page]) {
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier.fillMaxSize().widthIn(max = Dimens.contentMaxWidth)
+                        .align(Alignment.CenterHorizontally),
+                ) { page ->
+                    when (UserDetailContract.Tab.entries[page]) {
                     UserDetailContract.Tab.Topics -> {
                         state.topics?.let { flow ->
                             val topics = flow.collectAsLazyPagingItems()
                             LazyColumn(
-                                contentPadding = PaddingValues(16.dp),
+                                contentPadding = PaddingValues(
+                                    horizontal = LocalThreadWindowInfo.current.pageHorizontalPadding,
+                                    vertical = 12.dp,
+                                ),
                                 verticalArrangement = Arrangement.spacedBy(8.dp),
                                 modifier = Modifier.fillMaxSize()
                             ) {
@@ -195,7 +197,11 @@ data class UserDetailPage(
                         state.comments?.let { flow ->
                             val replies = flow.collectAsLazyPagingItems()
                             LazyColumn(
-                                modifier = Modifier.fillMaxSize()
+                                modifier = Modifier.fillMaxSize(),
+                                contentPadding = PaddingValues(
+                                    horizontal = LocalThreadWindowInfo.current.pageHorizontalPadding,
+                                    vertical = 12.dp,
+                                ),
                             ) {
                                 items(replies.itemCount) { index ->
                                     val reply = replies[index]
@@ -277,6 +283,7 @@ data class UserDetailPage(
                                 }
                             }
                         }
+                    }
                     }
                 }
             }

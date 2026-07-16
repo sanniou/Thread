@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.13.0 - 2026-07-16
+
+Adaptive workflow completion release.
+
+- Search, subscriptions, accounts, user activity, posting and source management now share one responsive secondary-workflow scaffold instead of unrelated mobile top bars.
+- A common command surface drives search, filtering and bulk-selection layouts; bookmarks and history use the same responsive controls and live context metrics.
+- Forum and Reader modal tasks switch between compact bottom sheets and wide focused dialogs for source editing, login, references, sub-comments, subscription IDs and data transfer.
+- The composer uses a centered reading-width canvas, IME-aware content insets and a persistent editing toolbar without introducing platform-specific UI branches.
+- Sync settings stack credentials on compact windows, use wrapping action groups and expose full-size portable JSON editors on larger windows.
+- Unreachable legacy forum-list/list-detail experiments and the obsolete dedicated search app bar are deleted.
+- Desktop JDK 21 `:composeApp:compileKotlinJvm` is the single verification gate for this release.
+
 ## 0.12.0 - 2026-07-16
 
 Cross-platform adaptive workspace release.

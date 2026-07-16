@@ -1,7 +1,8 @@
 package ai.saniou.forum.workflow.post
 
 import ai.saniou.coreui.theme.Dimens
-import ai.saniou.coreui.widgets.SaniouTopAppBar
+import ai.saniou.coreui.layout.LocalThreadWindowInfo
+import ai.saniou.coreui.widgets.ThreadDetailScaffold
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -21,6 +22,7 @@ import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -49,7 +51,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
@@ -192,30 +193,28 @@ data class PostPage(
             )
         }
 
-        Scaffold(
-            topBar = {
-                val title = if (topicId != null) stringResource(Res.string.post_page_reply)
-                else stringResource(Res.string.post_page_new_post, state.forumName)
-                val canSend = state.content.text.isNotBlank() && !state.isLoading && !state.isSuccess
+        val title = if (topicId != null) stringResource(Res.string.post_page_reply)
+        else stringResource(Res.string.post_page_new_post, state.forumName)
+        val canSend = state.content.text.isNotBlank() && !state.isLoading && !state.isSuccess
 
-                SaniouTopAppBar(
-                    title = title,
-                    onNavigationClick = { navigator.pop() },
-                    actions = {
-                        if (!state.isLoading && !state.isSuccess) {
-                            TextButton(
-                                onClick = { viewModel.onEvent(PostContract.Event.ToggleConfirmDialog) },
-                                enabled = canSend,
-                            ) {
-                                Text(
-                                    stringResource(Res.string.post_page_send),
-                                    fontWeight = FontWeight.Bold,
-                                    style = MaterialTheme.typography.titleSmall
-                                )
-                            }
-                        }
+        ThreadDetailScaffold(
+            title = title,
+            eyebrow = "COMPOSER",
+            subtitle = if (topicId == null) "发布到 ${state.forumName}" else "回复主题 $topicId",
+            onBack = navigator::pop,
+            actions = {
+                if (!state.isLoading && !state.isSuccess) {
+                    TextButton(
+                        onClick = { viewModel.onEvent(PostContract.Event.ToggleConfirmDialog) },
+                        enabled = canSend,
+                    ) {
+                        Text(
+                            stringResource(Res.string.post_page_send),
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.titleSmall
+                        )
                     }
-                )
+                }
             },
             bottomBar = {
                 BottomEditorToolbar(
@@ -240,13 +239,16 @@ data class PostPage(
                 )
             },
             snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-            contentWindowInsets = WindowInsets.ime // Handle IME padding in Scaffold
+            contentWindowInsets = WindowInsets.ime,
         ) { innerPadding ->
             Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
+                        .widthIn(max = Dimens.readingMaxWidth)
+                        .align(Alignment.TopCenter)
                         .verticalScroll(scrollState)
+                        .padding(horizontal = LocalThreadWindowInfo.current.pageHorizontalPadding)
                 ) {
                     // Extended Options Header
                     AnimatedVisibility(visible = state.showMoreOptions) {

@@ -1,5 +1,6 @@
 package ai.saniou.reader.workflow.reader
 
+import ai.saniou.coreui.widgets.AdaptiveModal
 import ai.saniou.thread.domain.model.reader.FeedType
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
@@ -26,14 +27,8 @@ fun AddFeedSourceSheet(
     onSave: (ai.saniou.thread.domain.model.reader.FeedSource) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState,
-//        windowInsets = WindowInsets.ime // 键盘避让
-    ) {
-        Box(modifier = Modifier.padding(bottom = 16.dp)) {
+    AdaptiveModal(onDismissRequest = onDismiss) {
+        Box {
             when (val state = uiState) {
                 is AddFeedSourceUiState.EnterUrl -> {
                     Step1_EnterUrl(

@@ -1,9 +1,15 @@
 package ai.saniou.forum.workflow.search
 
 import ai.saniou.coreui.theme.Dimens
+import ai.saniou.coreui.layout.LocalThreadWindowInfo
 import ai.saniou.coreui.widgets.BlankLinePolicy
+import ai.saniou.coreui.widgets.ModernEmptyState
 import ai.saniou.coreui.widgets.RichText
-import ai.saniou.coreui.widgets.SaniouSearchAppBar
+import ai.saniou.coreui.widgets.ThreadCard
+import ai.saniou.coreui.widgets.ThreadCommandBar
+import ai.saniou.coreui.widgets.ThreadDetailScaffold
+import ai.saniou.coreui.widgets.ThreadFilterBar
+import ai.saniou.coreui.widgets.ThreadSearchField
 import ai.saniou.forum.ui.components.TopicCard
 import ai.saniou.forum.ui.components.LoadEndIndicator
 import ai.saniou.forum.ui.components.LoadingFailedIndicator
@@ -28,14 +34,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -67,68 +70,58 @@ data class SearchPage(
         }
         val state by viewModel.state.collectAsStateWithLifecycle()
 
-        Scaffold(
-            topBar = {
-                Column {
-                    SaniouSearchAppBar(
-                        query = state.query,
-                        onQueryChange = { viewModel.onEvent(Event.QueryChanged(it)) },
-                        onClearQuery = { viewModel.onEvent(Event.ClearQuery) },
-                        onBack = { navigator.pop() },
-                        placeholder = "搜索本地记录..."
-                    )
-
-                    // 类型筛选 Chips
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        SearchType.entries.forEach { type ->
-                            FilterChip(
-                                selected = state.searchType == type,
-                                onClick = { viewModel.onEvent(Event.TypeChanged(type)) },
-                                label = { Text(type.title) },
-                                leadingIcon = if (state.searchType == type) {
-                                    {
-                                        Icon(
-                                            Icons.Default.Search,
-                                            null,
-                                            modifier = Modifier.size(16.dp)
-                                        )
-                                    }
-                                } else null
-                            )
-                        }
-                    }
-                }
-            }
+        ThreadDetailScaffold(
+            title = "社区搜索",
+            eyebrow = "DISCOVERY",
+            subtitle = "在当前来源的主题与回复中检索 · $sourceId",
+            onBack = navigator::pop,
         ) { paddingValues ->
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .background(MaterialTheme.colorScheme.background)
+            Column(
+                modifier = Modifier.fillMaxSize().padding(paddingValues)
+                    .background(MaterialTheme.colorScheme.background),
             ) {
-                if (state.query.isBlank()) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(
-                            "输入关键词开始搜索",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                ThreadCommandBar(
+                    modifier = Modifier.fillMaxWidth().widthIn(max = Dimens.contentMaxWidth)
+                        .align(Alignment.CenterHorizontally)
+                        .padding(
+                            horizontal = LocalThreadWindowInfo.current.pageHorizontalPadding,
+                            vertical = 16.dp,
+                        ),
+                    primary = {
+                        ThreadSearchField(
+                            query = state.query,
+                            onQueryChange = { viewModel.onEvent(Event.QueryChanged(it)) },
+                            onClear = { viewModel.onEvent(Event.ClearQuery) },
+                            placeholder = "搜索主题标题、正文或回复",
                         )
-                    }
+                    },
+                    secondary = {
+                        ThreadFilterBar(
+                            items = SearchType.entries,
+                            selected = state.searchType,
+                            label = SearchType::title,
+                            onSelect = { viewModel.onEvent(Event.TypeChanged(it)) },
+                        )
+                    },
+                )
+                Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
+                if (state.query.isBlank()) {
+                    ModernEmptyState(
+                            icon = Icons.Default.Search,
+                            title = "寻找讨论与答案",
+                            description = "输入关键词后，Thread 会在当前来源的主题和回复中搜索。",
+                            modifier = Modifier.align(Alignment.Center),
+                        )
                 } else {
                     if (state.searchType == SearchType.THREAD) {
                         ThreadResultList(
                             viewModel = viewModel,
                             onThreadClick = { navigator.push(TopicDetailPage(it)) },
                             onImageClick = { threadId, img ->
-                                ImagePreviewPage(
-                                    ImagePreviewViewModelParams(
-                                        initialImages = listOf(img),
-                                    ),
+                                navigator.push(
+                                    ImagePreviewPage(
+                                        ImagePreviewViewModelParams(initialImages = listOf(img)),
+                                    )
                                 )
                             },
                             onUserClick = { userHash -> navigator.push(UserDetailPage(sourceId, userHash)) }
@@ -138,14 +131,15 @@ data class SearchPage(
                             viewModel = viewModel,
                             onThreadClick = { navigator.push(TopicDetailPage(it)) },
                             onImageClick = { threadId, img ->
-                                ImagePreviewPage(
-                                    ImagePreviewViewModelParams(
-                                        initialImages = listOf(img),
-                                    ),
+                                navigator.push(
+                                    ImagePreviewPage(
+                                        ImagePreviewViewModelParams(initialImages = listOf(img)),
+                                    )
                                 )
                             }
                         )
                     }
+                }
                 }
             }
         }
@@ -162,7 +156,11 @@ data class SearchPage(
             viewModel.state.collectAsStateWithLifecycle().value.threadPagingData.collectAsLazyPagingItems()
 
         LazyColumn(
-            contentPadding = PaddingValues(16.dp),
+            modifier = Modifier.fillMaxSize().widthIn(max = Dimens.contentMaxWidth),
+            contentPadding = PaddingValues(
+                horizontal = LocalThreadWindowInfo.current.pageHorizontalPadding,
+                vertical = 8.dp,
+            ),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             items(threads.itemCount) { index ->
@@ -179,7 +177,9 @@ data class SearchPage(
                 when (threads.loadState.append) {
                     is Error -> LoadingFailedIndicator()
                     is Loading -> LoadingIndicator()
-                    else -> if (threads.itemCount > 0) LoadEndIndicator() else null
+                    else -> {
+                        if (threads.itemCount > 0) LoadEndIndicator()
+                    }
                 }
             }
 
@@ -199,7 +199,11 @@ data class SearchPage(
             viewModel.state.collectAsStateWithLifecycle().value.replyPagingData.collectAsLazyPagingItems()
 
         LazyColumn(
-            contentPadding = PaddingValues(16.dp),
+            modifier = Modifier.fillMaxSize().widthIn(max = Dimens.contentMaxWidth),
+            contentPadding = PaddingValues(
+                horizontal = LocalThreadWindowInfo.current.pageHorizontalPadding,
+                vertical = 8.dp,
+            ),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             items(replies.itemCount) { index ->
@@ -215,7 +219,9 @@ data class SearchPage(
                 when (replies.loadState.append) {
                     is Error -> LoadingFailedIndicator()
                     is Loading -> LoadingIndicator()
-                    else -> if (replies.itemCount > 0) LoadEndIndicator() else null
+                    else -> {
+                        if (replies.itemCount > 0) LoadEndIndicator()
+                    }
                 }
             }
 
@@ -232,13 +238,12 @@ fun SearchReplyCard(
     onClick: () -> Unit,
     onImageClick: (Image) -> Unit,
 ) {
-    ElevatedCard(
+    ThreadCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
     ) {
         Column(
-            modifier = Modifier.padding(Dimens.padding_medium),
             verticalArrangement = Arrangement.spacedBy(Dimens.padding_small)
         ) {
             Row(

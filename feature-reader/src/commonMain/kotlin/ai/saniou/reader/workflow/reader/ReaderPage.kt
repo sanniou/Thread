@@ -5,6 +5,7 @@ import ai.saniou.coreui.layout.LocalThreadWindowInfo
 import ai.saniou.coreui.state.PagingStateLayout
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.AppDrawerItem
+import ai.saniou.coreui.widgets.AdaptiveModal
 import ai.saniou.coreui.widgets.ArticleItem
 import ai.saniou.coreui.widgets.ContextHero
 import ai.saniou.coreui.widgets.ModernEmptyState
@@ -555,17 +556,22 @@ private fun ReaderTransferDialog(
     onImport: (String) -> Unit,
 ) {
     var payload by remember(dialog) { mutableStateOf(dialog.payload) }
-    AlertDialog(
+    AdaptiveModal(
         onDismissRequest = { if (!isWorking) onDismiss() },
-        title = {
-            Text("${if (dialog.isImport) "导入" else "导出"} ${dialog.format.name} 订阅")
-        },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(
+                "${if (dialog.isImport) "导入" else "导出"} ${dialog.format.name} 订阅",
+                style = MaterialTheme.typography.headlineSmall,
+            )
                 Text(
                     if (dialog.isImport) "粘贴订阅数据；导入会按 ID 或 URL 合并。"
                     else "复制以下内容并保存；该格式可再次导入 Thread。",
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 OutlinedTextField(
                     value = payload,
@@ -575,28 +581,28 @@ private fun ReaderTransferDialog(
                     textStyle = MaterialTheme.typography.bodySmall,
                     label = { Text("数据") },
                 )
-            }
-        },
-        confirmButton = {
-            if (dialog.isImport) {
-                Button(
-                    onClick = { onImport(payload) },
-                    enabled = payload.isNotBlank() && !isWorking,
-                ) {
-                    if (isWorking) {
-                        CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
-                    } else {
-                        Text("导入")
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+            ) {
+                if (dialog.isImport) {
+                    TextButton(onClick = onDismiss, enabled = !isWorking) { Text("取消") }
+                    Button(
+                        onClick = { onImport(payload) },
+                        enabled = payload.isNotBlank() && !isWorking,
+                    ) {
+                        if (isWorking) {
+                            CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
+                        } else {
+                            Text("导入")
+                        }
                     }
+                } else {
+                    Button(onClick = onDismiss) { Text("完成") }
                 }
-            } else {
-                Button(onClick = onDismiss) { Text("完成") }
             }
-        },
-        dismissButton = {
-            if (dialog.isImport) TextButton(onClick = onDismiss, enabled = !isWorking) { Text("取消") }
-        },
-    )
+        }
+    }
 }
 
 

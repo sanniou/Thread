@@ -2,9 +2,12 @@ package ai.saniou.thread.feature.bookmark
 
 import ai.saniou.coreui.widgets.NetworkImage
 import ai.saniou.coreui.theme.Dimens
+import ai.saniou.coreui.widgets.ContextHero
 import ai.saniou.coreui.widgets.ModernEmptyState
-import ai.saniou.coreui.widgets.PageHeader
+import ai.saniou.coreui.widgets.ThreadCommandBar
+import ai.saniou.coreui.widgets.ThreadContentColumn
 import ai.saniou.coreui.widgets.ThreadPage
+import ai.saniou.coreui.widgets.ThreadSearchField
 import ai.saniou.forum.workflow.topicdetail.TopicDetailPage
 import ai.saniou.reader.workflow.articledetail.ArticleDetailPage
 import ai.saniou.thread.domain.model.bookmark.Bookmark
@@ -49,17 +52,17 @@ object BookmarkPage : Screen {
         val state by viewModel.state.collectAsState()
         val lazyPagingItems = viewModel.bookmarksFlow.collectAsLazyPagingItems()
 
-        Scaffold(containerColor = MaterialTheme.colorScheme.background) { innerPadding ->
-            ThreadPage(modifier = Modifier.padding(innerPadding)) {
-              Column(
-                modifier = Modifier.fillMaxSize().widthIn(max = Dimens.contentMaxWidth)
-                    .padding(horizontal = Dimens.page_horizontal, vertical = Dimens.page_vertical),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-              ) {
-                PageHeader(
+        ThreadPage {
+            ThreadContentColumn(modifier = Modifier.fillMaxSize()) {
+                ContextHero(
+                    icon = Icons.Default.BookmarkBorder,
                     title = if (state.isSelectionMode) "已选择 ${state.selectedBookmarks.size} 项" else "收藏夹",
-                    eyebrow = "LIBRARY",
                     subtitle = if (state.isSelectionMode) "可以批量删除所选内容" else "集中管理帖子、文章、链接与摘录",
+                    metric = if (state.isSelectionMode) {
+                        "${state.selectedBookmarks.size} SELECTED"
+                    } else {
+                        "${lazyPagingItems.itemCount} ITEMS"
+                    },
                     actions = {
                         if (state.isSelectionMode) {
                             IconButton(onClick = { viewModel.onEvent(BookmarkContract.Event.DeleteSelectedBookmarks) }) {
@@ -75,44 +78,20 @@ object BookmarkPage : Screen {
                         }
                     },
                 )
-                // Search Bar
-                OutlinedTextField(
-                    value = state.searchQuery,
-                    onValueChange = {
-                        viewModel.onEvent(
-                            BookmarkContract.Event.OnSearchQueryChanged(
-                                it
-                            )
+                ThreadCommandBar(
+                    primary = {
+                        ThreadSearchField(
+                            query = state.searchQuery,
+                            onQueryChange = {
+                                viewModel.onEvent(BookmarkContract.Event.OnSearchQueryChanged(it))
+                            },
+                            placeholder = "搜索收藏内容",
                         )
                     },
-                    label = { Text("搜索收藏") },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = MaterialTheme.shapes.large,
-                    singleLine = true,
+                    secondary = if (state.allTags.isEmpty()) null else {
+                        { BookmarkTagFilters(state, viewModel::onEvent) }
+                    },
                 )
-
-                // Tag Filters
-                if (state.allTags.isNotEmpty()) {
-                    LazyRow(
-                        contentPadding = PaddingValues(vertical = 4.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        items(state.allTags) { tag ->
-                            val isSelected = state.selectedTags.contains(tag)
-                            FilterChip(
-                                selected = isSelected,
-                                onClick = {
-                                    if (isSelected) {
-                                        viewModel.onEvent(BookmarkContract.Event.OnTagDeselected(tag))
-                                    } else {
-                                        viewModel.onEvent(BookmarkContract.Event.OnTagSelected(tag))
-                                    }
-                                },
-                                label = { Text(tag.name) }
-                            )
-                        }
-                    }
-                }
 
                 LazyColumn(
                     modifier = Modifier.weight(1f),
@@ -230,6 +209,30 @@ object BookmarkPage : Screen {
                 }
               }
             }
+        }
+    }
+
+@Composable
+private fun BookmarkTagFilters(
+    state: BookmarkContract.State,
+    onEvent: (BookmarkContract.Event) -> Unit,
+) {
+    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        items(state.allTags) { tag ->
+            val isSelected = tag in state.selectedTags
+            FilterChip(
+                selected = isSelected,
+                onClick = {
+                    onEvent(
+                        if (isSelected) {
+                            BookmarkContract.Event.OnTagDeselected(tag)
+                        } else {
+                            BookmarkContract.Event.OnTagSelected(tag)
+                        },
+                    )
+                },
+                label = { Text(tag.name) },
+            )
         }
     }
 }
