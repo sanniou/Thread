@@ -9,6 +9,7 @@ import ai.saniou.coreui.widgets.RefreshDiagnosticsBanner
 import ai.saniou.reader.workflow.articledetail.ArticleDetailPage
 import ai.saniou.thread.domain.model.reader.Article
 import ai.saniou.thread.domain.model.reader.FeedSource
+import ai.saniou.thread.domain.model.reader.ReaderSubscriptionFormat
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -40,6 +41,25 @@ class ReaderPage : Screen {
         var isAddSheetShown by remember { mutableStateOf(false) }
         var editingSource by remember { mutableStateOf<FeedSource?>(null) }
         var isSearchActive by remember { mutableStateOf(false) }
+        val snackbarHostState = remember { SnackbarHostState() }
+
+        LaunchedEffect(state.message) {
+            state.message?.let {
+                snackbarHostState.showSnackbar(it)
+                viewModel.onEvent(ReaderContract.Event.OnMessageShown)
+            }
+        }
+
+        state.transferDialog?.let { dialog ->
+            ReaderTransferDialog(
+                dialog = dialog,
+                isWorking = state.isTransferWorking,
+                onDismiss = { viewModel.onEvent(ReaderContract.Event.OnDismissTransfer) },
+                onImport = { payload ->
+                    viewModel.onEvent(ReaderContract.Event.OnImportSubscriptions(payload, dialog.format))
+                },
+            )
+        }
 
         // Dialog handling
         val isSheetShown = isAddSheetShown || editingSource != null
@@ -86,7 +106,8 @@ class ReaderPage : Screen {
                         editingSource = null
                         isAddSheetShown = true
                         if (isMobile) scope.launch { drawerState.close() }
-                    }
+                    },
+                    schedulerState = state.scheduler,
                 )
             }
 
@@ -123,7 +144,10 @@ class ReaderPage : Screen {
                             )
                             navigator.push(ArticleDetailPage(article.id))
                         },
-                        onFilterChange = { viewModel.onEvent(ReaderContract.Event.OnFilterChanged(it)) }
+                        onFilterChange = { viewModel.onEvent(ReaderContract.Event.OnFilterChanged(it)) },
+                        snackbarHostState = snackbarHostState,
+                        onExport = { viewModel.onEvent(ReaderContract.Event.OnExportSubscriptions(it)) },
+                        onImport = { viewModel.onEvent(ReaderContract.Event.OnShowImport(it)) },
                     )
                 }
             } else {
@@ -158,7 +182,10 @@ class ReaderPage : Screen {
                             )
                             navigator.push(ArticleDetailPage(article.id))
                         },
-                        onFilterChange = { viewModel.onEvent(ReaderContract.Event.OnFilterChanged(it)) }
+                        onFilterChange = { viewModel.onEvent(ReaderContract.Event.OnFilterChanged(it)) },
+                        snackbarHostState = snackbarHostState,
+                        onExport = { viewModel.onEvent(ReaderContract.Event.OnExportSubscriptions(it)) },
+                        onImport = { viewModel.onEvent(ReaderContract.Event.OnShowImport(it)) },
                     )
                 }
             }
@@ -179,8 +206,12 @@ private fun ReaderScaffold(
     onMenuClick: () -> Unit,
     onArticleClick: (Article) -> Unit,
     onFilterChange: (ArticleFilter) -> Unit,
+    snackbarHostState: SnackbarHostState,
+    onExport: (ReaderSubscriptionFormat) -> Unit,
+    onImport: (ReaderSubscriptionFormat) -> Unit,
 ) {
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             ReaderTopAppBar(
                 state = state,
@@ -189,7 +220,9 @@ private fun ReaderScaffold(
                 onSearchActiveChange = onSearchActiveChange,
                 onSearchQueryChanged = onSearchQueryChanged,
                 onRefreshAll = onRefreshAll,
-                onMenuClick = onMenuClick
+                onMenuClick = onMenuClick,
+                onExport = onExport,
+                onImport = onImport,
             )
         }
     ) { padding ->
@@ -288,6 +321,8 @@ private fun ReaderTopAppBar(
     onSearchQueryChanged: (String) -> Unit,
     onRefreshAll: () -> Unit,
     onMenuClick: () -> Unit,
+    onExport: (ReaderSubscriptionFormat) -> Unit,
+    onImport: (ReaderSubscriptionFormat) -> Unit,
 ) {
     // 搜索状态下的 TopBar
     if (isSearchActive) {
@@ -327,6 +362,7 @@ private fun ReaderTopAppBar(
             )
         )
     } else {
+        var transferMenuExpanded by remember { mutableStateOf(false) }
         TopAppBar(
             title = { Text("阅读器") },
             navigationIcon = {
@@ -343,6 +379,49 @@ private fun ReaderTopAppBar(
                 IconButton(onClick = onRefreshAll) {
                     Icon(Icons.Default.Refresh, contentDescription = "全部刷新")
                 }
+                Box {
+                    IconButton(onClick = { transferMenuExpanded = true }) {
+                        Icon(Icons.Default.MoreVert, contentDescription = "订阅导入导出")
+                    }
+                    DropdownMenu(
+                        expanded = transferMenuExpanded,
+                        onDismissRequest = { transferMenuExpanded = false },
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("导出 JSON") },
+                            leadingIcon = { Icon(Icons.Default.Upload, null) },
+                            onClick = {
+                                transferMenuExpanded = false
+                                onExport(ReaderSubscriptionFormat.JSON)
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = { Text("导出 OPML") },
+                            leadingIcon = { Icon(Icons.Default.Upload, null) },
+                            onClick = {
+                                transferMenuExpanded = false
+                                onExport(ReaderSubscriptionFormat.OPML)
+                            },
+                        )
+                        HorizontalDivider()
+                        DropdownMenuItem(
+                            text = { Text("导入 JSON") },
+                            leadingIcon = { Icon(Icons.Default.Download, null) },
+                            onClick = {
+                                transferMenuExpanded = false
+                                onImport(ReaderSubscriptionFormat.JSON)
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = { Text("导入 OPML") },
+                            leadingIcon = { Icon(Icons.Default.Download, null) },
+                            onClick = {
+                                transferMenuExpanded = false
+                                onImport(ReaderSubscriptionFormat.OPML)
+                            },
+                        )
+                    }
+                }
             }
         )
     }
@@ -358,6 +437,7 @@ private fun FeedSourceList(
     onDelete: (String) -> Unit,
     onRefresh: (String) -> Unit,
     onAdd: () -> Unit,
+    schedulerState: ai.saniou.thread.domain.model.reader.ReaderSchedulerState,
 ) {
     Column(modifier = Modifier.fillMaxHeight().padding(vertical = 12.dp)) {
         val globalDrawer = LocalAppDrawer.current
@@ -402,6 +482,18 @@ private fun FeedSourceList(
 
         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
+        Text(
+            text = when {
+                schedulerState.refreshingSourceIds.isNotEmpty() ->
+                    "自动刷新中：${schedulerState.refreshingSourceIds.size} 个源"
+                schedulerState.isRunning -> "自动刷新已启用"
+                else -> "自动刷新未运行"
+            },
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp),
+        )
+
         AppDrawerItem(
             label = "添加订阅源",
             icon = Icons.Default.Add,
@@ -409,6 +501,58 @@ private fun FeedSourceList(
             onClick = onAdd
         )
     }
+}
+
+@Composable
+private fun ReaderTransferDialog(
+    dialog: ai.saniou.reader.workflow.reader.ReaderTransferDialog,
+    isWorking: Boolean,
+    onDismiss: () -> Unit,
+    onImport: (String) -> Unit,
+) {
+    var payload by remember(dialog) { mutableStateOf(dialog.payload) }
+    AlertDialog(
+        onDismissRequest = { if (!isWorking) onDismiss() },
+        title = {
+            Text("${if (dialog.isImport) "导入" else "导出"} ${dialog.format.name} 订阅")
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    if (dialog.isImport) "粘贴订阅数据；导入会按 ID 或 URL 合并。"
+                    else "复制以下内容并保存；该格式可再次导入 Thread。",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+                OutlinedTextField(
+                    value = payload,
+                    onValueChange = { if (dialog.isImport) payload = it },
+                    readOnly = !dialog.isImport,
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 220.dp, max = 420.dp),
+                    textStyle = MaterialTheme.typography.bodySmall,
+                    label = { Text("数据") },
+                )
+            }
+        },
+        confirmButton = {
+            if (dialog.isImport) {
+                Button(
+                    onClick = { onImport(payload) },
+                    enabled = payload.isNotBlank() && !isWorking,
+                ) {
+                    if (isWorking) {
+                        CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
+                    } else {
+                        Text("导入")
+                    }
+                }
+            } else {
+                Button(onClick = onDismiss) { Text("完成") }
+            }
+        },
+        dismissButton = {
+            if (dialog.isImport) TextButton(onClick = onDismiss, enabled = !isWorking) { Text("取消") }
+        },
+    )
 }
 
 

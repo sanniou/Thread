@@ -63,11 +63,6 @@ fun AddFeedSourceSheet(
                     )
                 }
 
-                is AddFeedSourceUiState.InteractiveSelect -> {
-                    // TODO: 实现交互式的网页选择器 UI
-                    Text("Interactive select not implemented yet", modifier = Modifier.padding(16.dp))
-                }
-
                 is AddFeedSourceUiState.ConfirmSource -> {
                     Step_ConfirmSource(
                         source = state.source,

@@ -24,6 +24,9 @@ class ReaderViewModel(
     private val refreshAllFeedsUseCase: RefreshAllFeedsUseCase,
     private val getArticleCountsUseCase: GetArticleCountsUseCase,
     private val observeRefreshDiagnostics: ObserveRefreshDiagnosticsUseCase,
+    private val exportSubscriptionsUseCase: ExportReaderSubscriptionsUseCase,
+    private val importSubscriptionsUseCase: ImportReaderSubscriptionsUseCase,
+    private val observeScheduler: ObserveReaderSchedulerUseCase,
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(ReaderContract.State())
@@ -31,6 +34,11 @@ class ReaderViewModel(
     val articles: Flow<PagingData<Article>>
 
     init {
+        screenModelScope.launch {
+            observeScheduler().collect { scheduler ->
+                _state.update { it.copy(scheduler = scheduler) }
+            }
+        }
         screenModelScope.launch {
             observeRefreshDiagnostics().collect { tasks ->
                 _state.update { current ->
@@ -43,19 +51,16 @@ class ReaderViewModel(
             }
         }
         screenModelScope.launch {
-            getFeedSourcesUseCase().collect { sources ->
-                _state.update { it.copy(feedSources = sources) }
-                sources.forEach { source ->
-                    launch {
-                        getArticleCountsUseCase(source.id).collect { counts ->
-                            _state.update {
-                                val newCounts = it.articleCounts.toMutableMap()
-                                newCounts[source.id] = counts
-                                it.copy(articleCounts = newCounts)
-                            }
-                        }
-                    }
+            getFeedSourcesUseCase().flatMapLatest { sources ->
+                if (sources.isEmpty()) {
+                    flowOf(sources to emptyMap())
+                } else {
+                    combine(sources.map { source ->
+                        getArticleCountsUseCase(source.id).map { counts -> source.id to counts }
+                    }) { counts -> sources to counts.toMap() }
                 }
+            }.collect { (sources, counts) ->
+                _state.update { it.copy(feedSources = sources, articleCounts = counts) }
             }
         }
         val sourceIdFlow = state.map { it.selectedFeedSourceId }.distinctUntilChanged()
@@ -84,6 +89,13 @@ class ReaderViewModel(
             is ReaderContract.Event.OnMarkArticleAsRead -> markArticleAsRead(event.id, event.isRead)
             is ReaderContract.Event.OnSearchQueryChanged -> onSearchQueryChanged(event.query)
             is ReaderContract.Event.OnFilterChanged -> onFilterChanged(event.filter)
+            is ReaderContract.Event.OnExportSubscriptions -> exportSubscriptions(event.format)
+            is ReaderContract.Event.OnShowImport -> _state.update {
+                it.copy(transferDialog = ReaderTransferDialog(event.format, isImport = true))
+            }
+            is ReaderContract.Event.OnImportSubscriptions -> importSubscriptions(event.payload, event.format)
+            ReaderContract.Event.OnDismissTransfer -> _state.update { it.copy(transferDialog = null) }
+            ReaderContract.Event.OnMessageShown -> _state.update { it.copy(message = null) }
         }
     }
 
@@ -184,6 +196,48 @@ class ReaderViewModel(
                     state.copy(feedSources = updatedSources)
                 }
             }
+        }
+    }
+
+    private fun exportSubscriptions(format: ai.saniou.thread.domain.model.reader.ReaderSubscriptionFormat) {
+        screenModelScope.launch {
+            _state.update { it.copy(isTransferWorking = true) }
+            exportSubscriptionsUseCase(format).fold(
+                onSuccess = { payload ->
+                    _state.update {
+                        it.copy(
+                            isTransferWorking = false,
+                            transferDialog = ReaderTransferDialog(format, isImport = false, payload = payload),
+                        )
+                    }
+                },
+                onFailure = { error ->
+                    _state.update { it.copy(isTransferWorking = false, message = error.message ?: "导出失败") }
+                },
+            )
+        }
+    }
+
+    private fun importSubscriptions(
+        payload: String,
+        format: ai.saniou.thread.domain.model.reader.ReaderSubscriptionFormat,
+    ) {
+        screenModelScope.launch {
+            _state.update { it.copy(isTransferWorking = true) }
+            importSubscriptionsUseCase(payload, format).fold(
+                onSuccess = { report ->
+                    _state.update {
+                        it.copy(
+                            isTransferWorking = false,
+                            transferDialog = null,
+                            message = "导入完成：新增 ${report.added}，更新 ${report.updated}，跳过 ${report.skipped}",
+                        )
+                    }
+                },
+                onFailure = { error ->
+                    _state.update { it.copy(isTransferWorking = false, message = error.message ?: "导入失败") }
+                },
+            )
         }
     }
 }

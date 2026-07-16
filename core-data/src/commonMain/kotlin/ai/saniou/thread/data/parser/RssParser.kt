@@ -3,6 +3,7 @@ package ai.saniou.thread.data.parser
 import ai.saniou.thread.data.parser.rss.Rss
 import ai.saniou.thread.domain.model.reader.Article
 import ai.saniou.thread.domain.model.reader.FeedSource
+import com.fleeksoft.ksoup.Ksoup
 import nl.adaptivity.xmlutil.serialization.XML
 import kotlin.time.Clock
 import kotlin.time.Instant
@@ -19,7 +20,7 @@ class RssParser : FeedParser {
     }
 
     override suspend fun parse(source: FeedSource, content: String): List<Article> {
-        return try {
+        val rssArticles = runCatching {
             val rss = xml.decodeFromString(Rss.serializer(), content)
             rss.channel.items.mapNotNull { item ->
                 val link = item.link ?: return@mapNotNull null
@@ -41,11 +42,38 @@ class RssParser : FeedParser {
                     isBookmarked = false
                 )
             }
-        } catch (e: Exception) {
-            // Log error
-            e.printStackTrace()
-            emptyList()
+        }.getOrDefault(emptyList())
+        if (rssArticles.isNotEmpty()) return rssArticles
+
+        val document = Ksoup.parse(content, source.url)
+        val atomArticles = document.select("entry").mapNotNull { entry ->
+            val linkElement = entry.select("link").first()
+            val link = linkElement?.attr("href")?.takeIf { it.isNotBlank() }
+                ?: linkElement?.text()?.takeIf { it.isNotBlank() }
+                ?: return@mapNotNull null
+            val title = entry.select("title").first()?.text()?.takeIf { it.isNotBlank() }
+                ?: return@mapNotNull null
+            val rawHtml = entry.select("content").first()?.html()?.takeIf { it.isNotBlank() }
+                ?: entry.select("summary").first()?.html().orEmpty()
+            val date = entry.select("published").first()?.text()?.takeIf { it.isNotBlank() }
+                ?: entry.select("updated").first()?.text()?.takeIf { it.isNotBlank() }
+            Article(
+                id = entry.select("id").first()?.text()?.takeIf { it.isNotBlank() } ?: link,
+                feedSourceId = source.id,
+                title = title,
+                description = HtmlParser.toPlainText(rawHtml).take(200),
+                content = HtmlParser.clean(rawHtml),
+                rawContent = rawHtml,
+                link = link,
+                author = entry.select("author > name").first()?.text(),
+                publishDate = date?.let { runCatching { Instant.parse(it) }.getOrNull() }
+                    ?: Clock.System.now(),
+                isRead = false,
+                isBookmarked = false,
+            )
         }
+        require(atomArticles.isNotEmpty()) { "Invalid or empty RSS/Atom document" }
+        return atomArticles
     }
 
     private val monthMap = mapOf(
@@ -102,10 +130,8 @@ class RssParser : FeedParser {
 
             return localDateTime.toInstant(offset)
 
-        } catch (e: Exception) {
-            // 解析失败
-            e.printStackTrace() // 有助于调试
-            return Clock.System.now() // 回退
+        } catch (_: Exception) {
+            return Clock.System.now()
         }
     }
 }

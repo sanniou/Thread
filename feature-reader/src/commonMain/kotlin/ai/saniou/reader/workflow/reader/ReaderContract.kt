@@ -2,11 +2,19 @@ package ai.saniou.reader.workflow.reader
 
 import ai.saniou.coreui.state.AppError
 import ai.saniou.thread.domain.model.reader.FeedSource
+import ai.saniou.thread.domain.model.reader.ReaderSchedulerState
+import ai.saniou.thread.domain.model.reader.ReaderSubscriptionFormat
 import ai.saniou.thread.domain.refresh.RefreshTaskState
 
 enum class ArticleFilter {
     ALL, UNREAD, BOOKMARKED
 }
+
+data class ReaderTransferDialog(
+    val format: ReaderSubscriptionFormat,
+    val isImport: Boolean,
+    val payload: String = "",
+)
 
 interface ReaderContract {
     data class State(
@@ -19,6 +27,10 @@ interface ReaderContract {
         val searchQuery: String = "",
         val articleFilter: ArticleFilter = ArticleFilter.ALL,
         val refreshFailures: List<RefreshTaskState> = emptyList(),
+        val scheduler: ReaderSchedulerState = ReaderSchedulerState(),
+        val transferDialog: ReaderTransferDialog? = null,
+        val isTransferWorking: Boolean = false,
+        val message: String? = null,
     )
 
     sealed interface Event {
@@ -33,5 +45,10 @@ interface ReaderContract {
         data class OnMarkArticleAsRead(val id: String, val isRead: Boolean) : Event
         data class OnSearchQueryChanged(val query: String) : Event
         data class OnFilterChanged(val filter: ArticleFilter) : Event
+        data class OnExportSubscriptions(val format: ReaderSubscriptionFormat) : Event
+        data class OnShowImport(val format: ReaderSubscriptionFormat) : Event
+        data class OnImportSubscriptions(val payload: String, val format: ReaderSubscriptionFormat) : Event
+        object OnDismissTransfer : Event
+        object OnMessageShown : Event
     }
 }

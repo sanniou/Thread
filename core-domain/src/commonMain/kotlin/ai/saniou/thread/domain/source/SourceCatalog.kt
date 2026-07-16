@@ -9,6 +9,8 @@ interface SourceCatalog : ConnectorRegistry {
     val descriptors: StateFlow<List<SourceDescriptor>>
     val availableSources: StateFlow<List<Source>>
 
+    fun supports(type: ai.saniou.thread.domain.model.source.SourceType): Boolean
+
     suspend fun upsert(descriptor: SourceDescriptor)
     suspend fun setEnabled(sourceId: String, enabled: Boolean)
     suspend fun remove(sourceId: String)

@@ -21,6 +21,7 @@
 3.  **通用阅读器 (Reader)**:
     -   专为“内容订阅/沉浸式阅读”设计，侧重长文章与排版体验。
     -   支持 **RSS/Atom**, **固定链接 (URL 解析)**, **JSON 订阅源**, **HTML 解析**。
+    -   支持按订阅源间隔自动刷新，以及 JSON/OPML 双向导入导出。
     -   提供纯净的阅读模式 (Readability)。
 
 ## 🏛️ 架构 (Architecture)
@@ -71,7 +72,7 @@
 -   [x] **运行时来源与缓存**: Discourse 多实例、来源管理、统一新鲜度/离线回退、Tieba 楼中楼与点赞。
 -   [ ] **Social Connector**: 在统一 Feed 契约上接入 Mastodon/Bluesky 等来源。
 -   [x] **Feature - Reader 基线**: RSS/Atom/JSON/HTML 来源、刷新诊断、阅读状态与收藏。
--   [ ] **数据同步**: 支持 WebDAV 数据备份与同步。
+-   [x] **数据同步**: 版本化用户数据包、本地文本导入导出与 WebDAV 备份恢复。
 
 ## 🚀 构建与运行
 

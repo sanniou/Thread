@@ -25,6 +25,8 @@ import ai.saniou.thread.feature.challenge.CloudflareVerificationDialog
 import ai.saniou.thread.feature.bookmark.BookmarkPage
 import ai.saniou.thread.feature.challenge.UiChallengeHandler
 import ai.saniou.thread.feature.history.HistoryPage
+import ai.saniou.thread.feature.settings.SyncSettingsPage
+import ai.saniou.thread.domain.reader.ReaderRefreshScheduler
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.DynamicFeed
@@ -32,8 +34,10 @@ import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.Games
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.RssFeed
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -56,14 +60,16 @@ import org.kodein.di.instance
 
 @Composable
 fun App() {
-    val di = DI {
-        import(domainModule)
-        import(dataModule)
-        import(readerModule)
-        import(feedModule)
-        import(nmbImagePreviewModule)
-        import(nmbFeatureModule)
-        import(appModule)
+    val di = remember {
+        DI {
+            import(domainModule)
+            import(dataModule)
+            import(readerModule)
+            import(feedModule)
+            import(nmbImagePreviewModule)
+            import(nmbFeatureModule)
+            import(appModule)
+        }
     }
     withDI(di) {
         val settingsRepository: SettingsRepository by di.instance()
@@ -73,6 +79,12 @@ fun App() {
         val challengeHandler: UiChallengeHandler by di.instance()
         var challengeRequest by remember { mutableStateOf<UiChallengeHandler.ChallengeRequest?>(null) }
         val scope = rememberCoroutineScope()
+        val readerScheduler: ReaderRefreshScheduler by di.instance()
+
+        DisposableEffect(readerScheduler) {
+            readerScheduler.start()
+            onDispose { readerScheduler.stop() }
+        }
 
         LaunchedEffect(Unit) {
             challengeHandler.challengeEvents.collect {
@@ -128,6 +140,10 @@ fun App() {
                                 Icons.Default.History,
                                 "浏览历史"
                             ) { navigator.push(HistoryPage()) },
+                            DrawerMenuItem(
+                                Icons.Default.Settings,
+                                "数据与同步"
+                            ) { navigator.push(SyncSettingsPage()) },
                         )
                     )
                 }

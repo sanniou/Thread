@@ -38,13 +38,6 @@ sealed interface AddFeedSourceUiState {
     data class SelectSource(val url: String, val sources: List<FeedSource>) : AddFeedSourceUiState
 
     /**
-     * 交互式选择模式 (用于 HTML/JSON)
-     * @param url 目标 URL
-     * @param content 页面内容或 API 响应
-     */
-    data class InteractiveSelect(val url: String, val content: String) : AddFeedSourceUiState
-
-    /**
      * 最终确认订阅源信息
      * @param source 待确认的订阅源
      */
@@ -120,10 +113,5 @@ class AddFeedSourceViewModel(
     /**
      * 最终确认并保存订阅源
      */
-    fun onConfirm(source: FeedSource, onSuccess: () -> Unit) {
-        // 在真实应用中，这里会调用 Repository 来保存数据
-        println("Feed source to be saved: $source")
-        // 触发成功回调，由调用方负责关闭和刷新
-        onSuccess()
-    }
+    fun onConfirm(source: FeedSource, onSuccess: () -> Unit) = onSuccess()
 }

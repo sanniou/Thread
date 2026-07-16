@@ -51,6 +51,7 @@ import ai.saniou.thread.domain.usecase.thread.GetTopicCommentsPagerUseCase
 import ai.saniou.thread.domain.usecase.thread.GetTopicMetadataUseCase
 import ai.saniou.thread.domain.usecase.user.LoginSourceUseCase
 import ai.saniou.thread.domain.usecase.refresh.ObserveRefreshDiagnosticsUseCase
+import ai.saniou.thread.domain.usecase.sync.*
 import org.kodein.di.DI
 import org.kodein.di.bindProvider
 import org.kodein.di.instance
@@ -75,6 +76,18 @@ val domainModule = DI.Module("domainModule") {
     bindProvider { RefreshAllFeedsUseCase(instance()) }
     bindProvider { ToggleArticleBookmarkUseCase(instance(), instance()) }
     bindProvider { GetFeedSourceUseCase(instance()) }
+    bindProvider { ExportReaderSubscriptionsUseCase(instance()) }
+    bindProvider { ImportReaderSubscriptionsUseCase(instance()) }
+    bindProvider { ObserveReaderSchedulerUseCase(instance()) }
+    bindProvider { RefreshDueReaderFeedsUseCase(instance()) }
+
+    // User data sync
+    bindProvider { ExportUserDataUseCase(instance()) }
+    bindProvider { ImportUserDataUseCase(instance()) }
+    bindProvider { ObserveWebDavConfigUseCase(instance()) }
+    bindProvider { SaveWebDavConfigUseCase(instance()) }
+    bindProvider { BackupToWebDavUseCase(instance()) }
+    bindProvider { RestoreFromWebDavUseCase(instance()) }
 
     // Subscription
     bindProvider { GetSubscriptionFeedUseCase(instance()) }

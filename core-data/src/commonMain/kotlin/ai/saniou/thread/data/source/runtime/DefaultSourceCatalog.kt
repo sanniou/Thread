@@ -59,6 +59,7 @@ class DefaultSourceCatalog(
     }
 
     override fun source(sourceId: String): Source? = activeRegistrations[sourceId]?.source
+    override fun supports(type: SourceType): Boolean = type in factoryByType
     override fun search(sourceId: String): ForumSearchConnector? = activeRegistrations[sourceId]?.search
     override fun userContent(sourceId: String): UserContentConnector? = activeRegistrations[sourceId]?.userContent
     override fun posting(sourceId: String): PostingConnector? = activeRegistrations[sourceId]?.posting
@@ -72,6 +73,7 @@ class DefaultSourceCatalog(
         require(descriptor.type in factoryByType) { "No runtime factory for ${descriptor.type}" }
         val next = mutableDescriptors.value.filterNot { it.id == descriptor.id } + descriptor.copy(isBuiltIn = false)
         require(next.map(SourceDescriptor::id).distinct().size == next.size) { "Duplicate source id" }
+        require(next.any(SourceDescriptor::enabled)) { "At least one source must remain enabled" }
         applyAndPersist(next)
         if (existing != null && existing.runtimeIdentity() != descriptor.runtimeIdentity()) {
             clearSourceNamespace(descriptor.id)

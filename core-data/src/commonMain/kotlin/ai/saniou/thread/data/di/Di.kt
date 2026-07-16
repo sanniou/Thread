@@ -51,8 +51,10 @@ import ai.saniou.thread.data.source.tieba.TiebaReactionConnector
 import ai.saniou.thread.data.source.runtime.DefaultSourceCatalog
 import ai.saniou.thread.data.source.runtime.RuntimeSourceRegistration
 import ai.saniou.thread.domain.service.ImageUrlResolver
-import ai.saniou.thread.data.sync.local.LocalSyncProvider
-import ai.saniou.thread.data.sync.webdav.WebDavSyncProvider
+import ai.saniou.thread.data.reader.DefaultReaderRefreshScheduler
+import ai.saniou.thread.data.reader.ReaderSubscriptionCodec
+import ai.saniou.thread.data.sync.webdav.WebDavSyncTransport
+import ai.saniou.thread.data.sync.webdav.UserDataRemoteTransport
 import ai.saniou.thread.domain.repository.BookmarkRepository
 import ai.saniou.thread.domain.repository.FavoriteRepository
 import ai.saniou.thread.domain.repository.FeedRepository
@@ -71,7 +73,6 @@ import ai.saniou.thread.domain.model.source.SourceDescriptor
 import ai.saniou.thread.domain.model.source.SourceType
 import ai.saniou.thread.domain.source.TrendSource
 import ai.saniou.thread.domain.repository.SubscriptionRepository
-import ai.saniou.thread.domain.repository.SyncProvider
 import ai.saniou.thread.domain.repository.SyncRepository
 import ai.saniou.thread.domain.repository.TagRepository
 import ai.saniou.thread.domain.repository.TopicRepository
@@ -84,6 +85,7 @@ import ai.saniou.thread.data.repository.ReaderRepositoryImpl
 import ai.saniou.thread.data.refresh.DefaultRefreshCoordinator
 import ai.saniou.thread.domain.repository.AccountRepository
 import ai.saniou.thread.domain.repository.ReaderRepository
+import ai.saniou.thread.domain.reader.ReaderRefreshScheduler
 import ai.saniou.thread.domain.repository.UserContentRepository
 import ai.saniou.thread.domain.refresh.RefreshCoordinator
 import ai.saniou.thread.domain.cache.CachePolicyProvider
@@ -284,17 +286,9 @@ val dataModule = DI.Module("dataModule") {
         )
     }
 
-    // sync providers
-    bind<SyncProvider>(tag = "webdav") with singleton { WebDavSyncProvider() }
-    bind<SyncProvider>(tag = "local") with singleton { LocalSyncProvider() }
-    bind<Set<SyncProvider>>(tag = "allSyncProviders") with singleton {
-        HashSet<SyncProvider>().apply { add(instance(tag = "webdav")); add(instance(tag = "local")) }
-    }
-
-    bind<SyncRepository>() with singleton {
-        val providers: Set<SyncProvider> = instance(tag = "allSyncProviders")
-        SyncRepositoryImpl(providers)
-    }
+    // Versioned user-data backup with a real common WebDAV transport.
+    bindSingleton<UserDataRemoteTransport> { WebDavSyncTransport(instance()) }
+    bind<SyncRepository>() with singleton { SyncRepositoryImpl(instance(), instance(), instance()) }
 
     bindSingleton { NmbAccountProvider(instance()) }
     // Cookie Store (for Discourse/CF)
@@ -310,11 +304,13 @@ val dataModule = DI.Module("dataModule") {
     bindSingleton { JsonParser() }
     bindSingleton { HtmlParser() }
     bindSingleton { FeedParserFactory(instance(), instance(), instance()) }
+    bindSingleton { ReaderSubscriptionCodec() }
     bindSingleton { HttpClient() } // Use a basic HttpClient
     bindSingleton<RefreshCoordinator> { DefaultRefreshCoordinator() }
     bind<ReaderRepository>() with singleton {
-        ReaderRepositoryImpl(instance(), instance(), instance(), instance(), instance())
+        ReaderRepositoryImpl(instance(), instance(), instance(), instance(), instance(), instance(), instance())
     }
+    bind<ReaderRefreshScheduler>() with singleton { DefaultReaderRefreshScheduler(instance()) }
 
     // Tieba Infrastructure
     bindSingleton { ai.saniou.thread.data.source.tieba.TiebaParameterProvider(instance()) }

@@ -17,12 +17,18 @@ SELECT * FROM FeedSourceEntity;
 getFeedSourceById:
 SELECT * FROM FeedSourceEntity WHERE id = ?;
 
+getFeedSourceByUrl:
+SELECT * FROM FeedSourceEntity WHERE url = :url LIMIT 1;
+
 insertFeedSource:
 INSERT OR REPLACE INTO FeedSourceEntity(id, name, url, type, description, iconUrl, lastUpdate, selectorConfig, autoRefresh, refreshInterval)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 deleteFeedSource:
 DELETE FROM FeedSourceEntity WHERE id = ?;
+
+deleteAllFeedSources:
+DELETE FROM FeedSourceEntity;
 
 updateLastUpdate:
 UPDATE FeedSourceEntity SET lastUpdate = ? WHERE id = ?;

@@ -6,26 +6,31 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
 import kotlin.time.Clock
 
 class JsonParser : FeedParser {
     private val json = Json { isLenient = true; ignoreUnknownKeys = true }
 
     override suspend fun parse(source: FeedSource, content: String): List<Article> {
-        return try {
-            val jsonElement = json.parseToJsonElement(content)
-            val config = source.selectorConfig
+        val jsonElement = json.parseToJsonElement(content)
+        val config = source.selectorConfig
+        require(!config["titlePath"].isNullOrBlank()) { "JSON titlePath is required" }
+        require(!config["linkPath"].isNullOrBlank() || !config["idPath"].isNullOrBlank()) {
+            "JSON linkPath or idPath is required"
+        }
 
-            val itemsPath = config["itemsPath"]
-            val itemsArray = findJsonArray(jsonElement, itemsPath) ?: return emptyList()
+        val itemsPath = config["itemsPath"]
+        val itemsArray = findPath(jsonElement, itemsPath) as? JsonArray
+            ?: throw IllegalArgumentException("JSON itemsPath does not point to an array")
 
-            itemsArray.mapNotNull { itemElement ->
+        val articles = itemsArray.mapNotNull { itemElement ->
                 if (itemElement !is JsonObject) return@mapNotNull null
 
-                val id = itemElement.getString(config["idPath"])
-                val title = itemElement.getString(config["titlePath"])
-                val link = itemElement.getString(config["linkPath"])
+                val id = itemElement.getStringAt(config["idPath"])
+                val title = itemElement.getStringAt(config["titlePath"])
+                val link = itemElement.getStringAt(config["linkPath"])
 
                 // ID 和 link 至少需要一个，title 是必须的
                 if (id == null && link == null) return@mapNotNull null
@@ -34,7 +39,7 @@ class JsonParser : FeedParser {
                 val finalId = id ?: link!!
                 val finalLink = link ?: id!!
 
-                val contentText = itemElement.getString(config["contentPath"]) ?: ""
+                val contentText = itemElement.getStringAt(config["contentPath"]) ?: ""
 
                 Article(
                     id = finalId,
@@ -43,30 +48,31 @@ class JsonParser : FeedParser {
                     description = contentText.take(200),
                     content = contentText,
                     link = finalLink,
-                    author = itemElement.getString(config["authorPath"]),
+                    author = itemElement.getStringAt(config["authorPath"]),
                     publishDate = Clock.System.now(), // JSON 源通常没有标准日期字段
-                    imageUrl = itemElement.getString(config["imagePath"]),
+                    imageUrl = itemElement.getStringAt(config["imagePath"]),
                     rawContent = itemElement.toString()
                 )
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            emptyList()
         }
+        require(articles.isNotEmpty()) { "JSON feed contains no valid items" }
+        return articles
     }
 
-    private fun findJsonArray(element: JsonElement, path: String?): JsonArray? {
+    private fun findPath(element: JsonElement, path: String?): JsonElement? {
         if (path.isNullOrBlank() || path == "$") {
-            return element as? JsonArray
+            return element
         }
-        // 目前只支持根路径访问。更复杂的实现可以解析点分隔的路径。
-        return (element as? JsonObject)?.get(path) as? JsonArray
+        return path.removePrefix("$.").split('.').filter(String::isNotBlank).fold(element as JsonElement?) { current, segment ->
+            when (current) {
+                is JsonObject -> current[segment]
+                is JsonArray -> segment.toIntOrNull()?.let(current::getOrNull)
+                else -> null
+            }
+        }
     }
 
-    private fun JsonObject.getString(key: String?): String? {
-        if (key.isNullOrBlank()) return null
-        // 目前尚不支持 "user.name" 这样的嵌套路径。
-        // 对于当前需求，这已足够。
-        return this[key]?.jsonPrimitive?.content
-    }
+    private fun JsonObject.getStringAt(path: String?): String? =
+        path?.takeIf { it.isNotBlank() }
+            ?.let { findPath(this, it) as? JsonPrimitive }
+            ?.contentOrNull
 }

@@ -4,6 +4,8 @@ import ai.saniou.thread.domain.model.reader.Article
 import ai.saniou.thread.domain.model.reader.FeedSource
 import ai.saniou.thread.domain.model.reader.ArticleWithSource
 import ai.saniou.thread.domain.model.reader.ReaderRefreshReport
+import ai.saniou.thread.domain.model.reader.ReaderImportReport
+import ai.saniou.thread.domain.model.reader.ReaderSubscriptionFormat
 import androidx.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 
@@ -30,5 +32,10 @@ interface ReaderRepository {
 
     // Sync/Refresh
     suspend fun refreshAllFeeds(): ReaderRefreshReport
-    suspend fun refreshFeed(feedSourceId: String): Result<Unit>
+    suspend fun refreshFeed(feedSourceId: String, forceRefresh: Boolean = true): Result<Unit>
+    suspend fun exportSubscriptions(format: ReaderSubscriptionFormat): Result<String>
+    suspend fun importSubscriptions(
+        payload: String,
+        format: ReaderSubscriptionFormat,
+    ): Result<ReaderImportReport>
 }
