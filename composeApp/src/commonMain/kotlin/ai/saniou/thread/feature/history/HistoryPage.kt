@@ -1,8 +1,11 @@
 package ai.saniou.thread.feature.history
 
 import ai.saniou.coreui.state.PagingStateLayout
+import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.ArticleItem
-import ai.saniou.coreui.widgets.SaniouTopAppBar
+import ai.saniou.coreui.widgets.ModernEmptyState
+import ai.saniou.coreui.widgets.PageHeader
+import ai.saniou.coreui.widgets.ThreadPage
 import ai.saniou.forum.ui.components.TopicCard
 import ai.saniou.reader.workflow.articledetail.ArticleDetailPage
 import ai.saniou.thread.domain.model.history.HistoryArticle
@@ -17,21 +20,21 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.paging.compose.collectAsLazyPagingItems
 import cafe.adriel.voyager.core.screen.Screen
@@ -46,64 +49,60 @@ class HistoryPage : Screen {
     override fun Content() {
         val viewModel: HistoryViewModel by localDI().instance()
         val navigator = LocalNavigator.currentOrThrow
-        val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
         val historyItems = viewModel.historyItems.collectAsLazyPagingItems()
         val typeFilter by viewModel.typeFilter.collectAsState()
 
-        Scaffold(
-            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-            topBar = {
-                Column {
-                    SaniouTopAppBar(
-                        title = "浏览历史",
-                        onNavigationClick = { navigator.pop() },
-                        scrollBehavior = scrollBehavior
+        Scaffold(containerColor = MaterialTheme.colorScheme.background) { paddingValues ->
+          ThreadPage(modifier = Modifier.padding(paddingValues)) {
+            Column(
+                modifier = Modifier.fillMaxSize().widthIn(max = Dimens.contentMaxWidth)
+                    .padding(horizontal = Dimens.page_horizontal, vertical = Dimens.page_vertical),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                PageHeader(
+                    title = "浏览历史",
+                    eyebrow = "ACTIVITY",
+                    subtitle = "按时间回到最近看过的帖子和文章",
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    FilterChip(
+                        selected = typeFilter == null,
+                        onClick = { viewModel.onFilterChanged(null) },
+                        label = { Text("全部") }
                     )
-                    // Filter Chips
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        FilterChip(
-                            selected = typeFilter == null,
-                            onClick = { viewModel.onFilterChanged(null) },
-                            label = { Text("全部") }
-                        )
-                        FilterChip(
-                            selected = typeFilter == "post",
-                            onClick = { viewModel.onFilterChanged("post") },
-                            label = { Text("帖子") }
-                        )
-                        FilterChip(
-                            selected = typeFilter == "article",
-                            onClick = { viewModel.onFilterChanged("article") },
-                            label = { Text("文章") }
-                        )
-                    }
+                    FilterChip(
+                        selected = typeFilter == "post",
+                        onClick = { viewModel.onFilterChanged("post") },
+                        label = { Text("帖子") }
+                    )
+                    FilterChip(
+                        selected = typeFilter == "article",
+                        onClick = { viewModel.onFilterChanged("article") },
+                        label = { Text("文章") }
+                    )
                 }
-            }
-        ) { paddingValues ->
             PagingStateLayout(
                 items = historyItems,
-                modifier = Modifier.padding(paddingValues).fillMaxSize(),
+                modifier = Modifier.weight(1f).fillMaxWidth(),
                 loading = {
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 },
                 empty = {
-                    Text(
-                        text = "没有浏览历史",
-                        style = MaterialTheme.typography.bodyLarge,
+                    ModernEmptyState(
+                        icon = Icons.Default.History,
+                        title = "还没有浏览历史",
+                        description = "阅读帖子或文章后，最近访问会按日期整理在这里。",
                         modifier = Modifier.align(Alignment.Center),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             ) {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    contentPadding = PaddingValues(top = 4.dp, bottom = Dimens.page_vertical),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     for (index in 0 until historyItems.itemCount) {
                         val item = historyItems[index]
@@ -145,10 +144,6 @@ class HistoryPage : Screen {
                                                 onClick = { navigator.push(ArticleDetailPage(history.article.id)) },
                                                 showUnreadIndicator = false
                                             )
-                                            HorizontalDivider(
-                                                modifier = Modifier.padding(top = 16.dp),
-                                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                                            )
                                         }
                                     }
                                 }
@@ -161,6 +156,8 @@ class HistoryPage : Screen {
                     }
                 }
             }
+          }
+        }
         }
     }
 }

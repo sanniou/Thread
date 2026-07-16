@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.11.0 - 2026-07-16
+
+Desktop workspace redesign release.
+
+- A common Material 3 design system now defines the quiet indigo/cyan palette, typography, shape scale, spacing and responsive width tokens.
+- Desktop uses a persistent global workspace rail plus feature sidebars for Forum, Reader and the unified timeline; compact windows retain a shared drawer.
+- Forum timelines, trends, thread detail, Reader, article detail, bookmarks, history and sync settings now share centered content canvases and outlined surfaces.
+- Empty, loading, diagnostics, page-header and navigation patterns are reusable `commonMain` components instead of page-specific mobile layouts.
+- The Desktop window opens at a productive workspace size while keeping native window controls and package metadata.
+
 ## 0.10.0 - 2026-07-16
 
 Forum depth and offline-readiness release.

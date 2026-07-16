@@ -2,6 +2,7 @@ package ai.saniou.forum.workflow.trend
 
 import ai.saniou.coreui.composition.LocalForumSourceId
 import ai.saniou.coreui.state.PagingStateLayout
+import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.BlankLinePolicy
 import ai.saniou.coreui.widgets.RichText
 import ai.saniou.coreui.widgets.SaniouAppBarTitle
@@ -12,6 +13,7 @@ import ai.saniou.forum.workflow.trend.TrendContract.Effect
 import ai.saniou.forum.workflow.trend.TrendContract.Event
 import ai.saniou.thread.domain.model.TrendItem
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -24,6 +26,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -192,7 +195,7 @@ data class TrendPage(
                             }
                         },
                         colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer
+                            containerColor = MaterialTheme.colorScheme.background
                         ),
                         actions = {
                             if (state.selectedTab?.supportsHistory == true) {
@@ -222,7 +225,7 @@ data class TrendPage(
                     if (state.availableTabs.size > 1) {
                         TabRow(
                             selectedTabIndex = pagerState.currentPage,
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            containerColor = MaterialTheme.colorScheme.background,
                             contentColor = MaterialTheme.colorScheme.primary,
                             indicator = { tabPositions ->
                                 TabRowDefaults.SecondaryIndicator(
@@ -293,26 +296,35 @@ data class TrendPage(
     ) {
         val items = viewModel.trendPagingFlow.collectAsLazyPagingItems()
 
-        PagingStateLayout(
-            items = items,
-            onRetry = { items.retry() }
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.TopCenter,
         ) {
-            LazyColumn(
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.fillMaxSize()
+            PagingStateLayout(
+                items = items,
+                onRetry = { items.retry() },
+                modifier = Modifier.fillMaxSize().widthIn(max = Dimens.contentMaxWidth),
             ) {
-                items(
-                    count = items.itemCount,
-                    key = items.itemKey { it.topicId }
-                ) { index ->
-                    val item = items[index]
-                    if (item != null) {
-                        TrendItemCard(
-                            index = index,
-                            item = item,
-                            onClick = { onItemClick(item) }
-                        )
+                LazyColumn(
+                    contentPadding = PaddingValues(
+                        horizontal = Dimens.page_horizontal,
+                        vertical = Dimens.page_vertical,
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    items(
+                        count = items.itemCount,
+                        key = items.itemKey { it.topicId }
+                    ) { index ->
+                        val item = items[index]
+                        if (item != null) {
+                            TrendItemCard(
+                                index = index,
+                                item = item,
+                                onClick = { onItemClick(item) }
+                            )
+                        }
                     }
                 }
             }
@@ -331,12 +343,13 @@ data class TrendPage(
                 .clickable(onClick = onClick),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp), // Flat style for list
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                containerColor = MaterialTheme.colorScheme.surface,
             ),
-            shape = MaterialTheme.shapes.medium
+            shape = MaterialTheme.shapes.large,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f)),
         ) {
             Row(
-                modifier = Modifier.padding(16.dp),
+                modifier = Modifier.padding(20.dp),
                 verticalAlignment = Alignment.Top
             ) {
                 // Rank Number

@@ -11,6 +11,7 @@ import ai.saniou.forum.ui.components.ThreadAuthor
 import ai.saniou.thread.domain.model.forum.Comment
 import ai.saniou.thread.domain.model.forum.Image
 import ai.saniou.thread.domain.model.forum.TopicMetadata
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -87,12 +88,14 @@ fun HeroTopicCard(
     val uriHandler = LocalUriHandler.current
     var showMenu by remember { mutableStateOf(false) }
 
-    Column(
+    Surface(
         modifier = modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surface)
-            .padding(bottom = Dimens.padding_medium)
+            .fillMaxWidth(),
+        color = MaterialTheme.colorScheme.surface,
+        shape = MaterialTheme.shapes.large,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f)),
     ) {
+      Column(modifier = Modifier.padding(bottom = Dimens.padding_medium)) {
         if (!metadata.title.isNullOrBlank() && metadata.title != stringResource(Res.string.empty_title)) {
             Text(
                 text = metadata.title!!,
@@ -261,6 +264,7 @@ fun HeroTopicCard(
                 )
             }
         }
+      }
     }
 }
 
@@ -275,7 +279,9 @@ fun FilterBar(
     Surface(
         modifier = modifier.fillMaxWidth(),
         color = MaterialTheme.colorScheme.surface,
-        tonalElevation = Dimens.padding_tiny
+        shape = MaterialTheme.shapes.medium,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f)),
+        tonalElevation = 0.dp,
     ) {
         Row(
             modifier = Modifier
@@ -334,28 +340,27 @@ fun ThreadReply(
     var showMenu by remember { mutableStateOf(false) }
     val haptic = LocalHapticFeedback.current
 
-    Column(
+    Surface(
         modifier = modifier
             .fillMaxWidth()
-            .background(
-                if (isHighlighted) {
-                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
-                } else {
-                    MaterialTheme.colorScheme.surface
-                }
-            )
             .combinedClickable(
                 onClick = { onReplyClicked(reply.id) },
                 onLongClick = {
                     haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
                     showMenu = true
                 }
-            )
-            .padding(
+            ),
+        color = if (isHighlighted) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
+            else MaterialTheme.colorScheme.surface,
+        shape = MaterialTheme.shapes.large,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f)),
+    ) {
+      Column(
+            modifier = Modifier.padding(
                 horizontal = Dimens.padding_standard,
                 vertical = Dimens.padding_medium
             )
-    ) {
+      ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
@@ -473,5 +478,6 @@ fun ThreadReply(
                 }
             )
         }
+      }
     }
 }

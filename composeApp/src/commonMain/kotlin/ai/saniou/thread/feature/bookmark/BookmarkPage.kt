@@ -1,12 +1,16 @@
 package ai.saniou.thread.feature.bookmark
 
 import ai.saniou.coreui.widgets.NetworkImage
-import ai.saniou.coreui.widgets.SaniouTopAppBar
+import ai.saniou.coreui.theme.Dimens
+import ai.saniou.coreui.widgets.ModernEmptyState
+import ai.saniou.coreui.widgets.PageHeader
+import ai.saniou.coreui.widgets.ThreadPage
 import ai.saniou.forum.workflow.topicdetail.TopicDetailPage
 import ai.saniou.reader.workflow.articledetail.ArticleDetailPage
 import ai.saniou.thread.domain.model.bookmark.Bookmark
 import ai.saniou.thread.domain.model.Tag
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
@@ -15,6 +19,8 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material3.*
@@ -43,39 +49,32 @@ object BookmarkPage : Screen {
         val state by viewModel.state.collectAsState()
         val lazyPagingItems = viewModel.bookmarksFlow.collectAsLazyPagingItems()
 
-        Scaffold(
-            topBar = {
-                if (state.isSelectionMode) {
-                    TopAppBar(
-                        title = { Text("已选择 ${state.selectedBookmarks.size} 项") },
-                        navigationIcon = {
-                            IconButton(onClick = { viewModel.onEvent(BookmarkContract.Event.ToggleSelectionMode) }) {
-                                Icon(
-                                    Icons.Default.Delete,
-                                    contentDescription = "取消选择"
-                                ) // Close icon actually
-                            }
-                        },
-                        actions = {
+        Scaffold(containerColor = MaterialTheme.colorScheme.background) { innerPadding ->
+            ThreadPage(modifier = Modifier.padding(innerPadding)) {
+              Column(
+                modifier = Modifier.fillMaxSize().widthIn(max = Dimens.contentMaxWidth)
+                    .padding(horizontal = Dimens.page_horizontal, vertical = Dimens.page_vertical),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+              ) {
+                PageHeader(
+                    title = if (state.isSelectionMode) "已选择 ${state.selectedBookmarks.size} 项" else "收藏夹",
+                    eyebrow = "LIBRARY",
+                    subtitle = if (state.isSelectionMode) "可以批量删除所选内容" else "集中管理帖子、文章、链接与摘录",
+                    actions = {
+                        if (state.isSelectionMode) {
                             IconButton(onClick = { viewModel.onEvent(BookmarkContract.Event.DeleteSelectedBookmarks) }) {
-                                Icon(Icons.Default.Delete, contentDescription = "删除")
+                                Icon(Icons.Default.Delete, contentDescription = "删除所选")
                             }
-                        }
-                    )
-                } else {
-                    SaniouTopAppBar(
-                        title = "收藏夹",
-                        onNavigationClick = { navigator.pop() },
-                        actions = {
+                            IconButton(onClick = { viewModel.onEvent(BookmarkContract.Event.ToggleSelectionMode) }) {
+                                Icon(Icons.Default.Close, contentDescription = "退出选择")
+                            }
+                        } else {
                             TextButton(onClick = { viewModel.onEvent(BookmarkContract.Event.ToggleSelectionMode) }) {
                                 Text("编辑")
                             }
                         }
-                    )
-                }
-            }
-        ) { innerPadding ->
-            Column(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
+                    },
+                )
                 // Search Bar
                 OutlinedTextField(
                     value = state.searchQuery,
@@ -87,16 +86,15 @@ object BookmarkPage : Screen {
                         )
                     },
                     label = { Text("搜索收藏") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    singleLine = true
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.large,
+                    singleLine = true,
                 )
 
                 // Tag Filters
                 if (state.allTags.isNotEmpty()) {
                     LazyRow(
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                        contentPadding = PaddingValues(vertical = 4.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         items(state.allTags) { tag ->
@@ -118,8 +116,8 @@ object BookmarkPage : Screen {
 
                 LazyColumn(
                     modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    contentPadding = PaddingValues(16.dp)
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(top = 4.dp, bottom = Dimens.page_vertical)
                 ) {
                     items(
                         count = lazyPagingItems.itemCount,
@@ -218,17 +216,19 @@ object BookmarkPage : Screen {
 
                             refresh is NotLoading && lazyPagingItems.itemCount == 0 -> {
                                 item {
-                                    Text(
-                                        text = "没有收藏",
-                                        modifier = Modifier.fillParentMaxSize(),
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
+                                    Box(Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) {
+                                        ModernEmptyState(
+                                            icon = Icons.Default.BookmarkBorder,
+                                            title = "还没有收藏",
+                                            description = "在帖子或文章中收藏内容，它们会出现在这里。",
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
                 }
+              }
             }
         }
     }
@@ -256,10 +256,16 @@ fun BookmarkItem(
                 onClick = { onBookmarkClick(bookmark) },
                 onLongClick = onLongClick
             ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = if (isSelected) CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant) else CardDefaults.cardColors()
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        shape = MaterialTheme.shapes.large,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f)),
+        colors = if (isSelected) {
+            CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+        } else {
+            CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        }
     ) {
-        Row(modifier = Modifier.padding(16.dp)) {
+        Row(modifier = Modifier.padding(20.dp)) {
             if (isSelectionMode) {
                 Icon(
                     imageVector = if (isSelected) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,

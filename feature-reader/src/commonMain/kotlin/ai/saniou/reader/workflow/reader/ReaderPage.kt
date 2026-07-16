@@ -5,12 +5,16 @@ import ai.saniou.coreui.state.PagingStateLayout
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.AppDrawerItem
 import ai.saniou.coreui.widgets.ArticleItem
+import ai.saniou.coreui.widgets.ModernEmptyState
 import ai.saniou.coreui.widgets.RefreshDiagnosticsBanner
+import ai.saniou.coreui.widgets.SectionLabel
+import ai.saniou.coreui.widgets.SidebarHeader
 import ai.saniou.reader.workflow.articledetail.ArticleDetailPage
 import ai.saniou.thread.domain.model.reader.Article
 import ai.saniou.thread.domain.model.reader.FeedSource
 import ai.saniou.thread.domain.model.reader.ReaderSubscriptionFormat
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -153,7 +157,10 @@ class ReaderPage : Screen {
             } else {
                 PermanentNavigationDrawer(
                     drawerContent = {
-                        PermanentDrawerSheet(modifier = Modifier.width(280.dp)) {
+                        PermanentDrawerSheet(
+                            modifier = Modifier.width(Dimens.sidebarWidth),
+                            drawerContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                        ) {
                             navigationContent()
                         }
                     }
@@ -226,18 +233,30 @@ private fun ReaderScaffold(
             )
         }
     ) { padding ->
-        Column(modifier = Modifier.padding(padding).fillMaxSize()) {
-            RefreshDiagnosticsBanner(
-                failures = state.refreshFailures,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-            )
-            FilterChips(
-                selectedFilter = state.articleFilter,
-                onFilterChange = onFilterChange
-            )
+        Column(
+            modifier = Modifier.padding(padding).fillMaxSize()
+                .background(MaterialTheme.colorScheme.background),
+        ) {
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.TopCenter,
+            ) {
+                Column(Modifier.fillMaxWidth().widthIn(max = Dimens.contentMaxWidth)) {
+                    RefreshDiagnosticsBanner(
+                        failures = state.refreshFailures,
+                        modifier = Modifier.padding(horizontal = Dimens.page_horizontal, vertical = 8.dp),
+                    )
+                    FilterChips(
+                        selectedFilter = state.articleFilter,
+                        onFilterChange = onFilterChange,
+                        modifier = Modifier.padding(horizontal = Dimens.page_horizontal),
+                    )
+                }
+            }
             PagingStateLayout(
                 items = articles,
-                modifier = Modifier.weight(1f).fillMaxSize(),
+                modifier = Modifier.weight(1f).fillMaxWidth().widthIn(max = Dimens.contentMaxWidth)
+                    .align(Alignment.CenterHorizontally),
                 loading = { CircularProgressIndicator(modifier = Modifier.align(Alignment.Center)) },
                 empty = {
                     EmptyState(
@@ -246,7 +265,14 @@ private fun ReaderScaffold(
                     )
                 }
             ) {
-                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(
+                        horizontal = Dimens.page_horizontal,
+                        vertical = 12.dp,
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
                     items(articles.itemCount) { index ->
                         val article = articles[index]
                         if (article != null) {
@@ -257,10 +283,6 @@ private fun ReaderScaffold(
                                 article = article,
                                 sourceName = sourceName,
                                 onClick = { onArticleClick(article) }
-                            )
-                            HorizontalDivider(
-                                modifier = Modifier.padding(horizontal = 16.dp),
-                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
                             )
                         }
                     }
@@ -280,33 +302,11 @@ private fun ReaderScaffold(
 
 @Composable
 private fun EmptyState(isSearchActive: Boolean, query: String) {
-    Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        val icon = if (isSearchActive) Icons.Default.SearchOff else Icons.Default.Inbox
-        val title = if (isSearchActive) "未找到相关文章" else "暂无文章"
-        val subtitle =
-            if (isSearchActive) "尝试使用不同的关键词" else "尝试添加新的订阅源或稍后刷新"
-
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            modifier = Modifier.size(64.dp),
-            tint = MaterialTheme.colorScheme.surfaceVariant
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = subtitle,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        ModernEmptyState(
+            icon = if (isSearchActive) Icons.Default.SearchOff else Icons.Default.Inbox,
+            title = if (isSearchActive) "未找到相关文章" else "暂无文章",
+            description = if (isSearchActive) "没有找到“$query”，换一个关键词继续搜索。" else "添加订阅源，或稍后刷新内容。",
         )
     }
 }
@@ -358,7 +358,8 @@ private fun ReaderTopAppBar(
                 }
             },
             colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainer
+                containerColor = MaterialTheme.colorScheme.background,
+                scrolledContainerColor = MaterialTheme.colorScheme.surface,
             )
         )
     } else {
@@ -422,7 +423,11 @@ private fun ReaderTopAppBar(
                         )
                     }
                 }
-            }
+            },
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = MaterialTheme.colorScheme.background,
+                scrolledContainerColor = MaterialTheme.colorScheme.surface,
+            ),
         )
     }
 }
@@ -439,16 +444,17 @@ private fun FeedSourceList(
     onAdd: () -> Unit,
     schedulerState: ai.saniou.thread.domain.model.reader.ReaderSchedulerState,
 ) {
-    Column(modifier = Modifier.fillMaxHeight().padding(vertical = 12.dp)) {
+    Column(modifier = Modifier.fillMaxHeight()) {
+        SidebarHeader(
+            icon = Icons.Default.RssFeed,
+            title = "阅读器",
+            subtitle = "${sources.size} 个订阅源",
+        )
         val globalDrawer = LocalAppDrawer.current
         globalDrawer()
-        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-
-        Text(
+        SectionLabel(
             text = "订阅源",
-            style = MaterialTheme.typography.titleSmall,
-            modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
-            color = MaterialTheme.colorScheme.primary
+            modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
         )
 
         LazyColumn(
@@ -612,9 +618,10 @@ fun FeedSourceItem(
 fun FilterChips(
     selectedFilter: ArticleFilter,
     onFilterChange: (ArticleFilter) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+        modifier = modifier.fillMaxWidth().padding(vertical = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         ArticleFilter.entries.forEach { filter ->

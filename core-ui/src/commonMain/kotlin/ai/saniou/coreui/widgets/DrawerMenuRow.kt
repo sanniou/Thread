@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,18 +30,29 @@ fun DrawerMenuRow(
     menuItems: List<DrawerMenuItem>,
     modifier: Modifier = Modifier
 ) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceEvenly
-    ) {
-        menuItems.forEach { menuItem ->
-            DrawerMenuIcon(
-                icon = menuItem.icon,
-                label = menuItem.label,
-                onClick = menuItem.onClick,
-                modifier = Modifier.weight(1f)
-            )
+    Column(modifier = modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 8.dp)) {
+        Text(
+            text = "工作区",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+        )
+        menuItems.chunked(3).forEach { rowItems ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                rowItems.forEach { menuItem ->
+                    DrawerMenuIcon(
+                        icon = menuItem.icon,
+                        label = menuItem.label,
+                        selected = menuItem.selected,
+                        onClick = menuItem.onClick,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+                repeat(3 - rowItems.size) { Spacer(Modifier.weight(1f)) }
+            }
         }
     }
 }
@@ -57,30 +69,35 @@ fun DrawerMenuRow(
 fun DrawerMenuIcon(
     icon: ImageVector,
     label: String,
+    selected: Boolean = false,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier
-            .clickable(onClick = onClick)
-            .padding(8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+    Surface(
+        modifier = modifier.clickable(onClick = onClick),
+        color = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface.copy(alpha = 0f),
+        contentColor = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+        shape = MaterialTheme.shapes.medium,
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = label,
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(24.dp)
-        )
+        Column(
+            modifier = Modifier.padding(horizontal = 4.dp, vertical = 9.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                modifier = Modifier.size(21.dp)
+            )
 
-        Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurface
-        )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                maxLines = 1,
+            )
+        }
     }
 }
 
@@ -90,5 +107,6 @@ fun DrawerMenuIcon(
 data class DrawerMenuItem(
     val icon: ImageVector,
     val label: String,
+    val selected: Boolean = false,
     val onClick: () -> Unit
 )

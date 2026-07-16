@@ -3,8 +3,11 @@ package ai.saniou.thread
 import ai.saniou.coreui.composition.LocalAppDrawer
 import ai.saniou.coreui.composition.LocalForumSourceId
 import ai.saniou.coreui.theme.CupcakeTheme
+import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.DrawerMenuItem
 import ai.saniou.coreui.widgets.DrawerMenuRow
+import ai.saniou.coreui.widgets.WorkspaceNavigationItem
+import ai.saniou.coreui.widgets.WorkspaceNavigationRail
 import ai.saniou.forum.di.nmbFeatureModule
 import ai.saniou.forum.workflow.home.ChannelPage
 import ai.saniou.forum.workflow.image.nmbImagePreviewModule
@@ -48,6 +51,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import kotlinx.coroutines.launch
@@ -120,55 +128,109 @@ fun App(attachmentPicker: AttachmentPicker? = null) {
                 screen = ForumRoute,
                 disposeBehavior = NavigatorDisposeBehavior(disposeSteps = false),
             ) { navigator ->
+                var selectedWorkspace by remember { mutableStateOf(WorkspaceDestination.FORUM) }
+                fun navigateTo(destination: WorkspaceDestination, screen: Screen) {
+                    selectedWorkspace = destination
+                    navigator.replaceAll(screen)
+                }
                 val appDrawer = @Composable {
                     DrawerMenuRow(
                         menuItems = listOf(
                             DrawerMenuItem(
                                 Icons.Default.Forum,
-                                "匿名版"
-                            ) { navigator.replaceAll(ForumRoute) },
+                                "社区",
+                                selectedWorkspace == WorkspaceDestination.FORUM,
+                            ) { navigateTo(WorkspaceDestination.FORUM, ForumRoute) },
                             DrawerMenuItem(
                                 Icons.Default.RssFeed,
-                                "阅读器"
-                            ) { navigator.replaceAll(ReaderRoute) },
+                                "阅读",
+                                selectedWorkspace == WorkspaceDestination.READER,
+                            ) { navigateTo(WorkspaceDestination.READER, ReaderRoute) },
                             DrawerMenuItem(
                                 Icons.Default.DynamicFeed,
-                                "聚合信息流"
-                            ) { navigator.replaceAll(FeedRoute) },
+                                "动态",
+                                selectedWorkspace == WorkspaceDestination.FEED,
+                            ) { navigateTo(WorkspaceDestination.FEED, FeedRoute) },
                             DrawerMenuItem(
                                 Icons.Default.Games,
-                                "元胞自动机"
-                            ) { navigator.replaceAll(CellularAutomatonRoute) },
+                                "实验室",
+                                selectedWorkspace == WorkspaceDestination.LAB,
+                            ) { navigateTo(WorkspaceDestination.LAB, CellularAutomatonRoute) },
                             DrawerMenuItem(
                                 Icons.Default.Bookmark,
-                                "收藏夹"
-                            ) { navigator.push(BookmarkPage) },
+                                "收藏",
+                                selectedWorkspace == WorkspaceDestination.BOOKMARKS,
+                            ) { navigateTo(WorkspaceDestination.BOOKMARKS, BookmarkPage) },
                             DrawerMenuItem(
                                 Icons.Default.History,
-                                "浏览历史"
-                            ) { navigator.push(HistoryPage()) },
+                                "历史",
+                                selectedWorkspace == WorkspaceDestination.HISTORY,
+                            ) { navigateTo(WorkspaceDestination.HISTORY, HistoryPage()) },
                             DrawerMenuItem(
                                 Icons.Default.Settings,
-                                "数据与同步"
-                            ) { navigator.push(SyncSettingsPage()) },
+                                "设置",
+                                selectedWorkspace == WorkspaceDestination.SETTINGS,
+                            ) { navigateTo(WorkspaceDestination.SETTINGS, SyncSettingsPage()) },
                         )
                     )
                 }
-                val navigator = LocalNavigator.currentOrThrow
                 val currentScreen = navigator.lastItem
 
-                CompositionLocalProvider(
-                    LocalAppDrawer provides appDrawer,
-                    LocalForumSourceId provides (currentSource ?: "nmb"),
-                    LocalAttachmentPicker provides attachmentPicker,
-                ) {
-                    navigator.saveableState("currentScreen") {
-                        currentScreen.Content()
+                BoxWithConstraints(Modifier.fillMaxSize()) {
+                    val showWorkspaceRail = maxWidth >= Dimens.DesktopWidth
+                    val railItems = listOf(
+                        WorkspaceNavigationItem(Icons.Default.Forum, "社区", selectedWorkspace == WorkspaceDestination.FORUM) {
+                            navigateTo(WorkspaceDestination.FORUM, ForumRoute)
+                        },
+                        WorkspaceNavigationItem(Icons.Default.RssFeed, "阅读", selectedWorkspace == WorkspaceDestination.READER) {
+                            navigateTo(WorkspaceDestination.READER, ReaderRoute)
+                        },
+                        WorkspaceNavigationItem(Icons.Default.DynamicFeed, "动态", selectedWorkspace == WorkspaceDestination.FEED) {
+                            navigateTo(WorkspaceDestination.FEED, FeedRoute)
+                        },
+                        WorkspaceNavigationItem(Icons.Default.Bookmark, "收藏", selectedWorkspace == WorkspaceDestination.BOOKMARKS) {
+                            navigateTo(WorkspaceDestination.BOOKMARKS, BookmarkPage)
+                        },
+                        WorkspaceNavigationItem(Icons.Default.History, "历史", selectedWorkspace == WorkspaceDestination.HISTORY) {
+                            navigateTo(WorkspaceDestination.HISTORY, HistoryPage())
+                        },
+                        WorkspaceNavigationItem(Icons.Default.Games, "实验室", selectedWorkspace == WorkspaceDestination.LAB, bottom = true) {
+                            navigateTo(WorkspaceDestination.LAB, CellularAutomatonRoute)
+                        },
+                        WorkspaceNavigationItem(Icons.Default.Settings, "设置", selectedWorkspace == WorkspaceDestination.SETTINGS, bottom = true) {
+                            navigateTo(WorkspaceDestination.SETTINGS, SyncSettingsPage())
+                        },
+                    )
+                    Row(Modifier.fillMaxSize()) {
+                        if (showWorkspaceRail) {
+                            WorkspaceNavigationRail(railItems)
+                        }
+                        Box(Modifier.weight(1f).fillMaxSize()) {
+                            CompositionLocalProvider(
+                                LocalAppDrawer provides if (showWorkspaceRail) ({}) else appDrawer,
+                                LocalForumSourceId provides (currentSource ?: "nmb"),
+                                LocalAttachmentPicker provides attachmentPicker,
+                            ) {
+                                navigator.saveableState("currentScreen") {
+                                    currentScreen.Content()
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
     }
+}
+
+private enum class WorkspaceDestination {
+    FORUM,
+    READER,
+    FEED,
+    BOOKMARKS,
+    HISTORY,
+    LAB,
+    SETTINGS,
 }
 
 object ForumRoute : Screen {

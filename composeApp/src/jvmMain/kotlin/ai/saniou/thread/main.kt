@@ -26,15 +26,14 @@ fun main(args: Array<String>) {
         addTempDirectoryRemovalHook()
         val windowState = rememberWindowState(
             position = WindowPosition(Alignment.Center),
-            size = DpSize(920.dp, 768.dp),
+            size = DpSize(1240.dp, 820.dp),
         )
         CupcakeTheme {
             val attachmentPicker = remember { DesktopAttachmentPicker() }
             Window(
                 onCloseRequest = ::exitApplication,
-                title = "Thread",
-                // Hide default window title
-                undecorated = true,
+                title = "Thread · Forum & Reader",
+                undecorated = false,
                 state = windowState
             ) {
                 App(attachmentPicker = attachmentPicker)

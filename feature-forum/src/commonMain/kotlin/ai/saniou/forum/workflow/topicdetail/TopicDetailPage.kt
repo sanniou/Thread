@@ -336,35 +336,37 @@ private fun ThreadContentRouter(
     onReplyClicked: (String) -> Unit,
     highlightedReplyId: String?,
 ) {
-    StateLayout(
-        state = state.topicWrapper,
-        onRetry = onRefresh,
-        modifier = modifier,
-        loading = { ThreadShimmer() },
-        error = { error ->
-            ThreadErrorContent(
-                error = error,
-                onRetry = onRefresh
+    Box(
+        modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
+        contentAlignment = Alignment.TopCenter,
+    ) {
+        StateLayout(
+            state = state.topicWrapper,
+            onRetry = onRefresh,
+            modifier = Modifier.fillMaxSize().widthIn(max = Dimens.readingMaxWidth),
+            loading = { ThreadShimmer() },
+            error = { error ->
+                ThreadErrorContent(error = error, onRetry = onRefresh)
+            }
+        ) { metadata ->
+            ThreadSuccessContent(
+                state = state,
+                metadata = metadata,
+                lazyListState = lazyListState,
+                onRefresh = onRefresh,
+                onReplyClicked = onReplyClicked,
+                onTogglePoOnly = onTogglePoOnly,
+                onRefClick = onRefClick,
+                onImageClick = onImageClick,
+                onUpdateLastReadId = onUpdateLastReadId,
+                onCopy = onCopy,
+                onBookmark = onBookmark,
+                onBookmarkImage = onBookmarkImage,
+                onUpvote = onUpvote,
+                onUserClick = onUserClick,
+                highlightedReplyId = highlightedReplyId
             )
         }
-    ) { metadata ->
-        ThreadSuccessContent(
-            state = state,
-            metadata = metadata,
-            lazyListState = lazyListState,
-            onRefresh = onRefresh,
-            onReplyClicked = onReplyClicked,
-            onTogglePoOnly = onTogglePoOnly,
-            onRefClick = onRefClick,
-            onImageClick = onImageClick,
-            onUpdateLastReadId = onUpdateLastReadId,
-            onCopy = onCopy,
-            onBookmark = onBookmark,
-            onBookmarkImage = onBookmarkImage,
-            onUpvote = onUpvote,
-            onUserClick = onUserClick,
-            highlightedReplyId = highlightedReplyId
-        )
     }
 }
 
@@ -606,8 +608,13 @@ private fun ThreadList(
     LazyColumn(
         state = lazyListState,
         modifier = Modifier,
-        contentPadding = PaddingValues(bottom = 80.dp),
-        verticalArrangement = Arrangement.spacedBy(Dimens.padding_small)
+        contentPadding = PaddingValues(
+            start = Dimens.page_horizontal,
+            top = 12.dp,
+            end = Dimens.page_horizontal,
+            bottom = 80.dp,
+        ),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         // 1. Hero Card (Metadata + Main Post Content)
         item {
@@ -675,10 +682,6 @@ private fun ThreadList(
                     onBookmarkImage = onBookmarkImage,
                     onUserClick = onUserClick,
                     isHighlighted = highlightedReplyId == reply.id
-                )
-                HorizontalDivider(
-                    thickness = 0.5.dp,
-                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)
                 )
             } else {
                 ShimmerContainer { SkeletonReplyItem(it) }

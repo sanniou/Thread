@@ -77,6 +77,7 @@
 -   [x] **Feature - Reader 基线**: RSS/Atom/JSON/HTML 来源、刷新诊断、阅读状态与收藏。
 -   [x] **数据同步**: 版本化用户数据包、本地文本导入导出与 WebDAV 备份恢复。
 -   [x] **Desktop 发布门禁**: Source 合约、数据库迁移/重启、真实组合根 smoke 与 Debian 包构建。
+-   [x] **Desktop 现代工作区**: common 设计系统、全局导航 rail、功能侧栏、居中内容画布与核心页面统一改造。
 
 ## 🚀 构建与运行
 

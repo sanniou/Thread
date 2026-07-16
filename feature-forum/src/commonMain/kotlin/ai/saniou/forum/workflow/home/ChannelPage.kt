@@ -2,9 +2,11 @@ package ai.saniou.forum.workflow.home
 
 import ai.saniou.coreui.composition.LocalAppDrawer
 import ai.saniou.coreui.state.StateLayout
-import ai.saniou.coreui.widgets.DrawerHeader
+import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.RefreshDiagnosticsBanner
 import ai.saniou.coreui.widgets.RichText
+import ai.saniou.coreui.widgets.SectionLabel
+import ai.saniou.coreui.widgets.SidebarHeader
 import ai.saniou.forum.workflow.home.ChannelContract.ChannelCategoryUiState
 import ai.saniou.forum.workflow.home.ChannelContract.Event
 import ai.saniou.forum.workflow.init.SourceInitScreen
@@ -23,7 +25,6 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -40,6 +41,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Search
@@ -58,6 +60,7 @@ import androidx.compose.material3.PermanentDrawerSheet
 import androidx.compose.material3.PermanentNavigationDrawer
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
@@ -97,9 +100,6 @@ data class ChannelPage(
         val viewModel: ChannelViewModel = rememberScreenModel()
         val state by viewModel.state.collectAsStateWithLifecycle()
 
-        val greetImageViewModel: GreetImageViewModel = rememberScreenModel()
-        val greetImageUrl by greetImageViewModel.greetImageUrl.collectAsStateWithLifecycle()
-
         val navigator = LocalNavigator.currentOrThrow
         val scope = rememberCoroutineScope()
         val snackbarHostState = remember { SnackbarHostState() }
@@ -118,7 +118,6 @@ data class ChannelPage(
 
             val drawerContent = @Composable {
                 ForumDrawerContent(
-                    greetImageUrl = greetImageUrl,
                     state = state,
                     viewModel = viewModel,
                     navigator = navigator,
@@ -141,7 +140,8 @@ data class ChannelPage(
                     drawerState = actualDrawerState,
                     drawerContent = {
                         ModalDrawerSheet(
-                            drawerContainerColor = Color.Transparent,
+                            modifier = Modifier.width(Dimens.sidebarWidth),
+                            drawerContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
                             drawerContentColor = MaterialTheme.colorScheme.onSurface
                         ) {
                             drawerContent()
@@ -154,8 +154,8 @@ data class ChannelPage(
                 PermanentNavigationDrawer(
                     drawerContent = {
                         PermanentDrawerSheet(
-                            modifier = Modifier.width(300.dp),
-                            drawerContainerColor = Color.Transparent,
+                            modifier = Modifier.width(Dimens.sidebarWidth),
+                            drawerContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
                             drawerContentColor = MaterialTheme.colorScheme.onSurface
                         ) {
                             drawerContent()
@@ -221,99 +221,85 @@ data class ChannelPage(
 
     @Composable
     private fun ForumDrawerContent(
-        greetImageUrl: String?,
         state: ChannelContract.ChannelUiState,
         viewModel: ChannelViewModel,
         navigator: Navigator,
         onCloseDrawer: () -> Unit,
         snackbarHostState: SnackbarHostState
     ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            // Full screen background image
-            DrawerHeader(
-                imageUrl = greetImageUrl,
-                modifier = Modifier.fillMaxSize()
+        Column(modifier = Modifier.fillMaxSize()) {
+            val currentSource = state.availableSources.firstOrNull { it.id == state.currentSourceId }
+            SidebarHeader(
+                icon = Icons.Default.Forum,
+                title = "社区",
+                subtitle = currentSource?.name ?: "选择内容来源",
             )
 
-            GlassmorphicDrawerContainer(modifier = Modifier.fillMaxSize()) {
-                Column(
-                    modifier = Modifier.fillMaxSize()
+            val globalDrawer = LocalAppDrawer.current
+            globalDrawer()
+
+            SectionLabel(
+                text = "内容来源",
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
+            )
+            AnimatedSourceSelector(
+                sources = state.availableSources,
+                currentSourceId = state.currentSourceId,
+                onSourceSelected = { viewModel.onEvent(Event.SelectSource(it)) }
+            )
+
+            DrawerFunctionGrid(
+                state = state,
+                navigator = navigator,
+                viewModel = viewModel,
+                onCloseDrawer = onCloseDrawer
+            )
+
+            RefreshDiagnosticsBanner(
+                failures = state.refreshFailures,
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            )
+
+            SectionLabel(
+                text = "版块",
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
+            )
+            StateLayout(
+                state = state.categoriesState,
+                onRetry = { viewModel.onEvent(Event.LoadCategories) },
+                modifier = Modifier.weight(1f)
+            ) { forumGroups ->
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 16.dp),
                 ) {
-                    // Transparent spacer to reveal the image header
-                    Spacer(modifier = Modifier.height(ai.saniou.coreui.theme.Dimens.drawer_header_height))
+                    forumGroups.forEach { group ->
+                        item(key = group.id) {
+                            CategoryHeader(
+                                group = group,
+                                isExpanded = state.expandedGroupId == group.id,
+                                onToggle = { viewModel.onEvent(Event.ToggleCategory(group.id)) }
+                            )
+                        }
 
-                    // List content
-                    Column(
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        val globalDrawer = LocalAppDrawer.current
-                        globalDrawer()
-                        HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
-
-                        AnimatedSourceSelector(
-                            sources = state.availableSources,
-                            currentSourceId = state.currentSourceId,
-                            onSourceSelected = { viewModel.onEvent(Event.SelectSource(it)) }
-                        )
-
-                        HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
-
-                        DrawerFunctionGrid(
-                            state = state,
-                            navigator = navigator,
-                            viewModel = viewModel,
-                            onCloseDrawer = onCloseDrawer
-                        )
-
-                        HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
-
-                        RefreshDiagnosticsBanner(
-                            failures = state.refreshFailures,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        )
-
-                        StateLayout(
-                            state = state.categoriesState,
-                            onRetry = { viewModel.onEvent(Event.LoadCategories) },
-                            modifier = Modifier.weight(1f)
-                        ) { forumGroups ->
-                            LazyColumn(modifier = Modifier.fillMaxSize()) {
-                                forumGroups.forEach { group ->
-                                    item(key = group.id) {
-                                        CategoryHeader(
-                                            group = group,
-                                            isExpanded = state.expandedGroupId == group.id,
-                                            onToggle = {
-                                                viewModel.onEvent(
-                                                    Event.ToggleCategory(group.id)
-                                                )
-                                            }
+                        item(key = "content_${group.id}") {
+                            AnimatedVisibility(
+                                visible = state.expandedGroupId == group.id,
+                                enter = expandVertically() + fadeIn(),
+                                exit = shrinkVertically() + fadeOut()
+                            ) {
+                                Column {
+                                    group.channels.forEach { forum ->
+                                        StylizedForumItem(
+                                            forum = forum,
+                                            isSelected = state.currentChannel?.id == forum.id,
+                                            isFavorite = state.favoriteChannelIds.contains(forum.id),
+                                            onForumClick = {
+                                                viewModel.onEvent(Event.SelectChannel(forum))
+                                                onCloseDrawer()
+                                            },
+                                            onFavoriteToggle = { viewModel.onEvent(Event.ToggleFavorite(forum)) }
                                         )
-                                    }
-
-                                    item(key = "content_${group.id}") {
-                                        AnimatedVisibility(
-                                            visible = state.expandedGroupId == group.id,
-                                            enter = expandVertically() + fadeIn(),
-                                            exit = shrinkVertically() + fadeOut()
-                                        ) {
-                                            Column {
-                                                group.channels.forEach { forum ->
-                                                    StylizedForumItem(
-                                                        forum = forum,
-                                                        isSelected = state.currentChannel?.id == forum.id,
-                                                        isFavorite = state.favoriteChannelIds.contains(forum.id),
-                                                        onForumClick = {
-                                                            viewModel.onEvent(Event.SelectChannel(forum))
-                                                            onCloseDrawer()
-                                                        },
-                                                        onFavoriteToggle = {
-                                                            viewModel.onEvent(Event.ToggleFavorite(forum))
-                                                        }
-                                                    )
-                                                }
-                                            }
-                                        }
                                     }
                                 }
                             }
@@ -323,7 +309,7 @@ data class ChannelPage(
             }
             SnackbarHost(
                 hostState = snackbarHostState,
-                modifier = Modifier.align(Alignment.BottomCenter)
+                modifier = Modifier.align(Alignment.CenterHorizontally)
             )
         }
     }
@@ -359,8 +345,8 @@ data class ChannelPage(
         }
 
         FlowRow(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-            maxItemsInEachRow = 3,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
+            maxItemsInEachRow = 2,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
@@ -391,40 +377,40 @@ data class ChannelPage(
         onClick: () -> Unit,
         modifier: Modifier = Modifier
     ) {
-        val backgroundColor = if (selected)
-            MaterialTheme.colorScheme.secondaryContainer
-        else
-            Color.Transparent
+        val backgroundColor = if (selected) MaterialTheme.colorScheme.primaryContainer
+        else MaterialTheme.colorScheme.surfaceContainer
 
         val contentColor = if (selected)
-            MaterialTheme.colorScheme.onSecondaryContainer
+            MaterialTheme.colorScheme.onPrimaryContainer
         else
             MaterialTheme.colorScheme.onSurfaceVariant
 
-        Column(
-            modifier = modifier
-                .clip(MaterialTheme.shapes.medium)
-                .background(backgroundColor)
-                .clickable(onClick = onClick)
-                .padding(vertical = 12.dp, horizontal = 4.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+        Surface(
+            onClick = onClick,
+            modifier = modifier,
+            shape = MaterialTheme.shapes.medium,
+            color = backgroundColor,
         ) {
+          Row(
+            modifier = Modifier.padding(vertical = 12.dp, horizontal = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+          ) {
             Icon(
                 imageVector = icon,
                 contentDescription = label,
                 tint = contentColor,
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(20.dp)
             )
-            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = label,
-                style = MaterialTheme.typography.labelSmall,
+                style = MaterialTheme.typography.labelMedium,
                 color = contentColor,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
             )
+          }
         }
     }
 
@@ -438,8 +424,7 @@ data class ChannelPage(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable(onClick = onToggle)
-                .background(MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.5f))
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(horizontal = 20.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
@@ -466,8 +451,8 @@ data class ChannelPage(
                 .fillMaxWidth()
                 .padding(8.dp),
             shape = MaterialTheme.shapes.medium,
-            elevation = CardDefaults.cardElevation(4.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+            elevation = CardDefaults.cardElevation(0.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
         ) {
             Column(
                 modifier = Modifier.padding(16.dp),

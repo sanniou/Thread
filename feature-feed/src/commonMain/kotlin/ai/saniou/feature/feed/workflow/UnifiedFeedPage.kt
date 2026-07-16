@@ -6,6 +6,10 @@ import ai.saniou.coreui.state.PagingStateLayout
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.AppDrawerItem
 import ai.saniou.coreui.widgets.RefreshDiagnosticsBanner
+import ai.saniou.coreui.widgets.ModernEmptyState
+import ai.saniou.coreui.widgets.PageHeader
+import ai.saniou.coreui.widgets.SidebarHeader
+import ai.saniou.coreui.widgets.ThreadCard
 import ai.saniou.coreui.widgets.ArticleItem as ArticleListItem
 import ai.saniou.feature.feed.ui.components.FeedRichText
 import ai.saniou.thread.domain.model.feed.ArticleItem
@@ -14,6 +18,7 @@ import ai.saniou.thread.domain.model.feed.TimelineItem
 import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.model.reader.Article
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -26,6 +31,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Checklist
@@ -122,13 +128,21 @@ fun UnifiedFeedPage(
         if (isMobile) {
             ModalNavigationDrawer(
                 drawerState = drawerState,
-                drawerContent = { ModalDrawerSheet { drawerContent() } },
+                drawerContent = {
+                    ModalDrawerSheet(
+                        modifier = Modifier.width(Dimens.sidebarWidth),
+                        drawerContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                    ) { drawerContent() }
+                },
                 content = content,
             )
         } else {
             PermanentNavigationDrawer(
                 drawerContent = {
-                    PermanentDrawerSheet(modifier = Modifier.width(288.dp)) {
+                    PermanentDrawerSheet(
+                        modifier = Modifier.width(Dimens.sidebarWidth),
+                        drawerContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                    ) {
                         drawerContent()
                     }
                 },
@@ -144,15 +158,12 @@ private fun FeedFilterDrawer(
     onEvent: (FeedContract.Event) -> Unit,
 ) {
     val globalDrawer = LocalAppDrawer.current
-    Column(modifier = Modifier.fillMaxSize().padding(vertical = 12.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Icon(Icons.Default.DynamicFeed, contentDescription = null)
-            Text("聚合范围", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-        }
+    Column(modifier = Modifier.fillMaxSize()) {
+        SidebarHeader(
+            icon = Icons.Default.DynamicFeed,
+            title = "聚合动态",
+            subtitle = "${state.selectedSourceIds.size + if (state.includeReader) 1 else 0} 个内容范围",
+        )
 
         AppDrawerItem(
             label = "全部论坛来源",
@@ -202,7 +213,6 @@ private fun FeedFilterDrawer(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun FeedScaffold(
     state: FeedContract.State,
@@ -216,22 +226,26 @@ private fun FeedScaffold(
 ) {
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        topBar = {
-            TopAppBar(
-                title = { Text("聚合信息流") },
-                navigationIcon = {
+    ) { padding ->
+        Column(
+            modifier = Modifier.padding(padding).fillMaxSize()
+                .background(MaterialTheme.colorScheme.background),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            PageHeader(
+                title = "聚合信息流",
+                eyebrow = "TIMELINE",
+                subtitle = "论坛主题与订阅文章组成的一条时间线",
+                modifier = Modifier.fillMaxWidth().widthIn(max = Dimens.contentMaxWidth)
+                    .padding(horizontal = Dimens.page_horizontal, vertical = 20.dp),
+                actions = {
                     if (showMenu) {
                         IconButton(onClick = onMenu) {
                             Icon(Icons.Default.Menu, contentDescription = "筛选来源")
                         }
                     }
-                },
-                actions = {
                     if (state.isRefreshing) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.padding(12.dp).size(24.dp),
-                            strokeWidth = 2.dp,
-                        )
+                        CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
                     } else {
                         IconButton(onClick = onRefresh) {
                             Icon(Icons.Default.Refresh, contentDescription = "刷新")
@@ -239,62 +253,57 @@ private fun FeedScaffold(
                     }
                 },
             )
-        },
-    ) { padding ->
-        PagingStateLayout(
-            items = timeline,
-            modifier = Modifier.padding(padding).fillMaxSize(),
-            empty = {
-                FeedEmptyState(
-                    hasSelection = state.selectedSourceIds.isNotEmpty() || state.includeReader,
-                    modifier = Modifier.align(Alignment.Center),
-                )
-            },
-        ) {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
+            PagingStateLayout(
+                items = timeline,
+                modifier = Modifier.weight(1f).fillMaxWidth().widthIn(max = Dimens.contentMaxWidth),
+                empty = {
+                    FeedEmptyState(
+                        hasSelection = state.selectedSourceIds.isNotEmpty() || state.includeReader,
+                        modifier = Modifier.align(Alignment.Center),
+                    )
+                },
             ) {
-                if (state.refreshFailures.isNotEmpty()) {
-                    item {
-                        RefreshDiagnosticsBanner(
-                            failures = state.refreshFailures,
-                            modifier = Modifier.padding(horizontal = 12.dp),
-                        )
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                        horizontal = Dimens.page_horizontal,
+                        vertical = 8.dp,
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    if (state.refreshFailures.isNotEmpty()) {
+                        item { RefreshDiagnosticsBanner(failures = state.refreshFailures) }
                     }
-                }
-                item { Spacer(Modifier.height(2.dp)) }
-                items(timeline.itemCount) { index ->
-                    when (val item = timeline[index]) {
-                        is PostItem -> TimelinePostCard(item.post, onOpenTopic)
-                        is ArticleItem -> ArticleListItem(
-                            article = item.article,
-                            sourceName = item.sourceName,
-                            onClick = { onOpenArticle(item.article) },
-                            modifier = Modifier.padding(horizontal = 12.dp),
-                        )
-                        null -> Unit
-                    }
-                }
-                when (timeline.loadState.append) {
-                    is LoadState.Loading -> item {
-                        Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator()
+                    items(timeline.itemCount) { index ->
+                        when (val item = timeline[index]) {
+                            is PostItem -> TimelinePostCard(item.post, onOpenTopic)
+                            is ArticleItem -> ArticleListItem(
+                                article = item.article,
+                                sourceName = item.sourceName,
+                                onClick = { onOpenArticle(item.article) },
+                            )
+                            null -> Unit
                         }
                     }
-                    is LoadState.Error -> item {
-                        Row(
-                            Modifier.fillMaxWidth().padding(16.dp),
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text("加载更多失败", color = MaterialTheme.colorScheme.error)
-                            TextButton(onClick = timeline::retry) { Text("重试") }
+                    when (timeline.loadState.append) {
+                        is LoadState.Loading -> item {
+                            Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
+                                CircularProgressIndicator()
+                            }
                         }
+                        is LoadState.Error -> item {
+                            Row(
+                                Modifier.fillMaxWidth().padding(16.dp),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text("加载更多失败", color = MaterialTheme.colorScheme.error)
+                                TextButton(onClick = timeline::retry) { Text("重试") }
+                            }
+                        }
+                        else -> Unit
                     }
-                    else -> Unit
                 }
-                item { Spacer(Modifier.height(16.dp)) }
             }
         }
     }
@@ -305,11 +314,9 @@ private fun TimelinePostCard(
     topic: Topic,
     onClick: (Topic) -> Unit,
 ) {
-    Card(
-        modifier = Modifier.padding(horizontal = 12.dp).fillMaxWidth().clickable { onClick(topic) },
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+    ThreadCard(
+        modifier = Modifier.fillMaxWidth().clickable { onClick(topic) },
     ) {
-        Column(Modifier.fillMaxWidth().padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = topic.sourceName,
@@ -347,7 +354,6 @@ private fun TimelinePostCard(
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-        }
     }
 }
 
@@ -356,27 +362,10 @@ private fun FeedEmptyState(
     hasSelection: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier = modifier.padding(32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
-        Icon(
-            imageVector = Icons.Default.DynamicFeed,
-            contentDescription = null,
-            modifier = Modifier.size(56.dp),
-            tint = MaterialTheme.colorScheme.outline,
-        )
-        Text(
-            if (hasSelection) "暂时没有时间线内容" else "请选择至少一个论坛或阅读器来源",
-            style = MaterialTheme.typography.titleMedium,
-        )
-        if (hasSelection) {
-            Text(
-                "可以刷新来源，或在左侧调整聚合范围",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
+    ModernEmptyState(
+        icon = Icons.Default.DynamicFeed,
+        title = if (hasSelection) "时间线暂时为空" else "还没有选择内容范围",
+        description = if (hasSelection) "刷新来源，或在左侧调整聚合范围。" else "从左侧选择论坛或阅读器来源。",
+        modifier = modifier,
+    )
 }
