@@ -7,6 +7,7 @@ import ai.saniou.coreui.widgets.ContextHero
 import ai.saniou.coreui.widgets.ModernEmptyState
 import ai.saniou.coreui.widgets.ThreadContentColumn
 import ai.saniou.coreui.widgets.ThreadFilterBar
+import ai.saniou.coreui.widgets.ThreadLoadingState
 import ai.saniou.coreui.widgets.ThreadPage
 import ai.saniou.forum.ui.components.TopicCard
 import ai.saniou.reader.workflow.articledetail.ArticleDetailPage
@@ -21,7 +22,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.History
@@ -55,7 +55,11 @@ class HistoryPage : Screen {
                     icon = Icons.Default.History,
                     title = "浏览历史",
                     subtitle = "按时间回到最近看过的帖子和文章",
-                    metric = "${historyItems.itemCount} RECENT",
+                    metric = if (historyItems.itemCount > 0) {
+                        "${historyItems.itemCount} 条最近"
+                    } else {
+                        "本地优先"
+                    },
                 )
                 ThreadFilterBar(
                     items = listOf(null, "post", "article"),
@@ -73,7 +77,7 @@ class HistoryPage : Screen {
                     items = historyItems,
                     modifier = Modifier.weight(1f).fillMaxWidth(),
                     loading = {
-                        CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                        ThreadLoadingState(modifier = Modifier.align(Alignment.Center))
                     },
                     empty = {
                         ModernEmptyState(

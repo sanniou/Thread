@@ -4,6 +4,7 @@ import ai.saniou.coreui.layout.AdaptiveSidebarScaffold
 import ai.saniou.coreui.layout.LocalThreadWindowInfo
 import ai.saniou.coreui.state.StateLayout
 import ai.saniou.coreui.theme.Dimens
+import ai.saniou.coreui.theme.threadTweenSpec
 import ai.saniou.coreui.widgets.RefreshDiagnosticsBanner
 import ai.saniou.coreui.widgets.RichText
 import ai.saniou.coreui.widgets.SectionLabel
@@ -265,8 +266,10 @@ data class ChannelPage(
                         item(key = "content_${group.id}") {
                             AnimatedVisibility(
                                 visible = state.expandedGroupId == group.id,
-                                enter = expandVertically() + fadeIn(),
-                                exit = shrinkVertically() + fadeOut()
+                                enter = expandVertically(animationSpec = threadTweenSpec()) +
+                                    fadeIn(animationSpec = threadTweenSpec()),
+                                exit = shrinkVertically(animationSpec = threadTweenSpec()) +
+                                    fadeOut(animationSpec = threadTweenSpec()),
                             ) {
                                 Column {
                                     group.channels.forEach { forum ->

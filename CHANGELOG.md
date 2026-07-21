@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.25.0 - 2026-07-22
+
+Experience deep-dive second wave: forum secondary paths, cache visualization and quiet motion.
+
+- Forum dialogs and secondary CTAs (manual login, page jump, source manager, subscription ID, reference sheet, user retry, topic empty refresh) use the shared `SaniouButton` family.
+- Reader surfaces the same cache-status banner as Unified Feed (refreshing / stale / cached) without clearing the article list.
+- History and Global Search empty/loading states reuse `ModernEmptyState` / `ThreadLoadingState`; search eyebrow is human-case Chinese.
+- Channel drawer expand, Post success overlay and cache banner enter/exit honor `threadTweenSpec` / reducedMotion.
+- Desktop gates cover compile and jvmTest on the UX surface.
+
 ## 0.24.0 - 2026-07-21
 
 Experience deep-dive for main user paths: buttons, detail reading rhythm, list hierarchy and shared feedback.

@@ -4,6 +4,8 @@ import ai.saniou.coreui.layout.LocalThreadWindowInfo
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.ContextHero
 import ai.saniou.coreui.widgets.AdaptiveModal
+import ai.saniou.coreui.widgets.SaniouButton
+import ai.saniou.coreui.widgets.SaniouTextButton
 import ai.saniou.coreui.widgets.ThreadCard
 import ai.saniou.coreui.widgets.ThreadDetailScaffold
 import ai.saniou.forum.workflow.source.SourceManagerContract.Event
@@ -34,7 +36,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -252,11 +253,13 @@ private fun DiscourseEditorDialog(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End,
             ) {
-                TextButton(onClick = onDismiss) { Text("取消") }
-                TextButton(
+                SaniouTextButton(onClick = onDismiss, text = "取消")
+                SaniouButton(
                     onClick = { onSave(id, name, url, apiKey) },
                     enabled = !isSaving && id.isNotBlank() && name.isNotBlank() && url.isNotBlank(),
-                ) { Text("保存") }
+                    loading = isSaving,
+                    text = "保存",
+                )
             }
         }
     }

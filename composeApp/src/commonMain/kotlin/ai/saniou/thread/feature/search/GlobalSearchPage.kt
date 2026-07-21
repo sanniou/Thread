@@ -3,8 +3,10 @@ package ai.saniou.thread.feature.search
 import ai.saniou.coreui.layout.LocalThreadWindowInfo
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.ContextHero
+import ai.saniou.coreui.widgets.ModernEmptyState
 import ai.saniou.coreui.widgets.PageHeader
 import ai.saniou.coreui.widgets.ThreadCard
+import ai.saniou.coreui.widgets.ThreadLoadingState
 import ai.saniou.coreui.composition.LocalContentLinkHandler
 import ai.saniou.thread.FeedTopicRoute
 import ai.saniou.thread.domain.model.search.GlobalSearchType
@@ -21,9 +23,9 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.SearchOff
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -93,7 +95,7 @@ object GlobalSearchPage : Screen {
             ) {
                 PageHeader(
                     title = "全局发现",
-                    eyebrow = "OFFLINE SEARCH",
+                    eyebrow = "本地搜索",
                     subtitle = "跨社区主题、回复与 Reader 正文搜索本地缓存",
                 )
                 ContextHero(
@@ -155,7 +157,7 @@ object GlobalSearchPage : Screen {
                         modifier = Modifier.weight(1f).fillMaxWidth(),
                         onOpen = viewModel::open,
                     )
-                    state.isSearching -> CircularProgressIndicator(Modifier.align(Alignment.CenterHorizontally))
+                    state.isSearching -> ThreadLoadingState(Modifier.align(Alignment.CenterHorizontally))
                     state.activeCollectionId == null && state.query.trim().length < 2 -> SearchGuidance()
                     state.response?.results.isNullOrEmpty() -> SearchEmptyState(state.query)
                     else -> GlobalSearchResults(
@@ -172,19 +174,20 @@ object GlobalSearchPage : Screen {
 
 @Composable
 private fun SearchGuidance() {
-    ThreadCard(Modifier.fillMaxWidth()) {
-        Text("从已有内容开始", style = MaterialTheme.typography.titleMedium)
-        Text(
-            "缓存搜索覆盖已加载的论坛主题、回复和 Reader 文章；即使某个来源暂时离线，已经阅读过的内容仍可发现。",
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
+    ModernEmptyState(
+        icon = Icons.Default.Search,
+        title = "从已有内容开始",
+        description = "缓存搜索覆盖已加载的论坛主题、回复和 Reader 文章；即使某个来源暂时离线，已经阅读过的内容仍可发现。",
+        modifier = Modifier.fillMaxWidth(),
+    )
 }
 
 @Composable
 private fun SearchEmptyState(query: String) {
-    ThreadCard(Modifier.fillMaxWidth()) {
-        Text("没有找到“${query.trim()}”", style = MaterialTheme.typography.titleMedium)
-        Text("可以缩短关键词、启用更多内容类型，或先刷新对应来源。", color = MaterialTheme.colorScheme.onSurfaceVariant)
-    }
+    ModernEmptyState(
+        icon = Icons.Default.SearchOff,
+        title = "没有找到“${query.trim()}”",
+        description = "可以缩短关键词、启用更多内容类型，或先刷新对应来源。",
+        modifier = Modifier.fillMaxWidth(),
+    )
 }

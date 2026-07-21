@@ -8,6 +8,8 @@ import ai.saniou.coreui.state.PagingAppendState
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.PullToRefreshWrapper
 import ai.saniou.coreui.widgets.AdaptiveModal
+import ai.saniou.coreui.widgets.SaniouButton
+import ai.saniou.coreui.widgets.SaniouTextButton
 import ai.saniou.coreui.widgets.ThreadDetailScaffold
 import ai.saniou.forum.ui.components.TopicCard
 import ai.saniou.forum.ui.components.ThreadListSkeleton
@@ -37,7 +39,6 @@ import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -49,7 +50,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -372,21 +372,24 @@ private fun SubscriptionIdDialog(
                 }),
             )
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                TextButton(onClick = onGenerateRandom) {
-                    Text(stringResource(Res.string.subscription_generate_random))
-                }
-                TextButton(onClick = onDismiss) {
-                    Text(stringResource(Res.string.subscription_cancel))
-                }
-            Button(onClick = {
-                if (subscriptionId.isBlank()) {
-                    isError = true
-                } else {
-                    onConfirm(subscriptionId)
-                }
-            }) {
-                Text(stringResource(Res.string.subscription_confirm))
-            }
+                SaniouTextButton(
+                    onClick = onGenerateRandom,
+                    text = stringResource(Res.string.subscription_generate_random),
+                )
+                SaniouTextButton(
+                    onClick = onDismiss,
+                    text = stringResource(Res.string.subscription_cancel),
+                )
+                SaniouButton(
+                    onClick = {
+                        if (subscriptionId.isBlank()) {
+                            isError = true
+                        } else {
+                            onConfirm(subscriptionId)
+                        }
+                    },
+                    text = stringResource(Res.string.subscription_confirm),
+                )
             }
         }
     }

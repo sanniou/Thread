@@ -10,6 +10,8 @@ import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.AppDrawerItem
 import ai.saniou.coreui.widgets.AdaptiveModal
 import ai.saniou.coreui.widgets.ArticleItem
+import ai.saniou.coreui.widgets.CacheStatusBanner
+import ai.saniou.coreui.widgets.CacheStatusTone
 import ai.saniou.coreui.widgets.ContextHero
 import ai.saniou.coreui.widgets.KeyedLazyListState
 import ai.saniou.coreui.widgets.ModernEmptyState
@@ -255,6 +257,28 @@ private fun ReaderScaffold(
                     onMenuClick = onMenuClick,
                     onExport = onExport,
                     onImport = onImport,
+                )
+                val isRefreshing = state.feedSources.any { it.isRefreshing }
+                val cacheTone = when {
+                    isRefreshing -> CacheStatusTone.REFRESHING
+                    state.refreshFailures.isNotEmpty() -> CacheStatusTone.STALE
+                    else -> CacheStatusTone.CACHED
+                }
+                val cacheTitle = when (cacheTone) {
+                    CacheStatusTone.REFRESHING -> "正在同步订阅"
+                    CacheStatusTone.STALE -> "本地缓存仍可阅读"
+                    else -> "缓存优先 · 本地先展示"
+                }
+                val cacheDetail = when (cacheTone) {
+                    CacheStatusTone.REFRESHING -> "刷新不会清空现有文章列表"
+                    CacheStatusTone.STALE -> "${state.refreshFailures.size} 个来源暂未更新，已隔离失败源"
+                    else -> "下拉或点击刷新以更新订阅源"
+                }
+                CacheStatusBanner(
+                    title = cacheTitle,
+                    tone = cacheTone,
+                    detail = cacheDetail,
+                    modifier = Modifier.fillMaxWidth(),
                 )
                 RefreshDiagnosticsBanner(
                     failures = state.refreshFailures,

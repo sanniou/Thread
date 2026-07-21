@@ -9,6 +9,7 @@ import ai.saniou.coreui.layout.ReadingCanvas
 import ai.saniou.coreui.state.*
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.ThreadDetailScaffold
+import ai.saniou.coreui.widgets.SaniouButton
 import ai.saniou.coreui.widgets.ShimmerContainer
 import ai.saniou.coreui.widgets.VerticalSpacerSmall
 import ai.saniou.coreui.widgets.RelatedContentSection
@@ -775,9 +776,7 @@ private fun EmptyReplyContent(onRefresh: () -> Unit) {
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Button(onClick = onRefresh) {
-                Text(stringResource(Res.string.refresh))
-            }
+            SaniouButton(onClick = onRefresh, text = stringResource(Res.string.refresh))
         }
     }
 }

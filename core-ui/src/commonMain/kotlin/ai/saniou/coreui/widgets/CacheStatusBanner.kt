@@ -1,6 +1,13 @@
 package ai.saniou.coreui.widgets
 
+import ai.saniou.coreui.theme.threadTweenSpec
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -49,37 +56,46 @@ fun CacheStatusBanner(
         CacheStatusTone.STALE -> Icons.Outlined.Cached
         CacheStatusTone.OFFLINE -> Icons.Outlined.CloudOff
     }
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large,
-        color = colors.first,
-        contentColor = colors.second,
-        tonalElevation = 0.dp,
+    AnimatedVisibility(
+        visible = true,
+        enter = fadeIn(animationSpec = threadTweenSpec()) +
+            slideInVertically(animationSpec = threadTweenSpec()) { -it / 3 },
+        exit = fadeOut(animationSpec = threadTweenSpec()) +
+            slideOutVertically(animationSpec = threadTweenSpec()) { -it / 3 },
+        modifier = modifier,
     ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.large,
+            color = colors.first,
+            contentColor = colors.second,
+            tonalElevation = 0.dp,
         ) {
-            Icon(icon, contentDescription = null)
-            androidx.compose.foundation.layout.Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(2.dp),
+            Row(
+                modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.SemiBold,
-                )
-                detail?.let {
+                Icon(icon, contentDescription = null)
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                ) {
                     Text(
-                        text = it,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = colors.second.copy(alpha = 0.86f),
+                        text = title,
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold,
                     )
+                    detail?.let {
+                        Text(
+                            text = it,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = colors.second.copy(alpha = 0.86f),
+                        )
+                    }
                 }
+                action?.invoke()
             }
-            action?.invoke()
         }
     }
 }

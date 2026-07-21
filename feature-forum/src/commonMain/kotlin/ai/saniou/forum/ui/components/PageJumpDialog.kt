@@ -8,12 +8,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
+import ai.saniou.coreui.widgets.SaniouButton
+import ai.saniou.coreui.widgets.SaniouTextButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -103,18 +103,15 @@ fun PageJumpDialog(
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                TextButton(onClick = onDismissRequest) {
-                    Text("取消")
-                }
-                Button(
+                SaniouTextButton(onClick = onDismissRequest, text = "取消")
+                SaniouButton(
                     onClick = {
                         onJumpToPage(targetPage.toInt())
                         onDismissRequest()
                     },
-                    enabled = !isError
-                ) {
-                    Text("确定")
-                }
+                    enabled = !isError,
+                    text = "确定",
+                )
             }
         }
     }

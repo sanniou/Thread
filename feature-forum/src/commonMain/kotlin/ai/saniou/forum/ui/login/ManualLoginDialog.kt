@@ -2,6 +2,8 @@ package ai.saniou.forum.ui.login
 
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.AdaptiveModal
+import ai.saniou.coreui.widgets.SaniouButton
+import ai.saniou.coreui.widgets.SaniouTextButton
 import ai.saniou.thread.domain.model.user.LoginStrategy
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -16,7 +18,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
@@ -63,13 +64,12 @@ fun ManualLoginDialog(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End,
             ) {
-                TextButton(onClick = onDismissRequest) { Text("取消") }
-                TextButton(
+                SaniouTextButton(onClick = onDismissRequest, text = "取消")
+                SaniouButton(
                     onClick = { onConfirm(inputs.toMap()) },
                     enabled = strategy.fields.all { !it.isRequired || !inputs[it.key].isNullOrBlank() },
-                ) {
-                    Text("保存")
-                }
+                    text = "保存",
+                )
             }
         }
     }

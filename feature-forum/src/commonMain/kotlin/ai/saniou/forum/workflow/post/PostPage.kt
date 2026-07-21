@@ -2,8 +2,13 @@ package ai.saniou.forum.workflow.post
 
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.layout.LocalThreadWindowInfo
+import ai.saniou.coreui.theme.threadTweenSpec
 import ai.saniou.coreui.widgets.ThreadDetailScaffold
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -332,8 +337,10 @@ data class PostPage(
                 AnimatedVisibility(
                     visible = state.isSuccess,
                     modifier = Modifier.align(Alignment.Center),
-                    enter = androidx.compose.animation.fadeIn() + androidx.compose.animation.scaleIn(),
-                    exit = androidx.compose.animation.fadeOut() + androidx.compose.animation.scaleOut()
+                    enter = fadeIn(animationSpec = threadTweenSpec()) +
+                        scaleIn(animationSpec = threadTweenSpec(), initialScale = 0.92f),
+                    exit = fadeOut(animationSpec = threadTweenSpec()) +
+                        scaleOut(animationSpec = threadTweenSpec(), targetScale = 0.92f),
                 ) {
                     Surface(
                         shape = RoundedCornerShape(Dimens.corner_radius_large),

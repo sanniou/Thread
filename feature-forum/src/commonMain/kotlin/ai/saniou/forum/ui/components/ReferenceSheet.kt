@@ -2,6 +2,7 @@ package ai.saniou.forum.ui.components
 
 import ai.saniou.corecommon.utils.toRelativeTimeString
 import ai.saniou.coreui.widgets.AdaptiveModal
+import ai.saniou.coreui.widgets.SaniouButton
 import ai.saniou.thread.domain.model.forum.Comment
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -19,7 +20,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ErrorOutline
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
@@ -161,12 +161,11 @@ fun ReferenceSheet(
                             )
                             if (reply.topicId.isNotBlank() && reply.topicId != "0") {
                                 Spacer(modifier = Modifier.height(16.dp))
-                                Button(
+                                SaniouButton(
                                     onClick = { onJumpToThread(reply.topicId) },
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Text("跳转到原串")
-                                }
+                                    modifier = Modifier.fillMaxWidth(),
+                                    text = "跳转到原串",
+                                )
                             }
                         }
                     }

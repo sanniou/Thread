@@ -2,6 +2,7 @@ package ai.saniou.forum.workflow.user
 
 import ai.saniou.coreui.layout.LocalThreadWindowInfo
 import ai.saniou.coreui.theme.Dimens
+import ai.saniou.coreui.widgets.SaniouButton
 import ai.saniou.coreui.widgets.ThreadDetailScaffold
 import ai.saniou.forum.ui.components.TopicCard
 import ai.saniou.forum.ui.components.ThreadListSkeleton
@@ -23,7 +24,6 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Star
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -164,9 +164,7 @@ data class UserDetailPage(
                                             modifier = Modifier.fillMaxWidth().padding(32.dp),
                                             contentAlignment = Alignment.Center
                                         ) {
-                                            Button(onClick = { topics.retry() }) {
-                                                Text("重试")
-                                            }
+                                            SaniouButton(onClick = { topics.retry() }, text = "重试")
                                         }
                                     }
 
@@ -252,9 +250,7 @@ data class UserDetailPage(
                                             modifier = Modifier.fillMaxWidth().padding(32.dp),
                                             contentAlignment = Alignment.Center
                                         ) {
-                                            Button(onClick = { replies.retry() }) {
-                                                Text("重试")
-                                            }
+                                            SaniouButton(onClick = { replies.retry() }, text = "重试")
                                         }
                                     }
 
