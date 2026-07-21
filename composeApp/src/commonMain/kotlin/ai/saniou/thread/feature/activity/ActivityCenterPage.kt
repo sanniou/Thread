@@ -5,6 +5,10 @@ import ai.saniou.coreui.interaction.rememberThreadClipboard
 import ai.saniou.coreui.widgets.AdaptiveModal
 import ai.saniou.coreui.widgets.ContextHero
 import ai.saniou.coreui.widgets.PageHeader
+import ai.saniou.coreui.widgets.SaniouButton
+import ai.saniou.coreui.widgets.SaniouDangerButton
+import ai.saniou.coreui.widgets.SaniouOutlinedButton
+import ai.saniou.coreui.widgets.SaniouTextButton
 import ai.saniou.coreui.widgets.ThreadCard
 import ai.saniou.forum.workflow.post.PostPage
 import ai.saniou.thread.ForumUserRoute
@@ -58,18 +62,15 @@ import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -140,7 +141,7 @@ object ActivityCenterPage : Screen {
                         title = "活动中心",
                         subtitle = "刷新、身份、草稿与数据迁移共享一条可恢复的跨平台任务流。",
                         actions = {
-                            TextButton(onClick = { viewModel.onEvent(Event.ClearCompleted) }) {
+                            SaniouTextButton(onClick = { viewModel.onEvent(Event.ClearCompleted) }) {
                                 Icon(Icons.Default.DeleteOutline, null)
                                 Spacer(Modifier.width(6.dp))
                                 Text("清理已完成")
@@ -220,10 +221,23 @@ object ActivityCenterPage : Screen {
                 title = { Text(if (request.danger == ProductActionDanger.DESTRUCTIVE) "确认永久操作" else "确认数据变更") },
                 text = { Text(request.confirmationText()) },
                 confirmButton = {
-                    Button(onClick = { viewModel.onEvent(Event.ConfirmDangerAction) }) { Text("继续") }
+                    if (request.danger == ProductActionDanger.DESTRUCTIVE) {
+                        SaniouDangerButton(
+                            onClick = { viewModel.onEvent(Event.ConfirmDangerAction) },
+                            text = "继续",
+                        )
+                    } else {
+                        SaniouButton(
+                            onClick = { viewModel.onEvent(Event.ConfirmDangerAction) },
+                            text = "继续",
+                        )
+                    }
                 },
                 dismissButton = {
-                    TextButton(onClick = { viewModel.onEvent(Event.DismissDangerAction) }) { Text("取消") }
+                    SaniouTextButton(
+                        onClick = { viewModel.onEvent(Event.DismissDangerAction) },
+                        text = "取消",
+                    )
                 },
             )
         }
@@ -249,8 +263,11 @@ object ActivityCenterPage : Screen {
                         }
                     }
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                        TextButton(onClick = { viewModel.onEvent(Event.DismissOutput) }) { Text("关闭") }
-                        Button(onClick = {
+                        SaniouTextButton(
+                            onClick = { viewModel.onEvent(Event.DismissOutput) },
+                            text = "关闭",
+                        )
+                        SaniouButton(onClick = {
                             clipboard.copyText(payload)
                             viewModel.onEvent(Event.DismissOutput)
                         }) {
@@ -332,12 +349,14 @@ private fun ActivityCard(
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
             item.secondaryAction?.let { action ->
-                TextButton(onClick = { onExecute(action) }, enabled = action.conflictKey != item.primaryAction?.conflictKey || !working) {
-                    Text(if (action.type == ProductActionType.DISCARD_DRAFT) "丢弃" else "忽略")
-                }
+                SaniouTextButton(
+                    onClick = { onExecute(action) },
+                    enabled = action.conflictKey != item.primaryAction?.conflictKey || !working,
+                    text = if (action.type == ProductActionType.DISCARD_DRAFT) "丢弃" else "忽略",
+                )
             }
             if (item.deepLink != null) {
-                OutlinedButton(onClick = onOpen) {
+                SaniouOutlinedButton(onClick = onOpen) {
                     Icon(if (item.kind == ActivityKind.DRAFT) Icons.Default.EditNote else Icons.AutoMirrored.Filled.OpenInNew, null)
                     Spacer(Modifier.width(6.dp))
                     Text(if (item.kind == ActivityKind.DRAFT) "继续" else "打开")
@@ -345,10 +364,14 @@ private fun ActivityCard(
             }
             item.primaryAction?.let { action ->
                 Spacer(Modifier.width(8.dp))
-                Button(onClick = { onExecute(action) }, enabled = !working) {
+                SaniouButton(
+                    onClick = { onExecute(action) },
+                    enabled = !working,
+                    loading = working,
+                ) {
                     Icon(Icons.Default.Refresh, null)
                     Spacer(Modifier.width(6.dp))
-                    Text(if (working) "执行中" else "执行")
+                    Text("执行")
                 }
             }
         }

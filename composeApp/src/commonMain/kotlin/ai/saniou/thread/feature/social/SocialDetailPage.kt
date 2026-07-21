@@ -6,8 +6,12 @@ import ai.saniou.coreui.interaction.rememberThreadClipboard
 import ai.saniou.coreui.widgets.NetworkImage
 import ai.saniou.coreui.widgets.RelatedContentSection
 import ai.saniou.coreui.widgets.RichText
+import ai.saniou.coreui.widgets.SaniouButton
+import ai.saniou.coreui.widgets.SaniouTextButton
 import ai.saniou.coreui.widgets.ThreadDetailScaffold
 import ai.saniou.coreui.widgets.ModernEmptyState
+import ai.saniou.coreui.theme.Dimens
+import ai.saniou.coreui.layout.LocalThreadWindowInfo
 import ai.saniou.thread.domain.model.content.ContentReference
 import ai.saniou.thread.domain.model.content.ContentReferenceKind
 import ai.saniou.thread.domain.model.content.toThreadUrl
@@ -50,7 +54,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -116,7 +119,7 @@ data class SocialDetailPage(
 
         ThreadDetailScaffold(
             title = state.post?.author?.displayName ?: "社交动态",
-            eyebrow = "SOCIAL",
+            eyebrow = "社交",
             subtitle = state.post?.author?.handle ?: sourceId,
             onBack = { navigator.pop() },
             actions = {
@@ -151,6 +154,7 @@ data class SocialDetailPage(
             },
             snackbarHost = { SnackbarHost(snackbar) },
         ) { padding ->
+            val windowInfo = LocalThreadWindowInfo.current
             Box(Modifier.padding(padding).fillMaxSize()) {
                 when {
                     state.isLoading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -163,9 +167,10 @@ data class SocialDetailPage(
                             title = "无法打开社交动态",
                             description = errorMessage,
                             action = {
-                                TextButton(onClick = { viewModel.onEvent(Event.Retry) }) {
-                                    Text("重试")
-                                }
+                                SaniouButton(
+                                    onClick = { viewModel.onEvent(Event.Retry) },
+                                    text = "重试",
+                                )
                             },
                         )
                     }
@@ -175,8 +180,11 @@ data class SocialDetailPage(
                             Modifier
                                 .fillMaxSize()
                                 .verticalScroll(rememberScrollState())
-                                .padding(horizontal = 24.dp, vertical = 16.dp),
-                            verticalArrangement = Arrangement.spacedBy(14.dp),
+                                .padding(
+                                    horizontal = windowInfo.pageHorizontalPadding,
+                                    vertical = Dimens.padding_standard,
+                                ),
+                            verticalArrangement = Arrangement.spacedBy(Dimens.padding_medium),
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 post.author.avatarUrl?.let { avatar ->
@@ -186,7 +194,7 @@ data class SocialDetailPage(
                                         modifier = Modifier.size(48.dp).clip(CircleShape),
                                         contentScale = ContentScale.Crop,
                                     )
-                                    Spacer(Modifier.width(12.dp))
+                                    Spacer(Modifier.width(Dimens.padding_medium))
                                 }
                                 Column(Modifier.weight(1f)) {
                                     Text(
@@ -226,7 +234,7 @@ data class SocialDetailPage(
                                         contentScale = ContentScale.Crop,
                                     )
                                 }
-                            FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            FlowRow(horizontalArrangement = Arrangement.spacedBy(Dimens.padding_tiny)) {
                                 SocialAction(
                                     interaction = SocialInteraction.REPLY,
                                     post = post,
@@ -266,7 +274,7 @@ data class SocialDetailPage(
                                     rootLinkHandler?.invoke(relatedItem.reference.toThreadUrl())
                                 },
                             )
-                            Spacer(Modifier.height(24.dp))
+                            Spacer(Modifier.height(Dimens.padding_large))
                         }
                     }
                 }
@@ -284,7 +292,7 @@ private fun SocialAction(
 ) {
     if (interaction !in post.permittedInteractions) return
     val active = interaction in post.activeInteractions
-    TextButton(onClick = { onClick(!active) }) {
+    SaniouTextButton(onClick = { onClick(!active) }) {
         Icon(
             icon,
             contentDescription = interaction.name,

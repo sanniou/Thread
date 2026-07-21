@@ -6,6 +6,9 @@ import ai.saniou.coreui.layout.LocalThreadWindowInfo
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.ContextHero
 import ai.saniou.coreui.widgets.PageHeader
+import ai.saniou.coreui.widgets.SaniouButton
+import ai.saniou.coreui.widgets.SaniouOutlinedButton
+import ai.saniou.coreui.widgets.SaniouTextButton
 import ai.saniou.coreui.widgets.ThreadCard
 import ai.saniou.coreui.widgets.AdaptiveModal
 import ai.saniou.forum.workflow.source.SourceManagerPage
@@ -46,16 +49,13 @@ import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material3.AssistChip
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -111,19 +111,16 @@ object OperationsPage : Screen {
                         eyebrow = "OPERATIONS",
                         subtitle = "连接器健康、缓存覆盖与刷新诊断集中在一个可恢复工作区",
                         actions = {
-                            OutlinedButton(
+                            SaniouOutlinedButton(
                                 onClick = { viewModel.onEvent(Event.ExportDiagnostic) },
                                 enabled = !state.isExportingDiagnostic,
+                                loading = state.isExportingDiagnostic,
                             ) {
-                                if (state.isExportingDiagnostic) {
-                                    CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
-                                } else {
-                                    Icon(Icons.Default.BugReport, null)
-                                }
+                                Icon(Icons.Default.BugReport, null)
                                 Spacer(Modifier.width(8.dp))
                                 Text("脱敏诊断")
                             }
-                            OutlinedButton(onClick = { navigator.push(SourceManagerPage()) }) {
+                            SaniouOutlinedButton(onClick = { navigator.push(SourceManagerPage()) }) {
                                 Icon(Icons.Default.Hub, null)
                                 Spacer(Modifier.width(8.dp))
                                 Text("管理论坛来源")
@@ -191,7 +188,7 @@ object OperationsPage : Screen {
                                     overflow = TextOverflow.Ellipsis,
                                 )
                             }
-                            TextButton(
+                            SaniouTextButton(
                                 onClick = {
                                     clipboard.copyText(state.snapshot.storageDirectory)
                                 },
@@ -239,8 +236,11 @@ object OperationsPage : Screen {
                         }
                     }
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                        TextButton(onClick = { viewModel.onEvent(Event.DiagnosticDismissed) }) { Text("关闭") }
-                        Button(onClick = {
+                        SaniouTextButton(
+                            onClick = { viewModel.onEvent(Event.DiagnosticDismissed) },
+                            text = "关闭",
+                        )
+                        SaniouButton(onClick = {
                             clipboard.copyText(payload)
                             viewModel.onEvent(Event.DiagnosticDismissed)
                         }) {
@@ -330,7 +330,7 @@ private fun SourceHealthCard(
             if (isWorking) {
                 CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 2.dp)
             } else if (source.enabled) {
-                Button(onClick = onRetry) {
+                SaniouButton(onClick = onRetry) {
                     Icon(Icons.Default.Refresh, null)
                     Spacer(Modifier.width(6.dp))
                     Text("刷新")
@@ -377,7 +377,7 @@ private fun SourceHealthCard(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(message, Modifier.weight(1f), color = MaterialTheme.colorScheme.onErrorContainer)
-                    TextButton(onClick = onClearDiagnostic) { Text("忽略") }
+                    SaniouTextButton(onClick = onClearDiagnostic, text = "忽略")
                 }
             }
         }

@@ -5,6 +5,9 @@ import ai.saniou.coreui.layout.LocalThreadWindowInfo
 import ai.saniou.coreui.layout.ThreadWindowWidthClass
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.AdaptiveModal
+import ai.saniou.coreui.widgets.SaniouButton
+import ai.saniou.coreui.widgets.SaniouOutlinedButton
+import ai.saniou.coreui.widgets.SaniouTextButton
 import ai.saniou.coreui.widgets.ThreadCard
 import ai.saniou.coreui.widgets.ThreadDetailScaffold
 import ai.saniou.coreui.platform.LocalUserDataFileService
@@ -33,7 +36,6 @@ import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -44,12 +46,10 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -227,9 +227,10 @@ class SyncSettingsPage(
                             },
                         )
                     }
-                    TextButton(onClick = { viewModel.onEvent(SyncSettingsContract.Event.ResetAppearance) }) {
-                        Text("恢复外观默认值")
-                    }
+                    SaniouTextButton(
+                        onClick = { viewModel.onEvent(SyncSettingsContract.Event.ResetAppearance) },
+                        text = "恢复外观默认值",
+                    )
                 }
 
                 ThreadCard(modifier = Modifier.fillMaxWidth()) {
@@ -285,7 +286,7 @@ class SyncSettingsPage(
                             )
                         }
                     }
-                    Button(
+                    SaniouButton(
                         enabled = collectionName.isNotBlank() && (collectionQuery.isNotBlank() || collectionUnread || collectionBookmarked),
                         onClick = {
                             viewModel.onEvent(SyncSettingsContract.Event.SaveSmartCollection(
@@ -297,7 +298,8 @@ class SyncSettingsPage(
                             collectionUnread = false
                             collectionBookmarked = false
                         },
-                    ) { Text("创建智能集合") }
+                        text = "创建智能集合",
+                    )
                     state.smartCollections.forEach { collection ->
                         HorizontalDivider()
                         Row(
@@ -365,7 +367,7 @@ class SyncSettingsPage(
                         visualTransformation = PasswordVisualTransformation(),
                         modifier = Modifier.fillMaxWidth(),
                     )
-                    Button(
+                    SaniouButton(
                         enabled = socialName.isNotBlank() && socialBaseUrl.isNotBlank() && socialAccessToken.isNotBlank(),
                         onClick = {
                             viewModel.onEvent(
@@ -379,7 +381,8 @@ class SyncSettingsPage(
                             socialBaseUrl = ""
                             socialAccessToken = ""
                         },
-                    ) { Text("添加社交来源") }
+                        text = "添加社交来源",
+                    )
                     state.socialSources.forEach { source ->
                         HorizontalDivider()
                         Row(
@@ -415,16 +418,25 @@ class SyncSettingsPage(
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        Button(
+                        SaniouButton(
                             onClick = { viewModel.onEvent(SyncSettingsContract.Event.ExportLocal) },
                             enabled = !state.isWorking,
-                        ) { Icon(Icons.Default.Upload, null); Spacer(Modifier.width(8.dp)); Text("导出") }
-                        OutlinedButton(
+                            loading = state.isWorking,
+                        ) {
+                            Icon(Icons.Default.Upload, null)
+                            Spacer(Modifier.width(8.dp))
+                            Text("导出")
+                        }
+                        SaniouOutlinedButton(
                             onClick = { viewModel.onEvent(SyncSettingsContract.Event.ShowImportLocal) },
                             enabled = !state.isWorking,
-                        ) { Icon(Icons.Default.Download, null); Spacer(Modifier.width(8.dp)); Text("导入") }
+                        ) {
+                            Icon(Icons.Default.Download, null)
+                            Spacer(Modifier.width(8.dp))
+                            Text("导入")
+                        }
                         if (userDataFileService != null) {
-                            OutlinedButton(
+                            SaniouOutlinedButton(
                                 onClick = {
                                     scope.launch {
                                         userDataFileService.importText().fold(
@@ -474,27 +486,37 @@ class SyncSettingsPage(
                       horizontalArrangement = Arrangement.spacedBy(12.dp),
                       verticalArrangement = Arrangement.spacedBy(8.dp),
                   ) {
-                      Button(
+                      SaniouButton(
                           onClick = { viewModel.onEvent(SyncSettingsContract.Event.SaveWebDav) },
                           enabled = state.endpoint.isNotBlank() && !state.isWorking,
-                      ) { Text("保存配置") }
-                      TextButton(
+                          text = "保存配置",
+                      )
+                      SaniouTextButton(
                           onClick = { viewModel.onEvent(SyncSettingsContract.Event.ClearWebDav) },
                           enabled = !state.isWorking,
-                      ) { Text("清除") }
+                          text = "清除",
+                      )
                   }
                   FlowRow(
                       horizontalArrangement = Arrangement.spacedBy(12.dp),
                       verticalArrangement = Arrangement.spacedBy(8.dp),
                   ) {
-                      OutlinedButton(
+                      SaniouOutlinedButton(
                           onClick = { viewModel.onEvent(SyncSettingsContract.Event.BackupWebDav) },
                           enabled = state.endpoint.isNotBlank() && !state.isWorking,
-                      ) { Icon(Icons.Default.CloudUpload, null); Spacer(Modifier.width(8.dp)); Text("立即备份") }
-                      OutlinedButton(
+                      ) {
+                          Icon(Icons.Default.CloudUpload, null)
+                          Spacer(Modifier.width(8.dp))
+                          Text("立即备份")
+                      }
+                      SaniouOutlinedButton(
                           onClick = { viewModel.onEvent(SyncSettingsContract.Event.RestoreWebDav) },
                           enabled = state.endpoint.isNotBlank() && !state.isWorking,
-                      ) { Icon(Icons.Default.CloudDownload, null); Spacer(Modifier.width(8.dp)); Text("从云端恢复") }
+                      ) {
+                          Icon(Icons.Default.CloudDownload, null)
+                          Spacer(Modifier.width(8.dp))
+                          Text("从云端恢复")
+                      }
                   }
                 }
 
@@ -606,21 +628,21 @@ private fun UserDataTransferDialog(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 if (dialog.isImport) {
-                    TextButton(onClick = onDismiss, enabled = !isWorking) { Text("取消") }
-                    Button(
+                    SaniouTextButton(onClick = onDismiss, enabled = !isWorking, text = "取消")
+                    SaniouButton(
                         onClick = { onImport(payload) },
                         enabled = payload.isNotBlank() && !isWorking,
-                    ) {
-                        Text(if (isWorking) "导入中…" else "确认导入")
-                    }
+                        loading = isWorking,
+                        text = "确认导入",
+                    )
                 } else {
                     if (onCopy != null) {
-                        OutlinedButton(onClick = onCopy) { Text("复制") }
+                        SaniouOutlinedButton(onClick = onCopy, text = "复制")
                     }
                     if (onExportToFile != null) {
-                        OutlinedButton(onClick = onExportToFile) { Text("保存到文件") }
+                        SaniouOutlinedButton(onClick = onExportToFile, text = "保存到文件")
                     }
-                    Button(onClick = onDismiss) { Text("完成") }
+                    SaniouButton(onClick = onDismiss, text = "完成")
                 }
             }
         }

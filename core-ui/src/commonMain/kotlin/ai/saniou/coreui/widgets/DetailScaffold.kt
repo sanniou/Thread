@@ -101,10 +101,10 @@ fun ThreadDetailScaffold(
                         ) {
                             if (eyebrow != null && windowInfo.widthClass != ThreadWindowWidthClass.Compact) {
                                 Text(
-                                    eyebrow.uppercase(),
+                                    eyebrow,
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.primary,
-                                    fontWeight = FontWeight.Bold,
+                                    fontWeight = FontWeight.SemiBold,
                                 )
                             }
                             Text(

@@ -88,9 +88,10 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import ai.saniou.coreui.widgets.SaniouButton
+import ai.saniou.coreui.widgets.SaniouDangerButton
+import ai.saniou.coreui.widgets.SaniouTextButton
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.runtime.Composable
@@ -532,13 +533,20 @@ fun App(
                         title = { Text(if (command.danger == ProductActionDanger.DESTRUCTIVE) "确认永久操作" else "确认数据变更") },
                         text = { Text(command.description) },
                         confirmButton = {
-                            Button(onClick = {
-                                pendingProductCommand = null
-                                performProductCommand(command, confirmed = true)
-                            }) { Text("继续") }
+                            if (command.danger == ProductActionDanger.DESTRUCTIVE) {
+                                SaniouDangerButton(onClick = {
+                                    pendingProductCommand = null
+                                    performProductCommand(command, confirmed = true)
+                                }, text = "继续")
+                            } else {
+                                SaniouButton(onClick = {
+                                    pendingProductCommand = null
+                                    performProductCommand(command, confirmed = true)
+                                }, text = "继续")
+                            }
                         },
                         dismissButton = {
-                            TextButton(onClick = { pendingProductCommand = null }) { Text("取消") }
+                            SaniouTextButton(onClick = { pendingProductCommand = null }, text = "取消")
                         },
                     )
                 }

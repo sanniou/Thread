@@ -4,6 +4,8 @@ import ai.saniou.corecommon.utils.toRelativeTimeString
 import ai.saniou.coreui.theme.LocalThreadUiPreferences
 import ai.saniou.coreui.widgets.ContextHero
 import ai.saniou.coreui.widgets.PageHeader
+import ai.saniou.coreui.widgets.SaniouButton
+import ai.saniou.coreui.widgets.SaniouTextButton
 import ai.saniou.coreui.widgets.ThreadCard
 import ai.saniou.reader.workflow.articledetail.ArticleDetailPage
 import ai.saniou.thread.FeedTopicRoute
@@ -55,7 +57,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -142,7 +143,7 @@ object InboxPage : Screen {
                         title = "通知收件箱",
                         subtitle = "公告、回复、订阅和 Reader 更新共用一条可筛选、可静音、离线优先的时间线。",
                         actions = {
-                            TextButton(onClick = { viewModel.onEvent(Event.MarkAllRead) }) {
+                            SaniouTextButton(onClick = { viewModel.onEvent(Event.MarkAllRead) }) {
                                 Icon(Icons.Default.DoneAll, null)
                                 Spacer(Modifier.width(6.dp))
                                 Text("全部已读")
@@ -216,7 +217,7 @@ object InboxPage : Screen {
                         ThreadCard(Modifier.fillMaxWidth()) {
                             Text("无法读取收件箱", style = MaterialTheme.typography.titleMedium)
                             Text(refresh.error.message ?: "数据库分页失败", color = MaterialTheme.colorScheme.error)
-                            TextButton(onClick = inbox::retry) { Text("重试") }
+                            SaniouButton(onClick = inbox::retry, text = "重试")
                         }
                     }
                     else -> if (inbox.itemCount == 0) item {

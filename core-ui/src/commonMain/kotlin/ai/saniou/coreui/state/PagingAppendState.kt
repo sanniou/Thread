@@ -1,5 +1,6 @@
 package ai.saniou.coreui.state
 
+import ai.saniou.coreui.widgets.SaniouTextButton
 import ai.saniou.coreui.widgets.ThreadStatusBanner
 import ai.saniou.coreui.widgets.ThreadStatusTone
 import androidx.compose.foundation.layout.Arrangement
@@ -14,7 +15,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -54,7 +54,7 @@ fun <T : Any> PagingAppendState(
                 message = error.message,
                 tone = ThreadStatusTone.Warning,
                 modifier = modifier.padding(vertical = 8.dp),
-                actions = { TextButton(onClick = onRetry) { Text("重试") } },
+                actions = { SaniouTextButton(onClick = onRetry, text = "重试") },
             )
         }
         is LoadState.NotLoading -> {

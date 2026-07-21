@@ -16,6 +16,8 @@ import ai.saniou.coreui.widgets.ModernEmptyState
 import ai.saniou.coreui.widgets.NetworkImage
 import ai.saniou.coreui.widgets.RefreshDiagnosticsBanner
 import ai.saniou.coreui.widgets.RichText
+import ai.saniou.coreui.widgets.SaniouButton
+import ai.saniou.coreui.widgets.SaniouTextButton
 import ai.saniou.coreui.widgets.SectionLabel
 import ai.saniou.coreui.widgets.SidebarHeader
 import ai.saniou.coreui.widgets.ThreadSearchField
@@ -639,19 +641,15 @@ private fun ReaderTransferDialog(
                 horizontalArrangement = Arrangement.End,
             ) {
                 if (dialog.isImport) {
-                    TextButton(onClick = onDismiss, enabled = !isWorking) { Text("取消") }
-                    Button(
+                    SaniouTextButton(onClick = onDismiss, enabled = !isWorking, text = "取消")
+                    SaniouButton(
                         onClick = { onImport(payload) },
                         enabled = payload.isNotBlank() && !isWorking,
-                    ) {
-                        if (isWorking) {
-                            CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
-                        } else {
-                            Text("导入")
-                        }
-                    }
+                        loading = isWorking,
+                        text = "导入",
+                    )
                 } else {
-                    Button(onClick = onDismiss) { Text("完成") }
+                    SaniouButton(onClick = onDismiss, text = "完成")
                 }
             }
         }

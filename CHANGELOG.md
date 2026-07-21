@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.24.0 - 2026-07-21
+
+Experience deep-dive for main user paths: buttons, detail reading rhythm, list hierarchy and shared feedback.
+
+- Settings, Operations, Activity Center, Inbox, Reader transfer dialogs and Add Feed sheet use the shared `SaniouButton` family, including loading and destructive confirmation.
+- Product command confirmation in App routes destructive actions through `SaniouDangerButton`.
+- Article detail gains a bottom `UnifiedActionBar` for bookmark / share / browser while keeping top-bar font controls; reading copy uses human-case eyebrows and density tokens.
+- Social detail, Reader list cards and paging append/refresh banners align retry actions and spacing with the design system.
+- `ArticleItem` tightens title/summary/meta hierarchy with density-aware thumbnails and quieter unread markers.
+- Desktop gates cover compile and jvmTest on the UX surface.
+
 ## 0.23.0 - 2026-07-21
 
 Quiet product UX polish for Desktop: motion, buttons, feed refresh and cache clarity.

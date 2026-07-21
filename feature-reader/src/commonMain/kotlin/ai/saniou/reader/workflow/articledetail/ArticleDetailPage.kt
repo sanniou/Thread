@@ -12,7 +12,10 @@ import ai.saniou.coreui.widgets.RichText
 import ai.saniou.coreui.widgets.ThreadDetailScaffold
 import ai.saniou.coreui.widgets.ThreadErrorState
 import ai.saniou.coreui.widgets.RelatedContentSection
+import ai.saniou.coreui.widgets.ActionItem
+import ai.saniou.coreui.widgets.UnifiedActionBar
 import ai.saniou.coreui.composition.LocalContentLinkHandler
+import ai.saniou.coreui.theme.Dimens
 import ai.saniou.thread.domain.model.content.ContentReference
 import ai.saniou.thread.domain.model.content.ContentReferenceKind
 import ai.saniou.thread.domain.model.content.RelatedContent
@@ -114,7 +117,7 @@ data class ArticleDetailPage(val articleId: String) : Screen {
         }
         ThreadDetailScaffold(
             title = state.feedSourceName ?: "文章详情",
-            eyebrow = "READER",
+            eyebrow = "阅读",
             subtitle = state.article?.title,
             onBack = ::closeDetail,
             actions = {
@@ -138,6 +141,39 @@ data class ArticleDetailPage(val articleId: String) : Screen {
                 )
             },
             snackbarHost = { SnackbarHost(snackbar) },
+            bottomBar = {
+                val article = state.article
+                UnifiedActionBar(
+                    visible = article != null,
+                    actions = listOf(
+                        ActionItem(
+                            label = if (article?.isBookmarked == true) "已收藏" else "收藏",
+                            icon = if (article?.isBookmarked == true) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
+                            emphasized = article?.isBookmarked == true,
+                            onClick = { viewModel.onEvent(ArticleDetailContract.Event.OnToggleBookmark) },
+                        ),
+                        ActionItem(
+                            label = "分享",
+                            icon = Icons.Default.Share,
+                            onClick = {
+                                article?.let {
+                                    val text = "${it.title}\n${it.link}"
+                                    val shared = shareService?.shareText(text, it.title) == true
+                                    if (!shared) clipboard.copyText(text)
+                                    scope.launch {
+                                        snackbar.showSnackbar(if (shared) "已通过系统分享" else "标题和链接已复制")
+                                    }
+                                }
+                            },
+                        ),
+                        ActionItem(
+                            label = "浏览器",
+                            icon = Icons.Default.Public,
+                            onClick = { article?.link?.let { uriHandler.openUri(it) } },
+                        ),
+                    ),
+                )
+            },
         ) { padding ->
             Box(modifier = Modifier.padding(padding).fillMaxSize()) {
                 when {
@@ -256,7 +292,7 @@ private fun ArticleContent(
         Column(
             modifier = Modifier.fillMaxHeight().fillMaxWidth().widthIn(max = uiPreferences.readerWidth)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = windowInfo.pageHorizontalPadding, vertical = 32.dp)
+                .padding(horizontal = windowInfo.pageHorizontalPadding, vertical = Dimens.padding_extra_large)
         ) {
             article.imageUrl?.takeIf { it.isNotBlank() }?.let { imageUrl ->
                 NetworkImage(
@@ -266,16 +302,16 @@ private fun ArticleContent(
                     modifier = Modifier.fillMaxWidth().heightIn(min = 220.dp, max = 360.dp)
                         .clip(MaterialTheme.shapes.extraLarge),
                 )
-                Spacer(Modifier.height(32.dp))
+                Spacer(Modifier.height(Dimens.padding_extra_large))
             }
 
             SelectionContainer {
-                Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(Dimens.padding_medium)) {
                     Text(
-                        text = "READER  ·  ${article.publishDate.toRelativeTimeString()}",
+                        text = "阅读 · ${article.publishDate.toRelativeTimeString()}",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                     )
                     Text(
                         text = article.title,
@@ -284,7 +320,7 @@ private fun ArticleContent(
                     )
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.padding_small),
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         article.author?.takeIf { it.isNotBlank() }?.let { author ->
@@ -303,7 +339,7 @@ private fun ArticleContent(
                 }
             }
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = 28.dp))
+            HorizontalDivider(modifier = Modifier.padding(vertical = Dimens.padding_large))
 
             SelectionContainer {
                 val baseStyle = MaterialTheme.typography.bodyLarge
@@ -317,9 +353,9 @@ private fun ArticleContent(
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
-            HorizontalDivider(modifier = Modifier.padding(vertical = 28.dp))
+            HorizontalDivider(modifier = Modifier.padding(vertical = Dimens.padding_large))
             RelatedContentSection(items = related, onOpen = onOpenRelated)
-            Spacer(modifier = Modifier.height(80.dp))
+            Spacer(modifier = Modifier.height(Dimens.size_120))
         }
     }
 }

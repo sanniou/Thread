@@ -1,6 +1,8 @@
 package ai.saniou.reader.workflow.reader
 
 import ai.saniou.coreui.widgets.AdaptiveModal
+import ai.saniou.coreui.widgets.SaniouButton
+import ai.saniou.coreui.widgets.SaniouTextButton
 import ai.saniou.thread.domain.model.reader.FeedType
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
@@ -136,13 +138,9 @@ private fun Step_AnalysisFailed(
             horizontalArrangement = Arrangement.End,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            TextButton(onClick = onBack) {
-                Text("返回")
-            }
+            SaniouTextButton(onClick = onBack, text = "返回")
             Spacer(modifier = Modifier.width(8.dp))
-            Button(onClick = onRetry) {
-                Text("重试")
-            }
+            SaniouButton(onClick = onRetry, text = "重试")
         }
     }
 }
@@ -183,9 +181,7 @@ private fun Step_SelectSource(
                 .padding(horizontal = 24.dp, vertical = 16.dp),
             horizontalArrangement = Arrangement.End
         ) {
-            TextButton(onClick = onBack) {
-                Text("返回")
-            }
+            SaniouTextButton(onClick = onBack, text = "返回")
         }
     }
 }
@@ -375,22 +371,21 @@ private fun Step_ConfirmSource(
                 modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                 horizontalArrangement = Arrangement.End
             ) {
-                TextButton(onClick = onBack) {
-                    Text("上一步")
-                }
+                SaniouTextButton(onClick = onBack, text = "上一步")
                 Spacer(modifier = Modifier.width(8.dp))
-                Button(onClick = {
-                    onConfirm(source.copy(
-                        name = name,
-                        url = url,
-                        type = type,
-                        selectorConfig = config,
-                        autoRefresh = autoRefresh,
-                        refreshInterval = refreshInterval
-                    ))
-                }) {
-                    Text("保存")
-                }
+                SaniouButton(
+                    onClick = {
+                        onConfirm(source.copy(
+                            name = name,
+                            url = url,
+                            type = type,
+                            selectorConfig = config,
+                            autoRefresh = autoRefresh,
+                            refreshInterval = refreshInterval
+                        ))
+                    },
+                    text = "保存",
+                )
             }
         }
     }
@@ -427,16 +422,13 @@ private fun Step1_EnterUrl(onNext: (String) -> Unit, onDismiss: () -> Unit) {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.End
         ) {
-            TextButton(onClick = onDismiss) {
-                Text("取消")
-            }
+            SaniouTextButton(onClick = onDismiss, text = "取消")
             Spacer(modifier = Modifier.width(8.dp))
-            Button(
+            SaniouButton(
                 onClick = { onNext(url) },
-                enabled = isUrlValid
-            ) {
-                Text("下一步")
-            }
+                enabled = isUrlValid,
+                text = "下一步",
+            )
         }
     }
 }
