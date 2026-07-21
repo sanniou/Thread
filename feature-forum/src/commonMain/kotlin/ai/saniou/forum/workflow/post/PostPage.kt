@@ -4,6 +4,8 @@ import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.layout.LocalThreadWindowInfo
 import ai.saniou.coreui.theme.threadTweenSpec
 import ai.saniou.coreui.widgets.ThreadDetailScaffold
+import ai.saniou.coreui.widgets.SaniouButton
+import ai.saniou.coreui.widgets.SaniouTextButton
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -47,7 +49,6 @@ import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardHide
 import androidx.compose.material.icons.filled.DeleteOutline
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -63,7 +64,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
@@ -167,18 +167,16 @@ data class PostPage(
                 title = { Text(text = stringResource(Res.string.post_page_send_confirm_title)) },
                 text = { Text(text = stringResource(Res.string.post_page_send_confirm_message)) },
                 confirmButton = {
-                    TextButton(
-                        onClick = { viewModel.onEvent(PostContract.Event.Submit) }
-                    ) {
-                        Text(stringResource(Res.string.post_page_send_confirm_yes))
-                    }
+                    SaniouTextButton(
+                        onClick = { viewModel.onEvent(PostContract.Event.Submit) },
+                        text = stringResource(Res.string.post_page_send_confirm_yes),
+                    )
                 },
                 dismissButton = {
-                    TextButton(
-                        onClick = { viewModel.onEvent(PostContract.Event.ToggleConfirmDialog) }
-                    ) {
-                        Text(stringResource(Res.string.post_page_send_confirm_no))
-                    }
+                    SaniouTextButton(
+                        onClick = { viewModel.onEvent(PostContract.Event.ToggleConfirmDialog) },
+                        text = stringResource(Res.string.post_page_send_confirm_no),
+                    )
                 }
             )
         }
@@ -189,11 +187,10 @@ data class PostPage(
                 title = { Text(text = stringResource(Res.string.post_page_error_title)) },
                 text = { Text(text = state.error!!) },
                 confirmButton = {
-                    TextButton(
-                        onClick = { viewModel.onEvent(PostContract.Event.ClearError) }
-                    ) {
-                        Text(stringResource(Res.string.post_page_error_ok))
-                    }
+                    SaniouTextButton(
+                        onClick = { viewModel.onEvent(PostContract.Event.ClearError) },
+                        text = stringResource(Res.string.post_page_error_ok),
+                    )
                 },
                 icon = { Icon(Icons.Default.Close, contentDescription = null) }
             )
@@ -205,7 +202,7 @@ data class PostPage(
 
         ThreadDetailScaffold(
             title = title,
-            eyebrow = "COMPOSER",
+            eyebrow = stringResource(Res.string.eyebrow_composer),
             subtitle = if (topicId == null) "发布到 ${state.forumName}" else "回复主题 $topicId",
             onBack = { viewModel.onEvent(PostContract.Event.Close) },
             actions = {
@@ -220,16 +217,11 @@ data class PostPage(
                     }
                 }
                 if (!state.isLoading && !state.isSuccess) {
-                    TextButton(
+                    SaniouTextButton(
                         onClick = { viewModel.onEvent(PostContract.Event.ToggleConfirmDialog) },
                         enabled = canSend,
-                    ) {
-                        Text(
-                            stringResource(Res.string.post_page_send),
-                            fontWeight = FontWeight.Bold,
-                            style = MaterialTheme.typography.titleSmall
-                        )
-                    }
+                        text = stringResource(Res.string.post_page_send),
+                    )
                 }
             },
             bottomBar = {
@@ -619,12 +611,11 @@ data class PostPage(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true
                 )
-                Button(
+                SaniouButton(
                     onClick = { onInsert(start, end) },
-                    enabled = isDiceInputValid
-                ) {
-                    Text(stringResource(Res.string.post_page_dice_insert))
-                }
+                    enabled = isDiceInputValid,
+                    text = stringResource(Res.string.post_page_dice_insert),
+                )
             }
         }
     }

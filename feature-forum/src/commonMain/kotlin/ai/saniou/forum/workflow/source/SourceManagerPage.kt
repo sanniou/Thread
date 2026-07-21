@@ -3,6 +3,8 @@ package ai.saniou.forum.workflow.source
 import ai.saniou.coreui.layout.LocalThreadWindowInfo
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.ContextHero
+import ai.saniou.coreui.widgets.ModernEmptyState
+import ai.saniou.coreui.widgets.SaniouButton
 import ai.saniou.coreui.widgets.AdaptiveModal
 import ai.saniou.coreui.widgets.SaniouButton
 import ai.saniou.coreui.widgets.SaniouTextButton
@@ -51,6 +53,9 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.kodein.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import org.jetbrains.compose.resources.stringResource
+import thread.feature_forum.generated.resources.Res
+import thread.feature_forum.generated.resources.eyebrow_forum_sources
 
 class SourceManagerPage : Screen {
     @OptIn(ExperimentalMaterial3Api::class)
@@ -71,7 +76,7 @@ class SourceManagerPage : Screen {
 
         ThreadDetailScaffold(
             title = "内容来源",
-            eyebrow = "FORUM SOURCES",
+            eyebrow = stringResource(Res.string.eyebrow_forum_sources),
             subtitle = "管理内置连接器和动态 Discourse 实例",
             onBack = navigator::pop,
             snackbarHost = { SnackbarHost(snackbar) },
@@ -107,6 +112,21 @@ class SourceManagerPage : Screen {
                                 subtitle = "内置来源可启停；动态实例保存后立即进入运行目录",
                                 metric = "${state.descriptors.count { it.enabled }} / ${state.descriptors.size} 已启用",
                             )
+                        }
+                        if (state.descriptors.isEmpty()) {
+                            item(key = "empty-sources") {
+                                ModernEmptyState(
+                                    icon = Icons.Default.Hub,
+                                    title = "还没有内容来源",
+                                    description = "添加 Discourse 实例，或启用内置连接器。",
+                                    action = {
+                                        SaniouButton(
+                                            onClick = { viewModel.onEvent(Event.AddDiscourse) },
+                                            text = "添加 Discourse",
+                                        )
+                                    },
+                                )
+                            }
                         }
                         items(state.descriptors, key = SourceDescriptor::id) { descriptor ->
                             SourceDescriptorCard(

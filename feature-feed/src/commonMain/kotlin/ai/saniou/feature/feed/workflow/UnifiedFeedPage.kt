@@ -13,6 +13,8 @@ import ai.saniou.coreui.widgets.CacheStatusBanner
 import ai.saniou.coreui.widgets.CacheStatusTone
 import ai.saniou.coreui.widgets.RefreshDiagnosticsBanner
 import ai.saniou.coreui.widgets.ModernEmptyState
+import ai.saniou.coreui.widgets.SaniouButton
+import ai.saniou.coreui.widgets.SaniouOutlinedButton
 import ai.saniou.coreui.widgets.ContextHero
 import ai.saniou.coreui.widgets.KeyedLazyListState
 import ai.saniou.coreui.widgets.PullToRefreshWrapper
@@ -330,6 +332,8 @@ private fun FeedScaffold(
                             hasSelection = state.selectedSourceIds.isNotEmpty() ||
                                 state.includeReader ||
                                 (state.includeSocial && state.selectedSocialSourceIds.isNotEmpty()),
+                            hasAnySource = state.sources.isNotEmpty() || state.socialSources.isNotEmpty(),
+                            onRefresh = onRefresh,
                             modifier = Modifier.align(Alignment.Center),
                         )
                     },
@@ -549,12 +553,27 @@ private fun TimelinePostCard(
 @Composable
 private fun FeedEmptyState(
     hasSelection: Boolean,
+    hasAnySource: Boolean,
+    onRefresh: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     ModernEmptyState(
         icon = Icons.Default.DynamicFeed,
-        title = if (hasSelection) "时间线暂时为空" else "还没有选择内容范围",
-        description = if (hasSelection) "刷新来源，或在左侧调整聚合范围。" else "从左侧选择论坛、阅读器或社交来源。",
+        title = when {
+            !hasAnySource -> "工作区还没有内容源"
+            hasSelection -> "时间线暂时为空"
+            else -> "还没有选择内容范围"
+        },
+        description = when {
+            !hasAnySource -> "先在社区添加论坛来源，或在阅读器添加订阅，再回到动态聚合。"
+            hasSelection -> "刷新来源，或在左侧调整聚合范围。"
+            else -> "从左侧选择论坛、阅读器或社交来源。"
+        },
         modifier = modifier,
+        action = if (hasSelection) {
+            {
+                SaniouButton(onClick = onRefresh, text = "刷新时间线")
+            }
+        } else null,
     )
 }

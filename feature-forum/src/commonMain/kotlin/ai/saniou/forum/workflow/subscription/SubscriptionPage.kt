@@ -91,6 +91,7 @@ import thread.feature_forum.generated.resources.subscription_set_id
 import thread.feature_forum.generated.resources.subscription_title
 import thread.feature_forum.generated.resources.subscription_unknown_error
 import thread.feature_forum.generated.resources.subscription_unsubscribe
+import thread.feature_forum.generated.resources.eyebrow_following
 
 data class SubscriptionPage(
     val onUpdateTitle: ((String) -> Unit)? = null,
@@ -125,7 +126,7 @@ data class SubscriptionPage(
 
         ThreadDetailScaffold(
                 title = stringResource(Res.string.subscription_title),
-                eyebrow = "FOLLOWING",
+                eyebrow = stringResource(Res.string.eyebrow_following),
                 subtitle = if (state.subscriptionId.isNullOrBlank()) {
                     "本地关注列表"
                 } else {

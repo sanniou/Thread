@@ -137,7 +137,7 @@ object ActivityCenterPage : Screen {
             ) {
                 item {
                     PageHeader(
-                        eyebrow = "ACTIVITY",
+                        eyebrow = "活动",
                         title = "活动中心",
                         subtitle = "刷新、身份、草稿与数据迁移共享一条可恢复的跨平台任务流。",
                         actions = {

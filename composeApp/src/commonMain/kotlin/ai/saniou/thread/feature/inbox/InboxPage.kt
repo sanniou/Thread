@@ -139,7 +139,7 @@ object InboxPage : Screen {
             ) {
                 item {
                     PageHeader(
-                        eyebrow = "INBOX",
+                        eyebrow = "收件箱",
                         title = "通知收件箱",
                         subtitle = "公告、回复、订阅和 Reader 更新共用一条可筛选、可静音、离线优先的时间线。",
                         actions = {

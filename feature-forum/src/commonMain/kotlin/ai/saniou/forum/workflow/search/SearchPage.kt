@@ -54,6 +54,9 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import org.kodein.di.direct
 import org.kodein.di.instance
+import org.jetbrains.compose.resources.stringResource
+import thread.feature_forum.generated.resources.Res
+import thread.feature_forum.generated.resources.eyebrow_discovery
 data class SearchPage(
     val sourceId: String,
 ) : Screen {
@@ -69,7 +72,7 @@ data class SearchPage(
 
         ThreadDetailScaffold(
             title = "社区搜索",
-            eyebrow = "DISCOVERY",
+            eyebrow = stringResource(Res.string.eyebrow_discovery),
             subtitle = "在当前来源的主题与回复中检索 · $sourceId",
             onBack = navigator::pop,
         ) { paddingValues ->

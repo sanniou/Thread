@@ -5,7 +5,13 @@ import ai.saniou.coreui.layout.LocalThreadWindowInfo
 import ai.saniou.coreui.state.StateLayout
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.theme.threadTweenSpec
+import ai.saniou.coreui.widgets.CacheStatusBanner
+import ai.saniou.coreui.widgets.CacheStatusTone
+import ai.saniou.coreui.widgets.ModernEmptyState
 import ai.saniou.coreui.widgets.RefreshDiagnosticsBanner
+import ai.saniou.coreui.widgets.SaniouOutlinedButton
+import ai.saniou.coreui.widgets.SaniouTextButton
+import ai.saniou.coreui.widgets.SaniouButton
 import ai.saniou.coreui.widgets.RichText
 import ai.saniou.coreui.widgets.SectionLabel
 import ai.saniou.coreui.widgets.SidebarHeader
@@ -19,6 +25,8 @@ import ai.saniou.forum.workflow.topic.TopicPage
 import ai.saniou.forum.workflow.topicdetail.TopicDetailPage
 import ai.saniou.forum.workflow.trend.TrendPage
 import ai.saniou.thread.domain.model.forum.Notice
+import ai.saniou.thread.domain.model.workspace.WorkspaceDestination
+import ai.saniou.thread.domain.usecase.workspace.UpdateWorkspaceSessionUseCase
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -48,7 +56,6 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DrawerState
@@ -77,6 +84,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.kodein.rememberScreenModel
+import org.kodein.di.compose.localDI
+import org.kodein.di.direct
+import org.kodein.di.instance
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -88,6 +98,17 @@ import thread.feature_forum.generated.resources.category_collapse
 import thread.feature_forum.generated.resources.category_expand
 import thread.feature_forum.generated.resources.drawer_search
 import thread.feature_forum.generated.resources.drawer_subscribe
+import thread.feature_forum.generated.resources.empty_workspace_title
+import thread.feature_forum.generated.resources.empty_workspace_desc
+import thread.feature_forum.generated.resources.empty_workspace_add_source
+import thread.feature_forum.generated.resources.empty_workspace_import
+import thread.feature_forum.generated.resources.cache_forum_stale_title
+import thread.feature_forum.generated.resources.cache_forum_cached_title
+import thread.feature_forum.generated.resources.cache_forum_stale_detail
+import thread.feature_forum.generated.resources.cache_forum_cached_detail
+import thread.feature_forum.generated.resources.action_view_health
+import thread.feature_forum.generated.resources.retry
+import thread.feature_forum.generated.resources.label_dismiss_notice
 
 data class ChannelPage(
     val drawerState: DrawerState? = null,
@@ -147,6 +168,46 @@ data class ChannelPage(
         onMenuClick: (() -> Unit)?
     ) {
         val viewModel: ChannelViewModel = rememberScreenModel()
+        val navigator = LocalNavigator.currentOrThrow
+        val di = localDI()
+        val updateWorkspaceSession = remember { di.direct.instance<UpdateWorkspaceSessionUseCase>() }
+        val scope = rememberCoroutineScope()
+
+        if (state.availableSources.isEmpty()) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                ModernEmptyState(
+                    icon = Icons.Default.Forum,
+                    title = stringResource(Res.string.empty_workspace_title),
+                    description = stringResource(Res.string.empty_workspace_desc),
+                    action = {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            SaniouButton(
+                                onClick = { navigator.push(SourceManagerPage()) },
+                                text = stringResource(Res.string.empty_workspace_add_source),
+                            )
+                            SaniouOutlinedButton(
+                                onClick = {
+                                    scope.launch {
+                                        updateWorkspaceSession { current ->
+                                            current.copy(
+                                                destination = WorkspaceDestination.SETTINGS,
+                                                lastContent = null,
+                                                updatedAtEpochMillis = kotlin.time.Clock.System.now().toEpochMilliseconds(),
+                                            )
+                                        }
+                                    }
+                                },
+                                text = stringResource(Res.string.empty_workspace_import),
+                            )
+                        }
+                    },
+                )
+            }
+            return
+        }
 
         if (!state.isCurrentSourceInitialized) {
             SourceInitScreen(
@@ -159,6 +220,54 @@ data class ChannelPage(
         }
 
         Column(modifier = Modifier.fillMaxSize()) {
+            val cacheTone = when {
+                state.refreshFailures.isNotEmpty() -> CacheStatusTone.STALE
+                else -> CacheStatusTone.CACHED
+            }
+            val cacheTitle = when (cacheTone) {
+                CacheStatusTone.STALE -> stringResource(Res.string.cache_forum_stale_title)
+                else -> stringResource(Res.string.cache_forum_cached_title)
+            }
+            val cacheDetail = when (cacheTone) {
+                CacheStatusTone.STALE -> stringResource(
+                    Res.string.cache_forum_stale_detail,
+                    state.refreshFailures.size,
+                )
+                else -> stringResource(Res.string.cache_forum_cached_detail)
+            }
+            CacheStatusBanner(
+                title = cacheTitle,
+                tone = cacheTone,
+                detail = cacheDetail,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                action = {
+                    if (state.refreshFailures.isNotEmpty()) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            SaniouTextButton(
+                                onClick = { viewModel.onEvent(Event.LoadCategories) },
+                                text = stringResource(Res.string.retry),
+                            )
+                            SaniouTextButton(
+                                onClick = {
+                                    scope.launch {
+                                        updateWorkspaceSession { current ->
+                                            current.copy(
+                                                destination = WorkspaceDestination.OPERATIONS,
+                                                lastContent = null,
+                                                updatedAtEpochMillis = kotlin.time.Clock.System.now().toEpochMilliseconds(),
+                                            )
+                                        }
+                                    }
+                                },
+                                text = stringResource(Res.string.action_view_health),
+                            )
+                        }
+                    }
+                },
+            )
+
             state.notice?.let { notice ->
                 NoticeBanner(
                     notice = notice,
@@ -451,9 +560,7 @@ data class ChannelPage(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
                 ) {
-                    Button(onClick = onDismiss) {
-                        Text("不再显示")
-                    }
+                    SaniouButton(onClick = onDismiss, text = stringResource(Res.string.label_dismiss_notice))
                 }
             }
         }

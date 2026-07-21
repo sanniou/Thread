@@ -91,7 +91,18 @@ class ChannelViewModel(
     private fun loadSources() {
         screenModelScope.launch {
             getAvailableSourcesUseCase().collect { sources ->
-                if (sources.isEmpty()) return@collect
+                if (sources.isEmpty()) {
+                    _state.update {
+                        it.copy(
+                            availableSources = emptyList(),
+                            currentSourceId = "",
+                            isCurrentSourceInitialized = true,
+                            categoriesState = UiStateWrapper.Success(emptyList()),
+                            currentChannel = null,
+                        )
+                    }
+                    return@collect
+                }
                 val savedSourceId = settingsRepository.getValue<String>("current_source_id")
                 val currentId = state.value.currentSourceId
                 val targetId = when {

@@ -15,6 +15,9 @@ import com.multiplatform.webview.web.WebView
 import com.multiplatform.webview.web.LoadingState
 import com.multiplatform.webview.web.rememberWebViewNavigator
 import com.multiplatform.webview.web.rememberWebViewState
+import org.jetbrains.compose.resources.stringResource
+import thread.feature_forum.generated.resources.Res
+import thread.feature_forum.generated.resources.eyebrow_secure_login
 
 @Composable
 fun LoginWebView(
@@ -41,7 +44,7 @@ fun LoginWebView(
 
     ThreadDetailScaffold(
         title = "网页登录",
-        eyebrow = "SECURE SESSION",
+        eyebrow = stringResource(Res.string.eyebrow_secure_login),
         subtitle = strategy.url,
         onBack = onDismissRequest,
     ) { padding ->

@@ -157,7 +157,7 @@ data class TopicPage(
         val channelDetail = (state.channelDetail as? UiStateWrapper.Success)?.value
         ThreadDetailScaffold(
             title = state.channelName.ifBlank { "社区板块" },
-            eyebrow = "FORUM CHANNEL",
+            eyebrow = stringResource(Res.string.eyebrow_forum_channel),
             subtitle = channelDetail?.let { detail ->
                 buildString {
                     detail.topicCount?.let { append("$it 个主题") }

@@ -7,6 +7,7 @@ import ai.saniou.coreui.interaction.threadShortcutHost
 import ai.saniou.coreui.state.PagingStateLayout
 import ai.saniou.coreui.state.PagingAppendState
 import ai.saniou.coreui.theme.Dimens
+import ai.saniou.coreui.theme.threadTweenSpec
 import ai.saniou.coreui.widgets.AppDrawerItem
 import ai.saniou.coreui.widgets.AdaptiveModal
 import ai.saniou.coreui.widgets.ArticleItem
@@ -27,6 +28,11 @@ import ai.saniou.reader.workflow.articledetail.ArticleDetailPage
 import ai.saniou.thread.domain.model.reader.Article
 import ai.saniou.thread.domain.model.reader.FeedSource
 import ai.saniou.thread.domain.model.reader.ReaderSubscriptionFormat
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.rememberScrollState
@@ -205,6 +211,10 @@ class ReaderPage(
                         snackbarHostState = snackbarHostState,
                         onExport = { viewModel.onEvent(ReaderContract.Event.OnExportSubscriptions(it)) },
                         onImport = { viewModel.onEvent(ReaderContract.Event.OnShowImport(it)) },
+                        onAddSource = {
+                            editingSource = null
+                            isAddSheetShown = true
+                        },
             )
         }
     }
@@ -231,6 +241,7 @@ private fun ReaderScaffold(
     snackbarHostState: SnackbarHostState,
     onExport: (ReaderSubscriptionFormat) -> Unit,
     onImport: (ReaderSubscriptionFormat) -> Unit,
+    onAddSource: () -> Unit,
 ) {
     Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) { padding ->
         Column(
@@ -257,6 +268,7 @@ private fun ReaderScaffold(
                     onMenuClick = onMenuClick,
                     onExport = onExport,
                     onImport = onImport,
+                    onAddSource = onAddSource,
                 )
                 val isRefreshing = state.feedSources.any { it.isRefreshing }
                 val cacheTone = when {
@@ -298,7 +310,9 @@ private fun ReaderScaffold(
                         empty = {
                             EmptyState(
                                 isSearchActive = state.searchQuery.isNotEmpty(),
-                                query = state.searchQuery
+                                query = state.searchQuery,
+                                hasSources = state.feedSources.isNotEmpty(),
+                                onAddSource = onAddSource,
                             )
                         }
                     ) {
@@ -350,16 +364,27 @@ private fun ReaderScaffold(
                         }
                     }
                 }
-                if (previewArticle != null && LocalThreadWindowInfo.current.supportsListDetail) {
-                    VerticalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f))
-                    ArticlePreviewPane(
-                        article = previewArticle,
-                        sourceName = state.feedSources.firstOrNull { it.id == previewArticle.feedSourceId }?.name
-                            ?: "未知来源",
-                        onDismiss = onDismissPreview,
-                        onOpenFull = { onOpenArticleDetail(previewArticle) },
-                        modifier = Modifier.widthIn(min = 440.dp, max = 600.dp).fillMaxHeight(),
-                    )
+                AnimatedVisibility(
+                    visible = previewArticle != null && LocalThreadWindowInfo.current.supportsListDetail,
+                    enter = fadeIn(animationSpec = threadTweenSpec()) +
+                        slideInHorizontally(animationSpec = threadTweenSpec()) { it / 6 },
+                    exit = fadeOut(animationSpec = threadTweenSpec()) +
+                        slideOutHorizontally(animationSpec = threadTweenSpec()) { it / 6 },
+                ) {
+                    val article = previewArticle
+                    if (article != null) {
+                        Row(Modifier.fillMaxHeight()) {
+                            VerticalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f))
+                            ArticlePreviewPane(
+                                article = article,
+                                sourceName = state.feedSources.firstOrNull { it.id == article.feedSourceId }?.name
+                                    ?: "未知来源",
+                                onDismiss = onDismissPreview,
+                                onOpenFull = { onOpenArticleDetail(article) },
+                                modifier = Modifier.widthIn(min = 440.dp, max = 600.dp).fillMaxHeight(),
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -367,12 +392,33 @@ private fun ReaderScaffold(
 }
 
 @Composable
-private fun EmptyState(isSearchActive: Boolean, query: String) {
+private fun EmptyState(
+    isSearchActive: Boolean,
+    query: String,
+    hasSources: Boolean,
+    onAddSource: () -> Unit,
+) {
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         ModernEmptyState(
             icon = if (isSearchActive) Icons.Default.SearchOff else Icons.Default.Inbox,
-            title = if (isSearchActive) "未找到相关文章" else "暂无文章",
-            description = if (isSearchActive) "没有找到“$query”，换一个关键词继续搜索。" else "添加订阅源，或稍后刷新内容。",
+            title = when {
+                isSearchActive -> "未找到相关文章"
+                !hasSources -> "还没有订阅源"
+                else -> "暂无文章"
+            },
+            description = when {
+                isSearchActive -> "没有找到“$query”，换一个关键词继续搜索。"
+                !hasSources -> "添加 RSS / Atom 订阅，或导入 OPML 备份，即可开始阅读。"
+                else -> "添加订阅源，或稍后刷新内容。"
+            },
+            action = if (!isSearchActive) {
+                {
+                    SaniouButton(
+                        onClick = onAddSource,
+                        text = if (!hasSources) "添加订阅源" else "添加更多源",
+                    )
+                }
+            } else null,
         )
     }
 }
@@ -466,6 +512,7 @@ private fun ReaderHeader(
     onMenuClick: () -> Unit,
     onExport: (ReaderSubscriptionFormat) -> Unit,
     onImport: (ReaderSubscriptionFormat) -> Unit,
+    onAddSource: () -> Unit,
 ) {
     var transferMenuExpanded by remember { mutableStateOf(false) }
     val selectedSource = state.feedSources.firstOrNull { it.id == state.selectedFeedSourceId }
@@ -534,6 +581,15 @@ private fun ReaderHeader(
                             onClick = {
                                 transferMenuExpanded = false
                                 onImport(ReaderSubscriptionFormat.OPML)
+                            },
+                        )
+                        HorizontalDivider()
+                        DropdownMenuItem(
+                            text = { Text("添加订阅源") },
+                            leadingIcon = { Icon(Icons.Default.Add, null) },
+                            onClick = {
+                                transferMenuExpanded = false
+                                onAddSource()
                             },
                         )
                     }

@@ -55,6 +55,9 @@ import kotlinx.coroutines.launch
 import org.kodein.di.direct
 import org.kodein.di.instance
 import org.kodein.di.compose.localDI
+import org.jetbrains.compose.resources.stringResource
+import thread.feature_forum.generated.resources.Res
+import thread.feature_forum.generated.resources.eyebrow_member_activity
 
 data class UserDetailPage(
     val sourceId: String,
@@ -92,7 +95,7 @@ data class UserDetailPage(
 
         ThreadDetailScaffold(
             title = userHash,
-            eyebrow = "MEMBER ACTIVITY",
+            eyebrow = stringResource(Res.string.eyebrow_member_activity),
             subtitle = "查看该用户在当前来源发布的主题与回复",
             onBack = { viewModel.handleEvent(UserDetailContract.Event.Back) },
         ) { paddingValues ->

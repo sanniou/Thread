@@ -26,7 +26,6 @@ import androidx.compose.material.icons.filled.ZoomOut
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -221,9 +220,7 @@ private fun ZoomImageTool(
                 Text(info)
             },
             confirmButton = {
-                TextButton(onClick = { showInfoDialog = false }) {
-                    Text("关闭")
-                }
+                SaniouTextButton(onClick = { showInfoDialog = false }, text = "关闭")
             }
         )
     }

@@ -5,7 +5,13 @@ import ai.saniou.coreui.layout.LocalThreadWindowInfo
 import ai.saniou.coreui.state.PagingStateLayout
 import ai.saniou.coreui.state.PagingAppendState
 import ai.saniou.coreui.theme.Dimens
+import ai.saniou.coreui.theme.threadContentSizeSpec
 import ai.saniou.coreui.widgets.ModernEmptyState
+import androidx.compose.animation.animateContentSize
+import ai.saniou.coreui.widgets.SaniouTextButton
+import org.jetbrains.compose.resources.stringResource
+import thread.feature_forum.generated.resources.Res
+import thread.feature_forum.generated.resources.label_show_cache
 import ai.saniou.coreui.widgets.PullToRefreshWrapper
 import ai.saniou.forum.ui.components.ThreadListSkeleton
 import ai.saniou.forum.ui.components.TopicCard
@@ -25,7 +31,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -66,9 +71,7 @@ fun ListThreadPage(
                         onRetry = { threads.retry() },
                         action = {
                             if (onShowCache != null) {
-                                TextButton(onClick = onShowCache) {
-                                    Text("显示缓存")
-                                }
+                                SaniouTextButton(onClick = onShowCache, text = stringResource(Res.string.label_show_cache))
                             }
                         }
                     )
@@ -107,7 +110,8 @@ fun ListThreadPage(
                             onClick = { onThreadClicked(feed.id) },
                             onImageClick = { img -> onImageClick(feed.id, img) },
                             onUserClick = onUserClick,
-                            showChannelBadge = showChannelBadge
+                            showChannelBadge = showChannelBadge,
+                            modifier = Modifier.animateContentSize(animationSpec = threadContentSizeSpec()),
                         )
                     }
 

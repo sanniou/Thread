@@ -74,6 +74,9 @@ import kotlinx.coroutines.flow.collectLatest
 import org.kodein.di.compose.localDI
 import org.kodein.di.direct
 import org.kodein.di.instance
+import org.jetbrains.compose.resources.stringResource
+import thread.feature_forum.generated.resources.Res
+import thread.feature_forum.generated.resources.eyebrow_forum_trend
 
 data class TrendPage(
     val onMenuClick: (() -> Unit)? = null,
@@ -128,7 +131,7 @@ data class TrendPage(
 
         ThreadDetailScaffold(
             title = state.selectedSource?.name ?: "趋势",
-            eyebrow = "FORUM PULSE",
+            eyebrow = stringResource(Res.string.eyebrow_forum_trend),
             subtitle = if (state.selectedTab?.supportsHistory == true) {
                 if (state.trendParams.dayOffset == 0) "今天 · ${state.selectedTab?.name.orEmpty()}"
                 else "${state.trendParams.dayOffset} 天前 · ${state.selectedTab?.name.orEmpty()}"

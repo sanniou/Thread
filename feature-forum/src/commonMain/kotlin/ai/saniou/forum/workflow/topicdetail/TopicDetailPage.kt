@@ -74,6 +74,7 @@ import org.kodein.di.direct
 import org.kodein.di.instance
 import org.kodein.di.compose.localDI
 import thread.feature_forum.generated.resources.*
+import thread.feature_forum.generated.resources.Res
 
 data class TopicDetailPage(
     val threadId: String,
@@ -180,7 +181,7 @@ data class TopicDetailPage(
                 },
             ),
             title = state.forumName.ifBlank { "主题详情" },
-            eyebrow = "FORUM THREAD",
+            eyebrow = stringResource(Res.string.eyebrow_forum_thread),
             subtitle = "No.$threadId · 阅读、引用与回复",
             onBack = ::closeDetail,
             actions = {

@@ -327,6 +327,14 @@ fun App(
                         }
                     }
                 }
+                // Child features may request shell navigation by updating workspace session destination
+                // (e.g. Forum cache banner -> Operations, empty workspace -> Settings import).
+                LaunchedEffect(workspaceSession?.destination, workspaceSession?.updatedAtEpochMillis) {
+                    val dest = workspaceSession?.destination ?: return@LaunchedEffect
+                    if (dest.key == selectedWorkspaceKey) return@LaunchedEffect
+                    selectedWorkspaceKey = dest.key
+                    navigator.replaceAll(screenFor(dest))
+                }
                 fun openContentUrl(url: String) {
                     scope.launch {
                         val normalized = url.trim()

@@ -147,7 +147,7 @@ class SyncSettingsPage(
 
         ThreadDetailScaffold(
             title = "数据与同步",
-            eyebrow = "PORTABILITY",
+            eyebrow = "备份与同步",
             subtitle = "本地数据包、WebDAV 备份与运行诊断",
             onBack = navigator::pop,
             snackbarHost = { SnackbarHost(snackbar) },

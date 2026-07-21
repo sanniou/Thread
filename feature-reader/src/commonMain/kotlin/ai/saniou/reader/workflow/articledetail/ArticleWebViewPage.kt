@@ -35,7 +35,7 @@ data class ArticleWebViewPage(val articleId: String) : Screen {
 
         ThreadDetailScaffold(
             title = state.feedSourceName ?: "网页视图",
-            eyebrow = "ORIGINAL VIEW",
+            eyebrow = "原文",
             subtitle = state.article?.title,
             onBack = navigator::pop,
             actions = {

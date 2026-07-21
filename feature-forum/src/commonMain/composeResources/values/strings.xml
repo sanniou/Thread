@@ -121,4 +121,30 @@
     <string name="subscription_empty_no_id_hint">点击右上角设置按钮设置订阅ID</string>
     <string name="subscription_unsubscribe">取消订阅</string>
 
+
+    <!-- Product UI eyebrows / labels (0.26) -->
+    <string name="eyebrow_forum_thread">论坛主题</string>
+    <string name="eyebrow_forum_channel">版块</string>
+    <string name="eyebrow_forum_trend">趋势</string>
+    <string name="eyebrow_forum_sources">论坛来源</string>
+    <string name="eyebrow_secure_login">安全登录</string>
+    <string name="eyebrow_composer">编辑器</string>
+    <string name="eyebrow_following">关注</string>
+    <string name="eyebrow_identities">账号</string>
+    <string name="eyebrow_member_activity">成员动态</string>
+    <string name="eyebrow_discovery">站内搜索</string>
+    <string name="label_sub_channels">子版块</string>
+    <string name="label_show_cache">显示缓存</string>
+    <string name="label_dismiss_notice">不再显示</string>
+    <string name="cache_forum_refreshing_title">正在同步社区</string>
+    <string name="cache_forum_stale_title">本地缓存仍可浏览</string>
+    <string name="cache_forum_cached_title">缓存优先 · 本地先展示</string>
+    <string name="cache_forum_refreshing_detail">刷新不会清空当前版块</string>
+    <string name="cache_forum_stale_detail">%1$d 个来源暂未更新，可重试或查看健康</string>
+    <string name="cache_forum_cached_detail">侧栏可切换来源；失败源已隔离</string>
+    <string name="action_view_health">查看健康</string>
+    <string name="empty_workspace_title">还没有可用来源</string>
+    <string name="empty_workspace_desc">添加论坛 / Discourse 实例，或从备份导入，即可开始阅读。</string>
+    <string name="empty_workspace_add_source">添加来源</string>
+    <string name="empty_workspace_import">导入备份</string>
 </resources>

@@ -34,9 +34,10 @@ fun TopicCard(
     onImageClick: ((Image) -> Unit)? = null,
     onUserClick: ((String) -> Unit)? = null,
     showChannelBadge: Boolean = true,
+    modifier: Modifier = Modifier,
 ) {
     ThreadCard(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
     ) {

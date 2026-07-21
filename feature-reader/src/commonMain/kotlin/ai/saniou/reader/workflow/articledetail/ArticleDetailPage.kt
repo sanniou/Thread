@@ -339,21 +339,28 @@ private fun ArticleContent(
                 }
             }
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = Dimens.padding_large))
+            HorizontalDivider(
+                modifier = Modifier.padding(vertical = Dimens.padding_extra_large),
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f),
+            )
 
             SelectionContainer {
                 val baseStyle = MaterialTheme.typography.bodyLarge
                 val scaledStyle = baseStyle.copy(
                     fontSize = baseStyle.fontSize * fontSizeScale,
                     lineHeight = baseStyle.fontSize * fontSizeScale * uiPreferences.readerLineHeightMultiplier,
+                    letterSpacing = baseStyle.letterSpacing,
                 )
                 RichText(
                     text = article.content,
                     style = scaledStyle,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().padding(bottom = Dimens.padding_medium),
                 )
             }
-            HorizontalDivider(modifier = Modifier.padding(vertical = Dimens.padding_large))
+            HorizontalDivider(
+                modifier = Modifier.padding(vertical = Dimens.padding_extra_large),
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f),
+            )
             RelatedContentSection(items = related, onOpen = onOpenRelated)
             Spacer(modifier = Modifier.height(Dimens.size_120))
         }

@@ -37,6 +37,9 @@ import cafe.adriel.voyager.kodein.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.flow.collectLatest
+import org.jetbrains.compose.resources.stringResource
+import thread.feature_forum.generated.resources.Res
+import thread.feature_forum.generated.resources.eyebrow_identities
 class UserPage : Screen {
 
     @Composable
@@ -63,7 +66,7 @@ class UserPage : Screen {
 
         ThreadDetailScaffold(
             title = "用户中心",
-            eyebrow = "IDENTITIES",
+            eyebrow = stringResource(Res.string.eyebrow_identities),
             subtitle = "管理当前来源的登录身份 · $sourceId",
             onBack = navigator::pop,
             snackbarHost = { SnackbarHost(snackbarHostState) },

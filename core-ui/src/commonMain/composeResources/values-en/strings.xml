@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Thread</string>
+    <string name="title">Thread</string>
+    <string name="core_ui_loading_wording">Loading…</string>
+    <string name="core_ui_list_loading_wording">Loading list…</string>
+    <string name="core_ui_no_internet_retry">Retry</string>
+    <string name="core_ui_net_un_connect">Network error</string>
+    <string name="core_ui_server_error">Server error</string>
+    <string name="core_ui_net_un_connect_and_retry">Check your connection and try again</string>
+    <string name="core_ui_server_busy">Server busy, try again later</string>
+</resources>

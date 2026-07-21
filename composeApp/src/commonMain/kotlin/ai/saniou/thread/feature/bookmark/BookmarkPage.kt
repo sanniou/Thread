@@ -4,6 +4,7 @@ import ai.saniou.coreui.widgets.NetworkImage
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.ContextHero
 import ai.saniou.coreui.widgets.ModernEmptyState
+import ai.saniou.coreui.widgets.SaniouTextButton
 import ai.saniou.coreui.widgets.ThreadCommandBar
 import ai.saniou.coreui.widgets.ThreadContentColumn
 import ai.saniou.coreui.widgets.ThreadPage
@@ -73,9 +74,7 @@ object BookmarkPage : Screen {
                                 Icon(Icons.Default.Close, contentDescription = "退出选择")
                             }
                         } else {
-                            TextButton(onClick = { viewModel.onEvent(BookmarkContract.Event.ToggleSelectionMode) }) {
-                                Text("编辑")
-                            }
+                            SaniouTextButton(onClick = { viewModel.onEvent(BookmarkContract.Event.ToggleSelectionMode) }, text = "编辑")
                         }
                     },
                 )

@@ -108,7 +108,7 @@ object OperationsPage : Screen {
                 item {
                     PageHeader(
                         title = "来源运维",
-                        eyebrow = "OPERATIONS",
+                        eyebrow = "来源健康",
                         subtitle = "连接器健康、缓存覆盖与刷新诊断集中在一个可恢复工作区",
                         actions = {
                             SaniouOutlinedButton(

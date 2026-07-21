@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.29.0 - 2026-07-22
+
+Product polish wave (0.26–0.29): de-console copy, cache story, empty workspace and quiet reading motion.
+
+- **0.26 De-console**: human-case Chinese eyebrows on forum secondary pages; residual Material buttons moved to the `SaniouButton` family (Post dice insert, Bookmark edit, ZoomImage, list cache CTA).
+- **0.26 i18n**: forum product strings for eyebrows / empty workspace / cache banner; `values-en` added for `feature-forum` and `core-ui` so English locale falls back cleanly.
+- **0.27 Cache story**: Forum Channel shows `CacheStatusBanner` with retry + “查看健康”; session destination updates let App shell navigate to Operations without feature→shell coupling.
+- **0.28 Empty workspace**: no forum sources → add source / import backup CTAs; Source Manager empty state; Reader empty state offers add-subscription; Feed empty explains missing sources and refresh.
+- **0.29 Reading rhythm**: article detail quieter dividers and denser reading spacing; Reader list-detail preview enters with `threadTweenSpec`; topic cards honor soft content-size motion.
+- Desktop gates: compileKotlinJvm (core-ui / forum / reader / feed / composeApp) and jvmTest (domain / data / ui / composeApp).
+
 ## 0.25.0 - 2026-07-22
 
 Experience deep-dive second wave: forum secondary paths, cache visualization and quiet motion.

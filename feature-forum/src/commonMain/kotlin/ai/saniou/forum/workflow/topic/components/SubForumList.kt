@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -22,6 +21,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import org.jetbrains.compose.resources.stringResource
+import thread.feature_forum.generated.resources.Res
+import thread.feature_forum.generated.resources.label_sub_channels
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -35,7 +37,7 @@ fun SubForumList(
 
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
-            text = "SUB-CHANNELS",
+            text = stringResource(Res.string.label_sub_channels),
             style = MaterialTheme.typography.labelSmall,
             fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
