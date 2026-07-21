@@ -18,6 +18,7 @@ import com.multiplatform.webview.web.rememberWebViewState
 import org.jetbrains.compose.resources.stringResource
 import thread.feature_forum.generated.resources.Res
 import thread.feature_forum.generated.resources.eyebrow_secure_login
+import thread.feature_forum.generated.resources.s_e16cc8bcd0
 
 @Composable
 fun LoginWebView(
@@ -43,7 +44,7 @@ fun LoginWebView(
     }
 
     ThreadDetailScaffold(
-        title = "网页登录",
+        title = stringResource(Res.string.s_e16cc8bcd0),
         eyebrow = stringResource(Res.string.eyebrow_secure_login),
         subtitle = strategy.url,
         onBack = onDismissRequest,

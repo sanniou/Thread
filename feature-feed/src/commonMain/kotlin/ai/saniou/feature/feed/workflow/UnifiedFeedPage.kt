@@ -95,6 +95,34 @@ import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.stringResource
+import thread.feature_feed.generated.resources.Res
+import thread.feature_feed.generated.resources.s_16dbcf21a4
+import thread.feature_feed.generated.resources.s_246b5aebf6
+import thread.feature_feed.generated.resources.s_274a1a8d2e
+import thread.feature_feed.generated.resources.s_38108eaa1d
+import thread.feature_feed.generated.resources.s_3e14c19001
+import thread.feature_feed.generated.resources.s_53a0111222
+import thread.feature_feed.generated.resources.s_5b60fee8a5
+import thread.feature_feed.generated.resources.s_65ee1f4b65
+import thread.feature_feed.generated.resources.s_6aecb04c5c
+import thread.feature_feed.generated.resources.s_6fd70bcc6e
+import thread.feature_feed.generated.resources.s_750ec0e335
+import thread.feature_feed.generated.resources.s_82fe3557c1
+import thread.feature_feed.generated.resources.s_89f66ab502
+import thread.feature_feed.generated.resources.s_8d5c61c2aa
+import thread.feature_feed.generated.resources.s_924ce8c469
+import thread.feature_feed.generated.resources.s_ae1913973c
+import thread.feature_feed.generated.resources.s_b372dd3411
+import thread.feature_feed.generated.resources.s_cec000d0c0
+import thread.feature_feed.generated.resources.s_d1be8ec160
+import thread.feature_feed.generated.resources.s_db3bdb19bb
+import thread.feature_feed.generated.resources.s_e45f66052e
+import thread.feature_feed.generated.resources.s_f0e21f6e0f
+import thread.feature_feed.generated.resources.s_f675ecc2a1
+import thread.feature_feed.generated.resources.s_f82f565394
+import thread.feature_feed.generated.resources.s_ffa27be6da
+import thread.feature_feed.generated.resources.s_ffc7247056
 
 @Composable
 fun UnifiedFeedPage(
@@ -166,12 +194,12 @@ private fun FeedFilterDrawer(
     Column(modifier = Modifier.fillMaxSize()) {
         SidebarHeader(
             icon = Icons.Default.DynamicFeed,
-            title = "聚合动态",
-            subtitle = "$selectionCount 个内容范围",
+            title = stringResource(Res.string.s_16dbcf21a4),
+            subtitle = stringResource(Res.string.s_ffa27be6da, selectionCount),
         )
 
         AppDrawerItem(
-            label = "全部论坛来源",
+            label = stringResource(Res.string.s_53a0111222),
             icon = Icons.Default.Checklist,
             selected = state.sources.isNotEmpty() && state.selectedSourceIds.size == state.sources.size,
             onClick = { onEvent(FeedContract.Event.SelectAllSources) },
@@ -180,7 +208,7 @@ private fun FeedFilterDrawer(
         if (state.socialSources.isNotEmpty()) {
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
             AppDrawerItem(
-                label = "开放社交时间线",
+                label = stringResource(Res.string.s_5b60fee8a5),
                 icon = Icons.Default.Public,
                 selected = state.includeSocial,
                 onClick = { onEvent(FeedContract.Event.ToggleSocial) },
@@ -202,7 +230,7 @@ private fun FeedFilterDrawer(
             }
         }
         AppDrawerItem(
-            label = "仅保留阅读器",
+            label = stringResource(Res.string.s_65ee1f4b65),
             icon = Icons.Default.ClearAll,
             selected = state.selectedSourceIds.isEmpty(),
             onClick = { onEvent(FeedContract.Event.ClearForumSources) },
@@ -225,7 +253,7 @@ private fun FeedFilterDrawer(
             )
         }
         AppDrawerItem(
-            label = "RSS / Atom 阅读器",
+            label = stringResource(Res.string.s_246b5aebf6),
             icon = Icons.Default.RssFeed,
             selected = state.includeReader,
             onClick = { onEvent(FeedContract.Event.ToggleReader) },
@@ -269,9 +297,9 @@ private fun FeedScaffold(
         ) {
             ContextHero(
                 icon = Icons.Default.DynamicFeed,
-                title = "聚合信息流",
-                subtitle = "论坛、订阅文章与开放社交动态，合并为一条可控时间线",
-                metric = "$selectionCount 个范围",
+                title = stringResource(Res.string.s_ae1913973c),
+                subtitle = stringResource(Res.string.s_750ec0e335),
+                metric = stringResource(Res.string.s_f82f565394, selectionCount),
                 modifier = Modifier.fillMaxWidth().widthIn(max = Dimens.contentMaxWidth)
                     .padding(
                         horizontal = LocalThreadWindowInfo.current.pageHorizontalPadding,
@@ -280,14 +308,14 @@ private fun FeedScaffold(
                 actions = {
                     if (showMenu) {
                         IconButton(onClick = onMenu) {
-                            Icon(Icons.Default.Menu, contentDescription = "筛选来源")
+                            Icon(Icons.Default.Menu, contentDescription = stringResource(Res.string.s_3e14c19001))
                         }
                     }
                     if (state.isRefreshing) {
                         CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
                     } else {
                         IconButton(onClick = onRefresh) {
-                            Icon(Icons.Default.Refresh, contentDescription = "刷新")
+                            Icon(Icons.Default.Refresh, contentDescription = stringResource(Res.string.s_38108eaa1d))
                         }
                     }
                 },
@@ -298,14 +326,14 @@ private fun FeedScaffold(
                 else -> CacheStatusTone.CACHED
             }
             val cacheTitle = when (cacheTone) {
-                CacheStatusTone.REFRESHING -> "正在同步最新内容"
-                CacheStatusTone.STALE -> "本地缓存仍可阅读"
-                else -> "缓存优先 · 本地先展示"
+                CacheStatusTone.REFRESHING -> stringResource(Res.string.s_ffc7247056)
+                CacheStatusTone.STALE -> stringResource(Res.string.s_e45f66052e)
+                else -> stringResource(Res.string.s_f0e21f6e0f)
             }
             val cacheDetail = when (cacheTone) {
-                CacheStatusTone.REFRESHING -> "刷新不会清空现有时间线"
-                CacheStatusTone.STALE -> "${state.refreshFailures.size} 个来源暂未更新，已隔离失败源"
-                else -> "下拉或点击刷新以拉取论坛 / 订阅 / 社交"
+                CacheStatusTone.REFRESHING -> stringResource(Res.string.s_cec000d0c0)
+                CacheStatusTone.STALE -> stringResource(Res.string.s_274a1a8d2e, state.refreshFailures.size)
+                else -> stringResource(Res.string.s_89f66ab502)
             }
             CacheStatusBanner(
                 title = cacheTitle,
@@ -400,7 +428,7 @@ private fun FeedScaffold(
                                 Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                                     SaniouTextButton(
                                         onClick = { onEvent(FeedContract.Event.LoadOlderSocial) },
-                                        text = "载入更早的社交动态",
+                                        text = stringResource(Res.string.s_924ce8c469),
                                     )
                                 }
                             }
@@ -543,7 +571,7 @@ private fun TimelinePostCard(
             )
             Spacer(Modifier.height(12.dp))
             Text(
-                text = "${topic.author.name} · ${topic.commentCount} 条回复",
+                text = stringResource(Res.string.s_82fe3557c1, topic.author.name, topic.commentCount),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -560,19 +588,19 @@ private fun FeedEmptyState(
     ModernEmptyState(
         icon = Icons.Default.DynamicFeed,
         title = when {
-            !hasAnySource -> "工作区还没有内容源"
-            hasSelection -> "时间线暂时为空"
-            else -> "还没有选择内容范围"
+            !hasAnySource -> stringResource(Res.string.s_b372dd3411)
+            hasSelection -> stringResource(Res.string.s_6aecb04c5c)
+            else -> stringResource(Res.string.s_db3bdb19bb)
         },
         description = when {
-            !hasAnySource -> "先在社区添加论坛来源，或在阅读器添加订阅，再回到动态聚合。"
-            hasSelection -> "刷新来源，或在左侧调整聚合范围。"
-            else -> "从左侧选择论坛、阅读器或社交来源。"
+            !hasAnySource -> stringResource(Res.string.s_8d5c61c2aa)
+            hasSelection -> stringResource(Res.string.s_6fd70bcc6e)
+            else -> stringResource(Res.string.s_d1be8ec160)
         },
         modifier = modifier,
         action = if (hasSelection) {
             {
-                SaniouButton(onClick = onRefresh, text = "刷新时间线")
+                SaniouButton(onClick = onRefresh, text = stringResource(Res.string.s_f675ecc2a1))
             }
         } else null,
     )

@@ -82,6 +82,11 @@ import thread.feature_forum.generated.resources.topic_page_menu
 import thread.feature_forum.generated.resources.topic_page_post
 import thread.feature_forum.generated.resources.topic_page_thread_count
 import thread.feature_forum.generated.resources.topic_page_user_center
+import thread.feature_forum.generated.resources.s_2dea05f2e9
+import thread.feature_forum.generated.resources.s_934aa9569f
+import thread.feature_forum.generated.resources.s_adbcf07716
+import thread.feature_forum.generated.resources.s_b8d72b4268
+import thread.feature_forum.generated.resources.s_c7ca62cbf8
 
 data class TopicPage(
     val forumId: String,
@@ -156,17 +161,17 @@ data class TopicPage(
 
         val channelDetail = (state.channelDetail as? UiStateWrapper.Success)?.value
         ThreadDetailScaffold(
-            title = state.channelName.ifBlank { "社区板块" },
+            title = state.channelName.ifBlank { stringResource(Res.string.s_2dea05f2e9) },
             eyebrow = stringResource(Res.string.eyebrow_forum_channel),
             subtitle = channelDetail?.let { detail ->
                 buildString {
-                    detail.topicCount?.let { append("$it 个主题") }
+                    detail.topicCount?.let { append(stringResource(Res.string.s_adbcf07716, it)) }
                     detail.interval?.let {
                         if (isNotEmpty()) append(" · ")
-                        append("$it 秒刷新间隔")
+                        append(stringResource(Res.string.s_c7ca62cbf8, it))
                     }
-                }.ifBlank { "主题、规则与子版块" }
-            } ?: "主题、规则与子版块",
+                }.ifBlank { stringResource(Res.string.s_b8d72b4268) }
+            } ?: stringResource(Res.string.s_b8d72b4268),
             onBack = navigator::pop,
             modifier = Modifier
                 .nestedScroll(fabNestedScrollConnection)
@@ -274,7 +279,7 @@ data class TopicPage(
                                 icon = Icons.Default.Forum,
                                 title = state.channelName,
                                 subtitle = detail.description.replace(Regex("<[^>]*>"), "").trim()
-                                    .ifBlank { "浏览最新主题并参与讨论" },
+                                    .ifBlank { stringResource(Res.string.s_934aa9569f) },
                                 metric = "${detail.topicCount ?: threads.itemCount} THREADS",
                             )
 

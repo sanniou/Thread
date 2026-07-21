@@ -93,6 +93,36 @@ import org.kodein.di.compose.localDI
 import org.kodein.di.direct
 import org.kodein.di.instance
 import kotlin.time.Instant
+import org.jetbrains.compose.resources.stringResource
+import thread.composeapp.generated.resources.Res
+import thread.composeapp.generated.resources.s_0b46d8806e
+import thread.composeapp.generated.resources.s_0f436818c0
+import thread.composeapp.generated.resources.s_109d57e951
+import thread.composeapp.generated.resources.s_149b3c638f
+import thread.composeapp.generated.resources.s_1f425b6bf0
+import thread.composeapp.generated.resources.s_1fc1afc5c5
+import thread.composeapp.generated.resources.s_28febba225
+import thread.composeapp.generated.resources.s_35405c37e2
+import thread.composeapp.generated.resources.s_39f95e3775
+import thread.composeapp.generated.resources.s_3f7b376d3e
+import thread.composeapp.generated.resources.s_45ad45848d
+import thread.composeapp.generated.resources.s_4d0b4688c7
+import thread.composeapp.generated.resources.s_4edd1d0087
+import thread.composeapp.generated.resources.s_62e27e2865
+import thread.composeapp.generated.resources.s_65fc81e161
+import thread.composeapp.generated.resources.s_6c14bd7f6f
+import thread.composeapp.generated.resources.s_7cac745e03
+import thread.composeapp.generated.resources.s_8a6e4f192f
+import thread.composeapp.generated.resources.s_ab0a804137
+import thread.composeapp.generated.resources.s_abd3040b73
+import thread.composeapp.generated.resources.s_afa43bc96e
+import thread.composeapp.generated.resources.s_b2548636f0
+import thread.composeapp.generated.resources.s_c840cbecba
+import thread.composeapp.generated.resources.s_d2ade1f772
+import thread.composeapp.generated.resources.s_d84129b8be
+import thread.composeapp.generated.resources.s_e99b48a29b
+import thread.composeapp.generated.resources.s_ea4899468c
+import thread.composeapp.generated.resources.s_ed5909bac1
 
 object ActivityCenterPage : Screen {
     @Composable
@@ -137,14 +167,14 @@ object ActivityCenterPage : Screen {
             ) {
                 item {
                     PageHeader(
-                        eyebrow = "活动",
-                        title = "活动中心",
-                        subtitle = "刷新、身份、草稿与数据迁移共享一条可恢复的跨平台任务流。",
+                        eyebrow = stringResource(Res.string.s_b2548636f0),
+                        title = stringResource(Res.string.s_109d57e951),
+                        subtitle = stringResource(Res.string.s_39f95e3775),
                         actions = {
                             SaniouTextButton(onClick = { viewModel.onEvent(Event.ClearCompleted) }) {
                                 Icon(Icons.Default.DeleteOutline, null)
                                 Spacer(Modifier.width(6.dp))
-                                Text("清理已完成")
+                                Text(stringResource(Res.string.s_149b3c638f))
                             }
                         },
                     )
@@ -152,11 +182,11 @@ object ActivityCenterPage : Screen {
                 item {
                     ContextHero(
                         title = if (state.snapshot.actionRequiredCount + state.snapshot.failedCount == 0) {
-                            "所有工作流均可继续"
+                            stringResource(Res.string.s_0b46d8806e)
                         } else {
-                            "${state.snapshot.actionRequiredCount + state.snapshot.failedCount} 项需要处理"
+                            stringResource(Res.string.s_ab0a804137, state.snapshot.actionRequiredCount + state.snapshot.failedCount)
                         },
-                        subtitle = "后台动作采用冲突域串行化；进程中断的任务会显式转为可重试状态。",
+                        subtitle = stringResource(Res.string.s_c840cbecba),
                         icon = Icons.Default.NotificationsActive,
                     )
                 }
@@ -174,7 +204,7 @@ object ActivityCenterPage : Screen {
                         onValueChange = { viewModel.onEvent(Event.QueryChanged(it)) },
                         modifier = Modifier.fillMaxWidth(),
                         leadingIcon = { Icon(Icons.Default.Search, null) },
-                        placeholder = { Text("筛选来源、任务或草稿…") },
+                        placeholder = { Text(stringResource(Res.string.s_8a6e4f192f)) },
                         singleLine = true,
                     )
                 }
@@ -195,8 +225,8 @@ object ActivityCenterPage : Screen {
                     item {
                         ThreadCard(Modifier.fillMaxWidth()) {
                             Icon(Icons.Default.CheckCircle, null, tint = MaterialTheme.colorScheme.primary)
-                            Text("当前视图没有活动", style = MaterialTheme.typography.titleMedium)
-                            Text("新的刷新、认证、草稿和数据任务会自动出现在这里。", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(stringResource(Res.string.s_62e27e2865), style = MaterialTheme.typography.titleMedium)
+                            Text(stringResource(Res.string.s_35405c37e2), color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 } else {
@@ -218,25 +248,25 @@ object ActivityCenterPage : Screen {
             AlertDialog(
                 onDismissRequest = { viewModel.onEvent(Event.DismissDangerAction) },
                 icon = { Icon(Icons.Default.Warning, null) },
-                title = { Text(if (request.danger == ProductActionDanger.DESTRUCTIVE) "确认永久操作" else "确认数据变更") },
+                title = { Text(if (request.danger == ProductActionDanger.DESTRUCTIVE) stringResource(Res.string.s_7cac745e03) else stringResource(Res.string.s_abd3040b73)) },
                 text = { Text(request.confirmationText()) },
                 confirmButton = {
                     if (request.danger == ProductActionDanger.DESTRUCTIVE) {
                         SaniouDangerButton(
                             onClick = { viewModel.onEvent(Event.ConfirmDangerAction) },
-                            text = "继续",
+                            text = stringResource(Res.string.s_1fc1afc5c5),
                         )
                     } else {
                         SaniouButton(
                             onClick = { viewModel.onEvent(Event.ConfirmDangerAction) },
-                            text = "继续",
+                            text = stringResource(Res.string.s_1fc1afc5c5),
                         )
                     }
                 },
                 dismissButton = {
                     SaniouTextButton(
                         onClick = { viewModel.onEvent(Event.DismissDangerAction) },
-                        text = "取消",
+                        text = stringResource(Res.string.s_4d0b4688c7),
                     )
                 },
             )
@@ -245,10 +275,10 @@ object ActivityCenterPage : Screen {
         state.outputPayload?.let { payload ->
             AdaptiveModal(
                 onDismissRequest = { viewModel.onEvent(Event.DismissOutput) },
-                paneTitle = state.outputTitle ?: "动作输出",
+                paneTitle = state.outputTitle ?: stringResource(Res.string.s_d2ade1f772),
             ) {
                 Column(Modifier.fillMaxWidth().padding(22.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                    Text("可复制输出", style = MaterialTheme.typography.headlineSmall)
+                    Text(stringResource(Res.string.s_afa43bc96e), style = MaterialTheme.typography.headlineSmall)
                     Surface(
                         color = MaterialTheme.colorScheme.surfaceContainer,
                         shape = MaterialTheme.shapes.large,
@@ -265,7 +295,7 @@ object ActivityCenterPage : Screen {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                         SaniouTextButton(
                             onClick = { viewModel.onEvent(Event.DismissOutput) },
-                            text = "关闭",
+                            text = stringResource(Res.string.s_6c14bd7f6f),
                         )
                         SaniouButton(onClick = {
                             clipboard.copyText(payload)
@@ -273,7 +303,7 @@ object ActivityCenterPage : Screen {
                         }) {
                             Icon(Icons.Default.ContentCopy, null)
                             Spacer(Modifier.width(6.dp))
-                            Text("复制")
+                            Text(stringResource(Res.string.s_4edd1d0087))
                         }
                     }
                 }
@@ -285,10 +315,10 @@ object ActivityCenterPage : Screen {
 @Composable
 private fun ActivityMetrics(running: Int, attention: Int, drafts: Int, completed: Int) {
     FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        ActivityMetric("执行中", running, Icons.Default.Sync, MaterialTheme.colorScheme.primary)
-        ActivityMetric("需处理", attention, Icons.Default.ErrorOutline, MaterialTheme.colorScheme.error)
-        ActivityMetric("草稿", drafts, Icons.Default.EditNote, MaterialTheme.colorScheme.tertiary)
-        ActivityMetric("已完成", completed, Icons.Default.History, MaterialTheme.colorScheme.secondary)
+        ActivityMetric(stringResource(Res.string.s_1f425b6bf0), running, Icons.Default.Sync, MaterialTheme.colorScheme.primary)
+        ActivityMetric(stringResource(Res.string.s_ed5909bac1), attention, Icons.Default.ErrorOutline, MaterialTheme.colorScheme.error)
+        ActivityMetric(stringResource(Res.string.s_0f436818c0), drafts, Icons.Default.EditNote, MaterialTheme.colorScheme.tertiary)
+        ActivityMetric(stringResource(Res.string.s_e99b48a29b), completed, Icons.Default.History, MaterialTheme.colorScheme.secondary)
     }
 }
 
@@ -352,14 +382,14 @@ private fun ActivityCard(
                 SaniouTextButton(
                     onClick = { onExecute(action) },
                     enabled = action.conflictKey != item.primaryAction?.conflictKey || !working,
-                    text = if (action.type == ProductActionType.DISCARD_DRAFT) "丢弃" else "忽略",
+                    text = if (action.type == ProductActionType.DISCARD_DRAFT) stringResource(Res.string.s_ea4899468c) else stringResource(Res.string.s_d84129b8be),
                 )
             }
             if (item.deepLink != null) {
                 SaniouOutlinedButton(onClick = onOpen) {
                     Icon(if (item.kind == ActivityKind.DRAFT) Icons.Default.EditNote else Icons.AutoMirrored.Filled.OpenInNew, null)
                     Spacer(Modifier.width(6.dp))
-                    Text(if (item.kind == ActivityKind.DRAFT) "继续" else "打开")
+                    Text(if (item.kind == ActivityKind.DRAFT) stringResource(Res.string.s_1fc1afc5c5) else stringResource(Res.string.s_65fc81e161))
                 }
             }
             item.primaryAction?.let { action ->
@@ -371,7 +401,7 @@ private fun ActivityCard(
                 ) {
                     Icon(Icons.Default.Refresh, null)
                     Spacer(Modifier.width(6.dp))
-                    Text("执行")
+                    Text(stringResource(Res.string.s_28febba225))
                 }
             }
         }
@@ -382,8 +412,8 @@ private fun ActivityCard(
 private fun IdentityStrip(identities: List<ai.saniou.thread.domain.model.activity.SourceIdentityStatus>) {
     if (identities.none { it.supportsLogin }) return
     ThreadCard(Modifier.fillMaxWidth()) {
-        Text("来源身份", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-        Text("身份状态不再从异常文案临时推断；刷新与登录只更新这一份显式事实。", color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(stringResource(Res.string.s_45ad45848d), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+        Text(stringResource(Res.string.s_3f7b376d3e), color = MaterialTheme.colorScheme.onSurfaceVariant)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             identities.filter { it.supportsLogin }.forEach { identity ->
                 Surface(color = MaterialTheme.colorScheme.surfaceContainerHigh, shape = MaterialTheme.shapes.extraLarge) {

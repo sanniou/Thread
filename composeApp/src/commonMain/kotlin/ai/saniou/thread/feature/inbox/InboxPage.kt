@@ -80,6 +80,33 @@ import kotlinx.coroutines.launch
 import org.kodein.di.compose.localDI
 import org.kodein.di.direct
 import org.kodein.di.instance
+import org.jetbrains.compose.resources.stringResource
+import thread.composeapp.generated.resources.Res
+import thread.composeapp.generated.resources.s_1a0ea4638c
+import thread.composeapp.generated.resources.s_1e230aa201
+import thread.composeapp.generated.resources.s_26fdb68077
+import thread.composeapp.generated.resources.s_342dc7b5e9
+import thread.composeapp.generated.resources.s_3c0aaf62db
+import thread.composeapp.generated.resources.s_41ca4f4fa4
+import thread.composeapp.generated.resources.s_5274a19b11
+import thread.composeapp.generated.resources.s_557ee228de
+import thread.composeapp.generated.resources.s_64d2bc34d9
+import thread.composeapp.generated.resources.s_778fc8f994
+import thread.composeapp.generated.resources.s_7f0d5ec20d
+import thread.composeapp.generated.resources.s_862ebc4065
+import thread.composeapp.generated.resources.s_ac210d6e7d
+import thread.composeapp.generated.resources.s_afdbd1ddec
+import thread.composeapp.generated.resources.s_b1971f6896
+import thread.composeapp.generated.resources.s_c4856b8590
+import thread.composeapp.generated.resources.s_c63f79e636
+import thread.composeapp.generated.resources.s_ccb91c07d7
+import thread.composeapp.generated.resources.s_cd83e6e100
+import thread.composeapp.generated.resources.s_d01a73e67b
+import thread.composeapp.generated.resources.s_d37c67c75a
+import thread.composeapp.generated.resources.s_e2d53a6d3a
+import thread.composeapp.generated.resources.s_f5d9c71552
+import thread.composeapp.generated.resources.s_f86d4f875a
+import thread.composeapp.generated.resources.s_f8d22fd22e
 
 object InboxPage : Screen {
     @Composable
@@ -139,22 +166,22 @@ object InboxPage : Screen {
             ) {
                 item {
                     PageHeader(
-                        eyebrow = "收件箱",
-                        title = "通知收件箱",
-                        subtitle = "公告、回复、订阅和 Reader 更新共用一条可筛选、可静音、离线优先的时间线。",
+                        eyebrow = stringResource(Res.string.s_cd83e6e100),
+                        title = stringResource(Res.string.s_7f0d5ec20d),
+                        subtitle = stringResource(Res.string.s_862ebc4065),
                         actions = {
                             SaniouTextButton(onClick = { viewModel.onEvent(Event.MarkAllRead) }) {
                                 Icon(Icons.Default.DoneAll, null)
                                 Spacer(Modifier.width(6.dp))
-                                Text("全部已读")
+                                Text(stringResource(Res.string.s_ac210d6e7d))
                             }
                         },
                     )
                 }
                 item {
                     ContextHero(
-                        title = if (state.summary.unread == 0) "收件箱已清空" else "${state.summary.unread} 条未读更新",
-                        subtitle = "共 ${state.summary.total} 条，${state.summary.muted} 条来自静音来源；所有计数由 SQLDelight 实时驱动。",
+                        title = if (state.summary.unread == 0) stringResource(Res.string.s_f5d9c71552) else stringResource(Res.string.s_f86d4f875a, state.summary.unread),
+                        subtitle = stringResource(Res.string.s_26fdb68077, state.summary.total, state.summary.muted),
                         icon = if (state.summary.unread == 0) Icons.Default.CheckCircle else Icons.Default.Notifications,
                     )
                 }
@@ -167,7 +194,7 @@ object InboxPage : Screen {
                         onValueChange = { viewModel.onEvent(Event.QueryChanged(it)) },
                         modifier = Modifier.fillMaxWidth(),
                         leadingIcon = { Icon(Icons.Default.Search, null) },
-                        placeholder = { Text("搜索通知标题或摘要…") },
+                        placeholder = { Text(stringResource(Res.string.s_557ee228de)) },
                         singleLine = true,
                     )
                 }
@@ -176,12 +203,12 @@ object InboxPage : Screen {
                         FilterChip(
                             selected = state.filter.unreadOnly,
                             onClick = { viewModel.onEvent(Event.UnreadOnlyChanged(!state.filter.unreadOnly)) },
-                            label = { Text("仅未读") },
+                            label = { Text(stringResource(Res.string.s_342dc7b5e9)) },
                         )
                         FilterChip(
                             selected = state.filter.includeMuted,
                             onClick = { viewModel.onEvent(Event.IncludeMutedChanged(!state.filter.includeMuted)) },
-                            label = { Text("显示静音") },
+                            label = { Text(stringResource(Res.string.s_3c0aaf62db)) },
                         )
                         InboxKind.entries.forEach { kind ->
                             FilterChip(
@@ -197,7 +224,7 @@ object InboxPage : Screen {
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             AssistChip(
                                 onClick = { viewModel.onEvent(Event.SourceChanged(null)) },
-                                label = { Text("全部来源") },
+                                label = { Text(stringResource(Res.string.s_f8d22fd22e)) },
                             )
                             state.summary.sourceCounts.forEach { source ->
                                 AssistChip(
@@ -215,16 +242,16 @@ object InboxPage : Screen {
                     }
                     is LoadState.Error -> item {
                         ThreadCard(Modifier.fillMaxWidth()) {
-                            Text("无法读取收件箱", style = MaterialTheme.typography.titleMedium)
-                            Text(refresh.error.message ?: "数据库分页失败", color = MaterialTheme.colorScheme.error)
-                            SaniouButton(onClick = inbox::retry, text = "重试")
+                            Text(stringResource(Res.string.s_d37c67c75a), style = MaterialTheme.typography.titleMedium)
+                            Text(refresh.error.message ?: stringResource(Res.string.s_d01a73e67b), color = MaterialTheme.colorScheme.error)
+                            SaniouButton(onClick = inbox::retry, text = stringResource(Res.string.s_e2d53a6d3a))
                         }
                     }
                     else -> if (inbox.itemCount == 0) item {
                         ThreadCard(Modifier.fillMaxWidth()) {
                             Icon(Icons.Default.MarkEmailRead, null, tint = MaterialTheme.colorScheme.primary)
-                            Text("当前筛选下没有通知", style = MaterialTheme.typography.titleMedium)
-                            Text("刷新 Reader 或收到社区更新后，新事件会自动汇入这里。", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(stringResource(Res.string.s_ccb91c07d7), style = MaterialTheme.typography.titleMedium)
+                            Text(stringResource(Res.string.s_41ca4f4fa4), color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }
@@ -257,7 +284,7 @@ object InboxPage : Screen {
 @Composable
 private fun InboxMetrics(total: Int, unread: Int, sources: Int, muted: Int) {
     FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        listOf("全部" to total, "未读" to unread, "来源" to sources, "静音" to muted).forEach { (label, value) ->
+        listOf(stringResource(Res.string.s_778fc8f994) to total, stringResource(Res.string.s_1e230aa201) to unread, stringResource(Res.string.s_c63f79e636) to sources, stringResource(Res.string.s_afdbd1ddec) to muted).forEach { (label, value) ->
             Surface(color = MaterialTheme.colorScheme.surfaceContainerHigh, shape = MaterialTheme.shapes.large) {
                 Column(Modifier.padding(horizontal = 18.dp, vertical = 12.dp)) {
                     Text(value.toString(), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
@@ -314,12 +341,12 @@ private fun InboxEventCard(
             }
             Column {
                 IconButton(onClick = onToggleRead) {
-                    Icon(if (event.isRead) Icons.Default.Notifications else Icons.Default.MarkEmailRead, if (event.isRead) "标为未读" else "标为已读")
+                    Icon(if (event.isRead) Icons.Default.Notifications else Icons.Default.MarkEmailRead, if (event.isRead) stringResource(Res.string.s_64d2bc34d9) else stringResource(Res.string.s_b1971f6896))
                 }
                 IconButton(onClick = onToggleMute) {
-                    Icon(if (event.muted) Icons.AutoMirrored.Filled.VolumeUp else Icons.AutoMirrored.Filled.VolumeOff, if (event.muted) "取消静音来源" else "静音来源")
+                    Icon(if (event.muted) Icons.AutoMirrored.Filled.VolumeUp else Icons.AutoMirrored.Filled.VolumeOff, if (event.muted) stringResource(Res.string.s_c4856b8590) else stringResource(Res.string.s_1a0ea4638c))
                 }
-                IconButton(onClick = onDelete) { Icon(Icons.Default.DeleteOutline, "删除通知") }
+                IconButton(onClick = onDelete) { Icon(Icons.Default.DeleteOutline, stringResource(Res.string.s_5274a19b11)) }
             }
         }
     }

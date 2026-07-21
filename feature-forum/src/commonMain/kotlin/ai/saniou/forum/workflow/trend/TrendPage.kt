@@ -77,6 +77,15 @@ import org.kodein.di.instance
 import org.jetbrains.compose.resources.stringResource
 import thread.feature_forum.generated.resources.Res
 import thread.feature_forum.generated.resources.eyebrow_forum_trend
+import thread.feature_forum.generated.resources.post_page_back
+import thread.feature_forum.generated.resources.refresh
+import thread.feature_forum.generated.resources.s_2af1650958
+import thread.feature_forum.generated.resources.s_56edba4cd0
+import thread.feature_forum.generated.resources.s_8e6904cf83
+import thread.feature_forum.generated.resources.s_a416165e7f
+import thread.feature_forum.generated.resources.s_a5db624e92
+import thread.feature_forum.generated.resources.s_de25657601
+import thread.feature_forum.generated.resources.s_dede7b4ef6
 
 data class TrendPage(
     val onMenuClick: (() -> Unit)? = null,
@@ -130,23 +139,23 @@ data class TrendPage(
         }
 
         ThreadDetailScaffold(
-            title = state.selectedSource?.name ?: "趋势",
+            title = state.selectedSource?.name ?: stringResource(Res.string.eyebrow_forum_trend),
             eyebrow = stringResource(Res.string.eyebrow_forum_trend),
             subtitle = if (state.selectedTab?.supportsHistory == true) {
-                if (state.trendParams.dayOffset == 0) "今天 · ${state.selectedTab?.name.orEmpty()}"
-                else "${state.trendParams.dayOffset} 天前 · ${state.selectedTab?.name.orEmpty()}"
+                if (state.trendParams.dayOffset == 0) stringResource(Res.string.s_a5db624e92, state.selectedTab?.name.orEmpty())
+                else stringResource(Res.string.s_56edba4cd0, state.trendParams.dayOffset, state.selectedTab?.name.orEmpty())
             } else {
-                state.selectedTab?.name ?: "跨来源热门讨论"
+                state.selectedTab?.name ?: stringResource(Res.string.s_8e6904cf83)
             },
             onBack = navigator::pop,
             navigationIcon = {
                 if (onMenuClick != null) {
                     IconButton(onClick = onMenuClick) {
-                        Icon(Icons.Default.Menu, contentDescription = "打开社区导航")
+                        Icon(Icons.Default.Menu, contentDescription = stringResource(Res.string.s_2af1650958))
                     }
                 } else {
                     IconButton(onClick = navigator::pop) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(Res.string.post_page_back))
                     }
                 }
             },
@@ -155,7 +164,7 @@ data class TrendPage(
                     var expanded by remember { mutableStateOf(false) }
                     Box {
                         IconButton(onClick = { expanded = true }) {
-                            Icon(Icons.Default.ArrowDropDown, contentDescription = "切换来源")
+                            Icon(Icons.Default.ArrowDropDown, contentDescription = stringResource(Res.string.s_de25657601))
                         }
                         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                             state.availableSources.forEach { source ->
@@ -172,17 +181,17 @@ data class TrendPage(
                 }
                 if (state.selectedTab?.supportsHistory == true) {
                     IconButton(onClick = { viewModel.onEvent(Event.SelectDate(state.trendParams.dayOffset + 1)) }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "前一天")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(Res.string.s_dede7b4ef6))
                     }
                     IconButton(
                         onClick = { viewModel.onEvent(Event.SelectDate(state.trendParams.dayOffset - 1)) },
                         enabled = state.trendParams.dayOffset > 0,
                     ) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "后一天")
+                        Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = stringResource(Res.string.s_a416165e7f))
                     }
                 } else {
                     IconButton(onClick = { viewModel.onEvent(Event.Refresh) }) {
-                        Icon(Icons.Default.Refresh, contentDescription = "刷新")
+                        Icon(Icons.Default.Refresh, contentDescription = stringResource(Res.string.refresh))
                     }
                 }
             },

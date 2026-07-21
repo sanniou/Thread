@@ -56,6 +56,26 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import org.jetbrains.compose.resources.stringResource
 import thread.feature_forum.generated.resources.Res
 import thread.feature_forum.generated.resources.eyebrow_forum_sources
+import thread.feature_forum.generated.resources.s_09ceea7644
+import thread.feature_forum.generated.resources.s_3507ddb87f
+import thread.feature_forum.generated.resources.s_3755f56f2f
+import thread.feature_forum.generated.resources.s_3cf2fddb98
+import thread.feature_forum.generated.resources.s_5fee7d843d
+import thread.feature_forum.generated.resources.s_6780ab7294
+import thread.feature_forum.generated.resources.s_6e04347c1c
+import thread.feature_forum.generated.resources.s_6fe30db879
+import thread.feature_forum.generated.resources.s_753ccc8e2e
+import thread.feature_forum.generated.resources.s_75ae6a8a7d
+import thread.feature_forum.generated.resources.s_7bda6019d9
+import thread.feature_forum.generated.resources.s_96d7780f27
+import thread.feature_forum.generated.resources.s_a7f814c0a4
+import thread.feature_forum.generated.resources.s_ac8895327b
+import thread.feature_forum.generated.resources.s_acc77f9e5b
+import thread.feature_forum.generated.resources.s_ae96a77def
+import thread.feature_forum.generated.resources.s_b4e08a4b66
+import thread.feature_forum.generated.resources.s_bb7f40922f
+import thread.feature_forum.generated.resources.s_fadf24dbc5
+import thread.feature_forum.generated.resources.subscription_cancel
 
 class SourceManagerPage : Screen {
     @OptIn(ExperimentalMaterial3Api::class)
@@ -75,14 +95,14 @@ class SourceManagerPage : Screen {
         }
 
         ThreadDetailScaffold(
-            title = "内容来源",
+            title = stringResource(Res.string.s_6e04347c1c),
             eyebrow = stringResource(Res.string.eyebrow_forum_sources),
-            subtitle = "管理内置连接器和动态 Discourse 实例",
+            subtitle = stringResource(Res.string.s_acc77f9e5b),
             onBack = navigator::pop,
             snackbarHost = { SnackbarHost(snackbar) },
             actions = {
                 IconButton(onClick = { viewModel.onEvent(Event.AddDiscourse) }) {
-                    Icon(Icons.Default.Add, contentDescription = "添加 Discourse")
+                    Icon(Icons.Default.Add, contentDescription = stringResource(Res.string.s_3cf2fddb98))
                 }
             },
         ) { padding ->
@@ -108,21 +128,24 @@ class SourceManagerPage : Screen {
                         item {
                             ContextHero(
                                 icon = Icons.Default.Hub,
-                                title = "开放来源目录",
-                                subtitle = "内置来源可启停；动态实例保存后立即进入运行目录",
-                                metric = "${state.descriptors.count { it.enabled }} / ${state.descriptors.size} 已启用",
+                                title = stringResource(Res.string.s_ac8895327b),
+                                subtitle = stringResource(Res.string.s_6fe30db879),
+                                metric = run {
+                                    val enabledCount = state.descriptors.count { it.enabled }
+                                    stringResource(Res.string.s_96d7780f27, enabledCount, state.descriptors.size)
+                                },
                             )
                         }
                         if (state.descriptors.isEmpty()) {
                             item(key = "empty-sources") {
                                 ModernEmptyState(
                                     icon = Icons.Default.Hub,
-                                    title = "还没有内容来源",
-                                    description = "添加 Discourse 实例，或启用内置连接器。",
+                                    title = stringResource(Res.string.s_7bda6019d9),
+                                    description = stringResource(Res.string.s_3507ddb87f),
                                     action = {
                                         SaniouButton(
                                             onClick = { viewModel.onEvent(Event.AddDiscourse) },
-                                            text = "添加 Discourse",
+                                            text = stringResource(Res.string.s_3cf2fddb98),
                                         )
                                     },
                                 )
@@ -181,7 +204,7 @@ private fun SourceDescriptorCard(
                         },
                     ) {
                         Text(
-                            if (descriptor.isBuiltIn) "内置" else "动态",
+                            if (descriptor.isBuiltIn) stringResource(Res.string.s_09ceea7644) else stringResource(Res.string.s_753ccc8e2e),
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                             style = MaterialTheme.typography.labelSmall,
                         )
@@ -198,10 +221,10 @@ private fun SourceDescriptorCard(
             }
             if (!descriptor.isBuiltIn) {
                 IconButton(onClick = onEdit, enabled = enabled) {
-                    Icon(Icons.Default.Edit, contentDescription = "编辑")
+                    Icon(Icons.Default.Edit, contentDescription = stringResource(Res.string.s_a7f814c0a4))
                 }
                 IconButton(onClick = onDelete, enabled = enabled) {
-                    Icon(Icons.Default.Delete, contentDescription = "删除")
+                    Icon(Icons.Default.Delete, contentDescription = stringResource(Res.string.s_3755f56f2f))
                 }
             }
             Spacer(Modifier.width(8.dp))
@@ -231,26 +254,26 @@ private fun DiscourseEditorDialog(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(
-                if (descriptor == null) "添加 Discourse" else "编辑 Discourse",
+                if (descriptor == null) stringResource(Res.string.s_3cf2fddb98) else stringResource(Res.string.s_ae96a77def),
                 style = MaterialTheme.typography.headlineSmall,
             )
             Text(
-                "连接一个兼容 Discourse API 的社区实例。保存后将作为完整论坛来源参与导航、搜索和阅读。",
+                stringResource(Res.string.s_bb7f40922f),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             OutlinedTextField(
                 value = id,
                 onValueChange = { id = it },
                 enabled = descriptor == null,
-                label = { Text("实例 ID") },
-                placeholder = { Text("例如 tech_forum") },
+                label = { Text(stringResource(Res.string.s_b4e08a4b66)) },
+                placeholder = { Text(stringResource(Res.string.s_5fee7d843d)) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
             )
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
-                label = { Text("显示名称") },
+                label = { Text(stringResource(Res.string.s_75ae6a8a7d)) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -265,7 +288,7 @@ private fun DiscourseEditorDialog(
             OutlinedTextField(
                 value = apiKey,
                 onValueChange = { apiKey = it },
-                label = { Text("开发测试 API Key（可选）") },
+                label = { Text(stringResource(Res.string.s_6780ab7294)) },
                 minLines = 2,
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -273,12 +296,12 @@ private fun DiscourseEditorDialog(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End,
             ) {
-                SaniouTextButton(onClick = onDismiss, text = "取消")
+                SaniouTextButton(onClick = onDismiss, text = stringResource(Res.string.subscription_cancel))
                 SaniouButton(
                     onClick = { onSave(id, name, url, apiKey) },
                     enabled = !isSaving && id.isNotBlank() && name.isNotBlank() && url.isNotBlank(),
                     loading = isSaving,
-                    text = "保存",
+                    text = stringResource(Res.string.s_fadf24dbc5),
                 )
             }
         }

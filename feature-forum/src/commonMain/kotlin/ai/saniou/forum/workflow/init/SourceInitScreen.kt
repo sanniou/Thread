@@ -35,6 +35,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.stringResource
+import thread.feature_forum.generated.resources.Res
+import thread.feature_forum.generated.resources.s_3dcc0e09cc
+import thread.feature_forum.generated.resources.s_7b7f6285e9
+import thread.feature_forum.generated.resources.s_85fb4f2e67
+import thread.feature_forum.generated.resources.s_8f9660d07c
+import thread.feature_forum.generated.resources.s_b1207c605f
+import thread.feature_forum.generated.resources.s_c160ae5e85
 
 data class SourceInitScreen(
     val sourceId: String,
@@ -55,8 +63,8 @@ data class SourceInitScreen(
           ThreadContentColumn(modifier = Modifier.fillMaxSize()) {
             ContextHero(
                 icon = Icons.Default.Hub,
-                title = "启用 ${state.sourceName}",
-                subtitle = "建立跨平台订阅身份并准备该来源的本地状态",
+                title = stringResource(Res.string.s_7b7f6285e9, state.sourceName),
+                subtitle = stringResource(Res.string.s_c160ae5e85),
                 metric = "ONE-TIME SETUP",
             )
             StateLayout(
@@ -69,20 +77,20 @@ data class SourceInitScreen(
                   verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
               ) {
                 ThreadCard(modifier = Modifier.fillMaxWidth()) {
-                    Text("来源初始化", style = MaterialTheme.typography.titleLarge)
+                    Text(stringResource(Res.string.s_85fb4f2e67), style = MaterialTheme.typography.titleLarge)
                     Text(
-                        text = "准备启用 ${state.sourceName}。账号凭据可在用户中心通过该来源声明的登录方式添加。",
+                        text = stringResource(Res.string.s_b1207c605f, state.sourceName),
                         style = MaterialTheme.typography.bodyMedium,
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "初始化只创建通用订阅标识和来源状态，不在界面层保存平台专用配置。",
+                        text = stringResource(Res.string.s_3dcc0e09cc),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Spacer(modifier = Modifier.height(24.dp))
                     SaniouButton(
-                        text = "完成初始化",
+                        text = stringResource(Res.string.s_8f9660d07c),
                         onClick = { viewModel.onEvent(Event.CompleteInitialization) },
                         modifier = Modifier.fillMaxWidth(),
                     )

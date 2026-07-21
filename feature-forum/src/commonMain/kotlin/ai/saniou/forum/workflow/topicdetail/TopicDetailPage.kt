@@ -75,6 +75,9 @@ import org.kodein.di.instance
 import org.kodein.di.compose.localDI
 import thread.feature_forum.generated.resources.*
 import thread.feature_forum.generated.resources.Res
+import thread.feature_forum.generated.resources.s_119feabb02
+import thread.feature_forum.generated.resources.s_18e3bb9915
+import thread.feature_forum.generated.resources.s_623b8e1c31
 
 data class TopicDetailPage(
     val threadId: String,
@@ -180,9 +183,9 @@ data class TopicDetailPage(
                     coroutineScope.launch { lazyListState.animateScrollToItem(0) }
                 },
             ),
-            title = state.forumName.ifBlank { "主题详情" },
+            title = state.forumName.ifBlank { stringResource(Res.string.s_623b8e1c31) },
             eyebrow = stringResource(Res.string.eyebrow_forum_thread),
-            subtitle = "No.$threadId · 阅读、引用与回复",
+            subtitle = stringResource(Res.string.s_119feabb02, threadId),
             onBack = ::closeDetail,
             actions = {
                 if (state.topicWrapper is UiStateWrapper.Success) {
@@ -740,7 +743,7 @@ private fun ThreadList(
         }
 
         // Paging state footer
-        item { PagingAppendState(replies, endLabel = "全部回复已加载") }
+        item { PagingAppendState(replies, endLabel = stringResource(Res.string.s_18e3bb9915)) }
         if (related.itemCount > 0) {
             item(key = "related-content") {
                 RelatedContentSection(items = related, onOpen = onOpenRelated)

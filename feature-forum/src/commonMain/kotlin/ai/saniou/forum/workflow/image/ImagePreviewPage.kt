@@ -54,6 +54,12 @@ import kotlinx.coroutines.launch
 import org.kodein.di.compose.localDI
 import org.kodein.di.direct
 import org.kodein.di.instance
+import org.jetbrains.compose.resources.stringResource
+import thread.feature_forum.generated.resources.Res
+import thread.feature_forum.generated.resources.post_page_back
+import thread.feature_forum.generated.resources.s_12f92d07e1
+import thread.feature_forum.generated.resources.s_7d25c5442f
+import thread.feature_forum.generated.resources.s_fadf24dbc5
 
 data class ImagePreviewPage(
     val params: ImagePreviewViewModelParams,
@@ -118,7 +124,7 @@ data class ImagePreviewPage(
                         ZoomAsyncImage(
                             uri = image.originalUrl,
                             thumbnailUrl = image.thumbnailUrl,
-                            contentDescription = "预览图片",
+                            contentDescription = stringResource(Res.string.s_7d25c5442f),
                             photoPalette = photoPaletteState.value,
                             showTools = isHudVisible,
                             modifier = Modifier.fillMaxSize().clickable(
@@ -170,7 +176,7 @@ private fun ImagePreviewHud(
             ) {
                 Icon(
                     Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "返回",
+                    contentDescription = stringResource(Res.string.post_page_back),
                 )
             }
 
@@ -219,7 +225,7 @@ private fun ImagePreviewHud(
             ) {
                 Icon(
                     Icons.Default.Save,
-                    contentDescription = "保存",
+                    contentDescription = stringResource(Res.string.s_fadf24dbc5),
                 )
             }
         }
@@ -242,7 +248,7 @@ private fun ImagePreviewHud(
                     .align(Alignment.BottomCenter)
                     .padding(bottom = 120.dp) // Adjusted padding
             ) {
-                Text("没有更多图片了", color = Color.White)
+                Text(stringResource(Res.string.s_12f92d07e1), color = Color.White)
             }
         }
     }

@@ -40,6 +40,11 @@ import kotlinx.coroutines.flow.collectLatest
 import org.jetbrains.compose.resources.stringResource
 import thread.feature_forum.generated.resources.Res
 import thread.feature_forum.generated.resources.eyebrow_identities
+import thread.feature_forum.generated.resources.retry
+import thread.feature_forum.generated.resources.s_7528719aed
+import thread.feature_forum.generated.resources.s_99a83bd52b
+import thread.feature_forum.generated.resources.s_bf7f516b9a
+import thread.feature_forum.generated.resources.topic_page_user_center
 class UserPage : Screen {
 
     @Composable
@@ -65,15 +70,15 @@ class UserPage : Screen {
         }
 
         ThreadDetailScaffold(
-            title = "用户中心",
+            title = stringResource(Res.string.topic_page_user_center),
             eyebrow = stringResource(Res.string.eyebrow_identities),
-            subtitle = "管理当前来源的登录身份 · $sourceId",
+            subtitle = stringResource(Res.string.s_bf7f516b9a, sourceId),
             onBack = navigator::pop,
             snackbarHost = { SnackbarHost(snackbarHostState) },
             actions = {
                 if (state.loginStrategy != null) {
                     IconButton(onClick = { showLoginScreen = true }) {
-                        Icon(Icons.Default.Add, contentDescription = "登录/添加账号")
+                        Icon(Icons.Default.Add, contentDescription = stringResource(Res.string.s_99a83bd52b))
                     }
                 }
             },
@@ -130,11 +135,11 @@ private fun UserScreenContent(
                     contentAlignment = Alignment.Center
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("错误: ${state.error}")
+                        Text(stringResource(Res.string.s_7528719aed, state.error))
                         Spacer(modifier = Modifier.height(16.dp))
                         SaniouButton(
                             onClick = { onEvent(Event.LoadData(state.sourceId)) },
-                            text = "重试",
+                            text = stringResource(Res.string.retry),
                         )
                     }
                 }

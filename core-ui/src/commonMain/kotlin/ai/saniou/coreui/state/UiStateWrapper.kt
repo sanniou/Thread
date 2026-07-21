@@ -6,6 +6,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
+import org.jetbrains.compose.resources.stringResource
+import thread.core_ui.generated.resources.Res
+import thread.core_ui.generated.resources.s_5f76edc5de
 
 sealed interface UiStateWrapper<out T> {
     data object Loading : UiStateWrapper<Nothing>
@@ -81,7 +84,7 @@ fun DefaultError(
     action: @Composable () -> Unit = {},
 ) {
     ThreadErrorState(
-        error = error ?: AppError(message = "未知错误"),
+        error = error ?: AppError(message = stringResource(Res.string.s_5f76edc5de)),
         onRetry = onRetry,
         action = action,
     )

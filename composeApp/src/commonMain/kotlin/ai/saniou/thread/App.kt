@@ -129,6 +129,26 @@ import org.kodein.di.compose.localDI
 import org.kodein.di.direct
 import org.kodein.di.instance
 import org.kodein.di.bindSingleton
+import org.jetbrains.compose.resources.stringResource
+import thread.composeapp.generated.resources.Res
+import thread.composeapp.generated.resources.s_0120a7f4c4
+import thread.composeapp.generated.resources.s_1fc1afc5c5
+import thread.composeapp.generated.resources.s_367c1ec5d7
+import thread.composeapp.generated.resources.s_4d0b4688c7
+import thread.composeapp.generated.resources.s_523e40a074
+import thread.composeapp.generated.resources.s_543fab9d19
+import thread.composeapp.generated.resources.s_57bd58e6ff
+import thread.composeapp.generated.resources.s_753ccc8e2e
+import thread.composeapp.generated.resources.s_7cac745e03
+import thread.composeapp.generated.resources.s_7debf9cb03
+import thread.composeapp.generated.resources.s_93d5a89429
+import thread.composeapp.generated.resources.s_963c1ebd19
+import thread.composeapp.generated.resources.s_aac0ef6c1c
+import thread.composeapp.generated.resources.s_abd3040b73
+import thread.composeapp.generated.resources.s_b2548636f0
+import thread.composeapp.generated.resources.s_cd0aecbcd0
+import thread.composeapp.generated.resources.s_cd83e6e100
+import thread.composeapp.generated.resources.s_d07cee786a
 
 fun createAppDi(databaseOverride: Database? = null) = DI {
     import(domainModule)
@@ -220,7 +240,7 @@ fun App(
                     val delta = summary.unread - lastUnread
                     resolvedNotificationService?.notify(
                         title = "Thread 收件箱",
-                        body = if (delta == 1) "有 1 条新通知" else "有 $delta 条新通知",
+                        body = if (delta == 1) "有 1 条新通知" else "有 ${delta} 条新通知",
                         deepLink = "thread://inbox",
                         notificationId = "inbox-unread",
                     )
@@ -473,31 +493,31 @@ fun App(
                 Box(Modifier.fillMaxSize()) {
                 ThreadAdaptiveWindow {
                     val navigationItems = listOf(
-                        WorkspaceNavigationItem(Icons.Default.Forum, "社区", selectedWorkspace == WorkspaceDestination.FORUM) {
+                        WorkspaceNavigationItem(Icons.Default.Forum, stringResource(Res.string.s_367c1ec5d7), selectedWorkspace == WorkspaceDestination.FORUM) {
                             navigateTo(WorkspaceDestination.FORUM, ForumRoute)
                         },
-                        WorkspaceNavigationItem(Icons.Default.RssFeed, "阅读", selectedWorkspace == WorkspaceDestination.READER) {
+                        WorkspaceNavigationItem(Icons.Default.RssFeed, stringResource(Res.string.s_aac0ef6c1c), selectedWorkspace == WorkspaceDestination.READER) {
                             navigateTo(WorkspaceDestination.READER, ReaderRoute)
                         },
-                        WorkspaceNavigationItem(Icons.Default.DynamicFeed, "动态", selectedWorkspace == WorkspaceDestination.FEED) {
+                        WorkspaceNavigationItem(Icons.Default.DynamicFeed, stringResource(Res.string.s_753ccc8e2e), selectedWorkspace == WorkspaceDestination.FEED) {
                             navigateTo(WorkspaceDestination.FEED, FeedRoute)
                         },
-                        WorkspaceNavigationItem(Icons.Default.Search, "发现", selectedWorkspace == WorkspaceDestination.SEARCH) {
+                        WorkspaceNavigationItem(Icons.Default.Search, stringResource(Res.string.s_523e40a074), selectedWorkspace == WorkspaceDestination.SEARCH) {
                             navigateTo(WorkspaceDestination.SEARCH, GlobalSearchPage)
                         },
-                        WorkspaceNavigationItem(Icons.Default.Bookmark, "收藏", selectedWorkspace == WorkspaceDestination.BOOKMARKS) {
+                        WorkspaceNavigationItem(Icons.Default.Bookmark, stringResource(Res.string.s_d07cee786a), selectedWorkspace == WorkspaceDestination.BOOKMARKS) {
                             navigateTo(WorkspaceDestination.BOOKMARKS, BookmarkPage)
                         },
-                        WorkspaceNavigationItem(Icons.Default.Inbox, "收件箱", selectedWorkspace == WorkspaceDestination.INBOX) {
+                        WorkspaceNavigationItem(Icons.Default.Inbox, stringResource(Res.string.s_cd83e6e100), selectedWorkspace == WorkspaceDestination.INBOX) {
                             navigateTo(WorkspaceDestination.INBOX, InboxPage)
                         },
-                        WorkspaceNavigationItem(Icons.Default.NotificationsActive, "活动", selectedWorkspace == WorkspaceDestination.ACTIVITY, bottom = true) {
+                        WorkspaceNavigationItem(Icons.Default.NotificationsActive, stringResource(Res.string.s_b2548636f0), selectedWorkspace == WorkspaceDestination.ACTIVITY, bottom = true) {
                             navigateTo(WorkspaceDestination.ACTIVITY, ActivityCenterPage)
                         },
-                        WorkspaceNavigationItem(Icons.Default.MonitorHeart, "运维", selectedWorkspace == WorkspaceDestination.OPERATIONS, bottom = true) {
+                        WorkspaceNavigationItem(Icons.Default.MonitorHeart, stringResource(Res.string.s_57bd58e6ff), selectedWorkspace == WorkspaceDestination.OPERATIONS, bottom = true) {
                             navigateTo(WorkspaceDestination.OPERATIONS, OperationsPage)
                         },
-                        WorkspaceNavigationItem(Icons.Default.Settings, "设置", selectedWorkspace == WorkspaceDestination.SETTINGS, bottom = true) {
+                        WorkspaceNavigationItem(Icons.Default.Settings, stringResource(Res.string.s_7debf9cb03), selectedWorkspace == WorkspaceDestination.SETTINGS, bottom = true) {
                             navigateTo(WorkspaceDestination.SETTINGS, SyncSettingsPage())
                         },
                     )
@@ -538,23 +558,23 @@ fun App(
                 pendingProductCommand?.let { command ->
                     AlertDialog(
                         onDismissRequest = { pendingProductCommand = null },
-                        title = { Text(if (command.danger == ProductActionDanger.DESTRUCTIVE) "确认永久操作" else "确认数据变更") },
+                        title = { Text(if (command.danger == ProductActionDanger.DESTRUCTIVE) stringResource(Res.string.s_7cac745e03) else stringResource(Res.string.s_abd3040b73)) },
                         text = { Text(command.description) },
                         confirmButton = {
                             if (command.danger == ProductActionDanger.DESTRUCTIVE) {
                                 SaniouDangerButton(onClick = {
                                     pendingProductCommand = null
                                     performProductCommand(command, confirmed = true)
-                                }, text = "继续")
+                                }, text = stringResource(Res.string.s_1fc1afc5c5))
                             } else {
                                 SaniouButton(onClick = {
                                     pendingProductCommand = null
                                     performProductCommand(command, confirmed = true)
-                                }, text = "继续")
+                                }, text = stringResource(Res.string.s_1fc1afc5c5))
                             }
                         },
                         dismissButton = {
-                            SaniouTextButton(onClick = { pendingProductCommand = null }, text = "取消")
+                            SaniouTextButton(onClick = { pendingProductCommand = null }, text = stringResource(Res.string.s_4d0b4688c7))
                         },
                     )
                 }

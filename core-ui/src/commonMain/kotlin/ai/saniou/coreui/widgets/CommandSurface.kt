@@ -31,6 +31,9 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import org.jetbrains.compose.resources.stringResource
+import thread.core_ui.generated.resources.Res
+import thread.core_ui.generated.resources.s_84fcd70d42
 
 /**
  * A shared command surface for search, filters and bulk actions. Compact
@@ -87,7 +90,7 @@ fun ThreadSearchField(
         trailingIcon = {
             if (query.isNotBlank()) {
                 IconButton(onClick = onClear) {
-                    Icon(Icons.Default.Clear, contentDescription = "清空")
+                    Icon(Icons.Default.Clear, contentDescription = stringResource(Res.string.s_84fcd70d42))
                 }
             }
         },

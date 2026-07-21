@@ -49,6 +49,8 @@ import thread.feature_forum.generated.resources.*
 import thread.feature_forum.generated.resources.forum_favorite_add
 import thread.feature_forum.generated.resources.forum_favorite_remove
 import thread.feature_forum.generated.resources.forum_limited_time
+import thread.feature_forum.generated.resources.s_4208e107f9
+import thread.feature_forum.generated.resources.topic_page_thread_count
 
 fun String.toColor(): Color {
     if (this.isBlank()) return Color.Gray
@@ -200,11 +202,11 @@ fun StylizedForumItem(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.padding(top = 2.dp)
                 ) {
-                    if (forum.topicCount != null) {
-                        MetadataBadge(text = "${forum.topicCount} 串")
+                    forum.topicCount?.let { count ->
+                        MetadataBadge(text = stringResource(Res.string.topic_page_thread_count, count))
                     }
-                    if (forum.postCount != null) {
-                        MetadataBadge(text = "${forum.postCount} 帖")
+                    forum.postCount?.let { count ->
+                        MetadataBadge(text = stringResource(Res.string.s_4208e107f9, count))
                     }
 
                     // Clean msg: prefer descriptionText, fallback to stripped description
@@ -307,9 +309,9 @@ fun SubCategoryBoxItem(
                 )
             }
 
-            if (forum.topicCount != null) {
+            forum.topicCount?.let { count ->
                 Text(
-                    text = "${forum.topicCount} 串",
+                    text = stringResource(Res.string.topic_page_thread_count, count),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

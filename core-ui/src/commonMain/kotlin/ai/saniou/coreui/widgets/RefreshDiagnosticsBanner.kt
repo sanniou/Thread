@@ -27,6 +27,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import org.jetbrains.compose.resources.stringResource
+import thread.core_ui.generated.resources.Res
+import thread.core_ui.generated.resources.core_ui_no_internet_retry
+import thread.core_ui.generated.resources.s_316334eed7
+import thread.core_ui.generated.resources.s_4f55ee1e68
+import thread.core_ui.generated.resources.s_5d5815647c
+import thread.core_ui.generated.resources.s_64f6dfa563
+import thread.core_ui.generated.resources.s_65c709f5be
+import thread.core_ui.generated.resources.s_d5f066a88a
+import thread.core_ui.generated.resources.s_ed7f8c8bad
 
 @Composable
 fun RefreshDiagnosticsBanner(
@@ -39,14 +49,14 @@ fun RefreshDiagnosticsBanner(
     val offlineCount = failures.count { it.failureKind == RefreshFailureKind.OFFLINE }
     val authCount = failures.count { it.failureKind == RefreshFailureKind.AUTHENTICATION }
     val summary = when {
-        offlineCount == failures.size -> "设备离线；已有缓存仍然可以继续阅读。"
-        authCount > 0 -> "$authCount 个来源需要更新登录状态，其他来源不受影响。"
-        else -> "失败已按来源隔离，成功来源与本地内容继续显示。"
+        offlineCount == failures.size -> stringResource(Res.string.s_d5f066a88a)
+        authCount > 0 -> stringResource(Res.string.s_316334eed7, authCount)
+        else -> stringResource(Res.string.s_ed7f8c8bad)
     }
     val tone = if (authCount > 0) ThreadStatusTone.Error else ThreadStatusTone.Warning
 
     ThreadStatusBanner(
-        title = "${failures.size} 个来源暂未刷新",
+        title = stringResource(Res.string.s_64f6dfa563, failures.size),
         message = summary,
         modifier = modifier,
         tone = tone,
@@ -54,10 +64,10 @@ fun RefreshDiagnosticsBanner(
         actions = {
             SaniouTextButton(
                 onClick = { expanded = !expanded },
-                text = if (expanded) "收起" else "详情",
+                text = if (expanded) stringResource(Res.string.s_5d5815647c) else stringResource(Res.string.s_4f55ee1e68),
             )
             onRetry?.let { retry ->
-                SaniouTextButton(onClick = retry, text = "重试")
+                SaniouTextButton(onClick = retry, text = stringResource(Res.string.core_ui_no_internet_retry))
             }
         },
         details = {
@@ -104,7 +114,7 @@ private fun FailureRow(failure: RefreshTaskState) {
                 )
             }
             Text(
-                "第 ${failure.attempt} 次",
+                stringResource(Res.string.s_65c709f5be, failure.attempt),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

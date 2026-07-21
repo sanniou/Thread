@@ -34,6 +34,9 @@ import ai.saniou.coreui.state.PagingStateLayout
 import ai.saniou.coreui.state.PagingAppendState
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.itemKey
+import org.jetbrains.compose.resources.stringResource
+import thread.composeapp.generated.resources.Res
+import thread.composeapp.generated.resources.s_8accf8d664
 
 @Composable
 fun GlobalSearchResults(
@@ -65,7 +68,7 @@ fun GlobalSearchPagingResults(
             ) { index ->
                 results[index]?.let { GlobalSearchResultRow(it, onOpen) }
             }
-            item { PagingAppendState(results, endLabel = "集合内容已全部加载") }
+            item { PagingAppendState(results, endLabel = stringResource(Res.string.s_8accf8d664)) }
         }
     }
 }

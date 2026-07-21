@@ -36,6 +36,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
+import org.jetbrains.compose.resources.stringResource
+import thread.feature_forum.generated.resources.Res
+import thread.feature_forum.generated.resources.s_35563060dc
+import thread.feature_forum.generated.resources.s_92a1ea8c23
+import thread.feature_forum.generated.resources.s_c699063a5e
+import thread.feature_forum.generated.resources.s_cf70d344a7
+import thread.feature_forum.generated.resources.s_f9a1271237
 
 @Composable
 fun CookieListContent(
@@ -85,7 +92,7 @@ fun CookieItem(
     modifier: Modifier = Modifier,
 ) {
     val elevation by animateDpAsState(if (isDragging) 8.dp else 2.dp)
-    val displayValue = cookie.uid?.let { "账号 ID: $it" } ?: "凭据已保存"
+    val displayValue = cookie.uid?.let { stringResource(Res.string.s_92a1ea8c23, it) } ?: stringResource(Res.string.s_f9a1271237)
 
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -98,11 +105,11 @@ fun CookieItem(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = cookie.alias ?: "未命名",
+                    text = cookie.alias ?: stringResource(Res.string.s_35563060dc),
                     style = MaterialTheme.typography.titleMedium
                 )
                 IconButton(onClick = onDelete) {
-                    Icon(Icons.Default.Delete, contentDescription = "删除账号")
+                    Icon(Icons.Default.Delete, contentDescription = stringResource(Res.string.s_cf70d344a7))
                 }
             }
             Spacer(modifier = Modifier.height(8.dp))
@@ -130,7 +137,7 @@ fun EmptyCookieList(modifier: Modifier = Modifier) {
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "还没有账号\n点击右下角的按钮添加一个吧",
+            text = stringResource(Res.string.s_c699063a5e),
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.bodyLarge
         )

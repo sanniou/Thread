@@ -38,6 +38,8 @@ import androidx.paging.PagingData
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import kotlinx.coroutines.flow.Flow
+import thread.feature_forum.generated.resources.s_4b3f9d3d5c
+import thread.feature_forum.generated.resources.s_a7e12880b9
 
 @Composable
 fun ListThreadPage(
@@ -79,8 +81,8 @@ fun ListThreadPage(
                 empty = {
                     ModernEmptyState(
                         icon = Icons.Outlined.Star,
-                        title = "这里还没有主题",
-                        description = "探索其他版块，或成为第一个发帖的人。",
+                        title = stringResource(Res.string.s_a7e12880b9),
+                        description = stringResource(Res.string.s_4b3f9d3d5c),
                         modifier = Modifier.align(Alignment.Center),
                     )
                 },

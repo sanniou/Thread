@@ -21,6 +21,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
+import org.jetbrains.compose.resources.stringResource
+import thread.core_ui.generated.resources.Res
+import thread.core_ui.generated.resources.core_ui_no_internet_retry
+import thread.core_ui.generated.resources.s_8657c1c431
+import thread.core_ui.generated.resources.s_ef7906fa7f
 
 /** Shared non-blocking state for the tail of every paged list. */
 @Composable
@@ -40,7 +45,7 @@ fun <T : Any> PagingAppendState(
             ) {
                 CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
                 Text(
-                    "正在加载更多",
+                    stringResource(Res.string.s_ef7906fa7f),
                     modifier = Modifier.padding(start = 10.dp),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -50,11 +55,11 @@ fun <T : Any> PagingAppendState(
         is LoadState.Error -> {
             val error = append.error.toAppError(onRetry)
             ThreadStatusBanner(
-                title = "未能加载更多内容",
+                title = stringResource(Res.string.s_8657c1c431),
                 message = error.message,
                 tone = ThreadStatusTone.Warning,
                 modifier = modifier.padding(vertical = 8.dp),
-                actions = { SaniouTextButton(onClick = onRetry, text = "重试") },
+                actions = { SaniouTextButton(onClick = onRetry, text = stringResource(Res.string.core_ui_no_internet_retry)) },
             )
         }
         is LoadState.NotLoading -> {

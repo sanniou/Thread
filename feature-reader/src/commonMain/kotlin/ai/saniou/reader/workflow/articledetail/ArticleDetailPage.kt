@@ -56,6 +56,23 @@ import org.kodein.di.direct
 import org.kodein.di.instance
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
+import org.jetbrains.compose.resources.stringResource
+import thread.feature_reader.generated.resources.Res
+import thread.feature_reader.generated.resources.s_0e9cfb13bf
+import thread.feature_reader.generated.resources.s_1795a34c15
+import thread.feature_reader.generated.resources.s_1fae1943e6
+import thread.feature_reader.generated.resources.s_29554f3cb1
+import thread.feature_reader.generated.resources.s_2d2cdabf29
+import thread.feature_reader.generated.resources.s_3c731ff0a2
+import thread.feature_reader.generated.resources.s_4b560383be
+import thread.feature_reader.generated.resources.s_7a92434114
+import thread.feature_reader.generated.resources.s_88d650dd4f
+import thread.feature_reader.generated.resources.s_aac0ef6c1c
+import thread.feature_reader.generated.resources.s_c578c37700
+import thread.feature_reader.generated.resources.s_cee8bcba20
+import thread.feature_reader.generated.resources.s_d07cee786a
+import thread.feature_reader.generated.resources.s_dfd9994508
+import thread.feature_reader.generated.resources.s_ea2ac35993
 
 data class ArticleDetailPage(val articleId: String) : Screen {
 
@@ -73,6 +90,8 @@ data class ArticleDetailPage(val articleId: String) : Screen {
         val shareService = LocalShareService.current
         val scope = rememberCoroutineScope()
         val snackbar = remember { SnackbarHostState() }
+        val sharedOkMsg = stringResource(Res.string.s_1795a34c15)
+        val sharedFallbackMsg = stringResource(Res.string.s_ea2ac35993)
         val rootLinkHandler = LocalContentLinkHandler.current
         val graphReference = remember(articleId) {
             ContentReference(ContentReferenceKind.ARTICLE, articleId)
@@ -116,8 +135,8 @@ data class ArticleDetailPage(val articleId: String) : Screen {
             }
         }
         ThreadDetailScaffold(
-            title = state.feedSourceName ?: "文章详情",
-            eyebrow = "阅读",
+            title = state.feedSourceName ?: stringResource(Res.string.s_1fae1943e6),
+            eyebrow = stringResource(Res.string.s_aac0ef6c1c),
             subtitle = state.article?.title,
             onBack = ::closeDetail,
             actions = {
@@ -130,7 +149,7 @@ data class ArticleDetailPage(val articleId: String) : Screen {
                             val shared = shareService?.shareText(text, article.title) == true
                             if (!shared) clipboard.copyText(text)
                             scope.launch {
-                                snackbar.showSnackbar(if (shared) "已通过系统分享" else "标题和链接已复制")
+                                snackbar.showSnackbar(if (shared) sharedOkMsg else sharedFallbackMsg)
                             }
                         }
                     },
@@ -147,13 +166,13 @@ data class ArticleDetailPage(val articleId: String) : Screen {
                     visible = article != null,
                     actions = listOf(
                         ActionItem(
-                            label = if (article?.isBookmarked == true) "已收藏" else "收藏",
+                            label = if (article?.isBookmarked == true) stringResource(Res.string.s_2d2cdabf29) else stringResource(Res.string.s_d07cee786a),
                             icon = if (article?.isBookmarked == true) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
                             emphasized = article?.isBookmarked == true,
                             onClick = { viewModel.onEvent(ArticleDetailContract.Event.OnToggleBookmark) },
                         ),
                         ActionItem(
-                            label = "分享",
+                            label = stringResource(Res.string.s_7a92434114),
                             icon = Icons.Default.Share,
                             onClick = {
                                 article?.let {
@@ -161,13 +180,13 @@ data class ArticleDetailPage(val articleId: String) : Screen {
                                     val shared = shareService?.shareText(text, it.title) == true
                                     if (!shared) clipboard.copyText(text)
                                     scope.launch {
-                                        snackbar.showSnackbar(if (shared) "已通过系统分享" else "标题和链接已复制")
+                                        snackbar.showSnackbar(if (shared) sharedOkMsg else sharedFallbackMsg)
                                     }
                                 }
                             },
                         ),
                         ActionItem(
-                            label = "浏览器",
+                            label = stringResource(Res.string.s_88d650dd4f),
                             icon = Icons.Default.Public,
                             onClick = { article?.link?.let { uriHandler.openUri(it) } },
                         ),
@@ -217,16 +236,16 @@ private fun ArticleDetailActions(
                 IconButton(onClick = onToggleBookmark) {
                     Icon(
                         imageVector = if (article.isBookmarked) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
-                        contentDescription = "收藏",
+                        contentDescription = stringResource(Res.string.s_d07cee786a),
                         tint = if (article.isBookmarked) MaterialTheme.colorScheme.primary else LocalContentColor.current
                     )
                 }
                 IconButton(onClick = onShare) {
-                    Icon(Icons.Default.Share, contentDescription = "分享")
+                    Icon(Icons.Default.Share, contentDescription = stringResource(Res.string.s_7a92434114))
                 }
                 Box {
                     IconButton(onClick = { onToggleMenu(true) }) {
-                        Icon(Icons.Default.MoreVert, contentDescription = "更多选项")
+                        Icon(Icons.Default.MoreVert, contentDescription = stringResource(Res.string.s_dfd9994508))
                     }
                     DropdownMenu(
                         expanded = state.isMenuExpanded,
@@ -238,7 +257,7 @@ private fun ArticleDetailActions(
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(Icons.Default.FormatSize, null, modifier = Modifier.size(20.dp))
                                     Spacer(modifier = Modifier.width(12.dp))
-                                    Text("字体大小")
+                                    Text(stringResource(Res.string.s_cee8bcba20))
                                 }
                             },
                             onClick = { /* Keep menu open */ },
@@ -258,7 +277,7 @@ private fun ArticleDetailActions(
 
                         if (!article.rawContent.isNullOrBlank()) {
                             DropdownMenuItem(
-                                text = { Text("网页视图") },
+                                text = { Text(stringResource(Res.string.s_4b560383be)) },
                                 onClick = {
                                     onShowWebView()
                                     onToggleMenu(false)
@@ -267,7 +286,7 @@ private fun ArticleDetailActions(
                             )
                         }
                         DropdownMenuItem(
-                            text = { Text("浏览器打开") },
+                            text = { Text(stringResource(Res.string.s_c578c37700)) },
                             onClick = {
                                 onOpenInBrowser()
                                 onToggleMenu(false)
@@ -308,7 +327,7 @@ private fun ArticleContent(
             SelectionContainer {
                 Column(verticalArrangement = Arrangement.spacedBy(Dimens.padding_medium)) {
                     Text(
-                        text = "阅读 · ${article.publishDate.toRelativeTimeString()}",
+                        text = stringResource(Res.string.s_0e9cfb13bf, article.publishDate.toRelativeTimeString()),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.SemiBold,
@@ -331,7 +350,7 @@ private fun ArticleContent(
                             )
                         }
                         Text(
-                            text = if (article.isBookmarked) "已收藏到稍后阅读" else "沉浸阅读模式",
+                            text = if (article.isBookmarked) stringResource(Res.string.s_3c731ff0a2) else stringResource(Res.string.s_29554f3cb1),
                             style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )

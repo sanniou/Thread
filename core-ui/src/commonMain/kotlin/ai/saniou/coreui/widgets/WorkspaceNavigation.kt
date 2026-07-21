@@ -49,6 +49,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import org.jetbrains.compose.resources.stringResource
+import thread.core_ui.generated.resources.Res
+import thread.core_ui.generated.resources.s_4bcb37a2a4
+import thread.core_ui.generated.resources.s_9b0c6c7858
+import thread.core_ui.generated.resources.s_a1ff8da47d
+import thread.core_ui.generated.resources.s_b114b91547
+import thread.core_ui.generated.resources.s_ff55f08cf1
 
 data class WorkspaceNavigationItem(
     val icon: ImageVector,
@@ -139,8 +146,8 @@ private fun WorkspaceBottomNavigation(
                     },
                     selected = overflowItems.any { it.selected },
                     onClick = { showOverflow = true },
-                    icon = { Icon(Icons.Default.MoreHoriz, contentDescription = "更多") },
-                    label = { Text("更多") },
+                    icon = { Icon(Icons.Default.MoreHoriz, contentDescription = stringResource(Res.string.s_9b0c6c7858)) },
+                    label = { Text(stringResource(Res.string.s_9b0c6c7858)) },
                 )
             }
         },
@@ -155,7 +162,7 @@ private fun WorkspaceBottomNavigation(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Text(
-                    text = "工作区",
+                    text = stringResource(Res.string.s_a1ff8da47d),
                     style = MaterialTheme.typography.headlineSmall,
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp),
                 )
@@ -178,8 +185,8 @@ private fun WorkspaceBottomNavigation(
                         ) {
                             Icon(Icons.Default.Search, contentDescription = null)
                             Column(Modifier.weight(1f)) {
-                                Text("命令与发现", style = MaterialTheme.typography.titleMedium)
-                                Text("跳转工作区或搜索离线缓存", style = MaterialTheme.typography.bodySmall)
+                                Text(stringResource(Res.string.s_4bcb37a2a4), style = MaterialTheme.typography.titleMedium)
+                                Text(stringResource(Res.string.s_ff55f08cf1), style = MaterialTheme.typography.bodySmall)
                             }
                         }
                     }
@@ -284,7 +291,7 @@ fun WorkspaceNavigationRail(
                         Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(22.dp))
                         if (windowInfo.showsNavigationLabels) {
                             Text(
-                                "命令",
+                                stringResource(Res.string.s_b114b91547),
                                 style = MaterialTheme.typography.labelSmall,
                                 maxLines = 1,
                                 textAlign = TextAlign.Center,

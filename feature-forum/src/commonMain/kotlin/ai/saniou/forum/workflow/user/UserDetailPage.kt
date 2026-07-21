@@ -58,6 +58,15 @@ import org.kodein.di.compose.localDI
 import org.jetbrains.compose.resources.stringResource
 import thread.feature_forum.generated.resources.Res
 import thread.feature_forum.generated.resources.eyebrow_member_activity
+import thread.feature_forum.generated.resources.empty_title
+import thread.feature_forum.generated.resources.post_page_reply
+import thread.feature_forum.generated.resources.retry
+import thread.feature_forum.generated.resources.s_1f63c99409
+import thread.feature_forum.generated.resources.s_2d0ce11e3d
+import thread.feature_forum.generated.resources.s_76f1ed24cb
+import thread.feature_forum.generated.resources.s_ad941b51d3
+import thread.feature_forum.generated.resources.s_bdf32f0d53
+import thread.feature_forum.generated.resources.s_dca79914e5
 
 data class UserDetailPage(
     val sourceId: String,
@@ -96,7 +105,7 @@ data class UserDetailPage(
         ThreadDetailScaffold(
             title = userHash,
             eyebrow = stringResource(Res.string.eyebrow_member_activity),
-            subtitle = "查看该用户在当前来源发布的主题与回复",
+            subtitle = stringResource(Res.string.s_dca79914e5),
             onBack = { viewModel.handleEvent(UserDetailContract.Event.Back) },
         ) { paddingValues ->
             Column(Modifier.padding(paddingValues).fillMaxSize()) {
@@ -116,8 +125,8 @@ data class UserDetailPage(
                             text = {
                                 Text(
                                     text = when (tab) {
-                                        UserDetailContract.Tab.Topics -> "串"
-                                        UserDetailContract.Tab.Comments -> "回复"
+                                        UserDetailContract.Tab.Topics -> stringResource(Res.string.s_1f63c99409)
+                                        UserDetailContract.Tab.Comments -> stringResource(Res.string.post_page_reply)
                                     }
                                 )
                             }
@@ -167,7 +176,7 @@ data class UserDetailPage(
                                             modifier = Modifier.fillMaxWidth().padding(32.dp),
                                             contentAlignment = Alignment.Center
                                         ) {
-                                            SaniouButton(onClick = { topics.retry() }, text = "重试")
+                                            SaniouButton(onClick = { topics.retry() }, text = stringResource(Res.string.retry))
                                         }
                                     }
 
@@ -178,7 +187,7 @@ data class UserDetailPage(
 
                                 if (topics.loadState.refresh !is Loading && topics.itemCount == 0) {
                                     item {
-                                        EmptyContent(message = "该用户还没有发布过串")
+                                        EmptyContent(message = stringResource(Res.string.s_76f1ed24cb))
                                     }
                                 }
                             }
@@ -199,16 +208,17 @@ data class UserDetailPage(
                                     val reply = replies[index]
                                     if (reply != null) {
                                         Column {
-                                            if (reply.title.isNullOrBlank().not() && reply.title != "无标题") {
+                                            val replyTitle = reply.title
+                                            if (!replyTitle.isNullOrBlank() && replyTitle != stringResource(Res.string.empty_title)) {
                                                 Text(
-                                                    text = "回复串: ${reply.title}",
+                                                    text = stringResource(Res.string.s_2d0ce11e3d, replyTitle),
                                                     style = MaterialTheme.typography.labelSmall,
                                                     color = MaterialTheme.colorScheme.primary,
                                                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                                                 )
                                             } else {
                                                 Text(
-                                                    text = "回复串: No.${reply.topicId}",
+                                                    text = stringResource(Res.string.s_bdf32f0d53, reply.topicId),
                                                     style = MaterialTheme.typography.labelSmall,
                                                     color = MaterialTheme.colorScheme.primary,
                                                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
@@ -253,7 +263,7 @@ data class UserDetailPage(
                                             modifier = Modifier.fillMaxWidth().padding(32.dp),
                                             contentAlignment = Alignment.Center
                                         ) {
-                                            SaniouButton(onClick = { replies.retry() }, text = "重试")
+                                            SaniouButton(onClick = { replies.retry() }, text = stringResource(Res.string.retry))
                                         }
                                     }
 
@@ -264,7 +274,7 @@ data class UserDetailPage(
 
                                 if (replies.loadState.refresh !is Loading && replies.itemCount == 0) {
                                     item {
-                                        EmptyContent(message = "该用户还没有发布过回复")
+                                        EmptyContent(message = stringResource(Res.string.s_ad941b51d3))
                                     }
                                 }
                             }

@@ -39,6 +39,17 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import org.kodein.di.compose.localDI
 import org.kodein.di.instance
+import org.jetbrains.compose.resources.stringResource
+import thread.composeapp.generated.resources.Res
+import thread.composeapp.generated.resources.s_29f6711704
+import thread.composeapp.generated.resources.s_3488c54564
+import thread.composeapp.generated.resources.s_447b732eb0
+import thread.composeapp.generated.resources.s_543842233f
+import thread.composeapp.generated.resources.s_778fc8f994
+import thread.composeapp.generated.resources.s_ad3fd0f4c7
+import thread.composeapp.generated.resources.s_c84df4602f
+import thread.composeapp.generated.resources.s_f9bb327879
+import thread.composeapp.generated.resources.s_fc825effd8
 
 class HistoryPage : Screen {
     @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -53,12 +64,12 @@ class HistoryPage : Screen {
             ThreadContentColumn(modifier = Modifier.fillMaxSize()) {
                 ContextHero(
                     icon = Icons.Default.History,
-                    title = "浏览历史",
-                    subtitle = "按时间回到最近看过的帖子和文章",
+                    title = stringResource(Res.string.s_29f6711704),
+                    subtitle = stringResource(Res.string.s_f9bb327879),
                     metric = if (historyItems.itemCount > 0) {
-                        "${historyItems.itemCount} 条最近"
+                        stringResource(Res.string.s_447b732eb0, historyItems.itemCount)
                     } else {
-                        "本地优先"
+                        stringResource(Res.string.s_c84df4602f)
                     },
                 )
                 ThreadFilterBar(
@@ -82,8 +93,8 @@ class HistoryPage : Screen {
                     empty = {
                         ModernEmptyState(
                             icon = Icons.Default.History,
-                            title = "还没有浏览历史",
-                            description = "阅读帖子或文章后，最近访问会按日期整理在这里。",
+                            title = stringResource(Res.string.s_543842233f),
+                            description = stringResource(Res.string.s_fc825effd8),
                             modifier = Modifier.align(Alignment.Center),
                         )
                     }

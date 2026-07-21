@@ -11,6 +11,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import org.jetbrains.compose.resources.stringResource
+import thread.feature_reader.generated.resources.Res
+import thread.feature_reader.generated.resources.s_d79148c66d
 
 private val fieldDescriptions = mapOf(
     // HTML
@@ -80,7 +83,7 @@ private fun ConfigField(
                     IconButton(onClick = { showHelp = !showHelp }) {
                         Icon(
                             Icons.Default.Info,
-                            contentDescription = "显示帮助",
+                            contentDescription = stringResource(Res.string.s_d79148c66d),
                             tint = if (showHelp) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
                         )
                     }

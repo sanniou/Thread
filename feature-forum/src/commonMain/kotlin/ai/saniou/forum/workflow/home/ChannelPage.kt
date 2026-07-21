@@ -109,6 +109,13 @@ import thread.feature_forum.generated.resources.cache_forum_cached_detail
 import thread.feature_forum.generated.resources.action_view_health
 import thread.feature_forum.generated.resources.retry
 import thread.feature_forum.generated.resources.label_dismiss_notice
+import thread.feature_forum.generated.resources.eyebrow_forum_channel
+import thread.feature_forum.generated.resources.s_367c1ec5d7
+import thread.feature_forum.generated.resources.s_3f95695328
+import thread.feature_forum.generated.resources.s_6e04347c1c
+import thread.feature_forum.generated.resources.s_782c5b3b11
+import thread.feature_forum.generated.resources.s_b5a583c5fd
+import thread.feature_forum.generated.resources.s_dcdbeb9e99
 
 data class ChannelPage(
     val drawerState: DrawerState? = null,
@@ -323,12 +330,12 @@ data class ChannelPage(
             val currentSource = state.availableSources.firstOrNull { it.id == state.currentSourceId }
             SidebarHeader(
                 icon = Icons.Default.Forum,
-                title = "社区",
-                subtitle = currentSource?.name ?: "选择内容来源",
+                title = stringResource(Res.string.s_367c1ec5d7),
+                subtitle = currentSource?.name ?: stringResource(Res.string.s_b5a583c5fd),
             )
 
             SectionLabel(
-                text = "内容来源",
+                text = stringResource(Res.string.s_6e04347c1c),
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
             )
             AnimatedSourceSelector(
@@ -351,7 +358,7 @@ data class ChannelPage(
             )
 
             SectionLabel(
-                text = "版块",
+                text = stringResource(Res.string.eyebrow_forum_channel),
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
             )
             StateLayout(
@@ -411,7 +418,7 @@ data class ChannelPage(
         onCloseDrawer: () -> Unit
     ) {
         val items = buildList {
-            add(DrawerItemData("综合趋势", Icons.Default.Home, state.currentChannel == null) {
+            add(DrawerItemData(stringResource(Res.string.s_dcdbeb9e99), Icons.Default.Home, state.currentChannel == null) {
                 viewModel.onEvent(Event.SelectHome)
                 onCloseDrawer()
             })
@@ -426,7 +433,7 @@ data class ChannelPage(
                     onCloseDrawer()
                 })
             }
-            add(DrawerItemData("来源管理", Icons.Default.Settings, false) {
+            add(DrawerItemData(stringResource(Res.string.s_782c5b3b11), Icons.Default.Settings, false) {
                 navigator.push(SourceManagerPage())
                 onCloseDrawer()
             })
@@ -547,7 +554,7 @@ data class ChannelPage(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
-                    text = "公告",
+                    text = stringResource(Res.string.s_3f95695328),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

@@ -15,6 +15,10 @@ import androidx.paging.LoadState.Error
 import androidx.paging.LoadState.Loading
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
+import org.jetbrains.compose.resources.stringResource
+import thread.core_ui.generated.resources.Res
+import thread.core_ui.generated.resources.core_ui_no_internet_retry
+import thread.core_ui.generated.resources.s_e3ce4f0d76
 
 enum class PagingContentState {
     CachedContent,
@@ -66,7 +70,7 @@ fun <T : Any> PagingStateLayout(
                 if (refreshState is Error) {
                     val appError = refreshState.error.toAppError(onRetry)
                     ThreadStatusBanner(
-                        title = "正在显示本地缓存",
+                        title = stringResource(Res.string.s_e3ce4f0d76),
                         message = appError.message,
                         tone = if (appError.type == AppErrorType.NETWORK) {
                             ThreadStatusTone.Warning
@@ -75,7 +79,7 @@ fun <T : Any> PagingStateLayout(
                         },
                         modifier = Modifier.align(Alignment.TopCenter).padding(12.dp).widthIn(max = 720.dp),
                         actions = {
-                            SaniouTextButton(onClick = onRetry, text = "重试")
+                            SaniouTextButton(onClick = onRetry, text = stringResource(Res.string.core_ui_no_internet_retry))
                         },
                     )
                 }

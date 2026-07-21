@@ -78,6 +78,37 @@ import org.kodein.di.compose.localDI
 import org.kodein.di.direct
 import org.kodein.di.instance
 import kotlin.time.Instant
+import org.jetbrains.compose.resources.stringResource
+import thread.composeapp.generated.resources.Res
+import thread.composeapp.generated.resources.s_01ca4b8486
+import thread.composeapp.generated.resources.s_06b65ae162
+import thread.composeapp.generated.resources.s_2426432239
+import thread.composeapp.generated.resources.s_284b34e15f
+import thread.composeapp.generated.resources.s_35050c33c1
+import thread.composeapp.generated.resources.s_38108eaa1d
+import thread.composeapp.generated.resources.s_456ee3d61d
+import thread.composeapp.generated.resources.s_4e173af0bc
+import thread.composeapp.generated.resources.s_67a0fbb9dc
+import thread.composeapp.generated.resources.s_6c14bd7f6f
+import thread.composeapp.generated.resources.s_6cff6c6817
+import thread.composeapp.generated.resources.s_6d1fac16bc
+import thread.composeapp.generated.resources.s_6dfb2feb93
+import thread.composeapp.generated.resources.s_705fcd3dfc
+import thread.composeapp.generated.resources.s_8dc0d03081
+import thread.composeapp.generated.resources.s_9365071b8f
+import thread.composeapp.generated.resources.s_9f6a681e2b
+import thread.composeapp.generated.resources.s_bdf1267805
+import thread.composeapp.generated.resources.s_be19319228
+import thread.composeapp.generated.resources.s_c63f79e636
+import thread.composeapp.generated.resources.s_d4289269a4
+import thread.composeapp.generated.resources.s_d439a278bc
+import thread.composeapp.generated.resources.s_d47379f917
+import thread.composeapp.generated.resources.s_d84129b8be
+import thread.composeapp.generated.resources.s_e0c29eaeb3
+import thread.composeapp.generated.resources.s_e4b9d92f14
+import thread.composeapp.generated.resources.s_e93afc81dc
+import thread.composeapp.generated.resources.s_f57207adee
+import thread.composeapp.generated.resources.s_fe5e010aa4
 
 object OperationsPage : Screen {
     @Composable
@@ -107,9 +138,9 @@ object OperationsPage : Screen {
             ) {
                 item {
                     PageHeader(
-                        title = "来源运维",
-                        eyebrow = "来源健康",
-                        subtitle = "连接器健康、缓存覆盖与刷新诊断集中在一个可恢复工作区",
+                        title = stringResource(Res.string.s_bdf1267805),
+                        eyebrow = stringResource(Res.string.s_d4289269a4),
+                        subtitle = stringResource(Res.string.s_d439a278bc),
                         actions = {
                             SaniouOutlinedButton(
                                 onClick = { viewModel.onEvent(Event.ExportDiagnostic) },
@@ -118,12 +149,12 @@ object OperationsPage : Screen {
                             ) {
                                 Icon(Icons.Default.BugReport, null)
                                 Spacer(Modifier.width(8.dp))
-                                Text("脱敏诊断")
+                                Text(stringResource(Res.string.s_be19319228))
                             }
                             SaniouOutlinedButton(onClick = { navigator.push(SourceManagerPage()) }) {
                                 Icon(Icons.Default.Hub, null)
                                 Spacer(Modifier.width(8.dp))
-                                Text("管理论坛来源")
+                                Text(stringResource(Res.string.s_67a0fbb9dc))
                             }
                         },
                     )
@@ -131,9 +162,9 @@ object OperationsPage : Screen {
                 item {
                     ContextHero(
                         icon = Icons.Default.MonitorHeart,
-                        title = if (state.snapshot.failedRefreshCount == 0) "内容管线运行正常" else "部分来源需要关注",
-                        subtitle = "失败按来源隔离；缓存内容、其他连接器与全局搜索不会被中断。",
-                        metric = "${state.snapshot.sources.size} 来源 · ${state.snapshot.cachedItemCount} 缓存",
+                        title = if (state.snapshot.failedRefreshCount == 0) stringResource(Res.string.s_2426432239) else stringResource(Res.string.s_6cff6c6817),
+                        subtitle = stringResource(Res.string.s_8dc0d03081),
+                        metric = stringResource(Res.string.s_6d1fac16bc, state.snapshot.sources.size, state.snapshot.cachedItemCount),
                     )
                 }
                 item {
@@ -160,8 +191,8 @@ object OperationsPage : Screen {
                 if (state.visibleSources.isEmpty()) {
                     item {
                         ThreadCard(Modifier.fillMaxWidth()) {
-                            Text("当前筛选没有来源", style = MaterialTheme.typography.titleMedium)
-                            Text("所有已注册来源都处于稳定或停用状态。", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(stringResource(Res.string.s_f57207adee), style = MaterialTheme.typography.titleMedium)
+                            Text(stringResource(Res.string.s_fe5e010aa4), color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 } else {
@@ -179,7 +210,7 @@ object OperationsPage : Screen {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             Icon(Icons.Default.Folder, null, tint = MaterialTheme.colorScheme.primary)
                             Column(Modifier.weight(1f)) {
-                                Text("应用数据目录", style = MaterialTheme.typography.titleMedium)
+                                Text(stringResource(Res.string.s_4e173af0bc), style = MaterialTheme.typography.titleMedium)
                                 Text(
                                     state.snapshot.storageDirectory,
                                     style = MaterialTheme.typography.bodySmall,
@@ -196,11 +227,11 @@ object OperationsPage : Screen {
                             ) {
                                 Icon(Icons.Default.ContentCopy, null)
                                 Spacer(Modifier.width(6.dp))
-                                Text("复制路径")
+                                Text(stringResource(Res.string.s_e0c29eaeb3))
                             }
                         }
                         Text(
-                            "数据库、缓存元数据与跨平台备份都使用明确的数据边界；Desktop 首次升级会迁移旧工作目录数据库。",
+                            stringResource(Res.string.s_705fcd3dfc),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
@@ -211,15 +242,15 @@ object OperationsPage : Screen {
         state.diagnosticPayload?.let { payload ->
             AdaptiveModal(
                 onDismissRequest = { viewModel.onEvent(Event.DiagnosticDismissed) },
-                paneTitle = "脱敏诊断预览",
+                paneTitle = stringResource(Res.string.s_e93afc81dc),
             ) {
                 Column(
                     Modifier.fillMaxWidth().padding(22.dp),
                     verticalArrangement = Arrangement.spacedBy(14.dp),
                 ) {
-                    Text("可安全分享的运行快照", style = MaterialTheme.typography.headlineSmall)
+                    Text(stringResource(Res.string.s_35050c33c1), style = MaterialTheme.typography.headlineSmall)
                     Text(
-                        "仅包含来源状态、缓存计数与刷新结果；账号、Cookie、令牌、内容正文和本地绝对路径不会导出。",
+                        stringResource(Res.string.s_06b65ae162),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Surface(
@@ -238,7 +269,7 @@ object OperationsPage : Screen {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                         SaniouTextButton(
                             onClick = { viewModel.onEvent(Event.DiagnosticDismissed) },
-                            text = "关闭",
+                            text = stringResource(Res.string.s_6c14bd7f6f),
                         )
                         SaniouButton(onClick = {
                             clipboard.copyText(payload)
@@ -246,7 +277,7 @@ object OperationsPage : Screen {
                         }) {
                             Icon(Icons.Default.ContentCopy, null)
                             Spacer(Modifier.width(6.dp))
-                            Text("复制诊断")
+                            Text(stringResource(Res.string.s_6dfb2feb93))
                         }
                     }
                 }
@@ -262,10 +293,10 @@ private fun OperationsMetrics(sourceCount: Int, activeCount: Int, failedCount: I
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        MetricCard("来源", sourceCount.toString(), Icons.Default.Hub, Modifier.weight(1f))
-        MetricCard("刷新中", activeCount.toString(), Icons.Default.Sync, Modifier.weight(1f))
-        MetricCard("需关注", failedCount.toString(), Icons.Default.Warning, Modifier.weight(1f))
-        MetricCard("缓存条目", cachedCount.toString(), Icons.Default.Speed, Modifier.weight(1f))
+        MetricCard(stringResource(Res.string.s_c63f79e636), sourceCount.toString(), Icons.Default.Hub, Modifier.weight(1f))
+        MetricCard(stringResource(Res.string.s_d47379f917), activeCount.toString(), Icons.Default.Sync, Modifier.weight(1f))
+        MetricCard(stringResource(Res.string.s_284b34e15f), failedCount.toString(), Icons.Default.Warning, Modifier.weight(1f))
+        MetricCard(stringResource(Res.string.s_e4b9d92f14), cachedCount.toString(), Icons.Default.Speed, Modifier.weight(1f))
     }
 }
 
@@ -333,7 +364,7 @@ private fun SourceHealthCard(
                 SaniouButton(onClick = onRetry) {
                     Icon(Icons.Default.Refresh, null)
                     Spacer(Modifier.width(6.dp))
-                    Text("刷新")
+                    Text(stringResource(Res.string.s_38108eaa1d))
                 }
             }
         }
@@ -346,22 +377,22 @@ private fun SourceHealthCard(
         }
         source.lastContentAtEpochMillis?.let {
             Text(
-                "最近内容 ${Instant.fromEpochMilliseconds(it).toRelativeTimeString()}",
+                stringResource(Res.string.s_9365071b8f, Instant.fromEpochMilliseconds(it).toRelativeTimeString()),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
         source.lastSuccessfulRefreshAtEpochMillis?.let {
             Text(
-                "上次成功 ${Instant.fromEpochMilliseconds(it).toRelativeTimeString()}" +
-                    if (source.consecutiveFailureCount > 0) " · 连续失败 ${source.consecutiveFailureCount} 次" else "",
+                stringResource(Res.string.s_456ee3d61d, Instant.fromEpochMilliseconds(it).toRelativeTimeString()) +
+                    if (source.consecutiveFailureCount > 0) stringResource(Res.string.s_9f6a681e2b, source.consecutiveFailureCount) else "",
                 style = MaterialTheme.typography.labelSmall,
                 color = if (source.consecutiveFailureCount > 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
         source.rateLimitUntilEpochMillis?.takeIf { it > kotlin.time.Clock.System.now().toEpochMilliseconds() }?.let {
             Text(
-                "限流恢复 ${Instant.fromEpochMilliseconds(it).toRelativeTimeString()}",
+                stringResource(Res.string.s_01ca4b8486, Instant.fromEpochMilliseconds(it).toRelativeTimeString()),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.tertiary,
             )
@@ -377,7 +408,7 @@ private fun SourceHealthCard(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(message, Modifier.weight(1f), color = MaterialTheme.colorScheme.onErrorContainer)
-                    SaniouTextButton(onClick = onClearDiagnostic, text = "忽略")
+                    SaniouTextButton(onClick = onClearDiagnostic, text = stringResource(Res.string.s_d84129b8be))
                 }
             }
         }

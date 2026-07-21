@@ -70,6 +70,7 @@ import thread.feature_forum.generated.resources.reply
 import thread.feature_forum.generated.resources.reply_count
 import thread.feature_forum.generated.resources.share
 import thread.feature_forum.generated.resources.view_po_only
+import thread.feature_forum.generated.resources.s_b239bbd1d5
 
 @Composable
 fun HeroTopicCard(
@@ -141,7 +142,7 @@ fun HeroTopicCard(
                             )
                         }
                         Badge(
-                            text = "楼主",
+                            text = stringResource(Res.string.s_b239bbd1d5),
                             containerColor = MaterialTheme.colorScheme.primary,
                             contentColor = MaterialTheme.colorScheme.onPrimary
                         )

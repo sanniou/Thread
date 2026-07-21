@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.30.0 - 2026-07-22
+
+i18n foundation: composeResources for every product shell/feature + composable UI string migration.
+
+- **composeApp / feature-reader / feature-feed**: first-class `composeResources/values` + `values-en` with product strings; feed already depended on compose resources and now ships its own catalog.
+- **feature-forum / core-ui**: expanded zh/en catalogs (legacy keys retained; auto-migrated composable UI strings appended).
+- Migrated high-traffic `@Composable` UI copy to `stringResource(Res.string.*)` across shell, Reader, Feed, Forum and core-ui widgets (filters, empty states, banners, dialogs, nav labels).
+- Non-composable side effects (ViewModel messages, `LaunchedEffect`/`scope.launch` snackbars, semantics-only a11y strings, notification bridge) intentionally keep Kotlin literals for now — Compose Resources `stringResource` is composable-only; full suspend `getString` plumbing is a follow-up.
+- Desktop gates: compileKotlinJvm (core-ui / forum / reader / feed / composeApp) and jvmTest (domain / data / ui / composeApp).
+
 ## 0.29.0 - 2026-07-22
 
 Product polish wave (0.26–0.29): de-console copy, cache story, empty workspace and quiet reading motion.

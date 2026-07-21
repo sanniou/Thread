@@ -53,6 +53,16 @@ import com.github.panpf.zoomimage.compose.zoom.ScrollBarSpec
 import com.github.panpf.zoomimage.compose.zoom.ZoomableState
 import com.github.panpf.zoomimage.rememberSketchZoomState
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.stringResource
+import thread.core_ui.generated.resources.Res
+import thread.core_ui.generated.resources.s_11f8516f82
+import thread.core_ui.generated.resources.s_12e2ed4d50
+import thread.core_ui.generated.resources.s_2da40f4073
+import thread.core_ui.generated.resources.s_324046a8e2
+import thread.core_ui.generated.resources.s_6c14bd7f6f
+import thread.core_ui.generated.resources.s_9b0c6c7858
+import thread.core_ui.generated.resources.s_a69e51e503
+import thread.core_ui.generated.resources.s_d7f48a059c
 
 /**
  * 一个功能丰富的可缩放图片组件，提供缩放、平移、旋转和图片信息。
@@ -154,7 +164,7 @@ private fun ZoomImageTool(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.ZoomOut,
-                                contentDescription = "缩小",
+                                contentDescription = stringResource(Res.string.s_11f8516f82),
                             )
                         }
 
@@ -172,7 +182,7 @@ private fun ZoomImageTool(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.ZoomIn,
-                                contentDescription = "放大",
+                                contentDescription = stringResource(Res.string.s_d7f48a059c),
                             )
                         }
                     }
@@ -210,7 +220,7 @@ private fun ZoomImageTool(
     if (showInfoDialog) {
         AlertDialog(
             onDismissRequest = { showInfoDialog = false },
-            title = { Text("图片信息") },
+            title = { Text(stringResource(Res.string.s_324046a8e2)) },
             text = {
                 val info = """
                     URL: $uri
@@ -220,7 +230,7 @@ private fun ZoomImageTool(
                 Text(info)
             },
             confirmButton = {
-                SaniouTextButton(onClick = { showInfoDialog = false }, text = "关闭")
+                SaniouTextButton(onClick = { showInfoDialog = false }, text = stringResource(Res.string.s_6c14bd7f6f))
             }
         )
     }
@@ -252,7 +262,7 @@ private fun ButtonPad(
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.RotateRight,
-                contentDescription = "旋转",
+                contentDescription = stringResource(Res.string.s_a69e51e503),
                 tint = contentColor
             )
         }
@@ -273,7 +283,7 @@ private fun ButtonPad(
             val icon = if (zoomIn) Icons.Default.ZoomIn else Icons.Default.ZoomOut
             Icon(
                 imageVector = icon,
-                contentDescription = "缩放",
+                contentDescription = stringResource(Res.string.s_12e2ed4d50),
                 tint = contentColor
             )
         }
@@ -284,7 +294,7 @@ private fun ButtonPad(
         ) {
             Icon(
                 imageVector = Icons.Default.Info,
-                contentDescription = "信息",
+                contentDescription = stringResource(Res.string.s_2da40f4073),
                 tint = contentColor
             )
         }
@@ -295,7 +305,7 @@ private fun ButtonPad(
         ) {
             Icon(
                 imageVector = Icons.Default.MoreVert,
-                contentDescription = "更多",
+                contentDescription = stringResource(Res.string.s_9b0c6c7858),
                 tint = contentColor
             )
         }

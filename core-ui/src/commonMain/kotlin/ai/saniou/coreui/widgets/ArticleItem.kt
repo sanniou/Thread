@@ -29,6 +29,10 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import org.jetbrains.compose.resources.stringResource
+import thread.core_ui.generated.resources.Res
+import thread.core_ui.generated.resources.s_1e230aa201
+import thread.core_ui.generated.resources.s_2d2cdabf29
 
 @Composable
 fun ArticleItem(
@@ -56,7 +60,7 @@ fun ArticleItem(
             if (showUnreadIndicator && !isRead) {
                 Icon(
                     Icons.Default.Circle,
-                    contentDescription = "未读",
+                    contentDescription = stringResource(Res.string.s_1e230aa201),
                     modifier = Modifier.padding(top = 7.dp).size(8.dp),
                     tint = MaterialTheme.colorScheme.primary,
                 )
@@ -105,7 +109,7 @@ fun ArticleItem(
                     if (article.isBookmarked) {
                         Icon(
                             Icons.Default.Bookmark,
-                            contentDescription = "已收藏",
+                            contentDescription = stringResource(Res.string.s_2d2cdabf29),
                             modifier = Modifier.size(15.dp),
                             tint = MaterialTheme.colorScheme.tertiary,
                         )

@@ -22,6 +22,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
+import org.jetbrains.compose.resources.stringResource
+import thread.feature_forum.generated.resources.Res
+import thread.feature_forum.generated.resources.category_collapse
+import thread.feature_forum.generated.resources.s_cabb83a73c
 
 @Composable
 fun CollapsibleThreadBody(
@@ -67,7 +71,7 @@ fun CollapsibleThreadBody(
                         tint = MaterialTheme.colorScheme.primary
                     )
                     Text(
-                        text = if (expanded) "收起" else "展开全文",
+                        text = if (expanded) stringResource(Res.string.category_collapse) else stringResource(Res.string.s_cabb83a73c),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.primary
                     )

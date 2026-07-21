@@ -8,4 +8,39 @@
     <string name="core_ui_server_error">服务器出错</string>
     <string name="core_ui_net_un_connect_and_retry">请检查您的网络设置后重试</string>
     <string name="core_ui_server_busy">服务器繁忙，请稍后再试</string>
+
+    <!-- auto-migrated product strings (composable UI) -->
+    <string name="s_04dcc2bb6b">打开命令与全局发现</string>
+    <string name="s_0b13297f85">打开命令与全局发现，快捷键 Ctrl 或 Command 加 Shift 加 P</string>
+    <string name="s_11f8516f82">缩小</string>
+    <string name="s_12e2ed4d50">缩放</string>
+    <string name="s_1e230aa201">未读</string>
+    <string name="s_2d2cdabf29">已收藏</string>
+    <string name="s_2da40f4073">信息</string>
+    <string name="s_316334eed7">%1$s 个来源需要更新登录状态，其他来源不受影响。</string>
+    <string name="s_324046a8e2">图片信息</string>
+    <string name="s_40a1549708">依据回复、引用、作者、标签和规范链接构建的本地内容关系图</string>
+    <string name="s_4bcb37a2a4">命令与发现</string>
+    <string name="s_4f55ee1e68">详情</string>
+    <string name="s_5d5815647c">收起</string>
+    <string name="s_5f76edc5de">未知错误</string>
+    <string name="s_64f6dfa563">%1$s 个来源暂未刷新</string>
+    <string name="s_65c709f5be">第 %1$s 次</string>
+    <string name="s_682836a89a">关联内容</string>
+    <string name="s_6c14bd7f6f">关闭</string>
+    <string name="s_84fcd70d42">清空</string>
+    <string name="s_8657c1c431">未能加载更多内容</string>
+    <string name="s_8f27d2c8a0">包含当前工作区</string>
+    <string name="s_9b0c6c7858">更多</string>
+    <string name="s_a1ff8da47d">工作区</string>
+    <string name="s_a69e51e503">旋转</string>
+    <string name="s_b114b91547">命令</string>
+    <string name="s_c07113b965">更多工作区</string>
+    <string name="s_d5f066a88a">设备离线；已有缓存仍然可以继续阅读。</string>
+    <string name="s_d7f48a059c">放大</string>
+    <string name="s_e3ce4f0d76">正在显示本地缓存</string>
+    <string name="s_ed7f8c8bad">失败已按来源隔离，成功来源与本地内容继续显示。</string>
+    <string name="s_ef7906fa7f">正在加载更多</string>
+    <string name="s_f7bd72c0c7">快捷键菜单</string>
+    <string name="s_ff55f08cf1">跳转工作区或搜索离线缓存</string>
 </resources>

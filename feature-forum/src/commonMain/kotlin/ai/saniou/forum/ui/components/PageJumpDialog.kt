@@ -27,6 +27,14 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import kotlin.math.roundToInt
+import org.jetbrains.compose.resources.stringResource
+import thread.feature_forum.generated.resources.Res
+import thread.feature_forum.generated.resources.s_053dd510fc
+import thread.feature_forum.generated.resources.s_3fbf1853e5
+import thread.feature_forum.generated.resources.s_4565fe5a08
+import thread.feature_forum.generated.resources.s_f374b88bfd
+import thread.feature_forum.generated.resources.subscription_cancel
+import thread.feature_forum.generated.resources.subscription_confirm
 
 /**
  * 页面跳转对话框
@@ -61,14 +69,14 @@ fun PageJumpDialog(
                 .padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text("跳转到页面", style = MaterialTheme.typography.headlineSmall)
+            Text(stringResource(Res.string.s_4565fe5a08), style = MaterialTheme.typography.headlineSmall)
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("选择页码", style = MaterialTheme.typography.bodyMedium)
-                Text("$totalPages 页", style = MaterialTheme.typography.bodyMedium)
+                Text(stringResource(Res.string.s_3fbf1853e5), style = MaterialTheme.typography.bodyMedium)
+                Text(stringResource(Res.string.s_f374b88bfd, totalPages), style = MaterialTheme.typography.bodyMedium)
             }
 
             OutlinedTextField(
@@ -81,7 +89,7 @@ fun PageJumpDialog(
                     }
                 },
                 isError = isError,
-                label = { Text("页码 (1-$totalPages)") },
+                label = { Text(stringResource(Res.string.s_053dd510fc, totalPages)) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
@@ -103,14 +111,14 @@ fun PageJumpDialog(
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                SaniouTextButton(onClick = onDismissRequest, text = "取消")
+                SaniouTextButton(onClick = onDismissRequest, text = stringResource(Res.string.subscription_cancel))
                 SaniouButton(
                     onClick = {
                         onJumpToPage(targetPage.toInt())
                         onDismissRequest()
                     },
                     enabled = !isError,
-                    text = "确定",
+                    text = stringResource(Res.string.subscription_confirm),
                 )
             }
         }

@@ -49,6 +49,23 @@ import org.kodein.di.compose.localDI
 import org.kodein.di.direct
 import org.kodein.di.instance
 import androidx.paging.compose.collectAsLazyPagingItems
+import org.jetbrains.compose.resources.stringResource
+import thread.composeapp.generated.resources.Res
+import thread.composeapp.generated.resources.s_0dfffe9881
+import thread.composeapp.generated.resources.s_2501ff4d66
+import thread.composeapp.generated.resources.s_2a73ffdf99
+import thread.composeapp.generated.resources.s_3b89e3b012
+import thread.composeapp.generated.resources.s_61bcd04508
+import thread.composeapp.generated.resources.s_6c53fc701c
+import thread.composeapp.generated.resources.s_98d1a2291c
+import thread.composeapp.generated.resources.s_a4330209a2
+import thread.composeapp.generated.resources.s_a970323576
+import thread.composeapp.generated.resources.s_c84df4602f
+import thread.composeapp.generated.resources.s_cf392f36e1
+import thread.composeapp.generated.resources.s_e33f273247
+import thread.composeapp.generated.resources.s_e5acde55aa
+import thread.composeapp.generated.resources.s_eb561f9bf0
+import thread.composeapp.generated.resources.s_ec4bfed1fe
 
 object GlobalSearchPage : Screen {
     @Composable
@@ -94,19 +111,19 @@ object GlobalSearchPage : Screen {
                 verticalArrangement = Arrangement.spacedBy(18.dp),
             ) {
                 PageHeader(
-                    title = "全局发现",
-                    eyebrow = "本地搜索",
-                    subtitle = "跨社区主题、回复与 Reader 正文搜索本地缓存",
+                    title = stringResource(Res.string.s_eb561f9bf0),
+                    eyebrow = stringResource(Res.string.s_cf392f36e1),
+                    subtitle = stringResource(Res.string.s_61bcd04508),
                 )
                 ContextHero(
                     icon = Icons.Default.Search,
-                    title = "一个入口，三类内容",
-                    subtitle = "搜索不依赖当前来源和网络状态，结果直接回到原始阅读上下文。",
-                    metric = state.response?.let { "${it.totalCount} 条命中" } ?: "本地优先",
+                    title = stringResource(Res.string.s_6c53fc701c),
+                    subtitle = stringResource(Res.string.s_3b89e3b012),
+                    metric = state.response?.let { stringResource(Res.string.s_98d1a2291c, it.totalCount) } ?: stringResource(Res.string.s_c84df4602f),
                 )
                 ThreadCard(Modifier.fillMaxWidth()) {
                     if (state.smartCollections.isNotEmpty()) {
-                        Text("智能集合", style = MaterialTheme.typography.labelLarge)
+                        Text(stringResource(Res.string.s_e33f273247), style = MaterialTheme.typography.labelLarge)
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             state.smartCollections.forEach { collection ->
                                 FilterChip(
@@ -126,13 +143,13 @@ object GlobalSearchPage : Screen {
                         value = state.query,
                         onValueChange = { viewModel.onEvent(Event.QueryChanged(it)) },
                         modifier = Modifier.fillMaxWidth(),
-                        label = { Text("搜索缓存内容") },
-                        placeholder = { Text("至少输入两个字符") },
+                        label = { Text(stringResource(Res.string.s_ec4bfed1fe)) },
+                        placeholder = { Text(stringResource(Res.string.s_a970323576)) },
                         leadingIcon = { Icon(Icons.Default.Search, null) },
                         trailingIcon = {
                             if (state.query.isNotEmpty()) {
                                 IconButton(onClick = { viewModel.onEvent(Event.Clear) }) {
-                                    Icon(Icons.Default.Close, contentDescription = "清空搜索")
+                                    Icon(Icons.Default.Close, contentDescription = stringResource(Res.string.s_2a73ffdf99))
                                 }
                             }
                         },
@@ -176,8 +193,8 @@ object GlobalSearchPage : Screen {
 private fun SearchGuidance() {
     ModernEmptyState(
         icon = Icons.Default.Search,
-        title = "从已有内容开始",
-        description = "缓存搜索覆盖已加载的论坛主题、回复和 Reader 文章；即使某个来源暂时离线，已经阅读过的内容仍可发现。",
+        title = stringResource(Res.string.s_e5acde55aa),
+        description = stringResource(Res.string.s_0dfffe9881),
         modifier = Modifier.fillMaxWidth(),
     )
 }
@@ -186,8 +203,8 @@ private fun SearchGuidance() {
 private fun SearchEmptyState(query: String) {
     ModernEmptyState(
         icon = Icons.Default.SearchOff,
-        title = "没有找到“${query.trim()}”",
-        description = "可以缩短关键词、启用更多内容类型，或先刷新对应来源。",
+        title = stringResource(Res.string.s_2501ff4d66, query.trim()),
+        description = stringResource(Res.string.s_a4330209a2),
         modifier = Modifier.fillMaxWidth(),
     )
 }

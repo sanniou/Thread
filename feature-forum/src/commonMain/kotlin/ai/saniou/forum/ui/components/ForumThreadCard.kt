@@ -26,6 +26,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import org.jetbrains.compose.resources.stringResource
+import thread.feature_forum.generated.resources.Res
+import thread.feature_forum.generated.resources.empty_title
+import thread.feature_forum.generated.resources.s_0f666abf00
+import thread.feature_forum.generated.resources.s_3363bd3488
+import thread.feature_forum.generated.resources.s_b6543d7470
 
 @Composable
 fun TopicCard(
@@ -47,7 +53,7 @@ fun TopicCard(
                 showChannelBadge = showChannelBadge
             )
 
-            topic.title?.takeIf { it.isNotBlank() && it != "无标题" }?.let { title ->
+            topic.title?.takeIf { it.isNotBlank() && it != stringResource(Res.string.empty_title) }?.let { title ->
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleMedium,
@@ -88,7 +94,7 @@ fun TopicCard(
                             modifier = Modifier.size(Dimens.icon_size_small)
                         )
                         Text(
-                            text = "${topic.commentCount} 回复",
+                            text = stringResource(Res.string.s_b6543d7470, topic.commentCount),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -109,7 +115,7 @@ fun TopicCard(
                         RecentReplies(topic.comments.take(2))
                         if (topic.commentCount > 0) {
                             Text(
-                                text = "查看其余 ${topic.commentCount} 条回复...",
+                                text = stringResource(Res.string.s_3363bd3488, topic.commentCount),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.Medium,
@@ -156,7 +162,7 @@ private fun TopicMetaSection(
             horizontalArrangement = Arrangement.spacedBy(Dimens.padding_tiny)
         ) {
             Text(
-                text = topic.author.name.takeIf { it.isNotBlank() && it != "无名氏" } ?: topic.author.id,
+                text = topic.author.name.takeIf { it.isNotBlank() && it != stringResource(Res.string.s_0f666abf00) } ?: topic.author.id,
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.clickable(enabled = onUserClick != null) {

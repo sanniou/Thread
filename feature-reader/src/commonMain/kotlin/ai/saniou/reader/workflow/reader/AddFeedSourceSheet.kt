@@ -20,6 +20,38 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import org.jetbrains.compose.resources.stringResource
+import thread.feature_reader.generated.resources.Res
+import thread.feature_reader.generated.resources.s_0c8b3594f5
+import thread.feature_reader.generated.resources.s_11d0241540
+import thread.feature_reader.generated.resources.s_127db1eb5e
+import thread.feature_reader.generated.resources.s_1be7ae4fc2
+import thread.feature_reader.generated.resources.s_22735a939e
+import thread.feature_reader.generated.resources.s_251d583130
+import thread.feature_reader.generated.resources.s_293a341e88
+import thread.feature_reader.generated.resources.s_297a7ec438
+import thread.feature_reader.generated.resources.s_315d27498f
+import thread.feature_reader.generated.resources.s_3a9a579a96
+import thread.feature_reader.generated.resources.s_3f5cb2d1a1
+import thread.feature_reader.generated.resources.s_45a2727884
+import thread.feature_reader.generated.resources.s_4b62c5ce6c
+import thread.feature_reader.generated.resources.s_4d0b4688c7
+import thread.feature_reader.generated.resources.s_57937ccefc
+import thread.feature_reader.generated.resources.s_75ef1241c0
+import thread.feature_reader.generated.resources.s_899dfaf555
+import thread.feature_reader.generated.resources.s_8e17667027
+import thread.feature_reader.generated.resources.s_99250ff7cc
+import thread.feature_reader.generated.resources.s_b37255ca3a
+import thread.feature_reader.generated.resources.s_bb77d79355
+import thread.feature_reader.generated.resources.s_bea40ee383
+import thread.feature_reader.generated.resources.s_c02d95def4
+import thread.feature_reader.generated.resources.s_c3147ba167
+import thread.feature_reader.generated.resources.s_c9e72455c7
+import thread.feature_reader.generated.resources.s_dee3a22068
+import thread.feature_reader.generated.resources.s_e2d53a6d3a
+import thread.feature_reader.generated.resources.s_e4e46c7235
+import thread.feature_reader.generated.resources.s_ea0ef2ae72
+import thread.feature_reader.generated.resources.s_fadf24dbc5
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,7 +113,7 @@ private fun Step_Analyzing(url: String) {
         verticalArrangement = Arrangement.spacedBy(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("正在分析页面...", style = MaterialTheme.typography.titleLarge)
+        Text(stringResource(Res.string.s_899dfaf555), style = MaterialTheme.typography.titleLarge)
         CircularProgressIndicator(
             modifier = Modifier.size(48.dp),
             strokeWidth = 4.dp
@@ -117,7 +149,7 @@ private fun Step_AnalysisFailed(
             modifier = Modifier.size(64.dp)
         )
         Text(
-            text = "分析失败",
+            text = stringResource(Res.string.s_127db1eb5e),
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.error
         )
@@ -138,9 +170,9 @@ private fun Step_AnalysisFailed(
             horizontalArrangement = Arrangement.End,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            SaniouTextButton(onClick = onBack, text = "返回")
+            SaniouTextButton(onClick = onBack, text = stringResource(Res.string.s_11d0241540))
             Spacer(modifier = Modifier.width(8.dp))
-            SaniouButton(onClick = onRetry, text = "重试")
+            SaniouButton(onClick = onRetry, text = stringResource(Res.string.s_e2d53a6d3a))
         }
     }
 }
@@ -155,7 +187,7 @@ private fun Step_SelectSource(
         modifier = Modifier.fillMaxWidth()
     ) {
         Text(
-            "发现多个订阅源",
+            stringResource(Res.string.s_bea40ee383),
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)
         )
@@ -165,7 +197,7 @@ private fun Step_SelectSource(
         ) {
             items(sources) { source ->
                 ListItem(
-                    headlineContent = { Text(source.name.ifBlank { "未命名源" }) },
+                    headlineContent = { Text(source.name.ifBlank { stringResource(Res.string.s_dee3a22068) }) },
                     supportingContent = { Text(source.url, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                     modifier = Modifier.clickable { onSourceSelected(source) },
                     leadingContent = {
@@ -181,7 +213,7 @@ private fun Step_SelectSource(
                 .padding(horizontal = 24.dp, vertical = 16.dp),
             horizontalArrangement = Arrangement.End
         ) {
-            SaniouTextButton(onClick = onBack, text = "返回")
+            SaniouTextButton(onClick = onBack, text = stringResource(Res.string.s_11d0241540))
         }
     }
 }
@@ -204,13 +236,13 @@ private fun Step_ConfirmSource(
     var isAdvancedConfigExpanded by remember { mutableStateOf(false) }
 
     val intervalOptions = listOf(
-        900000L to "15分钟",
-        1800000L to "30分钟",
-        3600000L to "1小时",
-        7200000L to "2小时",
-        21600000L to "6小时",
-        43200000L to "12小时",
-        86400000L to "24小时"
+        900000L to stringResource(Res.string.s_c02d95def4),
+        1800000L to stringResource(Res.string.s_c9e72455c7),
+        3600000L to stringResource(Res.string.s_3a9a579a96),
+        7200000L to stringResource(Res.string.s_b37255ca3a),
+        21600000L to stringResource(Res.string.s_57937ccefc),
+        43200000L to stringResource(Res.string.s_293a341e88),
+        86400000L to stringResource(Res.string.s_45a2727884)
     )
 
     LazyColumn(
@@ -220,7 +252,7 @@ private fun Step_ConfirmSource(
     ) {
         item {
             Text(
-                if (source.id.isBlank()) "确认订阅信息" else "编辑订阅源",
+                if (source.id.isBlank()) stringResource(Res.string.s_0c8b3594f5) else stringResource(Res.string.s_bb77d79355),
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.padding(vertical = 8.dp)
             )
@@ -232,7 +264,7 @@ private fun Step_ConfirmSource(
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("名称") },
+                    label = { Text(stringResource(Res.string.s_1be7ae4fc2)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
@@ -251,7 +283,7 @@ private fun Step_ConfirmSource(
                         value = type.name,
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("类型") },
+                        label = { Text(stringResource(Res.string.s_e4e46c7235)) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isTypeMenuExpanded) },
                         modifier = Modifier
                             .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
@@ -278,7 +310,7 @@ private fun Step_ConfirmSource(
         // --- 刷新设置 ---
         item {
             Text(
-                "刷新设置",
+                stringResource(Res.string.s_c3147ba167),
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(vertical = 8.dp),
                 color = MaterialTheme.colorScheme.primary
@@ -289,7 +321,7 @@ private fun Step_ConfirmSource(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("自动刷新")
+                    Text(stringResource(Res.string.s_297a7ec438))
                     Switch(
                         checked = autoRefresh,
                         onCheckedChange = { autoRefresh = it }
@@ -302,10 +334,10 @@ private fun Step_ConfirmSource(
                         onExpandedChange = { isIntervalMenuExpanded = !isIntervalMenuExpanded }
                     ) {
                         OutlinedTextField(
-                            value = intervalOptions.find { it.first == refreshInterval }?.second ?: "${refreshInterval / 60000}分钟",
+                            value = intervalOptions.find { it.first == refreshInterval }?.second ?: stringResource(Res.string.s_315d27498f, refreshInterval / 60000),
                             onValueChange = {},
                             readOnly = true,
-                            label = { Text("刷新间隔") },
+                            label = { Text(stringResource(Res.string.s_3f5cb2d1a1)) },
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isIntervalMenuExpanded) },
                             modifier = Modifier
                                 .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
@@ -339,8 +371,8 @@ private fun Step_ConfirmSource(
                 ) {
                     Column {
                         ListItem(
-                            headlineContent = { Text("高级解析规则") },
-                            supportingContent = { Text("配置如何提取文章内容") },
+                            headlineContent = { Text(stringResource(Res.string.s_4b62c5ce6c)) },
+                            supportingContent = { Text(stringResource(Res.string.s_8e17667027)) },
                             trailingContent = {
                                 Icon(
                                     imageVector = Icons.Default.ArrowDropDown,
@@ -371,7 +403,7 @@ private fun Step_ConfirmSource(
                 modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                 horizontalArrangement = Arrangement.End
             ) {
-                SaniouTextButton(onClick = onBack, text = "上一步")
+                SaniouTextButton(onClick = onBack, text = stringResource(Res.string.s_75ef1241c0))
                 Spacer(modifier = Modifier.width(8.dp))
                 SaniouButton(
                     onClick = {
@@ -384,7 +416,7 @@ private fun Step_ConfirmSource(
                             refreshInterval = refreshInterval
                         ))
                     },
-                    text = "保存",
+                    text = stringResource(Res.string.s_fadf24dbc5),
                 )
             }
         }
@@ -401,19 +433,19 @@ private fun Step1_EnterUrl(onNext: (String) -> Unit, onDismiss: () -> Unit) {
         modifier = Modifier.padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
-        Text("添加新订阅", style = MaterialTheme.typography.titleLarge)
+        Text(stringResource(Res.string.s_22735a939e), style = MaterialTheme.typography.titleLarge)
 
         OutlinedTextField(
             value = url,
             onValueChange = { url = it },
-            label = { Text("输入网址 (RSS, HTML, JSON)") },
+            label = { Text(stringResource(Res.string.s_99250ff7cc)) },
             placeholder = { Text("https://example.com/feed") },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             isError = url.isNotBlank() && !isUrlValid,
             supportingText = {
                 if (url.isNotBlank() && !isUrlValid) {
-                    Text("请输入以 http:// 或 https:// 开头的有效网址")
+                    Text(stringResource(Res.string.s_251d583130))
                 }
             }
         )
@@ -422,12 +454,12 @@ private fun Step1_EnterUrl(onNext: (String) -> Unit, onDismiss: () -> Unit) {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.End
         ) {
-            SaniouTextButton(onClick = onDismiss, text = "取消")
+            SaniouTextButton(onClick = onDismiss, text = stringResource(Res.string.s_4d0b4688c7))
             Spacer(modifier = Modifier.width(8.dp))
             SaniouButton(
                 onClick = { onNext(url) },
                 enabled = isUrlValid,
-                text = "下一步",
+                text = stringResource(Res.string.s_ea0ef2ae72),
             )
         }
     }

@@ -70,6 +70,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
+import org.jetbrains.compose.resources.stringResource
+import thread.composeapp.generated.resources.Res
+import thread.composeapp.generated.resources.s_11fdaed970
+import thread.composeapp.generated.resources.s_1ca2668ead
+import thread.composeapp.generated.resources.s_1f425b6bf0
+import thread.composeapp.generated.resources.s_358adbfeaf
+import thread.composeapp.generated.resources.s_4bcb37a2a4
+import thread.composeapp.generated.resources.s_528869a02b
+import thread.composeapp.generated.resources.s_9f479438fb
+import thread.composeapp.generated.resources.s_a29b060f6c
+import thread.composeapp.generated.resources.s_bca2fcab84
+import thread.composeapp.generated.resources.s_f3ea6d345e
 
 data class WorkspaceCommand(
     val destination: WorkspaceDestination,
@@ -176,7 +188,7 @@ fun CommandPalette(
         onDismiss()
     }
 
-    AdaptiveModal(onDismissRequest = onDismiss, paneTitle = "Thread 命令面板") {
+    AdaptiveModal(onDismissRequest = onDismiss, paneTitle = stringResource(Res.string.s_1ca2668ead)) {
         Column(
             modifier = Modifier.fillMaxWidth().heightIn(min = 420.dp, max = 720.dp)
                 .threadShortcutHost(
@@ -192,9 +204,9 @@ fun CommandPalette(
                 ),
         ) {
             Column(Modifier.padding(horizontal = 22.dp, vertical = 18.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                Text("命令与发现", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold)
+                Text(stringResource(Res.string.s_4bcb37a2a4), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold)
                 Text(
-                    "输入工作区名称或搜索所有本地缓存 · Ctrl/Command + Shift + P",
+                    stringResource(Res.string.s_358adbfeaf),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -203,7 +215,7 @@ fun CommandPalette(
                 value = query,
                 onValueChange = { query = it.take(240) },
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 22.dp).focusRequester(focusRequester),
-                placeholder = { Text("跳转到工作区，或搜索主题、回复、文章…") },
+                placeholder = { Text(stringResource(Res.string.s_9f479438fb)) },
                 leadingIcon = { Icon(Icons.Default.Search, null) },
                 trailingIcon = {
                     if (isSearching) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
@@ -216,7 +228,7 @@ fun CommandPalette(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(Icons.Default.Search, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
                         Spacer(Modifier.size(10.dp))
-                        Text("没有匹配的命令或缓存内容")
+                        Text(stringResource(Res.string.s_11fdaed970))
                     }
                 }
             } else {
@@ -255,9 +267,9 @@ fun CommandPalette(
                 Modifier.fillMaxWidth().padding(horizontal = 22.dp, vertical = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(18.dp),
             ) {
-                Text("↑↓ 选择", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text("↵ 打开", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text("Esc 关闭", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(Res.string.s_528869a02b), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(Res.string.s_a29b060f6c), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(Res.string.s_bca2fcab84), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }
@@ -296,7 +308,7 @@ private fun ProductCommandRow(command: ProductCommand, selected: Boolean, onClic
             }
             Surface(shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.surfaceContainerHigh) {
                 Text(
-                    if (command.descriptor.enabled) "操作" else "执行中",
+                    if (command.descriptor.enabled) stringResource(Res.string.s_f3ea6d345e) else stringResource(Res.string.s_1f425b6bf0),
                     Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                     style = MaterialTheme.typography.labelSmall,
                 )

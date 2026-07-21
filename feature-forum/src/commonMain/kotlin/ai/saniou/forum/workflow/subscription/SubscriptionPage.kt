@@ -92,6 +92,8 @@ import thread.feature_forum.generated.resources.subscription_title
 import thread.feature_forum.generated.resources.subscription_unknown_error
 import thread.feature_forum.generated.resources.subscription_unsubscribe
 import thread.feature_forum.generated.resources.eyebrow_following
+import thread.feature_forum.generated.resources.s_66f2ea3cde
+import thread.feature_forum.generated.resources.s_e7081deccc
 
 data class SubscriptionPage(
     val onUpdateTitle: ((String) -> Unit)? = null,
@@ -128,9 +130,9 @@ data class SubscriptionPage(
                 title = stringResource(Res.string.subscription_title),
                 eyebrow = stringResource(Res.string.eyebrow_following),
                 subtitle = if (state.subscriptionId.isNullOrBlank()) {
-                    "本地关注列表"
+                    stringResource(Res.string.s_66f2ea3cde)
                 } else {
-                    "本地与云端订阅同步"
+                    stringResource(Res.string.s_e7081deccc)
                 },
                 onBack = navigator::pop,
                 snackbarHost = { SnackbarHost(snackbarHostState) },

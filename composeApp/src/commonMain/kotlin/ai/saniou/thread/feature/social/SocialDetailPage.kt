@@ -77,6 +77,16 @@ import org.kodein.di.compose.localDI
 import org.kodein.di.direct
 import org.kodein.di.instance
 import kotlin.time.Instant
+import org.jetbrains.compose.resources.stringResource
+import thread.composeapp.generated.resources.Res
+import thread.composeapp.generated.resources.s_1795a34c15
+import thread.composeapp.generated.resources.s_5eee313d53
+import thread.composeapp.generated.resources.s_7a92434114
+import thread.composeapp.generated.resources.s_ac12e825b5
+import thread.composeapp.generated.resources.s_adacab81ba
+import thread.composeapp.generated.resources.s_d4efdb587a
+import thread.composeapp.generated.resources.s_e2d53a6d3a
+import thread.composeapp.generated.resources.s_f8b857f50a
 
 data class SocialDetailPage(
     val sourceId: String,
@@ -104,6 +114,8 @@ data class SocialDetailPage(
         val related = remember(graphReference) { contentGraphRepository.getRelated(graphReference) }
             .collectAsLazyPagingItems()
         val snackbar = remember { SnackbarHostState() }
+        val shareOkMsg = stringResource(Res.string.s_1795a34c15)
+        val shareFallbackMsg = stringResource(Res.string.s_adacab81ba)
         val scope = rememberCoroutineScope()
         val uriHandler = LocalUriHandler.current
         val clipboard = rememberThreadClipboard()
@@ -118,8 +130,8 @@ data class SocialDetailPage(
         }
 
         ThreadDetailScaffold(
-            title = state.post?.author?.displayName ?: "社交动态",
-            eyebrow = "社交",
+            title = state.post?.author?.displayName ?: stringResource(Res.string.s_f8b857f50a),
+            eyebrow = stringResource(Res.string.s_ac12e825b5),
             subtitle = state.post?.author?.handle ?: sourceId,
             onBack = { navigator.pop() },
             actions = {
@@ -140,14 +152,14 @@ data class SocialDetailPage(
                         val shared = shareService?.shareText(shareText, post.author.displayName) == true
                         if (!shared) clipboard.copyText(shareText)
                         scope.launch {
-                            snackbar.showSnackbar(if (shared) "已通过系统分享" else "内容已复制")
+                            snackbar.showSnackbar(if (shared) shareOkMsg else shareFallbackMsg)
                         }
                     }) {
-                        Icon(Icons.Outlined.Share, contentDescription = "分享")
+                        Icon(Icons.Outlined.Share, contentDescription = stringResource(Res.string.s_7a92434114))
                     }
                     post.canonicalUrl?.let { url ->
                         IconButton(onClick = { uriHandler.openUri(url) }) {
-                            Icon(Icons.Outlined.OpenInNew, contentDescription = "在浏览器打开")
+                            Icon(Icons.Outlined.OpenInNew, contentDescription = stringResource(Res.string.s_5eee313d53))
                         }
                     }
                 }
@@ -164,12 +176,12 @@ data class SocialDetailPage(
                         val errorMessage = state.error.orEmpty()
                         ModernEmptyState(
                             icon = Icons.Default.Public,
-                            title = "无法打开社交动态",
+                            title = stringResource(Res.string.s_d4efdb587a),
                             description = errorMessage,
                             action = {
                                 SaniouButton(
                                     onClick = { viewModel.onEvent(Event.Retry) },
-                                    text = "重试",
+                                    text = stringResource(Res.string.s_e2d53a6d3a),
                                 )
                             },
                         )

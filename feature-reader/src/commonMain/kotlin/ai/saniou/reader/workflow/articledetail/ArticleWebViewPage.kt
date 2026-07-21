@@ -24,6 +24,11 @@ import com.multiplatform.webview.web.WebView
 import com.multiplatform.webview.web.rememberWebViewNavigator
 import com.multiplatform.webview.web.rememberWebViewState
 import com.multiplatform.webview.web.rememberWebViewStateWithHTMLData
+import org.jetbrains.compose.resources.stringResource
+import thread.feature_reader.generated.resources.Res
+import thread.feature_reader.generated.resources.s_4b560383be
+import thread.feature_reader.generated.resources.s_4d69dbdf62
+import thread.feature_reader.generated.resources.s_76b3e684df
 
 data class ArticleWebViewPage(val articleId: String) : Screen {
 
@@ -34,13 +39,13 @@ data class ArticleWebViewPage(val articleId: String) : Screen {
         val state by viewModel.state.collectAsState()
 
         ThreadDetailScaffold(
-            title = state.feedSourceName ?: "网页视图",
-            eyebrow = "原文",
+            title = state.feedSourceName ?: stringResource(Res.string.s_4b560383be),
+            eyebrow = stringResource(Res.string.s_4d69dbdf62),
             subtitle = state.article?.title,
             onBack = navigator::pop,
             actions = {
                 IconButton(onClick = { viewModel.onEvent(ArticleDetailContract.Event.OnRetry) }) {
-                    Icon(Icons.Default.Refresh, contentDescription = "重新加载文章")
+                    Icon(Icons.Default.Refresh, contentDescription = stringResource(Res.string.s_76b3e684df))
                 }
             },
         ) { padding ->

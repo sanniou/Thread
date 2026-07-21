@@ -43,6 +43,23 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.kodein.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import org.jetbrains.compose.resources.stringResource
+import thread.composeapp.generated.resources.Res
+import thread.composeapp.generated.resources.s_1c3775584b
+import thread.composeapp.generated.resources.s_2b69b675e4
+import thread.composeapp.generated.resources.s_2fe8f7cd43
+import thread.composeapp.generated.resources.s_3488c54564
+import thread.composeapp.generated.resources.s_525b6078f6
+import thread.composeapp.generated.resources.s_5d071a7a42
+import thread.composeapp.generated.resources.s_61d0e95680
+import thread.composeapp.generated.resources.s_7459b11af2
+import thread.composeapp.generated.resources.s_9ebd38aa1b
+import thread.composeapp.generated.resources.s_a7f814c0a4
+import thread.composeapp.generated.resources.s_ad3fd0f4c7
+import thread.composeapp.generated.resources.s_ae8714509f
+import thread.composeapp.generated.resources.s_d4dcb361a4
+import thread.composeapp.generated.resources.s_e23ed7cf28
+import thread.composeapp.generated.resources.s_e6f497d8b4
 
 object BookmarkPage : Screen {
 
@@ -58,8 +75,8 @@ object BookmarkPage : Screen {
             ThreadContentColumn(modifier = Modifier.fillMaxSize()) {
                 ContextHero(
                     icon = Icons.Default.BookmarkBorder,
-                    title = if (state.isSelectionMode) "已选择 ${state.selectedBookmarks.size} 项" else "收藏夹",
-                    subtitle = if (state.isSelectionMode) "可以批量删除所选内容" else "集中管理帖子、文章、链接与摘录",
+                    title = if (state.isSelectionMode) stringResource(Res.string.s_61d0e95680, state.selectedBookmarks.size) else stringResource(Res.string.s_e6f497d8b4),
+                    subtitle = if (state.isSelectionMode) stringResource(Res.string.s_d4dcb361a4) else stringResource(Res.string.s_2b69b675e4),
                     metric = if (state.isSelectionMode) {
                         "${state.selectedBookmarks.size} SELECTED"
                     } else {
@@ -68,13 +85,13 @@ object BookmarkPage : Screen {
                     actions = {
                         if (state.isSelectionMode) {
                             IconButton(onClick = { viewModel.onEvent(BookmarkContract.Event.DeleteSelectedBookmarks) }) {
-                                Icon(Icons.Default.Delete, contentDescription = "删除所选")
+                                Icon(Icons.Default.Delete, contentDescription = stringResource(Res.string.s_5d071a7a42))
                             }
                             IconButton(onClick = { viewModel.onEvent(BookmarkContract.Event.ToggleSelectionMode) }) {
-                                Icon(Icons.Default.Close, contentDescription = "退出选择")
+                                Icon(Icons.Default.Close, contentDescription = stringResource(Res.string.s_e23ed7cf28))
                             }
                         } else {
-                            SaniouTextButton(onClick = { viewModel.onEvent(BookmarkContract.Event.ToggleSelectionMode) }, text = "编辑")
+                            SaniouTextButton(onClick = { viewModel.onEvent(BookmarkContract.Event.ToggleSelectionMode) }, text = stringResource(Res.string.s_a7f814c0a4))
                         }
                     },
                 )
@@ -85,7 +102,7 @@ object BookmarkPage : Screen {
                             onQueryChange = {
                                 viewModel.onEvent(BookmarkContract.Event.OnSearchQueryChanged(it))
                             },
-                            placeholder = "搜索收藏内容",
+                            placeholder = stringResource(Res.string.s_2fe8f7cd43),
                         )
                     },
                     secondary = if (state.allTags.isEmpty()) null else {
@@ -176,7 +193,7 @@ object BookmarkPage : Screen {
                                 val e = lazyPagingItems.loadState.refresh as Error
                                 item {
                                     Text(
-                                        text = "加载失败: ${e.error.message}",
+                                        text = stringResource(Res.string.s_1c3775584b, e.error.message ?: ""),
                                         modifier = Modifier.fillParentMaxSize(),
                                         color = MaterialTheme.colorScheme.error
                                     )
@@ -188,8 +205,8 @@ object BookmarkPage : Screen {
                                     Box(Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) {
                                         ModernEmptyState(
                                             icon = Icons.Default.BookmarkBorder,
-                                            title = "还没有收藏",
-                                            description = "在帖子或文章中收藏内容，它们会出现在这里。",
+                                            title = stringResource(Res.string.s_525b6078f6),
+                                            description = stringResource(Res.string.s_ae8714509f),
                                         )
                                     }
                                 }
@@ -275,7 +292,7 @@ fun BookmarkItem(
                     }
 
                     is Bookmark.Quote -> {
-                        val label = if (bookmark.sourceType == "article") "文章" else "帖子"
+                        val label = if (bookmark.sourceType == "article") stringResource(Res.string.s_ad3fd0f4c7) else stringResource(Res.string.s_3488c54564)
                         Text(
                             text = bookmark.content,
                             maxLines = 5,
@@ -319,7 +336,7 @@ fun BookmarkItem(
                     is Bookmark.Image -> {
                         NetworkImage(
                             imageUrl = bookmark.url,
-                            contentDescription = "图片收藏",
+                            contentDescription = stringResource(Res.string.s_7459b11af2),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(180.dp),
@@ -329,7 +346,7 @@ fun BookmarkItem(
 
                     is Bookmark.Media -> {
                         Text(
-                            text = "媒体: ${bookmark.url}",
+                            text = stringResource(Res.string.s_9ebd38aa1b, bookmark.url),
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }

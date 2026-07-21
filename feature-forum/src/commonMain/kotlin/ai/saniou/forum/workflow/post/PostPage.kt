@@ -119,6 +119,12 @@ import thread.feature_forum.generated.resources.post_page_send_confirm_yes
 import thread.feature_forum.generated.resources.post_page_success
 import thread.feature_forum.generated.resources.post_page_title_optional
 import thread.feature_forum.generated.resources.post_page_watermark
+import thread.feature_forum.generated.resources.s_323931b66a
+import thread.feature_forum.generated.resources.s_4d4e5130dc
+import thread.feature_forum.generated.resources.s_5ad2e65cbd
+import thread.feature_forum.generated.resources.s_6644f06197
+import thread.feature_forum.generated.resources.s_9d84cfe84d
+import thread.feature_forum.generated.resources.s_fcd8a7e687
 
 
 data class PostPage(
@@ -139,6 +145,7 @@ data class PostPage(
         }
         val state by viewModel.state.collectAsStateWithLifecycle()
         val snackbarHostState = remember { SnackbarHostState() }
+        val imagePickErrorMsg = stringResource(Res.string.s_323931b66a)
         val scrollState = rememberScrollState()
         val contentFocusRequester = remember { FocusRequester() }
         val scope = rememberCoroutineScope()
@@ -203,17 +210,17 @@ data class PostPage(
         ThreadDetailScaffold(
             title = title,
             eyebrow = stringResource(Res.string.eyebrow_composer),
-            subtitle = if (topicId == null) "发布到 ${state.forumName}" else "回复主题 $topicId",
+            subtitle = if (topicId == null) stringResource(Res.string.s_5ad2e65cbd, state.forumName) else stringResource(Res.string.s_fcd8a7e687, topicId),
             onBack = { viewModel.onEvent(PostContract.Event.Close) },
             actions = {
                 if (state.hasRestoredDraft || state.postBody.content.isNotBlank() || state.postBody.attachment != null) {
                     Text(
-                        if (state.isDraftSaving) "保存中…" else "草稿已保存",
+                        if (state.isDraftSaving) stringResource(Res.string.s_6644f06197) else stringResource(Res.string.s_9d84cfe84d),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     IconButton(onClick = { viewModel.onEvent(PostContract.Event.DiscardDraft) }) {
-                        Icon(Icons.Default.DeleteOutline, contentDescription = "丢弃草稿")
+                        Icon(Icons.Default.DeleteOutline, contentDescription = stringResource(Res.string.s_4d4e5130dc))
                     }
                 }
                 if (!state.isLoading && !state.isSuccess) {
@@ -238,7 +245,7 @@ data class PostPage(
                                     attachment?.let { viewModel.onEvent(PostContract.Event.UpdateImage(it)) }
                                 },
                                 onFailure = { error ->
-                                    snackbarHostState.showSnackbar(error.message ?: "无法读取图片")
+                                    snackbarHostState.showSnackbar(error.message ?: imagePickErrorMsg)
                                 },
                             )
                         }

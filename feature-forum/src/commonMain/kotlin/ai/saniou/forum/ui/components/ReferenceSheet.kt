@@ -33,6 +33,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import org.jetbrains.compose.resources.stringResource
+import thread.feature_forum.generated.resources.Res
+import thread.feature_forum.generated.resources.s_637f5a02cc
+import thread.feature_forum.generated.resources.s_685f61ba7b
+import thread.feature_forum.generated.resources.s_6c14bd7f6f
+import thread.feature_forum.generated.resources.s_70cd4c4538
 
 /**
  * 引用底部弹窗组件
@@ -64,7 +70,7 @@ fun ReferenceSheet(
             ) {
                 Column {
                     Text(
-                        text = "引用内容",
+                        text = stringResource(Res.string.s_685f61ba7b),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -83,7 +89,7 @@ fun ReferenceSheet(
                         contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 ) {
-                    Icon(Icons.Default.Close, contentDescription = "关闭")
+                    Icon(Icons.Default.Close, contentDescription = stringResource(Res.string.s_6c14bd7f6f))
                 }
             }
 
@@ -164,7 +170,7 @@ fun ReferenceSheet(
                                 SaniouButton(
                                     onClick = { onJumpToThread(reply.topicId) },
                                     modifier = Modifier.fillMaxWidth(),
-                                    text = "跳转到原串",
+                                    text = stringResource(Res.string.s_637f5a02cc),
                                 )
                             }
                         }
@@ -178,7 +184,7 @@ fun ReferenceSheet(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "未找到该引用内容",
+                                text = stringResource(Res.string.s_70cd4c4538),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )

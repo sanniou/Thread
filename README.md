@@ -93,8 +93,9 @@
 -   [x] **安静产品体验层**: 动效 token、统一按钮、Feed 下拉刷新与缓存态、密度间距与排版节奏已进入 0.23.0 Desktop 门禁。
 -   [x] **体验深潜第一波**: 设置/运维/活动/收件箱/详情主路径按钮统一、文章底栏操作条、列表卡片层级与分页反馈一致性已进入 0.24.0 Desktop 门禁。
 -   [x] **体验深潜第二波**: 论坛次级对话框/重试、Reader 缓存态横幅、搜索/历史空态与关键动效 reducedMotion 已进入 0.25.0 Desktop 门禁。
--   [x] **产品打磨 0.26–0.29**: 去控制台味 eyebrow/按钮、Forum 缓存故事闭环、空工作区加源/导入主任务流、阅读节奏与安静动效，以及 forum/core-ui 英文本地化已进入 0.29.0 Desktop 门禁。
--   [ ] **发布候选（0.30）**: 真机回归、全量门禁与可选 tag；剩余次级页面继续按主路径迭代。
+-   [x] **产品打磨 0.26–0.29**: 去控制台味 eyebrow/按钮、Forum 缓存故事闭环、空工作区加源/导入主任务流、阅读节奏与安静动效，以及 forum/core-ui 英文本地化首波。
+-   [x] **i18n 基建 0.30**: composeApp / reader / feed 建立 composeResources（zh+en）；高流量 `@Composable` UI 迁入 `stringResource`；Desktop 编译与 jvmTest 门禁通过。
+-   [ ] **发布候选（0.31）**: 真机回归、全量门禁与可选 tag；ViewModel/side-effect 文案 suspend `getString` 与次级页面继续资源化。
 
 ## 🚀 构建与运行
 

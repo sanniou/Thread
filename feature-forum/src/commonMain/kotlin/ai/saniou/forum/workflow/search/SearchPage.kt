@@ -57,6 +57,15 @@ import org.kodein.di.instance
 import org.jetbrains.compose.resources.stringResource
 import thread.feature_forum.generated.resources.Res
 import thread.feature_forum.generated.resources.eyebrow_discovery
+import thread.feature_forum.generated.resources.s_097aa90342
+import thread.feature_forum.generated.resources.s_0e346065ab
+import thread.feature_forum.generated.resources.s_25d6453d01
+import thread.feature_forum.generated.resources.s_32c18b1aa0
+import thread.feature_forum.generated.resources.s_8da9c24c50
+import thread.feature_forum.generated.resources.s_a7591bfa06
+import thread.feature_forum.generated.resources.s_cafc844242
+import thread.feature_forum.generated.resources.s_e72e76112a
+import thread.feature_forum.generated.resources.s_ff666dc5e4
 data class SearchPage(
     val sourceId: String,
 ) : Screen {
@@ -71,9 +80,9 @@ data class SearchPage(
         val state by viewModel.state.collectAsStateWithLifecycle()
 
         ThreadDetailScaffold(
-            title = "社区搜索",
+            title = stringResource(Res.string.s_097aa90342),
             eyebrow = stringResource(Res.string.eyebrow_discovery),
-            subtitle = "在当前来源的主题与回复中检索 · $sourceId",
+            subtitle = stringResource(Res.string.s_a7591bfa06, sourceId),
             onBack = navigator::pop,
         ) { paddingValues ->
             Column(
@@ -92,7 +101,7 @@ data class SearchPage(
                             query = state.query,
                             onQueryChange = { viewModel.onEvent(Event.QueryChanged(it)) },
                             onClear = { viewModel.onEvent(Event.ClearQuery) },
-                            placeholder = "搜索主题标题、正文或回复",
+                            placeholder = stringResource(Res.string.s_25d6453d01),
                         )
                     },
                     secondary = {
@@ -108,8 +117,8 @@ data class SearchPage(
                 if (state.query.isBlank()) {
                     ModernEmptyState(
                             icon = Icons.Default.Search,
-                            title = "寻找讨论与答案",
-                            description = "输入关键词后，Thread 会在当前来源的主题和回复中搜索。",
+                            title = stringResource(Res.string.s_8da9c24c50),
+                            description = stringResource(Res.string.s_0e346065ab),
                             modifier = Modifier.align(Alignment.Center),
                         )
                 } else {
@@ -161,8 +170,8 @@ data class SearchPage(
             empty = {
                 ModernEmptyState(
                     icon = Icons.Default.Search,
-                    title = "没有找到主题",
-                    description = "换一个关键词，或切换到回复搜索。",
+                    title = stringResource(Res.string.s_cafc844242),
+                    description = stringResource(Res.string.s_32c18b1aa0),
                     modifier = Modifier.align(Alignment.Center),
                 )
             },
@@ -204,8 +213,8 @@ data class SearchPage(
             empty = {
                 ModernEmptyState(
                     icon = Icons.Default.Search,
-                    title = "没有找到回复",
-                    description = "尝试更短的关键词，或切换到主题搜索。",
+                    title = stringResource(Res.string.s_ff666dc5e4),
+                    description = stringResource(Res.string.s_e72e76112a),
                     modifier = Modifier.align(Alignment.Center),
                 )
             },

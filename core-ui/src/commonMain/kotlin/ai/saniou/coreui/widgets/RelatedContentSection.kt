@@ -25,6 +25,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.paging.compose.LazyPagingItems
+import org.jetbrains.compose.resources.stringResource
+import thread.core_ui.generated.resources.Res
+import thread.core_ui.generated.resources.s_40a1549708
+import thread.core_ui.generated.resources.s_682836a89a
 
 /** Compact graph projection designed to live inside both forum and Reader detail canvases. */
 @Composable
@@ -39,10 +43,10 @@ fun RelatedContentSection(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Default.AccountTree, null, tint = MaterialTheme.colorScheme.primary)
             Spacer(Modifier.width(10.dp))
-            Text("关联内容", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Text(stringResource(Res.string.s_682836a89a), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         }
         Text(
-            "依据回复、引用、作者、标签和规范链接构建的本地内容关系图",
+            stringResource(Res.string.s_40a1549708),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )

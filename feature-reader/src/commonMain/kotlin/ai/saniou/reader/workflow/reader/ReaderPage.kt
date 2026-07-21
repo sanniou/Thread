@@ -65,6 +65,57 @@ import cafe.adriel.voyager.kodein.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.stringResource
+import thread.feature_reader.generated.resources.reader_export_format_title
+import thread.feature_reader.generated.resources.reader_import_format_title
+import thread.feature_reader.generated.resources.Res
+import thread.feature_reader.generated.resources.s_138be3960f
+import thread.feature_reader.generated.resources.s_13f5a71b47
+import thread.feature_reader.generated.resources.s_1d3e8e0a39
+import thread.feature_reader.generated.resources.s_274a1a8d2e
+import thread.feature_reader.generated.resources.s_33246f6a5e
+import thread.feature_reader.generated.resources.s_362ae50a1d
+import thread.feature_reader.generated.resources.s_3755f56f2f
+import thread.feature_reader.generated.resources.s_38108eaa1d
+import thread.feature_reader.generated.resources.s_3b9ec1c412
+import thread.feature_reader.generated.resources.s_3bbbd45469
+import thread.feature_reader.generated.resources.s_452c23cf13
+import thread.feature_reader.generated.resources.s_463923ed95
+import thread.feature_reader.generated.resources.s_4a8be83972
+import thread.feature_reader.generated.resources.s_4d0b4688c7
+import thread.feature_reader.generated.resources.s_4fc9662b55
+import thread.feature_reader.generated.resources.s_54b8a90b3c
+import thread.feature_reader.generated.resources.s_57c031dbd9
+import thread.feature_reader.generated.resources.s_60e2bcad85
+import thread.feature_reader.generated.resources.s_6f3f39d03c
+import thread.feature_reader.generated.resources.s_7829a6c547
+import thread.feature_reader.generated.resources.s_7a124b0cee
+import thread.feature_reader.generated.resources.s_7ce6f142b0
+import thread.feature_reader.generated.resources.s_8837069fef
+import thread.feature_reader.generated.resources.s_96cc0e8ed2
+import thread.feature_reader.generated.resources.s_a0ecc22def
+import thread.feature_reader.generated.resources.s_a701463879
+import thread.feature_reader.generated.resources.s_a7f814c0a4
+import thread.feature_reader.generated.resources.s_ad3c05564d
+import thread.feature_reader.generated.resources.s_b7f317d76b
+import thread.feature_reader.generated.resources.s_badc7c8a1d
+import thread.feature_reader.generated.resources.s_bb713419e6
+import thread.feature_reader.generated.resources.s_bf76308794
+import thread.feature_reader.generated.resources.s_c5c986c21d
+import thread.feature_reader.generated.resources.s_c96ee4e21a
+import thread.feature_reader.generated.resources.s_d2045dd3b8
+import thread.feature_reader.generated.resources.s_d506ee7198
+import thread.feature_reader.generated.resources.s_dc64bee91b
+import thread.feature_reader.generated.resources.s_e1d8a5a688
+import thread.feature_reader.generated.resources.s_e25eb142fc
+import thread.feature_reader.generated.resources.s_e40a06c88b
+import thread.feature_reader.generated.resources.s_e45f66052e
+import thread.feature_reader.generated.resources.s_ec41cc2365
+import thread.feature_reader.generated.resources.s_f04090805c
+import thread.feature_reader.generated.resources.s_f0e21f6e0f
+import thread.feature_reader.generated.resources.s_f511238a87
+import thread.feature_reader.generated.resources.s_f9f25fb227
+import thread.feature_reader.generated.resources.s_fbf6b9bcc8
 
 class ReaderPage(
     private val initialImportFormat: ReaderSubscriptionFormat? = null,
@@ -277,14 +328,14 @@ private fun ReaderScaffold(
                     else -> CacheStatusTone.CACHED
                 }
                 val cacheTitle = when (cacheTone) {
-                    CacheStatusTone.REFRESHING -> "正在同步订阅"
-                    CacheStatusTone.STALE -> "本地缓存仍可阅读"
-                    else -> "缓存优先 · 本地先展示"
+                    CacheStatusTone.REFRESHING -> stringResource(Res.string.s_c5c986c21d)
+                    CacheStatusTone.STALE -> stringResource(Res.string.s_e45f66052e)
+                    else -> stringResource(Res.string.s_f0e21f6e0f)
                 }
                 val cacheDetail = when (cacheTone) {
-                    CacheStatusTone.REFRESHING -> "刷新不会清空现有文章列表"
-                    CacheStatusTone.STALE -> "${state.refreshFailures.size} 个来源暂未更新，已隔离失败源"
-                    else -> "下拉或点击刷新以更新订阅源"
+                    CacheStatusTone.REFRESHING -> stringResource(Res.string.s_ad3c05564d)
+                    CacheStatusTone.STALE -> stringResource(Res.string.s_274a1a8d2e, state.refreshFailures.size)
+                    else -> stringResource(Res.string.s_7829a6c547)
                 }
                 CacheStatusBanner(
                     title = cacheTitle,
@@ -350,7 +401,7 @@ private fun ReaderScaffold(
                                         val sourceName = state.feedSources
                                             .find { it.id == article.feedSourceId }
                                             ?.name
-                                            ?: "未知来源"
+                                            ?: stringResource(Res.string.s_13f5a71b47)
                                         ArticleItem(
                                             article = article,
                                             sourceName = sourceName,
@@ -378,7 +429,7 @@ private fun ReaderScaffold(
                             ArticlePreviewPane(
                                 article = article,
                                 sourceName = state.feedSources.firstOrNull { it.id == article.feedSourceId }?.name
-                                    ?: "未知来源",
+                                    ?: stringResource(Res.string.s_13f5a71b47),
                                 onDismiss = onDismissPreview,
                                 onOpenFull = { onOpenArticleDetail(article) },
                                 modifier = Modifier.widthIn(min = 440.dp, max = 600.dp).fillMaxHeight(),
@@ -402,20 +453,20 @@ private fun EmptyState(
         ModernEmptyState(
             icon = if (isSearchActive) Icons.Default.SearchOff else Icons.Default.Inbox,
             title = when {
-                isSearchActive -> "未找到相关文章"
-                !hasSources -> "还没有订阅源"
-                else -> "暂无文章"
+                isSearchActive -> stringResource(Res.string.s_f9f25fb227)
+                !hasSources -> stringResource(Res.string.s_f511238a87)
+                else -> stringResource(Res.string.s_4a8be83972)
             },
             description = when {
-                isSearchActive -> "没有找到“$query”，换一个关键词继续搜索。"
-                !hasSources -> "添加 RSS / Atom 订阅，或导入 OPML 备份，即可开始阅读。"
-                else -> "添加订阅源，或稍后刷新内容。"
+                isSearchActive -> stringResource(Res.string.s_badc7c8a1d, query)
+                !hasSources -> stringResource(Res.string.s_b7f317d76b)
+                else -> stringResource(Res.string.s_7a124b0cee)
             },
             action = if (!isSearchActive) {
                 {
                     SaniouButton(
                         onClick = onAddSource,
-                        text = if (!hasSources) "添加订阅源" else "添加更多源",
+                        text = if (!hasSources) stringResource(Res.string.s_8837069fef) else stringResource(Res.string.s_a0ecc22def),
                     )
                 }
             } else null,
@@ -449,10 +500,10 @@ private fun ArticlePreviewPane(
             }
             Spacer(Modifier.weight(1f))
             IconButton(onClick = onOpenFull) {
-                Icon(Icons.Default.OpenInFull, contentDescription = "打开完整阅读页")
+                Icon(Icons.Default.OpenInFull, contentDescription = stringResource(Res.string.s_463923ed95))
             }
             IconButton(onClick = onDismiss) {
-                Icon(Icons.Default.Close, contentDescription = "关闭预览")
+                Icon(Icons.Default.Close, contentDescription = stringResource(Res.string.s_bf76308794))
             }
         }
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f))
@@ -520,38 +571,38 @@ private fun ReaderHeader(
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         ContextHero(
             icon = Icons.Default.AutoStories,
-            title = selectedSource?.name ?: "今日阅读",
+            title = selectedSource?.name ?: stringResource(Res.string.s_c96ee4e21a),
             subtitle = if (selectedSource == null) {
-                "汇集 ${state.feedSources.size} 个订阅源，按你的节奏专注阅读"
+                stringResource(Res.string.s_4fc9662b55, state.feedSources.size)
             } else {
-                "当前订阅源的文章、未读内容与收藏"
+                stringResource(Res.string.s_362ae50a1d)
             },
-            metric = "$unreadCount 未读",
+            metric = stringResource(Res.string.s_d506ee7198, unreadCount),
             actions = {
                 if (showMenuIcon) {
                     IconButton(onClick = onMenuClick) {
-                        Icon(Icons.Default.Menu, contentDescription = "订阅源")
+                        Icon(Icons.Default.Menu, contentDescription = stringResource(Res.string.s_a701463879))
                     }
                 }
                 IconButton(onClick = { onSearchActiveChange(!isSearchActive) }) {
                     Icon(
                         if (isSearchActive) Icons.Default.Close else Icons.Default.Search,
-                        contentDescription = if (isSearchActive) "关闭搜索" else "搜索",
+                        contentDescription = if (isSearchActive) stringResource(Res.string.s_e40a06c88b) else stringResource(Res.string.s_f04090805c),
                     )
                 }
                 IconButton(onClick = onRefreshAll) {
-                    Icon(Icons.Default.Refresh, contentDescription = "全部刷新")
+                    Icon(Icons.Default.Refresh, contentDescription = stringResource(Res.string.s_e1d8a5a688))
                 }
                 Box {
                     IconButton(onClick = { transferMenuExpanded = true }) {
-                        Icon(Icons.Default.MoreVert, contentDescription = "订阅导入导出")
+                        Icon(Icons.Default.MoreVert, contentDescription = stringResource(Res.string.s_57c031dbd9))
                     }
                     DropdownMenu(
                         expanded = transferMenuExpanded,
                         onDismissRequest = { transferMenuExpanded = false },
                     ) {
                         DropdownMenuItem(
-                            text = { Text("导出 JSON") },
+                            text = { Text(stringResource(Res.string.s_3b9ec1c412)) },
                             leadingIcon = { Icon(Icons.Default.Upload, null) },
                             onClick = {
                                 transferMenuExpanded = false
@@ -559,7 +610,7 @@ private fun ReaderHeader(
                             },
                         )
                         DropdownMenuItem(
-                            text = { Text("导出 OPML") },
+                            text = { Text(stringResource(Res.string.s_452c23cf13)) },
                             leadingIcon = { Icon(Icons.Default.Upload, null) },
                             onClick = {
                                 transferMenuExpanded = false
@@ -568,7 +619,7 @@ private fun ReaderHeader(
                         )
                         HorizontalDivider()
                         DropdownMenuItem(
-                            text = { Text("导入 JSON") },
+                            text = { Text(stringResource(Res.string.s_d2045dd3b8)) },
                             leadingIcon = { Icon(Icons.Default.Download, null) },
                             onClick = {
                                 transferMenuExpanded = false
@@ -576,7 +627,7 @@ private fun ReaderHeader(
                             },
                         )
                         DropdownMenuItem(
-                            text = { Text("导入 OPML") },
+                            text = { Text(stringResource(Res.string.s_96cc0e8ed2)) },
                             leadingIcon = { Icon(Icons.Default.Download, null) },
                             onClick = {
                                 transferMenuExpanded = false
@@ -585,7 +636,7 @@ private fun ReaderHeader(
                         )
                         HorizontalDivider()
                         DropdownMenuItem(
-                            text = { Text("添加订阅源") },
+                            text = { Text(stringResource(Res.string.s_8837069fef)) },
                             leadingIcon = { Icon(Icons.Default.Add, null) },
                             onClick = {
                                 transferMenuExpanded = false
@@ -601,7 +652,7 @@ private fun ReaderHeader(
             ThreadSearchField(
                 query = state.searchQuery,
                 onQueryChange = onSearchQueryChanged,
-                placeholder = "搜索标题、作者或正文",
+                placeholder = stringResource(Res.string.s_dc64bee91b),
                 modifier = Modifier.focusRequester(searchFocusRequester),
             )
         }
@@ -623,11 +674,11 @@ private fun FeedSourceList(
     Column(modifier = Modifier.fillMaxHeight()) {
         SidebarHeader(
             icon = Icons.Default.RssFeed,
-            title = "阅读器",
-            subtitle = "${sources.size} 个订阅源",
+            title = stringResource(Res.string.s_1d3e8e0a39),
+            subtitle = stringResource(Res.string.s_138be3960f, sources.size),
         )
         SectionLabel(
-            text = "订阅源",
+            text = stringResource(Res.string.s_a701463879),
             modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
         )
 
@@ -637,7 +688,7 @@ private fun FeedSourceList(
         ) {
             item {
                 AppDrawerItem(
-                    label = "全部文章",
+                    label = stringResource(Res.string.s_7ce6f142b0),
                     icon = Icons.Default.AllInclusive,
                     selected = selectedSourceId == null,
                     onClick = { onSelect(null) },
@@ -665,9 +716,9 @@ private fun FeedSourceList(
         Text(
             text = when {
                 schedulerState.refreshingSourceIds.isNotEmpty() ->
-                    "自动刷新中：${schedulerState.refreshingSourceIds.size} 个源"
-                schedulerState.isRunning -> "自动刷新已启用"
-                else -> "自动刷新未运行"
+                    stringResource(Res.string.s_bb713419e6, schedulerState.refreshingSourceIds.size)
+                schedulerState.isRunning -> stringResource(Res.string.s_ec41cc2365)
+                else -> stringResource(Res.string.s_e25eb142fc)
             },
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -675,7 +726,7 @@ private fun FeedSourceList(
         )
 
         AppDrawerItem(
-            label = "添加订阅源",
+            label = stringResource(Res.string.s_8837069fef),
             icon = Icons.Default.Add,
             selected = false,
             onClick = onAdd
@@ -699,12 +750,15 @@ private fun ReaderTransferDialog(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(
-                "${if (dialog.isImport) "导入" else "导出"} ${dialog.format.name} 订阅",
+                text = stringResource(
+                    if (dialog.isImport) Res.string.reader_import_format_title else Res.string.reader_export_format_title,
+                    dialog.format.name,
+                ),
                 style = MaterialTheme.typography.headlineSmall,
             )
                 Text(
-                    if (dialog.isImport) "粘贴订阅数据；导入会按 ID 或 URL 合并。"
-                    else "复制以下内容并保存；该格式可再次导入 Thread。",
+                    if (dialog.isImport) stringResource(Res.string.s_fbf6b9bcc8)
+                    else stringResource(Res.string.s_3bbbd45469),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -714,22 +768,22 @@ private fun ReaderTransferDialog(
                     readOnly = !dialog.isImport,
                     modifier = Modifier.fillMaxWidth().heightIn(min = 220.dp, max = 420.dp),
                     textStyle = MaterialTheme.typography.bodySmall,
-                    label = { Text("数据") },
+                    label = { Text(stringResource(Res.string.s_54b8a90b3c)) },
                 )
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End,
             ) {
                 if (dialog.isImport) {
-                    SaniouTextButton(onClick = onDismiss, enabled = !isWorking, text = "取消")
+                    SaniouTextButton(onClick = onDismiss, enabled = !isWorking, text = stringResource(Res.string.s_4d0b4688c7))
                     SaniouButton(
                         onClick = { onImport(payload) },
                         enabled = payload.isNotBlank() && !isWorking,
                         loading = isWorking,
-                        text = "导入",
+                        text = stringResource(Res.string.s_60e2bcad85),
                     )
                 } else {
-                    SaniouButton(onClick = onDismiss, text = "完成")
+                    SaniouButton(onClick = onDismiss, text = stringResource(Res.string.s_33246f6a5e))
                 }
             }
         }
@@ -765,18 +819,18 @@ fun FeedSourceItem(
                     onDismissRequest = { showMenu = false }
                 ) {
                     DropdownMenuItem(
-                        text = { Text("刷新") },
+                        text = { Text(stringResource(Res.string.s_38108eaa1d)) },
                         onClick = { onRefresh(); showMenu = false },
                         leadingIcon = { Icon(Icons.Default.Refresh, null) }
                     )
                     DropdownMenuItem(
-                        text = { Text("编辑") },
+                        text = { Text(stringResource(Res.string.s_a7f814c0a4)) },
                         onClick = { onEdit(); showMenu = false },
                         leadingIcon = { Icon(Icons.Default.Edit, null) }
                     )
                     HorizontalDivider()
                     DropdownMenuItem(
-                        text = { Text("删除") },
+                        text = { Text(stringResource(Res.string.s_3755f56f2f)) },
                         onClick = { onDelete(); showMenu = false },
                         leadingIcon = { Icon(Icons.Default.Delete, null) },
                         colors = MenuDefaults.itemColors(textColor = MaterialTheme.colorScheme.error)
