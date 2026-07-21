@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.23.0 - 2026-07-21
+
+Quiet product UX polish for Desktop: motion, buttons, feed refresh and cache clarity.
+
+- Motion tokens in `core-ui` honor `reducedMotion` with short fades/rises instead of bounce-heavy animation.
+- Unified button family (`SaniouButton` / Outlined / Text / Tonal / Danger) supports loading state and shared min height.
+- `ThreadCard` and page headers follow density-aware spacing; eyebrow copy stays human case.
+- Unified Feed shows a cache-status banner (cached / refreshing / stale) and pull-to-refresh without clearing the timeline.
+- Refresh diagnostics and error states use the shared button system; failure attempt labels are localized.
+- Desktop gates cover compile and jvmTest on the UX surface.
+
 ## 0.22.0 - 2026-07-21
 
 System-entry bridge release for Desktop: share, deep links, notifications and portable files.

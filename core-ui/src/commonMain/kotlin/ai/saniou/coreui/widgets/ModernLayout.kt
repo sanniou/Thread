@@ -1,8 +1,11 @@
 package ai.saniou.coreui.widgets
 
 import ai.saniou.coreui.theme.Dimens
+import ai.saniou.coreui.theme.LocalThreadUiPreferences
+import ai.saniou.coreui.theme.threadContentSizeSpec
 import ai.saniou.coreui.layout.LocalThreadWindowInfo
 import ai.saniou.coreui.layout.ThreadWindowWidthClass
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -76,10 +79,11 @@ fun PageHeader(
     actions: @Composable RowScope.() -> Unit = {},
 ) {
     val windowInfo = LocalThreadWindowInfo.current
+    val sectionGap = LocalThreadUiPreferences.current.sectionSpacing
     if (windowInfo.widthClass == ThreadWindowWidthClass.Compact) {
         Column(
             modifier = modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
+            verticalArrangement = Arrangement.spacedBy(sectionGap.coerceAtMost(16.dp)),
         ) {
             PageHeaderCopy(
                 title = title,
@@ -128,10 +132,10 @@ private fun PageHeaderCopy(
     ) {
         eyebrow?.let {
             Text(
-                text = it.uppercase(),
+                text = it,
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.SemiBold,
             )
         }
         Text(
@@ -157,20 +161,28 @@ fun ThreadCard(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val windowInfo = LocalThreadWindowInfo.current
+    val preferences = LocalThreadUiPreferences.current
     Surface(
-        modifier = modifier,
+        modifier = modifier.animateContentSize(
+            animationSpec = threadContentSizeSpec(),
+        ),
         color = containerColor,
         shape = MaterialTheme.shapes.large,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f)),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f)),
         tonalElevation = 0.dp,
+        shadowElevation = 0.dp,
     ) {
         Column(
             modifier = Modifier.padding(
                 contentPadding ?: PaddingValues(
-                    if (windowInfo.widthClass == ThreadWindowWidthClass.Compact) 16.dp else 20.dp,
+                    if (windowInfo.widthClass == ThreadWindowWidthClass.Compact) {
+                        Dimens.padding_standard
+                    } else {
+                        Dimens.padding_large - 4.dp
+                    },
                 ),
             ),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(preferences.itemSpacing.coerceAtLeast(10.dp)),
             content = content,
         )
     }

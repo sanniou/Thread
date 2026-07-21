@@ -18,7 +18,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -53,11 +52,12 @@ fun RefreshDiagnosticsBanner(
         tone = tone,
         icon = if (offlineCount == failures.size) Icons.Default.CloudOff else Icons.Default.SyncProblem,
         actions = {
-            TextButton(onClick = { expanded = !expanded }) {
-                Text(if (expanded) "收起" else "详情")
-            }
+            SaniouTextButton(
+                onClick = { expanded = !expanded },
+                text = if (expanded) "收起" else "详情",
+            )
             onRetry?.let { retry ->
-                TextButton(onClick = retry) { Text("重试") }
+                SaniouTextButton(onClick = retry, text = "重试")
             }
         },
         details = {
@@ -90,7 +90,10 @@ private fun FailureRow(failure: RefreshTaskState) {
                 tint = MaterialTheme.colorScheme.error,
             )
             Column(Modifier.weight(1f)) {
-                Text(failure.label, style = MaterialTheme.typography.labelMedium)
+                Text(
+                    failure.label,
+                    style = MaterialTheme.typography.labelMedium,
+                )
                 Text(
                     buildString {
                         append(presentation.label)
@@ -101,7 +104,7 @@ private fun FailureRow(failure: RefreshTaskState) {
                 )
             }
             Text(
-                "${failure.attempt} TRY",
+                "第 ${failure.attempt} 次",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

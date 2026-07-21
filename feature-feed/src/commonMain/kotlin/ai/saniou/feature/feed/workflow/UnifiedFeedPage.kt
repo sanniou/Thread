@@ -9,10 +9,14 @@ import ai.saniou.coreui.state.PagingStateLayout
 import ai.saniou.coreui.state.PagingAppendState
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.AppDrawerItem
+import ai.saniou.coreui.widgets.CacheStatusBanner
+import ai.saniou.coreui.widgets.CacheStatusTone
 import ai.saniou.coreui.widgets.RefreshDiagnosticsBanner
 import ai.saniou.coreui.widgets.ModernEmptyState
 import ai.saniou.coreui.widgets.ContextHero
 import ai.saniou.coreui.widgets.KeyedLazyListState
+import ai.saniou.coreui.widgets.PullToRefreshWrapper
+import ai.saniou.coreui.widgets.SaniouTextButton
 import ai.saniou.coreui.widgets.SidebarHeader
 import ai.saniou.coreui.widgets.ThreadCard
 import ai.saniou.coreui.widgets.NetworkImage
@@ -70,7 +74,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -287,18 +290,50 @@ private fun FeedScaffold(
                     }
                 },
             )
-            PagingStateLayout(
-                items = timeline,
+            val cacheTone = when {
+                state.isRefreshing -> CacheStatusTone.REFRESHING
+                state.refreshFailures.isNotEmpty() -> CacheStatusTone.STALE
+                else -> CacheStatusTone.CACHED
+            }
+            val cacheTitle = when (cacheTone) {
+                CacheStatusTone.REFRESHING -> "正在同步最新内容"
+                CacheStatusTone.STALE -> "本地缓存仍可阅读"
+                else -> "缓存优先 · 本地先展示"
+            }
+            val cacheDetail = when (cacheTone) {
+                CacheStatusTone.REFRESHING -> "刷新不会清空现有时间线"
+                CacheStatusTone.STALE -> "${state.refreshFailures.size} 个来源暂未更新，已隔离失败源"
+                else -> "下拉或点击刷新以拉取论坛 / 订阅 / 社交"
+            }
+            CacheStatusBanner(
+                title = cacheTitle,
+                tone = cacheTone,
+                detail = cacheDetail,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .widthIn(max = Dimens.contentMaxWidth)
+                    .padding(
+                        horizontal = LocalThreadWindowInfo.current.pageHorizontalPadding,
+                        vertical = 4.dp,
+                    ),
+            )
+            PullToRefreshWrapper(
+                isRefreshing = state.isRefreshing,
+                onRefreshTrigger = onRefresh,
                 modifier = Modifier.weight(1f).fillMaxWidth().widthIn(max = Dimens.contentMaxWidth),
-                empty = {
-                    FeedEmptyState(
-                        hasSelection = state.selectedSourceIds.isNotEmpty() ||
-                            state.includeReader ||
-                            (state.includeSocial && state.selectedSocialSourceIds.isNotEmpty()),
-                        modifier = Modifier.align(Alignment.Center),
-                    )
-                },
             ) {
+                PagingStateLayout(
+                    items = timeline,
+                    modifier = Modifier.fillMaxSize(),
+                    empty = {
+                        FeedEmptyState(
+                            hasSelection = state.selectedSourceIds.isNotEmpty() ||
+                                state.includeReader ||
+                                (state.includeSocial && state.selectedSocialSourceIds.isNotEmpty()),
+                            modifier = Modifier.align(Alignment.Center),
+                        )
+                    },
+                ) {
                 val listStateKey = buildString {
                     append(state.selectedSourceIds.sorted().joinToString(","))
                     append(":reader=")
@@ -359,14 +394,16 @@ private fun FeedScaffold(
                         if (state.includeSocial && state.selectedSocialSourceIds.isNotEmpty()) {
                             item(key = "load-older-social") {
                                 Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                                    TextButton(onClick = { onEvent(FeedContract.Event.LoadOlderSocial) }) {
-                                        Text("载入更早的社交动态")
-                                    }
+                                    SaniouTextButton(
+                                        onClick = { onEvent(FeedContract.Event.LoadOlderSocial) },
+                                        text = "载入更早的社交动态",
+                                    )
                                 }
                             }
                         }
                     }
                 }
+            }
             }
         }
     }
@@ -447,7 +484,7 @@ private fun SocialInteractionButton(
 ) {
     if (interaction !in post.permittedInteractions) return
     val active = interaction in post.activeInteractions
-    TextButton(onClick = { onInteract(interaction, !active) }) {
+    SaniouTextButton(onClick = { onInteract(interaction, !active) }) {
         Icon(
             icon,
             contentDescription = interaction.name,
