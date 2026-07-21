@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.21.0 - 2026-07-21
+
+Production Social runtime, content-graph and unified discovery release.
+
+- ActivityPub/Mastodon-compatible Social connector authenticates with a local token, refreshes bidirectional home timelines, and supports like/repost/bookmark interactions without provider-specific UI branches.
+- Database schema v6 adds Social sources/posts/cursors, a durable content-graph edge table, and a materialized smart-collection index so related content and saved views page from SQL instead of ad-hoc Kotlin scans.
+- Unified Feed can include Social sources beside Forum and Reader items; social cards open an in-app detail page with media, interactions, share/copy and related content.
+- `thread://social/{sourceId}/{postId}` deep links, Inbox notifications, global search and content-link resolution all route Social posts in-app when the cache has them, and fall back safely when they do not.
+- Smart collections keep a recency-bounded catalog of 50 views and resolve Forum/Comment/Reader/Social caches through one indexed SQL path.
+- Desktop gates cover schema v6 migration, offline Social search, concurrent collection bounds, product-graph discovery and `:composeApp:compileKotlinJvm`.
+
 ## 0.20.0 - 2026-07-17
 
 Unified content-routing, notification-inbox and portable-appearance release.

@@ -7,6 +7,10 @@ import ai.saniou.thread.domain.model.collection.SmartCollection
 import ai.saniou.thread.domain.model.collection.SmartCollectionRules
 import ai.saniou.thread.domain.repository.AppearanceRepository
 import ai.saniou.thread.domain.repository.SmartCollectionRepository
+import ai.saniou.thread.domain.model.social.SocialSourceDescriptor
+import ai.saniou.thread.domain.usecase.social.ObserveSocialSourcesUseCase
+import ai.saniou.thread.domain.usecase.social.SaveSocialSourceUseCase
+import ai.saniou.thread.domain.usecase.social.RemoveSocialSourceUseCase
 import ai.saniou.thread.domain.usecase.activity.ExecuteProductActionUseCase
 import ai.saniou.thread.domain.refresh.RefreshStatus
 import ai.saniou.thread.domain.usecase.reader.ObserveReaderSchedulerUseCase
@@ -29,6 +33,9 @@ class SyncSettingsViewModel(
     private val observeRefreshDiagnostics: ObserveRefreshDiagnosticsUseCase,
     private val appearanceRepository: AppearanceRepository,
     private val smartCollectionRepository: SmartCollectionRepository,
+    observeSocialSources: ObserveSocialSourcesUseCase,
+    private val saveSocialSourceUseCase: SaveSocialSourceUseCase,
+    private val removeSocialSourceUseCase: RemoveSocialSourceUseCase,
 ) : ScreenModel {
     private val _state = MutableStateFlow(SyncSettingsContract.State())
     val state: StateFlow<SyncSettingsContract.State> = _state.asStateFlow()
@@ -68,6 +75,11 @@ class SyncSettingsViewModel(
                 _state.update { it.copy(smartCollections = collections) }
             }
         }
+        screenModelScope.launch {
+            observeSocialSources().collect { sources ->
+                _state.update { it.copy(socialSources = sources) }
+            }
+        }
     }
 
     fun onEvent(event: SyncSettingsContract.Event) {
@@ -93,6 +105,20 @@ class SyncSettingsViewModel(
             is SyncSettingsContract.Event.SaveSmartCollection -> saveSmartCollection(event)
             is SyncSettingsContract.Event.DeleteSmartCollection -> screenModelScope.launch {
                 smartCollectionRepository.delete(event.id)
+            }
+            is SyncSettingsContract.Event.ToggleSmartCollectionPinned -> screenModelScope.launch {
+                smartCollectionRepository.setPinned(event.id, event.pinned)
+            }
+            is SyncSettingsContract.Event.MoveSmartCollection -> moveSmartCollection(event.id, event.delta)
+            is SyncSettingsContract.Event.SaveSocialSource -> saveSocialSource(event)
+            is SyncSettingsContract.Event.ToggleSocialSource -> screenModelScope.launch {
+                runCatching { saveSocialSourceUseCase(event.source.copy(enabled = !event.source.enabled)) }
+                    .onFailure(::showFailure)
+            }
+            is SyncSettingsContract.Event.DeleteSocialSource -> screenModelScope.launch {
+                runCatching { removeSocialSourceUseCase(event.id) }
+                    .onSuccess { _state.update { it.copy(message = "社交来源已删除") } }
+                    .onFailure(::showFailure)
             }
         }
     }
@@ -120,11 +146,57 @@ class SyncSettingsViewModel(
                         unreadOnly = event.unreadOnly,
                         bookmarkedOnly = event.bookmarkedOnly,
                     ),
+                    sort = event.sort,
+                    groupBy = event.groupBy,
+                    position = _state.value.smartCollections.size,
                     createdAtEpochMillis = now,
                     updatedAtEpochMillis = now,
                 )
             )
             _state.update { it.copy(message = "智能集合已创建") }
+        }
+    }
+
+    private fun moveSmartCollection(id: String, delta: Int) {
+        val ordered = _state.value.smartCollections.toMutableList()
+        val from = ordered.indexOfFirst { it.id == id }
+        if (from < 0) return
+        val to = (from + delta).coerceIn(0, ordered.lastIndex)
+        if (from == to) return
+        val moved = ordered.removeAt(from)
+        ordered.add(to, moved)
+        screenModelScope.launch { smartCollectionRepository.reorder(ordered.map { it.id }) }
+    }
+
+    private fun saveSocialSource(event: SyncSettingsContract.Event.SaveSocialSource) {
+        val baseUrl = event.baseUrl.trim().trimEnd('/')
+        val name = event.name.trim()
+        if (name.isBlank() || event.accessToken.isBlank() ||
+            !(baseUrl.startsWith("https://") || baseUrl.startsWith("http://"))
+        ) {
+            _state.update { it.copy(message = "请填写来源名称、有效服务器地址和访问令牌") }
+            return
+        }
+        val existing = _state.value.socialSources.firstOrNull { it.baseUrl.trimEnd('/') == baseUrl }
+        val baseId = baseUrl.substringAfter("://").substringBefore('/')
+            .lowercase().replace(Regex("[^a-z0-9_-]+"), "-").trim('-').take(48)
+            .ifBlank { "social" }
+        val sourceId = existing?.id ?: buildString {
+            append(baseId)
+            if (_state.value.socialSources.any { it.id == baseId }) {
+                append('-')
+                append(kotlin.time.Clock.System.now().toEpochMilliseconds().toString().takeLast(6))
+            }
+        }.let { if (it.length == 1) "$it-social" else it }
+        screenModelScope.launch {
+            runCatching {
+                saveSocialSourceUseCase(
+                    SocialSourceDescriptor(sourceId, name, baseUrl, enabled = true),
+                    event.accessToken,
+                )
+            }.onSuccess {
+                _state.update { it.copy(message = "开放社交来源已保存") }
+            }.onFailure(::showFailure)
         }
     }
 

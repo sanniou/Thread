@@ -10,6 +10,13 @@ import ai.saniou.coreui.widgets.NetworkImage
 import ai.saniou.coreui.widgets.RichText
 import ai.saniou.coreui.widgets.ThreadDetailScaffold
 import ai.saniou.coreui.widgets.ThreadErrorState
+import ai.saniou.coreui.widgets.RelatedContentSection
+import ai.saniou.coreui.composition.LocalContentLinkHandler
+import ai.saniou.thread.domain.model.content.ContentReference
+import ai.saniou.thread.domain.model.content.ContentReferenceKind
+import ai.saniou.thread.domain.model.content.RelatedContent
+import ai.saniou.thread.domain.model.content.toThreadUrl
+import ai.saniou.thread.domain.repository.ContentGraphRepository
 import ai.saniou.thread.domain.model.reader.Article
 import ai.saniou.thread.domain.model.workspace.RestorableContentKind
 import ai.saniou.thread.domain.model.workspace.RestorableContentReference
@@ -43,6 +50,8 @@ import kotlinx.coroutines.launch
 import org.kodein.di.compose.localDI
 import org.kodein.di.direct
 import org.kodein.di.instance
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
 
 data class ArticleDetailPage(val articleId: String) : Screen {
 
@@ -52,12 +61,19 @@ data class ArticleDetailPage(val articleId: String) : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val di = localDI()
         val updateWorkspaceSession = di.direct.instance<UpdateWorkspaceSessionUseCase>()
+        val contentGraphRepository = di.direct.instance<ContentGraphRepository>()
         val viewModel: ArticleDetailViewModel = rememberScreenModel(arg = articleId)
         val state by viewModel.state.collectAsState()
         val uriHandler = LocalUriHandler.current
         val clipboard = rememberThreadClipboard()
         val scope = rememberCoroutineScope()
         val snackbar = remember { SnackbarHostState() }
+        val rootLinkHandler = LocalContentLinkHandler.current
+        val graphReference = remember(articleId) {
+            ContentReference(ContentReferenceKind.ARTICLE, articleId)
+        }
+        val relatedFlow = remember(graphReference) { contentGraphRepository.getRelated(graphReference) }
+        val related = relatedFlow.collectAsLazyPagingItems()
         val contentReference = remember(articleId) {
             RestorableContentReference(
                 kind = RestorableContentKind.ARTICLE,
@@ -72,6 +88,9 @@ data class ArticleDetailPage(val articleId: String) : Screen {
                     updatedAtEpochMillis = kotlin.time.Clock.System.now().toEpochMilliseconds(),
                 )
             }
+        }
+        LaunchedEffect(state.article?.id) {
+            if (state.article != null) contentGraphRepository.rebuild(graphReference)
         }
         fun closeDetail() {
             scope.launch {
@@ -130,7 +149,9 @@ data class ArticleDetailPage(val articleId: String) : Screen {
                     state.article != null -> {
                         ArticleContent(
                             article = state.article!!,
-                            fontSizeScale = state.fontSizeScale
+                            fontSizeScale = state.fontSizeScale,
+                            related = related,
+                            onOpenRelated = { rootLinkHandler?.invoke(it.reference.toThreadUrl()) },
                         )
                     }
                 }
@@ -217,7 +238,12 @@ private fun ArticleDetailActions(
 }
 
 @Composable
-private fun ArticleContent(article: Article, fontSizeScale: Float) {
+private fun ArticleContent(
+    article: Article,
+    fontSizeScale: Float,
+    related: LazyPagingItems<RelatedContent>,
+    onOpenRelated: (RelatedContent) -> Unit,
+) {
     val windowInfo = LocalThreadWindowInfo.current
     val uiPreferences = LocalThreadUiPreferences.current
     ReadingCanvas {
@@ -285,6 +311,8 @@ private fun ArticleContent(article: Article, fontSizeScale: Float) {
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
+            HorizontalDivider(modifier = Modifier.padding(vertical = 28.dp))
+            RelatedContentSection(items = related, onOpen = onOpenRelated)
             Spacer(modifier = Modifier.height(80.dp))
         }
     }

@@ -26,6 +26,11 @@ import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.Public
+import androidx.compose.material.icons.filled.PushPin
+import androidx.compose.material.icons.outlined.PushPin
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
@@ -57,6 +62,8 @@ import androidx.compose.ui.unit.dp
 import ai.saniou.thread.domain.model.settings.InterfaceDensity
 import ai.saniou.thread.domain.model.settings.MotionMode
 import ai.saniou.thread.domain.model.settings.ThemeMode
+import ai.saniou.thread.domain.model.collection.SmartCollectionSort
+import ai.saniou.thread.domain.model.collection.SmartCollectionGroup
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -80,6 +87,11 @@ class SyncSettingsPage(
         var collectionQuery by remember { mutableStateOf("") }
         var collectionUnread by remember { mutableStateOf(false) }
         var collectionBookmarked by remember { mutableStateOf(false) }
+        var collectionSort by remember { mutableStateOf(SmartCollectionSort.NEWEST) }
+        var collectionGroup by remember { mutableStateOf(SmartCollectionGroup.NONE) }
+        var socialName by remember { mutableStateOf("") }
+        var socialBaseUrl by remember { mutableStateOf("") }
+        var socialAccessToken by remember { mutableStateOf("") }
 
         LaunchedEffect(showImportOnOpen) {
             if (showImportOnOpen) viewModel.onEvent(SyncSettingsContract.Event.ShowImportLocal)
@@ -211,11 +223,41 @@ class SyncSettingsPage(
                         FilterChip(collectionUnread, { collectionUnread = !collectionUnread }, { Text("仅未读") })
                         FilterChip(collectionBookmarked, { collectionBookmarked = !collectionBookmarked }, { Text("仅收藏") })
                     }
+                    Text("排序", style = MaterialTheme.typography.labelLarge)
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        SmartCollectionSort.entries.forEach { sort ->
+                            FilterChip(
+                                selected = collectionSort == sort,
+                                onClick = { collectionSort = sort },
+                                label = { Text(when (sort) {
+                                    SmartCollectionSort.NEWEST -> "最新优先"
+                                    SmartCollectionSort.OLDEST -> "最早优先"
+                                    SmartCollectionSort.RELEVANCE -> "相关优先"
+                                }) },
+                            )
+                        }
+                    }
+                    Text("分组", style = MaterialTheme.typography.labelLarge)
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        SmartCollectionGroup.entries.forEach { group ->
+                            FilterChip(
+                                selected = collectionGroup == group,
+                                onClick = { collectionGroup = group },
+                                label = { Text(when (group) {
+                                    SmartCollectionGroup.NONE -> "不分组"
+                                    SmartCollectionGroup.SOURCE -> "按来源"
+                                    SmartCollectionGroup.CONTENT_KIND -> "按类型"
+                                    SmartCollectionGroup.AUTHOR -> "按作者"
+                                }) },
+                            )
+                        }
+                    }
                     Button(
                         enabled = collectionName.isNotBlank() && (collectionQuery.isNotBlank() || collectionUnread || collectionBookmarked),
                         onClick = {
                             viewModel.onEvent(SyncSettingsContract.Event.SaveSmartCollection(
                                 collectionName, collectionQuery, collectionUnread, collectionBookmarked,
+                                collectionSort, collectionGroup,
                             ))
                             collectionName = ""
                             collectionQuery = ""
@@ -231,10 +273,100 @@ class SyncSettingsPage(
                         ) {
                             Column(Modifier.weight(1f)) {
                                 Text(collection.name, style = MaterialTheme.typography.titleSmall)
-                                Text(collection.description, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(
+                                    "${collection.description} · ${collection.sort.name.lowercase()} · ${collection.groupBy.name.lowercase()}",
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                            IconButton(onClick = {
+                                viewModel.onEvent(SyncSettingsContract.Event.MoveSmartCollection(collection.id, -1))
+                            }) { Icon(Icons.Default.KeyboardArrowUp, "上移 ${collection.name}") }
+                            IconButton(onClick = {
+                                viewModel.onEvent(SyncSettingsContract.Event.MoveSmartCollection(collection.id, 1))
+                            }) { Icon(Icons.Default.KeyboardArrowDown, "下移 ${collection.name}") }
+                            IconButton(onClick = {
+                                viewModel.onEvent(SyncSettingsContract.Event.ToggleSmartCollectionPinned(collection.id, !collection.pinned))
+                            }) {
+                                Icon(if (collection.pinned) Icons.Default.PushPin else Icons.Outlined.PushPin, "置顶 ${collection.name}")
                             }
                             IconButton(onClick = { viewModel.onEvent(SyncSettingsContract.Event.DeleteSmartCollection(collection.id)) }) {
                                 Icon(Icons.Default.DeleteOutline, "删除 ${collection.name}")
+                            }
+                        }
+                    }
+                }
+
+                ThreadCard(modifier = Modifier.fillMaxWidth()) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Public, null, tint = MaterialTheme.colorScheme.primary)
+                        Spacer(Modifier.width(10.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text("开放社交来源", style = MaterialTheme.typography.titleLarge)
+                            Text(
+                                "接入 Mastodon 兼容的 ActivityPub 时间线。令牌只保存在本机，不进入用户数据包或 WebDAV。",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                    OutlinedTextField(
+                        value = socialName,
+                        onValueChange = { socialName = it },
+                        label = { Text("显示名称") },
+                        placeholder = { Text("我的社区") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    OutlinedTextField(
+                        value = socialBaseUrl,
+                        onValueChange = { socialBaseUrl = it },
+                        label = { Text("服务器地址") },
+                        placeholder = { Text("https://mastodon.social") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    OutlinedTextField(
+                        value = socialAccessToken,
+                        onValueChange = { socialAccessToken = it },
+                        label = { Text("访问令牌") },
+                        singleLine = true,
+                        visualTransformation = PasswordVisualTransformation(),
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    Button(
+                        enabled = socialName.isNotBlank() && socialBaseUrl.isNotBlank() && socialAccessToken.isNotBlank(),
+                        onClick = {
+                            viewModel.onEvent(
+                                SyncSettingsContract.Event.SaveSocialSource(
+                                    socialName,
+                                    socialBaseUrl,
+                                    socialAccessToken,
+                                )
+                            )
+                            socialName = ""
+                            socialBaseUrl = ""
+                            socialAccessToken = ""
+                        },
+                    ) { Text("添加社交来源") }
+                    state.socialSources.forEach { source ->
+                        HorizontalDivider()
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Column(Modifier.weight(1f)) {
+                                Text(source.displayName, style = MaterialTheme.typography.titleSmall)
+                                Text(source.baseUrl, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            Switch(
+                                checked = source.enabled,
+                                onCheckedChange = {
+                                    viewModel.onEvent(SyncSettingsContract.Event.ToggleSocialSource(source))
+                                },
+                            )
+                            IconButton(
+                                onClick = { viewModel.onEvent(SyncSettingsContract.Event.DeleteSocialSource(source.id)) }
+                            ) {
+                                Icon(Icons.Default.DeleteOutline, "删除 ${source.displayName}")
                             }
                         }
                     }

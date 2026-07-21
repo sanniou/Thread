@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Article
 import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.QuestionAnswer
+import androidx.compose.material.icons.filled.Public
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -29,6 +30,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kotlin.time.Instant
+import ai.saniou.coreui.state.PagingStateLayout
+import ai.saniou.coreui.state.PagingAppendState
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.itemKey
 
 @Composable
 fun GlobalSearchResults(
@@ -42,6 +47,25 @@ fun GlobalSearchResults(
     ) {
         items(results, key = { "${it.type}:${it.sourceId}:${it.id}" }) { result ->
             GlobalSearchResultRow(result, onOpen)
+        }
+    }
+}
+
+@Composable
+fun GlobalSearchPagingResults(
+    results: LazyPagingItems<GlobalSearchResult>,
+    modifier: Modifier = Modifier,
+    onOpen: (GlobalSearchResult) -> Unit,
+) {
+    PagingStateLayout(items = results, modifier = modifier) {
+        LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            items(
+                count = results.itemCount,
+                key = results.itemKey { "${it.type}:${it.sourceId}:${it.id}" },
+            ) { index ->
+                results[index]?.let { GlobalSearchResultRow(it, onOpen) }
+            }
+            item { PagingAppendState(results, endLabel = "集合内容已全部加载") }
         }
     }
 }
@@ -114,4 +138,5 @@ fun GlobalSearchType.presentation(): SearchTypePresentation = when (this) {
     GlobalSearchType.TOPIC -> SearchTypePresentation("主题", Icons.Default.Forum)
     GlobalSearchType.COMMENT -> SearchTypePresentation("回复", Icons.Default.QuestionAnswer)
     GlobalSearchType.ARTICLE -> SearchTypePresentation("文章", Icons.AutoMirrored.Filled.Article)
+    GlobalSearchType.SOCIAL -> SearchTypePresentation("动态", Icons.Default.Public)
 }

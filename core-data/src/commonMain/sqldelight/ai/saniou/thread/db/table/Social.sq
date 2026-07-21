@@ -1,0 +1,140 @@
+CREATE TABLE SocialSourceEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    displayName TEXT NOT NULL,
+    baseUrl TEXT NOT NULL,
+    enabled INTEGER NOT NULL DEFAULT 1,
+    lastSyncAt INTEGER
+);
+
+CREATE TABLE SocialPostEntity (
+    id TEXT NOT NULL,
+    sourceId TEXT NOT NULL,
+    authorId TEXT NOT NULL,
+    authorName TEXT NOT NULL,
+    authorHandle TEXT,
+    authorAvatarUrl TEXT,
+    authorVerified INTEGER NOT NULL DEFAULT 0,
+    body TEXT NOT NULL,
+    createdAt INTEGER NOT NULL,
+    contentWarning TEXT,
+    mediaJson TEXT NOT NULL DEFAULT '[]',
+    interactionCountsJson TEXT NOT NULL DEFAULT '{}',
+    permittedInteractionsJson TEXT NOT NULL DEFAULT '[]',
+    activeInteractionsJson TEXT NOT NULL DEFAULT '[]',
+    canonicalUrl TEXT,
+    replyToId TEXT,
+    repostOfId TEXT,
+    PRIMARY KEY (sourceId, id),
+    FOREIGN KEY(sourceId) REFERENCES SocialSourceEntity(id) ON DELETE CASCADE
+);
+
+CREATE TABLE SocialCursorEntity (
+    sourceId TEXT NOT NULL PRIMARY KEY,
+    newerCursor TEXT,
+    olderCursor TEXT,
+    updatedAt INTEGER NOT NULL,
+    FOREIGN KEY(sourceId) REFERENCES SocialSourceEntity(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_social_post_created ON SocialPostEntity(createdAt DESC);
+CREATE INDEX idx_social_post_source_created ON SocialPostEntity(sourceId, createdAt DESC);
+CREATE INDEX idx_social_post_author_created ON SocialPostEntity(sourceId, authorId, createdAt DESC);
+
+getSocialSources:
+SELECT * FROM SocialSourceEntity ORDER BY displayName;
+
+getEnabledSocialSources:
+SELECT * FROM SocialSourceEntity WHERE enabled = 1 ORDER BY displayName;
+
+getSocialSource:
+SELECT * FROM SocialSourceEntity WHERE id = :id;
+
+upsertSocialSource:
+INSERT INTO SocialSourceEntity(id, displayName, baseUrl, enabled, lastSyncAt)
+VALUES (:id, :displayName, :baseUrl, :enabled, :lastSyncAt)
+ON CONFLICT(id) DO UPDATE SET
+    displayName = excluded.displayName,
+    baseUrl = excluded.baseUrl,
+    enabled = excluded.enabled;
+
+updateSocialSourceSync:
+UPDATE SocialSourceEntity SET lastSyncAt = :lastSyncAt WHERE id = :id;
+
+deleteSocialSource:
+DELETE FROM SocialSourceEntity WHERE id = :id;
+
+getSocialTimelinePaging:
+SELECT * FROM SocialPostEntity
+WHERE sourceId IN :sourceIds
+  AND (:query = '' OR body LIKE '%' || :query || '%' OR authorName LIKE '%' || :query || '%')
+ORDER BY createdAt DESC, sourceId, id DESC
+LIMIT :limit OFFSET :offset;
+
+countSocialTimeline:
+SELECT count(*) FROM SocialPostEntity
+WHERE sourceId IN :sourceIds
+  AND (:query = '' OR body LIKE '%' || :query || '%' OR authorName LIKE '%' || :query || '%');
+
+searchSocialPosts:
+SELECT post.*, source.displayName AS sourceName
+FROM SocialPostEntity post
+JOIN SocialSourceEntity source ON source.id = post.sourceId
+WHERE post.body LIKE '%' || :query || '%' OR post.authorName LIKE '%' || :query || '%'
+ORDER BY post.createdAt DESC
+LIMIT :limit OFFSET :offset;
+
+countSearchSocialPosts:
+SELECT count(*) FROM SocialPostEntity
+WHERE body LIKE '%' || :query || '%' OR authorName LIKE '%' || :query || '%';
+
+getSocialPost:
+SELECT * FROM SocialPostEntity WHERE sourceId = :sourceId AND id = :id;
+
+getSocialPostByCanonicalUrl:
+SELECT * FROM SocialPostEntity WHERE canonicalUrl = :canonicalUrl LIMIT 1;
+
+getSocialPostsByAuthor:
+SELECT * FROM SocialPostEntity
+WHERE sourceId = :sourceId AND authorId = :authorId
+ORDER BY createdAt DESC LIMIT :limit;
+
+upsertSocialPost:
+INSERT INTO SocialPostEntity(
+    id, sourceId, authorId, authorName, authorHandle, authorAvatarUrl, authorVerified,
+    body, createdAt, contentWarning, mediaJson, interactionCountsJson,
+    permittedInteractionsJson, activeInteractionsJson, canonicalUrl, replyToId, repostOfId
+) VALUES (
+    :id, :sourceId, :authorId, :authorName, :authorHandle, :authorAvatarUrl, :authorVerified,
+    :body, :createdAt, :contentWarning, :mediaJson, :interactionCountsJson,
+    :permittedInteractionsJson, :activeInteractionsJson, :canonicalUrl, :replyToId, :repostOfId
+)
+ON CONFLICT(sourceId, id) DO UPDATE SET
+    authorId = excluded.authorId,
+    authorName = excluded.authorName,
+    authorHandle = excluded.authorHandle,
+    authorAvatarUrl = excluded.authorAvatarUrl,
+    authorVerified = excluded.authorVerified,
+    body = excluded.body,
+    createdAt = excluded.createdAt,
+    contentWarning = excluded.contentWarning,
+    mediaJson = excluded.mediaJson,
+    interactionCountsJson = excluded.interactionCountsJson,
+    permittedInteractionsJson = excluded.permittedInteractionsJson,
+    activeInteractionsJson = excluded.activeInteractionsJson,
+    canonicalUrl = excluded.canonicalUrl,
+    replyToId = excluded.replyToId,
+    repostOfId = excluded.repostOfId;
+
+deleteSocialPostsBySource:
+DELETE FROM SocialPostEntity WHERE sourceId = :sourceId;
+
+getSocialCursor:
+SELECT * FROM SocialCursorEntity WHERE sourceId = :sourceId;
+
+upsertSocialCursor:
+INSERT INTO SocialCursorEntity(sourceId, newerCursor, olderCursor, updatedAt)
+VALUES (:sourceId, :newerCursor, :olderCursor, :updatedAt)
+ON CONFLICT(sourceId) DO UPDATE SET
+    newerCursor = COALESCE(excluded.newerCursor, SocialCursorEntity.newerCursor),
+    olderCursor = COALESCE(excluded.olderCursor, SocialCursorEntity.olderCursor),
+    updatedAt = excluded.updatedAt;

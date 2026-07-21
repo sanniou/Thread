@@ -1,0 +1,55 @@
+CREATE TABLE ContentGraphEdgeEntity (
+    fromKind TEXT NOT NULL,
+    fromId TEXT NOT NULL,
+    fromSourceId TEXT NOT NULL DEFAULT '',
+    fromParentId TEXT NOT NULL DEFAULT '',
+    toKind TEXT NOT NULL,
+    toId TEXT NOT NULL,
+    toSourceId TEXT NOT NULL DEFAULT '',
+    toParentId TEXT NOT NULL DEFAULT '',
+    relation TEXT NOT NULL,
+    weight REAL NOT NULL DEFAULT 1.0,
+    createdAt INTEGER NOT NULL,
+    PRIMARY KEY(fromKind, fromId, fromSourceId, toKind, toId, toSourceId, relation)
+);
+
+CREATE INDEX idx_content_graph_from
+ON ContentGraphEdgeEntity(fromKind, fromId, fromSourceId, weight DESC, createdAt DESC);
+
+CREATE INDEX idx_content_graph_to
+ON ContentGraphEdgeEntity(toKind, toId, toSourceId, relation);
+
+getRelatedEdges:
+SELECT * FROM ContentGraphEdgeEntity
+WHERE fromKind = :fromKind AND fromId = :fromId AND fromSourceId = :fromSourceId
+ORDER BY weight DESC, createdAt DESC
+LIMIT :limit OFFSET :offset;
+
+countRelatedEdges:
+SELECT count(*) FROM ContentGraphEdgeEntity
+WHERE fromKind = :fromKind AND fromId = :fromId AND fromSourceId = :fromSourceId;
+
+upsertContentEdge:
+INSERT INTO ContentGraphEdgeEntity(
+    fromKind, fromId, fromSourceId, fromParentId,
+    toKind, toId, toSourceId, toParentId,
+    relation, weight, createdAt
+) VALUES (
+    :fromKind, :fromId, :fromSourceId, :fromParentId,
+    :toKind, :toId, :toSourceId, :toParentId,
+    :relation, :weight, :createdAt
+)
+ON CONFLICT(fromKind, fromId, fromSourceId, toKind, toId, toSourceId, relation)
+DO UPDATE SET weight = excluded.weight, createdAt = excluded.createdAt;
+
+deleteContentEdgesFor:
+DELETE FROM ContentGraphEdgeEntity
+WHERE (fromKind = :kind AND fromId = :id AND fromSourceId = :sourceId)
+   OR (toKind = :kind AND toId = :id AND toSourceId = :sourceId);
+
+deleteOutgoingContentEdges:
+DELETE FROM ContentGraphEdgeEntity
+WHERE fromKind = :kind AND fromId = :id AND fromSourceId = :sourceId;
+
+countAllContentEdges:
+SELECT count(*) FROM ContentGraphEdgeEntity;

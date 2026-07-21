@@ -1,24 +1,38 @@
 package ai.saniou.thread.data.repository
 
+import ai.saniou.corecommon.coroutines.ioDispatcher
+import ai.saniou.thread.db.Database
+import ai.saniou.thread.db.table.SmartCollectionIndexEntity
 import ai.saniou.thread.domain.model.collection.SmartCollection
+import ai.saniou.thread.domain.model.collection.SmartCollectionRules
+import ai.saniou.thread.domain.model.content.ContentReferenceKind
+import ai.saniou.thread.domain.model.search.GlobalSearchResult
+import ai.saniou.thread.domain.model.search.GlobalSearchType
+import ai.saniou.thread.domain.paging.threadPagingConfig
 import ai.saniou.thread.domain.repository.SettingsRepository
 import ai.saniou.thread.domain.repository.SmartCollectionRepository
 import ai.saniou.thread.domain.repository.getValue
 import ai.saniou.thread.domain.repository.observeValue
 import ai.saniou.thread.domain.repository.saveValue
-import ai.saniou.thread.db.Database
-import ai.saniou.thread.domain.model.content.ContentReferenceKind
-import ai.saniou.thread.domain.model.forum.ImageType
-import ai.saniou.thread.domain.model.search.GlobalSearchResult
-import ai.saniou.thread.domain.model.search.GlobalSearchType
-import ai.saniou.corecommon.coroutines.ioDispatcher
-import kotlinx.coroutines.withContext
+import androidx.paging.Pager
+import androidx.paging.PagingData
+import androidx.paging.map
+import app.cash.sqldelight.paging3.QueryPagingSource
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 
+/**
+ * Persistent collection definitions backed by a SQL materialized projection.
+ * Rebuilding the projection uses four INSERT…SELECT statements instead of a Kotlin full-cache scan;
+ * every subsequent collection page is served by SQLDelight's official QueryPagingSource.
+ */
 class SmartCollectionRepositoryImpl(
     private val settings: SettingsRepository,
     private val db: Database,
@@ -27,130 +41,200 @@ class SmartCollectionRepositoryImpl(
 
     override fun observeCollections(): Flow<List<SmartCollection>> =
         settings.observeValue<List<SmartCollection>>(KEY)
-            .map { values -> values.orEmpty().sortedWith(compareByDescending<SmartCollection> { it.pinned }.thenByDescending { it.updatedAtEpochMillis }) }
+            .map { values -> values.orEmpty().ordered() }
             .catch { emit(emptyList()) }
 
     override suspend fun save(collection: SmartCollection) = mutex.withLock {
         val values = settings.getValue<List<SmartCollection>>(KEY).orEmpty()
-        val updated = (values.filterNot { it.id == collection.id } + collection)
+        val existing = values.firstOrNull { it.id == collection.id }
+        val normalized = collection.copy(position = existing?.position ?: values.size)
+        // Bound the catalog by recency so concurrent creates keep the newest MAX_COLLECTIONS.
+        val bounded = (values.filterNot { it.id == collection.id } + normalized)
             .sortedByDescending(SmartCollection::updatedAtEpochMillis)
             .take(MAX_COLLECTIONS)
-        settings.saveValue(KEY, updated)
+            .mapIndexed { index, value -> value.copy(position = index) }
+        settings.saveValue(KEY, bounded)
     }
 
     override suspend fun delete(id: String) = mutex.withLock {
-        val updated = settings.getValue<List<SmartCollection>>(KEY).orEmpty().filterNot { it.id == id }
+        val updated = settings.getValue<List<SmartCollection>>(KEY).orEmpty()
+            .filterNot { it.id == id }
+            .mapIndexed { index, value -> value.copy(position = index) }
         settings.saveValue(KEY, updated)
+    }
+
+    override suspend fun setPinned(id: String, pinned: Boolean) = mutate { values ->
+        values.map { value ->
+            if (value.id == id) value.copy(
+                pinned = pinned,
+                updatedAtEpochMillis = kotlin.time.Clock.System.now().toEpochMilliseconds(),
+            ) else value
+        }
+    }
+
+    override suspend fun reorder(orderedIds: List<String>) = mutate { values ->
+        val ranks = orderedIds.distinct().withIndex().associate { it.value to it.index }
+        values.map { value -> value.copy(position = ranks[value.id] ?: (ranks.size + value.position)) }
     }
 
     override suspend fun resolve(id: String, limit: Int): List<GlobalSearchResult> {
         require(limit in 1..500)
-        val collection = settings.getValue<List<SmartCollection>>(KEY).orEmpty()
-            .firstOrNull { it.id == id } ?: return emptyList()
-        val rules = collection.rules
-        val scanLimit = (limit * 5).coerceAtMost(MAX_SCAN).toLong()
+        val context = prepare(id) ?: return emptyList()
         return withContext(ioDispatcher) {
-            buildList {
-                if (rules.accepts(ContentReferenceKind.TOPIC)) {
-                    db.topicQueries.getRecentTopicsForCollection(scanLimit, 0).executeAsList()
-                        .asSequence()
-                        .filter { row -> rules.sourceIds.isEmpty() || row.sourceId in rules.sourceIds }
-                        .filter { row -> rules.author.isBlank() || row.authorName.contains(rules.author, true) || row.authorId.contains(rules.author, true) }
-                        .filter { row -> rules.query.matches(row.title, row.summary, row.content, row.id) }
-                        .filter { row -> !rules.unreadOnly || row.lastVisitedAt == null }
-                        .filter { row -> !rules.bookmarkedOnly || row.isCollected == true }
-                        .filter { row ->
-                            val images = if (rules.hasMedia != null) {
-                                db.imageQueries.getImagesByParent(row.sourceId, row.id, ImageType.Topic).executeAsList().isNotEmpty()
-                            } else false
-                            rules.hasMedia == null || rules.hasMedia == images
-                        }
-                        .filter { row ->
-                            rules.tags.isEmpty() || db.topicTagQueries.getTagsForTopic(row.sourceId, row.id)
-                                .executeAsList().map { it.name }.toSet().containsAll(rules.tags)
-                        }
-                        .mapTo(this) { row ->
-                            GlobalSearchResult(
-                                type = GlobalSearchType.TOPIC,
-                                id = row.id,
-                                sourceId = row.sourceId,
-                                sourceName = row.sourceId,
-                                title = row.title?.takeIf(String::isNotBlank) ?: "主题 #${row.id}",
-                                snippet = excerpt(row.summary ?: row.content.orEmpty()),
-                                author = row.authorName,
-                                publishedAtEpochMillis = maxOf(row.lastReplyAt, row.createdAt),
-                            )
-                        }
-                }
-                if (rules.accepts(ContentReferenceKind.COMMENT) && !rules.bookmarkedOnly && rules.tags.isEmpty()) {
-                    db.commentQueries.getRecentCommentsForCollection(scanLimit, 0).executeAsList()
-                        .asSequence()
-                        .filter { row -> rules.sourceIds.isEmpty() || row.sourceId in rules.sourceIds }
-                        .filter { row -> rules.author.isBlank() || row.authorName.contains(rules.author, true) || row.userHash.contains(rules.author, true) }
-                        .filter { row -> rules.query.matches(row.title, row.content, row.id) }
-                        .filter { row -> !rules.unreadOnly || db.topicQueries.getTopic(row.sourceId, row.topicId).executeAsOneOrNull()?.lastVisitedAt == null }
-                        .filter { row ->
-                            val images = if (rules.hasMedia != null) {
-                                db.imageQueries.getImagesByParent(row.sourceId, row.id, ImageType.Comment).executeAsList().isNotEmpty()
-                            } else false
-                            rules.hasMedia == null || rules.hasMedia == images
-                        }
-                        .mapTo(this) { row ->
-                            GlobalSearchResult(
-                                type = GlobalSearchType.COMMENT,
-                                id = row.id,
-                                sourceId = row.sourceId,
-                                sourceName = row.sourceId,
-                                title = row.title?.takeIf(String::isNotBlank) ?: "${row.floor} 楼回复",
-                                snippet = excerpt(row.content),
-                                author = row.authorName,
-                                publishedAtEpochMillis = row.createdAt,
-                                contextId = row.topicId,
-                            )
-                        }
-                }
-                if (rules.accepts(ContentReferenceKind.ARTICLE) && rules.tags.isEmpty()) {
-                    db.articleQueries.getRecentArticlesWithSource(scanLimit, 0).executeAsList()
-                        .asSequence()
-                        .filter { row -> rules.sourceIds.isEmpty() || row.feedSourceId in rules.sourceIds }
-                        .filter { row -> rules.author.isBlank() || row.author?.contains(rules.author, true) == true }
-                        .filter { row -> rules.query.matches(row.title, row.description, row.content) }
-                        .filter { row -> !rules.unreadOnly || row.isRead == 0L }
-                        .filter { row -> !rules.bookmarkedOnly || row.isBookmarked != 0L }
-                        .filter { row -> rules.hasMedia == null || rules.hasMedia == !row.imageUrl.isNullOrBlank() }
-                        .mapTo(this) { row ->
-                            GlobalSearchResult(
-                                type = GlobalSearchType.ARTICLE,
-                                id = row.id,
-                                sourceId = row.feedSourceId,
-                                sourceName = row.sourceName,
-                                title = row.title,
-                                snippet = excerpt(row.description.ifBlank { row.content }),
-                                author = row.author,
-                                publishedAtEpochMillis = row.publishDate,
-                            )
-                        }
-                }
-            }.sortedByDescending(GlobalSearchResult::publishedAtEpochMillis).take(limit)
+            db.smartCollectionIndexQueries.resolveSmartCollectionPaging(
+                contentKinds = context.contentKinds,
+                sourceIds = context.sourceIds,
+                query = context.rules.query.trim(),
+                author = context.rules.author.trim(),
+                tag1 = context.tags[0],
+                tag2 = context.tags[1],
+                tag3 = context.tags[2],
+                tag4 = context.tags[3],
+                unreadOnly = context.rules.unreadOnly.asLong(),
+                bookmarkedOnly = context.rules.bookmarkedOnly.asLong(),
+                hasMedia = context.rules.hasMedia.asFilterLong(),
+                includeContentWarnings = context.rules.includeContentWarnings.asLong(),
+                groupMode = context.collection.groupBy.name,
+                sortMode = context.collection.sort.name,
+                limit = limit.toLong(),
+                offset = 0,
+            ).executeAsList().map(SmartCollectionIndexEntity::toSearchResult)
         }
     }
 
-    private fun ai.saniou.thread.domain.model.collection.SmartCollectionRules.accepts(kind: ContentReferenceKind) =
-        contentKinds.isEmpty() || kind in contentKinds
-
-    private fun String.matches(vararg values: String?): Boolean = isBlank() || values.any { value ->
-        value?.contains(this, ignoreCase = true) == true
+    override fun resolvePaging(id: String): Flow<PagingData<GlobalSearchResult>> = flow {
+        val context = prepare(id)
+        if (context == null) {
+            emit(PagingData.empty())
+            return@flow
+        }
+        emitAll(
+            Pager(
+                config = threadPagingConfig(pageSize = 40),
+                pagingSourceFactory = {
+                    QueryPagingSource(
+                        transacter = db.smartCollectionIndexQueries,
+                        context = Dispatchers.Default,
+                        countQuery = db.smartCollectionIndexQueries.countResolvedSmartCollection(
+                            contentKinds = context.contentKinds,
+                            sourceIds = context.sourceIds,
+                            query = context.rules.query.trim(),
+                            author = context.rules.author.trim(),
+                            tag1 = context.tags[0],
+                            tag2 = context.tags[1],
+                            tag3 = context.tags[2],
+                            tag4 = context.tags[3],
+                            unreadOnly = context.rules.unreadOnly.asLong(),
+                            bookmarkedOnly = context.rules.bookmarkedOnly.asLong(),
+                            hasMedia = context.rules.hasMedia.asFilterLong(),
+                            includeContentWarnings = context.rules.includeContentWarnings.asLong(),
+                        ),
+                        queryProvider = { limit, offset ->
+                            db.smartCollectionIndexQueries.resolveSmartCollectionPaging(
+                                contentKinds = context.contentKinds,
+                                sourceIds = context.sourceIds,
+                                query = context.rules.query.trim(),
+                                author = context.rules.author.trim(),
+                                tag1 = context.tags[0],
+                                tag2 = context.tags[1],
+                                tag3 = context.tags[2],
+                                tag4 = context.tags[3],
+                                unreadOnly = context.rules.unreadOnly.asLong(),
+                                bookmarkedOnly = context.rules.bookmarkedOnly.asLong(),
+                                hasMedia = context.rules.hasMedia.asFilterLong(),
+                                includeContentWarnings = context.rules.includeContentWarnings.asLong(),
+                                groupMode = context.collection.groupBy.name,
+                                sortMode = context.collection.sort.name,
+                                limit = limit,
+                                offset = offset,
+                            )
+                        },
+                    )
+                },
+            ).flow.map { paging -> paging.map(SmartCollectionIndexEntity::toSearchResult) },
+        )
     }
 
-    private fun excerpt(value: String): String = value
-        .replace(Regex("<[^>]+>"), " ")
-        .replace(Regex("\\s+"), " ")
-        .trim()
-        .take(220)
+    private suspend fun prepare(id: String): QueryContext? {
+        val collection = settings.getValue<List<SmartCollection>>(KEY).orEmpty()
+            .firstOrNull { it.id == id } ?: return null
+        rebuildIndex()
+        val allSources = withContext(ioDispatcher) {
+            db.smartCollectionIndexQueries.getSmartCollectionIndexSources().executeAsList()
+                .mapTo(linkedSetOf()) { it }
+        }
+        val sources = collection.rules.sourceIds.ifEmpty { allSources }
+        if (sources.isEmpty()) return null
+        val kinds = collection.rules.contentKinds
+            .ifEmpty { INDEXED_KINDS }
+            .mapTo(linkedSetOf()) { it.name }
+        val tags = collection.rules.tags.map(String::trim).filter(String::isNotBlank).take(MAX_TAG_RULES)
+            .let { it + List(MAX_TAG_RULES - it.size) { "" } }
+        return QueryContext(collection, collection.rules, kinds, sources, tags)
+    }
+
+    private suspend fun rebuildIndex() = withContext(ioDispatcher) {
+        db.transaction {
+            db.smartCollectionIndexQueries.clearSmartCollectionIndex()
+            db.smartCollectionIndexQueries.indexCachedTopics()
+            db.smartCollectionIndexQueries.indexCachedComments()
+            db.smartCollectionIndexQueries.indexCachedArticles()
+            db.smartCollectionIndexQueries.indexCachedSocialPosts()
+        }
+    }
+
+    private suspend fun mutate(transform: (List<SmartCollection>) -> List<SmartCollection>) = mutex.withLock {
+        val bounded = transform(settings.getValue<List<SmartCollection>>(KEY).orEmpty())
+            .sortedByDescending(SmartCollection::updatedAtEpochMillis)
+            .take(MAX_COLLECTIONS)
+            .mapIndexed { index, value -> value.copy(position = index) }
+        settings.saveValue(KEY, bounded)
+    }
+
+    private fun List<SmartCollection>.ordered() = sortedWith(
+        compareByDescending<SmartCollection> { it.pinned }
+            .thenBy(SmartCollection::position)
+            .thenByDescending(SmartCollection::updatedAtEpochMillis),
+    )
+
+    private data class QueryContext(
+        val collection: SmartCollection,
+        val rules: SmartCollectionRules,
+        val contentKinds: Set<String>,
+        val sourceIds: Set<String>,
+        val tags: List<String>,
+    )
 
     private companion object {
         const val KEY = "smart_collections_v1"
         const val MAX_COLLECTIONS = 50
-        const val MAX_SCAN = 1_000
+        const val MAX_TAG_RULES = 4
+        val INDEXED_KINDS = setOf(
+            ContentReferenceKind.TOPIC,
+            ContentReferenceKind.COMMENT,
+            ContentReferenceKind.ARTICLE,
+            ContentReferenceKind.SOCIAL_POST,
+        )
     }
 }
+
+private fun SmartCollectionIndexEntity.toSearchResult() = GlobalSearchResult(
+    type = when (contentKind) {
+        ContentReferenceKind.TOPIC.name -> GlobalSearchType.TOPIC
+        ContentReferenceKind.COMMENT.name -> GlobalSearchType.COMMENT
+        ContentReferenceKind.ARTICLE.name -> GlobalSearchType.ARTICLE
+        ContentReferenceKind.SOCIAL_POST.name -> GlobalSearchType.SOCIAL
+        else -> GlobalSearchType.ARTICLE
+    },
+    id = contentId,
+    sourceId = sourceId,
+    sourceName = sourceName,
+    title = title,
+    snippet = body.replace(Regex("<[^>]+>"), " ").replace(Regex("\\s+"), " ").trim().take(220),
+    author = author.takeIf(String::isNotBlank),
+    publishedAtEpochMillis = publishedAt,
+    contextId = contextId,
+)
+
+private fun Boolean.asLong() = if (this) 1L else 0L
+private fun Boolean?.asFilterLong() = when (this) { null -> -1L; true -> 1L; false -> 0L }

@@ -11,11 +11,15 @@ interface FeedRepository {
     fun getTimelinePaging(
         sourceIds: Set<String>? = null,
         includeReader: Boolean = true,
+        socialSourceIds: Set<String>? = null,
+        includeSocial: Boolean = true,
     ): Flow<PagingData<TimelineItem>>
 
     suspend fun refreshTimeline(
         sourceIds: Set<String>? = null,
         includeReader: Boolean = true,
+        socialSourceIds: Set<String>? = null,
+        includeSocial: Boolean = true,
     ): FeedRefreshReport
 
     fun getFeed(sourceId: String, feedType: FeedType): Flow<PagingData<Topic>>

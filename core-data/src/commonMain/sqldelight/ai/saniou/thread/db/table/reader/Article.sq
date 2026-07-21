@@ -93,6 +93,11 @@ SELECT * FROM ArticleEntity WHERE id = ?;
 getArticleByLink:
 SELECT * FROM ArticleEntity WHERE link = :link LIMIT 1;
 
+getArticlesByAuthor:
+SELECT * FROM ArticleEntity
+WHERE author = :author AND id != :excludeId
+ORDER BY publishDate DESC LIMIT :limit;
+
 insertArticle:
 INSERT OR REPLACE INTO ArticleEntity(id, feedSourceId, title, description, content, link, author, publishDate, isRead, isBookmarked, imageUrl, rawContent)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);

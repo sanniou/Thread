@@ -41,7 +41,10 @@ class WorkspaceSessionRepositoryImpl(
                 searchQuery = session.reader.searchQuery.take(MAX_QUERY_LENGTH),
                 articleFilter = session.reader.articleFilter.take(MAX_FILTER_LENGTH),
             ),
-            feed = session.feed.copy(selectedSourceIds = session.feed.selectedSourceIds.take(MAX_SOURCE_COUNT).toSet()),
+            feed = session.feed.copy(
+                selectedSourceIds = session.feed.selectedSourceIds.take(MAX_SOURCE_COUNT).toSet(),
+                selectedSocialSourceIds = session.feed.selectedSocialSourceIds.take(MAX_SOURCE_COUNT).toSet(),
+            ),
         )
         settings.saveValue(STORAGE_KEY, json.encodeToString(PersistedSession.fromDomain(normalized)))
     }
@@ -71,6 +74,7 @@ private data class PersistedSession(
     val destination: String = "forum",
     val forumSourceId: String? = null,
     val globalSearchQuery: String = "",
+    val activeSmartCollectionId: String? = null,
     val forum: PersistedForumState = PersistedForumState(),
     val reader: PersistedReaderState = PersistedReaderState(),
     val feed: PersistedFeedState = PersistedFeedState(),
@@ -84,6 +88,7 @@ private data class PersistedSession(
             destination = WorkspaceDestination.fromKey(destination),
             forumSourceId = sourceId,
             globalSearchQuery = globalSearchQuery.take(240),
+            activeSmartCollectionId = activeSmartCollectionId?.takeIf(String::isNotBlank),
             forum = forum.toDomain().copy(sourceId = sourceId),
             reader = reader.toDomain(),
             feed = feed.toDomain(),
@@ -98,6 +103,7 @@ private data class PersistedSession(
             destination = value.destination.key,
             forumSourceId = value.forumSourceId,
             globalSearchQuery = value.globalSearchQuery,
+            activeSmartCollectionId = value.activeSmartCollectionId,
             forum = PersistedForumState.fromDomain(value.forum),
             reader = PersistedReaderState.fromDomain(value.reader),
             feed = PersistedFeedState.fromDomain(value.feed),
@@ -176,12 +182,18 @@ private data class PersistedFeedState(
     val selectedSourceIds: Set<String> = emptySet(),
     val hasExplicitSourceSelection: Boolean = false,
     val includeReader: Boolean = true,
+    val selectedSocialSourceIds: Set<String> = emptySet(),
+    val hasExplicitSocialSourceSelection: Boolean = false,
+    val includeSocial: Boolean = true,
     val listAnchor: PersistedListAnchor? = null,
 ) {
     fun toDomain() = FeedWorkspaceState(
         selectedSourceIds = selectedSourceIds.filter(String::isNotBlank).take(100).toSet(),
         hasExplicitSourceSelection = hasExplicitSourceSelection,
         includeReader = includeReader,
+        selectedSocialSourceIds = selectedSocialSourceIds.filter(String::isNotBlank).take(100).toSet(),
+        hasExplicitSocialSourceSelection = hasExplicitSocialSourceSelection,
+        includeSocial = includeSocial,
         listAnchor = listAnchor?.toDomain(),
     )
 
@@ -190,6 +202,9 @@ private data class PersistedFeedState(
             value.selectedSourceIds,
             value.hasExplicitSourceSelection,
             value.includeReader,
+            value.selectedSocialSourceIds,
+            value.hasExplicitSocialSourceSelection,
+            value.includeSocial,
             value.listAnchor?.let(PersistedListAnchor::fromDomain),
         )
     }

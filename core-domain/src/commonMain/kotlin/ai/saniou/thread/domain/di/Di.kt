@@ -58,6 +58,7 @@ import ai.saniou.thread.domain.usecase.thread.GetTopicMetadataUseCase
 import ai.saniou.thread.domain.usecase.user.LoginSourceUseCase
 import ai.saniou.thread.domain.usecase.refresh.ObserveRefreshDiagnosticsUseCase
 import ai.saniou.thread.domain.usecase.sync.*
+import ai.saniou.thread.domain.usecase.social.*
 import ai.saniou.thread.domain.usecase.search.SearchLocalContentUseCase
 import ai.saniou.thread.domain.usecase.operations.ClearSourceDiagnosticUseCase
 import ai.saniou.thread.domain.usecase.operations.ObserveOperationsUseCase
@@ -76,6 +77,12 @@ val domainModule = DI.Module("domainModule") {
     // Unified feed
     bindProvider { GetTimelineUseCase(instance()) }
     bindProvider { RefreshTimelineUseCase(instance()) }
+    bindProvider { ObserveSocialSourcesUseCase(instance()) }
+    bindProvider { SaveSocialSourceUseCase(instance()) }
+    bindProvider { RemoveSocialSourceUseCase(instance()) }
+    bindProvider { LoadOlderSocialTimelineUseCase(instance()) }
+    bindProvider { InteractWithSocialPostUseCase(instance()) }
+    bindProvider { GetSocialPostUseCase(instance()) }
     bindProvider { GetAggregatedFeedUseCase(instance()) }
     bindProvider { ObserveRefreshDiagnosticsUseCase(instance()) }
     bindProvider { SearchLocalContentUseCase(instance()) }

@@ -4,6 +4,7 @@ enum class GlobalSearchType {
     TOPIC,
     COMMENT,
     ARTICLE,
+    SOCIAL,
 }
 
 /** Lightweight navigation-safe projection from SQLDelight's offline caches. */
@@ -26,6 +27,7 @@ data class GlobalSearchResponse(
     val topicCount: Long,
     val commentCount: Long,
     val articleCount: Long,
+    val socialCount: Long = 0,
 ) {
-    val totalCount: Long get() = topicCount + commentCount + articleCount
+    val totalCount: Long get() = topicCount + commentCount + articleCount + socialCount
 }

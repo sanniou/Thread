@@ -32,6 +32,17 @@ class ContentLinkRepositoryImpl(
                 availableOffline = true,
             )
         }
+        db.socialQueries.getSocialPostByCanonicalUrl(normalized).executeAsOneOrNull()?.let { post ->
+            return@withContext LinkResolution.Internal(
+                ContentReference(
+                    kind = ContentReferenceKind.SOCIAL_POST,
+                    id = post.id,
+                    sourceId = post.sourceId,
+                    canonicalUrl = normalized,
+                ),
+                availableOffline = true,
+            )
+        }
         parseForumUrl(normalized)?.let { return@withContext resolveReferenceLocal(it) }
         LinkResolution.External(normalized)
     }
@@ -46,6 +57,14 @@ class ContentLinkRepositoryImpl(
                 LinkResolution.External(url)
             } else LinkResolution.Unsupported("外部链接协议不受支持")
         }
+        if (reference.kind == ContentReferenceKind.SOCIAL_POST) {
+            val post = db.socialQueries.getSocialPost(checkNotNull(reference.sourceId), reference.id)
+                .executeAsOneOrNull()
+            return LinkResolution.Internal(
+                reference.copy(canonicalUrl = post?.canonicalUrl ?: reference.canonicalUrl),
+                post != null,
+            )
+        }
         val available = when (reference.kind) {
             ContentReferenceKind.TOPIC -> db.topicQueries.getTopic(
                 checkNotNull(reference.sourceId), reference.id,
@@ -55,7 +74,7 @@ class ContentLinkRepositoryImpl(
             ).executeAsOneOrNull() != null
             ContentReferenceKind.ARTICLE -> db.articleQueries.getArticleById(reference.id)
                 .executeAsOneOrNull() != null
-            ContentReferenceKind.SOCIAL_POST -> false
+            ContentReferenceKind.SOCIAL_POST -> error("Handled above")
             ContentReferenceKind.EXTERNAL_URL -> false
         }
         return LinkResolution.Internal(reference, available)

@@ -11,5 +11,12 @@ class GetTimelineUseCase(
     operator fun invoke(
         sourceIds: Set<String>? = null,
         includeReader: Boolean = true,
-    ): Flow<PagingData<TimelineItem>> = repository.getTimelinePaging(sourceIds, includeReader)
+        socialSourceIds: Set<String>? = null,
+        includeSocial: Boolean = true,
+    ): Flow<PagingData<TimelineItem>> = repository.getTimelinePaging(
+        sourceIds = sourceIds,
+        includeReader = includeReader,
+        socialSourceIds = socialSourceIds,
+        includeSocial = includeSocial,
+    )
 }

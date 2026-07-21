@@ -41,6 +41,7 @@ class GlobalSearchRepositoryImpl(
             topicCount = counts[GlobalSearchType.TOPIC] ?: 0,
             commentCount = counts[GlobalSearchType.COMMENT] ?: 0,
             articleCount = counts[GlobalSearchType.ARTICLE] ?: 0,
+            socialCount = counts[GlobalSearchType.SOCIAL] ?: 0,
         )
     }
 
@@ -84,6 +85,18 @@ class GlobalSearchRepositoryImpl(
                         publishedAtEpochMillis = row.publishDate,
                     )
                 }
+                GlobalSearchType.SOCIAL -> database.socialQueries.searchSocialPosts(query, limit, 0).executeAsList().map { row ->
+                    GlobalSearchResult(
+                        type = type,
+                        id = row.id,
+                        sourceId = row.sourceId,
+                        sourceName = row.sourceName,
+                        title = row.authorName,
+                        snippet = excerpt(row.body),
+                        author = row.authorHandle ?: row.authorName,
+                        publishedAtEpochMillis = row.createdAt,
+                    )
+                }
             }
         }
 
@@ -91,6 +104,7 @@ class GlobalSearchRepositoryImpl(
         GlobalSearchType.TOPIC -> database.topicQueries.countSearchTopics(query).executeAsOne()
         GlobalSearchType.COMMENT -> database.commentQueries.countSearchComments(query).executeAsOne()
         GlobalSearchType.ARTICLE -> database.articleQueries.countSearchArticles(query).executeAsOne()
+        GlobalSearchType.SOCIAL -> database.socialQueries.countSearchSocialPosts(query).executeAsOne()
     }
 
     private fun sourceName(sourceId: String): String =

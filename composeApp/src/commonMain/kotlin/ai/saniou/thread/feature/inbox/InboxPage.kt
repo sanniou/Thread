@@ -14,6 +14,7 @@ import ai.saniou.thread.domain.model.inbox.InboxEvent
 import ai.saniou.thread.domain.model.inbox.InboxKind
 import ai.saniou.thread.domain.repository.ContentLinkRepository
 import ai.saniou.thread.feature.inbox.InboxContract.Event
+import ai.saniou.thread.feature.social.SocialDetailPage
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -117,8 +118,12 @@ object InboxPage : Screen {
                             )
                         )
                         ContentReferenceKind.ARTICLE -> navigator.push(ArticleDetailPage(resolution.reference.id))
-                        ContentReferenceKind.SOCIAL_POST -> resolution.reference.canonicalUrl?.let(uriHandler::openUri)
-                            ?: snackbar.showSnackbar("该社交内容尚无可打开的平台路由")
+                        ContentReferenceKind.SOCIAL_POST -> navigator.push(
+                            SocialDetailPage(
+                                sourceId = checkNotNull(resolution.reference.sourceId),
+                                postId = resolution.reference.id,
+                            ),
+                        )
                         ContentReferenceKind.EXTERNAL_URL -> Unit
                     }
                 }

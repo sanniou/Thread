@@ -5,6 +5,7 @@ import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.ContextHero
 import ai.saniou.coreui.widgets.PageHeader
 import ai.saniou.coreui.widgets.ThreadCard
+import ai.saniou.coreui.composition.LocalContentLinkHandler
 import ai.saniou.thread.FeedTopicRoute
 import ai.saniou.thread.domain.model.search.GlobalSearchType
 import ai.saniou.thread.feature.search.GlobalSearchContract.Event
@@ -45,6 +46,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import org.kodein.di.compose.localDI
 import org.kodein.di.direct
 import org.kodein.di.instance
+import androidx.paging.compose.collectAsLazyPagingItems
 
 object GlobalSearchPage : Screen {
     @Composable
@@ -53,7 +55,9 @@ object GlobalSearchPage : Screen {
         val di = localDI()
         val viewModel = rememberScreenModel { di.direct.instance<GlobalSearchViewModel>() }
         val state by viewModel.state.collectAsState()
+        val collectionResults = viewModel.collectionResults.collectAsLazyPagingItems()
         val snackbar = remember { SnackbarHostState() }
+        val contentLinkHandler = LocalContentLinkHandler.current
 
         LaunchedEffect(viewModel) {
             viewModel.effects.collect { effect ->
@@ -63,6 +67,9 @@ object GlobalSearchPage : Screen {
                         GlobalSearchType.TOPIC -> navigator.push(FeedTopicRoute(effect.result.sourceId, effect.result.id))
                         GlobalSearchType.COMMENT -> navigator.push(
                             FeedTopicRoute(effect.result.sourceId, effect.result.contextId ?: effect.result.id)
+                        )
+                        GlobalSearchType.SOCIAL -> contentLinkHandler?.invoke(
+                            "thread://social/${effect.result.sourceId}/${effect.result.id}"
                         )
                     }
                 }
@@ -143,6 +150,11 @@ object GlobalSearchPage : Screen {
                     }
                 }
                 when {
+                    state.activeCollectionId != null -> GlobalSearchPagingResults(
+                        results = collectionResults,
+                        modifier = Modifier.weight(1f).fillMaxWidth(),
+                        onOpen = viewModel::open,
+                    )
                     state.isSearching -> CircularProgressIndicator(Modifier.align(Alignment.CenterHorizontally))
                     state.activeCollectionId == null && state.query.trim().length < 2 -> SearchGuidance()
                     state.response?.results.isNullOrEmpty() -> SearchEmptyState(state.query)

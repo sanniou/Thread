@@ -2,6 +2,7 @@ package ai.saniou.thread.domain.model.feed
 
 import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.model.reader.Article
+import ai.saniou.thread.domain.model.social.SocialPost
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
@@ -27,4 +28,12 @@ data class ArticleItem(
 ) : TimelineItem {
     override val uniqueId: String = "article_${article.id}"
     override val displayTime: Instant = article.publishDate
+}
+
+data class SocialItem(
+    val post: SocialPost,
+    val sourceName: String,
+) : TimelineItem {
+    override val uniqueId: String = "social_${post.sourceId}_${post.id}"
+    override val displayTime: Instant = Instant.fromEpochMilliseconds(post.createdAtEpochMillis)
 }

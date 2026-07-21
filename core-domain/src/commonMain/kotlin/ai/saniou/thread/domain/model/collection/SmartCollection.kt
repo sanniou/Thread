@@ -10,6 +10,9 @@ data class SmartCollection(
     val description: String = "",
     val rules: SmartCollectionRules = SmartCollectionRules(),
     val pinned: Boolean = false,
+    val sort: SmartCollectionSort = SmartCollectionSort.NEWEST,
+    val groupBy: SmartCollectionGroup = SmartCollectionGroup.NONE,
+    val position: Int = 0,
     val createdAtEpochMillis: Long,
     val updatedAtEpochMillis: Long,
 ) {
@@ -19,6 +22,12 @@ data class SmartCollection(
         require(rules.isMeaningful) { "A smart collection needs at least one rule" }
     }
 }
+
+@Serializable
+enum class SmartCollectionSort { NEWEST, OLDEST, RELEVANCE }
+
+@Serializable
+enum class SmartCollectionGroup { NONE, SOURCE, CONTENT_KIND, AUTHOR }
 
 @Serializable
 data class SmartCollectionRules(

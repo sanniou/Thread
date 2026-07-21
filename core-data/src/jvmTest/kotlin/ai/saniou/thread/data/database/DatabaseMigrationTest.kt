@@ -90,7 +90,7 @@ class DatabaseMigrationTest {
             "idx_topic_source_author_reply",
         )
         assertTrue(driver.indexNames().containsAll(expected))
-        assertEquals(5L, Database.Schema.version)
+        assertEquals(6L, Database.Schema.version)
         driver.close()
     }
 
@@ -115,6 +115,71 @@ class DatabaseMigrationTest {
             parameters = 0,
         ).value
         assertEquals(1L, count)
+        driver.close()
+    }
+
+    @Test
+    fun addsVersionSixSocialGraphAndCollectionIndex() = runBlocking {
+        val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
+        Database.Schema.synchronous().migrate(driver, oldVersion = 4L, newVersion = 6L)
+        driver.executeStatement(
+            """
+            INSERT INTO SocialSourceEntity(id, displayName, baseUrl, enabled, lastSyncAt)
+            VALUES ('mastodon', 'Mastodon', 'https://example.social', 1, NULL)
+            """.trimIndent(),
+        )
+        driver.executeStatement(
+            """
+            INSERT INTO SocialPostEntity(
+                id, sourceId, authorId, authorName, body, createdAt
+            ) VALUES ('1', 'mastodon', 'u1', 'Alice', 'hello graph', 10)
+            """.trimIndent(),
+        )
+        driver.executeStatement(
+            """
+            INSERT INTO ContentGraphEdgeEntity(
+                fromKind, fromId, fromSourceId, fromParentId,
+                toKind, toId, toSourceId, toParentId,
+                relation, weight, createdAt
+            ) VALUES (
+                'SOCIAL_POST', '1', 'mastodon', '',
+                'SOCIAL_POST', '0', 'mastodon', '',
+                'REPLY_TO', 1.0, 10
+            )
+            """.trimIndent(),
+        )
+        driver.executeStatement(
+            """
+            INSERT INTO SmartCollectionIndexEntity(
+                contentKey, contentKind, contentId, sourceId, sourceName,
+                title, body, author, publishedAt
+            ) VALUES (
+                'SOCIAL_POST:mastodon:1', 'SOCIAL_POST', '1', 'mastodon', 'Mastodon',
+                'Alice', 'hello graph', 'Alice', 10
+            )
+            """.trimIndent(),
+        )
+        val socialCount = driver.executeQuery(
+            identifier = null,
+            sql = "SELECT count(*) FROM SocialPostEntity",
+            mapper = { cursor ->
+                cursor.next()
+                QueryResult.Value(cursor.getLong(0) ?: 0L)
+            },
+            parameters = 0,
+        ).value
+        val edgeCount = driver.executeQuery(
+            identifier = null,
+            sql = "SELECT count(*) FROM ContentGraphEdgeEntity",
+            mapper = { cursor ->
+                cursor.next()
+                QueryResult.Value(cursor.getLong(0) ?: 0L)
+            },
+            parameters = 0,
+        ).value
+        assertEquals(1L, socialCount)
+        assertEquals(1L, edgeCount)
+        assertEquals(6L, Database.Schema.version)
         driver.close()
     }
 

@@ -19,10 +19,14 @@ data class FeedRefreshReport(
     val sourceFailures: List<SourceFeedFailure> = emptyList(),
     val refreshedReaderSourceIds: Set<String> = emptySet(),
     val readerFailures: Map<String, String> = emptyMap(),
+    val refreshedSocialSourceIds: Set<String> = emptySet(),
+    val socialFailures: Map<String, String> = emptyMap(),
 ) {
     val isSuccess: Boolean
-        get() = sourceFailures.isEmpty() && readerFailures.isEmpty()
+        get() = sourceFailures.isEmpty() && readerFailures.isEmpty() && socialFailures.isEmpty()
 
     val hasAnySuccess: Boolean
-        get() = refreshedSourceIds.isNotEmpty() || refreshedReaderSourceIds.isNotEmpty()
+        get() = refreshedSourceIds.isNotEmpty() ||
+            refreshedReaderSourceIds.isNotEmpty() ||
+            refreshedSocialSourceIds.isNotEmpty()
 }

@@ -11,6 +11,8 @@ import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.ThreadDetailScaffold
 import ai.saniou.coreui.widgets.ShimmerContainer
 import ai.saniou.coreui.widgets.VerticalSpacerSmall
+import ai.saniou.coreui.widgets.RelatedContentSection
+import ai.saniou.coreui.composition.LocalContentLinkHandler
 import ai.saniou.forum.ui.components.*
 import ai.saniou.forum.workflow.image.ImagePreviewPage
 import ai.saniou.forum.workflow.image.ImagePreviewViewModelParams
@@ -24,6 +26,11 @@ import ai.saniou.forum.workflow.user.UserDetailPage
 import ai.saniou.thread.domain.model.forum.Comment
 import ai.saniou.thread.domain.model.forum.Image
 import ai.saniou.thread.domain.model.forum.TopicMetadata
+import ai.saniou.thread.domain.model.content.ContentReference
+import ai.saniou.thread.domain.model.content.ContentReferenceKind
+import ai.saniou.thread.domain.model.content.RelatedContent
+import ai.saniou.thread.domain.model.content.toThreadUrl
+import ai.saniou.thread.domain.repository.ContentGraphRepository
 import ai.saniou.thread.domain.model.workspace.RestorableContentKind
 import ai.saniou.thread.domain.model.workspace.RestorableContentReference
 import ai.saniou.thread.domain.usecase.workspace.UpdateWorkspaceSessionUseCase
@@ -51,6 +58,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.LazyPagingItems
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.kodein.rememberScreenModel
@@ -80,11 +88,18 @@ data class TopicDetailPage(
         val clipboard = rememberThreadClipboard()
         val sourceId = LocalForumSourceId.current
         val updateWorkspaceSession = di.direct.instance<UpdateWorkspaceSessionUseCase>()
+        val contentGraphRepository = di.direct.instance<ContentGraphRepository>()
+        val rootLinkHandler = LocalContentLinkHandler.current
 
         val viewModel: TopicDetailViewModel = rememberScreenModel(tag = "$sourceId:$threadId") {
             di.direct.instance(arg = TopicDetailViewModelParams(sourceId, threadId))
         }
         val state by viewModel.state.collectAsState()
+        val graphReference = remember(sourceId, threadId) {
+            ContentReference(ContentReferenceKind.TOPIC, threadId, sourceId)
+        }
+        val relatedFlow = remember(graphReference) { contentGraphRepository.getRelated(graphReference) }
+        val related = relatedFlow.collectAsLazyPagingItems()
         val contentReference = remember(sourceId, threadId) {
             RestorableContentReference(
                 kind = RestorableContentKind.TOPIC,
@@ -100,6 +115,9 @@ data class TopicDetailPage(
                     updatedAtEpochMillis = kotlin.time.Clock.System.now().toEpochMilliseconds(),
                 )
             }
+        }
+        LaunchedEffect(state.topicWrapper) {
+            if (state.topicWrapper is UiStateWrapper.Success) contentGraphRepository.rebuild(graphReference)
         }
         fun closeDetail() {
             coroutineScope.launch {
@@ -287,7 +305,9 @@ data class TopicDetailPage(
                     onUpvote = { viewModel.onEvent(Event.UpvoteTopic) },
                     onUserClick = { userHash -> navigator.push(UserDetailPage(sourceId, userHash)) },
                     onReplyClicked = { commentId -> viewModel.onEvent(Event.ShowSubComments(commentId)) },
-                    highlightedReplyId = highlightedReplyId
+                    highlightedReplyId = highlightedReplyId,
+                    related = related,
+                    onOpenRelated = { rootLinkHandler?.invoke(it.reference.toThreadUrl()) },
                 )
             }
         }
@@ -353,6 +373,8 @@ private fun ThreadContentRouter(
     onUserClick: (String) -> Unit,
     onReplyClicked: (String) -> Unit,
     highlightedReplyId: String?,
+    related: LazyPagingItems<RelatedContent>,
+    onOpenRelated: (RelatedContent) -> Unit,
 ) {
     Box(
         modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface),
@@ -382,7 +404,9 @@ private fun ThreadContentRouter(
                 onBookmarkImage = onBookmarkImage,
                 onUpvote = onUpvote,
                 onUserClick = onUserClick,
-                highlightedReplyId = highlightedReplyId
+                highlightedReplyId = highlightedReplyId,
+                related = related,
+                onOpenRelated = onOpenRelated,
             )
         }
     }
@@ -530,6 +554,8 @@ fun ThreadSuccessContent(
     onUpvote: () -> Unit,
     onUserClick: (String) -> Unit,
     highlightedReplyId: String?,
+    related: LazyPagingItems<RelatedContent>,
+    onOpenRelated: (RelatedContent) -> Unit,
 ) {
     val replies = state.replies.collectAsLazyPagingItems()
     val allImages by remember(replies.itemSnapshotList) {
@@ -598,7 +624,9 @@ fun ThreadSuccessContent(
             onUpvote = onUpvote,
             onUserClick = onUserClick,
             onBookmark = onBookmark,
-            highlightedReplyId = highlightedReplyId
+            highlightedReplyId = highlightedReplyId,
+            related = related,
+            onOpenRelated = onOpenRelated,
         )
     }
 }
@@ -620,6 +648,8 @@ private fun ThreadList(
     onUpvote: () -> Unit,
     onUserClick: (String) -> Unit,
     highlightedReplyId: String?,
+    related: LazyPagingItems<RelatedContent>,
+    onOpenRelated: (RelatedContent) -> Unit,
 ) {
     val windowInfo = LocalThreadWindowInfo.current
     val replies = state.replies.collectAsLazyPagingItems()
@@ -709,6 +739,11 @@ private fun ThreadList(
 
         // Paging state footer
         item { PagingAppendState(replies, endLabel = "全部回复已加载") }
+        if (related.itemCount > 0) {
+            item(key = "related-content") {
+                RelatedContentSection(items = related, onOpen = onOpenRelated)
+            }
+        }
     }
 }
 

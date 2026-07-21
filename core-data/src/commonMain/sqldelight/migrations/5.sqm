@@ -1,0 +1,84 @@
+CREATE TABLE SocialSourceEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    displayName TEXT NOT NULL,
+    baseUrl TEXT NOT NULL,
+    enabled INTEGER NOT NULL DEFAULT 1,
+    lastSyncAt INTEGER
+);
+
+CREATE TABLE SocialPostEntity (
+    id TEXT NOT NULL,
+    sourceId TEXT NOT NULL,
+    authorId TEXT NOT NULL,
+    authorName TEXT NOT NULL,
+    authorHandle TEXT,
+    authorAvatarUrl TEXT,
+    authorVerified INTEGER NOT NULL DEFAULT 0,
+    body TEXT NOT NULL,
+    createdAt INTEGER NOT NULL,
+    contentWarning TEXT,
+    mediaJson TEXT NOT NULL DEFAULT '[]',
+    interactionCountsJson TEXT NOT NULL DEFAULT '{}',
+    permittedInteractionsJson TEXT NOT NULL DEFAULT '[]',
+    activeInteractionsJson TEXT NOT NULL DEFAULT '[]',
+    canonicalUrl TEXT,
+    replyToId TEXT,
+    repostOfId TEXT,
+    PRIMARY KEY (sourceId, id),
+    FOREIGN KEY(sourceId) REFERENCES SocialSourceEntity(id) ON DELETE CASCADE
+);
+
+CREATE TABLE SocialCursorEntity (
+    sourceId TEXT NOT NULL PRIMARY KEY,
+    newerCursor TEXT,
+    olderCursor TEXT,
+    updatedAt INTEGER NOT NULL,
+    FOREIGN KEY(sourceId) REFERENCES SocialSourceEntity(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_social_post_created ON SocialPostEntity(createdAt DESC);
+CREATE INDEX idx_social_post_source_created ON SocialPostEntity(sourceId, createdAt DESC);
+CREATE INDEX idx_social_post_author_created ON SocialPostEntity(sourceId, authorId, createdAt DESC);
+
+CREATE TABLE SmartCollectionIndexEntity (
+    contentKey TEXT NOT NULL PRIMARY KEY,
+    contentKind TEXT NOT NULL,
+    contentId TEXT NOT NULL,
+    sourceId TEXT NOT NULL,
+    sourceName TEXT NOT NULL,
+    contextId TEXT,
+    title TEXT NOT NULL,
+    body TEXT NOT NULL,
+    author TEXT NOT NULL,
+    tags TEXT NOT NULL DEFAULT '',
+    unread INTEGER NOT NULL DEFAULT 0,
+    bookmarked INTEGER NOT NULL DEFAULT 0,
+    hasMedia INTEGER NOT NULL DEFAULT 0,
+    hasContentWarning INTEGER NOT NULL DEFAULT 0,
+    publishedAt INTEGER NOT NULL
+);
+CREATE INDEX idx_collection_kind_published ON SmartCollectionIndexEntity(contentKind, publishedAt DESC);
+CREATE INDEX idx_collection_source_published ON SmartCollectionIndexEntity(sourceId, publishedAt DESC);
+CREATE INDEX idx_collection_author_published ON SmartCollectionIndexEntity(author, publishedAt DESC);
+CREATE INDEX idx_collection_unread_published ON SmartCollectionIndexEntity(unread, publishedAt DESC);
+CREATE INDEX idx_collection_bookmarked_published ON SmartCollectionIndexEntity(bookmarked, publishedAt DESC);
+
+CREATE TABLE ContentGraphEdgeEntity (
+    fromKind TEXT NOT NULL,
+    fromId TEXT NOT NULL,
+    fromSourceId TEXT NOT NULL DEFAULT '',
+    fromParentId TEXT NOT NULL DEFAULT '',
+    toKind TEXT NOT NULL,
+    toId TEXT NOT NULL,
+    toSourceId TEXT NOT NULL DEFAULT '',
+    toParentId TEXT NOT NULL DEFAULT '',
+    relation TEXT NOT NULL,
+    weight REAL NOT NULL DEFAULT 1.0,
+    createdAt INTEGER NOT NULL,
+    PRIMARY KEY(fromKind, fromId, fromSourceId, toKind, toId, toSourceId, relation)
+);
+
+CREATE INDEX idx_content_graph_from
+ON ContentGraphEdgeEntity(fromKind, fromId, fromSourceId, weight DESC, createdAt DESC);
+CREATE INDEX idx_content_graph_to
+ON ContentGraphEdgeEntity(toKind, toId, toSourceId, relation);

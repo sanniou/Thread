@@ -1,0 +1,151 @@
+CREATE TABLE SmartCollectionIndexEntity (
+    contentKey TEXT NOT NULL PRIMARY KEY,
+    contentKind TEXT NOT NULL,
+    contentId TEXT NOT NULL,
+    sourceId TEXT NOT NULL,
+    sourceName TEXT NOT NULL,
+    contextId TEXT,
+    title TEXT NOT NULL,
+    body TEXT NOT NULL,
+    author TEXT NOT NULL,
+    tags TEXT NOT NULL DEFAULT '',
+    unread INTEGER NOT NULL DEFAULT 0,
+    bookmarked INTEGER NOT NULL DEFAULT 0,
+    hasMedia INTEGER NOT NULL DEFAULT 0,
+    hasContentWarning INTEGER NOT NULL DEFAULT 0,
+    publishedAt INTEGER NOT NULL
+);
+
+CREATE INDEX idx_collection_kind_published ON SmartCollectionIndexEntity(contentKind, publishedAt DESC);
+CREATE INDEX idx_collection_source_published ON SmartCollectionIndexEntity(sourceId, publishedAt DESC);
+CREATE INDEX idx_collection_author_published ON SmartCollectionIndexEntity(author, publishedAt DESC);
+CREATE INDEX idx_collection_unread_published ON SmartCollectionIndexEntity(unread, publishedAt DESC);
+CREATE INDEX idx_collection_bookmarked_published ON SmartCollectionIndexEntity(bookmarked, publishedAt DESC);
+
+clearSmartCollectionIndex:
+DELETE FROM SmartCollectionIndexEntity;
+
+indexCachedTopics:
+INSERT INTO SmartCollectionIndexEntity(
+    contentKey, contentKind, contentId, sourceId, sourceName, contextId, title, body,
+    author, tags, unread, bookmarked, hasMedia, hasContentWarning, publishedAt
+)
+SELECT
+    'TOPIC:' || topic.sourceId || ':' || topic.id,
+    'TOPIC', topic.id, topic.sourceId, topic.sourceId, NULL,
+    COALESCE(NULLIF(topic.title, ''), '主题 #' || topic.id),
+    COALESCE(topic.summary, '') || ' ' || COALESCE(topic.content, ''),
+    topic.authorName,
+    COALESCE((
+        SELECT '|' || GROUP_CONCAT(tag.name, '|') || '|'
+        FROM TopicTag mapping JOIN Tag tag ON tag.id = mapping.tagId
+        WHERE mapping.sourceId = topic.sourceId AND mapping.topicId = topic.id
+    ), ''),
+    CASE WHEN topic.lastVisitedAt IS NULL THEN 1 ELSE 0 END,
+    CASE WHEN topic.isCollected = 1 THEN 1 ELSE 0 END,
+    CASE WHEN EXISTS(
+        SELECT 1 FROM Image image
+        WHERE image.sourceId = topic.sourceId AND image.parentId = topic.id AND image.parentType = 'Topic'
+    ) THEN 1 ELSE 0 END,
+    0,
+    MAX(topic.createdAt, topic.lastReplyAt)
+FROM Topic topic;
+
+indexCachedComments:
+INSERT INTO SmartCollectionIndexEntity(
+    contentKey, contentKind, contentId, sourceId, sourceName, contextId, title, body,
+    author, tags, unread, bookmarked, hasMedia, hasContentWarning, publishedAt
+)
+SELECT
+    'COMMENT:' || comment.sourceId || ':' || comment.id,
+    'COMMENT', comment.id, comment.sourceId, comment.sourceId, comment.topicId,
+    COALESCE(NULLIF(comment.title, ''), comment.floor || ' 楼回复'),
+    comment.content, comment.authorName, '',
+    CASE WHEN topic.lastVisitedAt IS NULL THEN 1 ELSE 0 END,
+    0,
+    CASE WHEN EXISTS(
+        SELECT 1 FROM Image image
+        WHERE image.sourceId = comment.sourceId AND image.parentId = comment.id AND image.parentType = 'Comment'
+    ) THEN 1 ELSE 0 END,
+    0,
+    comment.createdAt
+FROM Comment comment
+JOIN Topic topic ON topic.sourceId = comment.sourceId AND topic.id = comment.topicId;
+
+indexCachedArticles:
+INSERT INTO SmartCollectionIndexEntity(
+    contentKey, contentKind, contentId, sourceId, sourceName, contextId, title, body,
+    author, tags, unread, bookmarked, hasMedia, hasContentWarning, publishedAt
+)
+SELECT
+    'ARTICLE:' || article.feedSourceId || ':' || article.id,
+    'ARTICLE', article.id, article.feedSourceId, source.name, NULL,
+    article.title, article.description || ' ' || article.content, COALESCE(article.author, ''), '',
+    CASE WHEN article.isRead = 0 THEN 1 ELSE 0 END,
+    article.isBookmarked,
+    CASE WHEN article.imageUrl IS NOT NULL AND article.imageUrl != '' THEN 1 ELSE 0 END,
+    0,
+    article.publishDate
+FROM ArticleEntity article
+JOIN FeedSourceEntity source ON source.id = article.feedSourceId;
+
+indexCachedSocialPosts:
+INSERT INTO SmartCollectionIndexEntity(
+    contentKey, contentKind, contentId, sourceId, sourceName, contextId, title, body,
+    author, tags, unread, bookmarked, hasMedia, hasContentWarning, publishedAt
+)
+SELECT
+    'SOCIAL_POST:' || post.sourceId || ':' || post.id,
+    'SOCIAL_POST', post.id, post.sourceId, source.displayName, NULL,
+    post.authorName, post.body, post.authorName, '', 1,
+    CASE WHEN post.activeInteractionsJson LIKE '%BOOKMARK%' THEN 1 ELSE 0 END,
+    CASE WHEN post.mediaJson != '[]' THEN 1 ELSE 0 END,
+    CASE WHEN post.contentWarning IS NOT NULL AND post.contentWarning != '' THEN 1 ELSE 0 END,
+    post.createdAt
+FROM SocialPostEntity post
+JOIN SocialSourceEntity source ON source.id = post.sourceId;
+
+countResolvedSmartCollection:
+SELECT count(*) FROM SmartCollectionIndexEntity
+WHERE contentKind IN :contentKinds
+  AND sourceId IN :sourceIds
+  AND (:query = '' OR title LIKE '%' || :query || '%' OR body LIKE '%' || :query || '%' OR author LIKE '%' || :query || '%')
+  AND (:author = '' OR author LIKE '%' || :author || '%')
+  AND (:tag1 = '' OR tags LIKE '%|' || :tag1 || '|%')
+  AND (:tag2 = '' OR tags LIKE '%|' || :tag2 || '|%')
+  AND (:tag3 = '' OR tags LIKE '%|' || :tag3 || '|%')
+  AND (:tag4 = '' OR tags LIKE '%|' || :tag4 || '|%')
+  AND (:unreadOnly = 0 OR unread = 1)
+  AND (:bookmarkedOnly = 0 OR bookmarked = 1)
+  AND (:hasMedia < 0 OR hasMedia = :hasMedia)
+  AND (:includeContentWarnings = 1 OR hasContentWarning = 0);
+
+resolveSmartCollectionPaging:
+SELECT * FROM SmartCollectionIndexEntity
+WHERE contentKind IN :contentKinds
+  AND sourceId IN :sourceIds
+  AND (:query = '' OR title LIKE '%' || :query || '%' OR body LIKE '%' || :query || '%' OR author LIKE '%' || :query || '%')
+  AND (:author = '' OR author LIKE '%' || :author || '%')
+  AND (:tag1 = '' OR tags LIKE '%|' || :tag1 || '|%')
+  AND (:tag2 = '' OR tags LIKE '%|' || :tag2 || '|%')
+  AND (:tag3 = '' OR tags LIKE '%|' || :tag3 || '|%')
+  AND (:tag4 = '' OR tags LIKE '%|' || :tag4 || '|%')
+  AND (:unreadOnly = 0 OR unread = 1)
+  AND (:bookmarkedOnly = 0 OR bookmarked = 1)
+  AND (:hasMedia < 0 OR hasMedia = :hasMedia)
+  AND (:includeContentWarnings = 1 OR hasContentWarning = 0)
+ORDER BY
+  CASE :groupMode
+    WHEN 'SOURCE' THEN sourceName
+    WHEN 'CONTENT_KIND' THEN contentKind
+    WHEN 'AUTHOR' THEN author
+    ELSE ''
+  END ASC,
+  CASE WHEN :sortMode = 'RELEVANCE' AND :query != '' AND title LIKE '%' || :query || '%' THEN 0 ELSE 1 END ASC,
+  CASE WHEN :sortMode = 'OLDEST' THEN publishedAt END ASC,
+  CASE WHEN :sortMode != 'OLDEST' THEN publishedAt END DESC,
+  contentKey ASC
+LIMIT :limit OFFSET :offset;
+
+getSmartCollectionIndexSources:
+SELECT DISTINCT sourceId FROM SmartCollectionIndexEntity ORDER BY sourceId;

@@ -40,3 +40,11 @@ sealed interface LinkResolution {
     data class External(val url: String) : LinkResolution
     data class Unsupported(val reason: String) : LinkResolution
 }
+
+fun ContentReference.toThreadUrl(): String = when (kind) {
+    ContentReferenceKind.TOPIC -> "thread://forum/${checkNotNull(sourceId)}/$id"
+    ContentReferenceKind.COMMENT -> "thread://forum/${checkNotNull(sourceId)}/${checkNotNull(parentId)}#comment-$id"
+    ContentReferenceKind.ARTICLE -> "thread://reader/$id"
+    ContentReferenceKind.SOCIAL_POST -> "thread://social/${checkNotNull(sourceId)}/$id"
+    ContentReferenceKind.EXTERNAL_URL -> canonicalUrl ?: id
+}

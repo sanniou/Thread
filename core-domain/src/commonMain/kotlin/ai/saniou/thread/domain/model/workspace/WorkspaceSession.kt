@@ -29,6 +29,7 @@ data class WorkspaceSession(
     val destination: WorkspaceDestination = WorkspaceDestination.FORUM,
     val forumSourceId: String? = null,
     val globalSearchQuery: String = "",
+    val activeSmartCollectionId: String? = null,
     val forum: ForumWorkspaceState = ForumWorkspaceState(),
     val reader: ReaderWorkspaceState = ReaderWorkspaceState(),
     val feed: FeedWorkspaceState = FeedWorkspaceState(),
@@ -71,6 +72,9 @@ data class FeedWorkspaceState(
     val selectedSourceIds: Set<String> = emptySet(),
     val hasExplicitSourceSelection: Boolean = false,
     val includeReader: Boolean = true,
+    val selectedSocialSourceIds: Set<String> = emptySet(),
+    val hasExplicitSocialSourceSelection: Boolean = false,
+    val includeSocial: Boolean = true,
     val listAnchor: ListAnchor? = null,
 )
 

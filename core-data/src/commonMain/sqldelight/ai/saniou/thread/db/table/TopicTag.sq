@@ -14,6 +14,12 @@ SELECT T.* FROM Tag T
 JOIN TopicTag TT ON T.id = TT.tagId
 WHERE TT.sourceId = ? AND TT.topicId = ?;
 
+getTopicsForTag:
+SELECT sourceId, topicId FROM TopicTag
+WHERE tagId = :tagId
+ORDER BY sourceId, topicId
+LIMIT :limit;
+
 deleteTagsForTopic:
 DELETE FROM TopicTag WHERE sourceId = ? AND topicId = ?;
 

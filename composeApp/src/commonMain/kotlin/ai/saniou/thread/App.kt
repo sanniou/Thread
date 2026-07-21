@@ -49,6 +49,7 @@ import ai.saniou.thread.feature.search.GlobalSearchPage
 import ai.saniou.thread.feature.operations.OperationsPage
 import ai.saniou.thread.feature.activity.ActivityCenterPage
 import ai.saniou.thread.feature.inbox.InboxPage
+import ai.saniou.thread.feature.social.SocialDetailPage
 import ai.saniou.thread.feature.commands.CommandPalette
 import ai.saniou.thread.feature.commands.ProductCommand
 import ai.saniou.thread.domain.reader.ReaderRefreshScheduler
@@ -280,9 +281,15 @@ fun App(attachmentPicker: AttachmentPicker? = null) {
                                     navigateTo(WorkspaceDestination.READER, ReaderRoute)
                                     navigator.push(ArticleDetailPage(resolution.reference.id))
                                 }
-                                ContentReferenceKind.SOCIAL_POST -> resolution.reference.canonicalUrl
-                                    ?.let(uriHandler::openUri)
-                                    ?: appSnackbar.showSnackbar("该社交内容尚无可打开的平台路由")
+                                ContentReferenceKind.SOCIAL_POST -> {
+                                    navigateTo(WorkspaceDestination.FEED, FeedRoute)
+                                    navigator.push(
+                                        SocialDetailPage(
+                                            sourceId = checkNotNull(resolution.reference.sourceId),
+                                            postId = resolution.reference.id,
+                                        ),
+                                    )
+                                }
                                 ContentReferenceKind.EXTERNAL_URL -> resolution.reference.canonicalUrl
                                     ?.let(uriHandler::openUri)
                             }
@@ -303,6 +310,7 @@ fun App(attachmentPicker: AttachmentPicker? = null) {
                             navigateTo(WorkspaceDestination.FORUM, ForumRoute)
                             navigator.push(FeedTopicRoute(result.sourceId, result.contextId ?: result.id))
                         }
+                        GlobalSearchType.SOCIAL -> openContentUrl("thread://social/${result.sourceId}/${result.id}")
                     }
                 }
                 val productCommands = remember(activitySnapshot) {
@@ -482,6 +490,9 @@ object FeedRoute : Screen {
             },
             onOpenArticle = { article ->
                 navigator.push(ArticleDetailPage(article.id))
+            },
+            onOpenSocial = { post ->
+                navigator.push(SocialDetailPage(post.sourceId, post.id))
             },
         )
     }

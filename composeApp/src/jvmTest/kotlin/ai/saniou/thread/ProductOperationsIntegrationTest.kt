@@ -54,11 +54,12 @@ class ProductOperationsIntegrationTest {
 
         val search = di.direct.instance<GlobalSearchRepository>()
             .search("跨平台", limitPerType = 10)
-        assertEquals(3, search.results.size)
+        assertEquals(4, search.results.size)
         assertEquals(GlobalSearchType.entries.toSet(), search.results.mapTo(mutableSetOf()) { it.type })
         assertEquals(1L, search.topicCount)
         assertEquals(1L, search.commentCount)
         assertEquals(1L, search.articleCount)
+        assertEquals(1L, search.socialCount)
 
         val operations = di.direct.instance<OperationsRepository>()
         val cached = operations.observe().awaitState("cached source health") { it.cachedItemCount == 3L }
@@ -236,6 +237,32 @@ class ProductOperationsIntegrationTest {
             isBookmarked = 0,
             imageUrl = null,
             rawContent = null,
+        )
+        database.socialQueries.upsertSocialSource(
+            id = "activitypub-demo",
+            displayName = "Demo Social",
+            baseUrl = "https://social.example.test",
+            enabled = 1,
+            lastSyncAt = 4_000,
+        )
+        database.socialQueries.upsertSocialPost(
+            id = "status-alpha",
+            sourceId = "activitypub-demo",
+            authorId = "alice",
+            authorName = "Alice",
+            authorHandle = "@alice@social.example.test",
+            authorAvatarUrl = null,
+            authorVerified = 0,
+            body = "跨平台社交时间线也能离线搜索",
+            createdAt = 4_000,
+            contentWarning = null,
+            mediaJson = "[]",
+            interactionCountsJson = "{}",
+            permittedInteractionsJson = "[]",
+            activeInteractionsJson = "[]",
+            canonicalUrl = "https://social.example.test/@alice/status-alpha",
+            replyToId = null,
+            repostOfId = null,
         )
     }
 }

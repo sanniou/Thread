@@ -9,5 +9,12 @@ class RefreshTimelineUseCase(
     suspend operator fun invoke(
         sourceIds: Set<String>? = null,
         includeReader: Boolean = true,
-    ): FeedRefreshReport = repository.refreshTimeline(sourceIds, includeReader)
+        socialSourceIds: Set<String>? = null,
+        includeSocial: Boolean = true,
+    ): FeedRefreshReport = repository.refreshTimeline(
+        sourceIds = sourceIds,
+        includeReader = includeReader,
+        socialSourceIds = socialSourceIds,
+        includeSocial = includeSocial,
+    )
 }
