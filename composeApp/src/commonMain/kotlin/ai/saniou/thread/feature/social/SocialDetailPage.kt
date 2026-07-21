@@ -15,6 +15,7 @@ import ai.saniou.thread.domain.model.social.SocialInteraction
 import ai.saniou.thread.domain.model.social.SocialMediaKind
 import ai.saniou.thread.domain.repository.ContentGraphRepository
 import ai.saniou.thread.feature.social.SocialDetailContract.Event
+import ai.saniou.coreui.platform.LocalShareService
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -103,6 +104,7 @@ data class SocialDetailPage(
         val scope = rememberCoroutineScope()
         val uriHandler = LocalUriHandler.current
         val clipboard = rememberThreadClipboard()
+        val shareService = LocalShareService.current
         val rootLinkHandler = LocalContentLinkHandler.current
 
         LaunchedEffect(state.message) {
@@ -118,15 +120,32 @@ data class SocialDetailPage(
             subtitle = state.post?.author?.handle ?: sourceId,
             onBack = { navigator.pop() },
             actions = {
-                state.post?.canonicalUrl?.let { url ->
-                    IconButton(onClick = {
-                        clipboard.copyText(url)
-                        scope.launch { snackbar.showSnackbar("链接已复制") }
-                    }) {
-                        Icon(Icons.Outlined.Share, contentDescription = "复制链接")
+                state.post?.let { post ->
+                    val shareText = buildString {
+                        append(post.author.displayName)
+                        post.author.handle?.let { append(" · ").append(it) }
+                        append('\n')
+                        append(post.body)
+                        val link = post.canonicalUrl ?: ContentReference(
+                            ContentReferenceKind.SOCIAL_POST,
+                            post.id,
+                            post.sourceId,
+                        ).toThreadUrl()
+                        append('\n').append(link)
                     }
-                    IconButton(onClick = { uriHandler.openUri(url) }) {
-                        Icon(Icons.Outlined.OpenInNew, contentDescription = "在浏览器打开")
+                    IconButton(onClick = {
+                        val shared = shareService?.shareText(shareText, post.author.displayName) == true
+                        if (!shared) clipboard.copyText(shareText)
+                        scope.launch {
+                            snackbar.showSnackbar(if (shared) "已通过系统分享" else "内容已复制")
+                        }
+                    }) {
+                        Icon(Icons.Outlined.Share, contentDescription = "分享")
+                    }
+                    post.canonicalUrl?.let { url ->
+                        IconButton(onClick = { uriHandler.openUri(url) }) {
+                            Icon(Icons.Outlined.OpenInNew, contentDescription = "在浏览器打开")
+                        }
                     }
                 }
             },

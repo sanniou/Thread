@@ -1,11 +1,13 @@
 package ai.saniou.thread.feature.settings
 
+import ai.saniou.coreui.interaction.rememberThreadClipboard
 import ai.saniou.coreui.layout.LocalThreadWindowInfo
 import ai.saniou.coreui.layout.ThreadWindowWidthClass
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.AdaptiveModal
 import ai.saniou.coreui.widgets.ThreadCard
 import ai.saniou.coreui.widgets.ThreadDetailScaffold
+import ai.saniou.coreui.platform.LocalUserDataFileService
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Arrangement
@@ -54,6 +56,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
@@ -68,12 +71,14 @@ import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import kotlinx.coroutines.launch
 import org.kodein.di.compose.localDI
 import org.kodein.di.direct
 import org.kodein.di.instance
 
 class SyncSettingsPage(
     private val showImportOnOpen: Boolean = false,
+    private val initialImportPayload: String? = null,
 ) : Screen {
     @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
     @Composable
@@ -83,6 +88,9 @@ class SyncSettingsPage(
         val viewModel = rememberScreenModel { di.direct.instance<SyncSettingsViewModel>() }
         val state by viewModel.state.collectAsState()
         val snackbar = remember { SnackbarHostState() }
+        val scope = rememberCoroutineScope()
+        val clipboard = rememberThreadClipboard()
+        val userDataFileService = LocalUserDataFileService.current
         var collectionName by remember { mutableStateOf("") }
         var collectionQuery by remember { mutableStateOf("") }
         var collectionUnread by remember { mutableStateOf(false) }
@@ -93,8 +101,12 @@ class SyncSettingsPage(
         var socialBaseUrl by remember { mutableStateOf("") }
         var socialAccessToken by remember { mutableStateOf("") }
 
-        LaunchedEffect(showImportOnOpen) {
-            if (showImportOnOpen) viewModel.onEvent(SyncSettingsContract.Event.ShowImportLocal)
+        LaunchedEffect(showImportOnOpen, initialImportPayload) {
+            when {
+                !initialImportPayload.isNullOrBlank() ->
+                    viewModel.onEvent(SyncSettingsContract.Event.ImportLocal(initialImportPayload))
+                showImportOnOpen -> viewModel.onEvent(SyncSettingsContract.Event.ShowImportLocal)
+            }
         }
 
         LaunchedEffect(state.message) {
@@ -109,6 +121,27 @@ class SyncSettingsPage(
                 isWorking = state.isWorking,
                 onDismiss = { viewModel.onEvent(SyncSettingsContract.Event.DismissDialog) },
                 onImport = { viewModel.onEvent(SyncSettingsContract.Event.ImportLocal(it)) },
+                onExportToFile = userDataFileService?.let { service ->
+                    {
+                        scope.launch {
+                            service.exportText("thread-user-data.json", dialog.payload).fold(
+                                onSuccess = { path ->
+                                    snackbar.showSnackbar("已导出到 $path")
+                                    viewModel.onEvent(SyncSettingsContract.Event.DismissDialog)
+                                },
+                                onFailure = { error ->
+                                    if (error.message != "已取消导出") {
+                                        snackbar.showSnackbar(error.message ?: "导出失败")
+                                    }
+                                },
+                            )
+                        }
+                    }
+                },
+                onCopy = {
+                    clipboard.copyText(dialog.payload)
+                    scope.launch { snackbar.showSnackbar("数据包已复制") }
+                },
             )
         }
 
@@ -390,6 +423,29 @@ class SyncSettingsPage(
                             onClick = { viewModel.onEvent(SyncSettingsContract.Event.ShowImportLocal) },
                             enabled = !state.isWorking,
                         ) { Icon(Icons.Default.Download, null); Spacer(Modifier.width(8.dp)); Text("导入") }
+                        if (userDataFileService != null) {
+                            OutlinedButton(
+                                onClick = {
+                                    scope.launch {
+                                        userDataFileService.importText().fold(
+                                            onSuccess = { payload ->
+                                                viewModel.onEvent(SyncSettingsContract.Event.ImportLocal(payload))
+                                            },
+                                            onFailure = { error ->
+                                                if (error.message != "已取消导入") {
+                                                    snackbar.showSnackbar(error.message ?: "导入失败")
+                                                }
+                                            },
+                                        )
+                                    }
+                                },
+                                enabled = !state.isWorking,
+                            ) {
+                                Icon(Icons.Default.Download, null)
+                                Spacer(Modifier.width(8.dp))
+                                Text("从文件导入")
+                            }
+                        }
                     }
                 }
 
@@ -515,6 +571,8 @@ private fun UserDataTransferDialog(
     isWorking: Boolean,
     onDismiss: () -> Unit,
     onImport: (String) -> Unit,
+    onExportToFile: (() -> Unit)? = null,
+    onCopy: (() -> Unit)? = null,
 ) {
     var payload by remember(dialog) { mutableStateOf(dialog.payload) }
     AdaptiveModal(
@@ -556,6 +614,12 @@ private fun UserDataTransferDialog(
                         Text(if (isWorking) "导入中…" else "确认导入")
                     }
                 } else {
+                    if (onCopy != null) {
+                        OutlinedButton(onClick = onCopy) { Text("复制") }
+                    }
+                    if (onExportToFile != null) {
+                        OutlinedButton(onClick = onExportToFile) { Text("保存到文件") }
+                    }
                     Button(onClick = onDismiss) { Text("完成") }
                 }
             }

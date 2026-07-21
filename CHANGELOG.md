@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.22.0 - 2026-07-21
+
+System-entry bridge release for Desktop: share, deep links, notifications and portable files.
+
+- Platform contracts live in `core-ui` (`ShareService`, `AppEntryController`, `UserDataFileService`, `SystemNotificationService`, `BackgroundRefreshBridge`) so feature modules stay free of shell dependencies.
+- Desktop share falls back to the system clipboard; Article and Social detail pages share through the same boundary.
+- Launch args accept `thread://…`, `http(s)://…` and local `.json/.txt` user-data files; App consumes the entry bus and routes through the cache-safe content resolver.
+- Workspace deep links `thread://inbox` and `thread://feed` open the matching primary destinations; notification clicks re-enter the same bus.
+- Desktop tray notifications fire when Inbox unread increases, with a click payload that returns to the Inbox.
+- Settings can import/export portable user-data via OS file dialogs in addition to the existing paste/copy dialog.
+- Background refresh keeps Reader due-feeds and Social newer timelines on a 15-minute lifecycle bridge owned by the live App DI graph.
+- Desktop gates cover compile, jvmTest and the existing release/smoke path.
+
 ## 0.21.0 - 2026-07-21
 
 Production Social runtime, content-graph and unified discovery release.

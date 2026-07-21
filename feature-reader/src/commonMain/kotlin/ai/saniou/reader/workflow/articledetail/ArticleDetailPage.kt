@@ -2,6 +2,7 @@ package ai.saniou.reader.workflow.articledetail
 
 import ai.saniou.corecommon.utils.toRelativeTimeString
 import ai.saniou.coreui.interaction.rememberThreadClipboard
+import ai.saniou.coreui.platform.LocalShareService
 import ai.saniou.coreui.layout.LocalThreadWindowInfo
 import ai.saniou.coreui.layout.ReadingCanvas
 import ai.saniou.coreui.state.toAppError
@@ -66,6 +67,7 @@ data class ArticleDetailPage(val articleId: String) : Screen {
         val state by viewModel.state.collectAsState()
         val uriHandler = LocalUriHandler.current
         val clipboard = rememberThreadClipboard()
+        val shareService = LocalShareService.current
         val scope = rememberCoroutineScope()
         val snackbar = remember { SnackbarHostState() }
         val rootLinkHandler = LocalContentLinkHandler.current
@@ -121,8 +123,12 @@ data class ArticleDetailPage(val articleId: String) : Screen {
                     onToggleBookmark = { viewModel.onEvent(ArticleDetailContract.Event.OnToggleBookmark) },
                     onShare = {
                         state.article?.let { article ->
-                            clipboard.copyText("${article.title}\n${article.link}")
-                            scope.launch { snackbar.showSnackbar("标题和链接已复制") }
+                            val text = "${article.title}\n${article.link}"
+                            val shared = shareService?.shareText(text, article.title) == true
+                            if (!shared) clipboard.copyText(text)
+                            scope.launch {
+                                snackbar.showSnackbar(if (shared) "已通过系统分享" else "标题和链接已复制")
+                            }
                         }
                     },
                     onOpenInBrowser = { state.article?.link?.let { uriHandler.openUri(it) } },

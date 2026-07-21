@@ -18,12 +18,18 @@ import ai.saniou.thread.data.database.createDatabase
 import ai.saniou.thread.db.Database
 import ai.saniou.thread.db.table.forum.Topic
 import ai.saniou.thread.db.table.forum.TopicListing
+import ai.saniou.coreui.platform.AppEntryController
+import ai.saniou.coreui.platform.AppEntrySource
+import ai.saniou.thread.platform.DesktopShareService
+import ai.saniou.thread.platform.DesktopSystemNotificationService
+import ai.saniou.thread.platform.DesktopUserDataFileService
 import app.cash.sqldelight.async.coroutines.synchronous
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.kodein.di.direct
 import org.kodein.di.instance
+import java.io.File
 
 @OptIn(ExperimentalVoyagerApi::class)
 fun main(args: Array<String>) {
@@ -31,6 +37,22 @@ fun main(args: Array<String>) {
         runDesktopStartupProbe()
         return
     }
+    val entryController = AppEntryController()
+    args.asSequence()
+        .filter { it != "--smoke-check" }
+        .forEach { arg ->
+            when {
+                arg.startsWith("thread://") || arg.startsWith("http://") || arg.startsWith("https://") ->
+                    entryController.open(arg, AppEntrySource.LAUNCH_ARG)
+                arg.endsWith(".json", ignoreCase = true) || arg.endsWith(".txt", ignoreCase = true) -> {
+                    val file = File(arg)
+                    if (file.isFile) {
+                        runCatching { file.readText() }
+                            .onSuccess { entryController.open(it, AppEntrySource.FILE_IMPORT) }
+                    }
+                }
+            }
+        }
     application {
         addTempDirectoryRemovalHook()
         val windowState = rememberWindowState(
@@ -38,13 +60,24 @@ fun main(args: Array<String>) {
             size = DpSize(1240.dp, 820.dp),
         )
         val attachmentPicker = remember { DesktopAttachmentPicker() }
+        val shareService = remember { DesktopShareService() }
+        val userDataFileService = remember { DesktopUserDataFileService() }
+        val notificationService = remember { DesktopSystemNotificationService(entryController) }
         Window(
             onCloseRequest = ::exitApplication,
             title = "Thread · Forum & Reader",
             undecorated = false,
             state = windowState
         ) {
-            App(attachmentPicker = attachmentPicker)
+            App(
+                attachmentPicker = attachmentPicker,
+                appEntryController = entryController,
+                shareService = shareService,
+                userDataFileService = userDataFileService,
+                systemNotificationService = notificationService,
+                // App-owned bridge reuses the live DI graph for Reader + Social refresh.
+                backgroundRefreshBridge = null,
+            )
         }
     }
 }

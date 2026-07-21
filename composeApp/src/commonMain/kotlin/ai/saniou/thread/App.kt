@@ -57,6 +57,20 @@ import ai.saniou.thread.db.Database
 import ai.saniou.forum.workflow.post.AttachmentPicker
 import ai.saniou.forum.workflow.post.LocalAttachmentPicker
 import ai.saniou.coreui.interaction.rememberThreadClipboard
+import ai.saniou.coreui.platform.AppEntryController
+import ai.saniou.coreui.platform.AppEntrySource
+import ai.saniou.coreui.platform.BackgroundRefreshBridge
+import ai.saniou.coreui.platform.LocalAppEntryController
+import ai.saniou.coreui.platform.LocalBackgroundRefreshBridge
+import ai.saniou.coreui.platform.LocalShareService
+import ai.saniou.coreui.platform.LocalSystemNotificationService
+import ai.saniou.coreui.platform.LocalUserDataFileService
+import ai.saniou.coreui.platform.ShareService
+import ai.saniou.coreui.platform.SystemNotificationService
+import ai.saniou.coreui.platform.UserDataFileService
+import ai.saniou.thread.domain.model.social.CursorDirection
+import ai.saniou.thread.domain.repository.InboxRepository
+import ai.saniou.thread.domain.repository.SocialRepository
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.DynamicFeed
@@ -129,7 +143,14 @@ fun createAppDi(databaseOverride: Database? = null) = DI {
 }
 
 @Composable
-fun App(attachmentPicker: AttachmentPicker? = null) {
+fun App(
+    attachmentPicker: AttachmentPicker? = null,
+    appEntryController: AppEntryController? = null,
+    shareService: ShareService? = null,
+    userDataFileService: UserDataFileService? = null,
+    systemNotificationService: SystemNotificationService? = null,
+    backgroundRefreshBridge: BackgroundRefreshBridge? = null,
+) {
     val di = remember { createAppDi() }
     withDI(di) {
         val settingsRepository: SettingsRepository by di.instance()
@@ -146,6 +167,12 @@ fun App(attachmentPicker: AttachmentPicker? = null) {
         val appearanceRepository: AppearanceRepository by di.instance()
         val appearance by appearanceRepository.observe().collectAsState(initial = AppearancePreferences())
         val contentLinkRepository: ContentLinkRepository by di.instance()
+        val socialRepository: SocialRepository by di.instance()
+        val inboxRepository: InboxRepository by di.instance()
+        val resolvedEntryController = remember(appEntryController) { appEntryController ?: AppEntryController() }
+        val resolvedShareService = shareService
+        val resolvedUserDataFileService = userDataFileService
+        val resolvedNotificationService = systemNotificationService
 
         val challengeHandler: UiChallengeHandler by di.instance()
         var challengeRequest by remember { mutableStateOf<UiChallengeHandler.ChallengeRequest?>(null) }
@@ -157,9 +184,48 @@ fun App(attachmentPicker: AttachmentPicker? = null) {
         val clipboard = rememberThreadClipboard()
         val uriHandler = LocalUriHandler.current
 
-        DisposableEffect(readerScheduler) {
+        DisposableEffect(readerScheduler, backgroundRefreshBridge, socialRepository) {
             readerScheduler.start()
-            onDispose { readerScheduler.stop() }
+            val bridge = backgroundRefreshBridge ?: object : BackgroundRefreshBridge {
+                private var job: kotlinx.coroutines.Job? = null
+                override fun start() {
+                    if (job?.isActive == true) return
+                    job = scope.launch {
+                        while (true) {
+                            runCatching {
+                                readerScheduler.refreshDueNow()
+                                socialRepository.refresh(direction = CursorDirection.NEWER)
+                            }
+                            kotlinx.coroutines.delay(15 * 60 * 1000L)
+                        }
+                    }
+                }
+                override fun stop() {
+                    job?.cancel()
+                    job = null
+                }
+            }
+            bridge.start()
+            onDispose {
+                bridge.stop()
+                readerScheduler.stop()
+            }
+        }
+
+        LaunchedEffect(inboxRepository, resolvedNotificationService) {
+            var lastUnread = -1
+            inboxRepository.observeSummary().collect { summary ->
+                if (lastUnread >= 0 && summary.unread > lastUnread) {
+                    val delta = summary.unread - lastUnread
+                    resolvedNotificationService?.notify(
+                        title = "Thread 收件箱",
+                        body = if (delta == 1) "有 1 条新通知" else "有 $delta 条新通知",
+                        deepLink = "thread://inbox",
+                        notificationId = "inbox-unread",
+                    )
+                }
+                lastUnread = summary.unread
+            }
         }
 
         LaunchedEffect(Unit) {
@@ -262,7 +328,20 @@ fun App(attachmentPicker: AttachmentPicker? = null) {
                 }
                 fun openContentUrl(url: String) {
                     scope.launch {
-                        when (val resolution = contentLinkRepository.resolveUrl(url)) {
+                        val normalized = url.trim()
+                        if (normalized.equals("thread://inbox", ignoreCase = true) ||
+                            normalized.equals("thread://inbox/", ignoreCase = true)
+                        ) {
+                            navigateTo(WorkspaceDestination.INBOX, InboxPage)
+                            return@launch
+                        }
+                        if (normalized.equals("thread://feed", ignoreCase = true) ||
+                            normalized.equals("thread://feed/", ignoreCase = true)
+                        ) {
+                            navigateTo(WorkspaceDestination.FEED, FeedRoute)
+                            return@launch
+                        }
+                        when (val resolution = contentLinkRepository.resolveUrl(normalized)) {
                             is LinkResolution.External -> uriHandler.openUri(resolution.url)
                             is LinkResolution.Unsupported -> appSnackbar.showSnackbar(resolution.reason)
                             is LinkResolution.Internal -> when (resolution.reference.kind) {
@@ -293,6 +372,19 @@ fun App(attachmentPicker: AttachmentPicker? = null) {
                                 ContentReferenceKind.EXTERNAL_URL -> resolution.reference.canonicalUrl
                                     ?.let(uriHandler::openUri)
                             }
+                        }
+                    }
+                }
+                LaunchedEffect(resolvedEntryController, navigator) {
+                    resolvedEntryController.entries.collect { entry ->
+                        when (entry.source) {
+                            AppEntrySource.FILE_IMPORT -> {
+                                navigateTo(
+                                    WorkspaceDestination.SETTINGS,
+                                    SyncSettingsPage(showImportOnOpen = true, initialImportPayload = entry.url),
+                                )
+                            }
+                            else -> openContentUrl(entry.url)
                         }
                     }
                 }
@@ -410,6 +502,11 @@ fun App(attachmentPicker: AttachmentPicker? = null) {
                                 ),
                                 LocalAttachmentPicker provides attachmentPicker,
                                 LocalContentLinkHandler provides ::openContentUrl,
+                                LocalAppEntryController provides resolvedEntryController,
+                                LocalShareService provides resolvedShareService,
+                                LocalUserDataFileService provides resolvedUserDataFileService,
+                                LocalSystemNotificationService provides resolvedNotificationService,
+                                LocalBackgroundRefreshBridge provides backgroundRefreshBridge,
                             ) {
                                 navigator.saveableState("currentScreen") {
                                     currentScreen.Content()
