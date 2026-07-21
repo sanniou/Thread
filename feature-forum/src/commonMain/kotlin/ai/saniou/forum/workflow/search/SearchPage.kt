@@ -56,6 +56,8 @@ import org.kodein.di.direct
 import org.kodein.di.instance
 import org.jetbrains.compose.resources.stringResource
 import thread.feature_forum.generated.resources.Res
+import thread.feature_forum.generated.resources.s_197e4877f3
+import thread.feature_forum.generated.resources.s_0deb34a438
 import thread.feature_forum.generated.resources.eyebrow_discovery
 import thread.feature_forum.generated.resources.s_097aa90342
 import thread.feature_forum.generated.resources.s_0e346065ab
@@ -105,10 +107,14 @@ data class SearchPage(
                         )
                     },
                     secondary = {
+                        val searchTypeLabels = mapOf(
+                            SearchType.THREAD to stringResource(Res.string.s_0deb34a438),
+                            SearchType.REPLY to stringResource(Res.string.s_197e4877f3),
+                        )
                         ThreadFilterBar(
                             items = SearchType.entries,
                             selected = state.searchType,
-                            label = SearchType::title,
+                            label = { searchTypeLabels[it] ?: it.name },
                             onSelect = { viewModel.onEvent(Event.TypeChanged(it)) },
                         )
                     },

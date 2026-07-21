@@ -108,8 +108,9 @@ data class SubscriptionPage(
         val viewModel: SubscriptionViewModel = rememberScreenModel()
         val state by viewModel.state.collectAsStateWithLifecycle()
 
-        LaunchedEffect(Unit) {
-            onUpdateTitle?.invoke(getString(Res.string.subscription_title))
+        val subscriptionTitle = stringResource(Res.string.subscription_title)
+        LaunchedEffect(subscriptionTitle) {
+            onUpdateTitle?.invoke(subscriptionTitle)
         }
 
         LaunchedEffect(viewModel.effect) {

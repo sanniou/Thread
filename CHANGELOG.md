@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.31.0 - 2026-07-22
+
+i18n completion wave: non-composable `getString` + residual secondary pages, semantics, and filter labels.
+
+- **ViewModel / side-effect**: snackbar, notification, and status messages resolve via suspend `getString(Res.string.*)` (or `screenModelScope.launch` / `LaunchedEffect` bridges) across composeApp, forum, reader, and feed.
+- **AppError**: `messageRes` + `localizedMessage()`; `Throwable.toAppError` maps failure kinds to core-ui string resources instead of hard-coded Chinese.
+- **Secondary UI**: Command Palette, Operations, Global Search, History filters, Search type labels, Emoticon group titles, SyncSettings, Desktop attachment/notification strings, and semantics content descriptions resourceized; `stringResource` hoisted out of `semantics {}` / non-composable lambdas.
+- **Resources**: new zh/en keys for VM and secondary paths; English catalog cleaned so values-en no longer contains Chinese literals.
+- Desktop gates: compileKotlinJvm (core-ui / forum / reader / feed / composeApp) and jvmTest (core-domain / core-data / core-ui / composeApp).
+
 ## 0.30.0 - 2026-07-22
 
 i18n foundation: composeResources for every product shell/feature + composable UI string migration.

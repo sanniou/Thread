@@ -72,14 +72,17 @@ class HistoryPage : Screen {
                         stringResource(Res.string.s_c84df4602f)
                     },
                 )
+                val historyFilterPost = stringResource(Res.string.s_3488c54564)
+                val historyFilterArticle = stringResource(Res.string.s_ad3fd0f4c7)
+                val historyFilterAll = stringResource(Res.string.s_778fc8f994)
                 ThreadFilterBar(
                     items = listOf(null, "post", "article"),
                     selected = typeFilter,
                     label = {
                         when (it) {
-                            "post" -> "帖子"
-                            "article" -> "文章"
-                            else -> "全部"
+                            "post" -> historyFilterPost
+                            "article" -> historyFilterArticle
+                            else -> historyFilterAll
                         }
                     },
                     onSelect = viewModel::onFilterChanged,

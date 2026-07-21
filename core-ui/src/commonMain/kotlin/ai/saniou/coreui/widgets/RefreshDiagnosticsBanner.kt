@@ -37,6 +37,12 @@ import thread.core_ui.generated.resources.s_64f6dfa563
 import thread.core_ui.generated.resources.s_65c709f5be
 import thread.core_ui.generated.resources.s_d5f066a88a
 import thread.core_ui.generated.resources.s_ed7f8c8bad
+import thread.core_ui.generated.resources.s_5f76edc5de
+import thread.core_ui.generated.resources.s_8a662fdebf
+import thread.core_ui.generated.resources.s_979b6bb444
+import thread.core_ui.generated.resources.s_ab0a60e784
+import thread.core_ui.generated.resources.s_bbbd563c35
+import thread.core_ui.generated.resources.s_e41ce24cf7
 
 @Composable
 fun RefreshDiagnosticsBanner(
@@ -124,11 +130,12 @@ private fun FailureRow(failure: RefreshTaskState) {
 
 private data class FailurePresentation(val label: String, val icon: ImageVector)
 
+@Composable
 private fun RefreshFailureKind?.presentation(): FailurePresentation = when (this) {
-    RefreshFailureKind.OFFLINE -> FailurePresentation("网络离线", Icons.Default.CloudOff)
-    RefreshFailureKind.TIMEOUT -> FailurePresentation("请求超时", Icons.Default.HourglassTop)
-    RefreshFailureKind.RATE_LIMIT -> FailurePresentation("请求受限", Icons.Default.HourglassTop)
-    RefreshFailureKind.AUTHENTICATION -> FailurePresentation("登录失效", Icons.Default.Lock)
-    RefreshFailureKind.REMOTE -> FailurePresentation("服务异常", Icons.Default.SyncProblem)
-    RefreshFailureKind.UNKNOWN, null -> FailurePresentation("未知错误", Icons.Default.WarningAmber)
+    RefreshFailureKind.OFFLINE -> FailurePresentation(stringResource(Res.string.s_8a662fdebf), Icons.Default.CloudOff)
+    RefreshFailureKind.TIMEOUT -> FailurePresentation(stringResource(Res.string.s_e41ce24cf7), Icons.Default.HourglassTop)
+    RefreshFailureKind.RATE_LIMIT -> FailurePresentation(stringResource(Res.string.s_979b6bb444), Icons.Default.HourglassTop)
+    RefreshFailureKind.AUTHENTICATION -> FailurePresentation(stringResource(Res.string.s_ab0a60e784), Icons.Default.Lock)
+    RefreshFailureKind.REMOTE -> FailurePresentation(stringResource(Res.string.s_bbbd563c35), Icons.Default.SyncProblem)
+    RefreshFailureKind.UNKNOWN, null -> FailurePresentation(stringResource(Res.string.s_5f76edc5de), Icons.Default.WarningAmber)
 }

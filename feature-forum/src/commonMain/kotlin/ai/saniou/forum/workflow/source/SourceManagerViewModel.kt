@@ -17,6 +17,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.getString
+import thread.feature_forum.generated.resources.Res
+import thread.feature_forum.generated.resources.s_0486e254a8
+import thread.feature_forum.generated.resources.s_4c7b4d2d92
+import thread.feature_forum.generated.resources.s_d1b88a3484
+import thread.feature_forum.generated.resources.s_f63e701a8b
 
 class SourceManagerViewModel(
     observeDescriptors: ObserveSourceDescriptorsUseCase,
@@ -44,16 +50,16 @@ class SourceManagerViewModel(
             Event.DismissEditor -> mutableState.update { it.copy(editing = null, showEditor = false) }
             is Event.SaveDiscourse -> save(event)
             is Event.SetEnabled -> mutate { setSourceEnabled(event.sourceId, event.enabled) }
-            is Event.Remove -> mutate(successMessage = "来源已删除") { removeDescriptor(event.sourceId) }
+            is Event.Remove -> mutate(successRes = Res.string.s_0486e254a8) { removeDescriptor(event.sourceId) }
         }
     }
 
-    private fun save(event: Event.SaveDiscourse) = mutate(successMessage = "来源已保存") {
+    private fun save(event: Event.SaveDiscourse) = mutate(successRes = Res.string.s_d1b88a3484) {
         val id = event.id.trim().lowercase()
         val name = event.displayName.trim()
         val url = event.baseUrl.trim().let { if (it.endsWith('/')) it else "$it/" }
         require(url.startsWith("https://") || url.startsWith("http://")) {
-            "Base URL 必须以 http:// 或 https:// 开头"
+            getString(Res.string.s_f63e701a8b)
         }
         val existing = mutableState.value.editing
         upsertDescriptor(
@@ -70,13 +76,16 @@ class SourceManagerViewModel(
         mutableState.update { it.copy(editing = null, showEditor = false) }
     }
 
-    private fun mutate(successMessage: String? = null, action: suspend () -> Unit) {
+    private fun mutate(
+        successRes: org.jetbrains.compose.resources.StringResource? = null,
+        action: suspend () -> Unit,
+    ) {
         if (mutableState.value.isSaving) return
         screenModelScope.launch {
             mutableState.update { it.copy(isSaving = true) }
             runCatching { action() }
-                .onSuccess { successMessage?.let { effects.send(Effect.Message(it)) } }
-                .onFailure { effects.send(Effect.Message(it.message ?: "来源操作失败")) }
+                .onSuccess { successRes?.let { effects.send(Effect.Message(getString(it))) } }
+                .onFailure { effects.send(Effect.Message(it.message ?: getString(Res.string.s_4c7b4d2d92))) }
             mutableState.update { it.copy(isSaving = false) }
         }
     }

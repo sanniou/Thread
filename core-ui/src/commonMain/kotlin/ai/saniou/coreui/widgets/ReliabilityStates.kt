@@ -1,7 +1,6 @@
 package ai.saniou.coreui.widgets
 
-import ai.saniou.coreui.state.AppError
-import ai.saniou.coreui.state.AppErrorType
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -31,6 +30,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import thread.core_ui.generated.resources.Res
+import thread.core_ui.generated.resources.s_2bd11d56d9
+import thread.core_ui.generated.resources.s_43341a1c24
+import thread.core_ui.generated.resources.s_5982c44c18
+import thread.core_ui.generated.resources.s_6513bc3959
+import thread.core_ui.generated.resources.s_6f33e1a69a
+import thread.core_ui.generated.resources.s_74d54da6e7
+import thread.core_ui.generated.resources.s_a980ac855c
+import thread.core_ui.generated.resources.s_af2fab7689
+import thread.core_ui.generated.resources.s_b8e0d519a4
+import thread.core_ui.generated.resources.s_bac95e1e52
+import thread.core_ui.generated.resources.s_e2d53a6d3a
+import thread.core_ui.generated.resources.s_edb8f0043f
+import ai.saniou.coreui.state.AppError
+import ai.saniou.coreui.state.AppErrorType
+import ai.saniou.coreui.state.localizedMessage
 
 enum class ThreadStatusTone {
     Neutral,
@@ -108,8 +123,8 @@ fun ThreadStatusBanner(
 @Composable
 fun ThreadLoadingState(
     modifier: Modifier = Modifier,
-    title: String = "正在准备内容",
-    message: String = "Thread 正在同步来源与本地缓存。",
+    title: String = stringResource(Res.string.s_43341a1c24),
+    message: String = stringResource(Res.string.s_edb8f0043f),
 ) {
     Column(
         modifier = modifier.fillMaxSize().padding(32.dp),
@@ -143,7 +158,7 @@ fun ThreadErrorState(
         ModernEmptyState(
             icon = presentation.icon,
             title = presentation.title,
-            description = error.message,
+            description = error.localizedMessage(),
             action = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     SaniouButton(
@@ -163,10 +178,11 @@ private data class ErrorPresentation(
     val icon: ImageVector,
 )
 
+@Composable
 private fun AppError.presentation(): ErrorPresentation = when (type) {
-    AppErrorType.NETWORK -> ErrorPresentation("当前处于离线状态", "重新连接", Icons.Default.CloudOff)
-    AppErrorType.AUTHENTICATION -> ErrorPresentation("登录状态需要更新", "重新尝试", Icons.Default.Lock)
-    AppErrorType.RATE_LIMIT -> ErrorPresentation("来源请求暂时受限", "稍后重试", Icons.Default.HourglassTop)
-    AppErrorType.SERVER -> ErrorPresentation("来源服务暂不可用", "重新加载", Icons.Default.SyncProblem)
-    AppErrorType.UNKNOWN -> ErrorPresentation("内容暂时无法加载", "重试", Icons.Default.WarningAmber)
+    AppErrorType.NETWORK -> ErrorPresentation(stringResource(Res.string.s_6f33e1a69a), stringResource(Res.string.s_bac95e1e52), Icons.Default.CloudOff)
+    AppErrorType.AUTHENTICATION -> ErrorPresentation(stringResource(Res.string.s_74d54da6e7), stringResource(Res.string.s_a980ac855c), Icons.Default.Lock)
+    AppErrorType.RATE_LIMIT -> ErrorPresentation(stringResource(Res.string.s_2bd11d56d9), stringResource(Res.string.s_b8e0d519a4), Icons.Default.HourglassTop)
+    AppErrorType.SERVER -> ErrorPresentation(stringResource(Res.string.s_6513bc3959), stringResource(Res.string.s_5982c44c18), Icons.Default.SyncProblem)
+    AppErrorType.UNKNOWN -> ErrorPresentation(stringResource(Res.string.s_af2fab7689), stringResource(Res.string.s_e2d53a6d3a), Icons.Default.WarningAmber)
 }

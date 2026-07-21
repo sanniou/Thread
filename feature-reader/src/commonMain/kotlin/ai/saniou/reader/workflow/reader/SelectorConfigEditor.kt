@@ -14,23 +14,37 @@ import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import thread.feature_reader.generated.resources.Res
 import thread.feature_reader.generated.resources.s_d79148c66d
+import thread.feature_reader.generated.resources.s_069758a2ae
+import thread.feature_reader.generated.resources.s_1bd97802ac
+import thread.feature_reader.generated.resources.s_2460b6d469
+import thread.feature_reader.generated.resources.s_5807cf82a0
+import thread.feature_reader.generated.resources.s_661f326eb8
+import thread.feature_reader.generated.resources.s_7516587bb9
+import thread.feature_reader.generated.resources.s_8a2604624b
+import thread.feature_reader.generated.resources.s_aaee9a97a8
+import thread.feature_reader.generated.resources.s_cbcd8508e9
+import thread.feature_reader.generated.resources.s_d3d10c87f2
+import thread.feature_reader.generated.resources.s_e153588a31
+import thread.feature_reader.generated.resources.s_f12cf82a01
 
-private val fieldDescriptions = mapOf(
+@Composable
+private fun fieldDescription(field: String): String? = when (field) {
     // HTML
-    "container" to "包含所有文章的列表选择器\n例如: #posts 或 .article-list",
-    "item" to "单个文章条目的选择器\n例如: .post-item 或 article",
-    "title" to "文章标题的选择器\n例如: h2.entry-title 或 .title > a",
-    "link" to "文章链接的选择器\n例如: a.read-more 或 a[href]",
-    "content" to "文章内容的简短描述选择器\n例如: .post-excerpt 或 .summary",
+    "container" -> stringResource(Res.string.s_8a2604624b)
+    "item" -> stringResource(Res.string.s_1bd97802ac)
+    "title" -> stringResource(Res.string.s_f12cf82a01)
+    "link" -> stringResource(Res.string.s_cbcd8508e9)
+    "content" -> stringResource(Res.string.s_2460b6d469)
     // JSON
-    "itemsPath" to "指向文章数组的 JSON 路径\n例如: data.articles 或 items",
-    "idPath" to "文章唯一 ID 的路径\n例如: id 或 uuid",
-    "titlePath" to "文章标题的路径\n例如: title.rendered 或 headline",
-    "linkPath" to "文章链接的路径\n例如: link 或 url",
-    "contentPath" to "文章内容的路径\n例如: content.rendered 或 body",
-    "authorPath" to "作者信息的路径\n例如: author.name",
-    "imagePath" to "文章图片的路径\n例如: featured_media.source_url"
-)
+    "itemsPath" -> stringResource(Res.string.s_aaee9a97a8)
+    "idPath" -> stringResource(Res.string.s_d3d10c87f2)
+    "titlePath" -> stringResource(Res.string.s_661f326eb8)
+    "linkPath" -> stringResource(Res.string.s_e153588a31)
+    "contentPath" -> stringResource(Res.string.s_7516587bb9)
+    "authorPath" -> stringResource(Res.string.s_5807cf82a0)
+    "imagePath" -> stringResource(Res.string.s_069758a2ae)
+    else -> null
+}
 
 @Composable
 fun SelectorConfigEditor(
@@ -50,7 +64,7 @@ fun SelectorConfigEditor(
                 ConfigField(
                     label = field,
                     value = config[field] ?: "",
-                    description = fieldDescriptions[field],
+                    description = fieldDescription(field),
                     onValueChange = { newValue ->
                         val newConfig = config.toMutableMap()
                         newConfig[field] = newValue

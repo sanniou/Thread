@@ -75,8 +75,11 @@ import kotlinx.coroutines.launch
 import org.kodein.di.compose.localDI
 import org.kodein.di.direct
 import org.kodein.di.instance
+import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import thread.composeapp.generated.resources.Res
+import thread.composeapp.generated.resources.reader_scheduler_stopped
+import thread.composeapp.generated.resources.reader_scheduler_running
 import thread.composeapp.generated.resources.s_038184cabc
 import thread.composeapp.generated.resources.s_05b0dbf37a
 import thread.composeapp.generated.resources.s_06f94a77b2
@@ -155,6 +158,7 @@ import thread.composeapp.generated.resources.s_e5b4eb9f7c
 import thread.composeapp.generated.resources.s_e848ddd482
 import thread.composeapp.generated.resources.s_ed59779c27
 import thread.composeapp.generated.resources.s_f4bbd91f79
+import thread.composeapp.generated.resources.s_11f4ce0c4c
 
 class SyncSettingsPage(
     private val showImportOnOpen: Boolean = false,
@@ -206,12 +210,12 @@ class SyncSettingsPage(
                         scope.launch {
                             service.exportText("thread-user-data.json", dialog.payload).fold(
                                 onSuccess = { path ->
-                                    snackbar.showSnackbar("已导出到 $path")
+                                    snackbar.showSnackbar(getString(Res.string.s_11f4ce0c4c, path))
                                     viewModel.onEvent(SyncSettingsContract.Event.DismissDialog)
                                 },
                                 onFailure = { error ->
-                                    if (error.message != "已取消导出") {
-                                        snackbar.showSnackbar(error.message ?: "导出失败")
+                                    if (error.message != getString(Res.string.s_c8feb7b4cf)) {
+                                        snackbar.showSnackbar(error.message ?: getString(Res.string.s_6753381261))
                                     }
                                 },
                             )
@@ -220,7 +224,7 @@ class SyncSettingsPage(
                 },
                 onCopy = {
                     clipboard.copyText(dialog.payload)
-                    scope.launch { snackbar.showSnackbar("数据包已复制") }
+                    scope.launch { snackbar.showSnackbar(getString(Res.string.s_56fdd69721)) }
                 },
             )
         }
@@ -524,8 +528,8 @@ class SyncSettingsPage(
                                                 viewModel.onEvent(SyncSettingsContract.Event.ImportLocal(payload))
                                             },
                                             onFailure = { error ->
-                                                if (error.message != "已取消导入") {
-                                                    snackbar.showSnackbar(error.message ?: "导入失败")
+                                                if (error.message != getString(Res.string.s_49c7737142)) {
+                                                    snackbar.showSnackbar(error.message ?: getString(Res.string.s_a01a8d5393))
                                                 }
                                             },
                                         )
@@ -602,7 +606,13 @@ class SyncSettingsPage(
 
                 Text(stringResource(Res.string.s_5d95923b6f), style = MaterialTheme.typography.titleLarge)
                 ThreadCard(Modifier.fillMaxWidth()) {
-                    Text("Reader 自动刷新：${if (state.scheduler.isRunning) "运行中" else "已停止"}")
+                    Text(
+                        stringResource(
+                            Res.string.s_b703aea0f9,
+                            if (state.scheduler.isRunning) stringResource(Res.string.reader_scheduler_running)
+                            else stringResource(Res.string.reader_scheduler_stopped),
+                        )
+                    )
                     Text(stringResource(Res.string.s_ed59779c27, state.scheduler.dueCount, state.scheduler.refreshingSourceIds.size))
                     Text(stringResource(Res.string.s_b4cdd77c3f, state.activeRefreshCount, state.failedRefreshCount))
                 }

@@ -129,6 +129,7 @@ import org.kodein.di.compose.localDI
 import org.kodein.di.direct
 import org.kodein.di.instance
 import org.kodein.di.bindSingleton
+import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import thread.composeapp.generated.resources.Res
 import thread.composeapp.generated.resources.s_0120a7f4c4
@@ -149,6 +150,8 @@ import thread.composeapp.generated.resources.s_b2548636f0
 import thread.composeapp.generated.resources.s_cd0aecbcd0
 import thread.composeapp.generated.resources.s_cd83e6e100
 import thread.composeapp.generated.resources.s_d07cee786a
+import thread.composeapp.generated.resources.s_2855f9d4e8
+import thread.composeapp.generated.resources.s_abe10f8a12
 
 fun createAppDi(databaseOverride: Database? = null) = DI {
     import(domainModule)
@@ -239,8 +242,8 @@ fun App(
                 if (lastUnread >= 0 && summary.unread > lastUnread) {
                     val delta = summary.unread - lastUnread
                     resolvedNotificationService?.notify(
-                        title = "Thread 收件箱",
-                        body = if (delta == 1) "有 1 条新通知" else "有 ${delta} 条新通知",
+                        title = getString(Res.string.s_cd0aecbcd0),
+                        body = if (delta == 1) getString(Res.string.s_543fab9d19) else getString(Res.string.s_abe10f8a12, delta),
                         deepLink = "thread://inbox",
                         notificationId = "inbox-unread",
                     )
@@ -460,9 +463,9 @@ fun App(
                             executeProductAction(request).fold(
                                 onSuccess = { result ->
                                     result.output?.let(clipboard::copyText)
-                                    notifyCommand(result.message + if (result.output == null) "" else "，内容已复制")
+                                    notifyCommand(result.message + if (result.output == null) "" else getString(Res.string.s_93d5a89429))
                                 },
-                                onFailure = { notifyCommand(it.message ?: "${command.label}失败") },
+                                onFailure = { notifyCommand(it.message ?: getString(Res.string.s_2855f9d4e8, command.label)) },
                             )
                         }
                         ProductCommandAction.OPEN_READER_IMPORT ->

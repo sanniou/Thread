@@ -20,8 +20,8 @@ interface SearchContract {
         data object ClearQuery : Event()
     }
 
-    enum class SearchType(val title: String) {
-        THREAD("搜串"),
-        REPLY("搜回复")
+    enum class SearchType {
+        THREAD,
+        REPLY
     }
 }

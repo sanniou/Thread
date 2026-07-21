@@ -23,6 +23,10 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.getString
+import thread.composeapp.generated.resources.Res
+import thread.composeapp.generated.resources.s_0fc87e8309
+import thread.composeapp.generated.resources.s_25a55e1483
 
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 class BookmarkViewModel(
@@ -86,7 +90,7 @@ class BookmarkViewModel(
     private fun deleteBookmark(bookmark: Bookmark) {
         screenModelScope.launch {
             removeBookmarkUseCase(bookmark.id)
-            _effect.send(Effect.ShowSnackbar("已取消收藏"))
+            _effect.send(Effect.ShowSnackbar(getString(Res.string.s_0fc87e8309)))
         }
     }
 
@@ -98,7 +102,7 @@ class BookmarkViewModel(
             selectedIds.forEach { id ->
                 removeBookmarkUseCase(id)
             }
-            _effect.send(Effect.ShowSnackbar("已删除 ${selectedIds.size} 条收藏"))
+            _effect.send(Effect.ShowSnackbar(getString(Res.string.s_25a55e1483, selectedIds.size)))
             _state.update { it.copy(isSelectionMode = false, selectedBookmarks = emptySet()) }
         }
     }

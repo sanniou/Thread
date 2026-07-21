@@ -12,6 +12,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.getString
+import thread.composeapp.generated.resources.Res
+import thread.composeapp.generated.resources.s_09e424b5e8
+import thread.composeapp.generated.resources.s_383bf53efb
+import thread.composeapp.generated.resources.s_e31cb76a01
+import thread.composeapp.generated.resources.s_fb8a49be23
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class InboxViewModel(
@@ -38,11 +45,12 @@ class InboxViewModel(
             is Event.SourceChanged -> updateFilter { copy(sourceId = event.sourceId) }
             is Event.KindChanged -> updateFilter { copy(kind = event.kind) }
             is Event.MarkRead -> launchMutation { repository.markRead(event.id, event.read) }
-            Event.MarkAllRead -> launchMutation("当前视图已全部标为已读") {
+            Event.MarkAllRead -> launchMutation(successRes = Res.string.s_fb8a49be23) {
                 repository.markAllRead(filters.value)
             }
             is Event.SetSourceMuted -> launchMutation(
-                if (event.muted) "已静音 ${event.sourceId}" else "已恢复 ${event.sourceId}",
+                successRes = if (event.muted) Res.string.s_383bf53efb else Res.string.s_e31cb76a01,
+                successArgs = listOf(event.sourceId),
             ) { repository.setSourceMuted(event.sourceId, event.muted) }
             is Event.Delete -> launchMutation { repository.delete(event.id) }
             Event.MessageShown -> mutableState.update { it.copy(message = null) }
@@ -54,11 +62,28 @@ class InboxViewModel(
         mutableState.update { it.copy(filter = filters.value) }
     }
 
-    private fun launchMutation(success: String? = null, block: suspend () -> Unit) {
+    private fun launchMutation(
+        successRes: StringResource? = null,
+        successArgs: List<Any> = emptyList(),
+        block: suspend () -> Unit,
+    ) {
         screenModelScope.launch {
             runCatching { block() }.fold(
-                onSuccess = { success?.let { message -> mutableState.update { it.copy(message = message) } } },
-                onFailure = { error -> mutableState.update { it.copy(message = error.message ?: "操作失败") } },
+                onSuccess = {
+                    if (successRes != null) {
+                        val message = if (successArgs.isEmpty()) {
+                            getString(successRes)
+                        } else {
+                            getString(successRes, *successArgs.toTypedArray())
+                        }
+                        mutableState.update { it.copy(message = message) }
+                    }
+                },
+                onFailure = { error ->
+                    mutableState.update {
+                        it.copy(message = error.message ?: getString(Res.string.s_09e424b5e8))
+                    }
+                },
             )
         }
     }

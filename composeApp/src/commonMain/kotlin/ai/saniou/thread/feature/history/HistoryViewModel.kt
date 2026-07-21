@@ -18,10 +18,15 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
+import org.jetbrains.compose.resources.getString
+import thread.composeapp.generated.resources.Res
+import thread.composeapp.generated.resources.s_17e83cc25e
+import thread.composeapp.generated.resources.s_59c4fcb09e
 
 sealed interface HistoryUiItem {
     data class DateSeparator(val date: String) : HistoryUiItem
@@ -35,6 +40,18 @@ class HistoryViewModel(
     private val _typeFilter = MutableStateFlow<String?>(null) // null = All, "post", "article"
     val typeFilter = _typeFilter.asStateFlow()
 
+    // Preload because insertSeparators transform is not a suspend context.
+    private val dateLabels = MutableStateFlow(DateLabels())
+
+    init {
+        screenModelScope.launch {
+            dateLabels.value = DateLabels(
+                today = getString(Res.string.s_17e83cc25e),
+                yesterday = getString(Res.string.s_59c4fcb09e),
+            )
+        }
+    }
+
     @OptIn(ExperimentalCoroutinesApi::class)
     val historyItems: Flow<PagingData<HistoryUiItem>> = _typeFilter
         .flatMapLatest { type ->
@@ -44,19 +61,18 @@ class HistoryViewModel(
             pagingData.map { HistoryUiItem.Item(it) }
         }
         .map { pagingData ->
+            val labels = dateLabels.value
             pagingData.insertSeparators { before: HistoryUiItem.Item?, after: HistoryUiItem.Item? ->
                 if (after == null) {
-                    // List end
                     return@insertSeparators null
                 }
 
                 if (before == null) {
-                    // List start
-                    return@insertSeparators HistoryUiItem.DateSeparator(getDateLabel(after.history.accessTime))
+                    return@insertSeparators HistoryUiItem.DateSeparator(getDateLabel(after.history.accessTime, labels))
                 }
 
-                val beforeDate = getDateLabel(before.history.accessTime)
-                val afterDate = getDateLabel(after.history.accessTime)
+                val beforeDate = getDateLabel(before.history.accessTime, labels)
+                val afterDate = getDateLabel(after.history.accessTime, labels)
 
                 if (beforeDate != afterDate) {
                     HistoryUiItem.DateSeparator(afterDate)
@@ -71,25 +87,23 @@ class HistoryViewModel(
         _typeFilter.update { type }
     }
 
-    private fun getDateLabel(instant: kotlin.time.Instant): String {
-        // 使用 DateTimeFormatter 的逻辑，但这里我们只关心日期分组，不需要精确到分钟
-        // 简单策略：
-        // 今天 -> "今天"
-        // 昨天 -> "昨天"
-        // 其他 -> "yyyy-MM-dd"
-        // 注意：DateTimeFormatter.kt 中的 toRelativeTimeString 比较适合单条显示，这里我们需要分组标题
-
+    private fun getDateLabel(instant: kotlin.time.Instant, labels: DateLabels): String {
         val timeZone = TimeZone.currentSystemDefault()
         val now = Clock.System.now().toLocalDateTime(timeZone)
         val date = instant.toLocalDateTime(timeZone)
 
         return if (date.year == now.year && date.dayOfYear == now.dayOfYear) {
-            "今天"
+            labels.today
         } else if (date.year == now.year && date.dayOfYear == now.dayOfYear - 1) {
-            "昨天"
+            labels.yesterday
         } else {
              val month = date.month.ordinal + 1
              "${date.year}-${month.toString().padStart(2, '0')}-${date.day.toString().padStart(2, '0')}"
         }
     }
+
+    private data class DateLabels(
+        val today: String = "Today",
+        val yesterday: String = "Yesterday",
+    )
 }

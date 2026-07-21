@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
-    <!-- auto-migrated product strings (composable UI) -->
     <string name="s_0c8b3594f5">确认订阅信息</string>
     <string name="s_0e9cfb13bf">阅读 · %1$s</string>
     <string name="s_11d0241540">返回</string>
@@ -98,4 +96,31 @@
     <string name="s_fbf6b9bcc8">粘贴订阅数据；导入会按 ID 或 URL 合并。</string>
     <string name="reader_import_format_title">导入 %1$s 订阅</string>
     <string name="reader_export_format_title">导出 %1$s 订阅</string>
+    <string name="s_8a2604624b">包含所有文章的列表选择器
+例如: #posts 或 .article-list</string>
+    <string name="s_1bd97802ac">单个文章条目的选择器
+例如: .post-item 或 article</string>
+    <string name="s_f12cf82a01">文章标题的选择器
+例如: h2.entry-title 或 .title &gt; a</string>
+    <string name="s_cbcd8508e9">文章链接的选择器
+例如: a.read-more 或 a[href]</string>
+    <string name="s_2460b6d469">文章内容的简短描述选择器
+例如: .post-excerpt 或 .summary</string>
+    <string name="s_aaee9a97a8">指向文章数组的 JSON 路径
+例如: data.articles 或 items</string>
+    <string name="s_d3d10c87f2">文章唯一 ID 的路径
+例如: id 或 uuid</string>
+    <string name="s_661f326eb8">文章标题的路径
+例如: title.rendered 或 headline</string>
+    <string name="s_e153588a31">文章链接的路径
+例如: link 或 url</string>
+    <string name="s_7516587bb9">文章内容的路径
+例如: content.rendered 或 body</string>
+    <string name="s_5807cf82a0">作者信息的路径
+例如: author.name</string>
+    <string name="s_069758a2ae">文章图片的路径
+例如: featured_media.source_url</string>
+    <string name="s_c9819795fe">URL 不能为空</string>
+    <string name="s_6753381261">导出失败</string>
+    <string name="s_a01a8d5393">导入失败</string>
 </resources>

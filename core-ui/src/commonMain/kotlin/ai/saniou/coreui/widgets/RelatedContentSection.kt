@@ -29,6 +29,12 @@ import org.jetbrains.compose.resources.stringResource
 import thread.core_ui.generated.resources.Res
 import thread.core_ui.generated.resources.s_40a1549708
 import thread.core_ui.generated.resources.s_682836a89a
+import thread.core_ui.generated.resources.s_04c5a5e4ed
+import thread.core_ui.generated.resources.s_1efeb8fdd8
+import thread.core_ui.generated.resources.s_34f34e7de0
+import thread.core_ui.generated.resources.s_48ddea0013
+import thread.core_ui.generated.resources.s_82fc0aaa43
+import thread.core_ui.generated.resources.s_fdd41d5c23
 
 /** Compact graph projection designed to live inside both forum and Reader detail canvases. */
 @Composable
@@ -91,11 +97,12 @@ fun RelatedContentSection(
     }
 }
 
+@Composable
 private fun ContentRelationKind.label() = when (this) {
-    ContentRelationKind.REPLY_TO -> "回复链"
-    ContentRelationKind.REFERENCES -> "正文引用"
-    ContentRelationKind.REPOST_OF -> "转发来源"
-    ContentRelationKind.SAME_AUTHOR -> "同一作者"
-    ContentRelationKind.SAME_TAG -> "相同标签"
-    ContentRelationKind.CANONICAL_DUPLICATE -> "同一内容"
+    ContentRelationKind.REPLY_TO -> stringResource(Res.string.s_04c5a5e4ed)
+    ContentRelationKind.REFERENCES -> stringResource(Res.string.s_82fc0aaa43)
+    ContentRelationKind.REPOST_OF -> stringResource(Res.string.s_fdd41d5c23)
+    ContentRelationKind.SAME_AUTHOR -> stringResource(Res.string.s_34f34e7de0)
+    ContentRelationKind.SAME_TAG -> stringResource(Res.string.s_1efeb8fdd8)
+    ContentRelationKind.CANONICAL_DUPLICATE -> stringResource(Res.string.s_48ddea0013)
 }

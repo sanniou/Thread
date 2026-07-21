@@ -1,5 +1,6 @@
 package ai.saniou.coreui.layout
 
+import org.jetbrains.compose.resources.stringResource
 import ai.saniou.coreui.interaction.ThreadShortcut
 import ai.saniou.coreui.interaction.threadShortcutHost
 import ai.saniou.coreui.theme.Dimens
@@ -33,6 +34,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import thread.core_ui.generated.resources.Res
+import thread.core_ui.generated.resources.s_295018abdd
 
 enum class ThreadWindowWidthClass {
     Compact,
@@ -150,11 +153,12 @@ fun AdaptiveSidebarScaffold(
         }
     }
 
+    val featureNavPaneTitle = stringResource(Res.string.s_295018abdd)
     if (windowInfo.hasPermanentFeatureSidebar) {
         Row(modifier.fillMaxSize()) {
             Surface(
                 modifier = Modifier.width(windowInfo.featureSidebarWidth).fillMaxHeight()
-                    .semantics { paneTitle = "功能导航" },
+                    .semantics { paneTitle = featureNavPaneTitle },
                 color = MaterialTheme.colorScheme.surfaceContainerLow,
                 border = BorderStroke(
                     width = 0.5.dp,
@@ -174,7 +178,7 @@ fun AdaptiveSidebarScaffold(
             drawerContent = {
                 ModalDrawerSheet(
                     modifier = Modifier.width(windowInfo.featureSidebarWidth)
-                        .semantics { paneTitle = "功能导航" },
+                        .semantics { paneTitle = featureNavPaneTitle },
                     drawerContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
                 ) {
                     sidebar()

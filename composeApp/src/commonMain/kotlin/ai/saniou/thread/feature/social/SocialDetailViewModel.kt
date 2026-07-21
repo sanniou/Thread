@@ -15,6 +15,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.getString
+import thread.composeapp.generated.resources.Res
+import thread.composeapp.generated.resources.s_51884bb3cd
+import thread.composeapp.generated.resources.s_acba1d0374
+import thread.composeapp.generated.resources.s_f6eafd8b6d
 
 class SocialDetailViewModel(
     private val sourceId: String,
@@ -45,7 +50,7 @@ class SocialDetailViewModel(
                 onSuccess = { post ->
                     if (post == null) {
                         mutableState.update {
-                            it.copy(isLoading = false, error = "本地缓存中找不到这条社交动态")
+                            it.copy(isLoading = false, error = getString(Res.string.s_acba1d0374))
                         }
                     } else {
                         mutableState.update { it.copy(isLoading = false, post = post, error = null) }
@@ -58,7 +63,7 @@ class SocialDetailViewModel(
                 },
                 onFailure = { error ->
                     mutableState.update {
-                        it.copy(isLoading = false, error = error.message ?: "加载社交动态失败")
+                        it.copy(isLoading = false, error = error.message ?: getString(Res.string.s_f6eafd8b6d))
                     }
                 },
             )
@@ -74,7 +79,7 @@ class SocialDetailViewModel(
                 },
                 onFailure = { error ->
                     mutableState.update {
-                        it.copy(message = error.message ?: "互动失败")
+                        it.copy(message = error.message ?: getString(Res.string.s_51884bb3cd))
                     }
                 },
             )

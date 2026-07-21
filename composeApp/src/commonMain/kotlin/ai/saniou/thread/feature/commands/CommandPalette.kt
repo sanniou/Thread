@@ -82,6 +82,28 @@ import thread.composeapp.generated.resources.s_9f479438fb
 import thread.composeapp.generated.resources.s_a29b060f6c
 import thread.composeapp.generated.resources.s_bca2fcab84
 import thread.composeapp.generated.resources.s_f3ea6d345e
+import thread.composeapp.generated.resources.s_02dae4bb5f
+import thread.composeapp.generated.resources.s_109d57e951
+import thread.composeapp.generated.resources.s_10a8b6eb39
+import thread.composeapp.generated.resources.s_29f6711704
+import thread.composeapp.generated.resources.s_2c175e73aa
+import thread.composeapp.generated.resources.s_54f69c3171
+import thread.composeapp.generated.resources.s_7f0d5ec20d
+import thread.composeapp.generated.resources.s_83e07208e8
+import thread.composeapp.generated.resources.s_8475b81705
+import thread.composeapp.generated.resources.s_88d95a1f5d
+import thread.composeapp.generated.resources.s_88eff084e7
+import thread.composeapp.generated.resources.s_89e3bbd558
+import thread.composeapp.generated.resources.s_9abbfdbe4b
+import thread.composeapp.generated.resources.s_af0c4a9884
+import thread.composeapp.generated.resources.s_bab87bccea
+import thread.composeapp.generated.resources.s_bbcc5f1de2
+import thread.composeapp.generated.resources.s_bdf1267805
+import thread.composeapp.generated.resources.s_d97d3180a5
+import thread.composeapp.generated.resources.s_dfd1109735
+import thread.composeapp.generated.resources.s_eb561f9bf0
+import thread.composeapp.generated.resources.s_f0b38d648c
+import thread.composeapp.generated.resources.s_f54431e0fc
 
 data class WorkspaceCommand(
     val destination: WorkspaceDestination,
@@ -117,17 +139,18 @@ data class ProductCommand(
     },
 )
 
-val defaultWorkspaceCommands = listOf(
-    WorkspaceCommand(WorkspaceDestination.FORUM, "打开社区", "浏览来源、版块与主题", Icons.Default.Forum, "⌘1"),
-    WorkspaceCommand(WorkspaceDestination.READER, "打开 Reader", "订阅、筛选与沉浸阅读", Icons.Default.RssFeed, "⌘2"),
-    WorkspaceCommand(WorkspaceDestination.FEED, "打开动态", "聚合社区与订阅时间线", Icons.Default.DynamicFeed, "⌘3"),
-    WorkspaceCommand(WorkspaceDestination.SEARCH, "全局发现", "搜索全部离线内容缓存", Icons.Default.Search, "⌘4"),
-    WorkspaceCommand(WorkspaceDestination.BOOKMARKS, "打开收藏", "继续保存的阅读上下文", Icons.Default.Bookmark, "⌘5"),
-    WorkspaceCommand(WorkspaceDestination.INBOX, "通知收件箱", "查看公告、回复与 Reader 更新", Icons.Default.NotificationsActive, "⌘6"),
-    WorkspaceCommand(WorkspaceDestination.ACTIVITY, "活动中心", "处理刷新、认证、草稿与数据任务", Icons.Default.NotificationsActive, "⌘7"),
-    WorkspaceCommand(WorkspaceDestination.OPERATIONS, "来源运维", "检查缓存、刷新与连接器健康", Icons.Default.MonitorHeart, "⌘8"),
-    WorkspaceCommand(WorkspaceDestination.SETTINGS, "数据与同步", "备份、恢复与 WebDAV", Icons.Default.Settings, "⌘9"),
-    WorkspaceCommand(WorkspaceDestination.HISTORY, "浏览历史", "回到最近浏览的主题和文章", Icons.Default.History, ""),
+@Composable
+fun defaultWorkspaceCommands(): List<WorkspaceCommand> = listOf(
+    WorkspaceCommand(WorkspaceDestination.FORUM, stringResource(Res.string.s_af0c4a9884), stringResource(Res.string.s_f54431e0fc), Icons.Default.Forum, "⌘1"),
+    WorkspaceCommand(WorkspaceDestination.READER, stringResource(Res.string.s_88eff084e7), stringResource(Res.string.s_bab87bccea), Icons.Default.RssFeed, "⌘2"),
+    WorkspaceCommand(WorkspaceDestination.FEED, stringResource(Res.string.s_dfd1109735), stringResource(Res.string.s_54f69c3171), Icons.Default.DynamicFeed, "⌘3"),
+    WorkspaceCommand(WorkspaceDestination.SEARCH, stringResource(Res.string.s_eb561f9bf0), stringResource(Res.string.s_10a8b6eb39), Icons.Default.Search, "⌘4"),
+    WorkspaceCommand(WorkspaceDestination.BOOKMARKS, stringResource(Res.string.s_02dae4bb5f), stringResource(Res.string.s_88d95a1f5d), Icons.Default.Bookmark, "⌘5"),
+    WorkspaceCommand(WorkspaceDestination.INBOX, stringResource(Res.string.s_7f0d5ec20d), stringResource(Res.string.s_8475b81705), Icons.Default.NotificationsActive, "⌘6"),
+    WorkspaceCommand(WorkspaceDestination.ACTIVITY, stringResource(Res.string.s_109d57e951), stringResource(Res.string.s_bbcc5f1de2), Icons.Default.NotificationsActive, "⌘7"),
+    WorkspaceCommand(WorkspaceDestination.OPERATIONS, stringResource(Res.string.s_bdf1267805), stringResource(Res.string.s_d97d3180a5), Icons.Default.MonitorHeart, "⌘8"),
+    WorkspaceCommand(WorkspaceDestination.SETTINGS, stringResource(Res.string.s_9abbfdbe4b), stringResource(Res.string.s_2c175e73aa), Icons.Default.Settings, "⌘9"),
+    WorkspaceCommand(WorkspaceDestination.HISTORY, stringResource(Res.string.s_29f6711704), stringResource(Res.string.s_f0b38d648c), Icons.Default.History, ""),
 )
 
 @Composable
@@ -140,13 +163,14 @@ fun CommandPalette(
     onResult: (GlobalSearchResult) -> Unit,
 ) {
     var query by remember { mutableStateOf("") }
+    val allWorkspaceCommands = defaultWorkspaceCommands()
     var searchResults by remember { mutableStateOf<List<GlobalSearchResult>>(emptyList()) }
     var isSearching by remember { mutableStateOf(false) }
     var selectedIndex by remember { mutableIntStateOf(0) }
     val focusRequester = remember { FocusRequester() }
-    val filteredCommands = remember(query) {
+    val filteredCommands = remember(query, allWorkspaceCommands) {
         val needle = query.trim()
-        if (needle.isEmpty()) defaultWorkspaceCommands else defaultWorkspaceCommands.filter {
+        if (needle.isEmpty()) allWorkspaceCommands else allWorkspaceCommands.filter {
             it.label.contains(needle, ignoreCase = true) || it.description.contains(needle, ignoreCase = true)
         }
     }
@@ -277,11 +301,12 @@ fun CommandPalette(
 
 @Composable
 private fun ProductCommandRow(command: ProductCommand, selected: Boolean, onClick: () -> Unit) {
+    val contentDesc = stringResource(Res.string.s_83e07208e8, command.descriptor.label)
     Surface(
         onClick = onClick,
         enabled = command.descriptor.enabled,
         modifier = Modifier.fillMaxWidth().semantics {
-            contentDescription = "${command.descriptor.label}，全局操作"
+            contentDescription = contentDesc
         },
         color = if (selected) MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.surface,
         shape = MaterialTheme.shapes.large,
@@ -319,10 +344,11 @@ private fun ProductCommandRow(command: ProductCommand, selected: Boolean, onClic
 
 @Composable
 private fun CommandRow(command: WorkspaceCommand, selected: Boolean, onClick: () -> Unit) {
+    val contentDesc = stringResource(Res.string.s_89e3bbd558, command.label, command.shortcut)
     Surface(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth().semantics {
-            contentDescription = "${command.label}，快捷键 ${command.shortcut}"
+            contentDescription = contentDesc
         },
         color = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
         shape = MaterialTheme.shapes.large,

@@ -2,30 +2,36 @@
 <resources>
 
     <!-- auto-migrated product strings (composable UI) -->
-    <string name="s_16dbcf21a4">聚合Timeline</string>
+    <string name="s_16dbcf21a4">Aggregated timeline</string>
     <string name="s_246b5aebf6">RSS / Atom Reader</string>
-    <string name="s_274a1a8d2e">%1$s 个Source暂未更新，已隔离Failed源</string>
+    <string name="s_274a1a8d2e">%1$s sources not updated; failed sources isolated</string>
     <string name="s_38108eaa1d">Refresh</string>
     <string name="s_3e14c19001">FilterSource</string>
     <string name="s_53a0111222">AllForumSource</string>
-    <string name="s_5b60fee8a5">开放Social时间线</string>
-    <string name="s_65ee1f4b65">仅保留Reader</string>
-    <string name="s_6aecb04c5c">时间线暂时为空</string>
-    <string name="s_6fd70bcc6e">RefreshSource，或在左侧调整聚合范围。</string>
-    <string name="s_750ec0e335">Forum、SubscribeArticle与开放SocialTimeline，合并为一条可控时间线</string>
-    <string name="s_82fe3557c1">%1$s · %2$s 条Reply</string>
-    <string name="s_89f66ab502">下拉或点击Refresh以拉取Forum / Subscribe / Social</string>
-    <string name="s_8d5c61c2aa">先在CommunityAddForumSource，或在ReaderAdd subscription，再回到Timeline聚合。</string>
-    <string name="s_924ce8c469">载入更早的SocialTimeline</string>
-    <string name="s_ae1913973c">聚合Info流</string>
-    <string name="s_b372dd3411">Workspace还没有内容源</string>
-    <string name="s_cec000d0c0">Refresh不会Clear现有时间线</string>
-    <string name="s_d1be8ec160">从左侧SelectForum、Reader或SocialSource。</string>
-    <string name="s_db3bdb19bb">还没有Select内容范围</string>
+    <string name="s_5b60fee8a5">Open social timeline</string>
+    <string name="s_65ee1f4b65">Reader only</string>
+    <string name="s_6aecb04c5c">Timeline is empty for now</string>
+    <string name="s_6fd70bcc6e">Refresh sources, or adjust the aggregation range on the left.</string>
+    <string name="s_750ec0e335">Forum, subscription articles, and open social timeline—merged into one controllable feed</string>
+    <string name="s_82fe3557c1">%1$s · %2$s replies</string>
+    <string name="s_89f66ab502">Pull down or tap refresh to fetch forum / subscription / social</string>
+    <string name="s_8d5c61c2aa">Add a forum source in Community, or a subscription in Reader, then return to the timeline</string>
+    <string name="s_924ce8c469">Load earlier social timeline</string>
+    <string name="s_ae1913973c">Aggregated feed</string>
+    <string name="s_b372dd3411">This workspace has no content sources yet</string>
+    <string name="s_cec000d0c0">Refresh will not clear the existing timeline</string>
+    <string name="s_d1be8ec160">Select a forum, Reader, or social source on the left.</string>
+    <string name="s_db3bdb19bb">No content scope selected yet</string>
     <string name="s_e45f66052e">Local cache is still readable</string>
     <string name="s_f0e21f6e0f">Cache first · show local content first</string>
-    <string name="s_f675ecc2a1">Refresh时间线</string>
-    <string name="s_f82f565394">%1$s 个范围</string>
-    <string name="s_ffa27be6da">%1$s 个内容范围</string>
+    <string name="s_f675ecc2a1">Refresh timeline</string>
+    <string name="s_f82f565394">%1$s ranges</string>
+    <string name="s_ffa27be6da">%1$s content ranges</string>
     <string name="s_ffc7247056">Syncing latest content</string>
+    <string name="s_4d8b4193a3">Older posts loaded</string>
+    <string name="s_52e6d8f7c0">Refreshed %1$s sources</string>
+    <string name="s_6414520846">Refresh failed: %1$s sources unavailable</string>
+    <string name="s_9fbd2eca51">Failed to load older posts</string>
+    <string name="s_b93442c95f">Refreshed %1$s sources, %2$s failed</string>
+    <string name="s_f15797df4e">Post updated</string>
 </resources>

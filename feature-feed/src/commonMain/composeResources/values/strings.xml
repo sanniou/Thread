@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
-    <!-- auto-migrated product strings (composable UI) -->
     <string name="s_16dbcf21a4">聚合动态</string>
     <string name="s_246b5aebf6">RSS / Atom 阅读器</string>
     <string name="s_274a1a8d2e">%1$s 个来源暂未更新，已隔离失败源</string>
@@ -28,4 +26,10 @@
     <string name="s_f82f565394">%1$s 个范围</string>
     <string name="s_ffa27be6da">%1$s 个内容范围</string>
     <string name="s_ffc7247056">正在同步最新内容</string>
+    <string name="s_4d8b4193a3">已载入更早动态</string>
+    <string name="s_9fbd2eca51">更早动态载入失败</string>
+    <string name="s_f15797df4e">动态已更新</string>
+    <string name="s_52e6d8f7c0">已刷新 %1$s 个来源</string>
+    <string name="s_6414520846">刷新失败：%1$s 个来源不可用</string>
+    <string name="s_b93442c95f">已刷新 %1$s 个来源，%2$s 个来源失败</string>
 </resources>

@@ -10,12 +10,17 @@ import java.awt.FileDialog
 import java.awt.Frame
 import java.io.File
 import kotlin.coroutines.resume
+import org.jetbrains.compose.resources.getString
+import thread.composeapp.generated.resources.Res
+import thread.composeapp.generated.resources.s_18104edf89
+import thread.composeapp.generated.resources.s_da42d5b856
 
 class DesktopAttachmentPicker : AttachmentPicker {
     override suspend fun pickImage(): PostAttachment? {
         val file = chooseFile() ?: return null
+        val tooLarge = getString(Res.string.s_da42d5b856)
         return withContext(Dispatchers.IO) {
-            require(file.length() <= MAX_ATTACHMENT_BYTES) { "图片不能超过 20 MB" }
+            require(file.length() <= MAX_ATTACHMENT_BYTES) { tooLarge }
             PostAttachment(
                 fileName = file.name,
                 bytes = file.readBytes(),
@@ -24,19 +29,22 @@ class DesktopAttachmentPicker : AttachmentPicker {
         }
     }
 
-    private suspend fun chooseFile(): File? = suspendCancellableCoroutine { continuation ->
-        EventQueue.invokeLater {
-            if (!continuation.isActive) return@invokeLater
-            val dialog = FileDialog(null as Frame?, "选择图片", FileDialog.LOAD).apply {
-                filenameFilter = java.io.FilenameFilter { _, name ->
-                    name.substringAfterLast('.', "").lowercase() in IMAGE_EXTENSIONS
+    private suspend fun chooseFile(): File? {
+        val title = getString(Res.string.s_18104edf89)
+        return suspendCancellableCoroutine { continuation ->
+            EventQueue.invokeLater {
+                if (!continuation.isActive) return@invokeLater
+                val dialog = FileDialog(null as Frame?, title, FileDialog.LOAD).apply {
+                    filenameFilter = java.io.FilenameFilter { _, name ->
+                        name.substringAfterLast('.', "").lowercase() in IMAGE_EXTENSIONS
+                    }
+                    isMultipleMode = false
+                    isVisible = true
                 }
-                isMultipleMode = false
-                isVisible = true
+                val selected = dialog.file?.let { name -> File(dialog.directory, name) }
+                dialog.dispose()
+                if (continuation.isActive) continuation.resume(selected)
             }
-            val selected = dialog.file?.let { name -> File(dialog.directory, name) }
-            dialog.dispose()
-            if (continuation.isActive) continuation.resume(selected)
         }
     }
 

@@ -24,6 +24,20 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.getString
+import thread.composeapp.generated.resources.Res
+import thread.composeapp.generated.resources.s_09e424b5e8
+import thread.composeapp.generated.resources.s_1ad61173b4
+import thread.composeapp.generated.resources.s_342dc7b5e9
+import thread.composeapp.generated.resources.s_521889b79f
+import thread.composeapp.generated.resources.s_6da9925ffe
+import thread.composeapp.generated.resources.s_70a5ae0f89
+import thread.composeapp.generated.resources.s_790909b45b
+import thread.composeapp.generated.resources.s_86cbda7968
+import thread.composeapp.generated.resources.s_d85e9647ff
+import thread.composeapp.generated.resources.s_e0d57d4e7d
+import thread.composeapp.generated.resources.s_f21ab6df37
 
 class SyncSettingsViewModel(
     private val executeProductAction: ExecuteProductActionUseCase,
@@ -117,7 +131,7 @@ class SyncSettingsViewModel(
             }
             is SyncSettingsContract.Event.DeleteSocialSource -> screenModelScope.launch {
                 runCatching { removeSocialSourceUseCase(event.id) }
-                    .onSuccess { _state.update { it.copy(message = "社交来源已删除") } }
+                    .onSuccess { _state.update { it.copy(message = getString(Res.string.s_f21ab6df37)) } }
                     .onFailure(::showFailure)
             }
         }
@@ -127,7 +141,9 @@ class SyncSettingsViewModel(
         val name = event.name.trim()
         val query = event.query.trim()
         if (name.isBlank() || (query.isBlank() && !event.unreadOnly && !event.bookmarkedOnly)) {
-            _state.update { it.copy(message = "请填写名称，并至少设置一条筛选规则") }
+            screenModelScope.launch {
+                _state.update { it.copy(message = getString(Res.string.s_e0d57d4e7d)) }
+            }
             return
         }
         screenModelScope.launch {
@@ -137,9 +153,9 @@ class SyncSettingsViewModel(
                     id = "collection-$now",
                     name = name,
                     description = buildList {
-                        if (query.isNotBlank()) add("关键词：$query")
-                        if (event.unreadOnly) add("仅未读")
-                        if (event.bookmarkedOnly) add("仅收藏")
+                        if (query.isNotBlank()) add(getString(Res.string.s_790909b45b, query))
+                        if (event.unreadOnly) add(getString(Res.string.s_342dc7b5e9))
+                        if (event.bookmarkedOnly) add(getString(Res.string.s_70a5ae0f89))
                     }.joinToString(" · "),
                     rules = SmartCollectionRules(
                         query = query,
@@ -153,7 +169,7 @@ class SyncSettingsViewModel(
                     updatedAtEpochMillis = now,
                 )
             )
-            _state.update { it.copy(message = "智能集合已创建") }
+            _state.update { it.copy(message = getString(Res.string.s_1ad61173b4)) }
         }
     }
 
@@ -174,7 +190,9 @@ class SyncSettingsViewModel(
         if (name.isBlank() || event.accessToken.isBlank() ||
             !(baseUrl.startsWith("https://") || baseUrl.startsWith("http://"))
         ) {
-            _state.update { it.copy(message = "请填写来源名称、有效服务器地址和访问令牌") }
+            screenModelScope.launch {
+                _state.update { it.copy(message = getString(Res.string.s_6da9925ffe)) }
+            }
             return
         }
         val existing = _state.value.socialSources.firstOrNull { it.baseUrl.trimEnd('/') == baseUrl }
@@ -195,17 +213,17 @@ class SyncSettingsViewModel(
                     event.accessToken,
                 )
             }.onSuccess {
-                _state.update { it.copy(message = "开放社交来源已保存") }
+                _state.update { it.copy(message = getString(Res.string.s_d85e9647ff)) }
             }.onFailure(::showFailure)
         }
     }
 
-    private fun saveConfig() = launchWork("WebDAV 配置已保存") {
+    private fun saveConfig() = launchWork(Res.string.s_86cbda7968) {
         val current = _state.value
         saveWebDavConfig(WebDavConfig(current.endpoint.trim(), current.username, current.password))
     }
 
-    private fun clearConfig() = launchWork("WebDAV 配置已清除") { saveWebDavConfig(null) }
+    private fun clearConfig() = launchWork(Res.string.s_521889b79f) { saveWebDavConfig(null) }
 
     private fun exportLocal() {
         screenModelScope.launch {
@@ -265,17 +283,23 @@ class SyncSettingsViewModel(
         }
     }
 
-    private fun launchWork(successMessage: String, block: suspend () -> Unit) {
+    private fun launchWork(successRes: StringResource, block: suspend () -> Unit) {
         screenModelScope.launch {
             _state.update { it.copy(isWorking = true) }
             runCatching { block() }.fold(
-                onSuccess = { _state.update { it.copy(isWorking = false, message = successMessage) } },
+                onSuccess = {
+                    _state.update { it.copy(isWorking = false, message = getString(successRes)) }
+                },
                 onFailure = ::showFailure,
             )
         }
     }
 
     private fun showFailure(error: Throwable) {
-        _state.update { it.copy(isWorking = false, message = error.message ?: "操作失败") }
+        screenModelScope.launch {
+            _state.update {
+                it.copy(isWorking = false, message = error.message ?: getString(Res.string.s_09e424b5e8))
+            }
+        }
     }
 }

@@ -28,6 +28,9 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import kotlin.time.Clock
+import org.jetbrains.compose.resources.getString
+import thread.composeapp.generated.resources.Res
+import thread.composeapp.generated.resources.s_210fce4b59
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class GlobalSearchViewModel(
@@ -148,7 +151,7 @@ class GlobalSearchViewModel(
                 onSuccess = { response -> mutableState.update { it.copy(response = response, isSearching = false) } },
                 onFailure = { error ->
                     mutableState.update {
-                        it.copy(isSearching = false, message = error.message ?: "本地搜索失败")
+                        it.copy(isSearching = false, message = error.message ?: getString(Res.string.s_210fce4b59))
                     }
                 },
             )

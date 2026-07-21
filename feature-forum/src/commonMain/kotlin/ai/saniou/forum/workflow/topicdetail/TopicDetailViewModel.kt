@@ -41,6 +41,19 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
+import org.jetbrains.compose.resources.getString
+import thread.feature_forum.generated.resources.Res
+import thread.feature_forum.generated.resources.s_0e055beabc
+import thread.feature_forum.generated.resources.s_12a870cbdf
+import thread.feature_forum.generated.resources.s_1ec0da44f8
+import thread.feature_forum.generated.resources.s_2cb63ed15e
+import thread.feature_forum.generated.resources.s_3395596aa5
+import thread.feature_forum.generated.resources.s_3eb8dbcc7f
+import thread.feature_forum.generated.resources.s_5efbdd9e46
+import thread.feature_forum.generated.resources.s_64f538c2fa
+import thread.feature_forum.generated.resources.s_b11cc4945e
+import thread.feature_forum.generated.resources.s_b8d684d1cb
+import thread.feature_forum.generated.resources.s_beda0ebfaf
 
 data class TopicDetailViewModelParams(
     val sourceId: String,
@@ -237,7 +250,7 @@ class TopicDetailViewModel(
         screenModelScope.launch {
             val subscriptionKey =
                 getActiveSubscriptionKeyUseCase() ?: run {
-                    _effect.send(Effect.ShowSnackbar("未设置订阅ID"))
+                    _effect.send(Effect.ShowSnackbar(getString(Res.string.s_5efbdd9e46)))
                     _state.update { it.copy(isTogglingSubscription = false) }
                     return@launch
                 }
@@ -249,7 +262,7 @@ class TopicDetailViewModel(
                 }
                 .onFailure { e ->
                     _state.update { it.copy(isTogglingSubscription = false) }
-                    _effect.send(Effect.ShowSnackbar("操作失败: ${e.message}"))
+                    _effect.send(Effect.ShowSnackbar(getString(Res.string.s_0e055beabc, e.message.orEmpty())))
                 }
         }
     }
@@ -259,18 +272,18 @@ class TopicDetailViewModel(
             val metadata = (state.value.topicWrapper as? UiStateWrapper.Success)?.value
             val url = metadata?.sourceUrl.orEmpty()
             if (url.isBlank()) {
-                _effect.send(Effect.ShowSnackbar("当前来源未提供公开链接"))
+                _effect.send(Effect.ShowSnackbar(getString(Res.string.s_beda0ebfaf)))
                 return@launch
             }
             _effect.send(Effect.CopyToClipboard(url))
-            _effect.send(Effect.ShowSnackbar("链接已复制到剪贴板"))
+            _effect.send(Effect.ShowSnackbar(getString(Res.string.s_1ec0da44f8)))
         }
     }
 
     private fun copyContent(content: String) {
         screenModelScope.launch {
             _effect.send(Effect.CopyToClipboard(content))
-            _effect.send(Effect.ShowSnackbar("内容已复制到剪贴板"))
+            _effect.send(Effect.ShowSnackbar(getString(Res.string.s_b8d684d1cb)))
         }
     }
 
@@ -278,7 +291,7 @@ class TopicDetailViewModel(
         screenModelScope.launch {
             val metadata = (state.value.topicWrapper as? UiStateWrapper.Success)?.value
             if (metadata == null) {
-                _effect.send(Effect.ShowSnackbar("无法收藏：数据未加载"))
+                _effect.send(Effect.ShowSnackbar(getString(Res.string.s_2cb63ed15e)))
                 return@launch
             }
 
@@ -293,7 +306,7 @@ class TopicDetailViewModel(
                     sourceType = "$sourceId.Topic"
                 )
             )
-            _effect.send(Effect.ShowSnackbar("帖子已收藏"))
+            _effect.send(Effect.ShowSnackbar(getString(Res.string.s_12a870cbdf)))
         }
     }
 
@@ -309,7 +322,7 @@ class TopicDetailViewModel(
                     sourceType = "$sourceId.Comment"
                 )
             )
-            _effect.send(Effect.ShowSnackbar("回复已收藏"))
+            _effect.send(Effect.ShowSnackbar(getString(Res.string.s_3395596aa5)))
         }
     }
 
@@ -327,7 +340,7 @@ class TopicDetailViewModel(
                     height = null
                 )
             )
-            _effect.send(Effect.ShowSnackbar("图片已收藏"))
+            _effect.send(Effect.ShowSnackbar(getString(Res.string.s_3eb8dbcc7f)))
         }
     }
 
@@ -337,11 +350,11 @@ class TopicDetailViewModel(
             _state.update { it.copy(isReacting = true) }
             upvoteTopicUseCase(sourceId, threadId)
                 .onSuccess {
-                    _effect.send(Effect.ShowSnackbar("点赞成功"))
+                    _effect.send(Effect.ShowSnackbar(getString(Res.string.s_64f538c2fa)))
                     observeTopicDetail(forceRefresh = true)
                 }
                 .onFailure { error ->
-                    _effect.send(Effect.ShowSnackbar(error.message ?: "点赞失败"))
+                    _effect.send(Effect.ShowSnackbar(error.message ?: getString(Res.string.s_b11cc4945e)))
                 }
             _state.update { it.copy(isReacting = false) }
         }

@@ -56,6 +56,14 @@ import thread.core_ui.generated.resources.s_9b0c6c7858
 import thread.core_ui.generated.resources.s_a1ff8da47d
 import thread.core_ui.generated.resources.s_b114b91547
 import thread.core_ui.generated.resources.s_ff55f08cf1
+import thread.core_ui.generated.resources.s_04dcc2bb6b
+import thread.core_ui.generated.resources.s_0b13297f85
+import thread.core_ui.generated.resources.s_8ea79fb9c8
+import thread.core_ui.generated.resources.s_8f27d2c8a0
+import thread.core_ui.generated.resources.s_b863c3bd02
+import thread.core_ui.generated.resources.s_c07113b965
+import thread.core_ui.generated.resources.s_d811b10221
+import thread.core_ui.generated.resources.s_f7bd72c0c7
 
 data class WorkspaceNavigationItem(
     val icon: ImageVector,
@@ -86,10 +94,11 @@ fun WorkspaceNavigationSuite(
     } + listOfNotNull(
         onOpenCommandPalette?.let { ThreadShortcut(Key.P, shift = true, action = it) }
     )
+    val workspacePaneTitle = stringResource(Res.string.s_b863c3bd02)
     val hostModifier = modifier
         .focusRequester(focusRequester)
         .focusable()
-        .semantics { paneTitle = "Thread 工作区" }
+        .semantics { paneTitle = workspacePaneTitle }
         .threadShortcutHost(*shortcuts.toTypedArray())
     LaunchedEffect(Unit) { focusRequester.requestFocus() }
     if (windowInfo.usesBottomNavigation) {
@@ -117,6 +126,11 @@ private fun WorkspaceBottomNavigation(
     var showOverflow by remember { mutableStateOf(false) }
     val primaryItems = items.filterNot { it.bottom }.take(4)
     val overflowItems = items.filterNot { it in primaryItems }
+    val moreLabel = stringResource(Res.string.s_9b0c6c7858)
+    val moreContentDescription = stringResource(Res.string.s_c07113b965)
+    val containsCurrentWorkspace = stringResource(Res.string.s_8f27d2c8a0)
+    val shortcutMenuLabel = stringResource(Res.string.s_f7bd72c0c7)
+    val openCommandDiscover = stringResource(Res.string.s_04dcc2bb6b)
 
     Scaffold(
         modifier = modifier,
@@ -141,13 +155,13 @@ private fun WorkspaceBottomNavigation(
                 }
                 NavigationBarItem(
                     modifier = Modifier.semantics {
-                        contentDescription = "更多工作区"
-                        stateDescription = if (overflowItems.any { it.selected }) "包含当前工作区" else "快捷键菜单"
+                        contentDescription = moreContentDescription
+                        stateDescription = if (overflowItems.any { it.selected }) containsCurrentWorkspace else shortcutMenuLabel
                     },
                     selected = overflowItems.any { it.selected },
                     onClick = { showOverflow = true },
-                    icon = { Icon(Icons.Default.MoreHoriz, contentDescription = stringResource(Res.string.s_9b0c6c7858)) },
-                    label = { Text(stringResource(Res.string.s_9b0c6c7858)) },
+                    icon = { Icon(Icons.Default.MoreHoriz, contentDescription = moreLabel) },
+                    label = { Text(moreLabel) },
                 )
             }
         },
@@ -173,7 +187,7 @@ private fun WorkspaceBottomNavigation(
                             openPalette()
                         },
                         modifier = Modifier.fillMaxWidth().semantics {
-                            contentDescription = "打开命令与全局发现"
+                            contentDescription = openCommandDiscover
                         },
                         shape = MaterialTheme.shapes.large,
                         color = MaterialTheme.colorScheme.primaryContainer,
@@ -241,6 +255,7 @@ fun WorkspaceNavigationRail(
     onOpenCommandPalette: (() -> Unit)? = null,
 ) {
     val windowInfo = LocalThreadWindowInfo.current
+    val openCommandDiscoverLong = stringResource(Res.string.s_0b13297f85)
     Surface(
         modifier = modifier.width(windowInfo.navigationRailWidth).fillMaxHeight(),
         color = MaterialTheme.colorScheme.surface,
@@ -278,7 +293,7 @@ fun WorkspaceNavigationRail(
                 Surface(
                     onClick = openPalette,
                     modifier = Modifier.fillMaxWidth().semantics {
-                        contentDescription = "打开命令与全局发现，快捷键 Ctrl 或 Command 加 Shift 加 P"
+                        contentDescription = openCommandDiscoverLong
                     },
                     shape = MaterialTheme.shapes.large,
                     color = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -350,16 +365,17 @@ private fun WorkspaceRailItem(item: WorkspaceNavigationItem, showLabel: Boolean,
     }
 }
 
+@Composable
 private fun Modifier.workspaceDestinationSemantics(
     item: WorkspaceNavigationItem,
     index: Int,
-): Modifier = semantics {
-    contentDescription = item.label
-    selected = item.selected
-    stateDescription = if (item.selected) {
-        "当前工作区"
-    } else {
-        "快捷键 Ctrl 或 Command + ${index + 1}"
+): Modifier {
+    val selectedLabel = stringResource(Res.string.s_8ea79fb9c8)
+    val shortcutLabel = stringResource(Res.string.s_d811b10221, index + 1)
+    return semantics {
+        contentDescription = item.label
+        selected = item.selected
+        stateDescription = if (item.selected) selectedLabel else shortcutLabel
     }
 }
 

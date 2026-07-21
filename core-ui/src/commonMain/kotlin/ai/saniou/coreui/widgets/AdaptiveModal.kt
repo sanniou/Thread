@@ -1,5 +1,6 @@
 package ai.saniou.coreui.widgets
 
+import org.jetbrains.compose.resources.stringResource
 import ai.saniou.coreui.interaction.ThreadShortcut
 import ai.saniou.coreui.interaction.threadShortcutHost
 import ai.saniou.coreui.layout.LocalThreadWindowInfo
@@ -23,13 +24,15 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import thread.core_ui.generated.resources.Res
+import thread.core_ui.generated.resources.s_21a58979fe
 
 /** Phone-first bottom sheet that becomes a focused dialog on wider windows. */
 @Composable
 fun AdaptiveModal(
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
-    paneTitle: String = "对话框",
+    paneTitle: String = stringResource(Res.string.s_21a58979fe),
     content: @Composable () -> Unit,
 ) {
     val windowInfo = LocalThreadWindowInfo.current

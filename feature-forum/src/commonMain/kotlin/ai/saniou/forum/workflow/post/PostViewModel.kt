@@ -24,6 +24,11 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import org.jetbrains.compose.resources.getString
+import thread.feature_forum.generated.resources.Res
+import thread.feature_forum.generated.resources.s_38eb42e243
+import thread.feature_forum.generated.resources.s_f95134f690
+import thread.feature_forum.generated.resources.s_ffc7850925
 
 class PostViewModel(
     private val createThreadUseCase: CreateThreadUseCase,
@@ -43,8 +48,12 @@ class PostViewModel(
     private var draftSaveJob: Job? = null
 
     init {
-        _state.update { it.copy(forumName = params.forumName ?: "回复") }
         screenModelScope.launch {
+            if (params.forumName == null) {
+                _state.update { it.copy(forumName = getString(Res.string.s_ffc7850925)) }
+            } else {
+                _state.update { it.copy(forumName = params.forumName) }
+            }
             val saved = getPostDraft(draftKey)
             _state.update { current ->
                 if (saved == null) current.copy(isDraftLoading = false) else current.copy(
@@ -149,7 +158,7 @@ class PostViewModel(
                 }
             }
             .onFailure { error ->
-                _state.update { it.copy(isDraftSaving = false, error = error.message ?: "草稿保存失败") }
+                _state.update { it.copy(isDraftSaving = false, error = error.message ?: getString(Res.string.s_f95134f690)) }
             }
             .isSuccess
     }
@@ -167,7 +176,7 @@ class PostViewModel(
                     isDraftSaving = false,
                 )
             }
-            _effect.emit(Effect.ShowSnackbar("草稿已丢弃"))
+            _effect.emit(Effect.ShowSnackbar(getString(Res.string.s_38eb42e243)))
         }
     }
 

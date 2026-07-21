@@ -80,6 +80,10 @@ import org.kodein.di.instance
 import kotlin.time.Instant
 import org.jetbrains.compose.resources.stringResource
 import thread.composeapp.generated.resources.Res
+import thread.composeapp.generated.resources.s_1e230aa201
+import thread.composeapp.generated.resources.s_ffc7850925
+import thread.composeapp.generated.resources.s_ad3fd0f4c7
+import thread.composeapp.generated.resources.s_e848ddd482
 import thread.composeapp.generated.resources.s_01ca4b8486
 import thread.composeapp.generated.resources.s_06b65ae162
 import thread.composeapp.generated.resources.s_2426432239
@@ -109,6 +113,15 @@ import thread.composeapp.generated.resources.s_e4b9d92f14
 import thread.composeapp.generated.resources.s_e93afc81dc
 import thread.composeapp.generated.resources.s_f57207adee
 import thread.composeapp.generated.resources.s_fe5e010aa4
+import thread.composeapp.generated.resources.s_5faee8f507
+import thread.composeapp.generated.resources.s_6c7dcbb73a
+import thread.composeapp.generated.resources.s_778fc8f994
+import thread.composeapp.generated.resources.s_8a662fdebf
+import thread.composeapp.generated.resources.s_979b6bb444
+import thread.composeapp.generated.resources.s_b796f2d4ca
+import thread.composeapp.generated.resources.s_bbbd563c35
+import thread.composeapp.generated.resources.s_caf701318e
+import thread.composeapp.generated.resources.s_ee8161e985
 
 object OperationsPage : Screen {
     @Composable
@@ -329,9 +342,15 @@ private fun SourceHealthCard(
     onClearDiagnostic: () -> Unit,
 ) {
     val presentation = source.state.presentation()
+    val sourceContentDescription = stringResource(
+        Res.string.s_ee8161e985,
+        source.name,
+        presentation.label,
+        source.primaryItemCount,
+    )
     ThreadCard(
         modifier = Modifier.fillMaxWidth().semantics {
-            contentDescription = "${source.name}，${presentation.label}，${source.primaryItemCount} 条主要缓存"
+            contentDescription = sourceContentDescription
         },
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -353,7 +372,29 @@ private fun SourceHealthCard(
                     )
                 }
                 Text(
-                    "${presentation.label} · ${source.primaryItemCount} ${if (source.kind == ContentSourceKind.FORUM) "主题" else "文章"} · ${source.secondaryItemCount} ${if (source.kind == ContentSourceKind.FORUM) "回复" else "未读"}",
+                    buildString {
+                        append(presentation.label)
+                        append(" · ")
+                        append(source.primaryItemCount)
+                        append(' ')
+                        append(
+                            if (source.kind == ContentSourceKind.FORUM) {
+                                stringResource(Res.string.s_e848ddd482)
+                            } else {
+                                stringResource(Res.string.s_ad3fd0f4c7)
+                            },
+                        )
+                        append(" · ")
+                        append(source.secondaryItemCount)
+                        append(' ')
+                        append(
+                            if (source.kind == ContentSourceKind.FORUM) {
+                                stringResource(Res.string.s_ffc7850925)
+                            } else {
+                                stringResource(Res.string.s_1e230aa201)
+                            },
+                        )
+                    },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -418,14 +459,15 @@ private fun SourceHealthCard(
 private data class HealthPresentation(val label: String, val icon: ImageVector, val tone: HealthTone)
 private enum class HealthTone { GOOD, NEUTRAL, WARNING, ERROR }
 
+@Composable
 private fun SourceOperationalState.presentation() = when (this) {
-    SourceOperationalState.READY -> HealthPresentation("就绪", Icons.Default.CheckCircle, HealthTone.GOOD)
-    SourceOperationalState.DISABLED -> HealthPresentation("已停用", Icons.Default.PauseCircle, HealthTone.NEUTRAL)
-    SourceOperationalState.REFRESHING -> HealthPresentation("刷新中", Icons.Default.Sync, HealthTone.GOOD)
-    SourceOperationalState.OFFLINE -> HealthPresentation("网络离线", Icons.Default.CloudOff, HealthTone.WARNING)
-    SourceOperationalState.AUTHENTICATION_REQUIRED -> HealthPresentation("需要登录", Icons.Default.Lock, HealthTone.ERROR)
-    SourceOperationalState.RATE_LIMITED -> HealthPresentation("请求受限", Icons.Default.Speed, HealthTone.WARNING)
-    SourceOperationalState.DEGRADED -> HealthPresentation("服务异常", Icons.Default.Warning, HealthTone.ERROR)
+    SourceOperationalState.READY -> HealthPresentation(stringResource(Res.string.s_b796f2d4ca), Icons.Default.CheckCircle, HealthTone.GOOD)
+    SourceOperationalState.DISABLED -> HealthPresentation(stringResource(Res.string.s_6c7dcbb73a), Icons.Default.PauseCircle, HealthTone.NEUTRAL)
+    SourceOperationalState.REFRESHING -> HealthPresentation(stringResource(Res.string.s_d47379f917), Icons.Default.Sync, HealthTone.GOOD)
+    SourceOperationalState.OFFLINE -> HealthPresentation(stringResource(Res.string.s_8a662fdebf), Icons.Default.CloudOff, HealthTone.WARNING)
+    SourceOperationalState.AUTHENTICATION_REQUIRED -> HealthPresentation(stringResource(Res.string.s_caf701318e), Icons.Default.Lock, HealthTone.ERROR)
+    SourceOperationalState.RATE_LIMITED -> HealthPresentation(stringResource(Res.string.s_979b6bb444), Icons.Default.Speed, HealthTone.WARNING)
+    SourceOperationalState.DEGRADED -> HealthPresentation(stringResource(Res.string.s_bbbd563c35), Icons.Default.Warning, HealthTone.ERROR)
 }
 
 @Composable
@@ -444,9 +486,10 @@ private fun HealthPresentation.contentColor(): Color = when (tone) {
     HealthTone.ERROR -> MaterialTheme.colorScheme.onErrorContainer
 }
 
+@Composable
 private fun OperationsContract.Filter.label(): String = when (this) {
-    OperationsContract.Filter.ALL -> "全部"
-    OperationsContract.Filter.ATTENTION -> "需关注"
-    OperationsContract.Filter.FORUM -> "论坛"
+    OperationsContract.Filter.ALL -> stringResource(Res.string.s_778fc8f994)
+    OperationsContract.Filter.ATTENTION -> stringResource(Res.string.s_284b34e15f)
+    OperationsContract.Filter.FORUM -> stringResource(Res.string.s_5faee8f507)
     OperationsContract.Filter.READER -> "Reader"
 }

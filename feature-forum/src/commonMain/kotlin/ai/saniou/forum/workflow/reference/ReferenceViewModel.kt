@@ -12,6 +12,9 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
+import org.jetbrains.compose.resources.getString
+import thread.feature_forum.generated.resources.Res
+import thread.feature_forum.generated.resources.s_03e6f0a74a
 
 class ReferenceViewModel(
     private val getReferenceUseCase: GetReferenceUseCase,
@@ -38,7 +41,7 @@ class ReferenceViewModel(
             }
             .catch { error ->
                 _uiState.update {
-                    it.copy(isLoading = false, error = "获取引用内容失败: ${error.message}")
+                    it.copy(isLoading = false, error = getString(Res.string.s_03e6f0a74a, error.message.orEmpty()))
                 }
             }
             .launchIn(screenModelScope)

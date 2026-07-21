@@ -12,6 +12,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.getString
+import thread.composeapp.generated.resources.Res
+import thread.composeapp.generated.resources.s_b164df8a38
+import thread.composeapp.generated.resources.s_fcf7924617
 
 class ActivityCenterViewModel(
     observeActivityCenter: ObserveActivityCenterUseCase,
@@ -44,7 +48,7 @@ class ActivityCenterViewModel(
             Event.DismissDangerAction -> mutableState.update { it.copy(pendingDangerAction = null) }
             Event.ClearCompleted -> screenModelScope.launch {
                 clearCompletedActivities()
-                mutableState.update { it.copy(message = "已清理完成记录") }
+                mutableState.update { it.copy(message = getString(Res.string.s_fcf7924617)) }
             }
             Event.DismissOutput -> mutableState.update { it.copy(outputTitle = null, outputPayload = null) }
             Event.MessageShown -> mutableState.update { it.copy(message = null) }
@@ -66,7 +70,7 @@ class ActivityCenterViewModel(
                     }
                 },
                 onFailure = { error ->
-                    mutableState.update { it.copy(message = error.message ?: "动作执行失败") }
+                    mutableState.update { it.copy(message = error.message ?: getString(Res.string.s_b164df8a38)) }
                 },
             )
         }

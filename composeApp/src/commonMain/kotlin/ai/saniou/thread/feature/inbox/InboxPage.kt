@@ -107,6 +107,11 @@ import thread.composeapp.generated.resources.s_e2d53a6d3a
 import thread.composeapp.generated.resources.s_f5d9c71552
 import thread.composeapp.generated.resources.s_f86d4f875a
 import thread.composeapp.generated.resources.s_f8d22fd22e
+import thread.composeapp.generated.resources.s_1a1f6dff78
+import thread.composeapp.generated.resources.s_3f95695328
+import thread.composeapp.generated.resources.s_5319af762d
+import thread.composeapp.generated.resources.s_9f7ab435be
+import thread.composeapp.generated.resources.s_ffc7850925
 
 object InboxPage : Screen {
     @Composable
@@ -352,13 +357,14 @@ private fun InboxEventCard(
     }
 }
 
+@Composable
 private fun InboxKind.label(): String = when (this) {
-    InboxKind.ANNOUNCEMENT -> "公告"
-    InboxKind.MENTION -> "提及"
-    InboxKind.REPLY -> "回复"
-    InboxKind.SUBSCRIPTION_UPDATE -> "订阅"
+    InboxKind.ANNOUNCEMENT -> stringResource(Res.string.s_3f95695328)
+    InboxKind.MENTION -> stringResource(Res.string.s_9f7ab435be)
+    InboxKind.REPLY -> stringResource(Res.string.s_ffc7850925)
+    InboxKind.SUBSCRIPTION_UPDATE -> stringResource(Res.string.s_5319af762d)
     InboxKind.READER_UPDATE -> "Reader"
-    InboxKind.SYSTEM -> "系统"
+    InboxKind.SYSTEM -> stringResource(Res.string.s_1a1f6dff78)
 }
 
 private fun InboxKind.icon(): ImageVector = when (this) {

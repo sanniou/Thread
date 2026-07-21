@@ -1,5 +1,6 @@
 package ai.saniou.coreui.widgets
 
+import org.jetbrains.compose.resources.stringResource
 import ai.saniou.coreui.layout.LocalThreadWindowInfo
 import ai.saniou.coreui.layout.ThreadWindowWidthClass
 import ai.saniou.coreui.interaction.ThreadShortcut
@@ -35,6 +36,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import thread.core_ui.generated.resources.Res
+import thread.core_ui.generated.resources.s_11d0241540
 
 /**
  * Shared shell for secondary workflows. It keeps navigation and commands
@@ -55,7 +58,7 @@ fun ThreadDetailScaffold(
     contentWindowInsets: WindowInsets = ScaffoldDefaults.contentWindowInsets,
     navigationIcon: @Composable () -> Unit = {
         IconButton(onClick = onBack) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(Res.string.s_11d0241540))
         }
     },
     content: @Composable (PaddingValues) -> Unit,

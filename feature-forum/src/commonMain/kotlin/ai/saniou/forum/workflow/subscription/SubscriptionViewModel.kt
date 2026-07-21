@@ -19,6 +19,12 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.getString
+import thread.feature_forum.generated.resources.Res
+import thread.feature_forum.generated.resources.s_6ae7f0c15b
+import thread.feature_forum.generated.resources.s_7a88fa73fc
+import thread.feature_forum.generated.resources.s_90b3eb11f7
+import thread.feature_forum.generated.resources.s_cdab65f5b9
 
 class SubscriptionViewModel(
     private val getSubscriptionFeedUseCase: GetSubscriptionFeedUseCase,
@@ -45,7 +51,7 @@ class SubscriptionViewModel(
                             it.copy(
                                 isLoading = false,
                                 isShowSubscriptionIdDialog = true,
-                                error = IllegalStateException("请先设置订阅ID").toAppError()
+                                error = IllegalStateException(getString(Res.string.s_90b3eb11f7)).toAppError()
                             )
                         }
                     } else {
@@ -98,10 +104,10 @@ class SubscriptionViewModel(
         screenModelScope.launch {
             try {
                 syncLocalSubscriptionsUseCase(id)
-                _effect.send(Effect.OnPushResult(true, "推送成功"))
+                _effect.send(Effect.OnPushResult(true, getString(Res.string.s_6ae7f0c15b)))
                 loadFeeds(id)
             } catch (e: Exception) {
-                _effect.send(Effect.OnPushResult(false, "推送失败: ${e.message}"))
+                _effect.send(Effect.OnPushResult(false, getString(Res.string.s_7a88fa73fc, e.message.orEmpty())))
             }
         }
     }
@@ -126,7 +132,7 @@ class SubscriptionViewModel(
             result.onSuccess {
                 _effect.send(Effect.OnUnsubscribeResult(true, it))
             }.onFailure {
-                _effect.send(Effect.OnUnsubscribeResult(false, "取消订阅失败: ${it.message}"))
+                _effect.send(Effect.OnUnsubscribeResult(false, getString(Res.string.s_cdab65f5b9, it.message.orEmpty())))
             }
         }
     }

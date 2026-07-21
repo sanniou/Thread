@@ -37,6 +37,11 @@ import androidx.paging.compose.itemKey
 import org.jetbrains.compose.resources.stringResource
 import thread.composeapp.generated.resources.Res
 import thread.composeapp.generated.resources.s_8accf8d664
+import thread.composeapp.generated.resources.s_15d15d9013
+import thread.composeapp.generated.resources.s_753ccc8e2e
+import thread.composeapp.generated.resources.s_ad3fd0f4c7
+import thread.composeapp.generated.resources.s_e848ddd482
+import thread.composeapp.generated.resources.s_ffc7850925
 
 @Composable
 fun GlobalSearchResults(
@@ -79,10 +84,16 @@ fun GlobalSearchResultRow(
     onOpen: (GlobalSearchResult) -> Unit,
 ) {
     val presentation = result.type.presentation()
+    val resultContentDescription = stringResource(
+        Res.string.s_15d15d9013,
+        presentation.label,
+        result.title,
+        result.sourceName,
+    )
     Surface(
         onClick = { onOpen(result) },
         modifier = Modifier.fillMaxWidth().semantics {
-            contentDescription = "${presentation.label}，${result.title}，来自 ${result.sourceName}"
+            contentDescription = resultContentDescription
         },
         shape = MaterialTheme.shapes.large,
         color = MaterialTheme.colorScheme.surface,
@@ -137,9 +148,10 @@ fun GlobalSearchResultRow(
 
 data class SearchTypePresentation(val label: String, val icon: ImageVector)
 
+@Composable
 fun GlobalSearchType.presentation(): SearchTypePresentation = when (this) {
-    GlobalSearchType.TOPIC -> SearchTypePresentation("主题", Icons.Default.Forum)
-    GlobalSearchType.COMMENT -> SearchTypePresentation("回复", Icons.Default.QuestionAnswer)
-    GlobalSearchType.ARTICLE -> SearchTypePresentation("文章", Icons.AutoMirrored.Filled.Article)
-    GlobalSearchType.SOCIAL -> SearchTypePresentation("动态", Icons.Default.Public)
+    GlobalSearchType.TOPIC -> SearchTypePresentation(stringResource(Res.string.s_e848ddd482), Icons.Default.Forum)
+    GlobalSearchType.COMMENT -> SearchTypePresentation(stringResource(Res.string.s_ffc7850925), Icons.Default.QuestionAnswer)
+    GlobalSearchType.ARTICLE -> SearchTypePresentation(stringResource(Res.string.s_ad3fd0f4c7), Icons.AutoMirrored.Filled.Article)
+    GlobalSearchType.SOCIAL -> SearchTypePresentation(stringResource(Res.string.s_753ccc8e2e), Icons.Default.Public)
 }

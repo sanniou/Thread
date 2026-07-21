@@ -63,6 +63,7 @@ import thread.core_ui.generated.resources.s_6c14bd7f6f
 import thread.core_ui.generated.resources.s_9b0c6c7858
 import thread.core_ui.generated.resources.s_a69e51e503
 import thread.core_ui.generated.resources.s_d7f48a059c
+import thread.core_ui.generated.resources.s_73be332268
 
 /**
  * 一个功能丰富的可缩放图片组件，提供缩放、平移、旋转和图片信息。
@@ -222,11 +223,14 @@ private fun ZoomImageTool(
             onDismissRequest = { showInfoDialog = false },
             title = { Text(stringResource(Res.string.s_324046a8e2)) },
             text = {
-                val info = """
-                    URL: $uri
-                    尺寸: ${zoomableState.contentSize.width} x ${zoomableState.contentSize.height}
-                    原始尺寸: ${zoomableState.contentOriginSize.width} x ${zoomableState.contentOriginSize.height}
-                """.trimIndent()
+                val info = stringResource(
+                    Res.string.s_73be332268,
+                    uri.orEmpty(),
+                    zoomableState.contentSize.width,
+                    zoomableState.contentSize.height,
+                    zoomableState.contentOriginSize.width,
+                    zoomableState.contentOriginSize.height,
+                )
                 Text(info)
             },
             confirmButton = {

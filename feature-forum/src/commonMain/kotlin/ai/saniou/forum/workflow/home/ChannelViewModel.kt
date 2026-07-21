@@ -36,6 +36,12 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.getString
+import thread.feature_forum.generated.resources.Res
+import thread.feature_forum.generated.resources.s_249b0d1cc6
+import thread.feature_forum.generated.resources.s_5fafcc2093
+import thread.feature_forum.generated.resources.s_980abb36c0
+import thread.feature_forum.generated.resources.s_d07cee786a
 
 class ChannelViewModel(
     private val getChannelsUseCase: GetChannelsUseCase,
@@ -216,12 +222,12 @@ class ChannelViewModel(
             }.collect { (forums, favorites, recent) ->
                 val favoriteGroup = ChannelCategoryUiState(
                     id = "-2", // Special ID for favorites
-                    name = "收藏",
+                    name = getString(Res.string.s_d07cee786a),
                     channels = favorites
                 )
                 val recentGroup = ChannelCategoryUiState(
                     id = "-3",
-                    name = "最近访问",
+                    name = getString(Res.string.s_249b0d1cc6),
                     channels = recent,
                 )
 
@@ -330,7 +336,7 @@ class ChannelViewModel(
             val isCurrentlyFavorite = state.value.favoriteChannelIds.contains(forum.id)
             toggleFavoriteUseCase(state.value.currentSourceId, forum)
             val message =
-                if (isCurrentlyFavorite) "已取消收藏 ${forum.name}" else "已收藏 ${forum.name}"
+                if (isCurrentlyFavorite) getString(Res.string.s_5fafcc2093, forum.name) else getString(Res.string.s_980abb36c0, forum.name)
             _state.update { it.copy(toastMessage = message) }
         }
     }

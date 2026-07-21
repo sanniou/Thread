@@ -27,6 +27,14 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.getString
+import thread.feature_feed.generated.resources.Res
+import thread.feature_feed.generated.resources.s_4d8b4193a3
+import thread.feature_feed.generated.resources.s_52e6d8f7c0
+import thread.feature_feed.generated.resources.s_6414520846
+import thread.feature_feed.generated.resources.s_9fbd2eca51
+import thread.feature_feed.generated.resources.s_b93442c95f
+import thread.feature_feed.generated.resources.s_f15797df4e
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class FeedViewModel(
@@ -216,9 +224,9 @@ class FeedViewModel(
                 report.refreshedReaderSourceIds.size +
                 report.refreshedSocialSourceIds.size
             val message = when {
-                report.isSuccess -> "已刷新 $successCount 个来源"
-                report.hasAnySuccess -> "已刷新 $successCount 个来源，$failureCount 个来源失败"
-                else -> "刷新失败：$failureCount 个来源不可用"
+                report.isSuccess -> getString(Res.string.s_52e6d8f7c0, successCount)
+                report.hasAnySuccess -> getString(Res.string.s_b93442c95f, successCount, failureCount)
+                else -> getString(Res.string.s_6414520846, failureCount)
             }
             _state.update { it.copy(isRefreshing = false, message = message) }
             _effect.emit(FeedContract.Effect.RefreshPaging)
@@ -234,7 +242,7 @@ class FeedViewModel(
             _state.update {
                 it.copy(
                     isRefreshing = false,
-                    message = if (report.isSuccess) "已载入更早动态" else "更早动态载入失败",
+                    message = if (report.isSuccess) getString(Res.string.s_4d8b4193a3) else getString(Res.string.s_9fbd2eca51),
                 )
             }
             _effect.emit(FeedContract.Effect.RefreshPaging)
@@ -245,7 +253,7 @@ class FeedViewModel(
         screenModelScope.launch {
             val result = interactWithSocialPost(event.post, event.interaction, event.enabled)
             _state.update {
-                it.copy(message = result.exceptionOrNull()?.message ?: "动态已更新")
+                it.copy(message = result.exceptionOrNull()?.message ?: getString(Res.string.s_f15797df4e))
             }
             if (result.isSuccess) _effect.emit(FeedContract.Effect.RefreshPaging)
         }

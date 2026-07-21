@@ -32,6 +32,9 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.getString
+import thread.feature_forum.generated.resources.Res
+import thread.feature_forum.generated.resources.s_43b4a10a57
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class TopicViewModel(
@@ -73,7 +76,7 @@ class TopicViewModel(
         getChannelDetailUseCase(sourceId, channelId)
         .map { channel ->
             channel?.let { UiStateWrapper.Success(it) }
-                ?: UiStateWrapper.Error(AppError(message = "未找到该板块"))
+                ?: UiStateWrapper.Error(AppError(message = getString(Res.string.s_43b4a10a57)))
         }
         .onStart { emit(UiStateWrapper.Loading) }
         .catch { emit(UiStateWrapper.Error(it.toAppError())) }

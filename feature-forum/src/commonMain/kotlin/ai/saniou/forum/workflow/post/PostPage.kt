@@ -97,6 +97,8 @@ import org.kodein.di.compose.localDI
 import ai.saniou.thread.domain.source.SourceCatalog
 import kotlinx.coroutines.launch
 import thread.feature_forum.generated.resources.Res
+import thread.feature_forum.generated.resources.s_61bd8c129c
+import thread.feature_forum.generated.resources.s_50783db68a
 import thread.feature_forum.generated.resources.*
 import thread.feature_forum.generated.resources.post_page_add_image
 import thread.feature_forum.generated.resources.post_page_back
@@ -630,7 +632,14 @@ data class PostPage(
     @Composable
     private fun EmoticonPicker(onEmoticonSelected: (String) -> Unit) {
         var selectedTabIndex by remember { mutableStateOf(0) }
-        val titles = EmoticonData.groups.keys.toList()
+        val groupKeys = EmoticonData.groups.keys.toList()
+        val titles = groupKeys.map { key ->
+            when (key) {
+                "common" -> stringResource(Res.string.s_50783db68a)
+                "kaomoji" -> stringResource(Res.string.s_61bd8c129c)
+                else -> key
+            }
+        }
 
         Column(
             modifier = Modifier

@@ -26,6 +26,7 @@ import thread.core_ui.generated.resources.Res
 import thread.core_ui.generated.resources.core_ui_no_internet_retry
 import thread.core_ui.generated.resources.s_8657c1c431
 import thread.core_ui.generated.resources.s_ef7906fa7f
+import thread.core_ui.generated.resources.s_e89c04731b
 
 /** Shared non-blocking state for the tail of every paged list. */
 @Composable
@@ -33,7 +34,7 @@ fun <T : Any> PagingAppendState(
     items: LazyPagingItems<T>,
     modifier: Modifier = Modifier,
     showEnd: Boolean = true,
-    endLabel: String = "已加载全部内容",
+    endLabel: String = stringResource(Res.string.s_e89c04731b),
     onRetry: () -> Unit = { items.retry() },
 ) {
     when (val append = items.loadState.append) {
@@ -56,7 +57,7 @@ fun <T : Any> PagingAppendState(
             val error = append.error.toAppError(onRetry)
             ThreadStatusBanner(
                 title = stringResource(Res.string.s_8657c1c431),
-                message = error.message,
+                message = error.localizedMessage(),
                 tone = ThreadStatusTone.Warning,
                 modifier = modifier.padding(vertical = 8.dp),
                 actions = { SaniouTextButton(onClick = onRetry, text = stringResource(Res.string.core_ui_no_internet_retry)) },

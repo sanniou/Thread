@@ -26,6 +26,14 @@ import java.awt.image.BufferedImage
 import java.io.File
 import java.nio.charset.StandardCharsets
 import kotlin.coroutines.resume
+import org.jetbrains.compose.resources.getString
+import thread.composeapp.generated.resources.Res
+import thread.composeapp.generated.resources.s_2df6481f4e
+import thread.composeapp.generated.resources.s_49c7737142
+import thread.composeapp.generated.resources.s_86773005b9
+import thread.composeapp.generated.resources.s_86dab44bc6
+import thread.composeapp.generated.resources.s_c8feb7b4cf
+import thread.composeapp.generated.resources.s_ffcf0a1eb0
 
 class DesktopShareService : ShareService {
     override fun shareText(text: String, title: String?): Boolean {
@@ -42,7 +50,7 @@ class DesktopUserDataFileService : UserDataFileService {
     override suspend fun exportText(suggestedFileName: String, text: String): Result<String> =
         runCatching {
             val file = chooseFile(save = true, suggestedName = suggestedFileName)
-                ?: error("已取消导出")
+                ?: error(getString(Res.string.s_c8feb7b4cf))
             withContext(Dispatchers.IO) {
                 file.parentFile?.mkdirs()
                 file.writeText(text, StandardCharsets.UTF_8)
@@ -53,10 +61,10 @@ class DesktopUserDataFileService : UserDataFileService {
     override suspend fun importText(allowedExtensions: Set<String>): Result<String> =
         runCatching {
             val file = chooseFile(save = false, allowedExtensions = allowedExtensions)
-                ?: error("已取消导入")
+                ?: error(getString(Res.string.s_49c7737142))
             withContext(Dispatchers.IO) {
-                require(file.isFile) { "文件不存在" }
-                require(file.length() <= MAX_IMPORT_BYTES) { "导入文件不能超过 8 MB" }
+                require(file.isFile) { getString(Res.string.s_ffcf0a1eb0) }
+                require(file.length() <= MAX_IMPORT_BYTES) { getString(Res.string.s_2df6481f4e) }
                 file.readText(StandardCharsets.UTF_8)
             }
         }
@@ -65,12 +73,14 @@ class DesktopUserDataFileService : UserDataFileService {
         save: Boolean,
         suggestedName: String = "thread-user-data.json",
         allowedExtensions: Set<String> = setOf("json", "txt"),
-    ): File? = suspendCancellableCoroutine { continuation ->
+    ): File? {
+        val title = if (save) getString(Res.string.s_86773005b9) else getString(Res.string.s_86dab44bc6)
+        return suspendCancellableCoroutine { continuation ->
         EventQueue.invokeLater {
             if (!continuation.isActive) return@invokeLater
             val dialog = FileDialog(
                 null as Frame?,
-                if (save) "导出用户数据" else "导入用户数据",
+                title,
                 if (save) FileDialog.SAVE else FileDialog.LOAD,
             ).apply {
                 file = suggestedName
@@ -83,6 +93,7 @@ class DesktopUserDataFileService : UserDataFileService {
             val selected = dialog.file?.let { name -> File(dialog.directory, name) }
             dialog.dispose()
             if (continuation.isActive) continuation.resume(selected)
+        }
         }
     }
 

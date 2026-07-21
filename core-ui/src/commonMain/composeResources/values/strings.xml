@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Thread</string>
     <string name="title">Thread</string>
@@ -8,8 +9,6 @@
     <string name="core_ui_server_error">服务器出错</string>
     <string name="core_ui_net_un_connect_and_retry">请检查您的网络设置后重试</string>
     <string name="core_ui_server_busy">服务器繁忙，请稍后再试</string>
-
-    <!-- auto-migrated product strings (composable UI) -->
     <string name="s_04dcc2bb6b">打开命令与全局发现</string>
     <string name="s_0b13297f85">打开命令与全局发现，快捷键 Ctrl 或 Command 加 Shift 加 P</string>
     <string name="s_11f8516f82">缩小</string>
@@ -43,4 +42,45 @@
     <string name="s_ef7906fa7f">正在加载更多</string>
     <string name="s_f7bd72c0c7">快捷键菜单</string>
     <string name="s_ff55f08cf1">跳转工作区或搜索离线缓存</string>
+    <string name="s_d656314c49">网络不可用，请检查连接</string>
+    <string name="s_2a975f5214">请求超时，请稍后重试</string>
+    <string name="s_597b79526b">登录状态已失效，请重新登录</string>
+    <string name="s_14c9516e3f">请求过于频繁，请稍后再试</string>
+    <string name="s_56fe93471e">远端服务暂时不可用</string>
+    <string name="s_891d3990d9">操作失败，请稍后重试</string>
+    <string name="s_e89c04731b">已加载全部内容</string>
+    <string name="s_295018abdd">功能导航</string>
+    <string name="s_21a58979fe">对话框</string>
+    <string name="s_04c5a5e4ed">回复链</string>
+    <string name="s_82fc0aaa43">正文引用</string>
+    <string name="s_fdd41d5c23">转发来源</string>
+    <string name="s_34f34e7de0">同一作者</string>
+    <string name="s_1efeb8fdd8">相同标签</string>
+    <string name="s_48ddea0013">同一内容</string>
+    <string name="s_11d0241540">返回</string>
+    <string name="s_b863c3bd02">Thread 工作区</string>
+    <string name="s_8ea79fb9c8">当前工作区</string>
+    <string name="s_43341a1c24">正在准备内容</string>
+    <string name="s_edb8f0043f">Thread 正在同步来源与本地缓存。</string>
+    <string name="s_6f33e1a69a">当前处于离线状态</string>
+    <string name="s_bac95e1e52">重新连接</string>
+    <string name="s_74d54da6e7">登录状态需要更新</string>
+    <string name="s_a980ac855c">重新尝试</string>
+    <string name="s_2bd11d56d9">来源请求暂时受限</string>
+    <string name="s_b8e0d519a4">稍后重试</string>
+    <string name="s_6513bc3959">来源服务暂不可用</string>
+    <string name="s_5982c44c18">重新加载</string>
+    <string name="s_af2fab7689">内容暂时无法加载</string>
+    <string name="s_e2d53a6d3a">重试</string>
+    <string name="s_8a662fdebf">网络离线</string>
+    <string name="s_e41ce24cf7">请求超时</string>
+    <string name="s_979b6bb444">请求受限</string>
+    <string name="s_ab0a60e784">登录失效</string>
+    <string name="s_bbbd563c35">服务异常</string>
+    <string name="s_d811b10221">快捷键 Ctrl 或 Command + %1$s</string>
+    <string name="s_73be332268">
+                    URL: %1$s
+                    尺寸: %2$s x %3$s
+                    原始尺寸: %4$s x %5$s
+                </string>
 </resources>

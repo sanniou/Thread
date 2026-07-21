@@ -2,11 +2,18 @@ package ai.saniou.reader.workflow.reader
 
 import ai.saniou.thread.domain.model.reader.FeedSource
 import ai.saniou.thread.domain.model.reader.FeedType
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
+import org.jetbrains.compose.resources.getString
+import thread.feature_reader.generated.resources.Res
+import thread.feature_reader.generated.resources.s_c9819795fe
 
 /**
  * 添加订阅源工作流的 UI 状态
@@ -51,6 +58,7 @@ class AddFeedSourceViewModel(
     private val sourceToEdit: FeedSource? = null, // 用于编辑模式
     private val urlAnalyzer: UrlAnalyzer = UrlAnalyzer() // 实际项目中应通过 DI 提供
 ) {
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     private val _uiState: MutableStateFlow<AddFeedSourceUiState>
     val uiState: StateFlow<AddFeedSourceUiState>
@@ -72,7 +80,9 @@ class AddFeedSourceViewModel(
     @OptIn(ExperimentalUuidApi::class)
     fun onUrlEntered(url: String) {
         if (url.isBlank()) {
-            _uiState.value = AddFeedSourceUiState.AnalysisFailed(url, "URL 不能为空")
+            scope.launch {
+                _uiState.value = AddFeedSourceUiState.AnalysisFailed(url, getString(Res.string.s_c9819795fe))
+            }
             return
         }
         _uiState.value = AddFeedSourceUiState.Analyzing(url)

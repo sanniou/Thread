@@ -13,6 +13,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.getString
+import thread.composeapp.generated.resources.Res
+import thread.composeapp.generated.resources.s_2f0f04da11
+import thread.composeapp.generated.resources.s_b164df8a38
 
 class OperationsViewModel(
     observeOperations: ObserveOperationsUseCase,
@@ -67,7 +71,7 @@ class OperationsViewModel(
                     }
                 }
                 .onFailure { error ->
-                    mutableState.update { it.copy(message = error.message ?: "诊断生成失败") }
+                    mutableState.update { it.copy(message = error.message ?: getString(Res.string.s_2f0f04da11)) }
                 }
             mutableState.update { it.copy(isExportingDiagnostic = false) }
         }
@@ -87,7 +91,7 @@ class OperationsViewModel(
         screenModelScope.launch {
             executeProductAction(request).fold(
                 onSuccess = { result -> mutableState.update { it.copy(message = result.message) } },
-                onFailure = { error -> mutableState.update { it.copy(message = error.message ?: "动作执行失败") } },
+                onFailure = { error -> mutableState.update { it.copy(message = error.message ?: getString(Res.string.s_b164df8a38)) } },
             )
         }
     }

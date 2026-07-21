@@ -123,6 +123,22 @@ import thread.composeapp.generated.resources.s_d84129b8be
 import thread.composeapp.generated.resources.s_e99b48a29b
 import thread.composeapp.generated.resources.s_ea4899468c
 import thread.composeapp.generated.resources.s_ed5909bac1
+import thread.composeapp.generated.resources.s_1354374f76
+import thread.composeapp.generated.resources.s_39e846f9a0
+import thread.composeapp.generated.resources.s_4722686b0c
+import thread.composeapp.generated.resources.s_59a9eb4e65
+import thread.composeapp.generated.resources.s_5ffe0b99be
+import thread.composeapp.generated.resources.s_62c7d33506
+import thread.composeapp.generated.resources.s_656c40a504
+import thread.composeapp.generated.resources.s_6c7dcbb73a
+import thread.composeapp.generated.resources.s_778fc8f994
+import thread.composeapp.generated.resources.s_89a2b24d0c
+import thread.composeapp.generated.resources.s_8ecb358ed8
+import thread.composeapp.generated.resources.s_9117f23d72
+import thread.composeapp.generated.resources.s_ad385d382a
+import thread.composeapp.generated.resources.s_bbdc7b495b
+import thread.composeapp.generated.resources.s_d04bd6349b
+import thread.composeapp.generated.resources.s_ed15fd8c6c
 
 object ActivityCenterPage : Screen {
     @Composable
@@ -436,12 +452,13 @@ private fun IdentityStrip(identities: List<ai.saniou.thread.domain.model.activit
 private data class ActivityPresentation(val label: String, val icon: ImageVector, val tone: ActivityTone)
 private enum class ActivityTone { GOOD, INFO, WARNING, ERROR }
 
+@Composable
 private fun ActivityItem.presentation(): ActivityPresentation = when (state) {
-    ActivityState.RUNNING -> ActivityPresentation("执行中", Icons.Default.Sync, ActivityTone.INFO)
-    ActivityState.ACTION_REQUIRED -> ActivityPresentation("需要操作", Icons.Default.Lock, ActivityTone.ERROR)
-    ActivityState.FAILED -> ActivityPresentation("可重试", Icons.Default.CloudOff, ActivityTone.WARNING)
-    ActivityState.READY -> ActivityPresentation("可继续", if (kind == ActivityKind.DRAFT) Icons.Default.EditNote else Icons.Default.NotificationsActive, ActivityTone.INFO)
-    ActivityState.COMPLETED -> ActivityPresentation("已完成", Icons.Default.CheckCircle, ActivityTone.GOOD)
+    ActivityState.RUNNING -> ActivityPresentation(stringResource(Res.string.s_1f425b6bf0), Icons.Default.Sync, ActivityTone.INFO)
+    ActivityState.ACTION_REQUIRED -> ActivityPresentation(stringResource(Res.string.s_8ecb358ed8), Icons.Default.Lock, ActivityTone.ERROR)
+    ActivityState.FAILED -> ActivityPresentation(stringResource(Res.string.s_5ffe0b99be), Icons.Default.CloudOff, ActivityTone.WARNING)
+    ActivityState.READY -> ActivityPresentation(stringResource(Res.string.s_ed15fd8c6c), if (kind == ActivityKind.DRAFT) Icons.Default.EditNote else Icons.Default.NotificationsActive, ActivityTone.INFO)
+    ActivityState.COMPLETED -> ActivityPresentation(stringResource(Res.string.s_e99b48a29b), Icons.Default.CheckCircle, ActivityTone.GOOD)
 }
 
 @Composable
@@ -460,27 +477,30 @@ private fun ActivityPresentation.contentColor(): Color = when (tone) {
     ActivityTone.ERROR -> MaterialTheme.colorScheme.onErrorContainer
 }
 
+@Composable
 private fun ActivityCenterContract.Filter.label(): String = when (this) {
-    ActivityCenterContract.Filter.ATTENTION -> "待处理"
-    ActivityCenterContract.Filter.ALL -> "全部"
-    ActivityCenterContract.Filter.RUNNING -> "执行中"
-    ActivityCenterContract.Filter.DRAFTS -> "草稿"
-    ActivityCenterContract.Filter.HISTORY -> "已完成"
+    ActivityCenterContract.Filter.ATTENTION -> stringResource(Res.string.s_59a9eb4e65)
+    ActivityCenterContract.Filter.ALL -> stringResource(Res.string.s_778fc8f994)
+    ActivityCenterContract.Filter.RUNNING -> stringResource(Res.string.s_1f425b6bf0)
+    ActivityCenterContract.Filter.DRAFTS -> stringResource(Res.string.s_0f436818c0)
+    ActivityCenterContract.Filter.HISTORY -> stringResource(Res.string.s_e99b48a29b)
 }
 
+@Composable
 private fun IdentityValidity.label(): String = when (this) {
-    IdentityValidity.NOT_APPLICABLE -> "无需登录"
-    IdentityValidity.ANONYMOUS -> "匿名"
-    IdentityValidity.VALID -> "有效"
-    IdentityValidity.EXPIRED -> "已过期"
-    IdentityValidity.DISABLED -> "已停用"
+    IdentityValidity.NOT_APPLICABLE -> stringResource(Res.string.s_89a2b24d0c)
+    IdentityValidity.ANONYMOUS -> stringResource(Res.string.s_9117f23d72)
+    IdentityValidity.VALID -> stringResource(Res.string.s_ad385d382a)
+    IdentityValidity.EXPIRED -> stringResource(Res.string.s_1354374f76)
+    IdentityValidity.DISABLED -> stringResource(Res.string.s_6c7dcbb73a)
 }
 
+@Composable
 private fun ProductActionRequest.confirmationText(): String = when (type) {
-    ProductActionType.DISCARD_DRAFT -> "此草稿只保存在当前设备。丢弃后无法恢复。"
-    ProductActionType.RESTORE_FROM_WEBDAV -> "远端数据会与本地来源、订阅、收藏和阅读状态合并。"
-    ProductActionType.IMPORT_USER_DATA -> "导入快照会更新本地来源和用户数据。"
-    ProductActionType.IMPORT_READER_SUBSCRIPTIONS -> "导入会新增或更新同 URL 的 Reader 订阅。"
-    ProductActionType.SET_SOURCE_ENABLED -> "停用来源后，其导航入口和聚合内容将暂时隐藏。"
-    else -> "此动作会修改本地数据，是否继续？"
+    ProductActionType.DISCARD_DRAFT -> stringResource(Res.string.s_bbdc7b495b)
+    ProductActionType.RESTORE_FROM_WEBDAV -> stringResource(Res.string.s_4722686b0c)
+    ProductActionType.IMPORT_USER_DATA -> stringResource(Res.string.s_d04bd6349b)
+    ProductActionType.IMPORT_READER_SUBSCRIPTIONS -> stringResource(Res.string.s_62c7d33506)
+    ProductActionType.SET_SOURCE_ENABLED -> stringResource(Res.string.s_39e846f9a0)
+    else -> stringResource(Res.string.s_656c40a504)
 }

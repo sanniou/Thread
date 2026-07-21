@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="back_button">My awesome app</string>
     <string name="title">Some title</string>
@@ -31,8 +32,6 @@
     <string name="open_original_link">打开原链接</string>
     <string name="bookmark_reply">收藏回复</string>
     <string name="share">分享</string>
-
-    <!-- TopicPage -->
     <string name="topic_page_post">发帖</string>
     <string name="topic_page_menu">菜单</string>
     <string name="topic_page_back">返回</string>
@@ -40,8 +39,6 @@
     <string name="topic_page_expand">展开</string>
     <string name="topic_page_thread_count">%1$s 串</string>
     <string name="topic_page_interval">· %1$ss</string>
-
-    <!-- ForumCategoryPage -->
     <string name="drawer_subscribe">订阅</string>
     <string name="drawer_bookmark">收藏</string>
     <string name="drawer_history">历史</string>
@@ -53,8 +50,6 @@
     <string name="forum_favorite_remove">取消收藏</string>
     <string name="category_expand">展开</string>
     <string name="category_collapse">收起</string>
-
-    <!-- ThreadPage -->
     <string name="thread_no_prefix">No.</string>
     <string name="refresh">刷新</string>
     <string name="subscribe">收藏</string>
@@ -72,7 +67,6 @@
     <string name="back">返回</string>
     <string name="view_more_replies">查看更多回复</string>
     <string name="sub_comments_title">查看更多回复</string>
-
     <string name="post_page_reply">回复</string>
     <string name="post_page_new_post">发帖: %1$s</string>
     <string name="post_page_back">返回</string>
@@ -96,8 +90,6 @@
     <string name="post_page_error_title">发送失败</string>
     <string name="post_page_error_ok">确定</string>
     <string name="post_page_success">发送成功</string>
-
-    <!-- SubscriptionPage -->
     <string name="subscription_title">订阅列表</string>
     <string name="subscription_unknown_error">未知错误</string>
     <string name="subscription_pull_cloud">拉取云端订阅</string>
@@ -120,9 +112,6 @@
     <string name="subscription_empty_no_id">未设置订阅ID</string>
     <string name="subscription_empty_no_id_hint">点击右上角设置按钮设置订阅ID</string>
     <string name="subscription_unsubscribe">取消订阅</string>
-
-
-    <!-- Product UI eyebrows / labels (0.26) -->
     <string name="eyebrow_forum_thread">论坛主题</string>
     <string name="eyebrow_forum_channel">版块</string>
     <string name="eyebrow_forum_trend">趋势</string>
@@ -147,8 +136,6 @@
     <string name="empty_workspace_desc">添加论坛 / Discourse 实例，或从备份导入，即可开始阅读。</string>
     <string name="empty_workspace_add_source">添加来源</string>
     <string name="empty_workspace_import">导入备份</string>
-
-    <!-- auto-migrated product strings (composable UI) -->
     <string name="s_053dd510fc">页码 (1-%1$s)</string>
     <string name="s_097aa90342">社区搜索</string>
     <string name="s_09ceea7644">内置</string>
@@ -246,4 +233,40 @@
     <string name="s_fadf24dbc5">保存</string>
     <string name="s_fcd8a7e687">回复主题 %1$s</string>
     <string name="s_ff666dc5e4">没有找到回复</string>
+    <string name="s_d07cee786a">收藏</string>
+    <string name="s_249b0d1cc6">最近访问</string>
+    <string name="s_0486e254a8">来源已删除</string>
+    <string name="s_d1b88a3484">来源已保存</string>
+    <string name="s_4c7b4d2d92">来源操作失败</string>
+    <string name="s_90b3eb11f7">请先设置订阅ID</string>
+    <string name="s_6ae7f0c15b">推送成功</string>
+    <string name="s_0deb34a438">搜串</string>
+    <string name="s_197e4877f3">搜回复</string>
+    <string name="s_ffc7850925">回复</string>
+    <string name="s_f95134f690">草稿保存失败</string>
+    <string name="s_38eb42e243">草稿已丢弃</string>
+    <string name="s_43b4a10a57">未找到该板块</string>
+    <string name="s_5efbdd9e46">未设置订阅ID</string>
+    <string name="s_beda0ebfaf">当前来源未提供公开链接</string>
+    <string name="s_1ec0da44f8">链接已复制到剪贴板</string>
+    <string name="s_b8d684d1cb">内容已复制到剪贴板</string>
+    <string name="s_2cb63ed15e">无法收藏：数据未加载</string>
+    <string name="s_12a870cbdf">帖子已收藏</string>
+    <string name="s_3395596aa5">回复已收藏</string>
+    <string name="s_3eb8dbcc7f">图片已收藏</string>
+    <string name="s_64f538c2fa">点赞成功</string>
+    <string name="s_b11cc4945e">点赞失败</string>
+    <string name="s_a927c74919">保存图片</string>
+    <string name="s_03e6f0a74a">获取引用内容失败: %1$s</string>
+    <string name="s_0e055beabc">操作失败: %1$s</string>
+    <string name="s_40aae6f9bf">添加账号失败: %1$s</string>
+    <string name="s_50783db68a">常用</string>
+    <string name="s_5fafcc2093">已取消收藏 %1$s</string>
+    <string name="s_61bd8c129c">颜文字</string>
+    <string name="s_7a88fa73fc">推送失败: %1$s</string>
+    <string name="s_980abb36c0">已收藏 %1$s</string>
+    <string name="s_cdab65f5b9">取消订阅失败: %1$s</string>
+    <string name="s_e1064538ca">删除账号失败: %1$s</string>
+    <string name="s_eef9a8d022">获取账号列表失败: %1$s</string>
+    <string name="s_f63e701a8b">Base URL 必须以 http:// 或 https:// 开头</string>
 </resources>

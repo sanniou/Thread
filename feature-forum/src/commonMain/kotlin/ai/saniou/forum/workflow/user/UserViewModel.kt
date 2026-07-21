@@ -18,6 +18,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
+import org.jetbrains.compose.resources.getString
+import thread.feature_forum.generated.resources.Res
+import thread.feature_forum.generated.resources.s_40aae6f9bf
+import thread.feature_forum.generated.resources.s_e1064538ca
+import thread.feature_forum.generated.resources.s_eef9a8d022
 
 class UserViewModel(
     private val getAvailableSourcesUseCase: GetAvailableSourcesUseCase,
@@ -71,7 +76,7 @@ class UserViewModel(
                 _state.update {
                     it.copy(
                         isLoading = false,
-                        error = "获取账号列表失败: ${e.message}"
+                        error = getString(Res.string.s_eef9a8d022, e.message.orEmpty())
                     )
                 }
             }
@@ -84,7 +89,7 @@ class UserViewModel(
                 val sourceId = _state.value.sourceId
                 loginSourceUseCase(sourceId, inputs)
             } catch (e: Exception) {
-                _effect.send(Effect.ShowError("添加账号失败: ${e.message}"))
+                _effect.send(Effect.ShowError(getString(Res.string.s_40aae6f9bf, e.message.orEmpty())))
             }
         }
     }
@@ -94,7 +99,7 @@ class UserViewModel(
             try {
                 accountRepository.deleteAccount(account.id)
             } catch (e: Exception) {
-                _effect.send(Effect.ShowError("删除账号失败: ${e.message}"))
+                _effect.send(Effect.ShowError(getString(Res.string.s_e1064538ca, e.message.orEmpty())))
             }
         }
     }
