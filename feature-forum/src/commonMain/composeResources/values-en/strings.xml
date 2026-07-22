@@ -311,4 +311,8 @@ Tap the button at the bottom right to add one</string>
     <string name="profile_save">Save profile</string>
     <string name="profile_save_success">Profile updated</string>
     <string name="action_cancel">Cancel</string>
+    <string name="channel_search_title">Search in forum</string>
+    <string name="channel_search_placeholder">Search topics and replies in this forum</string>
+    <string name="channel_search_empty_desc">Enter a keyword to search this forum</string>
+    <string name="topic_action_search">Search forum</string>
 </resources>

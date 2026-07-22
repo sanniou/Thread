@@ -1,9 +1,11 @@
 package ai.saniou.thread.data.source.tieba
 
 import ai.saniou.thread.data.source.tieba.model.SearchForumBean
+import ai.saniou.thread.data.source.tieba.model.SearchPostBean
 import ai.saniou.thread.data.source.tieba.model.SearchThreadBean
 import ai.saniou.thread.data.source.tieba.model.SearchUserBean
 import ai.saniou.thread.data.source.tieba.remote.AppHybridTiebaApi
+import ai.saniou.thread.data.source.tieba.remote.MiniTiebaApi
 import ai.saniou.thread.domain.model.forum.Author
 import ai.saniou.thread.domain.model.forum.Channel
 import ai.saniou.thread.domain.model.forum.Comment
@@ -26,6 +28,7 @@ import kotlin.time.Instant
 class TiebaSearchConnector(
     private val source: TiebaSource,
     private val api: AppHybridTiebaApi,
+    private val miniApi: MiniTiebaApi,
 ) : ForumSearchConnector {
     override val sourceId: String = source.id
 
@@ -81,6 +84,28 @@ class TiebaSearchConnector(
             exact?.let(::add)
             addAll(fuzzy.filterNot { it.id == exact?.id })
         }
+    }
+
+    /**
+     * In-forum search via Mini `c/s/searchpost`.
+     * [channelName] is the forum kw (吧名); [channelId] is used to fill Topic.channelId.
+     */
+    override fun searchChannelTopics(
+        channelId: String,
+        channelName: String,
+        query: String,
+    ): Flow<PagingData<Topic>> = pager { page ->
+        val forumKw = channelName.ifBlank { channelId }
+        val response = miniApi.searchPost(
+            keyword = query,
+            forumName = forumKw,
+            page = page,
+            pageSize = PAGE_SIZE,
+            only_thread = 0,
+            sortMode = SORT_RELEVANCE,
+        )
+        response.ensureOk()
+        response.postList.orEmpty().map { it.toTopic(channelId = channelId, channelName = forumKw) }
     }
 
     private fun <T : Any> pager(loadPage: suspend (Int) -> List<T>): Flow<PagingData<T>> = Pager(
@@ -239,5 +264,52 @@ private fun portraitUrl(portrait: String): String =
 private fun parseSearchTime(time: String, modifiedTime: Long): Instant {
     time.toLongOrNull()?.let { return Instant.fromEpochSeconds(it) }
     if (modifiedTime > 0L) return Instant.fromEpochSeconds(modifiedTime)
+    return Instant.fromEpochSeconds(0)
+}
+
+internal fun SearchPostBean.ensureOk() {
+    val code = errorCode?.toIntOrNull() ?: 0
+    if (code != 0) {
+        throw IllegalStateException(errorMsg?.takeIf(String::isNotBlank) ?: "贴吧吧内搜索失败 ($errorCode)")
+    }
+}
+
+internal fun SearchPostBean.ThreadInfoBean.toTopic(
+    channelId: String,
+    channelName: String,
+): Topic {
+    val tid = tid?.takeIf(String::isNotBlank) ?: error("searchPost hit missing tid")
+    val displayName = author?.nameShow?.takeIf(String::isNotBlank)
+        ?: author?.name?.takeIf(String::isNotBlank)
+        ?: "贴吧用户"
+    val body = content?.takeIf(String::isNotBlank) ?: title.orEmpty()
+    return Topic(
+        id = tid,
+        channelId = channelId,
+        channelName = forumName?.takeIf(String::isNotBlank) ?: channelName,
+        title = title?.takeIf(String::isNotBlank),
+        content = body,
+        summary = body.takeIf(String::isNotBlank),
+        author = Author(
+            id = "0",
+            name = displayName,
+            avatar = null,
+            sourceName = TiebaMapper.SOURCE_NAME,
+        ),
+        createdAt = parseSearchPostTime(time),
+        commentCount = 0,
+        sourceId = TiebaMapper.SOURCE_ID,
+        sourceName = TiebaMapper.SOURCE_NAME,
+        sourceUrl = "https://tieba.baidu.com/p/$tid",
+    )
+}
+
+private fun parseSearchPostTime(time: String?): Instant {
+    val raw = time?.trim().orEmpty()
+    raw.toLongOrNull()?.let { secs ->
+        // Mini may return seconds or milliseconds
+        return if (secs > 10_000_000_000L) Instant.fromEpochMilliseconds(secs)
+        else Instant.fromEpochSeconds(secs)
+    }
     return Instant.fromEpochSeconds(0)
 }

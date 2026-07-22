@@ -59,6 +59,9 @@ import org.kodein.di.direct
 import org.kodein.di.instance
 import org.jetbrains.compose.resources.stringResource
 import thread.feature_forum.generated.resources.Res
+import thread.feature_forum.generated.resources.channel_search_empty_desc
+import thread.feature_forum.generated.resources.channel_search_placeholder
+import thread.feature_forum.generated.resources.channel_search_title
 import thread.feature_forum.generated.resources.s_197e4877f3
 import thread.feature_forum.generated.resources.s_0deb34a438
 import thread.feature_forum.generated.resources.eyebrow_discovery
@@ -80,21 +83,42 @@ import thread.feature_forum.generated.resources.search_empty_user_desc
 
 data class SearchPage(
     val sourceId: String,
+    val channelId: String? = null,
+    val channelName: String? = null,
 ) : Screen {
 
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val di = org.kodein.di.compose.localDI()
-        val viewModel: SearchViewModel = rememberScreenModel(tag = sourceId) {
-            di.direct.instance<String, SearchViewModel>(arg = sourceId)
+        val channelScoped = !channelId.isNullOrBlank() || !channelName.isNullOrBlank()
+        val vmTag = if (channelScoped) {
+            "$sourceId|channel|${channelId.orEmpty()}|${channelName.orEmpty()}"
+        } else {
+            sourceId
+        }
+        val viewModel: SearchViewModel = rememberScreenModel(tag = vmTag) {
+            di.direct.instance<SearchViewModelParams, SearchViewModel>(
+                arg = SearchViewModelParams(
+                    sourceId = sourceId,
+                    channelId = channelId,
+                    channelName = channelName,
+                ),
+            )
         }
         val state by viewModel.state.collectAsStateWithLifecycle()
 
         ThreadDetailScaffold(
-            title = stringResource(Res.string.s_097aa90342),
+            title = stringResource(
+                if (channelScoped) Res.string.channel_search_title else Res.string.s_097aa90342,
+            ),
             eyebrow = stringResource(Res.string.eyebrow_discovery),
-            subtitle = stringResource(Res.string.s_a7591bfa06, sourceId),
+            subtitle = if (channelScoped) {
+                channelName?.takeIf { it.isNotBlank() }
+                    ?: channelId.orEmpty()
+            } else {
+                stringResource(Res.string.s_a7591bfa06, sourceId)
+            },
             onBack = navigator::pop,
         ) { paddingValues ->
             Column(
@@ -113,22 +137,27 @@ data class SearchPage(
                             query = state.query,
                             onQueryChange = { viewModel.onEvent(Event.QueryChanged(it)) },
                             onClear = { viewModel.onEvent(Event.ClearQuery) },
-                            placeholder = stringResource(Res.string.s_25d6453d01),
+                            placeholder = stringResource(
+                                if (channelScoped) Res.string.channel_search_placeholder
+                                else Res.string.s_25d6453d01,
+                            ),
                         )
                     },
                     secondary = {
-                        val searchTypeLabels = mapOf(
-                            SearchType.THREAD to stringResource(Res.string.s_0deb34a438),
-                            SearchType.REPLY to stringResource(Res.string.s_197e4877f3),
-                            SearchType.CHANNEL to stringResource(Res.string.search_type_channel),
-                            SearchType.USER to stringResource(Res.string.search_type_user),
-                        )
-                        ThreadFilterBar(
-                            items = SearchType.entries,
-                            selected = state.searchType,
-                            label = { searchTypeLabels[it] ?: it.name },
-                            onSelect = { viewModel.onEvent(Event.TypeChanged(it)) },
-                        )
+                        if (!channelScoped) {
+                            val searchTypeLabels = mapOf(
+                                SearchType.THREAD to stringResource(Res.string.s_0deb34a438),
+                                SearchType.REPLY to stringResource(Res.string.s_197e4877f3),
+                                SearchType.CHANNEL to stringResource(Res.string.search_type_channel),
+                                SearchType.USER to stringResource(Res.string.search_type_user),
+                            )
+                            ThreadFilterBar(
+                                items = SearchType.entries,
+                                selected = state.searchType,
+                                label = { searchTypeLabels[it] ?: it.name },
+                                onSelect = { viewModel.onEvent(Event.TypeChanged(it)) },
+                            )
+                        }
                     },
                 )
                 Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
@@ -136,7 +165,10 @@ data class SearchPage(
                         ModernEmptyState(
                             icon = Icons.Default.Search,
                             title = stringResource(Res.string.s_8da9c24c50),
-                            description = stringResource(Res.string.s_0e346065ab),
+                            description = stringResource(
+                                if (channelScoped) Res.string.channel_search_empty_desc
+                                else Res.string.s_0e346065ab,
+                            ),
                             modifier = Modifier.align(Alignment.Center),
                         )
                     } else {

@@ -309,4 +309,8 @@
     <string name="profile_save">保存资料</string>
     <string name="profile_save_success">资料已更新</string>
     <string name="action_cancel">取消</string>
+    <string name="channel_search_title">吧内搜索</string>
+    <string name="channel_search_placeholder">搜索本吧主题与回复</string>
+    <string name="channel_search_empty_desc">输入关键词，在当前吧内搜索主题与回复</string>
+    <string name="topic_action_search">搜索本吧</string>
 </resources>

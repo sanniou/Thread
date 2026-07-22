@@ -1,7 +1,7 @@
 # TiebaLite → Thread 功能覆盖矩阵
 
 对照基准：`TiebaLite-4.0-dev`（页面 + `ITiebaApi` ~63 逻辑接口）  
-Thread 基线：`0.46.0`（P0–P3a + 看帖体验 + 推荐不感兴趣 + 本地屏蔽 + 资料编辑；云历史/设置 parity 后续）
+Thread 基线：`0.47.0`（P0–P3a + 看帖体验 + 推荐不感兴趣 + 本地屏蔽 + 资料编辑 + 吧内搜帖；设置 parity 后续）
 
 ## 0. 覆盖原则
 
@@ -30,7 +30,7 @@ Thread 基线：`0.46.0`（P0–P3a + 看帖体验 + 推荐不感兴趣 + 本地
 | 搜索帖/回复 | hybrid `searchThread` | `TiebaSearchConnector` + DI | done (0.39) | — |
 | 搜索吧 | hybrid `searchForum` | `TiebaSearchConnector.searchChannels` + Search CHANNEL tab | done (0.41) | — |
 | 搜索用户 | hybrid `searchUser` | `TiebaSearchConnector.searchUsers` + Search USER tab | done (0.41) | — |
-| 吧内搜帖 | `searchPost` | Mini API only | missing | P2 |
+| 吧内搜帖 | `searchPost` | Mini `searchChannelTopics` + Channel SearchPage | done (0.47) | — |
 | 热门 / 推荐 / 关注流 | hotThread / personalized / userLike | `TiebaTrendSource` tabs | done | — |
 | 话题详情 | topicDetail / topicList | Trend 部分 | partial | P2 |
 | 用户主页帖/回 | `userPost` | `TiebaUserContentConnector` | done | — |
@@ -46,7 +46,7 @@ Thread 基线：`0.46.0`（P0–P3a + 看帖体验 + 推荐不感兴趣 + 本地
 | 吧详情/成员/等级/吧务 | getForumDetail / Member / Level / Bawu | protobuf API only | deferred 吧务 | 暂不实现 |
 | 资料编辑 | profileModify | nick/intro/sex self-edit | done (0.46) | — |
 | 图片浏览器 | picPage / PhotoView | ImagePreview + `FetchTopicImagePageUseCase` / picPage 分页 | done (0.43) | — |
-| 浏览历史 | History 本地 | Thread History 本地 | partial（无贴吧云历史） | P3 |
+| 浏览历史 | History 本地 | Thread History 本地（TiebaLite 亦本地 LitePal，无云历史 API） | done local (parity) | — |
 | 屏蔽词/黑名单 | Block settings | local ContentBlock 关键词+用户 + Settings + Trend filter | done (0.45 local) | — |
 | 设置/主题/习惯 | Settings* | Thread 通用 Appearance/Settings | n/a 映射 | P3 |
 | WebView 杂项 | WebViewPage | Desktop 外链/系统浏览器 | n/a | 扩展保留 |
@@ -92,7 +92,8 @@ Thread 基线：`0.46.0`（P0–P3a + 看帖体验 + 推荐不感兴趣 + 本地
 | **P3b-a** | **0.44** | ✅ 推荐流不感兴趣 submitDislike |
 | **P3b-b** | **0.45** | ✅ 本地屏蔽关键词/用户 |
 | **P3b-c** | **0.46** | ✅ 资料编辑 profileModify |
-| **P3b-d** | 0.47+ | 历史云同步、设置 parity（**删帖/吧务 deferred**） |
+| **P3b-d** | **0.47** | ✅ 吧内搜帖 searchPost（云历史核对为本地 parity） |
+| **P3b-e** | 0.48+ | 设置 parity、头像 multipart（**删帖/吧务 deferred**） |
 
 ## 6. 明确不做 / 暂缓（非本阶段 100% 定义内）
 

@@ -16,6 +16,13 @@ interface ForumSearchRepository {
     fun searchChannels(sourceId: String, query: String): Flow<PagingData<Channel>>
 
     fun searchUsers(sourceId: String, query: String): Flow<PagingData<Author>>
+
+    fun searchChannelTopics(
+        sourceId: String,
+        channelId: String,
+        channelName: String,
+        query: String,
+    ): Flow<PagingData<Topic>>
 }
 
 /** Source-aware author-content facade consumed by feature modules. */

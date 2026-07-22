@@ -191,7 +191,7 @@ val dataModule = DI.Module("dataModule") {
     bindSingleton { NmbPostingConnector(instance()) }
     bindSingleton { NmbLoginConnector(instance()) }
     bindSingleton { TiebaUserContentConnector(instance(), instance()) }
-    bindSingleton { TiebaSearchConnector(instance(), instance()) }
+    bindSingleton { TiebaSearchConnector(instance(), instance(), instance()) }
     bindSingleton { TiebaPostingConnector(instance(), instance(), instance(), instance(), instance()) }
     bindSingleton { TiebaLoginConnector(instance(), instance(), instance()) }
     bindSingleton { TiebaReactionConnector(instance(), instance(), instance(), instance(), instance()) }

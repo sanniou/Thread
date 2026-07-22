@@ -23,6 +23,17 @@ interface ForumSearchConnector : SourceConnector {
     fun searchComments(query: String): Flow<PagingData<Comment>>
     fun searchChannels(query: String): Flow<PagingData<Channel>> = flowOf(PagingData.empty())
     fun searchUsers(query: String): Flow<PagingData<Author>> = flowOf(PagingData.empty())
+
+    /**
+     * Search topics **within a channel/forum** (e.g. Tieba Mini searchPost).
+     * [channelName] is the forum kw used by Tieba; [channelId] is kept for UI/context.
+     * Default: empty (source has no in-channel search).
+     */
+    fun searchChannelTopics(
+        channelId: String,
+        channelName: String,
+        query: String,
+    ): Flow<PagingData<Topic>> = flowOf(PagingData.empty())
 }
 
 interface UserContentConnector : SourceConnector {

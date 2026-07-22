@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.47.0 - 2026-07-22
+
+### Added
+- **吧内搜帖 `searchPost`**：`ForumSearchConnector.searchChannelTopics` + Mini `c/s/searchpost`；频道页入口（顶栏/快捷栏）进入 scoped SearchPage。
+- SearchPage 支持 `channelId`/`channelName` 限定本吧；隐藏全局类型 FilterBar，结果走主题列表。
+
+### Notes
+- 审计确认 TiebaLite History 亦为本地 LitePal，无独立贴吧云历史 API；本刀优先补 matrix 唯一 `missing` 主路径。
+- Desktop compile + jvmTest 门禁通过；设置 parity / 头像 multipart 仍后续；删帖/吧务 deferred。
+
+
 ## 0.46.0 - 2026-07-22
 
 资料编辑：Tieba `profileModify` 全链路（昵称 / 简介 / 性别）；本人 UserDetail 编辑入口。

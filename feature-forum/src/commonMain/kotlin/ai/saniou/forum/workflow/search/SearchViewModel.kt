@@ -17,13 +17,27 @@ import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+data class SearchViewModelParams(
+    val sourceId: String,
+    val channelId: String? = null,
+    val channelName: String? = null,
+)
+
 @OptIn(FlowPreview::class)
 class SearchViewModel(
     private val sourceId: String,
     private val repository: ForumSearchRepository,
+    private val channelId: String? = null,
+    private val channelName: String? = null,
 ) : ScreenModel {
 
-    private val _state = MutableStateFlow(State())
+    /** When set, search is scoped to a forum via [ForumSearchRepository.searchChannelTopics]. */
+    val isChannelScoped: Boolean =
+        !channelId.isNullOrBlank() || !channelName.isNullOrBlank()
+
+    private val _state = MutableStateFlow(
+        State(searchType = if (isChannelScoped) SearchType.THREAD else SearchType.THREAD),
+    )
     val state = _state.asStateFlow()
 
     private val searchTrigger = MutableStateFlow("")
@@ -47,6 +61,7 @@ class SearchViewModel(
             }
 
             is Event.TypeChanged -> {
+                if (isChannelScoped) return
                 _state.update { it.copy(searchType = event.type) }
                 if (_state.value.query.isNotBlank()) {
                     performSearch(_state.value.query)
@@ -70,6 +85,16 @@ class SearchViewModel(
 
     private fun performSearch(query: String) {
         if (query.isBlank()) return
+        if (isChannelScoped) {
+            val pager = repository.searchChannelTopics(
+                sourceId = sourceId,
+                channelId = channelId.orEmpty(),
+                channelName = channelName.orEmpty().ifBlank { channelId.orEmpty() },
+                query = query,
+            ).cachedIn(screenModelScope)
+            _state.update { it.copy(searchType = SearchType.THREAD, threadPagingData = pager) }
+            return
+        }
         when (_state.value.searchType) {
             SearchType.THREAD -> {
                 val pager = repository.searchTopics(sourceId, query).cachedIn(screenModelScope)

@@ -25,6 +25,15 @@ class ForumSearchRepositoryImpl(
 
     override fun searchUsers(sourceId: String, query: String): Flow<PagingData<Author>> =
         registry.search(sourceId)?.searchUsers(query) ?: flowOf(PagingData.empty())
+
+    override fun searchChannelTopics(
+        sourceId: String,
+        channelId: String,
+        channelName: String,
+        query: String,
+    ): Flow<PagingData<Topic>> =
+        registry.search(sourceId)?.searchChannelTopics(channelId, channelName, query)
+            ?: flowOf(PagingData.empty())
 }
 
 class UserContentRepositoryImpl(

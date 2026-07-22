@@ -8,6 +8,7 @@ import ai.saniou.forum.workflow.post.PostViewModel
 import ai.saniou.forum.workflow.post.PostViewModelParams
 import ai.saniou.forum.workflow.reference.ReferenceViewModel
 import ai.saniou.forum.workflow.search.SearchViewModel
+import ai.saniou.forum.workflow.search.SearchViewModelParams
 import ai.saniou.forum.workflow.subscription.SubscriptionViewModel
 import ai.saniou.forum.workflow.topicdetail.TopicDetailViewModel
 import ai.saniou.forum.workflow.topicdetail.TopicDetailViewModelParams
@@ -128,7 +129,9 @@ val forumFeatureModule = DI.Module("forumFeatureModule") {
         )
     }
     // 搜索相关
-    bindFactory<String, SearchViewModel> { sourceId -> SearchViewModel(sourceId, instance()) }
+    bindFactory<SearchViewModelParams, SearchViewModel> { params ->
+        SearchViewModel(params.sourceId, instance(), params.channelId, params.channelName)
+    }
     bindFactory<Pair<String, String>, UserDetailViewModel> { params ->
         UserDetailViewModel(
             sourceId = params.first,

@@ -1,5 +1,6 @@
 package ai.saniou.thread.data.source.tieba
 
+import ai.saniou.thread.data.source.tieba.model.SearchPostBean
 import ai.saniou.thread.data.source.tieba.model.SearchThreadBean
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -70,5 +71,32 @@ class TiebaSearchConnectorTest {
         val referer = hybridSearchReferer("kotlin multiplatform")
         assertTrue(referer.contains("hybrid"))
         assertTrue(referer.contains("%"))
+    }
+
+    @Test
+    fun mapsSearchPostHitToTopicInChannel() {
+        val hit = SearchPostBean.ThreadInfoBean(
+            tid = "300",
+            pid = "301",
+            title = "吧内标题",
+            content = "吧内正文",
+            time = "1700000100",
+            forumName = "测试吧",
+            author = SearchPostBean.AuthorBean(name = "u", nameShow = "昵称"),
+        )
+        val topic = hit.toTopic(channelId = "55", channelName = "测试吧")
+        assertEquals("300", topic.id)
+        assertEquals("55", topic.channelId)
+        assertEquals("测试吧", topic.channelName)
+        assertEquals("吧内正文", topic.content)
+        assertEquals("昵称", topic.author.name)
+        assertEquals(TiebaMapper.SOURCE_ID, topic.sourceId)
+    }
+
+    @Test
+    fun searchPostEnsureOkRejectsNonZero() {
+        val bean = SearchPostBean(errorCode = "1", errorMsg = "失败")
+        val error = assertFailsWith<IllegalStateException> { bean.ensureOk() }
+        assertEquals("失败", error.message)
     }
 }

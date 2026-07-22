@@ -8,6 +8,7 @@ import ai.saniou.coreui.widgets.ContextHero
 import ai.saniou.coreui.widgets.ThreadDetailScaffold
 import ai.saniou.forum.ui.components.ForumRichText
 import ai.saniou.forum.workflow.home.ListThreadPage
+import ai.saniou.forum.workflow.search.SearchPage
 import ai.saniou.forum.workflow.image.ImagePreviewPage
 import ai.saniou.forum.workflow.image.ImagePreviewViewModelParams
 import ai.saniou.forum.workflow.post.PostPage
@@ -31,6 +32,7 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Info
@@ -245,6 +247,24 @@ data class TopicPage(
                                 )
                             }
                         }
+                        if (state.capabilities.supportsSearch) {
+                            IconButton(
+                                onClick = {
+                                    navigator.push(
+                                        SearchPage(
+                                            sourceId = actualSourceId,
+                                            channelId = forumId,
+                                            channelName = state.channelName,
+                                        )
+                                    )
+                                }
+                            ) {
+                                Icon(
+                                    Icons.Default.Search,
+                                    contentDescription = stringResource(Res.string.topic_action_search),
+                                )
+                            }
+                        }
                         IconButton(onClick = {
                             navigator.push(UserPage())
                         }) {
@@ -305,6 +325,23 @@ data class TopicPage(
                                         if (!state.isLoadingRules) {
                                             viewModel.onEvent(TopicContract.Event.LoadForumRules)
                                         }
+                                    },
+                                )
+                            )
+                        }
+                        if (state.capabilities.supportsSearch) {
+                            add(
+                                ai.saniou.coreui.widgets.ActionItem(
+                                    label = stringResource(Res.string.topic_action_search),
+                                    icon = Icons.Default.Search,
+                                    onClick = {
+                                        navigator.push(
+                                            SearchPage(
+                                                sourceId = actualSourceId,
+                                                channelId = forumId,
+                                                channelName = state.channelName,
+                                            )
+                                        )
                                     },
                                 )
                             )
