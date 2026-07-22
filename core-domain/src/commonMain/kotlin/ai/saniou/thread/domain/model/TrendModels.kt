@@ -20,6 +20,8 @@ data class TrendTab(
     val id: String, // Unique ID for this tab within its source
     val name: String, // Display name, e.g., "热议"
     val supportsHistory: Boolean = false, // Does this tab support date picking?
+    /** Feed-style "not interested" (e.g. Tieba recommend submitDislike). */
+    val supportsNotInterested: Boolean = false,
     val payload: Map<String, String> = emptyMap(), // For source-specific parameters
 )
 

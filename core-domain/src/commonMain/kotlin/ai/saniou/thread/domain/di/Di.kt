@@ -26,6 +26,7 @@ import ai.saniou.thread.domain.usecase.post.GetReferenceUseCase
 import ai.saniou.thread.domain.usecase.post.ToggleFavoriteUseCase
 import ai.saniou.thread.domain.usecase.post.UpvoteTopicUseCase
 import ai.saniou.thread.domain.usecase.post.DownvoteTopicUseCase
+import ai.saniou.thread.domain.usecase.post.SubmitNotInterestedUseCase
 import ai.saniou.thread.domain.usecase.user.FollowUserUseCase
 import ai.saniou.thread.domain.usecase.user.GetUserRelationProfileUseCase
 import ai.saniou.thread.domain.usecase.user.UnfollowUserUseCase
@@ -172,6 +173,7 @@ val domainModule = DI.Module("domainModule") {
     bindProvider { ToggleFavoriteUseCase(instance()) }
     bindProvider { UpvoteTopicUseCase(instance()) }
     bindProvider { DownvoteTopicUseCase(instance()) }
+    bindProvider { SubmitNotInterestedUseCase(instance()) }
 
     // User relation
     bindProvider { GetUserRelationProfileUseCase(instance()) }

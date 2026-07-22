@@ -21,37 +21,23 @@ interface TrendContract {
         val selectedTab: TrendTab? = null,
         val trendParams: TrendParams = TrendParams(),
         val availableSources: List<TrendSource> = emptyList(),
-        val availableTabs: List<TrendTab> = emptyList()
+        val availableTabs: List<TrendTab> = emptyList(),
+        /** Topic IDs dismissed via「不感兴趣」within this session (client-side filter). */
+        val dismissedTopicIds: Set<String> = emptySet(),
+        val notInterestedInFlight: Set<String> = emptySet(),
     )
 
     /**
      * UI 事件
      */
     sealed interface Event {
-        /**
-         * 刷新数据
-         */
         object Refresh : Event
-
-        /**
-         * 点击趋势条目
-         */
         data class OnTrendItemClick(val item: TrendItem) : Event
-
-        /**
-         * 选择数据源
-         */
         data class SelectSource(val sourceId: String) : Event
-
-        /**
-         * 选择 Tab
-         */
         data class SelectTab(val tabId: String) : Event
-
-        /**
-         * 选择日期 (用于历史回溯)
-         */
         data class SelectDate(val dayOffset: Int) : Event
+        /** 推荐流「不感兴趣」 */
+        data class NotInterested(val item: TrendItem) : Event
     }
 
     /**

@@ -5,8 +5,10 @@ import ai.saniou.forum.workflow.trend.TrendContract.Event
 import ai.saniou.forum.workflow.trend.TrendContract.State
 import ai.saniou.thread.domain.model.TrendItem
 import ai.saniou.thread.domain.repository.TrendRepository
+import ai.saniou.thread.domain.usecase.post.SubmitNotInterestedUseCase
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
+import androidx.paging.filter
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -14,6 +16,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapLatest
@@ -25,7 +28,8 @@ import kotlin.time.Clock
 
 class TrendViewModel(
     private val initialSourceId: String,
-    private val trendRepository: TrendRepository
+    private val trendRepository: TrendRepository,
+    private val submitNotInterestedUseCase: SubmitNotInterestedUseCase,
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(State())
@@ -51,7 +55,12 @@ class TrendViewModel(
             } else {
                 trendRepository.getTrendPagingData(source.id, tab, params)
             }
-        }.cachedIn(screenModelScope)
+        }
+        .combine(state.map { it.dismissedTopicIds }.distinctUntilChanged()) { paging, dismissed ->
+            if (dismissed.isEmpty()) paging
+            else paging.filter { it.topicId !in dismissed }
+        }
+        .cachedIn(screenModelScope)
 
     private fun loadAvailableSources() {
         val sources = trendRepository.getAvailableTrendSources()
@@ -59,7 +68,8 @@ class TrendViewModel(
     }
 
     private fun selectSource(sourceId: String) {
-        val source = trendRepository.getTrendSource(sourceId) ?: trendRepository.getAvailableTrendSources().firstOrNull()
+        val source = trendRepository.getTrendSource(sourceId)
+            ?: trendRepository.getAvailableTrendSources().firstOrNull()
         if (source != null) {
             val tabs = source.getTrendTabs()
             _state.update {
@@ -67,7 +77,9 @@ class TrendViewModel(
                     selectedSource = source,
                     availableTabs = tabs,
                     selectedTab = tabs.firstOrNull(),
-                    trendParams = it.trendParams.copy(dayOffset = 0, refreshId = 0) // Reset date and refresh state on source switch
+                    trendParams = it.trendParams.copy(dayOffset = 0, refreshId = 0),
+                    dismissedTopicIds = emptySet(),
+                    notInterestedInFlight = emptySet(),
                 )
             }
         }
@@ -75,18 +87,17 @@ class TrendViewModel(
 
     fun onEvent(event: Event) {
         when (event) {
-            is Event.SelectSource -> {
-                selectSource(event.sourceId)
-            }
+            is Event.SelectSource -> selectSource(event.sourceId)
 
             is Event.SelectTab -> {
                 val tab = _state.value.availableTabs.find { it.id == event.tabId }
                 if (tab != null) {
-                    // Reset refreshId when switching tabs to use cache by default
                     _state.update {
                         it.copy(
                             selectedTab = tab,
-                            trendParams = it.trendParams.copy(refreshId = 0)
+                            trendParams = it.trendParams.copy(refreshId = 0),
+                            dismissedTopicIds = emptySet(),
+                            notInterestedInFlight = emptySet(),
                         )
                     }
                 }
@@ -94,8 +105,12 @@ class TrendViewModel(
 
             is Event.SelectDate -> {
                 _state.update {
-                    // Reset refreshId when changing date to use cache by default
-                    it.copy(trendParams = it.trendParams.copy(dayOffset = event.dayOffset, refreshId = 0))
+                    it.copy(
+                        trendParams = it.trendParams.copy(
+                            dayOffset = event.dayOffset,
+                            refreshId = 0,
+                        ),
+                    )
                 }
             }
 
@@ -107,10 +122,57 @@ class TrendViewModel(
 
             Event.Refresh -> {
                 _state.update {
-                    // Use current timestamp as refreshId to force a new Pager creation with NETWORK_ONLY policy
-                    it.copy(trendParams = it.trendParams.copy(refreshId = Clock.System.now().toEpochMilliseconds()))
+                    it.copy(
+                        trendParams = it.trendParams.copy(
+                            refreshId = Clock.System.now().toEpochMilliseconds(),
+                        ),
+                        dismissedTopicIds = emptySet(),
+                        notInterestedInFlight = emptySet(),
+                    )
                 }
             }
+
+            is Event.NotInterested -> handleNotInterested(event.item)
+        }
+    }
+
+    private fun handleNotInterested(item: TrendItem) {
+        val tab = _state.value.selectedTab
+        if (tab?.supportsNotInterested != true) {
+            screenModelScope.launch {
+                _effect.send(Effect.ShowSnackbar("当前页签不支持「不感兴趣」"))
+            }
+            return
+        }
+        if (item.topicId in _state.value.notInterestedInFlight ||
+            item.topicId in _state.value.dismissedTopicIds
+        ) {
+            return
+        }
+        _state.update { it.copy(notInterestedInFlight = it.notInterestedInFlight + item.topicId) }
+        screenModelScope.launch {
+            val channelId = item.payload["channelId"] as? String
+            val result = submitNotInterestedUseCase(
+                sourceId = item.sourceId,
+                topicId = item.topicId,
+                channelId = channelId,
+            )
+            _state.update {
+                it.copy(notInterestedInFlight = it.notInterestedInFlight - item.topicId)
+            }
+            result.fold(
+                onSuccess = { msg ->
+                    _state.update {
+                        it.copy(dismissedTopicIds = it.dismissedTopicIds + item.topicId)
+                    }
+                    _effect.send(Effect.ShowSnackbar(msg.ifBlank { "已标记不感兴趣" }))
+                },
+                onFailure = { e ->
+                    _effect.send(
+                        Effect.ShowSnackbar(e.message?.takeIf(String::isNotBlank) ?: "标记不感兴趣失败"),
+                    )
+                },
+            )
         }
     }
 }

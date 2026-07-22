@@ -6,6 +6,7 @@ import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.BlankLinePolicy
 import ai.saniou.coreui.widgets.RichText
 import ai.saniou.coreui.widgets.ThreadDetailScaffold
+import ai.saniou.coreui.widgets.SaniouTextButton
 import ai.saniou.coreui.widgets.VerticalSpacerSmall
 import ai.saniou.coreui.theme.threadAnimateItem
 import ai.saniou.forum.workflow.topicdetail.TopicDetailPage
@@ -80,6 +81,7 @@ import thread.feature_forum.generated.resources.Res
 import thread.feature_forum.generated.resources.eyebrow_forum_trend
 import thread.feature_forum.generated.resources.post_page_back
 import thread.feature_forum.generated.resources.refresh
+import thread.feature_forum.generated.resources.not_interested
 import thread.feature_forum.generated.resources.s_2af1650958
 import thread.feature_forum.generated.resources.s_56edba4cd0
 import thread.feature_forum.generated.resources.s_8e6904cf83
@@ -215,10 +217,13 @@ data class TrendPage(
                     }
                 }
                 HorizontalPager(state = pagerState, modifier = Modifier.weight(1f)) { page ->
-                    if (state.availableTabs.getOrNull(page) != null) {
+                    val tab = state.availableTabs.getOrNull(page)
+                    if (tab != null) {
                         TrendList(
                             viewModel = viewModel,
+                            supportsNotInterested = tab.supportsNotInterested,
                             onItemClick = { viewModel.onEvent(Event.OnTrendItemClick(it)) },
+                            onNotInterested = { viewModel.onEvent(Event.NotInterested(it)) },
                         )
                     }
                 }
@@ -229,9 +234,12 @@ data class TrendPage(
     @Composable
     fun TrendList(
         viewModel: TrendViewModel,
+        supportsNotInterested: Boolean,
         onItemClick: (TrendItem) -> Unit,
+        onNotInterested: (TrendItem) -> Unit,
     ) {
         val items = viewModel.trendPagingFlow.collectAsLazyPagingItems()
+        val uiState by viewModel.state.collectAsState()
 
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -259,7 +267,10 @@ data class TrendPage(
                             TrendItemCard(
                                 index = index,
                                 item = item,
+                                supportsNotInterested = supportsNotInterested,
+                                notInterestedInFlight = item.topicId in uiState.notInterestedInFlight,
                                 onClick = { onItemClick(item) },
+                                onNotInterested = { onNotInterested(item) },
                                 modifier = threadAnimateItem(),
                             )
                         }
@@ -273,7 +284,10 @@ data class TrendPage(
     fun TrendItemCard(
         index: Int,
         item: TrendItem,
+        supportsNotInterested: Boolean = false,
+        notInterestedInFlight: Boolean = false,
         onClick: () -> Unit,
+        onNotInterested: () -> Unit = {},
         modifier: Modifier = Modifier,
     ) {
         Card(
@@ -367,6 +381,20 @@ data class TrendPage(
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.tertiary
                         )
+                    }
+
+                    if (supportsNotInterested) {
+                        VerticalSpacerSmall()
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End,
+                        ) {
+                            SaniouTextButton(
+                                onClick = onNotInterested,
+                                enabled = !notInterestedInFlight,
+                                text = stringResource(Res.string.not_interested),
+                            )
+                        }
                     }
                 }
             }

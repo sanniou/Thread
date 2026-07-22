@@ -192,7 +192,7 @@ val dataModule = DI.Module("dataModule") {
     bindSingleton { TiebaSearchConnector(instance(), instance()) }
     bindSingleton { TiebaPostingConnector(instance(), instance(), instance(), instance(), instance()) }
     bindSingleton { TiebaLoginConnector(instance(), instance(), instance()) }
-    bindSingleton { TiebaReactionConnector(instance(), instance(), instance(), instance()) }
+    bindSingleton { TiebaReactionConnector(instance(), instance(), instance(), instance(), instance()) }
     bindSingleton { TiebaUserRelationConnector(instance(), instance(), instance(), instance(), instance()) }
     bindSingleton { TiebaChannelMembership(instance(), instance(), instance()) }
     bindSingleton { TiebaThreadStoreSync(instance(), instance(), instance()) }

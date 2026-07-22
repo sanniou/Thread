@@ -43,6 +43,19 @@ interface ReactionConnector : SourceConnector {
     /** Downvote / 点踩 a topic or post. Default: unsupported. */
     suspend fun downvote(topicId: String, targetPostId: String): Result<Unit> =
         Result.failure(UnsupportedOperationException("Source '$sourceId' does not support downvote"))
+
+    /**
+     * Feed / 推荐流「不感兴趣」(e.g. Tieba submitDislike).
+     * [reasonIds] / [extra] are platform-opaque CSV strings; empty is valid (generic dislike).
+     */
+    suspend fun submitNotInterested(
+        topicId: String,
+        channelId: String? = null,
+        reasonIds: String = "",
+        extra: String = "",
+        clickTimeMs: Long = 0L,
+    ): Result<String> =
+        Result.failure(UnsupportedOperationException("Source '$sourceId' does not support not-interested"))
 }
 
 /**

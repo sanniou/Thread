@@ -297,4 +297,7 @@ Tap the button at the bottom right to add one</string>
     <string name="user_profile_loading">Loading profile…</string>
     <string name="user_fans_count">%1$s fans</string>
     <string name="user_follow_count">%1$s following</string>
+    <string name="not_interested">Not interested</string>
+    <string name="not_interested_success">Marked as not interested</string>
+    <string name="not_interested_failed">Failed to mark not interested</string>
 </resources>

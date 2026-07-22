@@ -29,7 +29,11 @@ class TiebaTrendSource(
             TrendTab(id = "tieba_hot", name = "热议"),
             TrendTab(id = "tieba_topic", name = "话题"),
             TrendTab(id = "tieba_concern", name = "关注"),
-            TrendTab(id = "tieba_recommend", name = "推荐")
+            TrendTab(
+                id = "tieba_recommend",
+                name = "推荐",
+                supportsNotInterested = true,
+            ),
         )
     }
 
@@ -58,7 +62,10 @@ class TiebaTrendSource(
                     channel = topic.channelName,
                     author = topic.author.name,
                     isNew = false,
-                    payload = emptyMap()
+                    payload = mapOf(
+                        "channelId" to topic.channelId,
+                        "channelName" to (topic.channelName ?: ""),
+                    ),
                 )
             })
         } catch (e: Exception) {

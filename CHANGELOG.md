@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.44.0 - 2026-07-22
+
+推荐流「不感兴趣」：Tieba `submitDislike` 全链路（Connector + Trend 推荐 tab UI）。
+
+- Domain：`ReactionConnector.submitNotInterested` + `ReactionRepository` / `SubmitNotInterestedUseCase`；`TrendTab.supportsNotInterested`。
+- Data：`TiebaReactionConnector` 调用 Official `c/c/excellent/submitDislike`（DislikeBean JSON 数组）；推荐流 `TrendItem.payload.channelId`。
+- UI：Trend 推荐 tab 卡片「不感兴趣」；会话内 dismiss filter + snackbar；其它 tab 不暴露入口。
+- Desktop compile + jvmTest 门禁通过；资料编辑/屏蔽/云历史/设置 parity 仍后续；删帖/吧务 deferred。
+
 ## 0.43.0 - 2026-07-22
 
 看帖核心体验：倒序、跳页、楼中楼分页、贴吧图片流（picPage）、详情工具栏。

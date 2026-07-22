@@ -12,6 +12,7 @@ import ai.saniou.forum.workflow.subscription.SubscriptionViewModel
 import ai.saniou.forum.workflow.topicdetail.TopicDetailViewModel
 import ai.saniou.forum.workflow.topicdetail.TopicDetailViewModelParams
 import ai.saniou.forum.workflow.trend.TrendViewModel
+import ai.saniou.thread.domain.usecase.post.SubmitNotInterestedUseCase
 import ai.saniou.forum.workflow.user.UserDetailViewModel
 import ai.saniou.forum.workflow.user.UserViewModel
 import ai.saniou.forum.workflow.source.SourceManagerViewModel
@@ -143,7 +144,8 @@ val forumFeatureModule = DI.Module("forumFeatureModule") {
     bindFactory<String, TrendViewModel> { sourceId ->
         TrendViewModel(
             initialSourceId = sourceId,
-            trendRepository = instance()
+            trendRepository = instance(),
+            submitNotInterestedUseCase = instance(),
         )
     }
 

@@ -18,6 +18,27 @@ class ReactionRepositoryImpl(
     override suspend fun downvoteTopic(sourceId: String, topicId: String): Result<Unit> =
         react(sourceId, topicId) { connector, postId -> connector.downvote(topicId, postId) }
 
+    override suspend fun submitNotInterested(
+        sourceId: String,
+        topicId: String,
+        channelId: String?,
+        reasonIds: String,
+        extra: String,
+        clickTimeMs: Long,
+    ): Result<String> {
+        val connector = registry.reactions(sourceId)
+            ?: return Result.failure(
+                UnsupportedOperationException("Source '$sourceId' does not support reactions"),
+            )
+        return connector.submitNotInterested(
+            topicId = topicId,
+            channelId = channelId,
+            reasonIds = reasonIds,
+            extra = extra,
+            clickTimeMs = clickTimeMs,
+        )
+    }
+
     private suspend fun react(
         sourceId: String,
         topicId: String,
