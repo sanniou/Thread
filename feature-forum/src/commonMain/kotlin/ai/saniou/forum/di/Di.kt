@@ -73,6 +73,7 @@ val forumFeatureModule = DI.Module("forumFeatureModule") {
             instance(),
             instance(),
             instance(),
+            instance(), // observeContentBlocks
             sourceId = params.first,
             channelId = params.second,
             channelCategoryId = params.third
@@ -95,7 +96,8 @@ val forumFeatureModule = DI.Module("forumFeatureModule") {
             instance(),
             instance(),
             instance(),
-            instance()
+            instance(),
+            instance(), // observeContentBlocks
         )
     }
 

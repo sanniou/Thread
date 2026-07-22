@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.49.0 - 2026-07-22
+
+### Changed
+- **本地屏蔽生效面扩展**：`ContentBlock` 过滤从 Trend 扩展到 **频道主题列表** 与 **帖详情楼层/楼中楼**。
+- TopicViewModel / TopicDetailViewModel 订阅 `ObserveContentBlocksUseCase`，paging + sub-comments 客户端过滤。
+
+### Notes
+- 主路径质量补全：屏蔽规则不再只对推荐流生效。
+- Desktop compile + jvmTest 门禁通过；设置 parity / 头像 multipart 仍后续；删帖/吧务 deferred。
+
+
 ## 0.48.0 - 2026-07-22
 
 ### Added

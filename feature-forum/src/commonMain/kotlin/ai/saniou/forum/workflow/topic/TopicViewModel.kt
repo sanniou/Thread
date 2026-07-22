@@ -8,7 +8,10 @@ import ai.saniou.forum.workflow.topic.TopicContract.Event
 import ai.saniou.forum.workflow.topic.TopicContract.State
 import ai.saniou.thread.domain.model.forum.Channel
 import ai.saniou.thread.domain.model.forum.ForumRuleDetail
+import ai.saniou.thread.domain.model.block.ContentBlock
+import ai.saniou.thread.domain.model.block.ContentBlockMatcher
 import ai.saniou.thread.domain.model.forum.Topic
+import ai.saniou.thread.domain.usecase.block.ObserveContentBlocksUseCase
 import ai.saniou.thread.domain.repository.SourceRepository
 import ai.saniou.thread.domain.usecase.channel.GetChannelDetailUseCase
 import ai.saniou.thread.domain.usecase.channel.GetChannelNameUseCase
@@ -18,6 +21,7 @@ import ai.saniou.thread.domain.usecase.channel.SetChannelFallbackModeUseCase
 import ai.saniou.thread.domain.usecase.channel.SignChannelUseCase
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
+import androidx.paging.filter
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -49,6 +53,7 @@ class TopicViewModel(
     sourceRepository: SourceRepository,
     private val signChannelUseCase: SignChannelUseCase,
     private val getForumRulesUseCase: GetForumRulesUseCase,
+    observeContentBlocks: ObserveContentBlocksUseCase,
     private val sourceId: String,
     private val channelId: String,
     private val channelCategoryId: String,
@@ -77,6 +82,14 @@ class TopicViewModel(
     private val capabilities = sourceRepository.getSource(sourceId)?.capabilities
         ?: ai.saniou.thread.domain.model.SourceCapabilities.Default
 
+    private val contentBlocks = MutableStateFlow<List<ContentBlock>>(emptyList())
+
+    init {
+        screenModelScope.launch {
+            observeContentBlocks().collect { contentBlocks.value = it }
+        }
+    }
+
     val topics: Flow<PagingData<Topic>> =
         loadParams.flatMapLatest { request ->
             getChannelTopicsPagingUseCase(
@@ -85,6 +98,24 @@ class TopicViewModel(
                 isTimeline = request.channelCategory == "-1",
                 initialPage = request.page,
             )
+        }.combine(contentBlocks) { paging, blocks ->
+            if (blocks.isEmpty()) {
+                paging
+            } else {
+                paging.filter { topic ->
+                    !ContentBlockMatcher.shouldBlockContent(
+                        text = listOfNotNull(
+                            topic.title,
+                            topic.content,
+                            topic.summary,
+                            topic.channelName,
+                        ).joinToString("\n"),
+                        userId = topic.author.id,
+                        userName = topic.author.name,
+                        rules = blocks,
+                    )
+                }
+            }
         }.cachedIn(screenModelScope)
 
     private val forumDetailFlow: Flow<UiStateWrapper<Channel>> =

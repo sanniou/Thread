@@ -1,7 +1,7 @@
 # TiebaLite → Thread 功能覆盖矩阵
 
 对照基准：`TiebaLite-4.0-dev`（页面 + `ITiebaApi` ~63 逻辑接口）  
-Thread 基线：`0.48.0`（P0–P3a + 看帖/楼层回复 + 推荐不感兴趣 + 本地屏蔽 + 资料编辑 + 吧内搜帖；设置 parity 后续）
+Thread 基线：`0.49.0`（P0–P3a + 看帖/楼层回复 + 推荐不感兴趣 + 本地屏蔽扩列表 + 资料编辑 + 吧内搜帖；设置 parity 后续）
 
 ## 0. 覆盖原则
 
@@ -47,7 +47,7 @@ Thread 基线：`0.48.0`（P0–P3a + 看帖/楼层回复 + 推荐不感兴趣 +
 | 资料编辑 | profileModify | nick/intro/sex self-edit | done (0.46) | — |
 | 图片浏览器 | picPage / PhotoView | ImagePreview + `FetchTopicImagePageUseCase` / picPage 分页 | done (0.43) | — |
 | 浏览历史 | History 本地 | Thread History 本地（TiebaLite 亦本地 LitePal，无云历史 API） | done local (parity) | — |
-| 屏蔽词/黑名单 | Block settings | local ContentBlock 关键词+用户 + Settings + Trend filter | done (0.45 local) | — |
+| 屏蔽词/黑名单 | Block settings | local ContentBlock 关键词+用户 + Settings + Trend/频道列表/帖详情过滤 | done (0.45 + 0.49 surfaces) | — |
 | 设置/主题/习惯 | Settings* | Thread 通用 Appearance/Settings | n/a 映射 | P3 |
 | WebView 杂项 | WebViewPage | Desktop 外链/系统浏览器 | n/a | 扩展保留 |
 
@@ -94,7 +94,8 @@ Thread 基线：`0.48.0`（P0–P3a + 看帖/楼层回复 + 推荐不感兴趣 +
 | **P3b-c** | **0.46** | ✅ 资料编辑 profileModify |
 | **P3b-d** | **0.47** | ✅ 吧内搜帖 searchPost（云历史核对为本地 parity） |
 | **P3b-e** | **0.48** | ✅ 楼层/楼中楼回复 quote_id |
-| **P3b-f** | 0.49+ | 设置 parity、头像 multipart、屏蔽扩列表（**删帖/吧务 deferred**） |
+| **P3b-f** | **0.49** | ✅ 本地屏蔽扩到频道列表/帖详情 |
+| **P3b-g** | 0.50+ | 设置 parity、头像 multipart（**删帖/吧务 deferred**） |
 
 ## 6. 明确不做 / 暂缓（非本阶段 100% 定义内）
 

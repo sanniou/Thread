@@ -6,7 +6,10 @@ import ai.saniou.forum.workflow.topicdetail.TopicDetailContract.Effect
 import ai.saniou.forum.workflow.topicdetail.TopicDetailContract.Event
 import ai.saniou.forum.workflow.topicdetail.TopicDetailContract.State
 import ai.saniou.thread.domain.model.bookmark.Bookmark
+import ai.saniou.thread.domain.model.block.ContentBlock
+import ai.saniou.thread.domain.model.block.ContentBlockMatcher
 import ai.saniou.thread.domain.model.forum.TopicMetadata
+import ai.saniou.thread.domain.usecase.block.ObserveContentBlocksUseCase
 import ai.saniou.thread.domain.model.forum.Comment
 import ai.saniou.thread.domain.model.Tag
 import ai.saniou.thread.domain.usecase.bookmark.AddBookmarkUseCase
@@ -26,6 +29,7 @@ import ai.saniou.thread.domain.usecase.post.UpvoteTopicUseCase
 import ai.saniou.thread.domain.usecase.post.DownvoteTopicUseCase
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
+import androidx.paging.filter
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -34,6 +38,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
@@ -79,6 +84,7 @@ class TopicDetailViewModel(
     private val imageUrlResolver: ImageUrlResolver,
     private val upvoteTopicUseCase: UpvoteTopicUseCase,
     private val downvoteTopicUseCase: DownvoteTopicUseCase,
+    observeContentBlocks: ObserveContentBlocksUseCase,
 ) : ScreenModel {
 
     private val sourceId = params.sourceId
@@ -98,6 +104,7 @@ class TopicDetailViewModel(
     val effect = _effect.receiveAsFlow()
 
     private val loadRequest = MutableStateFlow(LoadRequest(threadId = threadId))
+    private val contentBlocks = MutableStateFlow<List<ContentBlock>>(emptyList())
 
     val replies: Flow<PagingData<Comment>> =
         loadRequest.flatMapLatest { request ->
@@ -108,6 +115,19 @@ class TopicDetailViewModel(
                 isReverse = request.isReverse,
                 startPage = request.page,
             )
+        }.combine(contentBlocks) { paging, blocks ->
+            if (blocks.isEmpty()) {
+                paging
+            } else {
+                paging.filter { comment ->
+                    !ContentBlockMatcher.shouldBlockContent(
+                        text = listOfNotNull(comment.title, comment.content).joinToString("\n"),
+                        userId = comment.author.id,
+                        userName = comment.author.name,
+                        rules = blocks,
+                    )
+                }
+            }
         }.cachedIn(screenModelScope)
 
     init {
@@ -115,6 +135,9 @@ class TopicDetailViewModel(
         updateLastAccessTime()
         _state.update { it.copy(replies = replies) }
 
+        screenModelScope.launch {
+            observeContentBlocks().collect { contentBlocks.value = it }
+        }
         screenModelScope.launch {
             observeSubscriptionStatus()
             loadRequest.collect { request ->
@@ -184,9 +207,10 @@ class TopicDetailViewModel(
         screenModelScope.launch {
             getSubCommentsUseCase(sourceId, threadId, commentId, 1)
                 .onSuccess { comments ->
+                    val filtered = filterBlockedComments(comments)
                     _state.update {
                         it.copy(
-                            subCommentsWrapper = UiStateWrapper.Success(comments),
+                            subCommentsWrapper = UiStateWrapper.Success(filtered),
                             subCommentsPage = 1,
                             // pbFloor 一页通常 10 条；有数据则允许尝试下一页
                             subCommentsHasMore = comments.size >= 10,
@@ -212,12 +236,13 @@ class TopicDetailViewModel(
         screenModelScope.launch {
             getSubCommentsUseCase(sourceId, threadId, commentId, nextPage)
                 .onSuccess { more ->
+                    val filteredMore = filterBlockedComments(more)
                     _state.update {
                         it.copy(
                             isLoadingMoreSubComments = false,
                             subCommentsPage = nextPage,
                             subCommentsHasMore = more.size >= 10,
-                            subCommentsWrapper = UiStateWrapper.Success(current + more),
+                            subCommentsWrapper = UiStateWrapper.Success(current + filteredMore),
                         )
                     }
                 }
@@ -426,4 +451,17 @@ class TopicDetailViewModel(
             _state.update { it.copy(isReacting = false) }
         }
     }
+    private fun filterBlockedComments(comments: List<Comment>): List<Comment> {
+        val blocks = contentBlocks.value
+        if (blocks.isEmpty()) return comments
+        return comments.filter { comment ->
+            !ContentBlockMatcher.shouldBlockContent(
+                text = listOfNotNull(comment.title, comment.content).joinToString("\n"),
+                userId = comment.author.id,
+                userName = comment.author.name,
+                rules = blocks,
+            )
+        }
+    }
+
 }
