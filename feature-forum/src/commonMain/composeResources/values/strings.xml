@@ -283,4 +283,13 @@
     <string name="s_e1064538ca">删除账号失败: %1$s</string>
     <string name="s_eef9a8d022">获取账号列表失败: %1$s</string>
     <string name="s_f63e701a8b">Base URL 必须以 http:// 或 https:// 开头</string>
+    <string name="downvote_success">已点踩</string>
+    <string name="downvote_failed">点踩失败</string>
+    <string name="follow_user">关注</string>
+    <string name="unfollow_user">取消关注</string>
+    <string name="following_user">已关注</string>
+    <string name="follow_user_failed">关注失败</string>
+    <string name="user_profile_loading">加载用户资料…</string>
+    <string name="user_fans_count">粉丝 %1$s</string>
+    <string name="user_follow_count">关注 %1$s</string>
 </resources>

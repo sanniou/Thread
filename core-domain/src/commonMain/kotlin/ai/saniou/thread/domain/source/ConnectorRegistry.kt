@@ -40,7 +40,30 @@ interface SubCommentConnector : SourceConnector {
 
 interface ReactionConnector : SourceConnector {
     suspend fun upvote(topicId: String, targetPostId: String): Result<Unit>
+    /** Downvote / 点踩 a topic or post. Default: unsupported. */
+    suspend fun downvote(topicId: String, targetPostId: String): Result<Unit> =
+        Result.failure(UnsupportedOperationException("Source '$sourceId' does not support downvote"))
 }
+
+/**
+ * User follow / unfollow and lightweight profile for relation UI.
+ * Portrait-based sources (Tieba) resolve portrait from [userId] internally.
+ */
+interface UserRelationConnector : SourceConnector {
+    suspend fun getProfile(userId: String): Result<UserRelationProfile>
+    suspend fun follow(userId: String): Result<String>
+    suspend fun unfollow(userId: String): Result<String>
+}
+
+data class UserRelationProfile(
+    val userId: String,
+    val name: String,
+    val avatar: String? = null,
+    val intro: String? = null,
+    val isFollowing: Boolean = false,
+    val fansCount: Long? = null,
+    val followCount: Long? = null,
+)
 
 interface PostingConnector : SourceConnector {
     suspend fun createThread(channelId: String, draft: PostDraft): PostResult
@@ -64,6 +87,7 @@ interface ConnectorRegistry {
     fun login(sourceId: String): LoginConnector?
     fun subComments(sourceId: String): SubCommentConnector?
     fun reactions(sourceId: String): ReactionConnector?
+    fun userRelation(sourceId: String): UserRelationConnector?
 }
 
 class DefaultConnectorRegistry(
@@ -74,6 +98,7 @@ class DefaultConnectorRegistry(
     loginConnectors: Set<LoginConnector> = emptySet(),
     subCommentConnectors: Set<SubCommentConnector> = emptySet(),
     reactionConnectors: Set<ReactionConnector> = emptySet(),
+    userRelationConnectors: Set<UserRelationConnector> = emptySet(),
 ) : ConnectorRegistry {
     private val sources = sources.uniqueBySourceId("source") { it.id }
     private val searches = searchConnectors.uniqueBySourceId("search") { it.sourceId }
@@ -82,6 +107,7 @@ class DefaultConnectorRegistry(
     private val logins = loginConnectors.uniqueBySourceId("login") { it.sourceId }
     private val subComments = subCommentConnectors.uniqueBySourceId("sub-comment") { it.sourceId }
     private val reactions = reactionConnectors.uniqueBySourceId("reaction") { it.sourceId }
+    private val userRelations = userRelationConnectors.uniqueBySourceId("user relation") { it.sourceId }
 
     override fun source(sourceId: String): Source? = sources[sourceId]
     override fun search(sourceId: String): ForumSearchConnector? = searches[sourceId]
@@ -90,6 +116,7 @@ class DefaultConnectorRegistry(
     override fun login(sourceId: String): LoginConnector? = logins[sourceId]
     override fun subComments(sourceId: String): SubCommentConnector? = subComments[sourceId]
     override fun reactions(sourceId: String): ReactionConnector? = reactions[sourceId]
+    override fun userRelation(sourceId: String): UserRelationConnector? = userRelations[sourceId]
 }
 
 private inline fun <T> Set<T>.uniqueBySourceId(

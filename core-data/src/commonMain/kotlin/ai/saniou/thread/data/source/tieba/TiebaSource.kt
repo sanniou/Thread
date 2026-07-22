@@ -49,9 +49,11 @@ class TiebaSource(
         supportsPagination = true,
         hasSubComments = true,
         hasUpvote = true,
+        hasDownvote = true,
         hasPoOnly = true,
         supportsChannelSign = true,
         supportsForumRules = true,
+        supportsUserFollow = true,
     )
 
     override fun topicUrl(topicId: String): String = "https://tieba.baidu.com/p/$topicId"

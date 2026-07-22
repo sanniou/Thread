@@ -13,11 +13,14 @@ import ai.saniou.forum.workflow.topicdetail.ThreadReply
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
@@ -28,6 +31,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
@@ -35,6 +40,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -68,6 +74,11 @@ import thread.feature_forum.generated.resources.s_76f1ed24cb
 import thread.feature_forum.generated.resources.s_ad941b51d3
 import thread.feature_forum.generated.resources.s_bdf32f0d53
 import thread.feature_forum.generated.resources.s_dca79914e5
+import thread.feature_forum.generated.resources.user_follow_count
+import thread.feature_forum.generated.resources.user_fans_count
+import thread.feature_forum.generated.resources.user_profile_loading
+import thread.feature_forum.generated.resources.unfollow_user
+import thread.feature_forum.generated.resources.follow_user
 
 data class UserDetailPage(
     val sourceId: String,
@@ -86,6 +97,7 @@ data class UserDetailPage(
         val state by viewModel.state.collectAsState()
         val pagerState = rememberPagerState(pageCount = { UserDetailContract.Tab.entries.size })
         val coroutineScope = rememberCoroutineScope()
+        val snackbarHostState = remember { SnackbarHostState() }
 
         LaunchedEffect(Unit) {
             viewModel.effect.collectLatest { effect ->
@@ -93,6 +105,12 @@ data class UserDetailPage(
                     UserDetailContract.Effect.NavigateBack -> navigator.pop()
                 }
             }
+        }
+
+        LaunchedEffect(state.actionMessage) {
+            val message = state.actionMessage ?: return@LaunchedEffect
+            snackbarHostState.showSnackbar(message)
+            viewModel.handleEvent(UserDetailContract.Event.ConsumeActionMessage)
         }
 
         LaunchedEffect(state.currentTab) {
@@ -103,13 +121,29 @@ data class UserDetailPage(
             viewModel.handleEvent(UserDetailContract.Event.SwitchTab(UserDetailContract.Tab.entries[pagerState.currentPage]))
         }
 
+        val displayTitle = state.profile?.name?.takeIf { it.isNotBlank() } ?: userHash
+        val subtitle = state.profile?.intro?.takeIf { it.isNotBlank() }
+            ?: stringResource(Res.string.s_dca79914e5)
+
         ThreadDetailScaffold(
-            title = userHash,
+            title = displayTitle,
             eyebrow = stringResource(Res.string.eyebrow_member_activity),
-            subtitle = stringResource(Res.string.s_dca79914e5),
+            subtitle = subtitle,
             onBack = { viewModel.handleEvent(UserDetailContract.Event.Back) },
+            snackbarHost = { SnackbarHost(snackbarHostState) },
         ) { paddingValues ->
             Column(Modifier.padding(paddingValues).fillMaxSize()) {
+                if (state.supportsUserFollow) {
+                    UserRelationHeader(
+                        state = state,
+                        onToggleFollow = { viewModel.handleEvent(UserDetailContract.Event.ToggleFollow) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .widthIn(max = Dimens.contentMaxWidth)
+                            .align(Alignment.CenterHorizontally)
+                            .padding(horizontal = LocalThreadWindowInfo.current.pageHorizontalPadding, vertical = 8.dp),
+                    )
+                }
                 SecondaryTabRow(
                     selectedTabIndex = state.currentTab.ordinal,
                     modifier = Modifier.fillMaxWidth().widthIn(max = Dimens.contentMaxWidth)
@@ -309,6 +343,52 @@ data class UserDetailPage(
                 style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+private fun UserRelationHeader(
+    state: UserDetailContract.State,
+    onToggleFollow: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        if (state.isProfileLoading && state.profile == null) {
+            Text(
+                text = stringResource(Res.string.user_profile_loading),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        } else {
+            val profile = state.profile
+            if (profile != null) {
+                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    profile.fansCount?.let {
+                        Text(
+                            text = stringResource(Res.string.user_fans_count, it.toString()),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    profile.followCount?.let {
+                        Text(
+                            text = stringResource(Res.string.user_follow_count, it.toString()),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            }
+            SaniouButton(
+                onClick = onToggleFollow,
+                enabled = !state.isFollowBusy,
+                text = if (state.profile?.isFollowing == true) {
+                    stringResource(Res.string.unfollow_user)
+                } else {
+                    stringResource(Res.string.follow_user)
+                },
             )
         }
     }

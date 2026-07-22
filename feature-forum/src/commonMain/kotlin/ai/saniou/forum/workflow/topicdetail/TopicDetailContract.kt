@@ -109,6 +109,11 @@ interface TopicDetailContract {
         object UpvoteTopic : Event
 
         /**
+         * 点踩主贴
+         */
+        object DownvoteTopic : Event
+
+        /**
          * 显示楼中楼弹窗
          * @param commentId 评论ID
          */

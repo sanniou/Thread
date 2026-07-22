@@ -25,6 +25,10 @@ import ai.saniou.thread.domain.usecase.post.CreateThreadUseCase
 import ai.saniou.thread.domain.usecase.post.GetReferenceUseCase
 import ai.saniou.thread.domain.usecase.post.ToggleFavoriteUseCase
 import ai.saniou.thread.domain.usecase.post.UpvoteTopicUseCase
+import ai.saniou.thread.domain.usecase.post.DownvoteTopicUseCase
+import ai.saniou.thread.domain.usecase.user.FollowUserUseCase
+import ai.saniou.thread.domain.usecase.user.GetUserRelationProfileUseCase
+import ai.saniou.thread.domain.usecase.user.UnfollowUserUseCase
 import ai.saniou.thread.domain.usecase.post.GetPostDraftUseCase
 import ai.saniou.thread.domain.usecase.post.SavePostDraftUseCase
 import ai.saniou.thread.domain.usecase.post.DiscardPostDraftUseCase
@@ -165,6 +169,12 @@ val domainModule = DI.Module("domainModule") {
     bindProvider { GetReferenceUseCase(instance()) }
     bindProvider { ToggleFavoriteUseCase(instance()) }
     bindProvider { UpvoteTopicUseCase(instance()) }
+    bindProvider { DownvoteTopicUseCase(instance()) }
+
+    // User relation
+    bindProvider { GetUserRelationProfileUseCase(instance()) }
+    bindProvider { FollowUserUseCase(instance()) }
+    bindProvider { UnfollowUserUseCase(instance()) }
 
     // Bookmark
     bindProvider { GetBookmarksUseCase(instance()) }

@@ -25,4 +25,26 @@ class TiebaReactionConnector(
             throw IllegalStateException(response.errorMsg ?: "贴吧点赞失败 (${response.errorCode})")
         }
     }
+
+    /**
+     * Tieba "点踩" uses the same opAgree endpoint with agree_type=5 (see MiniTiebaApi.disagreeFlow).
+     * The Call variant defaults to agree_type=2 (cancel like); we always pass 5 for true downvote.
+     */
+    override suspend fun downvote(topicId: String, targetPostId: String): Result<Unit> = runCatching {
+        val tbs = parameterProvider.ensureTbs(webApi)
+        val stoken = parameterProvider.getSToken().takeIf(String::isNotBlank)
+            ?: throw IllegalStateException("请先登录贴吧账号后再点踩")
+        val response = api.disagree(
+            postId = targetPostId,
+            threadId = topicId,
+            client_user_token = parameterProvider.getUid().takeIf(String::isNotBlank),
+            agree_type = 5,
+            op_type = 0,
+            tbs = tbs,
+            stoken = stoken,
+        )
+        if (!response.errorCode.isNullOrBlank() && response.errorCode != "0") {
+            throw IllegalStateException(response.errorMsg ?: "贴吧点踩失败 (${response.errorCode})")
+        }
+    }
 }

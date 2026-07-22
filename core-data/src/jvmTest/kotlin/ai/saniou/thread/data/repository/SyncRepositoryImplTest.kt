@@ -16,6 +16,7 @@ import ai.saniou.thread.domain.source.ReactionConnector
 import ai.saniou.thread.domain.source.SourceCatalog
 import ai.saniou.thread.domain.source.SubCommentConnector
 import ai.saniou.thread.domain.source.UserContentConnector
+import ai.saniou.thread.domain.source.UserRelationConnector
 import app.cash.sqldelight.async.coroutines.synchronous
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -124,4 +125,5 @@ private class TestCatalog : SourceCatalog {
     override fun login(sourceId: String): LoginConnector? = null
     override fun subComments(sourceId: String): SubCommentConnector? = null
     override fun reactions(sourceId: String): ReactionConnector? = null
+    override fun userRelation(sourceId: String): UserRelationConnector? = null
 }

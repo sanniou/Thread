@@ -12,6 +12,7 @@ import ai.saniou.thread.domain.source.ReactionConnector
 import ai.saniou.thread.domain.source.SourceCatalog
 import ai.saniou.thread.domain.source.SubCommentConnector
 import ai.saniou.thread.domain.source.UserContentConnector
+import ai.saniou.thread.domain.source.UserRelationConnector
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -73,6 +74,7 @@ class DefaultSourceCatalog(
     override fun login(sourceId: String): LoginConnector? = activeRegistrations[sourceId]?.login
     override fun subComments(sourceId: String): SubCommentConnector? = activeRegistrations[sourceId]?.subComments
     override fun reactions(sourceId: String): ReactionConnector? = activeRegistrations[sourceId]?.reactions
+    override fun userRelation(sourceId: String): UserRelationConnector? = activeRegistrations[sourceId]?.userRelation
 
     override suspend fun upsert(descriptor: SourceDescriptor) = updateMutex.withLock {
         val existing = mutableDescriptors.value.firstOrNull { it.id == descriptor.id }

@@ -12,6 +12,7 @@ import ai.saniou.thread.data.repository.HistoryRepositoryImpl
 import ai.saniou.thread.data.repository.NoticeRepositoryImpl
 import ai.saniou.thread.data.repository.PostRepositoryImpl
 import ai.saniou.thread.data.repository.ReactionRepositoryImpl
+import ai.saniou.thread.data.repository.UserRelationRepositoryImpl
 import ai.saniou.thread.data.repository.ForumSearchRepositoryImpl
 import ai.saniou.thread.data.repository.UserContentRepositoryImpl
 import ai.saniou.thread.data.repository.LoginRepositoryImpl
@@ -63,6 +64,7 @@ import ai.saniou.thread.data.cache.CacheFreshnessStore
 import ai.saniou.thread.data.source.discourse.DiscourseSourceFactory
 import ai.saniou.thread.data.source.tieba.TiebaLoginConnector
 import ai.saniou.thread.data.source.tieba.TiebaReactionConnector
+import ai.saniou.thread.data.source.tieba.TiebaUserRelationConnector
 import ai.saniou.thread.data.source.tieba.TiebaSearchConnector
 import ai.saniou.thread.data.source.tieba.TiebaChannelMembership
 import ai.saniou.thread.data.source.tieba.TiebaThreadStoreSync
@@ -190,6 +192,7 @@ val dataModule = DI.Module("dataModule") {
     bindSingleton { TiebaPostingConnector(instance(), instance(), instance(), instance(), instance()) }
     bindSingleton { TiebaLoginConnector(instance(), instance(), instance()) }
     bindSingleton { TiebaReactionConnector(instance(), instance(), instance(), instance()) }
+    bindSingleton { TiebaUserRelationConnector(instance(), instance(), instance(), instance(), instance()) }
     bindSingleton { TiebaChannelMembership(instance(), instance(), instance()) }
     bindSingleton { TiebaThreadStoreSync(instance(), instance(), instance()) }
     bindSingleton { TiebaUserLikeForumSync(instance(), instance(), instance()) }
@@ -264,6 +267,7 @@ val dataModule = DI.Module("dataModule") {
                     login = instance<TiebaLoginConnector>(),
                     subComments = instance<TiebaSource>(),
                     reactions = instance<TiebaReactionConnector>(),
+                    userRelation = instance<TiebaUserRelationConnector>(),
                 ),
             ),
             factories = setOf(instance<DiscourseSourceFactory>()),
@@ -319,6 +323,7 @@ val dataModule = DI.Module("dataModule") {
     }
     bind<PostRepository>() with singleton { PostRepositoryImpl(instance(), instance(), instance()) }
     bind<ReactionRepository>() with singleton { ReactionRepositoryImpl(instance(), instance(), instance()) }
+    bind<ai.saniou.thread.domain.repository.UserRelationRepository>() with singleton { UserRelationRepositoryImpl(instance()) }
 
     bind<TrendSource>(tag = "nmbTrend") with singleton { NmbTrendSource(instance()) }
     bind<TrendSource>(tag = "tiebaTrend") with singleton {

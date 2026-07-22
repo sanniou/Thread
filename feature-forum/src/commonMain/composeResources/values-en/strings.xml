@@ -285,4 +285,13 @@ Tap the button at the bottom right to add one</string>
     <string name="s_f95134f690">Failed to save draft</string>
     <string name="action_reply">Reply</string>
     <string name="s_f63e701a8b">Base URL must start with http:// or https://</string>
+    <string name="downvote_success">Disliked</string>
+    <string name="downvote_failed">Failed to dislike</string>
+    <string name="follow_user">Follow</string>
+    <string name="unfollow_user">Unfollow</string>
+    <string name="following_user">Following</string>
+    <string name="follow_user_failed">Failed to follow</string>
+    <string name="user_profile_loading">Loading profile…</string>
+    <string name="user_fans_count">%1$s fans</string>
+    <string name="user_follow_count">%1$s following</string>
 </resources>

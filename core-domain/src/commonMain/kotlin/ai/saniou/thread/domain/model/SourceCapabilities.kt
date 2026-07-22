@@ -25,6 +25,8 @@ data class SourceCapabilities(
     val supportsChannelSign: Boolean = false,
     /** Read-only forum rules / 吧规. */
     val supportsForumRules: Boolean = false,
+    /** Follow / unfollow other users (e.g. Tieba concern). */
+    val supportsUserFollow: Boolean = false,
 ) {
     companion object {
         val Default = SourceCapabilities()

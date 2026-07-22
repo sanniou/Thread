@@ -1,7 +1,7 @@
 # TiebaLite → Thread 功能覆盖矩阵
 
 对照基准：`TiebaLite-4.0-dev`（页面 + `ITiebaApi` ~63 逻辑接口）  
-Thread 基线：`0.41.0`（P0–P2 主刀已落地；已有主路径持续质量补齐）
+Thread 基线：`0.42.0`（P0–P2 + P3 点踩/关注用户已落地；相册/资料等后续）
 
 ## 0. 覆盖原则
 
@@ -24,7 +24,7 @@ Thread 基线：`0.41.0`（P0–P2 主刀已落地；已有主路径持续质量
 | 楼中楼 | `pbFloor` / SubPosts | `SubCommentConnector` | done | — |
 | 只看楼主 | Thread 筛选 | `hasPoOnly` + comments cursor | done | — |
 | 点赞 | `agree` / opAgree | `TiebaReactionConnector.upvote` + shared TBS | done (0.40 polish) | — |
-| 点踩 / 不感兴趣 | `disagree` / `submitDislike` | API only | missing UI | P2 |
+| 点踩 / 不感兴趣 | `disagree` / `submitDislike` | downvote=`opAgree agree_type=5` + Topic DislikeButton；submitDislike 仍 API only | partial (0.42 downvote) | 首页不感兴趣后续 |
 | 回复 | `addPost` | `TiebaPostingConnector.createReply` + 图传 + shared TBS | done | — |
 | 发主题 | `addPost` tid 空 | `createThread` → official `addPost` 空 tid | done (0.39) | — |
 | 搜索帖/回复 | hybrid `searchThread` | `TiebaSearchConnector` + DI | done (0.39) | — |
@@ -40,7 +40,7 @@ Thread 基线：`0.41.0`（P0–P2 主刀已落地；已有主路径持续质量
 | 登录 | WebView BDUSS/STOKEN | `TiebaLoginConnector` | done | — |
 | 签到 / 一键签 | sign / mSign / OKSign | `TiebaChannelSign` + Topic/Channel UI | done (0.41) | — |
 | 关注/取关吧 | likeForum / unlikeForum | `FavoriteRepository` remote-first | done (0.40) | — |
-| 关注/取关用户 | follow / unfollow | API only | missing | P2 |
+| 关注/取关用户 | follow / unfollow | `TiebaUserRelationConnector` + UserDetail 关注按钮 | done (0.42) | — |
 | 删帖/删楼 | delThread / delPost | API only | deferred | 暂不实现（外链扩展可保留） |
 | 吧规 | forumRuleDetail | `TiebaForumRuleService` + Topic 只读对话框 | done (0.41) | — |
 | 吧详情/成员/等级/吧务 | getForumDetail / Member / Level / Bawu | protobuf API only | deferred 吧务 | 暂不实现 |
@@ -62,12 +62,13 @@ Thread 基线：`0.41.0`（P0–P2 主刀已落地；已有主路径持续质量
 | Posting createThread | ✅ | ✅ | ✅（0.39，验证码风险） |
 | Login | ✅ | ✅ | ✅ |
 | SubComments | — | — | ✅ |
-| Reactions | — | ✅ | ✅ + shared TBS（0.40） |
+| Reactions | — | ✅ | ✅ upvote + downvote + shared TBS（0.42 downvote） |
 | Trend | — | — | ✅ |
 | Membership / Store / Inbox | — | — | ✅ 非 Connector 服务（0.40；agreeMe 0.41） |
 | Channel actions (sign / rules) | — | — | ✅ `ChannelActionRepository`（0.41） |
+| User relation (follow) | — | — | ✅ `UserRelationConnector`（0.42） |
 
-`SourceCapabilities` 当前 Tieba：`supportsSearch=true`、`supportsTopicCreation=true`、`supportsChannelSign=true`、`supportsForumRules=true`（0.41）。
+`SourceCapabilities` 当前 Tieba：`supportsSearch=true`、`supportsTopicCreation=true`、`supportsChannelSign=true`、`supportsForumRules=true`、`hasDownvote=true`、`supportsUserFollow=true`（0.42）。
 
 ## 3. API 移植完整度（remote 包）
 
@@ -85,8 +86,9 @@ Thread 基线：`0.41.0`（P0–P2 主刀已落地；已有主路径持续质量
 |---|---|---|
 | **P0** | **0.39** | ✅ 搜索 `ForumSearchConnector`；`supportsSearch`；发主题 `createThread` |
 | **P1** | **0.40** | ✅ 收藏 store 同步、关注/取关吧、userLikeForum 缓存、replyMe/atMe→Inbox；主路径 TBS 收紧 |
-| **P2** | **0.41** | ✅ 签到/mSign、吧规只读、搜索吧/用户、agreeMe→Inbox；点踩/关注用户/相册仍后续 |
-| **P3** | 0.42+ | 点踩/dislike、关注用户、图片相册、资料编辑、屏蔽、历史云同步、设置 parity（**删帖/吧务 deferred**） |
+| **P2** | **0.41** | ✅ 签到/mSign、吧规只读、搜索吧/用户、agreeMe→Inbox |
+| **P3a** | **0.42** | ✅ 点踩 downvote、关注/取关用户 |
+| **P3b** | 0.43+ | 图片相册、资料编辑、屏蔽、历史云同步、设置 parity、submitDislike（**删帖/吧务 deferred**） |
 
 ## 6. 明确不做 / 暂缓（非本阶段 100% 定义内）
 

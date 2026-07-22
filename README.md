@@ -106,6 +106,7 @@
 -   [x] **Tieba 覆盖 P0 0.39**: hybrid 远端搜索 Connector + 发主题路径；`docs/tieba-coverage-matrix.md` 分期对照 TiebaLite。
 -   [x] **Tieba 覆盖 P1 0.40**: 关注/取关吧远端同步、主题收藏 store 同步、likeForum 缓存、replyMe/atMe→Inbox；点赞/发帖共享 TBS；吧务/删帖仍暂缓。
 -   [x] **Tieba 覆盖 P2 0.41**: 签到/一键签到、吧规只读、搜吧/搜人、agreeMe→Inbox；删帖/吧务仍暂缓。
+-   [x] **Tieba 覆盖 P3a 0.42**: 点踩 downvote、关注/取关用户；删帖/吧务仍暂缓。
 
 ## 🚀 构建与运行
 

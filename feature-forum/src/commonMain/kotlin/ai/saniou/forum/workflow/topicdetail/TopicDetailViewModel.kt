@@ -23,6 +23,7 @@ import ai.saniou.thread.domain.usecase.thread.GetTopicMetadataUseCase
 import ai.saniou.thread.domain.usecase.thread.UpdateTopicLastAccessTimeUseCase
 import ai.saniou.thread.domain.usecase.thread.UpdateTopicLastReadCommentIdUseCase
 import ai.saniou.thread.domain.usecase.post.UpvoteTopicUseCase
+import ai.saniou.thread.domain.usecase.post.DownvoteTopicUseCase
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import cafe.adriel.voyager.core.model.ScreenModel
@@ -52,6 +53,8 @@ import thread.feature_forum.generated.resources.s_3eb8dbcc7f
 import thread.feature_forum.generated.resources.s_5efbdd9e46
 import thread.feature_forum.generated.resources.s_64f538c2fa
 import thread.feature_forum.generated.resources.s_b11cc4945e
+import thread.feature_forum.generated.resources.downvote_failed
+import thread.feature_forum.generated.resources.downvote_success
 import thread.feature_forum.generated.resources.s_b8d684d1cb
 import thread.feature_forum.generated.resources.s_beda0ebfaf
 
@@ -75,6 +78,7 @@ class TopicDetailViewModel(
     private val updateTopicLastReadCommentIdUseCase: UpdateTopicLastReadCommentIdUseCase,
     private val imageUrlResolver: ImageUrlResolver,
     private val upvoteTopicUseCase: UpvoteTopicUseCase,
+    private val downvoteTopicUseCase: DownvoteTopicUseCase,
 ) : ScreenModel {
 
     private val sourceId = params.sourceId
@@ -133,6 +137,7 @@ class TopicDetailViewModel(
             is Event.BookmarkReply -> bookmarkReply(event.reply)
             is Event.BookmarkImage -> bookmarkImage(event.image)
             is Event.UpvoteTopic -> upvoteTopic()
+            is Event.DownvoteTopic -> downvoteTopic()
             is Event.UpdateLastReadReplyId -> updateLastReadReplyId(event.id)
             is Event.ShowSubComments -> showSubComments(event.commentId)
             Event.HideSubComments -> _state.update { it.copy(showSubCommentsDialog = false) }
@@ -360,4 +365,19 @@ class TopicDetailViewModel(
         }
     }
 
+    private fun downvoteTopic() {
+        if (state.value.isReacting) return
+        screenModelScope.launch {
+            _state.update { it.copy(isReacting = true) }
+            downvoteTopicUseCase(sourceId, threadId)
+                .onSuccess {
+                    _effect.send(Effect.ShowSnackbar(getString(Res.string.downvote_success)))
+                    observeTopicDetail(forceRefresh = true)
+                }
+                .onFailure { error ->
+                    _effect.send(Effect.ShowSnackbar(error.message ?: getString(Res.string.downvote_failed)))
+                }
+            _state.update { it.copy(isReacting = false) }
+        }
+    }
 }

@@ -6,6 +6,7 @@ import ai.saniou.forum.ui.components.AnimatedIconButton
 import ai.saniou.forum.ui.components.Badge
 import ai.saniou.forum.ui.components.CollapsibleThreadBody
 import ai.saniou.forum.ui.components.LikeButton
+import ai.saniou.forum.ui.components.DislikeButton
 import ai.saniou.forum.ui.components.SubCommentPreview
 import ai.saniou.forum.ui.components.ThreadAuthor
 import ai.saniou.thread.domain.model.forum.Comment
@@ -83,6 +84,7 @@ fun HeroTopicCard(
     onBookmark: () -> Unit,
     onBookmarkImage: (Image) -> Unit,
     onUpvote: () -> Unit,
+    onDownvote: () -> Unit = {},
     onUserClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -207,6 +209,13 @@ fun HeroTopicCard(
                         isLiked = false,
                         count = metadata.agreeCount,
                         onClick = onUpvote
+                    )
+                    Spacer(modifier = Modifier.width(Dimens.padding_small))
+                }
+                if (metadata.capabilities.hasDownvote) {
+                    DislikeButton(
+                        count = metadata.disagreeCount,
+                        onClick = onDownvote
                     )
                     Spacer(modifier = Modifier.width(Dimens.padding_small))
                 }

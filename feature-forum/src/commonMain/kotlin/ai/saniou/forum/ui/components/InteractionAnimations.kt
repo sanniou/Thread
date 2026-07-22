@@ -15,6 +15,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.ThumbDown
+import androidx.compose.material.icons.filled.ThumbDown
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -118,6 +120,44 @@ fun LikeButton(
                 text = count.toString(),
                 style = MaterialTheme.typography.labelMedium,
                 color = if (isLiked) Color(0xFFE91E63) else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+
+/**
+ * 带计数的点踩按钮
+ */
+@Composable
+fun DislikeButton(
+    count: Long?,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    isSelected: Boolean = false,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier
+            .clip(RoundedCornerShape(50))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 8.dp, vertical = 4.dp)
+    ) {
+        AnimatedIconButton(
+            onClick = onClick,
+            icon = Icons.Outlined.ThumbDown,
+            selectedIcon = Icons.Filled.ThumbDown,
+            isSelected = isSelected,
+            selectedTint = MaterialTheme.colorScheme.onSurfaceVariant,
+            contentDescription = "Dislike",
+            modifier = Modifier.size(20.dp)
+        )
+        if (count != null && count > 0) {
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = count.toString(),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }

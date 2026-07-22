@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.42.0 - 2026-07-22
+
+TiebaLite coverage P3 slice: topic downvote + follow/unfollow user.
+
+- `ReactionConnector.downvote` + `TiebaReactionConnector` (opAgree `agree_type=5`) and `DownvoteTopicUseCase`.
+- Topic detail UI: `DislikeButton` gated by `hasDownvote`; Tieba `SourceCapabilities.hasDownvote=true`.
+- New `UserRelationConnector` / `UserRelationRepository` + `TiebaUserRelationConnector` (profile + follow/unfollow by portrait).
+- User detail UI: follow/unfollow header, profile subtitle, snackbar feedback (`supportsUserFollow`).
+- Runtime catalog + SourceConformance require user-relation connector when advertised.
+- Desktop compile + jvmTest matrix green. Admin (delete/bawu) still deferred; album / profile edit still later.
+
 ## 0.41.0 - 2026-07-22
 
 TiebaLite coverage P2: channel sign / forum rules / search forum+user / agreeMe inbox.

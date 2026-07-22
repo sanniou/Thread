@@ -92,6 +92,7 @@ val forumFeatureModule = DI.Module("forumFeatureModule") {
             instance(),
             instance(),
             instance(),
+            instance(),
             instance()
         )
     }
@@ -131,7 +132,11 @@ val forumFeatureModule = DI.Module("forumFeatureModule") {
         UserDetailViewModel(
             sourceId = params.first,
             userHash = params.second,
-            userContentRepository = instance()
+            userContentRepository = instance(),
+            getUserRelationProfileUseCase = instance(),
+            followUserUseCase = instance(),
+            unfollowUserUseCase = instance(),
+            sourceRepository = instance(),
         )
     }
 
