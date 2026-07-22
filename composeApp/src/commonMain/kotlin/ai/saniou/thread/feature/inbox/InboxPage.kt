@@ -8,6 +8,8 @@ import ai.saniou.coreui.widgets.SaniouButton
 import ai.saniou.coreui.widgets.SaniouTextButton
 import ai.saniou.coreui.widgets.ThreadCard
 import ai.saniou.coreui.widgets.ThreadLoadingState
+import ai.saniou.coreui.theme.threadAnimateItem
+import ai.saniou.coreui.state.PagingAppendState
 import ai.saniou.reader.workflow.articledetail.ArticleDetailPage
 import ai.saniou.thread.FeedTopicRoute
 import ai.saniou.thread.domain.model.content.ContentReference
@@ -48,7 +50,6 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.RssFeed
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AssistChip
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -275,12 +276,11 @@ object InboxPage : Screen {
                             onToggleRead = { viewModel.onEvent(Event.MarkRead(event.id, !event.isRead)) },
                             onToggleMute = { viewModel.onEvent(Event.SetSourceMuted(event.sourceId, !event.muted)) },
                             onDelete = { viewModel.onEvent(Event.Delete(event.id)) },
+                            modifier = threadAnimateItem(),
                         )
                     }
                 }
-                if (inbox.loadState.append is LoadState.Loading) item {
-                    Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-                }
+                item { PagingAppendState(inbox) }
             }
             SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter))
         }
@@ -308,9 +308,10 @@ private fun InboxEventCard(
     onToggleRead: () -> Unit,
     onToggleMute: () -> Unit,
     onDelete: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     ThreadCard(
-        modifier = Modifier.fillMaxWidth().clickable(enabled = event.reference != null, onClick = onOpen),
+        modifier = modifier.fillMaxWidth().clickable(enabled = event.reference != null, onClick = onOpen),
         containerColor = if (event.isRead) MaterialTheme.colorScheme.surfaceContainerLow else MaterialTheme.colorScheme.primaryContainer,
     ) {
         Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(14.dp)) {

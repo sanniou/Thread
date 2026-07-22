@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import kotlin.time.Instant
 import ai.saniou.coreui.state.PagingStateLayout
 import ai.saniou.coreui.state.PagingAppendState
+import ai.saniou.coreui.theme.threadAnimateItem
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.itemKey
 import org.jetbrains.compose.resources.stringResource
@@ -54,7 +55,7 @@ fun GlobalSearchResults(
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         items(results, key = { "${it.type}:${it.sourceId}:${it.id}" }) { result ->
-            GlobalSearchResultRow(result, onOpen)
+            GlobalSearchResultRow(result, modifier = threadAnimateItem(), onOpen = onOpen)
         }
     }
 }
@@ -71,7 +72,9 @@ fun GlobalSearchPagingResults(
                 count = results.itemCount,
                 key = results.itemKey { "${it.type}:${it.sourceId}:${it.id}" },
             ) { index ->
-                results[index]?.let { GlobalSearchResultRow(it, onOpen) }
+                results[index]?.let {
+                    GlobalSearchResultRow(it, modifier = threadAnimateItem(), onOpen = onOpen)
+                }
             }
             item { PagingAppendState(results, endLabel = stringResource(Res.string.s_8accf8d664)) }
         }
@@ -81,6 +84,7 @@ fun GlobalSearchPagingResults(
 @Composable
 fun GlobalSearchResultRow(
     result: GlobalSearchResult,
+    modifier: Modifier = Modifier,
     onOpen: (GlobalSearchResult) -> Unit,
 ) {
     val presentation = result.type.presentation()
@@ -92,7 +96,7 @@ fun GlobalSearchResultRow(
     )
     Surface(
         onClick = { onOpen(result) },
-        modifier = Modifier.fillMaxWidth().semantics {
+        modifier = modifier.fillMaxWidth().semantics {
             contentDescription = resultContentDescription
         },
         shape = MaterialTheme.shapes.large,

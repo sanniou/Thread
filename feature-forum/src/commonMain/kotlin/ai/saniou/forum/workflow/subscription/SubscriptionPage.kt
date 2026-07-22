@@ -12,6 +12,7 @@ import ai.saniou.coreui.widgets.SaniouButton
 import ai.saniou.coreui.widgets.SaniouTextButton
 import ai.saniou.coreui.widgets.ThreadDetailScaffold
 import ai.saniou.coreui.widgets.ThreadLoadingState
+import ai.saniou.coreui.theme.threadAnimateItem
 import ai.saniou.forum.ui.components.TopicCard
 import ai.saniou.forum.ui.components.ThreadListSkeleton
 import ai.saniou.forum.workflow.image.ImagePreviewPage
@@ -238,7 +239,7 @@ private fun SubscriptionContent(
                     var pressOffset by remember { mutableStateOf(DpOffset.Zero) }
 
                     Box(
-                        modifier = Modifier.pointerInput(feed.id) {
+                        modifier = threadAnimateItem().pointerInput(feed.id) {
                             detectTapGestures(
                                 onLongPress = { offset ->
                                     showMenu = true

@@ -11,6 +11,7 @@ import ai.saniou.coreui.widgets.SaniouTextButton
 import ai.saniou.coreui.widgets.ThreadCard
 import ai.saniou.coreui.widgets.ThreadDetailScaffold
 import ai.saniou.coreui.widgets.ThreadLoadingState
+import ai.saniou.coreui.theme.threadAnimateItem
 import ai.saniou.forum.workflow.source.SourceManagerContract.Event
 import ai.saniou.thread.domain.model.source.SourceDescriptor
 import androidx.compose.foundation.layout.Arrangement
@@ -154,6 +155,7 @@ class SourceManagerPage : Screen {
                                 onToggle = { viewModel.onEvent(Event.SetEnabled(descriptor.id, it)) },
                                 onEdit = { viewModel.onEvent(Event.Edit(descriptor)) },
                                 onDelete = { viewModel.onEvent(Event.Remove(descriptor.id)) },
+                                modifier = threadAnimateItem(),
                             )
                         }
                     }
@@ -181,8 +183,9 @@ private fun SourceDescriptorCard(
     onToggle: (Boolean) -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    ThreadCard(Modifier.fillMaxWidth()) {
+    ThreadCard(modifier.fillMaxWidth()) {
         Row(
             Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,

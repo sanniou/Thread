@@ -7,6 +7,7 @@ import ai.saniou.coreui.widgets.BlankLinePolicy
 import ai.saniou.coreui.widgets.RichText
 import ai.saniou.coreui.widgets.ThreadDetailScaffold
 import ai.saniou.coreui.widgets.VerticalSpacerSmall
+import ai.saniou.coreui.theme.threadAnimateItem
 import ai.saniou.forum.workflow.topicdetail.TopicDetailPage
 import ai.saniou.forum.workflow.trend.TrendContract.Effect
 import ai.saniou.forum.workflow.trend.TrendContract.Event
@@ -258,7 +259,8 @@ data class TrendPage(
                             TrendItemCard(
                                 index = index,
                                 item = item,
-                                onClick = { onItemClick(item) }
+                                onClick = { onItemClick(item) },
+                                modifier = threadAnimateItem(),
                             )
                         }
                     }
@@ -272,9 +274,10 @@ data class TrendPage(
         index: Int,
         item: TrendItem,
         onClick: () -> Unit,
+        modifier: Modifier = Modifier,
     ) {
         Card(
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxWidth()
                 .clickable(onClick = onClick),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp), // Flat style for list

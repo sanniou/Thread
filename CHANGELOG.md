@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.35.0 - 2026-07-22
+
+Secondary list quiet motion + Inbox append consistency.
+
+- Extended `threadAnimateItem()` to Search (threads/replies), Subscription, Source Manager, Trend, TopicDetail replies, Global Search results, and Inbox events.
+- Inbox append loading now reuses `PagingAppendState` instead of a bare spinner.
+- `GlobalSearchResultRow` accepts `modifier` with trailing-lambda-safe parameter order.
+- Desktop compile + jvmTest matrix green. Tag `v0.34.0` pushed for prior list-motion release.
+
 ## 0.34.0 - 2026-07-22
 
 Quiet list enter motion + remaining full-page loading consistency.

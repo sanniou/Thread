@@ -14,6 +14,7 @@ import ai.saniou.coreui.widgets.ShimmerContainer
 import ai.saniou.coreui.widgets.VerticalSpacerSmall
 import ai.saniou.coreui.widgets.RelatedContentSection
 import ai.saniou.coreui.composition.LocalContentLinkHandler
+import ai.saniou.coreui.theme.threadAnimateItem
 import ai.saniou.forum.ui.components.*
 import ai.saniou.forum.workflow.image.ImagePreviewPage
 import ai.saniou.forum.workflow.image.ImagePreviewViewModelParams
@@ -735,10 +736,11 @@ private fun ThreadList(
                     onBookmark = { onBookmark(reply) },
                     onBookmarkImage = onBookmarkImage,
                     onUserClick = onUserClick,
-                    isHighlighted = highlightedReplyId == reply.id
+                    isHighlighted = highlightedReplyId == reply.id,
+                    modifier = threadAnimateItem(),
                 )
             } else {
-                ShimmerContainer { SkeletonReplyItem(it) }
+                ShimmerContainer(modifier = threadAnimateItem()) { SkeletonReplyItem(it) }
             }
         }
 

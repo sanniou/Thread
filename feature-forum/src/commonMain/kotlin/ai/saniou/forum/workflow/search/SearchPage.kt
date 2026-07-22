@@ -12,6 +12,7 @@ import ai.saniou.coreui.widgets.ThreadCommandBar
 import ai.saniou.coreui.widgets.ThreadDetailScaffold
 import ai.saniou.coreui.widgets.ThreadFilterBar
 import ai.saniou.coreui.widgets.ThreadSearchField
+import ai.saniou.coreui.theme.threadAnimateItem
 import ai.saniou.forum.ui.components.TopicCard
 import ai.saniou.forum.workflow.image.ImagePreviewPage
 import ai.saniou.forum.workflow.image.ImagePreviewViewModelParams
@@ -197,6 +198,7 @@ data class SearchPage(
                         onClick = { onThreadClick(thread.id) },
                         onImageClick = { img -> onImageClick(thread.id, img) },
                         onUserClick = onUserClick,
+                        modifier = threadAnimateItem(),
                     )
                 }
                 item { PagingAppendState(threads) }
@@ -239,6 +241,7 @@ data class SearchPage(
                         reply = reply,
                         onClick = { onThreadClick(reply.topicId) },
                         onImageClick = { img -> onImageClick(reply.topicId, img) },
+                        modifier = threadAnimateItem(),
                     )
                 }
                 item { PagingAppendState(replies) }
@@ -252,9 +255,10 @@ fun SearchReplyCard(
     reply: Comment,
     onClick: () -> Unit,
     onImageClick: (Image) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     ThreadCard(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
     ) {
