@@ -113,6 +113,7 @@ import thread.feature_forum.generated.resources.post_page_error_title
 import thread.feature_forum.generated.resources.post_page_name_optional
 import thread.feature_forum.generated.resources.post_page_new_post
 import thread.feature_forum.generated.resources.post_page_reply
+import thread.feature_forum.generated.resources.post_page_reply_floor
 import thread.feature_forum.generated.resources.post_page_send
 import thread.feature_forum.generated.resources.post_page_send_confirm_message
 import thread.feature_forum.generated.resources.post_page_send_confirm_no
@@ -134,15 +135,28 @@ data class PostPage(
     val channelId: String? = null,
     val topicId: String? = null,
     val forumName: String? = null,
+    val quotePostId: String? = null,
+    val replyUserId: String? = null,
+    val replyPreview: String? = null,
 ) : Screen {
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
         val di = localDI()
         val navigator = LocalNavigator.currentOrThrow
-        val viewModel: PostViewModel = rememberScreenModel(tag = "$sourceId:$channelId:$topicId") {
+        val viewModel: PostViewModel = rememberScreenModel(
+            tag = "$sourceId:$channelId:$topicId:q:${quotePostId.orEmpty()}",
+        ) {
             di.direct.instance(
-                arg = PostViewModelParams(sourceId, channelId, topicId, forumName)
+                arg = PostViewModelParams(
+                    sourceId = sourceId,
+                    channelId = channelId,
+                    topicId = topicId,
+                    forumName = forumName,
+                    quotePostId = quotePostId,
+                    replyUserId = replyUserId,
+                    replyPreview = replyPreview,
+                )
             )
         }
         val state by viewModel.state.collectAsStateWithLifecycle()
@@ -155,6 +169,7 @@ data class PostPage(
         val supportsAttachments = remember(sourceId) {
             di.direct.instance<SourceCatalog>().source(sourceId)?.capabilities?.supportsAttachments == true
         }
+        val isFloorReply = !quotePostId.isNullOrBlank()
 
         LaunchedEffect(Unit) {
             viewModel.effect.collect { effect ->
@@ -205,14 +220,23 @@ data class PostPage(
             )
         }
 
-        val title = if (topicId != null) stringResource(Res.string.post_page_reply)
-        else stringResource(Res.string.post_page_new_post, state.forumName)
+        val title = when {
+            isFloorReply -> stringResource(Res.string.post_page_reply_floor)
+            topicId != null -> stringResource(Res.string.post_page_reply)
+            else -> stringResource(Res.string.post_page_new_post, state.forumName)
+        }
         val canSend = state.content.text.isNotBlank() && !state.isLoading && !state.isSuccess
+        val subtitle = when {
+            isFloorReply -> replyPreview?.takeIf { it.isNotBlank() }
+                ?: stringResource(Res.string.s_fcd8a7e687, topicId.orEmpty())
+            topicId == null -> stringResource(Res.string.s_5ad2e65cbd, state.forumName)
+            else -> stringResource(Res.string.s_fcd8a7e687, topicId)
+        }
 
         ThreadDetailScaffold(
             title = title,
             eyebrow = stringResource(Res.string.eyebrow_composer),
-            subtitle = if (topicId == null) stringResource(Res.string.s_5ad2e65cbd, state.forumName) else stringResource(Res.string.s_fcd8a7e687, topicId),
+            subtitle = subtitle,
             onBack = { viewModel.onEvent(PostContract.Event.Close) },
             actions = {
                 if (state.hasRestoredDraft || state.postBody.content.isNotBlank() || state.postBody.attachment != null) {

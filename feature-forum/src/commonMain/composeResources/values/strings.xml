@@ -313,4 +313,6 @@
     <string name="channel_search_placeholder">搜索本吧主题与回复</string>
     <string name="channel_search_empty_desc">输入关键词，在当前吧内搜索主题与回复</string>
     <string name="topic_action_search">搜索本吧</string>
+    <string name="post_page_reply_floor">回复楼层</string>
+    <string name="reply_floor">回复此楼</string>
 </resources>

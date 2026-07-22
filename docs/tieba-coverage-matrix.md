@@ -1,7 +1,7 @@
 # TiebaLite → Thread 功能覆盖矩阵
 
 对照基准：`TiebaLite-4.0-dev`（页面 + `ITiebaApi` ~63 逻辑接口）  
-Thread 基线：`0.47.0`（P0–P3a + 看帖体验 + 推荐不感兴趣 + 本地屏蔽 + 资料编辑 + 吧内搜帖；设置 parity 后续）
+Thread 基线：`0.48.0`（P0–P3a + 看帖/楼层回复 + 推荐不感兴趣 + 本地屏蔽 + 资料编辑 + 吧内搜帖；设置 parity 后续）
 
 ## 0. 覆盖原则
 
@@ -93,7 +93,8 @@ Thread 基线：`0.47.0`（P0–P3a + 看帖体验 + 推荐不感兴趣 + 本地
 | **P3b-b** | **0.45** | ✅ 本地屏蔽关键词/用户 |
 | **P3b-c** | **0.46** | ✅ 资料编辑 profileModify |
 | **P3b-d** | **0.47** | ✅ 吧内搜帖 searchPost（云历史核对为本地 parity） |
-| **P3b-e** | 0.48+ | 设置 parity、头像 multipart（**删帖/吧务 deferred**） |
+| **P3b-e** | **0.48** | ✅ 楼层/楼中楼回复 quote_id |
+| **P3b-f** | 0.49+ | 设置 parity、头像 multipart、屏蔽扩列表（**删帖/吧务 deferred**） |
 
 ## 6. 明确不做 / 暂缓（非本阶段 100% 定义内）
 

@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.48.0 - 2026-07-22
+
+### Added
+- **楼层 / 楼中楼回复**：`PostDraft.quotePostId` + `replyUserId`；Tieba `addPost` 传 `quote_id`/`repostid`/`reply_uid`。
+- TopicDetail：楼层「回复」按钮进入 scoped PostPage；卡片点击仍打开楼中楼列表。
+- SubCommentsSheet：支持对楼中楼条目继续回复（quote 锚定父楼层）。
+
+### Notes
+- 主路径质量补全：此前只能主题级回复，无法对指定楼层发 楼中楼。
+- Desktop compile + jvmTest 门禁通过；删帖/吧务仍 deferred；设置 parity / 头像 multipart / 屏蔽扩列表 后续。
+
+
 ## 0.47.0 - 2026-07-22
 
 ### Added

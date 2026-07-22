@@ -400,9 +400,11 @@ fun ThreadReply(
     onBookmark: () -> Unit,
     onBookmarkImage: (Image) -> Unit,
     onUserClick: (String) -> Unit,
+    onComposeReply: ((Comment) -> Unit)? = null,
     isHighlighted: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
+    val composeReply = onComposeReply ?: { onReplyClicked(it.id) }
     val isPo = remember(reply.author.id, poUserHash) { reply.author.id == poUserHash }
     var showMenu by remember { mutableStateOf(false) }
     val haptic = LocalHapticFeedback.current
@@ -501,7 +503,7 @@ fun ThreadReply(
             horizontalArrangement = Arrangement.End
         ) {
             AnimatedIconButton(
-                onClick = { onReplyClicked(reply.id) },
+                onClick = { composeReply(reply) },
                 icon = Icons.AutoMirrored.Filled.Reply,
                 contentDescription = stringResource(Res.string.reply),
                 modifier = Modifier.size(32.dp)
@@ -522,7 +524,7 @@ fun ThreadReply(
                 text = { Text(stringResource(Res.string.reply)) },
                 leadingIcon = { Icon(Icons.AutoMirrored.Filled.Reply, null) },
                 onClick = {
-                    onReplyClicked(reply.id)
+                    composeReply(reply)
                     showMenu = false
                 }
             )

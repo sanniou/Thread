@@ -318,6 +318,21 @@ data class TopicDetailPage(
                     onDownvote = { viewModel.onEvent(Event.DownvoteTopic) },
                     onUserClick = { userHash -> navigator.push(UserDetailPage(sourceId, userHash)) },
                     onReplyClicked = { commentId -> viewModel.onEvent(Event.ShowSubComments(commentId)) },
+                    onComposeReply = { reply ->
+                        val metaId = (state.topicWrapper as? UiStateWrapper.Success)?.value?.id
+                        navigator.push(
+                            PostPage(
+                                sourceId = sourceId,
+                                topicId = metaId ?: reply.topicId,
+                                quotePostId = reply.id,
+                                replyUserId = reply.author.id.takeIf { it.isNotBlank() },
+                                replyPreview = buildString {
+                                    if (reply.floor > 0L) append("#${reply.floor} ")
+                                    append(reply.author.name.ifBlank { reply.author.id })
+                                },
+                            )
+                        )
+                    },
                     highlightedReplyId = highlightedReplyId,
                     related = related,
                     onOpenRelated = { rootLinkHandler?.invoke(it.reference.toThreadUrl()) },
@@ -356,13 +371,30 @@ data class TopicDetailPage(
 
         // 楼中楼弹窗
         if (state.showSubCommentsDialog) {
+            val parentFloorId = state.activeCommentId
             SubCommentsSheet(
                 wrapper = state.subCommentsWrapper,
                 hasMore = state.subCommentsHasMore,
                 isLoadingMore = state.isLoadingMoreSubComments,
                 onLoadMore = { viewModel.onEvent(Event.LoadMoreSubComments) },
                 onDismiss = { viewModel.onEvent(Event.HideSubComments) },
-                onRetry = { viewModel.onEvent(Event.RetrySubCommentsLoad) }
+                onRetry = { viewModel.onEvent(Event.RetrySubCommentsLoad) },
+                onComposeReply = { reply ->
+                    val metaId = (state.topicWrapper as? UiStateWrapper.Success)?.value?.id
+                    val quoteId = parentFloorId?.takeIf { it.isNotBlank() } ?: reply.id
+                    navigator.push(
+                        PostPage(
+                            sourceId = sourceId,
+                            topicId = metaId ?: reply.topicId,
+                            quotePostId = quoteId,
+                            replyUserId = reply.author.id.takeIf { it.isNotBlank() },
+                            replyPreview = buildString {
+                                append(reply.author.name.ifBlank { reply.author.id })
+                                append(" · 楼中楼")
+                            },
+                        )
+                    )
+                },
             )
         }
     }
@@ -391,6 +423,7 @@ private fun ThreadContentRouter(
     onDownvote: () -> Unit = {},
     onUserClick: (String) -> Unit,
     onReplyClicked: (String) -> Unit,
+    onComposeReply: (Comment) -> Unit,
     highlightedReplyId: String?,
     related: LazyPagingItems<RelatedContent>,
     onOpenRelated: (RelatedContent) -> Unit,
@@ -414,6 +447,7 @@ private fun ThreadContentRouter(
                 lazyListState = lazyListState,
                 onRefresh = onRefresh,
                 onReplyClicked = onReplyClicked,
+                    onComposeReply = onComposeReply,
                 onTogglePoOnly = onTogglePoOnly,
                 onToggleReverse = onToggleReverse,
                 onJumpPage = onJumpPage,
@@ -566,6 +600,7 @@ fun ThreadSuccessContent(
     lazyListState: LazyListState,
     onRefresh: () -> Unit,
     onReplyClicked: (String) -> Unit,
+    onComposeReply: (Comment) -> Unit,
     onTogglePoOnly: () -> Unit,
     onToggleReverse: () -> Unit,
     onJumpPage: () -> Unit,
@@ -636,6 +671,7 @@ fun ThreadSuccessContent(
             metadata = metadata,
             lazyListState = lazyListState,
             onReplyClicked = onReplyClicked,
+                    onComposeReply = onComposeReply,
             onTogglePoOnly = onTogglePoOnly,
             onToggleReverse = onToggleReverse,
             onJumpPage = onJumpPage,
@@ -666,6 +702,7 @@ private fun ThreadList(
     metadata: TopicMetadata,
     lazyListState: LazyListState,
     onReplyClicked: (String) -> Unit,
+    onComposeReply: (Comment) -> Unit,
     onTogglePoOnly: () -> Unit,
     onToggleReverse: () -> Unit,
     onJumpPage: () -> Unit,
@@ -762,6 +799,7 @@ private fun ThreadList(
                     reply = reply,
                     poUserHash = metadata.author.id,
                     onReplyClicked = onReplyClicked,
+                    onComposeReply = onComposeReply,
                     refClick = onRefClick,
                     onImageClick = onImageClick,
                     onCopy = { onCopy(reply.content) },

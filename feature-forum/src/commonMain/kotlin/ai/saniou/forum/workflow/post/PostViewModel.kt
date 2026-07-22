@@ -49,20 +49,31 @@ class PostViewModel(
 
     init {
         screenModelScope.launch {
-            if (params.forumName == null) {
-                _state.update { it.copy(forumName = getString(Res.string.action_reply)) }
-            } else {
-                _state.update { it.copy(forumName = params.forumName) }
+            when {
+                !params.replyPreview.isNullOrBlank() ->
+                    _state.update { it.copy(forumName = params.replyPreview) }
+                params.forumName == null ->
+                    _state.update { it.copy(forumName = getString(Res.string.action_reply)) }
+                else ->
+                    _state.update { it.copy(forumName = params.forumName) }
             }
             val saved = getPostDraft(draftKey)
+            // floor-reply metadata always comes from navigation params
             _state.update { current ->
-                if (saved == null) current.copy(isDraftLoading = false) else current.copy(
-                    postBody = saved.draft,
-                    content = TextFieldValue(saved.draft.content),
-                    isDraftLoading = false,
-                    hasRestoredDraft = true,
-                    draftUpdatedAtEpochMillis = saved.updatedAtEpochMillis,
-                )
+                if (saved == null) {
+                    current.copy(
+                        isDraftLoading = false,
+                        postBody = current.postBody.withQuoteContext(params),
+                    )
+                } else {
+                    current.copy(
+                        postBody = saved.draft.withQuoteContext(params),
+                        content = TextFieldValue(saved.draft.content),
+                        isDraftLoading = false,
+                        hasRestoredDraft = true,
+                        draftUpdatedAtEpochMillis = saved.updatedAtEpochMillis,
+                    )
+                }
             }
         }
     }
@@ -147,7 +158,7 @@ class PostViewModel(
         val draft = _state.value.postBody
         val now = kotlin.time.Clock.System.now().toEpochMilliseconds()
         _state.update { it.copy(isDraftSaving = true) }
-        return runCatching { savePostDraft(SavedPostDraft(key = draftKey, draft = draft, updatedAtEpochMillis = now)) }
+        return runCatching { savePostDraft(SavedPostDraft(key = draftKey, draft = draft.withQuoteContext(params), updatedAtEpochMillis = now)) }
             .onSuccess {
                 _state.update {
                     it.copy(
@@ -169,7 +180,7 @@ class PostViewModel(
             discardPostDraft(draftKey)
             _state.update {
                 it.copy(
-                    postBody = PostDraft(),
+                    postBody = PostDraft().withQuoteContext(params),
                     content = TextFieldValue(),
                     hasRestoredDraft = false,
                     draftUpdatedAtEpochMillis = null,
@@ -196,13 +207,13 @@ class PostViewModel(
                     createReplyUseCase(
                         sourceId = params.sourceId,
                         topicId = params.topicId,
-                        draft = s.postBody,
+                        draft = s.postBody.withQuoteContext(params),
                     )
                 } else if (params.channelId != null) {
                     createThreadUseCase(
                         sourceId = params.sourceId,
                         channelId = params.channelId,
-                        draft = s.postBody,
+                        draft = s.postBody.withQuoteContext(params),
                     )
                 } else {
                     throw IllegalStateException("channelId and topicId cannot both be null")
@@ -228,17 +239,35 @@ class PostViewModel(
 private const val DRAFT_SAVE_DEBOUNCE_MILLIS = 450L
 
 private fun PostViewModelParams.toDraftKey(): PostDraftKey = when {
-    topicId != null -> PostDraftKey(sourceId, PostDraftTargetKind.TOPIC, topicId)
+    topicId != null -> {
+        val target = if (!quotePostId.isNullOrBlank()) {
+            "$topicId#quote:$quotePostId"
+        } else {
+            topicId
+        }
+        PostDraftKey(sourceId, PostDraftTargetKind.TOPIC, target)
+    }
     channelId != null -> PostDraftKey(sourceId, PostDraftTargetKind.CHANNEL, channelId)
     else -> throw IllegalArgumentException("channelId and topicId cannot both be null")
 }
 
+
 private fun PostDraft.hasContent() =
     content.isNotBlank() || !name.isNullOrBlank() || !title.isNullOrBlank() || attachment != null
+
+private fun PostDraft.withQuoteContext(params: PostViewModelParams): PostDraft = copy(
+    quotePostId = params.quotePostId ?: quotePostId,
+    replyUserId = params.replyUserId ?: replyUserId,
+)
 
 data class PostViewModelParams(
     val sourceId: String,
     val channelId: String? = null,
     val topicId: String? = null,
     val forumName: String? = null,
+    /** When set, compose a floor/sub-reply (楼中楼) against this post id. */
+    val quotePostId: String? = null,
+    val replyUserId: String? = null,
+    /** UI-only hint e.g. "#12 用户名" */
+    val replyPreview: String? = null,
 )

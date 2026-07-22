@@ -36,7 +36,8 @@ fun SubCommentsSheet(
     isLoadingMore: Boolean = false,
     onLoadMore: () -> Unit = {},
     onDismiss: () -> Unit,
-    onRetry: () -> Unit
+    onRetry: () -> Unit,
+    onComposeReply: ((Comment) -> Unit)? = null,
 ) {
     AdaptiveModal(onDismissRequest = onDismiss) {
         Column(
@@ -65,13 +66,14 @@ fun SubCommentsSheet(
                         ThreadReply(
                             reply = comment,
                             poUserHash = "", // Sub-comments usually don't highlight PO in the same way
-                            onReplyClicked = { /* No-op for sub-comments of sub-comments */ },
+                            onReplyClicked = { /* viewing nested-of-nested not supported */ },
                             refClick = { /* Handle ref click if needed */ },
                             onImageClick = { /* Handle image click */ },
                             onCopy = { /* Handle copy */ },
                             onBookmark = { /* Handle bookmark */ },
                             onBookmarkImage = { /* Handle bookmark image */ },
                             onUserClick = { /* Handle user click */ },
+                            onComposeReply = onComposeReply,
                             modifier = threadAnimateItem(),
                         )
                         HorizontalDivider(

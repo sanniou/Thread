@@ -12,6 +12,12 @@ data class PostDraft(
     val title: String? = null,
     val water: Boolean = false,
     val attachment: PostAttachment? = null,
+    /** Floor post id when composing a 楼中楼 / quoted reply (Tieba quote_id / repostid). */
+    val quotePostId: String? = null,
+    /** Target user id for the quoted floor (Tieba reply_uid). */
+    val replyUserId: String? = null,
+    /** Optional nested sub-post id when replying inside 楼中楼 (Tieba spid family). */
+    val subPostId: String? = null,
 )
 
 class PostAttachment(

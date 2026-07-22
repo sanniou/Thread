@@ -111,14 +111,18 @@ class TiebaPostingConnector internal constructor(
                 add(imageUploader.upload(attachment, channel.name).markup)
             }
         }.joinToString("\n")
+        val quoteId = draft.quotePostId?.takeIf(String::isNotBlank)
         return submitAddPost(
             content = content,
             forumId = topic.channelId,
             forumName = channel.name,
             threadId = topicId,
             nameShow = draft.name,
-            failureLabel = "贴吧回复失败",
+            failureLabel = if (quoteId != null) "贴吧楼中楼回复失败" else "贴吧回复失败",
             fallbackTopicId = topicId,
+            quoteId = quoteId,
+            repostId = quoteId,
+            replyUserId = draft.replyUserId?.takeIf(String::isNotBlank),
         )
     }
 
@@ -130,6 +134,9 @@ class TiebaPostingConnector internal constructor(
         nameShow: String?,
         failureLabel: String,
         fallbackTopicId: String? = null,
+        quoteId: String? = null,
+        repostId: String? = null,
+        replyUserId: String? = null,
     ): PostResult {
         val tbs = ensureTbs()
         val response = api.addPost(
@@ -138,6 +145,9 @@ class TiebaPostingConnector internal constructor(
             forumName = forumName,
             tbs = tbs,
             threadId = threadId,
+            quoteId = quoteId,
+            repostId = repostId,
+            replyUserId = replyUserId ?: "null",
             nameShow = nameShow,
             sToken = parameterProvider.getSToken().takeIf(String::isNotBlank),
             client_user_token = parameterProvider.getUid().takeIf(String::isNotBlank),
