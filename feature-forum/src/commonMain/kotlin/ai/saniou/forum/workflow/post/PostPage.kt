@@ -661,6 +661,7 @@ data class PostPage(
                     contentPadding = PaddingValues(Dimens.padding_small)
                 ) {
                     items(EmoticonData.groups.values.toList()[selectedTabIndex]) { emoticon ->
+                        // LazyVerticalGrid uses LazyGridItemScope — no LazyItemScope.animateItem.
                         Box(
                             contentAlignment = Alignment.Center,
                             modifier = Modifier

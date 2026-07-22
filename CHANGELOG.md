@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.38.0 - 2026-07-22
+
+Remaining secondary list quiet motion + reader multi-ref key rename.
+
+- SubComments, Channel source chips, SubForum chips, Cookie reorder list, AddFeed source pick use `threadAnimateItem` (LazyColumn/LazyRow only; grid skipped).
+- Reader: `label_web_view` / `label_unknown_source` / `label_feed_source`.
+- Desktop compile + jvmTest matrix green. Tag `v0.37.0` pushed.
+
 ## 0.37.0 - 2026-07-22
 
 Second-wave semantic i18n keys + shell list quiet motion.

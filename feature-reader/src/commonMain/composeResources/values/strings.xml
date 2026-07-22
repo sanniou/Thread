@@ -5,7 +5,7 @@
     <string name="action_back">返回</string>
     <string name="s_127db1eb5e">分析失败</string>
     <string name="s_138be3960f">%1$s 个订阅源</string>
-    <string name="s_13f5a71b47">未知来源</string>
+    <string name="label_unknown_source">未知来源</string>
     <string name="share_via_system">已通过系统分享</string>
     <string name="s_1be7ae4fc2">名称</string>
     <string name="s_1d3e8e0a39">阅读器</string>
@@ -31,7 +31,7 @@
     <string name="s_45a2727884">24小时</string>
     <string name="s_463923ed95">打开完整阅读页</string>
     <string name="s_4a8be83972">暂无文章</string>
-    <string name="s_4b560383be">网页视图</string>
+    <string name="label_web_view">网页视图</string>
     <string name="s_4b62c5ce6c">高级解析规则</string>
     <string name="action_cancel">取消</string>
     <string name="s_4d69dbdf62">原文</string>
@@ -54,7 +54,7 @@
     <string name="s_96cc0e8ed2">导入 OPML</string>
     <string name="s_99250ff7cc">输入网址 (RSS, HTML, JSON)</string>
     <string name="s_a0ecc22def">添加更多源</string>
-    <string name="s_a701463879">订阅源</string>
+    <string name="label_feed_source">订阅源</string>
     <string name="action_edit">编辑</string>
     <string name="label_reading">阅读</string>
     <string name="s_ad3c05564d">刷新不会清空现有文章列表</string>

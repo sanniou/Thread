@@ -72,7 +72,7 @@ import thread.feature_reader.generated.resources.reader_export_format_title
 import thread.feature_reader.generated.resources.reader_import_format_title
 import thread.feature_reader.generated.resources.Res
 import thread.feature_reader.generated.resources.s_138be3960f
-import thread.feature_reader.generated.resources.s_13f5a71b47
+import thread.feature_reader.generated.resources.label_unknown_source
 import thread.feature_reader.generated.resources.s_1d3e8e0a39
 import thread.feature_reader.generated.resources.cache_sources_isolated
 import thread.feature_reader.generated.resources.action_done
@@ -96,7 +96,7 @@ import thread.feature_reader.generated.resources.s_7ce6f142b0
 import thread.feature_reader.generated.resources.action_add_feed_source
 import thread.feature_reader.generated.resources.s_96cc0e8ed2
 import thread.feature_reader.generated.resources.s_a0ecc22def
-import thread.feature_reader.generated.resources.s_a701463879
+import thread.feature_reader.generated.resources.label_feed_source
 import thread.feature_reader.generated.resources.action_edit
 import thread.feature_reader.generated.resources.s_ad3c05564d
 import thread.feature_reader.generated.resources.s_b7f317d76b
@@ -403,7 +403,7 @@ private fun ReaderScaffold(
                                         val sourceName = state.feedSources
                                             .find { it.id == article.feedSourceId }
                                             ?.name
-                                            ?: stringResource(Res.string.s_13f5a71b47)
+                                            ?: stringResource(Res.string.label_unknown_source)
                                         ArticleItem(
                                             article = article,
                                             sourceName = sourceName,
@@ -432,7 +432,7 @@ private fun ReaderScaffold(
                             ArticlePreviewPane(
                                 article = article,
                                 sourceName = state.feedSources.firstOrNull { it.id == article.feedSourceId }?.name
-                                    ?: stringResource(Res.string.s_13f5a71b47),
+                                    ?: stringResource(Res.string.label_unknown_source),
                                 onDismiss = onDismissPreview,
                                 onOpenFull = { onOpenArticleDetail(article) },
                                 modifier = Modifier.widthIn(min = 440.dp, max = 600.dp).fillMaxHeight(),
@@ -584,7 +584,7 @@ private fun ReaderHeader(
             actions = {
                 if (showMenuIcon) {
                     IconButton(onClick = onMenuClick) {
-                        Icon(Icons.Default.Menu, contentDescription = stringResource(Res.string.s_a701463879))
+                        Icon(Icons.Default.Menu, contentDescription = stringResource(Res.string.label_feed_source))
                     }
                 }
                 IconButton(onClick = { onSearchActiveChange(!isSearchActive) }) {
@@ -681,7 +681,7 @@ private fun FeedSourceList(
             subtitle = stringResource(Res.string.s_138be3960f, sources.size),
         )
         SectionLabel(
-            text = stringResource(Res.string.s_a701463879),
+            text = stringResource(Res.string.label_feed_source),
             modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
         )
 

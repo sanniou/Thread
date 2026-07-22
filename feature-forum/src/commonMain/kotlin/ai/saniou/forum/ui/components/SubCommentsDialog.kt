@@ -4,6 +4,7 @@ import ai.saniou.coreui.state.StateLayout
 import ai.saniou.coreui.state.UiStateWrapper
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.AdaptiveModal
+import ai.saniou.coreui.theme.threadAnimateItem
 import ai.saniou.forum.workflow.topicdetail.ThreadReply
 import ai.saniou.thread.domain.model.forum.Comment
 import androidx.compose.foundation.layout.Column
@@ -62,7 +63,8 @@ fun SubCommentsSheet(
                             onCopy = { /* Handle copy */ },
                             onBookmark = { /* Handle bookmark */ },
                             onBookmarkImage = { /* Handle bookmark image */ },
-                            onUserClick = { /* Handle user click */ }
+                            onUserClick = { /* Handle user click */ },
+                            modifier = threadAnimateItem(),
                         )
                         HorizontalDivider(
                             thickness = 0.5.dp,

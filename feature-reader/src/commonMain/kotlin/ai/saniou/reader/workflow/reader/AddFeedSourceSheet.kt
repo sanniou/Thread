@@ -3,6 +3,7 @@ package ai.saniou.reader.workflow.reader
 import ai.saniou.coreui.widgets.AdaptiveModal
 import ai.saniou.coreui.widgets.SaniouButton
 import ai.saniou.coreui.widgets.SaniouTextButton
+import ai.saniou.coreui.theme.threadAnimateItem
 import ai.saniou.thread.domain.model.reader.FeedType
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
@@ -199,7 +200,7 @@ private fun Step_SelectSource(
                 ListItem(
                     headlineContent = { Text(source.name.ifBlank { stringResource(Res.string.s_dee3a22068) }) },
                     supportingContent = { Text(source.url, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                    modifier = Modifier.clickable { onSourceSelected(source) },
+                    modifier = threadAnimateItem().clickable { onSourceSelected(source) },
                     leadingContent = {
                         Icon(Icons.Default.Check, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                     }

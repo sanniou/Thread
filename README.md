@@ -102,6 +102,7 @@
 -   [x] **次级列表动效 0.35**: Search/Subscription/SourceManager/Trend/TopicDetail/GlobalSearch/Inbox 接入 `threadAnimateItem`；Inbox 分页尾部统一 `PagingAppendState`。
 -   [x] **语义化 i18n key 0.36**: 高频 `s_*` 重命名为 `action_*` / `label_*` 等可读 key（跨 composeApp/core-ui/forum/reader/feed）。
 -   [x] **i18n/列表收口 0.37**: 二波语义 key（错误/缓存/导入导出/壳层标签）+ Activity/Operations/CommandPalette 列表 `threadAnimateItem`。
+-   [x] **次级列表收口 0.38**: SubComments/Channel chips/SubForum/Cookie/AddFeed 列表动效；Reader 尾波多引用 key 语义化。
 
 ## 🚀 构建与运行
 

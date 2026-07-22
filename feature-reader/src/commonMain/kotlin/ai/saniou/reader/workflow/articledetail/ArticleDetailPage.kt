@@ -65,7 +65,7 @@ import thread.feature_reader.generated.resources.s_1fae1943e6
 import thread.feature_reader.generated.resources.s_29554f3cb1
 import thread.feature_reader.generated.resources.label_bookmarked
 import thread.feature_reader.generated.resources.s_3c731ff0a2
-import thread.feature_reader.generated.resources.s_4b560383be
+import thread.feature_reader.generated.resources.label_web_view
 import thread.feature_reader.generated.resources.action_share
 import thread.feature_reader.generated.resources.s_88d650dd4f
 import thread.feature_reader.generated.resources.label_reading
@@ -276,7 +276,7 @@ private fun ArticleDetailActions(
 
                         if (!article.rawContent.isNullOrBlank()) {
                             DropdownMenuItem(
-                                text = { Text(stringResource(Res.string.s_4b560383be)) },
+                                text = { Text(stringResource(Res.string.label_web_view)) },
                                 onClick = {
                                     onShowWebView()
                                     onToggleMenu(false)

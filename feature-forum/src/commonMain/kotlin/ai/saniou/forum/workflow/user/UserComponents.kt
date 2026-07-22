@@ -1,5 +1,6 @@
 package ai.saniou.forum.workflow.user
 
+import ai.saniou.coreui.theme.threadAnimateItem
 import ai.saniou.corecommon.utils.toRelativeTimeString
 import ai.saniou.thread.domain.model.forum.Account
 import androidx.compose.animation.core.animateDpAsState
@@ -76,7 +77,7 @@ fun CookieListContent(
                         cookie = cookie,
                         onDelete = { onDelete(cookie) },
                         isDragging = isDragging,
-                        modifier = Modifier.draggableHandle(),
+                        modifier = threadAnimateItem().then(Modifier.draggableHandle()),
                     )
                 }
             }

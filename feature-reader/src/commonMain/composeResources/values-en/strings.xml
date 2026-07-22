@@ -7,7 +7,7 @@
     <string name="action_back">Back</string>
     <string name="s_127db1eb5e">Analysis failed</string>
     <string name="s_138be3960f">%1$s feeds</string>
-    <string name="s_13f5a71b47">Unknown source</string>
+    <string name="label_unknown_source">Unknown source</string>
     <string name="share_via_system">Shared via system share sheet</string>
     <string name="s_1be7ae4fc2">Name</string>
     <string name="s_1d3e8e0a39">Reader</string>
@@ -33,7 +33,7 @@
     <string name="s_45a2727884">24h</string>
     <string name="s_463923ed95">Open full reader page</string>
     <string name="s_4a8be83972">No articles yet</string>
-    <string name="s_4b560383be">Web view</string>
+    <string name="label_web_view">Web view</string>
     <string name="s_4b62c5ce6c">Advanced parsing rules</string>
     <string name="action_cancel">Cancel</string>
     <string name="s_4d69dbdf62">Original</string>
@@ -56,7 +56,7 @@
     <string name="s_96cc0e8ed2">Import OPML</string>
     <string name="s_99250ff7cc">Enter URL (RSS, HTML, JSON)</string>
     <string name="s_a0ecc22def">Add more sources</string>
-    <string name="s_a701463879">Feed</string>
+    <string name="label_feed_source">Feed</string>
     <string name="action_edit">Edit</string>
     <string name="label_reading">Read</string>
     <string name="s_ad3c05564d">Refresh will not clear the existing article list</string>

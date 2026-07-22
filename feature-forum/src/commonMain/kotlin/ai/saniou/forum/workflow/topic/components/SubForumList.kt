@@ -1,6 +1,8 @@
 package ai.saniou.forum.workflow.topic.components
 
 import ai.saniou.coreui.theme.Dimens
+import ai.saniou.coreui.theme.threadAnimateItem
+import androidx.compose.foundation.lazy.items
 import ai.saniou.forum.workflow.home.StylizedForumItem
 import ai.saniou.forum.workflow.home.SubCategoryBoxItem
 import ai.saniou.thread.domain.model.forum.Channel
@@ -49,8 +51,7 @@ fun SubForumList(
             contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = Dimens.padding_standard),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(subForums.size) { index ->
-                val child = subForums[index]
+            items(subForums, key = { it.id }) { child ->
                 androidx.compose.material3.FilterChip(
                     selected = false,
                     onClick = { onForumClick(child) },
@@ -59,7 +60,8 @@ fun SubForumList(
                         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                         labelColor = MaterialTheme.colorScheme.onSurface
                     ),
-                    border = null
+                    border = null,
+                    modifier = threadAnimateItem(),
                 )
             }
         }

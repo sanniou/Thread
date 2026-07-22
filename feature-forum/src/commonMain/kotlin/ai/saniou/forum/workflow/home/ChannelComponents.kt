@@ -1,6 +1,7 @@
 package ai.saniou.forum.workflow.home
 
 import ai.saniou.coreui.theme.Dimens
+import ai.saniou.coreui.theme.threadAnimateItem
 import ai.saniou.thread.domain.model.forum.Channel
 import ai.saniou.thread.domain.repository.Source
 import androidx.compose.animation.animateColorAsState
@@ -79,11 +80,12 @@ fun AnimatedSourceSelector(
         ),
         horizontalArrangement = Arrangement.spacedBy(Dimens.padding_small)
     ) {
-        items(sources) { source ->
+        items(sources, key = { it.id }) { source ->
             SourceChip(
                 source = source,
                 isSelected = currentSourceId == source.id,
-                onClick = { onSourceSelected(source.id) }
+                onClick = { onSourceSelected(source.id) },
+                modifier = threadAnimateItem(),
             )
         }
     }
@@ -94,6 +96,7 @@ private fun SourceChip(
     source: Source,
     isSelected: Boolean,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val backgroundColor by animateColorAsState(
         targetValue = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -105,6 +108,7 @@ private fun SourceChip(
 
     Surface(
         onClick = onClick,
+        modifier = modifier,
         shape = CircleShape,
         color = backgroundColor,
         border = if (isSelected) null else androidx.compose.foundation.BorderStroke(
