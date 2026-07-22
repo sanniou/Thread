@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.32.0 - 2026-07-22
+
+Release-candidate Desktop gates after the 0.31 i18n completion wave.
+
+- Re-verified jvmTest + compileKotlinJvm matrix: core-domain, core-data, core-ui, composeApp.
+- `createReleaseDistributable` wrote main-release app image under `composeApp/build/compose/binaries/main-release/app`.
+- Launcher `--smoke-check` passed: `Thread Desktop offline startup probe passed: discourse, nmb, tieba` (exit 0; incidental SLF4J / pure-virtual noise ignored).
+- No product-code delta beyond 0.31 tip; this tag marks the RC gate set green on current main.
+
 ## 0.31.0 - 2026-07-22
 
 i18n completion wave: non-composable `getString` + residual secondary pages, semantics, and filter labels.
