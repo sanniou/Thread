@@ -35,6 +35,9 @@ val appModule = DI.Module("appModule") {
             instance(),
             instance(),
             instance(),
+            instance(),
+            instance(),
+            instance(),
         )
     }
 }

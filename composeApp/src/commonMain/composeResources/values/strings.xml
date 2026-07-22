@@ -298,4 +298,17 @@
     <string name="s_abe10f8a12">有 %1$s 条新通知</string>
     <string name="s_e31cb76a01">已恢复 %1$s</string>
     <string name="s_ee8161e985">%1$s，%2$s，%3$s 条主要缓存</string>
+    <string name="content_block_title">内容屏蔽</string>
+    <string name="content_block_desc">本地屏蔽关键词与用户；列表将隐藏匹配内容（不上传服务器）。</string>
+    <string name="content_block_keyword_label">关键词（空格或逗号分隔，AND）</string>
+    <string name="content_block_user_id_label">用户 ID</string>
+    <string name="content_block_user_name_label">用户名</string>
+    <string name="content_block_add_keyword">添加关键词</string>
+    <string name="content_block_add_user">添加用户</string>
+    <string name="content_block_remove">移除</string>
+    <string name="content_block_empty">暂无屏蔽规则</string>
+    <string name="content_block_type_keyword">关键词</string>
+    <string name="content_block_type_user">用户</string>
+    <string name="content_block_added">已添加屏蔽规则</string>
+    <string name="content_block_removed">已移除屏蔽规则</string>
 </resources>

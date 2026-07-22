@@ -66,6 +66,7 @@ import ai.saniou.thread.domain.model.settings.InterfaceDensity
 import ai.saniou.thread.domain.model.settings.MotionMode
 import ai.saniou.thread.domain.model.settings.ThemeMode
 import ai.saniou.thread.domain.model.collection.SmartCollectionSort
+import ai.saniou.thread.domain.model.block.ContentBlockType
 import ai.saniou.thread.domain.model.collection.SmartCollectionGroup
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
@@ -159,6 +160,17 @@ import thread.composeapp.generated.resources.label_topic
 import thread.composeapp.generated.resources.s_ed59779c27
 import thread.composeapp.generated.resources.s_f4bbd91f79
 import thread.composeapp.generated.resources.s_11f4ce0c4c
+import thread.composeapp.generated.resources.content_block_title
+import thread.composeapp.generated.resources.content_block_desc
+import thread.composeapp.generated.resources.content_block_keyword_label
+import thread.composeapp.generated.resources.content_block_user_id_label
+import thread.composeapp.generated.resources.content_block_user_name_label
+import thread.composeapp.generated.resources.content_block_add_keyword
+import thread.composeapp.generated.resources.content_block_add_user
+import thread.composeapp.generated.resources.content_block_remove
+import thread.composeapp.generated.resources.content_block_empty
+import thread.composeapp.generated.resources.content_block_type_keyword
+import thread.composeapp.generated.resources.content_block_type_user
 
 class SyncSettingsPage(
     private val showImportOnOpen: Boolean = false,
@@ -184,6 +196,9 @@ class SyncSettingsPage(
         var socialName by remember { mutableStateOf("") }
         var socialBaseUrl by remember { mutableStateOf("") }
         var socialAccessToken by remember { mutableStateOf("") }
+        var blockKeywords by remember { mutableStateOf("") }
+        var blockUserId by remember { mutableStateOf("") }
+        var blockUserName by remember { mutableStateOf("") }
 
         LaunchedEffect(showImportOnOpen, initialImportPayload) {
             when {
@@ -487,6 +502,95 @@ class SyncSettingsPage(
                                 onClick = { viewModel.onEvent(SyncSettingsContract.Event.DeleteSocialSource(source.id)) }
                             ) {
                                 Icon(Icons.Default.DeleteOutline, stringResource(Res.string.action_delete_named, source.displayName))
+                            }
+                        }
+                    }
+                }
+
+
+                ThreadCard(modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(Res.string.content_block_title), style = MaterialTheme.typography.titleLarge)
+                    Text(
+                        stringResource(Res.string.content_block_desc),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    OutlinedTextField(
+                        value = blockKeywords,
+                        onValueChange = { blockKeywords = it },
+                        label = { Text(stringResource(Res.string.content_block_keyword_label)) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    SaniouButton(
+                        enabled = blockKeywords.isNotBlank(),
+                        onClick = {
+                            viewModel.onEvent(SyncSettingsContract.Event.AddKeywordBlock(blockKeywords))
+                            blockKeywords = ""
+                        },
+                        text = stringResource(Res.string.content_block_add_keyword),
+                    )
+                    OutlinedTextField(
+                        value = blockUserId,
+                        onValueChange = { blockUserId = it },
+                        label = { Text(stringResource(Res.string.content_block_user_id_label)) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    OutlinedTextField(
+                        value = blockUserName,
+                        onValueChange = { blockUserName = it },
+                        label = { Text(stringResource(Res.string.content_block_user_name_label)) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    SaniouButton(
+                        enabled = blockUserId.isNotBlank() || blockUserName.isNotBlank(),
+                        onClick = {
+                            viewModel.onEvent(
+                                SyncSettingsContract.Event.AddUserBlock(blockUserId, blockUserName),
+                            )
+                            blockUserId = ""
+                            blockUserName = ""
+                        },
+                        text = stringResource(Res.string.content_block_add_user),
+                    )
+                    if (state.contentBlocks.isEmpty()) {
+                        Text(
+                            stringResource(Res.string.content_block_empty),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    } else {
+                        state.contentBlocks.forEach { block ->
+                            HorizontalDivider()
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Column(Modifier.weight(1f)) {
+                                    val typeLabel = when (block.type) {
+                                        ContentBlockType.KEYWORD -> stringResource(Res.string.content_block_type_keyword)
+                                        ContentBlockType.USER -> stringResource(Res.string.content_block_type_user)
+                                    }
+                                    Text(typeLabel, style = MaterialTheme.typography.labelLarge)
+                                    val detail = when (block.type) {
+                                        ContentBlockType.KEYWORD -> block.keywords.joinToString(" · ")
+                                        ContentBlockType.USER -> listOfNotNull(
+                                            block.userName?.takeIf { it.isNotBlank() },
+                                            block.userId?.takeIf { it.isNotBlank() }?.let { "id=$it" },
+                                        ).joinToString(" · ")
+                                    }
+                                    Text(detail, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                                IconButton(
+                                    onClick = {
+                                        viewModel.onEvent(SyncSettingsContract.Event.RemoveContentBlock(block.id))
+                                    },
+                                ) {
+                                    Icon(
+                                        Icons.Default.DeleteOutline,
+                                        stringResource(Res.string.content_block_remove),
+                                    )
+                                }
                             }
                         }
                     }

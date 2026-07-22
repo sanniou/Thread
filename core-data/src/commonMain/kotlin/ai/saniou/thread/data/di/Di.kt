@@ -8,6 +8,7 @@ import ai.saniou.thread.data.repository.FavoriteRepositoryImpl
 import ai.saniou.thread.data.repository.FeedRepositoryImpl
 import ai.saniou.thread.data.repository.SourceRepositoryImpl
 import ai.saniou.thread.data.repository.ChannelRepositoryImpl
+import ai.saniou.thread.data.repository.ContentBlockRepositoryImpl
 import ai.saniou.thread.data.repository.HistoryRepositoryImpl
 import ai.saniou.thread.data.repository.NoticeRepositoryImpl
 import ai.saniou.thread.data.repository.PostRepositoryImpl
@@ -87,6 +88,7 @@ import ai.saniou.thread.domain.repository.FeedRepository
 import ai.saniou.thread.domain.repository.ForumSearchRepository
 import ai.saniou.thread.domain.repository.SourceRepository
 import ai.saniou.thread.domain.repository.ChannelRepository
+import ai.saniou.thread.domain.repository.ContentBlockRepository
 import ai.saniou.thread.domain.repository.HistoryRepository
 import ai.saniou.thread.domain.repository.NoticeRepository
 import ai.saniou.thread.domain.repository.LoginRepository
@@ -321,6 +323,9 @@ val dataModule = DI.Module("dataModule") {
     }
     bind<HistoryRepository>() with singleton {
         HistoryRepositoryImpl(instance(), instance())
+    }
+    bind<ContentBlockRepository>() with singleton {
+        ContentBlockRepositoryImpl(instance())
     }
     bind<PostRepository>() with singleton { PostRepositoryImpl(instance(), instance(), instance()) }
     bind<ReactionRepository>() with singleton { ReactionRepositoryImpl(instance(), instance(), instance()) }

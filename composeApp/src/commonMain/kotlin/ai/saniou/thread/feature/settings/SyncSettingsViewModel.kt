@@ -6,6 +6,9 @@ import ai.saniou.thread.domain.model.activity.ProductActionType
 import ai.saniou.thread.domain.model.collection.SmartCollection
 import ai.saniou.thread.domain.model.collection.SmartCollectionRules
 import ai.saniou.thread.domain.repository.AppearanceRepository
+import ai.saniou.thread.domain.usecase.block.AddContentBlockUseCase
+import ai.saniou.thread.domain.usecase.block.ObserveContentBlocksUseCase
+import ai.saniou.thread.domain.usecase.block.RemoveContentBlockUseCase
 import ai.saniou.thread.domain.repository.SmartCollectionRepository
 import ai.saniou.thread.domain.model.social.SocialSourceDescriptor
 import ai.saniou.thread.domain.usecase.social.ObserveSocialSourcesUseCase
@@ -38,6 +41,8 @@ import thread.composeapp.generated.resources.s_86cbda7968
 import thread.composeapp.generated.resources.s_d85e9647ff
 import thread.composeapp.generated.resources.s_e0d57d4e7d
 import thread.composeapp.generated.resources.s_f21ab6df37
+import thread.composeapp.generated.resources.content_block_added
+import thread.composeapp.generated.resources.content_block_removed
 
 class SyncSettingsViewModel(
     private val executeProductAction: ExecuteProductActionUseCase,
@@ -50,6 +55,9 @@ class SyncSettingsViewModel(
     observeSocialSources: ObserveSocialSourcesUseCase,
     private val saveSocialSourceUseCase: SaveSocialSourceUseCase,
     private val removeSocialSourceUseCase: RemoveSocialSourceUseCase,
+    observeContentBlocks: ObserveContentBlocksUseCase,
+    private val addContentBlock: AddContentBlockUseCase,
+    private val removeContentBlock: RemoveContentBlockUseCase,
 ) : ScreenModel {
     private val _state = MutableStateFlow(SyncSettingsContract.State())
     val state: StateFlow<SyncSettingsContract.State> = _state.asStateFlow()
@@ -94,6 +102,12 @@ class SyncSettingsViewModel(
                 _state.update { it.copy(socialSources = sources) }
             }
         }
+        screenModelScope.launch {
+            observeContentBlocks().collect { blocks ->
+                _state.update { it.copy(contentBlocks = blocks) }
+            }
+        }
+
     }
 
     fun onEvent(event: SyncSettingsContract.Event) {
@@ -129,6 +143,9 @@ class SyncSettingsViewModel(
                 runCatching { saveSocialSourceUseCase(event.source.copy(enabled = !event.source.enabled)) }
                     .onFailure(::showFailure)
             }
+            is SyncSettingsContract.Event.AddKeywordBlock -> addKeywordBlock(event.raw)
+            is SyncSettingsContract.Event.AddUserBlock -> addUserBlock(event.userId, event.userName)
+            is SyncSettingsContract.Event.RemoveContentBlock -> removeBlock(event.id)
             is SyncSettingsContract.Event.DeleteSocialSource -> screenModelScope.launch {
                 runCatching { removeSocialSourceUseCase(event.id) }
                     .onSuccess { _state.update { it.copy(message = getString(Res.string.s_f21ab6df37)) } }
@@ -277,6 +294,43 @@ class SyncSettingsViewModel(
                     _state.update {
                         it.copy(isWorking = false, message = result.message)
                     }
+                },
+                onFailure = ::showFailure,
+            )
+        }
+    }
+
+
+    private fun addKeywordBlock(raw: String) {
+        val parts = raw.split(',', ' ', '，', '、', '\t', '\n')
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+        screenModelScope.launch {
+            runCatching { addContentBlock.keyword(parts) }.fold(
+                onSuccess = {
+                    _state.update { it.copy(message = getString(Res.string.content_block_added)) }
+                },
+                onFailure = ::showFailure,
+            )
+        }
+    }
+
+    private fun addUserBlock(userId: String, userName: String) {
+        screenModelScope.launch {
+            runCatching { addContentBlock.user(userId, userName) }.fold(
+                onSuccess = {
+                    _state.update { it.copy(message = getString(Res.string.content_block_added)) }
+                },
+                onFailure = ::showFailure,
+            )
+        }
+    }
+
+    private fun removeBlock(id: Long) {
+        screenModelScope.launch {
+            runCatching { removeContentBlock(id) }.fold(
+                onSuccess = {
+                    _state.update { it.copy(message = getString(Res.string.content_block_removed)) }
                 },
                 onFailure = ::showFailure,
             )

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.45.0 - 2026-07-22
+
+本地内容屏蔽：关键词（AND）+ 用户规则；设置页管理；Trend 列表客户端过滤。
+
+- Domain：`ContentBlock` / `ContentBlockMatcher` + `ContentBlockRepository` + Observe/Add/Remove UseCase。
+- Data：SQLDelight `ContentBlockEntity`（schema v7 / migration 6→7）+ `ContentBlockRepositoryImpl`。
+- UI：SyncSettings「内容屏蔽」卡片（增删关键词/用户）；Trend paging 按规则过滤。
+- Desktop compile + jvmTest 门禁通过；资料编辑/云历史/设置 parity 仍后续；删帖/吧务 deferred。
+
 ## 0.44.0 - 2026-07-22
 
 推荐流「不感兴趣」：Tieba `submitDislike` 全链路（Connector + Trend 推荐 tab UI）。

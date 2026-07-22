@@ -300,4 +300,17 @@
     <string name="s_fcf7924617">Completed records cleared</string>
     <string name="action_reply">Reply</string>
     <string name="s_ffcf0a1eb0">File not found</string>
+    <string name="content_block_title">Content blocks</string>
+    <string name="content_block_desc">Local keyword and user blocks; matching items are hidden client-side (never uploaded).</string>
+    <string name="content_block_keyword_label">Keywords (space/comma, AND)</string>
+    <string name="content_block_user_id_label">User ID</string>
+    <string name="content_block_user_name_label">Username</string>
+    <string name="content_block_add_keyword">Add keywords</string>
+    <string name="content_block_add_user">Add user</string>
+    <string name="content_block_remove">Remove</string>
+    <string name="content_block_empty">No block rules yet</string>
+    <string name="content_block_type_keyword">Keyword</string>
+    <string name="content_block_type_user">User</string>
+    <string name="content_block_added">Block rule added</string>
+    <string name="content_block_removed">Block rule removed</string>
 </resources>

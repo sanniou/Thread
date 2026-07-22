@@ -1,0 +1,33 @@
+CREATE TABLE ContentBlockEntity (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    type TEXT NOT NULL,
+    keywords TEXT NOT NULL DEFAULT '[]',
+    userId TEXT,
+    userName TEXT,
+    createdAt INTEGER NOT NULL
+);
+
+CREATE INDEX idx_content_block_type ON ContentBlockEntity(type);
+CREATE INDEX idx_content_block_user ON ContentBlockEntity(userId);
+
+getAllBlocks:
+SELECT * FROM ContentBlockEntity
+ORDER BY createdAt DESC, id DESC;
+
+getBlocksByType:
+SELECT * FROM ContentBlockEntity
+WHERE type = :type
+ORDER BY createdAt DESC, id DESC;
+
+insertBlock:
+INSERT INTO ContentBlockEntity(type, keywords, userId, userName, createdAt)
+VALUES (?, ?, ?, ?, ?);
+
+deleteBlock:
+DELETE FROM ContentBlockEntity WHERE id = ?;
+
+clearBlocks:
+DELETE FROM ContentBlockEntity;
+
+countBlocks:
+SELECT count(*) FROM ContentBlockEntity;

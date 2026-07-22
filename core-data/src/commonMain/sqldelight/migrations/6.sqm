@@ -1,0 +1,11 @@
+CREATE TABLE ContentBlockEntity (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    type TEXT NOT NULL,
+    keywords TEXT NOT NULL DEFAULT '[]',
+    userId TEXT,
+    userName TEXT,
+    createdAt INTEGER NOT NULL
+);
+
+CREATE INDEX idx_content_block_type ON ContentBlockEntity(type);
+CREATE INDEX idx_content_block_user ON ContentBlockEntity(userId);

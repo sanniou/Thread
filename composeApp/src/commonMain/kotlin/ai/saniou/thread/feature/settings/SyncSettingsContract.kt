@@ -4,6 +4,7 @@ import ai.saniou.thread.domain.model.reader.ReaderSchedulerState
 import ai.saniou.thread.domain.model.collection.SmartCollection
 import ai.saniou.thread.domain.model.collection.SmartCollectionSort
 import ai.saniou.thread.domain.model.collection.SmartCollectionGroup
+import ai.saniou.thread.domain.model.block.ContentBlock
 import ai.saniou.thread.domain.model.settings.AppearancePreferences
 import ai.saniou.thread.domain.model.social.SocialSourceDescriptor
 
@@ -26,6 +27,7 @@ interface SyncSettingsContract {
         val appearance: AppearancePreferences = AppearancePreferences(),
         val smartCollections: List<SmartCollection> = emptyList(),
         val socialSources: List<SocialSourceDescriptor> = emptyList(),
+        val contentBlocks: List<ContentBlock> = emptyList(),
     )
 
     sealed interface Event {
@@ -61,5 +63,8 @@ interface SyncSettingsContract {
         ) : Event
         data class ToggleSocialSource(val source: SocialSourceDescriptor) : Event
         data class DeleteSocialSource(val id: String) : Event
+        data class AddKeywordBlock(val raw: String) : Event
+        data class AddUserBlock(val userId: String, val userName: String) : Event
+        data class RemoveContentBlock(val id: Long) : Event
     }
 }

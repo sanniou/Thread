@@ -109,6 +109,7 @@
 -   [x] **Tieba 覆盖 P3a 0.42**: 点踩 downvote、关注/取关用户；删帖/吧务仍暂缓。
 -   [x] **看帖体验 0.43**: 倒序、跳页、楼中楼分页、图片流 picPage、详情 FilterBar 工具栏。
 -   [x] **推荐不感兴趣 0.44**: Trend 推荐 tab `submitDislike` / Not interested。
+-   [x] **本地屏蔽 0.45**: 关键词/用户 ContentBlock + 设置页管理 + Trend 过滤。
 
 ## 🚀 构建与运行
 

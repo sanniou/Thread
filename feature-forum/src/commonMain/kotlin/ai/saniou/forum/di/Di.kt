@@ -146,6 +146,7 @@ val forumFeatureModule = DI.Module("forumFeatureModule") {
             initialSourceId = sourceId,
             trendRepository = instance(),
             submitNotInterestedUseCase = instance(),
+            observeContentBlocks = instance(),
         )
     }
 

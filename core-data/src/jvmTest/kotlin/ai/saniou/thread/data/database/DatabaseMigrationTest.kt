@@ -90,7 +90,7 @@ class DatabaseMigrationTest {
             "idx_topic_source_author_reply",
         )
         assertTrue(driver.indexNames().containsAll(expected))
-        assertEquals(6L, Database.Schema.version)
+        assertEquals(7L, Database.Schema.version)
         driver.close()
     }
 
@@ -179,7 +179,32 @@ class DatabaseMigrationTest {
         ).value
         assertEquals(1L, socialCount)
         assertEquals(1L, edgeCount)
-        assertEquals(6L, Database.Schema.version)
+        assertEquals(7L, Database.Schema.version)
+        driver.close()
+    }
+
+
+    @Test
+    fun addsVersionSevenContentBlocksWithoutRecreatingDatabase() = runBlocking {
+        val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
+        Database.Schema.synchronous().migrate(driver, oldVersion = 6L, newVersion = 7L)
+        driver.executeStatement(
+            """
+            INSERT INTO ContentBlockEntity(type, keywords, userId, userName, createdAt)
+            VALUES ('KEYWORD', '["spam"]', NULL, NULL, 1)
+            """.trimIndent(),
+        )
+        val count = driver.executeQuery(
+            identifier = null,
+            sql = "SELECT count(*) FROM ContentBlockEntity",
+            mapper = { cursor ->
+                cursor.next()
+                QueryResult.Value(cursor.getLong(0) ?: 0L)
+            },
+            parameters = 0,
+        ).value
+        assertEquals(1L, count)
+        assertEquals(7L, Database.Schema.version)
         driver.close()
     }
 

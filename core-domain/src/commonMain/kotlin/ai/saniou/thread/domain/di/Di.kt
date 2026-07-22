@@ -13,6 +13,9 @@ import ai.saniou.thread.domain.usecase.channel.GetChannelTopicsPagingUseCase
 import ai.saniou.thread.domain.usecase.channel.GetForumRulesUseCase
 import ai.saniou.thread.domain.usecase.channel.SignChannelUseCase
 import ai.saniou.thread.domain.usecase.channel.SignFavoriteChannelsUseCase
+import ai.saniou.thread.domain.usecase.block.AddContentBlockUseCase
+import ai.saniou.thread.domain.usecase.block.ObserveContentBlocksUseCase
+import ai.saniou.thread.domain.usecase.block.RemoveContentBlockUseCase
 import ai.saniou.thread.domain.usecase.history.AddHistoryUseCase
 import ai.saniou.thread.domain.usecase.history.GetHistoryUseCase
 import ai.saniou.thread.domain.usecase.feed.GetTimelineUseCase
@@ -205,6 +208,11 @@ val domainModule = DI.Module("domainModule") {
     // History
     bindProvider { GetHistoryUseCase(instance()) }
     bindProvider { AddHistoryUseCase(instance()) }
+
+    // Content block (local mute/keyword)
+    bindProvider { ObserveContentBlocksUseCase(instance()) }
+    bindProvider { AddContentBlockUseCase(instance()) }
+    bindProvider { RemoveContentBlockUseCase(instance()) }
 
     // Settings
     bindProvider { GetSettingsUseCase(instance()) }

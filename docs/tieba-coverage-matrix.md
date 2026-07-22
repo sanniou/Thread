@@ -1,7 +1,7 @@
 # TiebaLite → Thread 功能覆盖矩阵
 
 对照基准：`TiebaLite-4.0-dev`（页面 + `ITiebaApi` ~63 逻辑接口）  
-Thread 基线：`0.44.0`（P0–P3a + 看帖体验 + 推荐不感兴趣；资料编辑/屏蔽等后续）
+Thread 基线：`0.45.0`（P0–P3a + 看帖体验 + 推荐不感兴趣 + 本地屏蔽；资料编辑/云历史等后续）
 
 ## 0. 覆盖原则
 
@@ -47,7 +47,7 @@ Thread 基线：`0.44.0`（P0–P3a + 看帖体验 + 推荐不感兴趣；资料
 | 资料编辑/头像 | profileModify / imgPortrait | API only | missing | P3 |
 | 图片浏览器 | picPage / PhotoView | ImagePreview + `FetchTopicImagePageUseCase` / picPage 分页 | done (0.43) | — |
 | 浏览历史 | History 本地 | Thread History 本地 | partial（无贴吧云历史） | P3 |
-| 屏蔽词/黑名单 | Block settings | missing | missing | P3 |
+| 屏蔽词/黑名单 | Block settings | local ContentBlock 关键词+用户 + Settings + Trend filter | done (0.45 local) | — |
 | 设置/主题/习惯 | Settings* | Thread 通用 Appearance/Settings | n/a 映射 | P3 |
 | WebView 杂项 | WebViewPage | Desktop 外链/系统浏览器 | n/a | 扩展保留 |
 
@@ -90,7 +90,8 @@ Thread 基线：`0.44.0`（P0–P3a + 看帖体验 + 推荐不感兴趣；资料
 | **P3a** | **0.42** | ✅ 点踩 downvote、关注/取关用户 |
 | **看帖体验** | **0.43** | ✅ 倒序、跳页、楼中楼分页、图片流 picPage、详情 FilterBar |
 | **P3b-a** | **0.44** | ✅ 推荐流不感兴趣 submitDislike |
-| **P3b-b** | 0.45+ | 资料编辑、屏蔽、历史云同步、设置 parity（**删帖/吧务 deferred**） |
+| **P3b-b** | **0.45** | ✅ 本地屏蔽关键词/用户 |
+| **P3b-c** | 0.46+ | 资料编辑、历史云同步、设置 parity（**删帖/吧务 deferred**） |
 
 ## 6. 明确不做 / 暂缓（非本阶段 100% 定义内）
 

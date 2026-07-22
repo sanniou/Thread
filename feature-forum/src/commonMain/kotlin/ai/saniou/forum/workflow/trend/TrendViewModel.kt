@@ -4,7 +4,10 @@ import ai.saniou.forum.workflow.trend.TrendContract.Effect
 import ai.saniou.forum.workflow.trend.TrendContract.Event
 import ai.saniou.forum.workflow.trend.TrendContract.State
 import ai.saniou.thread.domain.model.TrendItem
+import ai.saniou.thread.domain.model.block.ContentBlock
+import ai.saniou.thread.domain.model.block.ContentBlockMatcher
 import ai.saniou.thread.domain.repository.TrendRepository
+import ai.saniou.thread.domain.usecase.block.ObserveContentBlocksUseCase
 import ai.saniou.thread.domain.usecase.post.SubmitNotInterestedUseCase
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
@@ -30,6 +33,7 @@ class TrendViewModel(
     private val initialSourceId: String,
     private val trendRepository: TrendRepository,
     private val submitNotInterestedUseCase: SubmitNotInterestedUseCase,
+    observeContentBlocks: ObserveContentBlocksUseCase,
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(State())
@@ -38,10 +42,15 @@ class TrendViewModel(
     private val _effect = Channel<Effect>()
     val effect = _effect.receiveAsFlow()
 
+    private val contentBlocks = MutableStateFlow<List<ContentBlock>>(emptyList())
+
     init {
         screenModelScope.launch {
             loadAvailableSources()
             selectSource(initialSourceId)
+        }
+        screenModelScope.launch {
+            observeContentBlocks().collect { contentBlocks.value = it }
         }
     }
 
@@ -59,6 +68,17 @@ class TrendViewModel(
         .combine(state.map { it.dismissedTopicIds }.distinctUntilChanged()) { paging, dismissed ->
             if (dismissed.isEmpty()) paging
             else paging.filter { it.topicId !in dismissed }
+        }
+        .combine(contentBlocks) { paging, blocks ->
+            if (blocks.isEmpty()) paging
+            else paging.filter { item ->
+                !ContentBlockMatcher.shouldBlockContent(
+                    text = listOfNotNull(item.title, item.contentPreview, item.channel).joinToString("\n"),
+                    userId = item.payload["authorId"] as? String,
+                    userName = item.payload["authorName"] as? String ?: item.author,
+                    rules = blocks,
+                )
+            }
         }
         .cachedIn(screenModelScope)
 
