@@ -7,7 +7,6 @@ import ai.saniou.coreui.widgets.BlankLinePolicy
 import ai.saniou.coreui.widgets.RichText
 import ai.saniou.coreui.widgets.ThreadDetailScaffold
 import ai.saniou.coreui.widgets.SaniouTextButton
-import ai.saniou.coreui.widgets.VerticalSpacerSmall
 import ai.saniou.coreui.theme.threadAnimateItem
 import ai.saniou.forum.workflow.topicdetail.TopicDetailPage
 import ai.saniou.forum.workflow.trend.TrendContract.Effect
@@ -46,6 +45,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -61,7 +61,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -255,7 +254,7 @@ data class TrendPage(
                         horizontal = Dimens.page_horizontal,
                         vertical = Dimens.page_vertical,
                     ),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
                     modifier = Modifier.fillMaxSize()
                 ) {
                     items(
@@ -290,101 +289,96 @@ data class TrendPage(
         onNotInterested: () -> Unit = {},
         modifier: Modifier = Modifier,
     ) {
-        Card(
+        Surface(
             modifier = modifier
                 .fillMaxWidth()
                 .clickable(onClick = onClick),
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp), // Flat style for list
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface,
-            ),
+            color = MaterialTheme.colorScheme.surface,
             shape = MaterialTheme.shapes.large,
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f)),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.40f)),
+            tonalElevation = 0.dp,
+            shadowElevation = 0.dp,
         ) {
             Row(
-                modifier = Modifier.padding(20.dp),
-                verticalAlignment = Alignment.Top
+                modifier = Modifier.padding(horizontal = 18.dp, vertical = 16.dp),
+                verticalAlignment = Alignment.Top,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                // Rank Number
                 if (item.rank != null) {
-                    RankText(
+                    RankBadge(
                         index = index,
-                        rank = item.rank.toString().padStart(2, '0')
+                        rank = item.rank.toString().padStart(2, '0'),
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
                 }
 
-                Column(modifier = Modifier.weight(1f)) {
-                    // Header: Forum | ID | Time?
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         if (item.channel != null) {
                             Text(
                                 text = item.channel!!,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSecondaryContainer,
-                                modifier = Modifier
-                                    .clip(MaterialTheme.shapes.small)
-                                    .background(MaterialTheme.colorScheme.secondaryContainer)
-                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.primary,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
                             )
                         }
-
-                        Text(
-                            text = if (item.title?.startsWith("No.")?:false) item.title!! else "No.${item.topicId}",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.outline
-                        )
 
                         if (item.isNew) {
                             Text(
-                                text = "NEW",
+                                text = "新",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onError,
-                                fontWeight = FontWeight.Bold,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onTertiaryContainer,
                                 modifier = Modifier
-                                    .clip(MaterialTheme.shapes.small)
-                                    .background(MaterialTheme.colorScheme.error)
-                                    .padding(horizontal = 4.dp, vertical = 2.dp)
+                                    .clip(MaterialTheme.shapes.extraLarge)
+                                    .background(MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.85f))
+                                    .padding(horizontal = 8.dp, vertical = 2.dp),
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.weight(1f))
+
+                        if (item.hotness != null) {
+                            Text(
+                                text = item.hotness!!,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
                             )
                         }
                     }
-
-                    VerticalSpacerSmall()
 
                     if (item.title.isNullOrEmpty().not() && !item.title!!.startsWith("No.")) {
                         Text(
                             text = item.title!!,
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
                         )
-                        VerticalSpacerSmall()
                     }
 
-                    RichText(
-                        text = item.contentPreview?:"",
-                        blankLinePolicy = BlankLinePolicy.REMOVE,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        maxLines = 4,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-
-                    VerticalSpacerSmall()
-
-                    if (item.hotness != null) {
-                        Text(
-                            text = item.hotness!!, // e.g., "Trend 34" or "34 replies"
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.tertiary
+                    if (!item.contentPreview.isNullOrBlank()) {
+                        RichText(
+                            text = item.contentPreview ?: "",
+                            blankLinePolicy = BlankLinePolicy.REMOVE,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 3,
+                            overflow = TextOverflow.Ellipsis,
                         )
                     }
 
                     if (supportsNotInterested) {
-                        VerticalSpacerSmall()
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.End,
@@ -402,25 +396,33 @@ data class TrendPage(
     }
 
     @Composable
-    private fun RankText(
+    private fun RankBadge(
         index: Int,
         rank: String,
     ) {
-        val color = when (index) {
-            0 -> Color(0xFFD50000) // RedA700
-            1 -> Color(0xFFFF6D00) // OrangeA700
-            2 -> Color(0xFFFFD600) // Yellow
-            else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+        val (container, content) = when (index) {
+            0 -> MaterialTheme.colorScheme.primaryContainer to MaterialTheme.colorScheme.onPrimaryContainer
+            1 -> MaterialTheme.colorScheme.secondaryContainer to MaterialTheme.colorScheme.onSecondaryContainer
+            2 -> MaterialTheme.colorScheme.tertiaryContainer to MaterialTheme.colorScheme.onTertiaryContainer
+            else -> MaterialTheme.colorScheme.surfaceContainerHigh to MaterialTheme.colorScheme.onSurfaceVariant
         }
 
-        Text(
-            text = rank,
-            style = MaterialTheme.typography.headlineMedium.copy(
-                fontWeight = FontWeight.Bold,
-            ),
-            color = color,
-            modifier = Modifier.width(48.dp), // Fixed width for alignment
-            textAlign = TextAlign.Center
-        )
+        Surface(
+            color = container.copy(alpha = 0.92f),
+            shape = MaterialTheme.shapes.medium,
+            tonalElevation = 0.dp,
+            shadowElevation = 0.dp,
+        ) {
+            Text(
+                text = rank,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = content,
+                modifier = Modifier
+                    .width(40.dp)
+                    .padding(vertical = 8.dp),
+                textAlign = TextAlign.Center,
+            )
+        }
     }
 }

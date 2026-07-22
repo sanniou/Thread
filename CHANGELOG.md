@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.51.0 - 2026-07-23
+
+### Changed
+- **Redesign 波次 2**：继续弃草图，覆盖 Trend / Post / Search 与空错态基线。
+- Trend：`TrendItemCard` 信息层级（频道/热度/标题/正文）、主题色 Rank badge（去掉红橙黄硬编码）。
+- Post：主 CTA 实心发送、扩展选项安静卡片、成功态无重阴影、底栏 border/无 elevation。
+- Search：回复/频道/用户卡去 `No.` 草图标签，名称优先；列表间距收紧。
+- 基线：`ModernEmptyState` / `ThreadLoadingState` 安静容器；`ReferenceSheet` 引用标签现代化。
+
+### Notes
+- Desktop compile + jvmTest 门禁通过；设置 parity / 头像 multipart 仍后续；删帖/吧务 deferred。
+
 ## 0.50.0 - 2026-07-23
 
 ### Changed

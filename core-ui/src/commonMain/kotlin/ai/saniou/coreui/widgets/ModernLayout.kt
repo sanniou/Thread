@@ -330,24 +330,33 @@ fun ModernEmptyState(
     action: (@Composable () -> Unit)? = null,
 ) {
     Column(
-        modifier = modifier.padding(40.dp).widthIn(max = 460.dp),
+        modifier = modifier.padding(horizontal = 40.dp, vertical = 48.dp).widthIn(max = 460.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         Surface(
             shape = MaterialTheme.shapes.extraLarge,
-            color = MaterialTheme.colorScheme.primaryContainer,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.9f),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.40f)),
+            tonalElevation = 0.dp,
+            shadowElevation = 0.dp,
         ) {
-            Box(Modifier.size(72.dp), contentAlignment = Alignment.Center) {
+            Box(Modifier.size(68.dp), contentAlignment = Alignment.Center) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    modifier = Modifier.size(32.dp),
+                    modifier = Modifier.size(30.dp),
                     tint = MaterialTheme.colorScheme.primary,
                 )
             }
         }
-        Text(title, style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
+        Text(
+            title,
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.SemiBold,
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
         Text(
             description,
             style = MaterialTheme.typography.bodyMedium,

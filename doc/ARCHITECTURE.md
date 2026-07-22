@@ -472,3 +472,12 @@ Disable sketch-era hard-coded pink/bounce UI. Refresh `core-ui` palette/shapes/s
 - Interaction: theme-colored `LikeButton` / `DislikeButton`, reducedMotion-aware `AnimatedIconButton`.
 - Media: `ForumImageGrid` larger radius/spacing, single-image crop fill.
 - Shell: `UnifiedActionBar` primary CTA + quiet border surface.
+
+## 0.51 Redesign wave 2
+
+Continue quiet redesign on secondary main paths and system states:
+
+- Trend: `TrendItemCard` hierarchy + theme Rank badge (no hard-coded red/orange/yellow).
+- Post: solid send CTA, quiet more-options panel, border-only bottom toolbar, success overlay without heavy shadow.
+- Search: reply/channel/user cards drop sketch `No.` labels; name-first hierarchy.
+- System: quieter `ModernEmptyState` / `ThreadLoadingState`; `ReferenceSheet` reference label.

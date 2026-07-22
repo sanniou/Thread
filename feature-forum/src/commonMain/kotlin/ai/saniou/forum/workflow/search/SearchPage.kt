@@ -254,7 +254,7 @@ data class SearchPage(
                     horizontal = LocalThreadWindowInfo.current.pageHorizontalPadding,
                     vertical = 8.dp,
                 ),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 items(threads.itemCount) { index ->
                     val thread = threads[index] ?: return@items
@@ -298,7 +298,7 @@ data class SearchPage(
                     horizontal = LocalThreadWindowInfo.current.pageHorizontalPadding,
                     vertical = 8.dp,
                 ),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 items(replies.itemCount) { index ->
                     val reply = replies[index] ?: return@items
@@ -340,7 +340,7 @@ data class SearchPage(
                     horizontal = LocalThreadWindowInfo.current.pageHorizontalPadding,
                     vertical = 8.dp,
                 ),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 items(channels.itemCount) { index ->
                     val channel = channels[index] ?: return@items
@@ -381,7 +381,7 @@ data class SearchPage(
                     horizontal = LocalThreadWindowInfo.current.pageHorizontalPadding,
                     vertical = 8.dp,
                 ),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 items(users.itemCount) { index ->
                     val user = users[index] ?: return@items
@@ -410,28 +410,29 @@ fun SearchReplyCard(
             .clickable(onClick = onClick)
     ) {
         Column(
-            verticalArrangement = Arrangement.spacedBy(Dimens.padding_small)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(Dimens.padding_small)
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
+                val authorName = reply.author.name.ifBlank { reply.author.id }
                 Text(
-                    text = reply.author.id,
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = "No.${reply.id}",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.outline
+                    text = authorName,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false),
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 Text(
-                    text = ">> No.${reply.topicId}",
+                    text = "主题 ${reply.topicId}",
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.primary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
 
@@ -439,13 +440,17 @@ fun SearchReplyCard(
                 Text(
                     text = reply.title!!,
                     style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
 
             RichText(
                 text = reply.content,
                 style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 4,
                 overflow = TextOverflow.Ellipsis,
                 blankLinePolicy = BlankLinePolicy.REMOVE
@@ -471,7 +476,8 @@ fun SearchChannelCard(
             Text(
                 text = channel.displayName?.takeIf { it.isNotBlank() } ?: channel.name,
                 style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
             )
             val subtitle = channel.descriptionText
                 ?.takeIf { it.isNotBlank() }
@@ -517,13 +523,14 @@ fun SearchUserCard(
             Text(
                 text = author.name.ifBlank { author.id },
                 style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
             )
             if (author.id.isNotBlank() && author.id != author.name) {
                 Text(
                     text = author.id,
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.outline,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }

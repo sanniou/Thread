@@ -7,6 +7,7 @@ import ai.saniou.coreui.widgets.ThreadDetailScaffold
 import ai.saniou.coreui.widgets.SaniouButton
 import ai.saniou.coreui.widgets.SaniouTextButton
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -191,7 +192,7 @@ data class PostPage(
                 title = { Text(text = stringResource(Res.string.post_page_send_confirm_title)) },
                 text = { Text(text = stringResource(Res.string.post_page_send_confirm_message)) },
                 confirmButton = {
-                    SaniouTextButton(
+                    SaniouButton(
                         onClick = { viewModel.onEvent(PostContract.Event.Submit) },
                         text = stringResource(Res.string.post_page_send_confirm_yes),
                     )
@@ -250,7 +251,7 @@ data class PostPage(
                     }
                 }
                 if (!state.isLoading && !state.isSuccess) {
-                    SaniouTextButton(
+                    SaniouButton(
                         onClick = { viewModel.onEvent(PostContract.Event.ToggleConfirmDialog) },
                         enabled = canSend,
                         text = stringResource(Res.string.post_page_send),
@@ -296,8 +297,11 @@ data class PostPage(
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-                                .padding(Dimens.padding_medium)
+                                .padding(top = Dimens.padding_medium)
+                                .clip(MaterialTheme.shapes.large)
+                                .background(MaterialTheme.colorScheme.surfaceContainerLow)
+                                .padding(Dimens.padding_medium),
+                            verticalArrangement = Arrangement.spacedBy(Dimens.padding_small),
                         ) {
                             if (topicId == null) { // New Thread Options
                                 OutlinedTextField(
@@ -368,25 +372,36 @@ data class PostPage(
                         scaleOut(animationSpec = threadTweenSpec(), targetScale = 0.92f),
                 ) {
                     Surface(
-                        shape = RoundedCornerShape(Dimens.corner_radius_large),
-                        color = MaterialTheme.colorScheme.primaryContainer,
-                        shadowElevation = 6.dp
+                        shape = MaterialTheme.shapes.extraLarge,
+                        color = MaterialTheme.colorScheme.surface,
+                        border = BorderStroke(
+                            1.dp,
+                            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.40f),
+                        ),
+                        tonalElevation = 0.dp,
+                        shadowElevation = 0.dp,
                     ) {
                         Column(
-                            modifier = Modifier.padding(Dimens.padding_large),
-                            horizontalAlignment = Alignment.CenterHorizontally
+                            modifier = Modifier.padding(horizontal = 28.dp, vertical = 24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(Dimens.padding_medium),
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.CheckCircle,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(48.dp)
-                            )
-                            Spacer(modifier = Modifier.height(Dimens.padding_medium))
+                            Surface(
+                                shape = MaterialTheme.shapes.extraLarge,
+                                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.85f),
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.CheckCircle,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.padding(14.dp).size(28.dp),
+                                )
+                            }
                             Text(
                                 text = stringResource(Res.string.post_page_success),
                                 style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface,
                             )
                         }
                     }
@@ -514,16 +529,23 @@ data class PostPage(
         Column {
             // Toolbar Actions
             Surface(
-                tonalElevation = 3.dp,
-                shadowElevation = 4.dp,
-                color = MaterialTheme.colorScheme.surface
+                tonalElevation = 0.dp,
+                shadowElevation = 0.dp,
+                color = MaterialTheme.colorScheme.surfaceContainerLow,
+                border = BorderStroke(
+                    1.dp,
+                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f),
+                ),
+                shape = RoundedCornerShape(
+                    topStart = Dimens.corner_radius_extra_large,
+                    topEnd = Dimens.corner_radius_extra_large,
+                ),
             ) {
                 Column {
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = Dimens.padding_small, vertical = 8.dp)
+                            .padding(horizontal = Dimens.padding_small, vertical = 6.dp)
                             .navigationBarsPadding(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
