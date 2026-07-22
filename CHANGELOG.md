@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.53.0 - 2026-07-23
+
+### Changed
+- **Redesign 波次 4（Settings / Media / Feed / Reader 全覆盖）**：把安静层级扩到剩余主工作区页面。
+- Settings：分组标题 titleMedium、Slider 标签弱化、组间距收紧。
+- ImagePreview：页码 pill 边框、底栏「已到末尾」安静容器、HUD 内边距收紧。
+- Feed：`TimelinePostCard` 来源 chip 层级对齐 Topic 主路径；社交媒体圆角用主题 shape。
+- Reader：预览窗去 `QUICK READ` 草图标签、来源 chip 边框、Selector/AddFeed 高级配置无 elevation。
+- 边角：登录弹窗标题、SourceInit 去 `ONE-TIME SETUP`、SourceManager badge/对话框标题现代化。
+
+### Notes
+- Desktop compile + jvmTest 门禁通过；设置 parity / 头像 multipart 仍后续；删帖/吧务 deferred。
+- redesign 主线：页面级草图壳层已基本覆盖；后续以细节 polish 与能力边角为主。
+
 ## 0.52.0 - 2026-07-23
 
 ### Changed

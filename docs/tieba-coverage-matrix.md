@@ -1,7 +1,7 @@
 # TiebaLite → Thread 功能覆盖矩阵
 
 对照基准：`TiebaLite-4.0-dev`（页面 + `ITiebaApi` ~63 逻辑接口）  
-Thread 基线：`0.52.0`（P0–P3a + 看帖/楼层回复 + 推荐不感兴趣 + 本地屏蔽扩列表 + 资料编辑 + 吧内搜帖 + 现代化 UI 主路径 + redesign 波次2/3 壳层全覆盖；设置 parity 后续）
+Thread 基线：`0.53.0`（P0–P3a + 看帖/楼层回复 + 推荐不感兴趣 + 本地屏蔽扩列表 + 资料编辑 + 吧内搜帖 + 现代化 UI 主路径 + redesign 波次2–4 全页面覆盖；设置 parity 后续）
 
 ## 0. 覆盖原则
 
@@ -98,7 +98,8 @@ Thread 基线：`0.52.0`（P0–P3a + 看帖/楼层回复 + 推荐不感兴趣 +
 | **UX-modern** | **0.50** | ✅ 弃草图：tokens + 列表/详情/回复/点赞/图片流主路径现代化 UI |
 | **UX-redesign-2** | **0.51** | ✅ Trend/Post/Search/空错态第二波 redesign |
 | **UX-redesign-3** | **0.52** | ✅ 导航壳层/Home侧栏/User/Bookmark/Operations 第三波 redesign |
-| **P3b-g** | 0.53+ | 设置 parity、头像 multipart（**删帖/吧务 deferred**） |
+| **UX-redesign-4** | **0.53** | ✅ Settings/ImagePreview/Feed/Reader/Source 第四波 redesign（页面级全覆盖） |
+| **P3b-g** | 0.54+ | 设置 parity、头像 multipart（**删帖/吧务 deferred**） |
 
 ## 6. 明确不做 / 暂缓（非本阶段 100% 定义内）
 

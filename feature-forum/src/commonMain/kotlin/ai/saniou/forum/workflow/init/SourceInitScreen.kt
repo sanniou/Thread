@@ -25,6 +25,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.model.ScreenModel
@@ -65,7 +66,6 @@ data class SourceInitScreen(
                 icon = Icons.Default.Hub,
                 title = stringResource(Res.string.s_7b7f6285e9, state.sourceName),
                 subtitle = stringResource(Res.string.s_c160ae5e85),
-                metric = "ONE-TIME SETUP",
             )
             StateLayout(
                 state = state.uiState,
@@ -77,7 +77,7 @@ data class SourceInitScreen(
                   verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
               ) {
                 ThreadCard(modifier = Modifier.fillMaxWidth()) {
-                    Text(stringResource(Res.string.s_85fb4f2e67), style = MaterialTheme.typography.titleLarge)
+                    Text(stringResource(Res.string.s_85fb4f2e67), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     Text(
                         text = stringResource(Res.string.s_b1207c605f, state.sourceName),
                         style = MaterialTheme.typography.bodyMedium,

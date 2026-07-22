@@ -60,6 +60,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import ai.saniou.thread.domain.model.settings.InterfaceDensity
@@ -262,10 +263,10 @@ class SyncSettingsPage(
                         horizontal = LocalThreadWindowInfo.current.pageHorizontalPadding,
                         vertical = Dimens.page_vertical,
                     ),
-                verticalArrangement = Arrangement.spacedBy(20.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 ThreadCard(modifier = Modifier.fillMaxWidth()) {
-                    Text(stringResource(Res.string.s_4373b82f21), style = MaterialTheme.typography.titleLarge)
+                    Text(stringResource(Res.string.s_4373b82f21), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     Text(
                         stringResource(Res.string.s_c831720c36),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -333,7 +334,7 @@ class SyncSettingsPage(
                 }
 
                 ThreadCard(modifier = Modifier.fillMaxWidth()) {
-                    Text(stringResource(Res.string.s_9ab6e56a49), style = MaterialTheme.typography.titleLarge)
+                    Text(stringResource(Res.string.s_9ab6e56a49), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     Text(
                         stringResource(Res.string.s_9301c30bde),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -435,7 +436,7 @@ class SyncSettingsPage(
                         Icon(Icons.Default.Public, null, tint = MaterialTheme.colorScheme.primary)
                         Spacer(Modifier.width(10.dp))
                         Column(Modifier.weight(1f)) {
-                            Text(stringResource(Res.string.s_6525ca3010), style = MaterialTheme.typography.titleLarge)
+                            Text(stringResource(Res.string.s_6525ca3010), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                             Text(
                                 stringResource(Res.string.s_2f731abd93),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -509,7 +510,7 @@ class SyncSettingsPage(
 
 
                 ThreadCard(modifier = Modifier.fillMaxWidth()) {
-                    Text(stringResource(Res.string.content_block_title), style = MaterialTheme.typography.titleLarge)
+                    Text(stringResource(Res.string.content_block_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     Text(
                         stringResource(Res.string.content_block_desc),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -597,7 +598,7 @@ class SyncSettingsPage(
                 }
 
                 ThreadCard(modifier = Modifier.fillMaxWidth()) {
-                    Text(stringResource(Res.string.s_cf4b7d95a2), style = MaterialTheme.typography.titleLarge)
+                    Text(stringResource(Res.string.s_cf4b7d95a2), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     Text(
                         stringResource(Res.string.s_e3ec414278),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -650,7 +651,7 @@ class SyncSettingsPage(
                 }
 
                 ThreadCard(modifier = Modifier.fillMaxWidth()) {
-                  Text("WebDAV", style = MaterialTheme.typography.titleLarge)
+                  Text("WebDAV", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                   Text(
                     stringResource(Res.string.s_c929a1d2a2),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -708,7 +709,7 @@ class SyncSettingsPage(
                   }
                 }
 
-                Text(stringResource(Res.string.s_5d95923b6f), style = MaterialTheme.typography.titleLarge)
+                Text(stringResource(Res.string.s_5d95923b6f), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                 ThreadCard(Modifier.fillMaxWidth()) {
                     Text(
                         stringResource(
@@ -734,8 +735,13 @@ private fun PreferenceSlider(
     range: ClosedFloatingPointRange<Float>,
     onValue: (Float) -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        Text(label, style = MaterialTheme.typography.labelLarge)
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text(
+            label,
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontWeight = FontWeight.Medium,
+        )
         Slider(value = value, onValueChange = onValue, valueRange = range)
     }
 }

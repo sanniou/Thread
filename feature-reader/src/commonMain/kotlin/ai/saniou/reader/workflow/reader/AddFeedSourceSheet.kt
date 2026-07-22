@@ -6,6 +6,7 @@ import ai.saniou.coreui.widgets.SaniouTextButton
 import ai.saniou.coreui.theme.threadAnimateItem
 import ai.saniou.thread.domain.model.reader.FeedType
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -366,9 +367,13 @@ private fun Step_ConfirmSource(
         // --- 高级配置 (可折叠, 仅在 HTML/JSON 时显示) ---
         if (type == FeedType.HTML || type == FeedType.JSON) {
             item {
-                Card(
+                Surface(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
+                    shape = MaterialTheme.shapes.extraLarge,
+                    color = MaterialTheme.colorScheme.surfaceContainerLow,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)),
+                    shadowElevation = 0.dp,
+                    tonalElevation = 0.dp,
                 ) {
                     Column {
                         ListItem(

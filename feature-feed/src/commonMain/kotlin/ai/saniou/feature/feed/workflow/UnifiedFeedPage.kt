@@ -35,6 +35,7 @@ import ai.saniou.thread.domain.model.reader.Article
 import ai.saniou.thread.domain.model.social.SocialInteraction
 import ai.saniou.thread.domain.model.social.SocialPost
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -73,6 +74,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -495,7 +497,7 @@ private fun TimelineSocialCard(
             NetworkImage(
                 imageUrl = media.previewUrl ?: media.url,
                 contentDescription = media.altText,
-                modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f).clip(RoundedCornerShape(18.dp)),
+                modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f).clip(MaterialTheme.shapes.extraLarge),
                 contentScale = ContentScale.Crop,
             )
         }
@@ -544,14 +546,33 @@ private fun TimelinePostCard(
     ThreadCard(
         modifier = modifier.fillMaxWidth().clickable { onClick(topic) },
     ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Surface(
+                    shape = MaterialTheme.shapes.extraLarge,
+                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.40f)),
+                    shadowElevation = 0.dp,
+                    tonalElevation = 0.dp,
+                ) {
+                    Text(
+                        text = topic.sourceName,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
                 Text(
-                    text = topic.sourceName,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary,
+                    topic.channelName,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f),
                 )
-                Text(" · ${topic.channelName}", style = MaterialTheme.typography.labelMedium)
-                Spacer(Modifier.weight(1f))
                 Text(
                     topic.createdAt.toRelativeTimeString(),
                     style = MaterialTheme.typography.labelSmall,

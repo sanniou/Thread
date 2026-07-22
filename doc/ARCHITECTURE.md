@@ -490,3 +490,13 @@ Expand the quiet border / zero-elevation language across navigation and remainin
 - Home: drawer grid tiles, announcement banner, forum item selection, subcategory boxes, metadata badges.
 - User: cookie identity cards without elevation; relation header container; empty-state icon pill.
 - Workspace: Bookmark cards, Operations metric tiles, Activity metric weight.
+
+## 0.53 Redesign wave 4 (settings / media / feed / reader)
+
+Page-level coverage for remaining primary workspaces:
+
+- Settings: quieter section titles, preference sliders, denser group spacing.
+- ImagePreview: bordered page-index pill, quiet end-of-list chip, tighter HUD padding.
+- Feed: `TimelinePostCard` source chip hierarchy aligned with forum list language.
+- Reader: drop sketch `QUICK READ` label; bordered source chip; Selector/AddFeed advanced panels zero-elevation.
+- Edges: login dialog title, SourceInit without `ONE-TIME SETUP`, SourceManager badges/dialog titles.

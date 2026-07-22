@@ -117,6 +117,7 @@
 -   [x] **现代化 UI 0.50**: 弃草图；tokens + 列表/详情/回复/点赞/图片流主路径视觉重构。
 -   [x] **Redesign 0.51**: Trend / Post / Search / 空错态第二波现代化。
 -   [x] **Redesign 0.52**: 导航壳层 / Home 侧栏 / User / Bookmark / Operations 第三波现代化。
+-   [x] **Redesign 0.53**: Settings / ImagePreview / Feed / Reader / Source 边角第四波现代化。
 
 ## 🚀 构建与运行
 

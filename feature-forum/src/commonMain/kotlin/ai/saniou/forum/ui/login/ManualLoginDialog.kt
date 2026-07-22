@@ -22,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import thread.feature_forum.generated.resources.Res
@@ -38,7 +39,7 @@ fun ManualLoginDialog(
 
     AdaptiveModal(onDismissRequest = onDismissRequest) {
         Column(modifier = Modifier.fillMaxWidth().padding(24.dp)) {
-            Text(strategy.title, style = MaterialTheme.typography.headlineSmall)
+            Text(strategy.title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
             Spacer(modifier = Modifier.height(Dimens.padding_small))
             Column(
                 modifier = Modifier.fillMaxWidth().heightIn(max = 560.dp)

@@ -6,6 +6,7 @@ import ai.saniou.coreui.widgets.palette.PhotoPalette
 import ai.saniou.forum.workflow.image.ImagePreviewContract.Event
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -29,6 +30,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -43,6 +45,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -164,7 +167,7 @@ private fun ImagePreviewHud(
                 .align(Alignment.TopCenter)
                 .fillMaxWidth()
                 .statusBarsPadding()
-                .padding(20.dp),
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             IconButton(
@@ -182,31 +185,36 @@ private fun ImagePreviewHud(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            Box(
-                Modifier
-                    .height(40.dp)
-                    .background(
-                        color = photoPalette.containerColor,
-                        shape = RoundedCornerShape(50)
-                    )
-                    .padding(horizontal = 14.dp),
-                contentAlignment = Alignment.Center
+            Surface(
+                shape = RoundedCornerShape(50),
+                color = photoPalette.containerColor,
+                border = BorderStroke(1.dp, photoPalette.contentColor.copy(alpha = 0.18f)),
+                shadowElevation = 0.dp,
+                tonalElevation = 0.dp,
             ) {
-                val numberText by remember {
-                    derivedStateOf {
-                        if (uiState.images.isNotEmpty()) {
-                            "${pagerState.currentPage + 1}/${uiState.images.size}"
-                        } else {
-                            "0/0"
+                Box(
+                    Modifier
+                        .height(36.dp)
+                        .padding(horizontal = 14.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    val numberText by remember {
+                        derivedStateOf {
+                            if (uiState.images.isNotEmpty()) {
+                                "${pagerState.currentPage + 1} / ${uiState.images.size}"
+                            } else {
+                                "0 / 0"
+                            }
                         }
                     }
+                    Text(
+                        text = numberText,
+                        textAlign = TextAlign.Center,
+                        color = photoPalette.contentColor,
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold,
+                    )
                 }
-                Text(
-                    text = numberText,
-                    textAlign = TextAlign.Center,
-                    color = photoPalette.contentColor,
-                    style = TextStyle(lineHeight = 12.sp),
-                )
             }
 
             Spacer(modifier = Modifier.weight(1f))
@@ -243,12 +251,22 @@ private fun ImagePreviewHud(
 
         // End of list message
         if (uiState.endReached && uiState.images.size > 1 && pagerState.currentPage == uiState.images.size - 1) {
-            Box(
+            Surface(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = 120.dp) // Adjusted padding
+                    .padding(bottom = 120.dp),
+                shape = RoundedCornerShape(50),
+                color = photoPalette.containerColor,
+                border = BorderStroke(1.dp, photoPalette.contentColor.copy(alpha = 0.18f)),
+                shadowElevation = 0.dp,
+                tonalElevation = 0.dp,
             ) {
-                Text(stringResource(Res.string.s_12f92d07e1), color = Color.White)
+                Text(
+                    stringResource(Res.string.s_12f92d07e1),
+                    color = photoPalette.contentColor,
+                    style = MaterialTheme.typography.labelMedium,
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                )
             }
         }
     }

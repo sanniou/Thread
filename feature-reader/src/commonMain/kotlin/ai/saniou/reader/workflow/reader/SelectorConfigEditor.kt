@@ -1,5 +1,6 @@
 package ai.saniou.reader.workflow.reader
 
+import androidx.compose.foundation.BorderStroke
 import ai.saniou.thread.domain.model.reader.FeedType
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
@@ -106,14 +107,16 @@ private fun ConfigField(
         )
         
         AnimatedVisibility(visible = showHelp && description != null) {
-            Card(
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
-                ),
-                modifier = Modifier.fillMaxWidth()
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.large,
+                color = MaterialTheme.colorScheme.surfaceContainerLow,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)),
+                shadowElevation = 0.dp,
+                tonalElevation = 0.dp,
             ) {
                 Row(
-                    modifier = Modifier.padding(8.dp),
+                    modifier = Modifier.padding(10.dp),
                     verticalAlignment = Alignment.Top,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
@@ -121,7 +124,7 @@ private fun ConfigField(
                         Icons.Default.Info,
                         contentDescription = null,
                         modifier = Modifier.size(16.dp).padding(top = 2.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        tint = MaterialTheme.colorScheme.primary
                     )
                     Text(
                         text = description!!,

@@ -14,6 +14,7 @@ import ai.saniou.coreui.widgets.ThreadLoadingState
 import ai.saniou.coreui.theme.threadAnimateItem
 import ai.saniou.forum.workflow.source.SourceManagerContract.Event
 import ai.saniou.thread.domain.model.source.SourceDescriptor
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -197,15 +198,19 @@ private fun SourceDescriptorCard(
                     androidx.compose.material3.Surface(
                         shape = MaterialTheme.shapes.extraLarge,
                         color = if (descriptor.isBuiltIn) {
-                            MaterialTheme.colorScheme.secondaryContainer
+                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f)
                         } else {
-                            MaterialTheme.colorScheme.tertiaryContainer
+                            MaterialTheme.colorScheme.surfaceContainerHigh
                         },
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)),
+                        shadowElevation = 0.dp,
+                        tonalElevation = 0.dp,
                     ) {
                         Text(
                             if (descriptor.isBuiltIn) stringResource(Res.string.s_09ceea7644) else stringResource(Res.string.label_activity),
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                             style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.SemiBold,
                         )
                     }
                 }
@@ -254,7 +259,8 @@ private fun DiscourseEditorDialog(
         ) {
             Text(
                 if (descriptor == null) stringResource(Res.string.action_add_discourse) else stringResource(Res.string.s_ae96a77def),
-                style = MaterialTheme.typography.headlineSmall,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold,
             )
             Text(
                 stringResource(Res.string.s_bb7f40922f),
