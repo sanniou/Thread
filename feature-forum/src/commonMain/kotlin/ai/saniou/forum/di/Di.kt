@@ -143,6 +143,7 @@ val forumFeatureModule = DI.Module("forumFeatureModule") {
             followUserUseCase = instance(),
             unfollowUserUseCase = instance(),
             updateUserProfileUseCase = instance(),
+            uploadUserPortraitUseCase = instance(),
             sourceRepository = instance(),
             accountRepository = instance(),
         )

@@ -308,6 +308,11 @@
     <string name="profile_sex_female">女</string>
     <string name="profile_save">保存资料</string>
     <string name="profile_save_success">资料已更新</string>
+    <string name="profile_change_avatar">更换头像</string>
+    <string name="profile_upload_avatar">上传头像</string>
+    <string name="profile_avatar_pending">已选择：%1$s</string>
+    <string name="profile_avatar_clear">清除所选</string>
+    <string name="profile_avatar_success">头像已更新</string>
     <string name="action_cancel">取消</string>
     <string name="channel_search_title">吧内搜索</string>
     <string name="channel_search_placeholder">搜索本吧主题与回复</string>

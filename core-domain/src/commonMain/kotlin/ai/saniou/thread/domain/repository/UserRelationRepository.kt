@@ -8,4 +8,10 @@ interface UserRelationRepository {
     suspend fun follow(sourceId: String, userId: String): Result<String>
     suspend fun unfollow(sourceId: String, userId: String): Result<String>
     suspend fun updateProfile(sourceId: String, request: ProfileEditRequest): Result<String>
+    suspend fun uploadPortrait(
+        sourceId: String,
+        fileName: String,
+        bytes: ByteArray,
+        contentType: String = "application/octet-stream",
+    ): Result<String>
 }

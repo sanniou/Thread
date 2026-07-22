@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.55.0 - 2026-07-23
+
+### Added
+- **头像 multipart（Tieba `imgPortrait`）**：Edit Profile 可选图并上传头像。
+- domain：`UserRelationConnector.uploadPortrait` + `UploadUserPortraitUseCase`。
+- data：`OfficialTiebaApi.imgPortrait` 改为 `MultiPartFormDataContent`；`TiebaUserRelationConnector` 组 multipart（`_client_version` + `pic`）。
+- UI：`UserDetail` 编辑弹窗头像预览 / 选图 / 上传 / 清除；复用 `LocalAttachmentPicker`。
+
+### Changed
+- 资料编辑链路保持昵称/简介/性别；生日字段仍透传现有 profile 值（无独立生日 UI）。
+- 设置 parity：本波交付用户资料侧能力缺口（头像），外观/同步设置页视觉已在 0.53 收口。
+
+### Notes
+- Desktop compile + jvmTest 门禁通过；真机贴吧头像上传待账号回归。
+- **删帖/吧务仍 deferred**。
+
 ## 0.54.0 - 2026-07-23
 
 ### Changed

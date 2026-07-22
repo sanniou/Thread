@@ -508,3 +508,12 @@ After page-level redesign coverage, tighten residual type weights and selection 
 - `PageHeader` / dialog titles → titleLarge or headlineSmall + SemiBold (no Bold/headlineLarge reading titles).
 - Inbox metric tiles bordered + unread card soft primary alpha; CommandPalette selected row border-only.
 - ArticleDetail / SocialDetail / RelatedContent quieter hierarchy; theme shape on social media.
+
+## 0.55 Profile avatar multipart
+
+Close the remaining self-profile gap against TiebaLite `imgPortrait`:
+
+- Domain: `UserRelationConnector.uploadPortrait` default unsupported; `UploadUserPortraitUseCase`.
+- Data: `OfficialTiebaApi.imgPortrait(MultiPartFormDataContent)`; Tieba connector builds `_client_version` + `pic` file part (TiebaLite boundary/version).
+- UI: Edit Profile dialog shows current avatar, pick via `LocalAttachmentPicker`, upload/clear pending bytes; busy state shared with text save.
+- Settings visual parity already shipped in 0.53; this wave is capability parity for profile media.

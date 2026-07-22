@@ -6,6 +6,10 @@ import ai.saniou.thread.data.source.tieba.remote.WebTiebaApi
 import ai.saniou.thread.domain.source.ProfileEditRequest
 import ai.saniou.thread.domain.source.UserRelationConnector
 import ai.saniou.thread.domain.source.UserRelationProfile
+import io.ktor.client.request.forms.MultiPartFormDataContent
+import io.ktor.client.request.forms.formData
+import io.ktor.http.Headers
+import io.ktor.http.HttpHeaders
 
 /**
  * Tieba follow/unfollow is portrait-based. We resolve portrait via [MiniTiebaApi.profile]
@@ -96,6 +100,42 @@ class TiebaUserRelationConnector(
         "资料已更新"
     }
 
+    override suspend fun uploadPortrait(
+        fileName: String,
+        bytes: ByteArray,
+        contentType: String,
+    ): Result<String> = runCatching {
+        require(parameterProvider.getSToken().isNotBlank()) {
+            "请先登录贴吧账号后再修改头像"
+        }
+        require(bytes.isNotEmpty()) { "头像图片不能为空" }
+        require(bytes.size <= MAX_PORTRAIT_BYTES) { "头像不能超过 5 MB" }
+        val safeName = fileName.substringAfterLast('/').ifBlank { "file" }
+        val mime = contentType.takeIf { it.isNotBlank() && it != "application/octet-stream" }
+            ?: mimeFromName(safeName)
+        val body = MultiPartFormDataContent(
+            formData {
+                append("_client_version", CLIENT_VERSION)
+                append(
+                    key = "pic",
+                    value = bytes,
+                    headers = Headers.build {
+                        append(HttpHeaders.ContentType, mime)
+                        append(HttpHeaders.ContentDisposition, "filename=\"$safeName\"")
+                    },
+                )
+            },
+            boundary = BOUNDARY,
+        )
+        val response = officialApi.imgPortrait(body = body)
+        if (response.errorCode != 0) {
+            throw IllegalStateException(
+                response.errorMsg.ifBlank { "修改头像失败 (${response.errorCode})" },
+            )
+        }
+        response.errorMsg.takeIf(String::isNotBlank) ?: "头像已更新"
+    }
+
     private suspend fun resolvePortrait(userId: String): String {
         val raw = userId.trim()
         require(raw.isNotBlank()) { "用户 ID 不能为空" }
@@ -115,4 +155,18 @@ class TiebaUserRelationConnector(
     private fun portraitUrl(portrait: String): String =
         if (portrait.startsWith("http")) portrait
         else "https://tb.himg.baidu.com/sys/portrait/item/$portrait"
+
+    private fun mimeFromName(name: String): String = when (name.substringAfterLast('.', "").lowercase()) {
+        "jpg", "jpeg" -> "image/jpeg"
+        "png" -> "image/png"
+        "gif" -> "image/gif"
+        "webp" -> "image/webp"
+        else -> "application/octet-stream"
+    }
+
+    private companion object {
+        const val CLIENT_VERSION = "11.10.8.6"
+        const val BOUNDARY = "--------7da3d81520810*"
+        const val MAX_PORTRAIT_BYTES = 5 * 1024 * 1024
+    }
 }

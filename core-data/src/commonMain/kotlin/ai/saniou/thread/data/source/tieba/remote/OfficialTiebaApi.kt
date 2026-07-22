@@ -262,12 +262,11 @@ interface OfficialTiebaApi {
         @Field("need_keep_nickname_flag") needKeepNicknameFlag: String = "0",
     ): CommonResponse
 
-    // Note: Multipart support requires a specific plugin or Ktor setup.
-    // For now, defining Body as Any/Multipart type if available, or omitting detailed signature if Body type unknown.
-    // Assuming Ktorfit supports @Body with multipart content.
     /**
      * 修改头像
      * 对应原接口: /c/c/img/portrait
+     *
+     * Multipart fields (TiebaLite): `_client_version` + file part name `pic`.
      */
     @Headers(
         "${TiebaApiConstants.FORCE_PARAM}: ${TiebaApiConstants.FORCE_PARAM_QUERY}",
@@ -277,7 +276,7 @@ interface OfficialTiebaApi {
     )
     @POST("c/c/img/portrait")
     suspend fun imgPortrait(
-        @Body body: Any, // Requires platform specific multipart body
+        @Body body: MultiPartFormDataContent,
         @Header("User-Agent") user_agent: String = "bdtb for Android 11.10.8.6",
     ): CommonResponse
 

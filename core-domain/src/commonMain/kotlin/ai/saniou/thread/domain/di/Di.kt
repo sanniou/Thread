@@ -34,6 +34,7 @@ import ai.saniou.thread.domain.usecase.user.FollowUserUseCase
 import ai.saniou.thread.domain.usecase.user.GetUserRelationProfileUseCase
 import ai.saniou.thread.domain.usecase.user.UnfollowUserUseCase
 import ai.saniou.thread.domain.usecase.user.UpdateUserProfileUseCase
+import ai.saniou.thread.domain.usecase.user.UploadUserPortraitUseCase
 import ai.saniou.thread.domain.usecase.post.GetPostDraftUseCase
 import ai.saniou.thread.domain.usecase.post.SavePostDraftUseCase
 import ai.saniou.thread.domain.usecase.post.DiscardPostDraftUseCase
@@ -184,6 +185,7 @@ val domainModule = DI.Module("domainModule") {
     bindProvider { FollowUserUseCase(instance()) }
     bindProvider { UnfollowUserUseCase(instance()) }
     bindProvider { UpdateUserProfileUseCase(instance()) }
+    bindProvider { UploadUserPortraitUseCase(instance()) }
 
     // Bookmark
     bindProvider { GetBookmarksUseCase(instance()) }

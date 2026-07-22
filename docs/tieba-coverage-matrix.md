@@ -1,7 +1,7 @@
 # TiebaLite → Thread 功能覆盖矩阵
 
 对照基准：`TiebaLite-4.0-dev`（页面 + `ITiebaApi` ~63 逻辑接口）  
-Thread 基线：`0.54.0`（P0–P3a + 看帖/楼层回复 + 推荐不感兴趣 + 本地屏蔽扩列表 + 资料编辑 + 吧内搜帖 + 现代化 UI 主路径 + redesign 波次2–4 全页面覆盖 + 0.54 细节 polish；设置 parity 后续）
+Thread 基线：`0.55.0`（P0–P3a + 看帖/楼层回复 + 推荐不感兴趣 + 本地屏蔽扩列表 + 资料编辑 + 头像 multipart + 吧内搜帖 + 现代化 UI 主路径 + redesign 波次2–4 + 0.54 细节 polish；删帖/吧务 deferred）
 
 ## 0. 覆盖原则
 
@@ -44,7 +44,7 @@ Thread 基线：`0.54.0`（P0–P3a + 看帖/楼层回复 + 推荐不感兴趣 +
 | 删帖/删楼 | delThread / delPost | API only | deferred | 暂不实现（外链扩展可保留） |
 | 吧规 | forumRuleDetail | `TiebaForumRuleService` + Topic 只读对话框 | done (0.41) | — |
 | 吧详情/成员/等级/吧务 | getForumDetail / Member / Level / Bawu | protobuf API only | deferred 吧务 | 暂不实现 |
-| 资料编辑 | profileModify | nick/intro/sex self-edit | done (0.46) | — |
+| 资料编辑 | profileModify + imgPortrait | nick/intro/sex self-edit + avatar multipart | done (0.46 + 0.55 avatar) | — |
 | 图片浏览器 | picPage / PhotoView | ImagePreview + `FetchTopicImagePageUseCase` / picPage 分页 | done (0.43) | — |
 | 浏览历史 | History 本地 | Thread History 本地（TiebaLite 亦本地 LitePal，无云历史 API） | done local (parity) | — |
 | 屏蔽词/黑名单 | Block settings | local ContentBlock 关键词+用户 + Settings + Trend/频道列表/帖详情过滤 | done (0.45 + 0.49 surfaces) | — |
@@ -100,7 +100,8 @@ Thread 基线：`0.54.0`（P0–P3a + 看帖/楼层回复 + 推荐不感兴趣 +
 | **UX-redesign-3** | **0.52** | ✅ 导航壳层/Home侧栏/User/Bookmark/Operations 第三波 redesign |
 | **UX-redesign-4** | **0.53** | ✅ Settings/ImagePreview/Feed/Reader/Source 第四波 redesign（页面级全覆盖） |
 | **UX-polish-1** | **0.54** | ✅ 次级页标题/指标/对话框/选中态细节 polish |
-| **P3b-g** | 0.55+ | 设置 parity、头像 multipart（**删帖/吧务 deferred**） |
+| **P3b-g** | **0.55** | ✅ 头像 multipart（imgPortrait）+ 资料编辑闭环；设置视觉已在 0.53；**删帖/吧务 deferred** |
+| **P3b-h** | 0.56+ | 点赞取消/楼层 agree 边角、图传 polish（**删帖/吧务 deferred**） |
 
 ## 6. 明确不做 / 暂缓（非本阶段 100% 定义内）
 

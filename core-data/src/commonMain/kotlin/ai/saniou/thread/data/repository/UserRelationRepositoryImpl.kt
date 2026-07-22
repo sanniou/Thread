@@ -31,4 +31,15 @@ class UserRelationRepositoryImpl(
             ?: return Result.failure(UnsupportedOperationException("Source '$sourceId' does not support profile edit"))
         return connector.updateProfile(request)
     }
+
+    override suspend fun uploadPortrait(
+        sourceId: String,
+        fileName: String,
+        bytes: ByteArray,
+        contentType: String,
+    ): Result<String> {
+        val connector = registry.userRelation(sourceId)
+            ?: return Result.failure(UnsupportedOperationException("Source '$sourceId' does not support portrait upload"))
+        return connector.uploadPortrait(fileName, bytes, contentType)
+    }
 }

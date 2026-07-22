@@ -2,6 +2,7 @@ package ai.saniou.forum.workflow.user
 
 import ai.saniou.coreui.layout.LocalThreadWindowInfo
 import ai.saniou.coreui.theme.Dimens
+import ai.saniou.coreui.widgets.NetworkImage
 import ai.saniou.coreui.widgets.SaniouButton
 import ai.saniou.coreui.widgets.SaniouTextButton
 import ai.saniou.coreui.widgets.ThreadDetailScaffold
@@ -9,6 +10,7 @@ import ai.saniou.forum.ui.components.TopicCard
 import ai.saniou.forum.ui.components.ThreadListSkeleton
 import ai.saniou.forum.workflow.image.ImagePreviewPage
 import ai.saniou.forum.workflow.image.ImagePreviewViewModelParams
+import ai.saniou.forum.workflow.post.LocalAttachmentPicker
 import ai.saniou.forum.workflow.topicdetail.TopicDetailPage
 import ai.saniou.forum.workflow.topicdetail.ThreadReply
 import androidx.compose.foundation.BorderStroke
@@ -27,6 +29,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -50,6 +53,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.paging.LoadState
@@ -95,6 +100,10 @@ import thread.feature_forum.generated.resources.profile_intro
 import thread.feature_forum.generated.resources.profile_nick_name
 import thread.feature_forum.generated.resources.edit_profile_title
 import thread.feature_forum.generated.resources.edit_profile
+import thread.feature_forum.generated.resources.profile_change_avatar
+import thread.feature_forum.generated.resources.profile_upload_avatar
+import thread.feature_forum.generated.resources.profile_avatar_pending
+import thread.feature_forum.generated.resources.profile_avatar_clear
 
 data class UserDetailPage(
     val sourceId: String,
@@ -114,11 +123,36 @@ data class UserDetailPage(
         val pagerState = rememberPagerState(pageCount = { UserDetailContract.Tab.entries.size })
         val coroutineScope = rememberCoroutineScope()
         val snackbarHostState = remember { SnackbarHostState() }
+        val attachmentPicker = LocalAttachmentPicker.current
 
         LaunchedEffect(Unit) {
             viewModel.effect.collectLatest { effect ->
                 when (effect) {
                     UserDetailContract.Effect.NavigateBack -> navigator.pop()
+                    UserDetailContract.Effect.RequestPortraitPicker -> {
+                        val picker = attachmentPicker
+                        if (picker == null) {
+                            snackbarHostState.showSnackbar("当前平台暂不支持选择图片")
+                            return@collectLatest
+                        }
+                        runCatching { picker.pickImage() }
+                            .onSuccess { attachment ->
+                                if (attachment != null) {
+                                    viewModel.handleEvent(
+                                        UserDetailContract.Event.PortraitPicked(
+                                            fileName = attachment.fileName,
+                                            bytes = attachment.bytes,
+                                            contentType = attachment.contentType,
+                                        )
+                                    )
+                                }
+                            }
+                            .onFailure { error ->
+                                snackbarHostState.showSnackbar(
+                                    error.message ?: "选择头像失败",
+                                )
+                            }
+                    }
                 }
             }
         }
@@ -147,6 +181,9 @@ data class UserDetailPage(
                 onNickNameChange = { viewModel.handleEvent(UserDetailContract.Event.EditNickNameChanged(it)) },
                 onIntroChange = { viewModel.handleEvent(UserDetailContract.Event.EditIntroChanged(it)) },
                 onSexChange = { viewModel.handleEvent(UserDetailContract.Event.EditSexChanged(it)) },
+                onPickPortrait = { viewModel.handleEvent(UserDetailContract.Event.PickPortrait) },
+                onUploadPortrait = { viewModel.handleEvent(UserDetailContract.Event.UploadPortrait) },
+                onClearPortrait = { viewModel.handleEvent(UserDetailContract.Event.ClearPendingPortrait) },
                 onDismiss = { viewModel.handleEvent(UserDetailContract.Event.DismissEditProfile) },
                 onSubmit = { viewModel.handleEvent(UserDetailContract.Event.SubmitEditProfile) },
             )
@@ -461,21 +498,79 @@ private fun EditProfileDialog(
     onNickNameChange: (String) -> Unit,
     onIntroChange: (String) -> Unit,
     onSexChange: (Int) -> Unit,
+    onPickPortrait: () -> Unit,
+    onUploadPortrait: () -> Unit,
+    onClearPortrait: () -> Unit,
     onDismiss: () -> Unit,
     onSubmit: () -> Unit,
 ) {
+    val busy = state.isSavingProfile || state.isUploadingPortrait
     AlertDialog(
-        onDismissRequest = { if (!state.isSavingProfile) onDismiss() },
+        onDismissRequest = { if (!busy) onDismiss() },
         title = { Text(text = stringResource(Res.string.edit_profile_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    val avatarUrl = state.profile?.avatar
+                    if (!avatarUrl.isNullOrBlank()) {
+                        NetworkImage(
+                            imageUrl = avatarUrl,
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .size(56.dp)
+                                .clip(CircleShape),
+                        )
+                    } else {
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.surfaceVariant,
+                            modifier = Modifier.size(56.dp),
+                        ) {}
+                    }
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        SaniouTextButton(
+                            onClick = onPickPortrait,
+                            enabled = !busy,
+                            text = stringResource(Res.string.profile_change_avatar),
+                        )
+                        val pending = state.pendingPortraitFileName
+                        if (!pending.isNullOrBlank()) {
+                            Text(
+                                text = stringResource(Res.string.profile_avatar_pending, pending),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                SaniouButton(
+                                    onClick = onUploadPortrait,
+                                    enabled = !busy,
+                                    loading = state.isUploadingPortrait,
+                                    text = stringResource(Res.string.profile_upload_avatar),
+                                )
+                                SaniouTextButton(
+                                    onClick = onClearPortrait,
+                                    enabled = !busy,
+                                    text = stringResource(Res.string.profile_avatar_clear),
+                                )
+                            }
+                        }
+                    }
+                }
                 OutlinedTextField(
                     value = state.editNickName,
                     onValueChange = onNickNameChange,
                     singleLine = true,
                     label = { Text(stringResource(Res.string.profile_nick_name)) },
                     modifier = Modifier.fillMaxWidth(),
-                    enabled = !state.isSavingProfile,
+                    enabled = !busy,
                 )
                 OutlinedTextField(
                     value = state.editIntro,
@@ -483,7 +578,7 @@ private fun EditProfileDialog(
                     minLines = 3,
                     label = { Text(stringResource(Res.string.profile_intro)) },
                     modifier = Modifier.fillMaxWidth(),
-                    enabled = !state.isSavingProfile,
+                    enabled = !busy,
                 )
                 Text(
                     text = stringResource(Res.string.profile_sex),
@@ -498,7 +593,7 @@ private fun EditProfileDialog(
                         FilterChip(
                             selected = state.editSex == value,
                             onClick = { onSexChange(value) },
-                            enabled = !state.isSavingProfile,
+                            enabled = !busy,
                             label = { Text(stringResource(labelRes)) },
                         )
                     }
@@ -508,7 +603,7 @@ private fun EditProfileDialog(
         confirmButton = {
             SaniouButton(
                 onClick = onSubmit,
-                enabled = !state.isSavingProfile && state.editNickName.isNotBlank(),
+                enabled = !busy && state.editNickName.isNotBlank(),
                 loading = state.isSavingProfile,
                 text = stringResource(Res.string.profile_save),
             )
@@ -516,7 +611,7 @@ private fun EditProfileDialog(
         dismissButton = {
             SaniouTextButton(
                 onClick = onDismiss,
-                enabled = !state.isSavingProfile,
+                enabled = !busy,
                 text = stringResource(Res.string.action_cancel),
             )
         },

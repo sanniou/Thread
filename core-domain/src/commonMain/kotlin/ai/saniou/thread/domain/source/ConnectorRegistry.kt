@@ -81,6 +81,18 @@ interface UserRelationConnector : SourceConnector {
     /** Update the currently authenticated user's profile. Default: unsupported. */
     suspend fun updateProfile(request: ProfileEditRequest): Result<String> =
         Result.failure(UnsupportedOperationException("Source '$sourceId' does not support profile edit"))
+
+    /**
+     * Upload a new avatar/portrait for the currently authenticated user.
+     * [bytes] are raw image bytes (PNG/JPEG/GIF/WebP); network multipart stays in data layer.
+     * Default: unsupported.
+     */
+    suspend fun uploadPortrait(
+        fileName: String,
+        bytes: ByteArray,
+        contentType: String = "application/octet-stream",
+    ): Result<String> =
+        Result.failure(UnsupportedOperationException("Source '$sourceId' does not support portrait upload"))
 }
 
 /**

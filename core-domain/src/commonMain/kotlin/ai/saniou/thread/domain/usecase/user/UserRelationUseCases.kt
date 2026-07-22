@@ -23,3 +23,13 @@ class UpdateUserProfileUseCase(private val repository: UserRelationRepository) {
     suspend operator fun invoke(sourceId: String, request: ProfileEditRequest): Result<String> =
         repository.updateProfile(sourceId, request)
 }
+
+class UploadUserPortraitUseCase(private val repository: UserRelationRepository) {
+    suspend operator fun invoke(
+        sourceId: String,
+        fileName: String,
+        bytes: ByteArray,
+        contentType: String = "application/octet-stream",
+    ): Result<String> =
+        repository.uploadPortrait(sourceId, fileName, bytes, contentType)
+}

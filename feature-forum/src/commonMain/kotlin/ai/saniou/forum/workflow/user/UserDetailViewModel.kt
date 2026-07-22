@@ -8,6 +8,7 @@ import ai.saniou.thread.domain.usecase.user.FollowUserUseCase
 import ai.saniou.thread.domain.usecase.user.GetUserRelationProfileUseCase
 import ai.saniou.thread.domain.usecase.user.UnfollowUserUseCase
 import ai.saniou.thread.domain.usecase.user.UpdateUserProfileUseCase
+import ai.saniou.thread.domain.usecase.user.UploadUserPortraitUseCase
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.channels.Channel
@@ -26,6 +27,7 @@ class UserDetailViewModel(
     private val followUserUseCase: FollowUserUseCase,
     private val unfollowUserUseCase: UnfollowUserUseCase,
     private val updateUserProfileUseCase: UpdateUserProfileUseCase,
+    private val uploadUserPortraitUseCase: UploadUserPortraitUseCase,
     private val sourceRepository: SourceRepository,
     private val accountRepository: AccountRepository,
 ) : ScreenModel {
@@ -39,6 +41,9 @@ class UserDetailViewModel(
 
     private val _effect = Channel<UserDetailContract.Effect>()
     val effect = _effect.receiveAsFlow()
+
+    private var pendingPortraitBytes: ByteArray? = null
+    private var pendingPortraitContentType: String = "application/octet-stream"
 
     init {
         loadData()
@@ -112,7 +117,14 @@ class UserDetailViewModel(
             UserDetailContract.Event.ToggleFollow -> toggleFollow()
             UserDetailContract.Event.OpenEditProfile -> openEdit()
             UserDetailContract.Event.DismissEditProfile -> {
-                _state.update { it.copy(isEditDialogOpen = false, isSavingProfile = false) }
+                clearPendingPortrait()
+                _state.update {
+                    it.copy(
+                        isEditDialogOpen = false,
+                        isSavingProfile = false,
+                        isUploadingPortrait = false,
+                    )
+                }
             }
             is UserDetailContract.Event.EditNickNameChanged -> {
                 _state.update { it.copy(editNickName = event.value) }
@@ -124,6 +136,30 @@ class UserDetailViewModel(
                 _state.update { it.copy(editSex = event.value) }
             }
             UserDetailContract.Event.SubmitEditProfile -> submitEdit()
+            UserDetailContract.Event.PickPortrait -> {
+                if (!canEditSelf() || state.value.isUploadingPortrait || state.value.isSavingProfile) return
+                screenModelScope.launch {
+                    _effect.send(UserDetailContract.Effect.RequestPortraitPicker)
+                }
+            }
+            is UserDetailContract.Event.PortraitPicked -> {
+                if (!canEditSelf()) return
+                if (event.bytes.isEmpty()) {
+                    _state.update { it.copy(actionMessage = "头像图片不能为空") }
+                    return
+                }
+                if (event.bytes.size > MAX_PORTRAIT_BYTES) {
+                    _state.update { it.copy(actionMessage = "头像不能超过 5 MB") }
+                    return
+                }
+                pendingPortraitBytes = event.bytes
+                pendingPortraitContentType = event.contentType
+                _state.update {
+                    it.copy(pendingPortraitFileName = event.fileName)
+                }
+            }
+            UserDetailContract.Event.UploadPortrait -> uploadPortrait()
+            UserDetailContract.Event.ClearPendingPortrait -> clearPendingPortrait()
             UserDetailContract.Event.ConsumeActionMessage -> {
                 _state.update { it.copy(actionMessage = null) }
             }
@@ -134,6 +170,7 @@ class UserDetailViewModel(
         val current = state.value
         if (!current.supportsProfileEdit || !current.isSelf) return
         val profile = current.profile
+        clearPendingPortrait()
         _state.update {
             it.copy(
                 isEditDialogOpen = true,
@@ -175,10 +212,8 @@ class UserDetailViewModel(
                             ),
                         )
                     }
-                    getUserRelationProfileUseCase(sourceId, userHash)
-                        .onSuccess { profile ->
-                            _state.update { it.copy(profile = profile) }
-                        }
+                    clearPendingPortrait()
+                    refreshProfile()
                 }
                 .onFailure { error ->
                     _state.update {
@@ -187,6 +222,51 @@ class UserDetailViewModel(
                             actionMessage = error.message,
                         )
                     }
+                }
+        }
+    }
+
+    private fun uploadPortrait() {
+        val current = state.value
+        if (!canEditSelf() || current.isUploadingPortrait) return
+        val bytes = pendingPortraitBytes
+        val fileName = current.pendingPortraitFileName
+        if (bytes == null || fileName.isNullOrBlank()) {
+            _state.update { it.copy(actionMessage = "请先选择头像图片") }
+            return
+        }
+        screenModelScope.launch {
+            _state.update { it.copy(isUploadingPortrait = true) }
+            uploadUserPortraitUseCase(
+                sourceId = sourceId,
+                fileName = fileName,
+                bytes = bytes,
+                contentType = pendingPortraitContentType,
+            ).onSuccess { message ->
+                clearPendingPortrait()
+                _state.update {
+                    it.copy(
+                        isUploadingPortrait = false,
+                        actionMessage = message,
+                    )
+                }
+                refreshProfile()
+            }.onFailure { error ->
+                _state.update {
+                    it.copy(
+                        isUploadingPortrait = false,
+                        actionMessage = error.message,
+                    )
+                }
+            }
+        }
+    }
+
+    private fun refreshProfile() {
+        screenModelScope.launch {
+            getUserRelationProfileUseCase(sourceId, userHash)
+                .onSuccess { profile ->
+                    _state.update { it.copy(profile = profile) }
                 }
         }
     }
@@ -212,10 +292,7 @@ class UserDetailViewModel(
                             actionMessage = message,
                         )
                     }
-                    getUserRelationProfileUseCase(sourceId, userHash)
-                        .onSuccess { profile ->
-                            _state.update { it.copy(profile = profile) }
-                        }
+                    refreshProfile()
                 }
                 .onFailure { error ->
                     _state.update {
@@ -226,5 +303,20 @@ class UserDetailViewModel(
                     }
                 }
         }
+    }
+
+    private fun canEditSelf(): Boolean {
+        val current = state.value
+        return current.supportsProfileEdit && current.isSelf
+    }
+
+    private fun clearPendingPortrait() {
+        pendingPortraitBytes = null
+        pendingPortraitContentType = "application/octet-stream"
+        _state.update { it.copy(pendingPortraitFileName = null) }
+    }
+
+    private companion object {
+        const val MAX_PORTRAIT_BYTES = 5 * 1024 * 1024
     }
 }
