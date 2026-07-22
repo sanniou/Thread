@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.39.0 - 2026-07-22
+
+TiebaLite coverage P0: hybrid search + create-thread path.
+
+- Added `TiebaSearchConnector` (`ForumSearchConnector`) on hybrid `searchThread`; registered in runtime catalog DI.
+- Tieba `SourceCapabilities`: `supportsSearch` + `supportsTopicCreation` enabled; composition smoke asserts both connectors.
+- `TiebaPostingConnector.createThread` uses official `addPost` with empty `tid` (title prepended into content); reply path shared via `submitAddPost`.
+- Coverage matrix + plan: `docs/tieba-coverage-matrix.md`, `.hermes/plans/2026-07-22_115318-tieba-100-coverage.md`.
+- Desktop compile + jvmTest matrix green (incl. Tieba search mapper tests).
+
 ## 0.38.0 - 2026-07-22
 
 Remaining secondary list quiet motion + reader multi-ref key rename.

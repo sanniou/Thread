@@ -41,7 +41,8 @@ class TiebaSource(
     override val capabilities: SourceCapabilities = SourceCapabilities(
         supportsUserContent = true,
         supportsLogin = true,
-        supportsTopicCreation = false,
+        supportsSearch = true,
+        supportsTopicCreation = true,
         supportsReplies = true,
         supportsAttachments = true,
         commentPageSize = 30,

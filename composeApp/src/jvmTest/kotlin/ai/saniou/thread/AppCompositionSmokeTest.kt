@@ -38,9 +38,11 @@ class AppCompositionSmokeTest {
 
         val tieba = catalog.source("tieba")!!
         assertTrue(tieba.capabilities.supportsAttachments)
+        assertTrue(tieba.capabilities.supportsSearch)
+        assertTrue(tieba.capabilities.supportsTopicCreation)
         assertTrue(tieba.capabilities.hasSubComments)
         assertTrue(tieba.capabilities.hasUpvote)
-        assertNull(catalog.search("tieba"))
+        assertNotNull(catalog.search("tieba"))
         assertNotNull(catalog.userContent("tieba"))
         assertNotNull(catalog.posting("tieba"))
         assertNotNull(catalog.login("tieba"))

@@ -63,6 +63,7 @@ import ai.saniou.thread.data.cache.CacheFreshnessStore
 import ai.saniou.thread.data.source.discourse.DiscourseSourceFactory
 import ai.saniou.thread.data.source.tieba.TiebaLoginConnector
 import ai.saniou.thread.data.source.tieba.TiebaReactionConnector
+import ai.saniou.thread.data.source.tieba.TiebaSearchConnector
 import ai.saniou.thread.data.source.runtime.DefaultSourceCatalog
 import ai.saniou.thread.data.source.runtime.RuntimeSourceRegistration
 import ai.saniou.thread.domain.service.ImageUrlResolver
@@ -177,6 +178,7 @@ val dataModule = DI.Module("dataModule") {
     bindSingleton { NmbPostingConnector(instance()) }
     bindSingleton { NmbLoginConnector(instance()) }
     bindSingleton { TiebaUserContentConnector(instance(), instance()) }
+    bindSingleton { TiebaSearchConnector(instance(), instance()) }
     bindSingleton { TiebaPostingConnector(instance(), instance(), instance(), instance(), instance()) }
     bindSingleton { TiebaLoginConnector(instance(), instance(), instance()) }
     bindSingleton { TiebaReactionConnector(instance(), instance(), instance()) }
@@ -226,6 +228,7 @@ val dataModule = DI.Module("dataModule") {
                 ),
                 tiebaDescriptor to RuntimeSourceRegistration(
                     source = instance<TiebaSource>(),
+                    search = instance<TiebaSearchConnector>(),
                     userContent = instance<TiebaUserContentConnector>(),
                     posting = instance<TiebaPostingConnector>(),
                     login = instance<TiebaLoginConnector>(),

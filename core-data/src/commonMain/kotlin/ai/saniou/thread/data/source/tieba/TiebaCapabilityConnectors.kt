@@ -74,8 +74,29 @@ class TiebaPostingConnector internal constructor(
     )
     override val sourceId: String = source.id
 
-    override suspend fun createThread(channelId: String, draft: PostDraft): PostResult =
-        throw UnsupportedOperationException("贴吧发主题尚未开放；当前只支持回复已有主题")
+    override suspend fun createThread(channelId: String, draft: PostDraft): PostResult {
+        require(draft.content.isNotBlank() || draft.attachment != null || !draft.title.isNullOrBlank()) {
+            "发帖标题、正文和图片不能同时为空"
+        }
+        val channel = database.channelQueries.getChannel(sourceId, channelId).executeAsOneOrNull()
+            ?: throw IllegalStateException("本地未找到贴吧版块 $channelId，请先刷新关注吧列表")
+        // Official JSON addPost has no separate title field; Tieba clients prepend title into content.
+        val content = buildList {
+            draft.title?.trim()?.takeIf(String::isNotBlank)?.let(::add)
+            draft.content.trim().takeIf(String::isNotBlank)?.let(::add)
+            draft.attachment?.let { attachment ->
+                add(imageUploader.upload(attachment, channel.name).markup)
+            }
+        }.joinToString("\n")
+        return submitAddPost(
+            content = content,
+            forumId = channelId,
+            forumName = channel.name,
+            threadId = "",
+            nameShow = draft.name,
+            failureLabel = "贴吧发主题失败",
+        )
+    }
 
     override suspend fun createReply(topicId: String, draft: PostDraft): PostResult {
         require(draft.content.isNotBlank() || draft.attachment != null) { "回复内容和图片不能同时为空" }
@@ -84,30 +105,50 @@ class TiebaPostingConnector internal constructor(
             ?: throw IllegalStateException("本地未找到贴吧主题 $topicId，请先打开主题详情")
         val channel = database.channelQueries.getChannel(sourceId, topic.channelId).executeAsOneOrNull()
             ?: throw IllegalStateException("本地未找到贴吧版块 ${topic.channelId}")
-        val tbs = ensureTbs()
         val content = buildList {
             draft.content.trim().takeIf(String::isNotBlank)?.let(::add)
             draft.attachment?.let { attachment ->
                 add(imageUploader.upload(attachment, channel.name).markup)
             }
         }.joinToString("\n")
-        val response = api.addPost(
+        return submitAddPost(
             content = content,
             forumId = topic.channelId,
             forumName = channel.name,
-            tbs = tbs,
             threadId = topicId,
             nameShow = draft.name,
+            failureLabel = "贴吧回复失败",
+            fallbackTopicId = topicId,
+        )
+    }
+
+    private suspend fun submitAddPost(
+        content: String,
+        forumId: String,
+        forumName: String,
+        threadId: String,
+        nameShow: String?,
+        failureLabel: String,
+        fallbackTopicId: String? = null,
+    ): PostResult {
+        val tbs = ensureTbs()
+        val response = api.addPost(
+            content = content,
+            forumId = forumId,
+            forumName = forumName,
+            tbs = tbs,
+            threadId = threadId,
+            nameShow = nameShow,
             sToken = parameterProvider.getSToken().takeIf(String::isNotBlank),
             client_user_token = parameterProvider.getUid().takeIf(String::isNotBlank),
         )
         if (response.errorCode.isNotBlank() && response.errorCode != "0") {
-            throw IllegalStateException(response.msg.ifBlank { "贴吧回复失败 (${response.errorCode})" })
+            throw IllegalStateException(response.msg.ifBlank { "$failureLabel (${response.errorCode})" })
         }
         return PostResult(
             sourceId = sourceId,
             postId = response.pid.takeIf(String::isNotBlank),
-            topicId = response.tid.takeIf(String::isNotBlank) ?: topicId,
+            topicId = response.tid.takeIf(String::isNotBlank) ?: fallbackTopicId,
             message = response.msg.takeIf(String::isNotBlank),
         )
     }
