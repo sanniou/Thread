@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
 import thread.composeapp.generated.resources.Res
-import thread.composeapp.generated.resources.s_b164df8a38
+import thread.composeapp.generated.resources.error_action_exec_failed
 import thread.composeapp.generated.resources.s_fcf7924617
 
 class ActivityCenterViewModel(
@@ -70,7 +70,7 @@ class ActivityCenterViewModel(
                     }
                 },
                 onFailure = { error ->
-                    mutableState.update { it.copy(message = error.message ?: getString(Res.string.s_b164df8a38)) }
+                    mutableState.update { it.copy(message = error.message ?: getString(Res.string.error_action_exec_failed)) }
                 },
             )
         }

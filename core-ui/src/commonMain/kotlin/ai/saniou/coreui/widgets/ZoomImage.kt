@@ -60,7 +60,7 @@ import thread.core_ui.generated.resources.s_12e2ed4d50
 import thread.core_ui.generated.resources.s_2da40f4073
 import thread.core_ui.generated.resources.s_324046a8e2
 import thread.core_ui.generated.resources.action_close
-import thread.core_ui.generated.resources.s_9b0c6c7858
+import thread.core_ui.generated.resources.action_more
 import thread.core_ui.generated.resources.s_a69e51e503
 import thread.core_ui.generated.resources.s_d7f48a059c
 import thread.core_ui.generated.resources.s_73be332268
@@ -309,7 +309,7 @@ private fun ButtonPad(
         ) {
             Icon(
                 imageVector = Icons.Default.MoreVert,
-                contentDescription = stringResource(Res.string.s_9b0c6c7858),
+                contentDescription = stringResource(Res.string.action_more),
                 tint = contentColor
             )
         }

@@ -6,21 +6,21 @@
     <string name="s_127db1eb5e">分析失败</string>
     <string name="s_138be3960f">%1$s 个订阅源</string>
     <string name="s_13f5a71b47">未知来源</string>
-    <string name="s_1795a34c15">已通过系统分享</string>
+    <string name="share_via_system">已通过系统分享</string>
     <string name="s_1be7ae4fc2">名称</string>
     <string name="s_1d3e8e0a39">阅读器</string>
     <string name="s_1fae1943e6">文章详情</string>
     <string name="s_22735a939e">添加新订阅</string>
     <string name="s_251d583130">请输入以 http:// 或 https:// 开头的有效网址</string>
-    <string name="s_274a1a8d2e">%1$s 个来源暂未更新，已隔离失败源</string>
+    <string name="cache_sources_isolated">%1$s 个来源暂未更新，已隔离失败源</string>
     <string name="s_293a341e88">12小时</string>
     <string name="s_29554f3cb1">沉浸阅读模式</string>
     <string name="s_297a7ec438">自动刷新</string>
-    <string name="s_2d2cdabf29">已收藏</string>
+    <string name="label_bookmarked">已收藏</string>
     <string name="s_315d27498f">%1$s分钟</string>
-    <string name="s_33246f6a5e">完成</string>
+    <string name="action_done">完成</string>
     <string name="s_362ae50a1d">当前订阅源的文章、未读内容与收藏</string>
-    <string name="s_3755f56f2f">删除</string>
+    <string name="action_delete">删除</string>
     <string name="action_refresh">刷新</string>
     <string name="s_3a9a579a96">1小时</string>
     <string name="s_3b9ec1c412">导出 JSON</string>
@@ -39,7 +39,7 @@
     <string name="s_54b8a90b3c">数据</string>
     <string name="s_57937ccefc">6小时</string>
     <string name="s_57c031dbd9">订阅导入导出</string>
-    <string name="s_60e2bcad85">导入</string>
+    <string name="action_import">导入</string>
     <string name="s_6f3f39d03c">%1$s %2$s 订阅</string>
     <string name="s_75ef1241c0">上一步</string>
     <string name="s_76b3e684df">重新加载文章</string>
@@ -56,7 +56,7 @@
     <string name="s_a0ecc22def">添加更多源</string>
     <string name="s_a701463879">订阅源</string>
     <string name="action_edit">编辑</string>
-    <string name="s_aac0ef6c1c">阅读</string>
+    <string name="label_reading">阅读</string>
     <string name="s_ad3c05564d">刷新不会清空现有文章列表</string>
     <string name="s_b37255ca3a">2小时</string>
     <string name="s_b7f317d76b">添加 RSS / Atom 订阅，或导入 OPML 备份，即可开始阅读。</string>
@@ -83,13 +83,13 @@
     <string name="s_e25eb142fc">自动刷新未运行</string>
     <string name="action_retry">重试</string>
     <string name="s_e40a06c88b">关闭搜索</string>
-    <string name="s_e45f66052e">本地缓存仍可阅读</string>
+    <string name="cache_still_readable">本地缓存仍可阅读</string>
     <string name="s_e4e46c7235">类型</string>
     <string name="s_ea0ef2ae72">下一步</string>
     <string name="s_ea2ac35993">标题和链接已复制</string>
     <string name="s_ec41cc2365">自动刷新已启用</string>
     <string name="s_f04090805c">搜索</string>
-    <string name="s_f0e21f6e0f">缓存优先 · 本地先展示</string>
+    <string name="cache_first_local">缓存优先 · 本地先展示</string>
     <string name="s_f511238a87">还没有订阅源</string>
     <string name="s_f9f25fb227">未找到相关文章</string>
     <string name="action_save">保存</string>
@@ -121,6 +121,6 @@
     <string name="s_069758a2ae">文章图片的路径
 例如: featured_media.source_url</string>
     <string name="s_c9819795fe">URL 不能为空</string>
-    <string name="s_6753381261">导出失败</string>
-    <string name="s_a01a8d5393">导入失败</string>
+    <string name="export_failed">导出失败</string>
+    <string name="import_failed">导入失败</string>
 </resources>

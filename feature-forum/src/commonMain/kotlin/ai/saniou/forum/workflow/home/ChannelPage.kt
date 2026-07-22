@@ -110,9 +110,9 @@ import thread.feature_forum.generated.resources.action_view_health
 import thread.feature_forum.generated.resources.retry
 import thread.feature_forum.generated.resources.label_dismiss_notice
 import thread.feature_forum.generated.resources.eyebrow_forum_channel
-import thread.feature_forum.generated.resources.s_367c1ec5d7
-import thread.feature_forum.generated.resources.s_3f95695328
-import thread.feature_forum.generated.resources.s_6e04347c1c
+import thread.feature_forum.generated.resources.label_community
+import thread.feature_forum.generated.resources.label_announcement
+import thread.feature_forum.generated.resources.label_content_sources
 import thread.feature_forum.generated.resources.s_782c5b3b11
 import thread.feature_forum.generated.resources.s_b5a583c5fd
 import thread.feature_forum.generated.resources.s_dcdbeb9e99
@@ -330,12 +330,12 @@ data class ChannelPage(
             val currentSource = state.availableSources.firstOrNull { it.id == state.currentSourceId }
             SidebarHeader(
                 icon = Icons.Default.Forum,
-                title = stringResource(Res.string.s_367c1ec5d7),
+                title = stringResource(Res.string.label_community),
                 subtitle = currentSource?.name ?: stringResource(Res.string.s_b5a583c5fd),
             )
 
             SectionLabel(
-                text = stringResource(Res.string.s_6e04347c1c),
+                text = stringResource(Res.string.label_content_sources),
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
             )
             AnimatedSourceSelector(
@@ -554,7 +554,7 @@ data class ChannelPage(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
-                    text = stringResource(Res.string.s_3f95695328),
+                    text = stringResource(Res.string.label_announcement),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

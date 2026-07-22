@@ -74,10 +74,10 @@ import thread.feature_reader.generated.resources.Res
 import thread.feature_reader.generated.resources.s_138be3960f
 import thread.feature_reader.generated.resources.s_13f5a71b47
 import thread.feature_reader.generated.resources.s_1d3e8e0a39
-import thread.feature_reader.generated.resources.s_274a1a8d2e
-import thread.feature_reader.generated.resources.s_33246f6a5e
+import thread.feature_reader.generated.resources.cache_sources_isolated
+import thread.feature_reader.generated.resources.action_done
 import thread.feature_reader.generated.resources.s_362ae50a1d
-import thread.feature_reader.generated.resources.s_3755f56f2f
+import thread.feature_reader.generated.resources.action_delete
 import thread.feature_reader.generated.resources.action_refresh
 import thread.feature_reader.generated.resources.s_3b9ec1c412
 import thread.feature_reader.generated.resources.s_3bbbd45469
@@ -88,7 +88,7 @@ import thread.feature_reader.generated.resources.action_cancel
 import thread.feature_reader.generated.resources.s_4fc9662b55
 import thread.feature_reader.generated.resources.s_54b8a90b3c
 import thread.feature_reader.generated.resources.s_57c031dbd9
-import thread.feature_reader.generated.resources.s_60e2bcad85
+import thread.feature_reader.generated.resources.action_import
 import thread.feature_reader.generated.resources.s_6f3f39d03c
 import thread.feature_reader.generated.resources.s_7829a6c547
 import thread.feature_reader.generated.resources.s_7a124b0cee
@@ -111,10 +111,10 @@ import thread.feature_reader.generated.resources.s_dc64bee91b
 import thread.feature_reader.generated.resources.s_e1d8a5a688
 import thread.feature_reader.generated.resources.s_e25eb142fc
 import thread.feature_reader.generated.resources.s_e40a06c88b
-import thread.feature_reader.generated.resources.s_e45f66052e
+import thread.feature_reader.generated.resources.cache_still_readable
 import thread.feature_reader.generated.resources.s_ec41cc2365
 import thread.feature_reader.generated.resources.s_f04090805c
-import thread.feature_reader.generated.resources.s_f0e21f6e0f
+import thread.feature_reader.generated.resources.cache_first_local
 import thread.feature_reader.generated.resources.s_f511238a87
 import thread.feature_reader.generated.resources.s_f9f25fb227
 import thread.feature_reader.generated.resources.s_fbf6b9bcc8
@@ -331,12 +331,12 @@ private fun ReaderScaffold(
                 }
                 val cacheTitle = when (cacheTone) {
                     CacheStatusTone.REFRESHING -> stringResource(Res.string.s_c5c986c21d)
-                    CacheStatusTone.STALE -> stringResource(Res.string.s_e45f66052e)
-                    else -> stringResource(Res.string.s_f0e21f6e0f)
+                    CacheStatusTone.STALE -> stringResource(Res.string.cache_still_readable)
+                    else -> stringResource(Res.string.cache_first_local)
                 }
                 val cacheDetail = when (cacheTone) {
                     CacheStatusTone.REFRESHING -> stringResource(Res.string.s_ad3c05564d)
-                    CacheStatusTone.STALE -> stringResource(Res.string.s_274a1a8d2e, state.refreshFailures.size)
+                    CacheStatusTone.STALE -> stringResource(Res.string.cache_sources_isolated, state.refreshFailures.size)
                     else -> stringResource(Res.string.s_7829a6c547)
                 }
                 CacheStatusBanner(
@@ -783,10 +783,10 @@ private fun ReaderTransferDialog(
                         onClick = { onImport(payload) },
                         enabled = payload.isNotBlank() && !isWorking,
                         loading = isWorking,
-                        text = stringResource(Res.string.s_60e2bcad85),
+                        text = stringResource(Res.string.action_import),
                     )
                 } else {
-                    SaniouButton(onClick = onDismiss, text = stringResource(Res.string.s_33246f6a5e))
+                    SaniouButton(onClick = onDismiss, text = stringResource(Res.string.action_done))
                 }
             }
         }
@@ -833,7 +833,7 @@ fun FeedSourceItem(
                     )
                     HorizontalDivider()
                     DropdownMenuItem(
-                        text = { Text(stringResource(Res.string.s_3755f56f2f)) },
+                        text = { Text(stringResource(Res.string.action_delete)) },
                         onClick = { onDelete(); showMenu = false },
                         leadingIcon = { Icon(Icons.Default.Delete, null) },
                         colors = MenuDefaults.itemColors(textColor = MaterialTheme.colorScheme.error)

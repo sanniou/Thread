@@ -29,7 +29,7 @@ import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import thread.feature_forum.generated.resources.Res
 import thread.feature_forum.generated.resources.empty_title
-import thread.feature_forum.generated.resources.s_0f666abf00
+import thread.feature_forum.generated.resources.label_anonymous
 import thread.feature_forum.generated.resources.s_3363bd3488
 import thread.feature_forum.generated.resources.s_b6543d7470
 
@@ -162,7 +162,7 @@ private fun TopicMetaSection(
             horizontalArrangement = Arrangement.spacedBy(Dimens.padding_tiny)
         ) {
             Text(
-                text = topic.author.name.takeIf { it.isNotBlank() && it != stringResource(Res.string.s_0f666abf00) } ?: topic.author.id,
+                text = topic.author.name.takeIf { it.isNotBlank() && it != stringResource(Res.string.label_anonymous) } ?: topic.author.id,
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.clickable(enabled = onUserClick != null) {

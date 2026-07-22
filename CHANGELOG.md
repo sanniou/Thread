@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.37.0 - 2026-07-22
+
+Second-wave semantic i18n keys + shell list quiet motion.
+
+- Renamed ~50 additional frequent `s_*` keys (errors, cache story, import/export, shell labels) across modules; jvmMain desktop services included.
+- Activity Center, Operations source health, and Command Palette rows use `threadAnimateItem`.
+- Desktop compile + jvmTest matrix green. Tag `v0.36.0` pushed.
+
 ## 0.36.0 - 2026-07-22
 
 Semantic rename for high-traffic auto i18n keys.

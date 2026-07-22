@@ -25,7 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import thread.feature_forum.generated.resources.Res
-import thread.feature_forum.generated.resources.s_0f666abf00
+import thread.feature_forum.generated.resources.label_anonymous
 
 @Composable
 fun ThreadAuthor(
@@ -98,7 +98,7 @@ fun ThreadAuthor(
                     color = MaterialTheme.colorScheme.onSurface
                 )
 
-                if (author.name.isNotBlank() && author.name != stringResource(Res.string.s_0f666abf00)) {
+                if (author.name.isNotBlank() && author.name != stringResource(Res.string.label_anonymous)) {
                     Text(
                         text = author.name,
                         style = MaterialTheme.typography.labelMedium,

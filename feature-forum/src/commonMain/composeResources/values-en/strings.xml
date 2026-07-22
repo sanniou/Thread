@@ -132,7 +132,7 @@
     <string name="s_097aa90342">CommunitySearch</string>
     <string name="s_09ceea7644">Built-in</string>
     <string name="s_0e346065ab">After you enter keywords, Thread searches topics and replies in the current source.</string>
-    <string name="s_0f666abf00">Anonymous</string>
+    <string name="label_anonymous">Anonymous</string>
     <string name="s_119feabb02">No.%1$s · Read, quotes, and replies</string>
     <string name="s_12f92d07e1">No more images</string>
     <string name="s_18e3bb9915">All replies loaded</string>
@@ -147,11 +147,11 @@
     <string name="s_3363bd3488">View the remaining %1$s replies…</string>
     <string name="s_3507ddb87f">Add a Discourse instance, or enable a built-in connector.</string>
     <string name="s_35563060dc">Untitled</string>
-    <string name="s_367c1ec5d7">Community</string>
-    <string name="s_3755f56f2f">Delete</string>
+    <string name="label_community">Community</string>
+    <string name="action_delete">Delete</string>
     <string name="action_add_discourse">Add Discourse</string>
     <string name="s_3dcc0e09cc">Initialization only creates generic subscription IDs and source state; platform-specific config is not saved in the UI layer.</string>
-    <string name="s_3f95695328">Announcement</string>
+    <string name="label_announcement">Announcement</string>
     <string name="s_3fbf1853e5">SelectPage</string>
     <string name="s_4208e107f9">%1$s posts</string>
     <string name="s_4565fe5a08">Jump to page</string>
@@ -167,12 +167,12 @@
     <string name="s_6780ab7294">Dev/test API key (optional)</string>
     <string name="s_685f61ba7b">Quoted content</string>
     <string name="action_close">Close</string>
-    <string name="s_6e04347c1c">Content sources</string>
+    <string name="label_content_sources">Content sources</string>
     <string name="s_6fe30db879">Built-in sources can be enabled or disabled; dynamic instances enter the runtime catalog immediately after save</string>
     <string name="s_70cd4c4538">Quoted content not found</string>
     <string name="s_7528719aed">Error: %1$s</string>
     <string name="label_activity">Timeline</string>
-    <string name="s_75ae6a8a7d">Display name</string>
+    <string name="label_display_name">Display name</string>
     <string name="s_76f1ed24cb">This user has not posted any threads yet</string>
     <string name="s_782c5b3b11">Source manager</string>
     <string name="s_7b7f6285e9">Enable %1$s</string>
@@ -202,7 +202,7 @@
     <string name="s_b4e08a4b66">Instance ID</string>
     <string name="s_b5a583c5fd">Select content source</string>
     <string name="s_b6543d7470">%1$s Reply</string>
-    <string name="s_b8d72b4268">Topics, rules, and sub-boards</string>
+    <string name="label_topics_rules_subforums">Topics, rules, and sub-boards</string>
     <string name="s_bb7f40922f">Connect a community instance compatible with the Discourse API. After saving, it becomes a full forum source for navigation, search, and reading.</string>
     <string name="s_bdf32f0d53">Reply thread: No.%1$s</string>
     <string name="s_bf7f516b9a">Manage login identities for the current source · %1$s</string>

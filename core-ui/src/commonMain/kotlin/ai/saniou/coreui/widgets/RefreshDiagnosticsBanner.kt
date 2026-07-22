@@ -37,11 +37,11 @@ import thread.core_ui.generated.resources.s_64f6dfa563
 import thread.core_ui.generated.resources.s_65c709f5be
 import thread.core_ui.generated.resources.s_d5f066a88a
 import thread.core_ui.generated.resources.s_ed7f8c8bad
-import thread.core_ui.generated.resources.s_5f76edc5de
-import thread.core_ui.generated.resources.s_8a662fdebf
-import thread.core_ui.generated.resources.s_979b6bb444
+import thread.core_ui.generated.resources.error_unknown
+import thread.core_ui.generated.resources.error_network_offline
+import thread.core_ui.generated.resources.error_rate_limited
 import thread.core_ui.generated.resources.s_ab0a60e784
-import thread.core_ui.generated.resources.s_bbbd563c35
+import thread.core_ui.generated.resources.error_service
 import thread.core_ui.generated.resources.s_e41ce24cf7
 
 @Composable
@@ -132,10 +132,10 @@ private data class FailurePresentation(val label: String, val icon: ImageVector)
 
 @Composable
 private fun RefreshFailureKind?.presentation(): FailurePresentation = when (this) {
-    RefreshFailureKind.OFFLINE -> FailurePresentation(stringResource(Res.string.s_8a662fdebf), Icons.Default.CloudOff)
+    RefreshFailureKind.OFFLINE -> FailurePresentation(stringResource(Res.string.error_network_offline), Icons.Default.CloudOff)
     RefreshFailureKind.TIMEOUT -> FailurePresentation(stringResource(Res.string.s_e41ce24cf7), Icons.Default.HourglassTop)
-    RefreshFailureKind.RATE_LIMIT -> FailurePresentation(stringResource(Res.string.s_979b6bb444), Icons.Default.HourglassTop)
+    RefreshFailureKind.RATE_LIMIT -> FailurePresentation(stringResource(Res.string.error_rate_limited), Icons.Default.HourglassTop)
     RefreshFailureKind.AUTHENTICATION -> FailurePresentation(stringResource(Res.string.s_ab0a60e784), Icons.Default.Lock)
-    RefreshFailureKind.REMOTE -> FailurePresentation(stringResource(Res.string.s_bbbd563c35), Icons.Default.SyncProblem)
-    RefreshFailureKind.UNKNOWN, null -> FailurePresentation(stringResource(Res.string.s_5f76edc5de), Icons.Default.WarningAmber)
+    RefreshFailureKind.REMOTE -> FailurePresentation(stringResource(Res.string.error_service), Icons.Default.SyncProblem)
+    RefreshFailureKind.UNKNOWN, null -> FailurePresentation(stringResource(Res.string.error_unknown), Icons.Default.WarningAmber)
 }

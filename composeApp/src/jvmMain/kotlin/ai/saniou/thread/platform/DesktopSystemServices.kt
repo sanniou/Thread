@@ -29,10 +29,10 @@ import kotlin.coroutines.resume
 import org.jetbrains.compose.resources.getString
 import thread.composeapp.generated.resources.Res
 import thread.composeapp.generated.resources.s_2df6481f4e
-import thread.composeapp.generated.resources.s_49c7737142
-import thread.composeapp.generated.resources.s_86773005b9
-import thread.composeapp.generated.resources.s_86dab44bc6
-import thread.composeapp.generated.resources.s_c8feb7b4cf
+import thread.composeapp.generated.resources.import_cancelled
+import thread.composeapp.generated.resources.action_export_user_data
+import thread.composeapp.generated.resources.action_import_user_data
+import thread.composeapp.generated.resources.export_cancelled
 import thread.composeapp.generated.resources.s_ffcf0a1eb0
 
 class DesktopShareService : ShareService {
@@ -50,7 +50,7 @@ class DesktopUserDataFileService : UserDataFileService {
     override suspend fun exportText(suggestedFileName: String, text: String): Result<String> =
         runCatching {
             val file = chooseFile(save = true, suggestedName = suggestedFileName)
-                ?: error(getString(Res.string.s_c8feb7b4cf))
+                ?: error(getString(Res.string.export_cancelled))
             withContext(Dispatchers.IO) {
                 file.parentFile?.mkdirs()
                 file.writeText(text, StandardCharsets.UTF_8)
@@ -61,7 +61,7 @@ class DesktopUserDataFileService : UserDataFileService {
     override suspend fun importText(allowedExtensions: Set<String>): Result<String> =
         runCatching {
             val file = chooseFile(save = false, allowedExtensions = allowedExtensions)
-                ?: error(getString(Res.string.s_49c7737142))
+                ?: error(getString(Res.string.import_cancelled))
             withContext(Dispatchers.IO) {
                 require(file.isFile) { getString(Res.string.s_ffcf0a1eb0) }
                 require(file.length() <= MAX_IMPORT_BYTES) { getString(Res.string.s_2df6481f4e) }
@@ -74,7 +74,7 @@ class DesktopUserDataFileService : UserDataFileService {
         suggestedName: String = "thread-user-data.json",
         allowedExtensions: Set<String> = setOf("json", "txt"),
     ): File? {
-        val title = if (save) getString(Res.string.s_86773005b9) else getString(Res.string.s_86dab44bc6)
+        val title = if (save) getString(Res.string.action_export_user_data) else getString(Res.string.action_import_user_data)
         return suspendCancellableCoroutine { continuation ->
         EventQueue.invokeLater {
             if (!continuation.isActive) return@invokeLater

@@ -10,6 +10,7 @@ import ai.saniou.coreui.widgets.SaniouDangerButton
 import ai.saniou.coreui.widgets.SaniouOutlinedButton
 import ai.saniou.coreui.widgets.SaniouTextButton
 import ai.saniou.coreui.widgets.ThreadCard
+import ai.saniou.coreui.theme.threadAnimateItem
 import ai.saniou.forum.workflow.post.PostPage
 import ai.saniou.thread.ForumUserRoute
 import ai.saniou.thread.domain.model.activity.ActivityItem
@@ -96,8 +97,8 @@ import kotlin.time.Instant
 import org.jetbrains.compose.resources.stringResource
 import thread.composeapp.generated.resources.Res
 import thread.composeapp.generated.resources.s_0b46d8806e
-import thread.composeapp.generated.resources.s_0f436818c0
-import thread.composeapp.generated.resources.s_109d57e951
+import thread.composeapp.generated.resources.label_draft
+import thread.composeapp.generated.resources.label_activity_center
 import thread.composeapp.generated.resources.s_149b3c638f
 import thread.composeapp.generated.resources.label_working
 import thread.composeapp.generated.resources.action_continue
@@ -107,19 +108,19 @@ import thread.composeapp.generated.resources.s_39f95e3775
 import thread.composeapp.generated.resources.s_3f7b376d3e
 import thread.composeapp.generated.resources.s_45ad45848d
 import thread.composeapp.generated.resources.action_cancel
-import thread.composeapp.generated.resources.s_4edd1d0087
+import thread.composeapp.generated.resources.action_copy
 import thread.composeapp.generated.resources.s_62e27e2865
 import thread.composeapp.generated.resources.s_65fc81e161
 import thread.composeapp.generated.resources.action_close
-import thread.composeapp.generated.resources.s_7cac745e03
+import thread.composeapp.generated.resources.confirm_permanent
 import thread.composeapp.generated.resources.s_8a6e4f192f
 import thread.composeapp.generated.resources.s_ab0a804137
-import thread.composeapp.generated.resources.s_abd3040b73
+import thread.composeapp.generated.resources.confirm_data_change
 import thread.composeapp.generated.resources.s_afa43bc96e
-import thread.composeapp.generated.resources.s_b2548636f0
+import thread.composeapp.generated.resources.label_activity_short
 import thread.composeapp.generated.resources.s_c840cbecba
 import thread.composeapp.generated.resources.s_d2ade1f772
-import thread.composeapp.generated.resources.s_d84129b8be
+import thread.composeapp.generated.resources.action_dismiss
 import thread.composeapp.generated.resources.label_completed
 import thread.composeapp.generated.resources.s_ea4899468c
 import thread.composeapp.generated.resources.s_ed5909bac1
@@ -130,7 +131,7 @@ import thread.composeapp.generated.resources.s_59a9eb4e65
 import thread.composeapp.generated.resources.s_5ffe0b99be
 import thread.composeapp.generated.resources.s_62c7d33506
 import thread.composeapp.generated.resources.s_656c40a504
-import thread.composeapp.generated.resources.s_6c7dcbb73a
+import thread.composeapp.generated.resources.label_disabled
 import thread.composeapp.generated.resources.label_all
 import thread.composeapp.generated.resources.s_89a2b24d0c
 import thread.composeapp.generated.resources.s_8ecb358ed8
@@ -183,8 +184,8 @@ object ActivityCenterPage : Screen {
             ) {
                 item {
                     PageHeader(
-                        eyebrow = stringResource(Res.string.s_b2548636f0),
-                        title = stringResource(Res.string.s_109d57e951),
+                        eyebrow = stringResource(Res.string.label_activity_short),
+                        title = stringResource(Res.string.label_activity_center),
                         subtitle = stringResource(Res.string.s_39f95e3775),
                         actions = {
                             SaniouTextButton(onClick = { viewModel.onEvent(Event.ClearCompleted) }) {
@@ -252,6 +253,7 @@ object ActivityCenterPage : Screen {
                             working = item.primaryAction?.conflictKey in state.runningConflictKeys,
                             onOpen = { open(item) },
                             onExecute = { viewModel.onEvent(Event.Execute(it)) },
+                            modifier = threadAnimateItem(),
                         )
                     }
                 }
@@ -264,7 +266,7 @@ object ActivityCenterPage : Screen {
             AlertDialog(
                 onDismissRequest = { viewModel.onEvent(Event.DismissDangerAction) },
                 icon = { Icon(Icons.Default.Warning, null) },
-                title = { Text(if (request.danger == ProductActionDanger.DESTRUCTIVE) stringResource(Res.string.s_7cac745e03) else stringResource(Res.string.s_abd3040b73)) },
+                title = { Text(if (request.danger == ProductActionDanger.DESTRUCTIVE) stringResource(Res.string.confirm_permanent) else stringResource(Res.string.confirm_data_change)) },
                 text = { Text(request.confirmationText()) },
                 confirmButton = {
                     if (request.danger == ProductActionDanger.DESTRUCTIVE) {
@@ -319,7 +321,7 @@ object ActivityCenterPage : Screen {
                         }) {
                             Icon(Icons.Default.ContentCopy, null)
                             Spacer(Modifier.width(6.dp))
-                            Text(stringResource(Res.string.s_4edd1d0087))
+                            Text(stringResource(Res.string.action_copy))
                         }
                     }
                 }
@@ -333,7 +335,7 @@ private fun ActivityMetrics(running: Int, attention: Int, drafts: Int, completed
     FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         ActivityMetric(stringResource(Res.string.label_working), running, Icons.Default.Sync, MaterialTheme.colorScheme.primary)
         ActivityMetric(stringResource(Res.string.s_ed5909bac1), attention, Icons.Default.ErrorOutline, MaterialTheme.colorScheme.error)
-        ActivityMetric(stringResource(Res.string.s_0f436818c0), drafts, Icons.Default.EditNote, MaterialTheme.colorScheme.tertiary)
+        ActivityMetric(stringResource(Res.string.label_draft), drafts, Icons.Default.EditNote, MaterialTheme.colorScheme.tertiary)
         ActivityMetric(stringResource(Res.string.label_completed), completed, Icons.Default.History, MaterialTheme.colorScheme.secondary)
     }
 }
@@ -361,10 +363,11 @@ private fun ActivityCard(
     working: Boolean,
     onOpen: () -> Unit,
     onExecute: (ProductActionRequest) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val presentation = item.presentation()
     ThreadCard(
-        modifier = Modifier.fillMaxWidth().semantics {
+        modifier = modifier.fillMaxWidth().semantics {
             contentDescription = "${item.title}，${presentation.label}，${item.summary}"
         },
     ) {
@@ -398,7 +401,7 @@ private fun ActivityCard(
                 SaniouTextButton(
                     onClick = { onExecute(action) },
                     enabled = action.conflictKey != item.primaryAction?.conflictKey || !working,
-                    text = if (action.type == ProductActionType.DISCARD_DRAFT) stringResource(Res.string.s_ea4899468c) else stringResource(Res.string.s_d84129b8be),
+                    text = if (action.type == ProductActionType.DISCARD_DRAFT) stringResource(Res.string.s_ea4899468c) else stringResource(Res.string.action_dismiss),
                 )
             }
             if (item.deepLink != null) {
@@ -482,7 +485,7 @@ private fun ActivityCenterContract.Filter.label(): String = when (this) {
     ActivityCenterContract.Filter.ATTENTION -> stringResource(Res.string.s_59a9eb4e65)
     ActivityCenterContract.Filter.ALL -> stringResource(Res.string.label_all)
     ActivityCenterContract.Filter.RUNNING -> stringResource(Res.string.label_working)
-    ActivityCenterContract.Filter.DRAFTS -> stringResource(Res.string.s_0f436818c0)
+    ActivityCenterContract.Filter.DRAFTS -> stringResource(Res.string.label_draft)
     ActivityCenterContract.Filter.HISTORY -> stringResource(Res.string.label_completed)
 }
 
@@ -492,7 +495,7 @@ private fun IdentityValidity.label(): String = when (this) {
     IdentityValidity.ANONYMOUS -> stringResource(Res.string.s_9117f23d72)
     IdentityValidity.VALID -> stringResource(Res.string.s_ad385d382a)
     IdentityValidity.EXPIRED -> stringResource(Res.string.s_1354374f76)
-    IdentityValidity.DISABLED -> stringResource(Res.string.s_6c7dcbb73a)
+    IdentityValidity.DISABLED -> stringResource(Res.string.label_disabled)
 }
 
 @Composable

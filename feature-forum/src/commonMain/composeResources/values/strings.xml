@@ -140,7 +140,7 @@
     <string name="s_097aa90342">社区搜索</string>
     <string name="s_09ceea7644">内置</string>
     <string name="s_0e346065ab">输入关键词后，Thread 会在当前来源的主题和回复中搜索。</string>
-    <string name="s_0f666abf00">无名氏</string>
+    <string name="label_anonymous">无名氏</string>
     <string name="s_119feabb02">No.%1$s · 阅读、引用与回复</string>
     <string name="s_12f92d07e1">没有更多图片了</string>
     <string name="s_18e3bb9915">全部回复已加载</string>
@@ -155,11 +155,11 @@
     <string name="s_3363bd3488">查看其余 %1$s 条回复...</string>
     <string name="s_3507ddb87f">添加 Discourse 实例，或启用内置连接器。</string>
     <string name="s_35563060dc">未命名</string>
-    <string name="s_367c1ec5d7">社区</string>
-    <string name="s_3755f56f2f">删除</string>
+    <string name="label_community">社区</string>
+    <string name="action_delete">删除</string>
     <string name="action_add_discourse">添加 Discourse</string>
     <string name="s_3dcc0e09cc">初始化只创建通用订阅标识和来源状态，不在界面层保存平台专用配置。</string>
-    <string name="s_3f95695328">公告</string>
+    <string name="label_announcement">公告</string>
     <string name="s_3fbf1853e5">选择页码</string>
     <string name="s_4208e107f9">%1$s 帖</string>
     <string name="s_4565fe5a08">跳转到页面</string>
@@ -175,12 +175,12 @@
     <string name="s_6780ab7294">开发测试 API Key（可选）</string>
     <string name="s_685f61ba7b">引用内容</string>
     <string name="action_close">关闭</string>
-    <string name="s_6e04347c1c">内容来源</string>
+    <string name="label_content_sources">内容来源</string>
     <string name="s_6fe30db879">内置来源可启停；动态实例保存后立即进入运行目录</string>
     <string name="s_70cd4c4538">未找到该引用内容</string>
     <string name="s_7528719aed">错误: %1$s</string>
     <string name="label_activity">动态</string>
-    <string name="s_75ae6a8a7d">显示名称</string>
+    <string name="label_display_name">显示名称</string>
     <string name="s_76f1ed24cb">该用户还没有发布过串</string>
     <string name="s_782c5b3b11">来源管理</string>
     <string name="s_7b7f6285e9">启用 %1$s</string>
@@ -210,7 +210,7 @@
     <string name="s_b4e08a4b66">实例 ID</string>
     <string name="s_b5a583c5fd">选择内容来源</string>
     <string name="s_b6543d7470">%1$s 回复</string>
-    <string name="s_b8d72b4268">主题、规则与子版块</string>
+    <string name="label_topics_rules_subforums">主题、规则与子版块</string>
     <string name="s_bb7f40922f">连接一个兼容 Discourse API 的社区实例。保存后将作为完整论坛来源参与导航、搜索和阅读。</string>
     <string name="s_bdf32f0d53">回复串: No.%1$s</string>
     <string name="s_bf7f516b9a">管理当前来源的登录身份 · %1$s</string>

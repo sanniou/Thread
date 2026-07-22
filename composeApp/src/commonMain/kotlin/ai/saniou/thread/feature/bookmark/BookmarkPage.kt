@@ -50,7 +50,7 @@ import thread.composeapp.generated.resources.Res
 import thread.composeapp.generated.resources.s_1c3775584b
 import thread.composeapp.generated.resources.s_2b69b675e4
 import thread.composeapp.generated.resources.s_2fe8f7cd43
-import thread.composeapp.generated.resources.s_3488c54564
+import thread.composeapp.generated.resources.label_post
 import thread.composeapp.generated.resources.s_525b6078f6
 import thread.composeapp.generated.resources.s_5d071a7a42
 import thread.composeapp.generated.resources.s_61d0e95680
@@ -290,7 +290,7 @@ fun BookmarkItem(
                     }
 
                     is Bookmark.Quote -> {
-                        val label = if (bookmark.sourceType == "article") stringResource(Res.string.label_article) else stringResource(Res.string.s_3488c54564)
+                        val label = if (bookmark.sourceType == "article") stringResource(Res.string.label_article) else stringResource(Res.string.label_post)
                         Text(
                             text = bookmark.content,
                             maxLines = 5,

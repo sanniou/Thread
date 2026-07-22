@@ -3,6 +3,7 @@ package ai.saniou.thread.feature.commands
 import ai.saniou.coreui.interaction.ThreadShortcut
 import ai.saniou.coreui.interaction.threadShortcutHost
 import ai.saniou.coreui.widgets.AdaptiveModal
+import ai.saniou.coreui.theme.threadAnimateItem
 import ai.saniou.thread.domain.model.search.GlobalSearchResult
 import ai.saniou.thread.domain.model.operations.ProductCommandAction
 import ai.saniou.thread.domain.model.operations.ProductCommandDescriptor
@@ -76,32 +77,32 @@ import thread.composeapp.generated.resources.s_11fdaed970
 import thread.composeapp.generated.resources.s_1ca2668ead
 import thread.composeapp.generated.resources.label_working
 import thread.composeapp.generated.resources.s_358adbfeaf
-import thread.composeapp.generated.resources.s_4bcb37a2a4
+import thread.composeapp.generated.resources.eyebrow_commands_discovery
 import thread.composeapp.generated.resources.s_528869a02b
 import thread.composeapp.generated.resources.s_9f479438fb
 import thread.composeapp.generated.resources.s_a29b060f6c
 import thread.composeapp.generated.resources.s_bca2fcab84
 import thread.composeapp.generated.resources.s_f3ea6d345e
 import thread.composeapp.generated.resources.s_02dae4bb5f
-import thread.composeapp.generated.resources.s_109d57e951
+import thread.composeapp.generated.resources.label_activity_center
 import thread.composeapp.generated.resources.s_10a8b6eb39
-import thread.composeapp.generated.resources.s_29f6711704
+import thread.composeapp.generated.resources.label_browse_history
 import thread.composeapp.generated.resources.s_2c175e73aa
 import thread.composeapp.generated.resources.s_54f69c3171
-import thread.composeapp.generated.resources.s_7f0d5ec20d
+import thread.composeapp.generated.resources.label_notification_inbox
 import thread.composeapp.generated.resources.s_83e07208e8
 import thread.composeapp.generated.resources.s_8475b81705
 import thread.composeapp.generated.resources.s_88d95a1f5d
 import thread.composeapp.generated.resources.s_88eff084e7
 import thread.composeapp.generated.resources.s_89e3bbd558
-import thread.composeapp.generated.resources.s_9abbfdbe4b
+import thread.composeapp.generated.resources.label_data_sync
 import thread.composeapp.generated.resources.s_af0c4a9884
 import thread.composeapp.generated.resources.s_bab87bccea
 import thread.composeapp.generated.resources.s_bbcc5f1de2
-import thread.composeapp.generated.resources.s_bdf1267805
+import thread.composeapp.generated.resources.label_source_ops
 import thread.composeapp.generated.resources.s_d97d3180a5
 import thread.composeapp.generated.resources.s_dfd1109735
-import thread.composeapp.generated.resources.s_eb561f9bf0
+import thread.composeapp.generated.resources.label_global_discovery
 import thread.composeapp.generated.resources.s_f0b38d648c
 import thread.composeapp.generated.resources.s_f54431e0fc
 
@@ -144,13 +145,13 @@ fun defaultWorkspaceCommands(): List<WorkspaceCommand> = listOf(
     WorkspaceCommand(WorkspaceDestination.FORUM, stringResource(Res.string.s_af0c4a9884), stringResource(Res.string.s_f54431e0fc), Icons.Default.Forum, "⌘1"),
     WorkspaceCommand(WorkspaceDestination.READER, stringResource(Res.string.s_88eff084e7), stringResource(Res.string.s_bab87bccea), Icons.Default.RssFeed, "⌘2"),
     WorkspaceCommand(WorkspaceDestination.FEED, stringResource(Res.string.s_dfd1109735), stringResource(Res.string.s_54f69c3171), Icons.Default.DynamicFeed, "⌘3"),
-    WorkspaceCommand(WorkspaceDestination.SEARCH, stringResource(Res.string.s_eb561f9bf0), stringResource(Res.string.s_10a8b6eb39), Icons.Default.Search, "⌘4"),
+    WorkspaceCommand(WorkspaceDestination.SEARCH, stringResource(Res.string.label_global_discovery), stringResource(Res.string.s_10a8b6eb39), Icons.Default.Search, "⌘4"),
     WorkspaceCommand(WorkspaceDestination.BOOKMARKS, stringResource(Res.string.s_02dae4bb5f), stringResource(Res.string.s_88d95a1f5d), Icons.Default.Bookmark, "⌘5"),
-    WorkspaceCommand(WorkspaceDestination.INBOX, stringResource(Res.string.s_7f0d5ec20d), stringResource(Res.string.s_8475b81705), Icons.Default.NotificationsActive, "⌘6"),
-    WorkspaceCommand(WorkspaceDestination.ACTIVITY, stringResource(Res.string.s_109d57e951), stringResource(Res.string.s_bbcc5f1de2), Icons.Default.NotificationsActive, "⌘7"),
-    WorkspaceCommand(WorkspaceDestination.OPERATIONS, stringResource(Res.string.s_bdf1267805), stringResource(Res.string.s_d97d3180a5), Icons.Default.MonitorHeart, "⌘8"),
-    WorkspaceCommand(WorkspaceDestination.SETTINGS, stringResource(Res.string.s_9abbfdbe4b), stringResource(Res.string.s_2c175e73aa), Icons.Default.Settings, "⌘9"),
-    WorkspaceCommand(WorkspaceDestination.HISTORY, stringResource(Res.string.s_29f6711704), stringResource(Res.string.s_f0b38d648c), Icons.Default.History, ""),
+    WorkspaceCommand(WorkspaceDestination.INBOX, stringResource(Res.string.label_notification_inbox), stringResource(Res.string.s_8475b81705), Icons.Default.NotificationsActive, "⌘6"),
+    WorkspaceCommand(WorkspaceDestination.ACTIVITY, stringResource(Res.string.label_activity_center), stringResource(Res.string.s_bbcc5f1de2), Icons.Default.NotificationsActive, "⌘7"),
+    WorkspaceCommand(WorkspaceDestination.OPERATIONS, stringResource(Res.string.label_source_ops), stringResource(Res.string.s_d97d3180a5), Icons.Default.MonitorHeart, "⌘8"),
+    WorkspaceCommand(WorkspaceDestination.SETTINGS, stringResource(Res.string.label_data_sync), stringResource(Res.string.s_2c175e73aa), Icons.Default.Settings, "⌘9"),
+    WorkspaceCommand(WorkspaceDestination.HISTORY, stringResource(Res.string.label_browse_history), stringResource(Res.string.s_f0b38d648c), Icons.Default.History, ""),
 )
 
 @Composable
@@ -228,7 +229,7 @@ fun CommandPalette(
                 ),
         ) {
             Column(Modifier.padding(horizontal = 22.dp, vertical = 18.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                Text(stringResource(Res.string.s_4bcb37a2a4), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold)
+                Text(stringResource(Res.string.eyebrow_commands_discovery), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold)
                 Text(
                     stringResource(Res.string.s_358adbfeaf),
                     style = MaterialTheme.typography.bodySmall,
@@ -267,11 +268,13 @@ fun CommandPalette(
                                 command = entry.value,
                                 selected = index == selectedIndex,
                                 onClick = { activate(entry) },
+                                modifier = threadAnimateItem(),
                             )
                             is PaletteEntry.ProductAction -> ProductCommandRow(
                                 command = entry.value,
                                 selected = index == selectedIndex,
                                 onClick = { activate(entry) },
+                                modifier = threadAnimateItem(),
                             )
                             is PaletteEntry.Result -> Surface(
                                 color = if (index == selectedIndex) {
@@ -280,6 +283,7 @@ fun CommandPalette(
                                     MaterialTheme.colorScheme.surface
                                 },
                                 shape = MaterialTheme.shapes.large,
+                                modifier = threadAnimateItem(),
                             ) {
                                 GlobalSearchResultRow(entry.value) { activate(entry) }
                             }
@@ -300,12 +304,12 @@ fun CommandPalette(
 }
 
 @Composable
-private fun ProductCommandRow(command: ProductCommand, selected: Boolean, onClick: () -> Unit) {
+private fun ProductCommandRow(command: ProductCommand, selected: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
     val contentDesc = stringResource(Res.string.s_83e07208e8, command.descriptor.label)
     Surface(
         onClick = onClick,
         enabled = command.descriptor.enabled,
-        modifier = Modifier.fillMaxWidth().semantics {
+        modifier = modifier.fillMaxWidth().semantics {
             contentDescription = contentDesc
         },
         color = if (selected) MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.surface,
@@ -343,11 +347,11 @@ private fun ProductCommandRow(command: ProductCommand, selected: Boolean, onClic
 }
 
 @Composable
-private fun CommandRow(command: WorkspaceCommand, selected: Boolean, onClick: () -> Unit) {
+private fun CommandRow(command: WorkspaceCommand, selected: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
     val contentDesc = stringResource(Res.string.s_89e3bbd558, command.label, command.shortcut)
     Surface(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth().semantics {
+        modifier = modifier.fillMaxWidth().semantics {
             contentDescription = contentDesc
         },
         color = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,

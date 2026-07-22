@@ -60,15 +60,15 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import org.jetbrains.compose.resources.stringResource
 import thread.feature_reader.generated.resources.Res
 import thread.feature_reader.generated.resources.s_0e9cfb13bf
-import thread.feature_reader.generated.resources.s_1795a34c15
+import thread.feature_reader.generated.resources.share_via_system
 import thread.feature_reader.generated.resources.s_1fae1943e6
 import thread.feature_reader.generated.resources.s_29554f3cb1
-import thread.feature_reader.generated.resources.s_2d2cdabf29
+import thread.feature_reader.generated.resources.label_bookmarked
 import thread.feature_reader.generated.resources.s_3c731ff0a2
 import thread.feature_reader.generated.resources.s_4b560383be
 import thread.feature_reader.generated.resources.action_share
 import thread.feature_reader.generated.resources.s_88d650dd4f
-import thread.feature_reader.generated.resources.s_aac0ef6c1c
+import thread.feature_reader.generated.resources.label_reading
 import thread.feature_reader.generated.resources.s_c578c37700
 import thread.feature_reader.generated.resources.s_cee8bcba20
 import thread.feature_reader.generated.resources.action_bookmark
@@ -91,7 +91,7 @@ data class ArticleDetailPage(val articleId: String) : Screen {
         val shareService = LocalShareService.current
         val scope = rememberCoroutineScope()
         val snackbar = remember { SnackbarHostState() }
-        val sharedOkMsg = stringResource(Res.string.s_1795a34c15)
+        val sharedOkMsg = stringResource(Res.string.share_via_system)
         val sharedFallbackMsg = stringResource(Res.string.s_ea2ac35993)
         val rootLinkHandler = LocalContentLinkHandler.current
         val graphReference = remember(articleId) {
@@ -137,7 +137,7 @@ data class ArticleDetailPage(val articleId: String) : Screen {
         }
         ThreadDetailScaffold(
             title = state.feedSourceName ?: stringResource(Res.string.s_1fae1943e6),
-            eyebrow = stringResource(Res.string.s_aac0ef6c1c),
+            eyebrow = stringResource(Res.string.label_reading),
             subtitle = state.article?.title,
             onBack = ::closeDetail,
             actions = {
@@ -167,7 +167,7 @@ data class ArticleDetailPage(val articleId: String) : Screen {
                     visible = article != null,
                     actions = listOf(
                         ActionItem(
-                            label = if (article?.isBookmarked == true) stringResource(Res.string.s_2d2cdabf29) else stringResource(Res.string.action_bookmark),
+                            label = if (article?.isBookmarked == true) stringResource(Res.string.label_bookmarked) else stringResource(Res.string.action_bookmark),
                             icon = if (article?.isBookmarked == true) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
                             emphasized = article?.isBookmarked == true,
                             onClick = { viewModel.onEvent(ArticleDetailContract.Event.OnToggleBookmark) },

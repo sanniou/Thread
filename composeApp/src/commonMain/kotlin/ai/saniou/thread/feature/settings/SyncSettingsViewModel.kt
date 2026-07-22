@@ -27,12 +27,12 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.getString
 import thread.composeapp.generated.resources.Res
-import thread.composeapp.generated.resources.s_09e424b5e8
+import thread.composeapp.generated.resources.error_action_failed
 import thread.composeapp.generated.resources.s_1ad61173b4
 import thread.composeapp.generated.resources.filter_unread_only
 import thread.composeapp.generated.resources.s_521889b79f
 import thread.composeapp.generated.resources.s_6da9925ffe
-import thread.composeapp.generated.resources.s_70a5ae0f89
+import thread.composeapp.generated.resources.filter_bookmarked_only
 import thread.composeapp.generated.resources.s_790909b45b
 import thread.composeapp.generated.resources.s_86cbda7968
 import thread.composeapp.generated.resources.s_d85e9647ff
@@ -155,7 +155,7 @@ class SyncSettingsViewModel(
                     description = buildList {
                         if (query.isNotBlank()) add(getString(Res.string.s_790909b45b, query))
                         if (event.unreadOnly) add(getString(Res.string.filter_unread_only))
-                        if (event.bookmarkedOnly) add(getString(Res.string.s_70a5ae0f89))
+                        if (event.bookmarkedOnly) add(getString(Res.string.filter_bookmarked_only))
                     }.joinToString(" · "),
                     rules = SmartCollectionRules(
                         query = query,
@@ -298,7 +298,7 @@ class SyncSettingsViewModel(
     private fun showFailure(error: Throwable) {
         screenModelScope.launch {
             _state.update {
-                it.copy(isWorking = false, message = error.message ?: getString(Res.string.s_09e424b5e8))
+                it.copy(isWorking = false, message = error.message ?: getString(Res.string.error_action_failed))
             }
         }
     }

@@ -51,8 +51,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import thread.core_ui.generated.resources.Res
-import thread.core_ui.generated.resources.s_4bcb37a2a4
-import thread.core_ui.generated.resources.s_9b0c6c7858
+import thread.core_ui.generated.resources.eyebrow_commands_discovery
+import thread.core_ui.generated.resources.action_more
 import thread.core_ui.generated.resources.s_a1ff8da47d
 import thread.core_ui.generated.resources.s_b114b91547
 import thread.core_ui.generated.resources.s_ff55f08cf1
@@ -126,7 +126,7 @@ private fun WorkspaceBottomNavigation(
     var showOverflow by remember { mutableStateOf(false) }
     val primaryItems = items.filterNot { it.bottom }.take(4)
     val overflowItems = items.filterNot { it in primaryItems }
-    val moreLabel = stringResource(Res.string.s_9b0c6c7858)
+    val moreLabel = stringResource(Res.string.action_more)
     val moreContentDescription = stringResource(Res.string.s_c07113b965)
     val containsCurrentWorkspace = stringResource(Res.string.s_8f27d2c8a0)
     val shortcutMenuLabel = stringResource(Res.string.s_f7bd72c0c7)
@@ -199,7 +199,7 @@ private fun WorkspaceBottomNavigation(
                         ) {
                             Icon(Icons.Default.Search, contentDescription = null)
                             Column(Modifier.weight(1f)) {
-                                Text(stringResource(Res.string.s_4bcb37a2a4), style = MaterialTheme.typography.titleMedium)
+                                Text(stringResource(Res.string.eyebrow_commands_discovery), style = MaterialTheme.typography.titleMedium)
                                 Text(stringResource(Res.string.s_ff55f08cf1), style = MaterialTheme.typography.bodySmall)
                             }
                         }

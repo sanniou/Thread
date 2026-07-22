@@ -94,15 +94,15 @@ import thread.composeapp.generated.resources.s_5274a19b11
 import thread.composeapp.generated.resources.s_557ee228de
 import thread.composeapp.generated.resources.s_64d2bc34d9
 import thread.composeapp.generated.resources.label_all
-import thread.composeapp.generated.resources.s_7f0d5ec20d
+import thread.composeapp.generated.resources.label_notification_inbox
 import thread.composeapp.generated.resources.s_862ebc4065
 import thread.composeapp.generated.resources.s_ac210d6e7d
 import thread.composeapp.generated.resources.s_afdbd1ddec
 import thread.composeapp.generated.resources.s_b1971f6896
 import thread.composeapp.generated.resources.s_c4856b8590
-import thread.composeapp.generated.resources.s_c63f79e636
+import thread.composeapp.generated.resources.label_source
 import thread.composeapp.generated.resources.s_ccb91c07d7
-import thread.composeapp.generated.resources.s_cd83e6e100
+import thread.composeapp.generated.resources.label_inbox
 import thread.composeapp.generated.resources.s_d01a73e67b
 import thread.composeapp.generated.resources.s_d37c67c75a
 import thread.composeapp.generated.resources.action_retry
@@ -110,7 +110,7 @@ import thread.composeapp.generated.resources.s_f5d9c71552
 import thread.composeapp.generated.resources.s_f86d4f875a
 import thread.composeapp.generated.resources.s_f8d22fd22e
 import thread.composeapp.generated.resources.s_1a1f6dff78
-import thread.composeapp.generated.resources.s_3f95695328
+import thread.composeapp.generated.resources.label_announcement
 import thread.composeapp.generated.resources.s_5319af762d
 import thread.composeapp.generated.resources.s_9f7ab435be
 import thread.composeapp.generated.resources.action_reply
@@ -173,8 +173,8 @@ object InboxPage : Screen {
             ) {
                 item {
                     PageHeader(
-                        eyebrow = stringResource(Res.string.s_cd83e6e100),
-                        title = stringResource(Res.string.s_7f0d5ec20d),
+                        eyebrow = stringResource(Res.string.label_inbox),
+                        title = stringResource(Res.string.label_notification_inbox),
                         subtitle = stringResource(Res.string.s_862ebc4065),
                         actions = {
                             SaniouTextButton(onClick = { viewModel.onEvent(Event.MarkAllRead) }) {
@@ -290,7 +290,7 @@ object InboxPage : Screen {
 @Composable
 private fun InboxMetrics(total: Int, unread: Int, sources: Int, muted: Int) {
     FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        listOf(stringResource(Res.string.label_all) to total, stringResource(Res.string.label_unread) to unread, stringResource(Res.string.s_c63f79e636) to sources, stringResource(Res.string.s_afdbd1ddec) to muted).forEach { (label, value) ->
+        listOf(stringResource(Res.string.label_all) to total, stringResource(Res.string.label_unread) to unread, stringResource(Res.string.label_source) to sources, stringResource(Res.string.s_afdbd1ddec) to muted).forEach { (label, value) ->
             Surface(color = MaterialTheme.colorScheme.surfaceContainerHigh, shape = MaterialTheme.shapes.large) {
                 Column(Modifier.padding(horizontal = 18.dp, vertical = 12.dp)) {
                     Text(value.toString(), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
@@ -361,7 +361,7 @@ private fun InboxEventCard(
 
 @Composable
 private fun InboxKind.label(): String = when (this) {
-    InboxKind.ANNOUNCEMENT -> stringResource(Res.string.s_3f95695328)
+    InboxKind.ANNOUNCEMENT -> stringResource(Res.string.label_announcement)
     InboxKind.MENTION -> stringResource(Res.string.s_9f7ab435be)
     InboxKind.REPLY -> stringResource(Res.string.action_reply)
     InboxKind.SUBSCRIPTION_UPDATE -> stringResource(Res.string.s_5319af762d)

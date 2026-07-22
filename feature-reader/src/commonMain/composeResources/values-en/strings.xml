@@ -8,21 +8,21 @@
     <string name="s_127db1eb5e">Analysis failed</string>
     <string name="s_138be3960f">%1$s feeds</string>
     <string name="s_13f5a71b47">Unknown source</string>
-    <string name="s_1795a34c15">Shared via system share sheet</string>
+    <string name="share_via_system">Shared via system share sheet</string>
     <string name="s_1be7ae4fc2">Name</string>
     <string name="s_1d3e8e0a39">Reader</string>
     <string name="s_1fae1943e6">ArticleDetails</string>
     <string name="s_22735a939e">Add a new subscription</string>
     <string name="s_251d583130">Enter a valid URL starting with http:// or https://</string>
-    <string name="s_274a1a8d2e">%1$s sources not updated; failed sources isolated</string>
+    <string name="cache_sources_isolated">%1$s sources not updated; failed sources isolated</string>
     <string name="s_293a341e88">12h</string>
     <string name="s_29554f3cb1">Immersive reading mode</string>
     <string name="s_297a7ec438">Auto refresh</string>
-    <string name="s_2d2cdabf29">Bookmarked</string>
+    <string name="label_bookmarked">Bookmarked</string>
     <string name="s_315d27498f">%1$smin</string>
-    <string name="s_33246f6a5e">Done</string>
+    <string name="action_done">Done</string>
     <string name="s_362ae50a1d">Articles, unread items, and bookmarks for the current feed</string>
-    <string name="s_3755f56f2f">Delete</string>
+    <string name="action_delete">Delete</string>
     <string name="action_refresh">Refresh</string>
     <string name="s_3a9a579a96">1h</string>
     <string name="s_3b9ec1c412">Export JSON</string>
@@ -41,7 +41,7 @@
     <string name="s_54b8a90b3c">Data</string>
     <string name="s_57937ccefc">6h</string>
     <string name="s_57c031dbd9">SubscribeImportExport</string>
-    <string name="s_60e2bcad85">Import</string>
+    <string name="action_import">Import</string>
     <string name="s_6f3f39d03c">%1$s %2$s subscription</string>
     <string name="s_75ef1241c0">Back</string>
     <string name="s_76b3e684df">Reload article</string>
@@ -58,7 +58,7 @@
     <string name="s_a0ecc22def">Add more sources</string>
     <string name="s_a701463879">Feed</string>
     <string name="action_edit">Edit</string>
-    <string name="s_aac0ef6c1c">Read</string>
+    <string name="label_reading">Read</string>
     <string name="s_ad3c05564d">Refresh will not clear the existing article list</string>
     <string name="s_b37255ca3a">2h</string>
     <string name="s_b7f317d76b">Add RSS / Atom subscriptions, or import an OPML backup, to start reading.</string>
@@ -85,13 +85,13 @@
     <string name="s_e25eb142fc">Auto-refresh is not running</string>
     <string name="action_retry">Retry</string>
     <string name="s_e40a06c88b">CloseSearch</string>
-    <string name="s_e45f66052e">Local cache is still readable</string>
+    <string name="cache_still_readable">Local cache is still readable</string>
     <string name="s_e4e46c7235">Type</string>
     <string name="s_ea0ef2ae72">Next</string>
     <string name="s_ea2ac35993">Title and link copied</string>
     <string name="s_ec41cc2365">Auto-refresh enabled</string>
     <string name="s_f04090805c">Search</string>
-    <string name="s_f0e21f6e0f">Cache first · show local content first</string>
+    <string name="cache_first_local">Cache first · show local content first</string>
     <string name="s_f511238a87">No subscriptions yet</string>
     <string name="s_f9f25fb227">No related articles found</string>
     <string name="action_save">Save</string>
@@ -108,12 +108,12 @@ Example: .post-excerpt or .summary</string>
 Example: author.name</string>
     <string name="s_661f326eb8">Path to the article title
 Example: title.rendered or headline</string>
-    <string name="s_6753381261">Export failed</string>
+    <string name="export_failed">Export failed</string>
     <string name="s_7516587bb9">Path to the article content
 Example: content.rendered or body</string>
     <string name="s_8a2604624b">Selector for the list containing all articles
 Example: #posts or .article-list</string>
-    <string name="s_a01a8d5393">Import failed</string>
+    <string name="import_failed">Import failed</string>
     <string name="s_aaee9a97a8">JSON path to the articles array
 Example: data.articles or items</string>
     <string name="s_c9819795fe">URL cannot be empty</string>

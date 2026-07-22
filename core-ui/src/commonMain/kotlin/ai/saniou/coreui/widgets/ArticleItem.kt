@@ -32,7 +32,7 @@ import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import thread.core_ui.generated.resources.Res
 import thread.core_ui.generated.resources.label_unread
-import thread.core_ui.generated.resources.s_2d2cdabf29
+import thread.core_ui.generated.resources.label_bookmarked
 
 @Composable
 fun ArticleItem(
@@ -109,7 +109,7 @@ fun ArticleItem(
                     if (article.isBookmarked) {
                         Icon(
                             Icons.Default.Bookmark,
-                            contentDescription = stringResource(Res.string.s_2d2cdabf29),
+                            contentDescription = stringResource(Res.string.label_bookmarked),
                             modifier = Modifier.size(15.dp),
                             tint = MaterialTheme.colorScheme.tertiary,
                         )

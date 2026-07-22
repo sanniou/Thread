@@ -4,7 +4,7 @@
     <!-- auto-migrated product strings (composable UI) -->
     <string name="s_16dbcf21a4">Aggregated timeline</string>
     <string name="s_246b5aebf6">RSS / Atom Reader</string>
-    <string name="s_274a1a8d2e">%1$s sources not updated; failed sources isolated</string>
+    <string name="cache_sources_isolated">%1$s sources not updated; failed sources isolated</string>
     <string name="action_refresh">Refresh</string>
     <string name="s_3e14c19001">FilterSource</string>
     <string name="s_53a0111222">AllForumSource</string>
@@ -22,8 +22,8 @@
     <string name="s_cec000d0c0">Refresh will not clear the existing timeline</string>
     <string name="s_d1be8ec160">Select a forum, Reader, or social source on the left.</string>
     <string name="s_db3bdb19bb">No content scope selected yet</string>
-    <string name="s_e45f66052e">Local cache is still readable</string>
-    <string name="s_f0e21f6e0f">Cache first · show local content first</string>
+    <string name="cache_still_readable">Local cache is still readable</string>
+    <string name="cache_first_local">Cache first · show local content first</string>
     <string name="s_f675ecc2a1">Refresh timeline</string>
     <string name="s_f82f565394">%1$s ranges</string>
     <string name="s_ffa27be6da">%1$s content ranges</string>

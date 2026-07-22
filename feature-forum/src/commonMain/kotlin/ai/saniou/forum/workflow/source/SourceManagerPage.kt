@@ -59,14 +59,14 @@ import thread.feature_forum.generated.resources.Res
 import thread.feature_forum.generated.resources.eyebrow_forum_sources
 import thread.feature_forum.generated.resources.s_09ceea7644
 import thread.feature_forum.generated.resources.s_3507ddb87f
-import thread.feature_forum.generated.resources.s_3755f56f2f
+import thread.feature_forum.generated.resources.action_delete
 import thread.feature_forum.generated.resources.action_add_discourse
 import thread.feature_forum.generated.resources.s_5fee7d843d
 import thread.feature_forum.generated.resources.s_6780ab7294
-import thread.feature_forum.generated.resources.s_6e04347c1c
+import thread.feature_forum.generated.resources.label_content_sources
 import thread.feature_forum.generated.resources.s_6fe30db879
 import thread.feature_forum.generated.resources.label_activity
-import thread.feature_forum.generated.resources.s_75ae6a8a7d
+import thread.feature_forum.generated.resources.label_display_name
 import thread.feature_forum.generated.resources.s_7bda6019d9
 import thread.feature_forum.generated.resources.s_96d7780f27
 import thread.feature_forum.generated.resources.action_edit
@@ -96,7 +96,7 @@ class SourceManagerPage : Screen {
         }
 
         ThreadDetailScaffold(
-            title = stringResource(Res.string.s_6e04347c1c),
+            title = stringResource(Res.string.label_content_sources),
             eyebrow = stringResource(Res.string.eyebrow_forum_sources),
             subtitle = stringResource(Res.string.s_acc77f9e5b),
             onBack = navigator::pop,
@@ -223,7 +223,7 @@ private fun SourceDescriptorCard(
                     Icon(Icons.Default.Edit, contentDescription = stringResource(Res.string.action_edit))
                 }
                 IconButton(onClick = onDelete, enabled = enabled) {
-                    Icon(Icons.Default.Delete, contentDescription = stringResource(Res.string.s_3755f56f2f))
+                    Icon(Icons.Default.Delete, contentDescription = stringResource(Res.string.action_delete))
                 }
             }
             Spacer(Modifier.width(8.dp))
@@ -272,7 +272,7 @@ private fun DiscourseEditorDialog(
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
-                label = { Text(stringResource(Res.string.s_75ae6a8a7d)) },
+                label = { Text(stringResource(Res.string.label_display_name)) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
             )

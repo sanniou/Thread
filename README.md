@@ -101,6 +101,7 @@
 -   [x] **安静列表动效 0.34**: `threadAnimateItem` 进入主列表（Forum/Feed/Reader/Bookmark/User）；Bookmark/UserDetail 剩余全页 loading 收敛。
 -   [x] **次级列表动效 0.35**: Search/Subscription/SourceManager/Trend/TopicDetail/GlobalSearch/Inbox 接入 `threadAnimateItem`；Inbox 分页尾部统一 `PagingAppendState`。
 -   [x] **语义化 i18n key 0.36**: 高频 `s_*` 重命名为 `action_*` / `label_*` 等可读 key（跨 composeApp/core-ui/forum/reader/feed）。
+-   [x] **i18n/列表收口 0.37**: 二波语义 key（错误/缓存/导入导出/壳层标签）+ Activity/Operations/CommandPalette 列表 `threadAnimateItem`。
 
 ## 🚀 构建与运行
 

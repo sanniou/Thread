@@ -93,45 +93,45 @@ import thread.composeapp.generated.resources.s_2f731abd93
 import thread.composeapp.generated.resources.s_30b2c979ac
 import thread.composeapp.generated.resources.s_31e11f96c9
 import thread.composeapp.generated.resources.s_32d9d4ba90
-import thread.composeapp.generated.resources.s_33246f6a5e
+import thread.composeapp.generated.resources.action_done
 import thread.composeapp.generated.resources.filter_unread_only
 import thread.composeapp.generated.resources.s_351619af9a
 import thread.composeapp.generated.resources.s_3930ecdc05
 import thread.composeapp.generated.resources.s_3cce4b557d
 import thread.composeapp.generated.resources.s_3f01ff8d8d
-import thread.composeapp.generated.resources.s_430050ae51
+import thread.composeapp.generated.resources.action_delete_named
 import thread.composeapp.generated.resources.s_4373b82f21
 import thread.composeapp.generated.resources.s_44ceb01368
-import thread.composeapp.generated.resources.s_49c7737142
+import thread.composeapp.generated.resources.import_cancelled
 import thread.composeapp.generated.resources.s_4a88d2ab0b
 import thread.composeapp.generated.resources.action_cancel
 import thread.composeapp.generated.resources.s_4e2f1163fc
-import thread.composeapp.generated.resources.s_4edd1d0087
+import thread.composeapp.generated.resources.action_copy
 import thread.composeapp.generated.resources.s_56fdd69721
 import thread.composeapp.generated.resources.s_58333db940
 import thread.composeapp.generated.resources.s_5d95923b6f
-import thread.composeapp.generated.resources.s_60e2bcad85
+import thread.composeapp.generated.resources.action_import
 import thread.composeapp.generated.resources.s_6525ca3010
-import thread.composeapp.generated.resources.s_6753381261
-import thread.composeapp.generated.resources.s_70a5ae0f89
+import thread.composeapp.generated.resources.export_failed
+import thread.composeapp.generated.resources.filter_bookmarked_only
 import thread.composeapp.generated.resources.s_71c9730dfe
 import thread.composeapp.generated.resources.s_73bf8411b8
 import thread.composeapp.generated.resources.s_73e3355932
-import thread.composeapp.generated.resources.s_75ae6a8a7d
+import thread.composeapp.generated.resources.label_display_name
 import thread.composeapp.generated.resources.s_774fb84fcf
 import thread.composeapp.generated.resources.s_7b15e5e8e7
 import thread.composeapp.generated.resources.s_80ec9e2b1b
 import thread.composeapp.generated.resources.s_817af1870c
 import thread.composeapp.generated.resources.s_8502e30b3b
-import thread.composeapp.generated.resources.s_86773005b9
-import thread.composeapp.generated.resources.s_86dab44bc6
+import thread.composeapp.generated.resources.action_export_user_data
+import thread.composeapp.generated.resources.action_import_user_data
 import thread.composeapp.generated.resources.s_9301c30bde
 import thread.composeapp.generated.resources.s_967f446633
 import thread.composeapp.generated.resources.s_97d8a6c05b
 import thread.composeapp.generated.resources.s_9a1c91d13c
 import thread.composeapp.generated.resources.s_9ab6e56a49
-import thread.composeapp.generated.resources.s_9abbfdbe4b
-import thread.composeapp.generated.resources.s_a01a8d5393
+import thread.composeapp.generated.resources.label_data_sync
+import thread.composeapp.generated.resources.import_failed
 import thread.composeapp.generated.resources.s_a1aaf352cb
 import thread.composeapp.generated.resources.s_ad25121b16
 import thread.composeapp.generated.resources.s_ad30571e81
@@ -146,7 +146,7 @@ import thread.composeapp.generated.resources.s_c5e431f732
 import thread.composeapp.generated.resources.s_c831720c36
 import thread.composeapp.generated.resources.s_c837edc258
 import thread.composeapp.generated.resources.s_c839a8ff17
-import thread.composeapp.generated.resources.s_c8feb7b4cf
+import thread.composeapp.generated.resources.export_cancelled
 import thread.composeapp.generated.resources.s_c929a1d2a2
 import thread.composeapp.generated.resources.s_ce14673623
 import thread.composeapp.generated.resources.s_cf4b7d95a2
@@ -214,8 +214,8 @@ class SyncSettingsPage(
                                     viewModel.onEvent(SyncSettingsContract.Event.DismissDialog)
                                 },
                                 onFailure = { error ->
-                                    if (error.message != getString(Res.string.s_c8feb7b4cf)) {
-                                        snackbar.showSnackbar(error.message ?: getString(Res.string.s_6753381261))
+                                    if (error.message != getString(Res.string.export_cancelled)) {
+                                        snackbar.showSnackbar(error.message ?: getString(Res.string.export_failed))
                                     }
                                 },
                             )
@@ -230,7 +230,7 @@ class SyncSettingsPage(
         }
 
         ThreadDetailScaffold(
-            title = stringResource(Res.string.s_9abbfdbe4b),
+            title = stringResource(Res.string.label_data_sync),
             eyebrow = stringResource(Res.string.s_774fb84fcf),
             subtitle = stringResource(Res.string.s_3930ecdc05),
             onBack = navigator::pop,
@@ -339,7 +339,7 @@ class SyncSettingsPage(
                     )
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         FilterChip(collectionUnread, { collectionUnread = !collectionUnread }, { Text(stringResource(Res.string.filter_unread_only)) })
-                        FilterChip(collectionBookmarked, { collectionBookmarked = !collectionBookmarked }, { Text(stringResource(Res.string.s_70a5ae0f89)) })
+                        FilterChip(collectionBookmarked, { collectionBookmarked = !collectionBookmarked }, { Text(stringResource(Res.string.filter_bookmarked_only)) })
                     }
                     Text(stringResource(Res.string.s_dc35af8d69), style = MaterialTheme.typography.labelLarge)
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -409,7 +409,7 @@ class SyncSettingsPage(
                                 Icon(if (collection.pinned) Icons.Default.PushPin else Icons.Outlined.PushPin, stringResource(Res.string.s_32d9d4ba90, collection.name))
                             }
                             IconButton(onClick = { viewModel.onEvent(SyncSettingsContract.Event.DeleteSmartCollection(collection.id)) }) {
-                                Icon(Icons.Default.DeleteOutline, stringResource(Res.string.s_430050ae51, collection.name))
+                                Icon(Icons.Default.DeleteOutline, stringResource(Res.string.action_delete_named, collection.name))
                             }
                         }
                     }
@@ -430,7 +430,7 @@ class SyncSettingsPage(
                     OutlinedTextField(
                         value = socialName,
                         onValueChange = { socialName = it },
-                        label = { Text(stringResource(Res.string.s_75ae6a8a7d)) },
+                        label = { Text(stringResource(Res.string.label_display_name)) },
                         placeholder = { Text(stringResource(Res.string.s_71c9730dfe)) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
@@ -486,7 +486,7 @@ class SyncSettingsPage(
                             IconButton(
                                 onClick = { viewModel.onEvent(SyncSettingsContract.Event.DeleteSocialSource(source.id)) }
                             ) {
-                                Icon(Icons.Default.DeleteOutline, stringResource(Res.string.s_430050ae51, source.displayName))
+                                Icon(Icons.Default.DeleteOutline, stringResource(Res.string.action_delete_named, source.displayName))
                             }
                         }
                     }
@@ -517,7 +517,7 @@ class SyncSettingsPage(
                         ) {
                             Icon(Icons.Default.Download, null)
                             Spacer(Modifier.width(8.dp))
-                            Text(stringResource(Res.string.s_60e2bcad85))
+                            Text(stringResource(Res.string.action_import))
                         }
                         if (userDataFileService != null) {
                             SaniouOutlinedButton(
@@ -528,8 +528,8 @@ class SyncSettingsPage(
                                                 viewModel.onEvent(SyncSettingsContract.Event.ImportLocal(payload))
                                             },
                                             onFailure = { error ->
-                                                if (error.message != getString(Res.string.s_49c7737142)) {
-                                                    snackbar.showSnackbar(error.message ?: getString(Res.string.s_a01a8d5393))
+                                                if (error.message != getString(Res.string.import_cancelled)) {
+                                                    snackbar.showSnackbar(error.message ?: getString(Res.string.import_failed))
                                                 }
                                             },
                                         )
@@ -695,7 +695,7 @@ private fun UserDataTransferDialog(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(
-                if (dialog.isImport) stringResource(Res.string.s_86dab44bc6) else stringResource(Res.string.s_86773005b9),
+                if (dialog.isImport) stringResource(Res.string.action_import_user_data) else stringResource(Res.string.action_export_user_data),
                 style = MaterialTheme.typography.headlineSmall,
             )
             Text(
@@ -727,12 +727,12 @@ private fun UserDataTransferDialog(
                     )
                 } else {
                     if (onCopy != null) {
-                        SaniouOutlinedButton(onClick = onCopy, text = stringResource(Res.string.s_4edd1d0087))
+                        SaniouOutlinedButton(onClick = onCopy, text = stringResource(Res.string.action_copy))
                     }
                     if (onExportToFile != null) {
                         SaniouOutlinedButton(onClick = onExportToFile, text = stringResource(Res.string.s_4a88d2ab0b))
                     }
-                    SaniouButton(onClick = onDismiss, text = stringResource(Res.string.s_33246f6a5e))
+                    SaniouButton(onClick = onDismiss, text = stringResource(Res.string.action_done))
                 }
             }
         }

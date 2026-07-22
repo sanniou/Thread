@@ -60,11 +60,11 @@ import thread.composeapp.generated.resources.s_6c53fc701c
 import thread.composeapp.generated.resources.s_98d1a2291c
 import thread.composeapp.generated.resources.s_a4330209a2
 import thread.composeapp.generated.resources.s_a970323576
-import thread.composeapp.generated.resources.s_c84df4602f
+import thread.composeapp.generated.resources.label_local_first
 import thread.composeapp.generated.resources.s_cf392f36e1
 import thread.composeapp.generated.resources.s_e33f273247
 import thread.composeapp.generated.resources.s_e5acde55aa
-import thread.composeapp.generated.resources.s_eb561f9bf0
+import thread.composeapp.generated.resources.label_global_discovery
 import thread.composeapp.generated.resources.s_ec4bfed1fe
 
 object GlobalSearchPage : Screen {
@@ -111,7 +111,7 @@ object GlobalSearchPage : Screen {
                 verticalArrangement = Arrangement.spacedBy(18.dp),
             ) {
                 PageHeader(
-                    title = stringResource(Res.string.s_eb561f9bf0),
+                    title = stringResource(Res.string.label_global_discovery),
                     eyebrow = stringResource(Res.string.s_cf392f36e1),
                     subtitle = stringResource(Res.string.s_61bcd04508),
                 )
@@ -119,7 +119,7 @@ object GlobalSearchPage : Screen {
                     icon = Icons.Default.Search,
                     title = stringResource(Res.string.s_6c53fc701c),
                     subtitle = stringResource(Res.string.s_3b89e3b012),
-                    metric = state.response?.let { stringResource(Res.string.s_98d1a2291c, it.totalCount) } ?: stringResource(Res.string.s_c84df4602f),
+                    metric = state.response?.let { stringResource(Res.string.s_98d1a2291c, it.totalCount) } ?: stringResource(Res.string.label_local_first),
                 )
                 ThreadCard(Modifier.fillMaxWidth()) {
                     if (state.smartCollections.isNotEmpty()) {

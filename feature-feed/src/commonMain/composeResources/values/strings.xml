@@ -2,7 +2,7 @@
 <resources>
     <string name="s_16dbcf21a4">聚合动态</string>
     <string name="s_246b5aebf6">RSS / Atom 阅读器</string>
-    <string name="s_274a1a8d2e">%1$s 个来源暂未更新，已隔离失败源</string>
+    <string name="cache_sources_isolated">%1$s 个来源暂未更新，已隔离失败源</string>
     <string name="action_refresh">刷新</string>
     <string name="s_3e14c19001">筛选来源</string>
     <string name="s_53a0111222">全部论坛来源</string>
@@ -20,8 +20,8 @@
     <string name="s_cec000d0c0">刷新不会清空现有时间线</string>
     <string name="s_d1be8ec160">从左侧选择论坛、阅读器或社交来源。</string>
     <string name="s_db3bdb19bb">还没有选择内容范围</string>
-    <string name="s_e45f66052e">本地缓存仍可阅读</string>
-    <string name="s_f0e21f6e0f">缓存优先 · 本地先展示</string>
+    <string name="cache_still_readable">本地缓存仍可阅读</string>
+    <string name="cache_first_local">缓存优先 · 本地先展示</string>
     <string name="s_f675ecc2a1">刷新时间线</string>
     <string name="s_f82f565394">%1$s 个范围</string>
     <string name="s_ffa27be6da">%1$s 个内容范围</string>

@@ -85,7 +85,7 @@ import thread.feature_forum.generated.resources.topic_page_user_center
 import thread.feature_forum.generated.resources.s_2dea05f2e9
 import thread.feature_forum.generated.resources.s_934aa9569f
 import thread.feature_forum.generated.resources.s_adbcf07716
-import thread.feature_forum.generated.resources.s_b8d72b4268
+import thread.feature_forum.generated.resources.label_topics_rules_subforums
 import thread.feature_forum.generated.resources.s_c7ca62cbf8
 
 data class TopicPage(
@@ -170,8 +170,8 @@ data class TopicPage(
                         if (isNotEmpty()) append(" · ")
                         append(stringResource(Res.string.s_c7ca62cbf8, it))
                     }
-                }.ifBlank { stringResource(Res.string.s_b8d72b4268) }
-            } ?: stringResource(Res.string.s_b8d72b4268),
+                }.ifBlank { stringResource(Res.string.label_topics_rules_subforums) }
+            } ?: stringResource(Res.string.label_topics_rules_subforums),
             onBack = navigator::pop,
             modifier = Modifier
                 .nestedScroll(fabNestedScrollConnection)

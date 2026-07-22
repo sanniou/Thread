@@ -23,8 +23,8 @@ import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
 import thread.feature_reader.generated.resources.Res
-import thread.feature_reader.generated.resources.s_6753381261
-import thread.feature_reader.generated.resources.s_a01a8d5393
+import thread.feature_reader.generated.resources.export_failed
+import thread.feature_reader.generated.resources.import_failed
 
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 class ReaderViewModel(
@@ -276,7 +276,7 @@ class ReaderViewModel(
                     }
                 },
                 onFailure = { error ->
-                    _state.update { it.copy(isTransferWorking = false, message = error.message ?: getString(Res.string.s_6753381261)) }
+                    _state.update { it.copy(isTransferWorking = false, message = error.message ?: getString(Res.string.export_failed)) }
                 },
             )
         }
@@ -305,7 +305,7 @@ class ReaderViewModel(
                     }
                 },
                 onFailure = { error ->
-                    _state.update { it.copy(isTransferWorking = false, message = error.message ?: getString(Res.string.s_a01a8d5393)) }
+                    _state.update { it.copy(isTransferWorking = false, message = error.message ?: getString(Res.string.import_failed)) }
                 },
             )
         }

@@ -79,7 +79,7 @@ import org.kodein.di.instance
 import kotlin.time.Instant
 import org.jetbrains.compose.resources.stringResource
 import thread.composeapp.generated.resources.Res
-import thread.composeapp.generated.resources.s_1795a34c15
+import thread.composeapp.generated.resources.share_via_system
 import thread.composeapp.generated.resources.s_5eee313d53
 import thread.composeapp.generated.resources.action_share
 import thread.composeapp.generated.resources.s_ac12e825b5
@@ -114,7 +114,7 @@ data class SocialDetailPage(
         val related = remember(graphReference) { contentGraphRepository.getRelated(graphReference) }
             .collectAsLazyPagingItems()
         val snackbar = remember { SnackbarHostState() }
-        val shareOkMsg = stringResource(Res.string.s_1795a34c15)
+        val shareOkMsg = stringResource(Res.string.share_via_system)
         val shareFallbackMsg = stringResource(Res.string.s_adacab81ba)
         val scope = rememberCoroutineScope()
         val uriHandler = LocalUriHandler.current

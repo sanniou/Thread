@@ -11,6 +11,7 @@ import ai.saniou.coreui.widgets.SaniouOutlinedButton
 import ai.saniou.coreui.widgets.SaniouTextButton
 import ai.saniou.coreui.widgets.ThreadCard
 import ai.saniou.coreui.widgets.AdaptiveModal
+import ai.saniou.coreui.theme.threadAnimateItem
 import ai.saniou.forum.workflow.source.SourceManagerPage
 import ai.saniou.thread.domain.model.operations.ContentSourceKind
 import ai.saniou.thread.domain.model.operations.SourceHealth
@@ -87,7 +88,7 @@ import thread.composeapp.generated.resources.label_topic
 import thread.composeapp.generated.resources.s_01ca4b8486
 import thread.composeapp.generated.resources.s_06b65ae162
 import thread.composeapp.generated.resources.s_2426432239
-import thread.composeapp.generated.resources.s_284b34e15f
+import thread.composeapp.generated.resources.label_needs_attention
 import thread.composeapp.generated.resources.s_35050c33c1
 import thread.composeapp.generated.resources.action_refresh
 import thread.composeapp.generated.resources.s_456ee3d61d
@@ -101,25 +102,25 @@ import thread.composeapp.generated.resources.s_705fcd3dfc
 import thread.composeapp.generated.resources.s_8dc0d03081
 import thread.composeapp.generated.resources.s_9365071b8f
 import thread.composeapp.generated.resources.s_9f6a681e2b
-import thread.composeapp.generated.resources.s_bdf1267805
+import thread.composeapp.generated.resources.label_source_ops
 import thread.composeapp.generated.resources.s_be19319228
-import thread.composeapp.generated.resources.s_c63f79e636
+import thread.composeapp.generated.resources.label_source
 import thread.composeapp.generated.resources.s_d4289269a4
 import thread.composeapp.generated.resources.s_d439a278bc
-import thread.composeapp.generated.resources.s_d47379f917
-import thread.composeapp.generated.resources.s_d84129b8be
+import thread.composeapp.generated.resources.label_refreshing
+import thread.composeapp.generated.resources.action_dismiss
 import thread.composeapp.generated.resources.s_e0c29eaeb3
 import thread.composeapp.generated.resources.s_e4b9d92f14
 import thread.composeapp.generated.resources.s_e93afc81dc
 import thread.composeapp.generated.resources.s_f57207adee
 import thread.composeapp.generated.resources.s_fe5e010aa4
 import thread.composeapp.generated.resources.s_5faee8f507
-import thread.composeapp.generated.resources.s_6c7dcbb73a
+import thread.composeapp.generated.resources.label_disabled
 import thread.composeapp.generated.resources.label_all
-import thread.composeapp.generated.resources.s_8a662fdebf
-import thread.composeapp.generated.resources.s_979b6bb444
+import thread.composeapp.generated.resources.error_network_offline
+import thread.composeapp.generated.resources.error_rate_limited
 import thread.composeapp.generated.resources.s_b796f2d4ca
-import thread.composeapp.generated.resources.s_bbbd563c35
+import thread.composeapp.generated.resources.error_service
 import thread.composeapp.generated.resources.s_caf701318e
 import thread.composeapp.generated.resources.s_ee8161e985
 
@@ -151,7 +152,7 @@ object OperationsPage : Screen {
             ) {
                 item {
                     PageHeader(
-                        title = stringResource(Res.string.s_bdf1267805),
+                        title = stringResource(Res.string.label_source_ops),
                         eyebrow = stringResource(Res.string.s_d4289269a4),
                         subtitle = stringResource(Res.string.s_d439a278bc),
                         actions = {
@@ -215,6 +216,7 @@ object OperationsPage : Screen {
                             isWorking = source.id in state.workingSourceIds,
                             onRetry = { viewModel.onEvent(Event.Retry(source)) },
                             onClearDiagnostic = { viewModel.onEvent(Event.ClearDiagnostic(source.id)) },
+                            modifier = threadAnimateItem(),
                         )
                     }
                 }
@@ -306,9 +308,9 @@ private fun OperationsMetrics(sourceCount: Int, activeCount: Int, failedCount: I
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        MetricCard(stringResource(Res.string.s_c63f79e636), sourceCount.toString(), Icons.Default.Hub, Modifier.weight(1f))
-        MetricCard(stringResource(Res.string.s_d47379f917), activeCount.toString(), Icons.Default.Sync, Modifier.weight(1f))
-        MetricCard(stringResource(Res.string.s_284b34e15f), failedCount.toString(), Icons.Default.Warning, Modifier.weight(1f))
+        MetricCard(stringResource(Res.string.label_source), sourceCount.toString(), Icons.Default.Hub, Modifier.weight(1f))
+        MetricCard(stringResource(Res.string.label_refreshing), activeCount.toString(), Icons.Default.Sync, Modifier.weight(1f))
+        MetricCard(stringResource(Res.string.label_needs_attention), failedCount.toString(), Icons.Default.Warning, Modifier.weight(1f))
         MetricCard(stringResource(Res.string.s_e4b9d92f14), cachedCount.toString(), Icons.Default.Speed, Modifier.weight(1f))
     }
 }
@@ -340,6 +342,7 @@ private fun SourceHealthCard(
     isWorking: Boolean,
     onRetry: () -> Unit,
     onClearDiagnostic: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val presentation = source.state.presentation()
     val sourceContentDescription = stringResource(
@@ -349,7 +352,7 @@ private fun SourceHealthCard(
         source.primaryItemCount,
     )
     ThreadCard(
-        modifier = Modifier.fillMaxWidth().semantics {
+        modifier = modifier.fillMaxWidth().semantics {
             contentDescription = sourceContentDescription
         },
     ) {
@@ -449,7 +452,7 @@ private fun SourceHealthCard(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(message, Modifier.weight(1f), color = MaterialTheme.colorScheme.onErrorContainer)
-                    SaniouTextButton(onClick = onClearDiagnostic, text = stringResource(Res.string.s_d84129b8be))
+                    SaniouTextButton(onClick = onClearDiagnostic, text = stringResource(Res.string.action_dismiss))
                 }
             }
         }
@@ -462,12 +465,12 @@ private enum class HealthTone { GOOD, NEUTRAL, WARNING, ERROR }
 @Composable
 private fun SourceOperationalState.presentation() = when (this) {
     SourceOperationalState.READY -> HealthPresentation(stringResource(Res.string.s_b796f2d4ca), Icons.Default.CheckCircle, HealthTone.GOOD)
-    SourceOperationalState.DISABLED -> HealthPresentation(stringResource(Res.string.s_6c7dcbb73a), Icons.Default.PauseCircle, HealthTone.NEUTRAL)
-    SourceOperationalState.REFRESHING -> HealthPresentation(stringResource(Res.string.s_d47379f917), Icons.Default.Sync, HealthTone.GOOD)
-    SourceOperationalState.OFFLINE -> HealthPresentation(stringResource(Res.string.s_8a662fdebf), Icons.Default.CloudOff, HealthTone.WARNING)
+    SourceOperationalState.DISABLED -> HealthPresentation(stringResource(Res.string.label_disabled), Icons.Default.PauseCircle, HealthTone.NEUTRAL)
+    SourceOperationalState.REFRESHING -> HealthPresentation(stringResource(Res.string.label_refreshing), Icons.Default.Sync, HealthTone.GOOD)
+    SourceOperationalState.OFFLINE -> HealthPresentation(stringResource(Res.string.error_network_offline), Icons.Default.CloudOff, HealthTone.WARNING)
     SourceOperationalState.AUTHENTICATION_REQUIRED -> HealthPresentation(stringResource(Res.string.s_caf701318e), Icons.Default.Lock, HealthTone.ERROR)
-    SourceOperationalState.RATE_LIMITED -> HealthPresentation(stringResource(Res.string.s_979b6bb444), Icons.Default.Speed, HealthTone.WARNING)
-    SourceOperationalState.DEGRADED -> HealthPresentation(stringResource(Res.string.s_bbbd563c35), Icons.Default.Warning, HealthTone.ERROR)
+    SourceOperationalState.RATE_LIMITED -> HealthPresentation(stringResource(Res.string.error_rate_limited), Icons.Default.Speed, HealthTone.WARNING)
+    SourceOperationalState.DEGRADED -> HealthPresentation(stringResource(Res.string.error_service), Icons.Default.Warning, HealthTone.ERROR)
 }
 
 @Composable
@@ -489,7 +492,7 @@ private fun HealthPresentation.contentColor(): Color = when (tone) {
 @Composable
 private fun OperationsContract.Filter.label(): String = when (this) {
     OperationsContract.Filter.ALL -> stringResource(Res.string.label_all)
-    OperationsContract.Filter.ATTENTION -> stringResource(Res.string.s_284b34e15f)
+    OperationsContract.Filter.ATTENTION -> stringResource(Res.string.label_needs_attention)
     OperationsContract.Filter.FORUM -> stringResource(Res.string.s_5faee8f507)
     OperationsContract.Filter.READER -> "Reader"
 }

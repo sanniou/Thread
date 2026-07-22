@@ -134,21 +134,21 @@ import org.jetbrains.compose.resources.stringResource
 import thread.composeapp.generated.resources.Res
 import thread.composeapp.generated.resources.s_0120a7f4c4
 import thread.composeapp.generated.resources.action_continue
-import thread.composeapp.generated.resources.s_367c1ec5d7
+import thread.composeapp.generated.resources.label_community
 import thread.composeapp.generated.resources.action_cancel
 import thread.composeapp.generated.resources.s_523e40a074
 import thread.composeapp.generated.resources.s_543fab9d19
 import thread.composeapp.generated.resources.s_57bd58e6ff
 import thread.composeapp.generated.resources.label_activity
-import thread.composeapp.generated.resources.s_7cac745e03
+import thread.composeapp.generated.resources.confirm_permanent
 import thread.composeapp.generated.resources.s_7debf9cb03
 import thread.composeapp.generated.resources.s_93d5a89429
 import thread.composeapp.generated.resources.s_963c1ebd19
-import thread.composeapp.generated.resources.s_aac0ef6c1c
-import thread.composeapp.generated.resources.s_abd3040b73
-import thread.composeapp.generated.resources.s_b2548636f0
+import thread.composeapp.generated.resources.label_reading
+import thread.composeapp.generated.resources.confirm_data_change
+import thread.composeapp.generated.resources.label_activity_short
 import thread.composeapp.generated.resources.s_cd0aecbcd0
-import thread.composeapp.generated.resources.s_cd83e6e100
+import thread.composeapp.generated.resources.label_inbox
 import thread.composeapp.generated.resources.action_bookmark
 import thread.composeapp.generated.resources.s_2855f9d4e8
 import thread.composeapp.generated.resources.s_abe10f8a12
@@ -494,10 +494,10 @@ fun App(
                 Box(Modifier.fillMaxSize()) {
                 ThreadAdaptiveWindow {
                     val navigationItems = listOf(
-                        WorkspaceNavigationItem(Icons.Default.Forum, stringResource(Res.string.s_367c1ec5d7), selectedWorkspace == WorkspaceDestination.FORUM) {
+                        WorkspaceNavigationItem(Icons.Default.Forum, stringResource(Res.string.label_community), selectedWorkspace == WorkspaceDestination.FORUM) {
                             navigateTo(WorkspaceDestination.FORUM, ForumRoute)
                         },
-                        WorkspaceNavigationItem(Icons.Default.RssFeed, stringResource(Res.string.s_aac0ef6c1c), selectedWorkspace == WorkspaceDestination.READER) {
+                        WorkspaceNavigationItem(Icons.Default.RssFeed, stringResource(Res.string.label_reading), selectedWorkspace == WorkspaceDestination.READER) {
                             navigateTo(WorkspaceDestination.READER, ReaderRoute)
                         },
                         WorkspaceNavigationItem(Icons.Default.DynamicFeed, stringResource(Res.string.label_activity), selectedWorkspace == WorkspaceDestination.FEED) {
@@ -509,10 +509,10 @@ fun App(
                         WorkspaceNavigationItem(Icons.Default.Bookmark, stringResource(Res.string.action_bookmark), selectedWorkspace == WorkspaceDestination.BOOKMARKS) {
                             navigateTo(WorkspaceDestination.BOOKMARKS, BookmarkPage)
                         },
-                        WorkspaceNavigationItem(Icons.Default.Inbox, stringResource(Res.string.s_cd83e6e100), selectedWorkspace == WorkspaceDestination.INBOX) {
+                        WorkspaceNavigationItem(Icons.Default.Inbox, stringResource(Res.string.label_inbox), selectedWorkspace == WorkspaceDestination.INBOX) {
                             navigateTo(WorkspaceDestination.INBOX, InboxPage)
                         },
-                        WorkspaceNavigationItem(Icons.Default.NotificationsActive, stringResource(Res.string.s_b2548636f0), selectedWorkspace == WorkspaceDestination.ACTIVITY, bottom = true) {
+                        WorkspaceNavigationItem(Icons.Default.NotificationsActive, stringResource(Res.string.label_activity_short), selectedWorkspace == WorkspaceDestination.ACTIVITY, bottom = true) {
                             navigateTo(WorkspaceDestination.ACTIVITY, ActivityCenterPage)
                         },
                         WorkspaceNavigationItem(Icons.Default.MonitorHeart, stringResource(Res.string.s_57bd58e6ff), selectedWorkspace == WorkspaceDestination.OPERATIONS, bottom = true) {
@@ -559,7 +559,7 @@ fun App(
                 pendingProductCommand?.let { command ->
                     AlertDialog(
                         onDismissRequest = { pendingProductCommand = null },
-                        title = { Text(if (command.danger == ProductActionDanger.DESTRUCTIVE) stringResource(Res.string.s_7cac745e03) else stringResource(Res.string.s_abd3040b73)) },
+                        title = { Text(if (command.danger == ProductActionDanger.DESTRUCTIVE) stringResource(Res.string.confirm_permanent) else stringResource(Res.string.confirm_data_change)) },
                         text = { Text(command.description) },
                         confirmButton = {
                             if (command.danger == ProductActionDanger.DESTRUCTIVE) {

@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.getString
 import thread.composeapp.generated.resources.Res
-import thread.composeapp.generated.resources.s_09e424b5e8
+import thread.composeapp.generated.resources.error_action_failed
 import thread.composeapp.generated.resources.s_383bf53efb
 import thread.composeapp.generated.resources.s_e31cb76a01
 import thread.composeapp.generated.resources.s_fb8a49be23
@@ -81,7 +81,7 @@ class InboxViewModel(
                 },
                 onFailure = { error ->
                     mutableState.update {
-                        it.copy(message = error.message ?: getString(Res.string.s_09e424b5e8))
+                        it.copy(message = error.message ?: getString(Res.string.error_action_failed))
                     }
                 },
             )

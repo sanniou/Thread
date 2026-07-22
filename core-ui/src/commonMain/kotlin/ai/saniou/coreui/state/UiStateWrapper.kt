@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import org.jetbrains.compose.resources.stringResource
 import thread.core_ui.generated.resources.Res
-import thread.core_ui.generated.resources.s_5f76edc5de
+import thread.core_ui.generated.resources.error_unknown
 
 sealed interface UiStateWrapper<out T> {
     data object Loading : UiStateWrapper<Nothing>
@@ -84,7 +84,7 @@ fun DefaultError(
     action: @Composable () -> Unit = {},
 ) {
     ThreadErrorState(
-        error = error ?: AppError(message = stringResource(Res.string.s_5f76edc5de)),
+        error = error ?: AppError(message = stringResource(Res.string.error_unknown)),
         onRetry = onRetry,
         action = action,
     )

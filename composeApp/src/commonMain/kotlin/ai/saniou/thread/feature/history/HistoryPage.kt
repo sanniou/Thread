@@ -41,13 +41,13 @@ import org.kodein.di.compose.localDI
 import org.kodein.di.instance
 import org.jetbrains.compose.resources.stringResource
 import thread.composeapp.generated.resources.Res
-import thread.composeapp.generated.resources.s_29f6711704
-import thread.composeapp.generated.resources.s_3488c54564
+import thread.composeapp.generated.resources.label_browse_history
+import thread.composeapp.generated.resources.label_post
 import thread.composeapp.generated.resources.s_447b732eb0
 import thread.composeapp.generated.resources.s_543842233f
 import thread.composeapp.generated.resources.label_all
 import thread.composeapp.generated.resources.label_article
-import thread.composeapp.generated.resources.s_c84df4602f
+import thread.composeapp.generated.resources.label_local_first
 import thread.composeapp.generated.resources.s_f9bb327879
 import thread.composeapp.generated.resources.s_fc825effd8
 
@@ -64,15 +64,15 @@ class HistoryPage : Screen {
             ThreadContentColumn(modifier = Modifier.fillMaxSize()) {
                 ContextHero(
                     icon = Icons.Default.History,
-                    title = stringResource(Res.string.s_29f6711704),
+                    title = stringResource(Res.string.label_browse_history),
                     subtitle = stringResource(Res.string.s_f9bb327879),
                     metric = if (historyItems.itemCount > 0) {
                         stringResource(Res.string.s_447b732eb0, historyItems.itemCount)
                     } else {
-                        stringResource(Res.string.s_c84df4602f)
+                        stringResource(Res.string.label_local_first)
                     },
                 )
-                val historyFilterPost = stringResource(Res.string.s_3488c54564)
+                val historyFilterPost = stringResource(Res.string.label_post)
                 val historyFilterArticle = stringResource(Res.string.label_article)
                 val historyFilterAll = stringResource(Res.string.label_all)
                 ThreadFilterBar(
