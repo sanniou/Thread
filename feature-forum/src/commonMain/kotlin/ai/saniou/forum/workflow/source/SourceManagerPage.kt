@@ -10,6 +10,7 @@ import ai.saniou.coreui.widgets.SaniouButton
 import ai.saniou.coreui.widgets.SaniouTextButton
 import ai.saniou.coreui.widgets.ThreadCard
 import ai.saniou.coreui.widgets.ThreadDetailScaffold
+import ai.saniou.coreui.widgets.ThreadLoadingState
 import ai.saniou.forum.workflow.source.SourceManagerContract.Event
 import ai.saniou.thread.domain.model.source.SourceDescriptor
 import androidx.compose.foundation.layout.Arrangement
@@ -28,7 +29,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Hub
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -107,11 +107,7 @@ class SourceManagerPage : Screen {
             },
         ) { padding ->
             if (state.isLoading) {
-                Column(
-                    Modifier.padding(padding).fillMaxSize(),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) { CircularProgressIndicator() }
+                ThreadLoadingState(modifier = Modifier.padding(padding).fillMaxSize())
             } else {
                 androidx.compose.foundation.layout.Box(
                     modifier = Modifier.padding(padding).fillMaxSize(),

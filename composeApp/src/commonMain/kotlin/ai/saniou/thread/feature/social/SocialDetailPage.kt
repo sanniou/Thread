@@ -20,6 +20,7 @@ import ai.saniou.thread.domain.model.social.SocialMediaKind
 import ai.saniou.thread.domain.repository.ContentGraphRepository
 import ai.saniou.thread.feature.social.SocialDetailContract.Event
 import ai.saniou.coreui.platform.LocalShareService
+import ai.saniou.coreui.widgets.ThreadLoadingState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -46,7 +47,6 @@ import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.Repeat
 import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -169,9 +169,7 @@ data class SocialDetailPage(
             val windowInfo = LocalThreadWindowInfo.current
             Box(Modifier.padding(padding).fillMaxSize()) {
                 when {
-                    state.isLoading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
-                    }
+                    state.isLoading -> ThreadLoadingState(modifier = Modifier.fillMaxSize())
                     state.error != null -> {
                         val errorMessage = state.error.orEmpty()
                         ModernEmptyState(

@@ -7,6 +7,7 @@ import ai.saniou.coreui.widgets.PageHeader
 import ai.saniou.coreui.widgets.SaniouButton
 import ai.saniou.coreui.widgets.SaniouTextButton
 import ai.saniou.coreui.widgets.ThreadCard
+import ai.saniou.coreui.widgets.ThreadLoadingState
 import ai.saniou.reader.workflow.articledetail.ArticleDetailPage
 import ai.saniou.thread.FeedTopicRoute
 import ai.saniou.thread.domain.model.content.ContentReference
@@ -243,7 +244,7 @@ object InboxPage : Screen {
                 }
                 when (val refresh = inbox.loadState.refresh) {
                     is LoadState.Loading -> item {
-                        Box(Modifier.fillMaxWidth().padding(48.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+                        ThreadLoadingState(modifier = Modifier.fillMaxWidth())
                     }
                     is LoadState.Error -> item {
                         ThreadCard(Modifier.fillMaxWidth()) {

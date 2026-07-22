@@ -11,6 +11,7 @@ import ai.saniou.coreui.widgets.AdaptiveModal
 import ai.saniou.coreui.widgets.SaniouButton
 import ai.saniou.coreui.widgets.SaniouTextButton
 import ai.saniou.coreui.widgets.ThreadDetailScaffold
+import ai.saniou.coreui.widgets.ThreadLoadingState
 import ai.saniou.forum.ui.components.TopicCard
 import ai.saniou.forum.ui.components.ThreadListSkeleton
 import ai.saniou.forum.workflow.image.ImagePreviewPage
@@ -39,7 +40,6 @@ import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -217,9 +217,7 @@ private fun SubscriptionContent(
         PagingStateLayout(
             items = feeds,
             loading = {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
+                ThreadLoadingState(modifier = Modifier.fillMaxSize())
             },
             empty = { EmptyContent(hasId = state.subscriptionId != null) }
         ) {

@@ -16,6 +16,7 @@ import ai.saniou.coreui.widgets.ActionItem
 import ai.saniou.coreui.widgets.UnifiedActionBar
 import ai.saniou.coreui.composition.LocalContentLinkHandler
 import ai.saniou.coreui.theme.Dimens
+import ai.saniou.coreui.widgets.ThreadLoadingState
 import ai.saniou.thread.domain.model.content.ContentReference
 import ai.saniou.thread.domain.model.content.ContentReferenceKind
 import ai.saniou.thread.domain.model.content.RelatedContent
@@ -197,9 +198,7 @@ data class ArticleDetailPage(val articleId: String) : Screen {
             Box(modifier = Modifier.padding(padding).fillMaxSize()) {
                 when {
                     state.isLoading -> {
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator()
-                        }
+                        ThreadLoadingState(modifier = Modifier.fillMaxSize())
                     }
                     state.error != null -> {
                         ThreadErrorState(

@@ -84,7 +84,6 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.AlertDialog
@@ -92,6 +91,7 @@ import androidx.compose.material3.Text
 import ai.saniou.coreui.widgets.SaniouButton
 import ai.saniou.coreui.widgets.SaniouDangerButton
 import ai.saniou.coreui.widgets.SaniouTextButton
+import ai.saniou.coreui.widgets.ThreadLoadingState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.runtime.Composable
@@ -306,9 +306,7 @@ fun App(
             }
             val restoredSession = workspaceSession
             if (restoredSession == null) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
+                ThreadLoadingState(modifier = Modifier.fillMaxSize())
                 return@ThreadTheme
             }
             val initialDestination = remember { restoredSession.destination }

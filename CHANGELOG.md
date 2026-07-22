@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.33.0 - 2026-07-22
+
+Quiet product consistency: full-page loading surfaces share `ThreadLoadingState`.
+
+- App workspace restore, Social/Article detail, User, Source Manager, Subscription paging, Reader list, and Inbox initial refresh use the shared loading title/message instead of bare `CircularProgressIndicator`.
+- Inline overlays, append footers, and image preview spinners remain compact indicators (not full-page states).
+- Desktop compile + jvmTest matrix green after the adoption pass.
+
 ## 0.32.0 - 2026-07-22
 
 Release-candidate Desktop gates after the 0.31 i18n completion wave.

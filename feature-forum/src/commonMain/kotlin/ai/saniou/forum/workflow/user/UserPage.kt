@@ -4,6 +4,7 @@ import ai.saniou.coreui.composition.LocalForumSourceId
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.SaniouButton
 import ai.saniou.coreui.widgets.ThreadDetailScaffold
+import ai.saniou.coreui.widgets.ThreadLoadingState
 import ai.saniou.forum.ui.login.LoginScreen
 import ai.saniou.forum.workflow.user.UserContract.Event
 import androidx.compose.foundation.layout.Box
@@ -16,7 +17,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.SnackbarHost
@@ -121,12 +121,7 @@ private fun UserScreenContent(
     ) {
         when {
             state.isLoading -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
+                ThreadLoadingState(modifier = Modifier.fillMaxSize())
             }
 
             state.error != null -> {
