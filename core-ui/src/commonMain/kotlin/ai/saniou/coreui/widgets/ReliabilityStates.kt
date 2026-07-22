@@ -106,7 +106,7 @@ fun ThreadStatusBanner(
                     tint = colors.third,
                 )
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(title, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                    Text(title, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
                     Text(message, style = MaterialTheme.typography.bodySmall)
                 }
                 Row(

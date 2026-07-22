@@ -118,6 +118,7 @@
 -   [x] **Redesign 0.51**: Trend / Post / Search / 空错态第二波现代化。
 -   [x] **Redesign 0.52**: 导航壳层 / Home 侧栏 / User / Bookmark / Operations 第三波现代化。
 -   [x] **Redesign 0.53**: Settings / ImagePreview / Feed / Reader / Source 边角第四波现代化。
+-   [x] **Polish 0.54**: 次级页标题/指标/对话框/选中态细节收口。
 
 ## 🚀 构建与运行
 

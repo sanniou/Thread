@@ -763,7 +763,8 @@ private fun ReaderTransferDialog(
                     if (dialog.isImport) Res.string.reader_import_format_title else Res.string.reader_export_format_title,
                     dialog.format.name,
                 ),
-                style = MaterialTheme.typography.headlineSmall,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
             )
                 Text(
                     if (dialog.isImport) stringResource(Res.string.s_fbf6b9bcc8)

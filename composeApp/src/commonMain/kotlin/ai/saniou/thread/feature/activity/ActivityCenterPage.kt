@@ -296,7 +296,7 @@ object ActivityCenterPage : Screen {
                 paneTitle = state.outputTitle ?: stringResource(Res.string.s_d2ade1f772),
             ) {
                 Column(Modifier.fillMaxWidth().padding(22.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                    Text(stringResource(Res.string.s_afa43bc96e), style = MaterialTheme.typography.headlineSmall)
+                    Text(stringResource(Res.string.s_afa43bc96e), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
                     Surface(
                         color = MaterialTheme.colorScheme.surfaceContainer,
                         shape = MaterialTheme.shapes.large,

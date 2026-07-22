@@ -37,14 +37,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.ChatBubbleOutline
 import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material.icons.outlined.OpenInNew
+import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.Repeat
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -159,7 +158,7 @@ data class SocialDetailPage(
                     }
                     post.canonicalUrl?.let { url ->
                         IconButton(onClick = { uriHandler.openUri(url) }) {
-                            Icon(Icons.Outlined.OpenInNew, contentDescription = stringResource(Res.string.s_5eee313d53))
+                            Icon(Icons.AutoMirrored.Outlined.OpenInNew, contentDescription = stringResource(Res.string.s_5eee313d53))
                         }
                     }
                 }
@@ -240,7 +239,7 @@ data class SocialDetailPage(
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .aspectRatio(16f / 9f)
-                                            .clip(RoundedCornerShape(18.dp)),
+                                            .clip(MaterialTheme.shapes.extraLarge),
                                         contentScale = ContentScale.Crop,
                                     )
                                 }

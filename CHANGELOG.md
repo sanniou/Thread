@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.54.0 - 2026-07-23
+
+### Changed
+- **细节 polish（页面级 redesign 后收口）**：统一次级页标题权重、指标卡、对话框标题与选中态。
+- core-ui：`PageHeader` 标题 headlineSmall SemiBold；RelatedContent / Reliability banner 去 Bold。
+- Inbox：指标卡边框 + SemiBold 数字；未读卡 primaryContainer 降 alpha。
+- ArticleDetail 标题、CommandPalette 选中行边框、SocialDetail 媒体圆角主题化、对话框 titleLarge SemiBold。
+- TopicDetail / Subscription / Operations / Activity / Settings / Reader 对话框标题权重一致。
+
+### Notes
+- Desktop compile + jvmTest 门禁通过；设置 parity / 头像 multipart 仍后续；删帖/吧务 deferred。
+
 ## 0.53.0 - 2026-07-23
 
 ### Changed

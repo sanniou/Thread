@@ -264,7 +264,7 @@ object OperationsPage : Screen {
                     Modifier.fillMaxWidth().padding(22.dp),
                     verticalArrangement = Arrangement.spacedBy(14.dp),
                 ) {
-                    Text(stringResource(Res.string.s_35050c33c1), style = MaterialTheme.typography.headlineSmall)
+                    Text(stringResource(Res.string.s_35050c33c1), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
                     Text(
                         stringResource(Res.string.s_06b65ae162),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,

@@ -806,7 +806,8 @@ private fun UserDataTransferDialog(
         ) {
             Text(
                 if (dialog.isImport) stringResource(Res.string.action_import_user_data) else stringResource(Res.string.action_export_user_data),
-                style = MaterialTheme.typography.headlineSmall,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold,
             )
             Text(
                 if (dialog.isImport) {

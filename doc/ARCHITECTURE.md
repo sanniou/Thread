@@ -500,3 +500,11 @@ Page-level coverage for remaining primary workspaces:
 - Feed: `TimelinePostCard` source chip hierarchy aligned with forum list language.
 - Reader: drop sketch `QUICK READ` label; bordered source chip; Selector/AddFeed advanced panels zero-elevation.
 - Edges: login dialog title, SourceInit without `ONE-TIME SETUP`, SourceManager badges/dialog titles.
+
+## 0.54 Detail polish (secondary surfaces)
+
+After page-level redesign coverage, tighten residual type weights and selection chrome:
+
+- `PageHeader` / dialog titles → titleLarge or headlineSmall + SemiBold (no Bold/headlineLarge reading titles).
+- Inbox metric tiles bordered + unread card soft primary alpha; CommandPalette selected row border-only.
+- ArticleDetail / SocialDetail / RelatedContent quieter hierarchy; theme shape on social media.

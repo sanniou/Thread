@@ -22,6 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -69,7 +70,7 @@ fun PageJumpDialog(
                 .padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text(stringResource(Res.string.s_4565fe5a08), style = MaterialTheme.typography.headlineSmall)
+            Text(stringResource(Res.string.s_4565fe5a08), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
 
             Row(
                 modifier = Modifier.fillMaxWidth(),

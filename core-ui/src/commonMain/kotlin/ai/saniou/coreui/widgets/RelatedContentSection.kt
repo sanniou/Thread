@@ -49,7 +49,7 @@ fun RelatedContentSection(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Default.AccountTree, null, tint = MaterialTheme.colorScheme.primary)
             Spacer(Modifier.width(10.dp))
-            Text(stringResource(Res.string.s_682836a89a), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Text(stringResource(Res.string.s_682836a89a), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
         }
         Text(
             stringResource(Res.string.s_40a1549708),

@@ -484,7 +484,7 @@ fun ThreadReply(
             Text(
                 text = reply.title!!,
                 style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface
             )
         }

@@ -20,6 +20,7 @@ import ai.saniou.thread.domain.model.inbox.InboxKind
 import ai.saniou.thread.domain.repository.ContentLinkRepository
 import ai.saniou.thread.feature.inbox.InboxContract.Event
 import ai.saniou.thread.feature.social.SocialDetailPage
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -291,10 +292,16 @@ object InboxPage : Screen {
 private fun InboxMetrics(total: Int, unread: Int, sources: Int, muted: Int) {
     FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         listOf(stringResource(Res.string.label_all) to total, stringResource(Res.string.label_unread) to unread, stringResource(Res.string.label_source) to sources, stringResource(Res.string.s_afdbd1ddec) to muted).forEach { (label, value) ->
-            Surface(color = MaterialTheme.colorScheme.surfaceContainerHigh, shape = MaterialTheme.shapes.large) {
-                Column(Modifier.padding(horizontal = 18.dp, vertical = 12.dp)) {
-                    Text(value.toString(), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-                    Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Surface(
+                color = MaterialTheme.colorScheme.surfaceContainerLow,
+                shape = MaterialTheme.shapes.extraLarge,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.40f)),
+                shadowElevation = 0.dp,
+                tonalElevation = 0.dp,
+            ) {
+                Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+                    Text(value.toString(), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+                    Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }
@@ -312,7 +319,11 @@ private fun InboxEventCard(
 ) {
     ThreadCard(
         modifier = modifier.fillMaxWidth().clickable(enabled = event.reference != null, onClick = onOpen),
-        containerColor = if (event.isRead) MaterialTheme.colorScheme.surfaceContainerLow else MaterialTheme.colorScheme.primaryContainer,
+        containerColor = if (event.isRead) {
+            MaterialTheme.colorScheme.surface
+        } else {
+            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.42f)
+        },
     ) {
         Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
             Surface(
