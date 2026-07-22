@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.40.0 - 2026-07-22
+
+TiebaLite coverage P1: favorites/membership, thread store, inbox sync + main-path polish.
+
+- Remote-first Tieba channel follow/unfollow via `TiebaChannelMembership` wired into `FavoriteRepositoryImpl`.
+- Topic bookmark add/remove syncs official `addstore` / `rmstore` through `TiebaThreadStoreSync` (topic quotes only).
+- `TiebaUserLikeForumSync` caches user like-forum list into Channel + FavoriteChannel tables.
+- `TiebaInboxSync` pulls `replyMe` / `atMe` into shared Inbox; background refresh also re-syncs favorites.
+- Shared `ensureTbs` for posting + reactions; `LikeForumResultBean` serialization defaults hardened.
+- Scope note: platform admin (delete/bawu) still deferred; webview external links remain optional extension.
+- Desktop compile + jvmTest matrix green (incl. Tieba P1 helper tests).
+
 ## 0.39.0 - 2026-07-22
 
 TiebaLite coverage P0: hybrid search + create-thread path.

@@ -64,6 +64,10 @@ import ai.saniou.thread.data.source.discourse.DiscourseSourceFactory
 import ai.saniou.thread.data.source.tieba.TiebaLoginConnector
 import ai.saniou.thread.data.source.tieba.TiebaReactionConnector
 import ai.saniou.thread.data.source.tieba.TiebaSearchConnector
+import ai.saniou.thread.data.source.tieba.TiebaChannelMembership
+import ai.saniou.thread.data.source.tieba.TiebaThreadStoreSync
+import ai.saniou.thread.data.source.tieba.TiebaInboxSync
+import ai.saniou.thread.data.source.tieba.TiebaUserLikeForumSync
 import ai.saniou.thread.data.source.runtime.DefaultSourceCatalog
 import ai.saniou.thread.data.source.runtime.RuntimeSourceRegistration
 import ai.saniou.thread.domain.service.ImageUrlResolver
@@ -181,7 +185,11 @@ val dataModule = DI.Module("dataModule") {
     bindSingleton { TiebaSearchConnector(instance(), instance()) }
     bindSingleton { TiebaPostingConnector(instance(), instance(), instance(), instance(), instance()) }
     bindSingleton { TiebaLoginConnector(instance(), instance(), instance()) }
-    bindSingleton { TiebaReactionConnector(instance(), instance(), instance()) }
+    bindSingleton { TiebaReactionConnector(instance(), instance(), instance(), instance()) }
+    bindSingleton { TiebaChannelMembership(instance(), instance(), instance()) }
+    bindSingleton { TiebaThreadStoreSync(instance(), instance(), instance()) }
+    bindSingleton { TiebaUserLikeForumSync(instance(), instance(), instance()) }
+    bindSingleton { TiebaInboxSync(instance(), instance(), instance()) }
 
     bindSingleton {
         DiscourseSourceFactory(
@@ -247,9 +255,9 @@ val dataModule = DI.Module("dataModule") {
 
     bind<SourceRepository>() with singleton { SourceRepositoryImpl(instance()) }
 
-    bind<BookmarkRepository>() with singleton { BookmarkRepositoryImpl(instance()) }
+    bind<BookmarkRepository>() with singleton { BookmarkRepositoryImpl(instance(), instance()) }
     bind<TagRepository>() with singleton { TagRepositoryImpl(instance()) }
-    bind<FavoriteRepository>() with singleton { FavoriteRepositoryImpl(instance()) }
+    bind<FavoriteRepository>() with singleton { FavoriteRepositoryImpl(instance(), instance()) }
     bind<FeedRepository>() with singleton {
         FeedRepositoryImpl(
             instance(),

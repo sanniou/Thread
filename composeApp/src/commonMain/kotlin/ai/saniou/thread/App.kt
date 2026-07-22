@@ -71,6 +71,8 @@ import ai.saniou.coreui.platform.UserDataFileService
 import ai.saniou.thread.domain.model.social.CursorDirection
 import ai.saniou.thread.domain.repository.InboxRepository
 import ai.saniou.thread.domain.repository.SocialRepository
+import ai.saniou.thread.data.source.tieba.TiebaInboxSync
+import ai.saniou.thread.data.source.tieba.TiebaUserLikeForumSync
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.DynamicFeed
@@ -193,6 +195,8 @@ fun App(
         val contentLinkRepository: ContentLinkRepository by di.instance()
         val socialRepository: SocialRepository by di.instance()
         val inboxRepository: InboxRepository by di.instance()
+        val tiebaInboxSync: TiebaInboxSync by di.instance()
+        val tiebaUserLikeForumSync: TiebaUserLikeForumSync by di.instance()
         val resolvedEntryController = remember(appEntryController) { appEntryController ?: AppEntryController() }
         val resolvedShareService = shareService
         val resolvedUserDataFileService = userDataFileService
@@ -208,7 +212,7 @@ fun App(
         val clipboard = rememberThreadClipboard()
         val uriHandler = LocalUriHandler.current
 
-        DisposableEffect(readerScheduler, backgroundRefreshBridge, socialRepository) {
+        DisposableEffect(readerScheduler, backgroundRefreshBridge, socialRepository, tiebaInboxSync, tiebaUserLikeForumSync) {
             readerScheduler.start()
             val bridge = backgroundRefreshBridge ?: object : BackgroundRefreshBridge {
                 private var job: kotlinx.coroutines.Job? = null
@@ -219,6 +223,8 @@ fun App(
                             runCatching {
                                 readerScheduler.refreshDueNow()
                                 socialRepository.refresh(direction = CursorDirection.NEWER)
+                                tiebaInboxSync.refresh(maxPages = 1)
+                                tiebaUserLikeForumSync.syncCurrentUserFavorites()
                             }
                             kotlinx.coroutines.delay(15 * 60 * 1000L)
                         }

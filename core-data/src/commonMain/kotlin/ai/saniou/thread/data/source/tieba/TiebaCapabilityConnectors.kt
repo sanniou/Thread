@@ -153,20 +153,7 @@ class TiebaPostingConnector internal constructor(
         )
     }
 
-    private suspend fun ensureTbs(): String {
-        parameterProvider.getTbs().takeIf(String::isNotBlank)?.let { return it }
-        val profile = webApi.myInfo(
-            "BDUSS=${parameterProvider.getBduss()}; STOKEN=${parameterProvider.getSToken()}"
-        )
-        require(profile.isLogin && profile.tbs.isNotBlank()) { "贴吧登录已失效，无法刷新 TBS" }
-        parameterProvider.updateCredentials(
-            bduss = parameterProvider.getBduss(),
-            stoken = parameterProvider.getSToken(),
-            uid = profile.uid.toString(),
-            tbs = profile.tbs,
-        )
-        return profile.tbs
-    }
+    private suspend fun ensureTbs(): String = parameterProvider.ensureTbs(webApi)
 }
 
 private class TiebaUserContentPagingSource<T : Any>(

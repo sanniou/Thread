@@ -4,6 +4,9 @@ import ai.saniou.thread.db.Database
 import ai.saniou.thread.db.table.BookmarkTag
 import ai.saniou.thread.data.mapper.toDomain
 import ai.saniou.thread.data.mapper.toEntity
+import ai.saniou.thread.data.source.tieba.TiebaMapper
+import ai.saniou.thread.data.source.tieba.TiebaThreadStoreSync
+import ai.saniou.thread.data.source.tieba.parseTiebaTopicBookmarkId
 import ai.saniou.thread.domain.model.bookmark.Bookmark
 import ai.saniou.thread.domain.repository.BookmarkRepository
 import androidx.paging.PagingSource
@@ -17,7 +20,8 @@ import kotlinx.coroutines.withContext
 import kotlin.time.Instant
 
 class BookmarkRepositoryImpl(
-    private val db: Database
+    private val db: Database,
+    private val tiebaThreadStore: TiebaThreadStoreSync,
 ) : BookmarkRepository {
     override fun getBookmarks(query: String?, tags: List<String>?): PagingSource<Int, Bookmark> {
         val normalizedQuery = query.orEmpty()
@@ -48,13 +52,13 @@ class BookmarkRepositoryImpl(
                         normalizedTags.size.toLong(),
                         limit,
                         offset,
-                        ::mapBookmark
+                        ::mapBookmark,
                     )
                     hasQuery -> db.bookmarkQueries.searchByQuery(
                         normalizedQuery,
                         limit,
                         offset,
-                        ::mapBookmark
+                        ::mapBookmark,
                     )
                     hasTags -> db.bookmarkQueries.searchByTags(
                         normalizedTags,
@@ -65,7 +69,7 @@ class BookmarkRepositoryImpl(
                     )
                     else -> db.bookmarkQueries.searchAll(limit, offset, ::mapBookmark)
                 }
-            }
+            },
         )
     }
 
@@ -83,7 +87,7 @@ class BookmarkRepositoryImpl(
         width: Long?,
         height: Long?,
         mimeType: String?,
-        duration: Long?
+        duration: Long?,
     ): Bookmark {
         val bookmarkTags = db.tagQueries.getTagsForBookmark(id).executeAsList().map { it.toDomain() }
         return ai.saniou.thread.db.table.Bookmark(
@@ -100,12 +104,13 @@ class BookmarkRepositoryImpl(
             width,
             height,
             mimeType,
-            duration
+            duration,
         ).toDomain(bookmarkTags)
     }
 
     override suspend fun addBookmark(bookmark: Bookmark) {
         withContext(Dispatchers.Default) {
+            syncTiebaStoreOnAdd(bookmark)
             db.transaction {
                 db.bookmarkQueries.insert(bookmark.toEntity())
                 bookmark.tags.forEach { tag ->
@@ -118,6 +123,10 @@ class BookmarkRepositoryImpl(
 
     override suspend fun removeBookmark(id: String) {
         withContext(Dispatchers.Default) {
+            parseTiebaTopicBookmarkId(id)?.let { threadId ->
+                // Best-effort remote rmstore; local remove still proceeds if already uncollected.
+                runCatching { tiebaThreadStore.removeStore(threadId) }
+            }
             db.bookmarkQueries.deleteById(id)
         }
     }
@@ -127,5 +136,22 @@ class BookmarkRepositoryImpl(
             .asFlow()
             .mapToList(Dispatchers.Default)
             .map { it.isNotEmpty() }
+    }
+
+    private suspend fun syncTiebaStoreOnAdd(bookmark: Bookmark) {
+        val quote = bookmark as? Bookmark.Quote ?: return
+        if (!quote.sourceType.startsWith("${TiebaMapper.SOURCE_ID}.")) return
+        val threadId = when {
+            quote.sourceType == "${TiebaMapper.SOURCE_ID}.Topic" -> quote.sourceId
+            quote.sourceType == "${TiebaMapper.SOURCE_ID}.Comment" -> {
+                // Comment bookmarks store the post id in sourceId; official store needs tid.
+                // Prefer bookmark id shape tieba.Comment.* only when parent is unknown — skip remote.
+                return
+            }
+            else -> parseTiebaTopicBookmarkId(quote.id) ?: return
+        }
+        if (threadId.isBlank()) return
+        // Remote-first: failed collect should surface to the UI instead of a local-only star.
+        tiebaThreadStore.addStore(threadId = threadId, postId = threadId)
     }
 }

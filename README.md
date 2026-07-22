@@ -104,6 +104,7 @@
 -   [x] **i18n/列表收口 0.37**: 二波语义 key（错误/缓存/导入导出/壳层标签）+ Activity/Operations/CommandPalette 列表 `threadAnimateItem`。
 -   [x] **次级列表收口 0.38**: SubComments/Channel chips/SubForum/Cookie/AddFeed 列表动效；Reader 尾波多引用 key 语义化。
 -   [x] **Tieba 覆盖 P0 0.39**: hybrid 远端搜索 Connector + 发主题路径；`docs/tieba-coverage-matrix.md` 分期对照 TiebaLite。
+-   [x] **Tieba 覆盖 P1 0.40**: 关注/取关吧远端同步、主题收藏 store 同步、likeForum 缓存、replyMe/atMe→Inbox；点赞/发帖共享 TBS；吧务/删帖仍暂缓。
 
 ## 🚀 构建与运行
 
