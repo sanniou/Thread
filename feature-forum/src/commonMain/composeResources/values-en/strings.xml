@@ -300,4 +300,15 @@ Tap the button at the bottom right to add one</string>
     <string name="not_interested">Not interested</string>
     <string name="not_interested_success">Marked as not interested</string>
     <string name="not_interested_failed">Failed to mark not interested</string>
+    <string name="edit_profile">Edit profile</string>
+    <string name="edit_profile_title">Edit profile</string>
+    <string name="profile_nick_name">Nickname</string>
+    <string name="profile_intro">Bio</string>
+    <string name="profile_sex">Gender</string>
+    <string name="profile_sex_unknown">Unset</string>
+    <string name="profile_sex_male">Male</string>
+    <string name="profile_sex_female">Female</string>
+    <string name="profile_save">Save profile</string>
+    <string name="profile_save_success">Profile updated</string>
+    <string name="action_cancel">Cancel</string>
 </resources>

@@ -1,6 +1,7 @@
 package ai.saniou.thread.domain.usecase.user
 
 import ai.saniou.thread.domain.repository.UserRelationRepository
+import ai.saniou.thread.domain.source.ProfileEditRequest
 import ai.saniou.thread.domain.source.UserRelationProfile
 
 class GetUserRelationProfileUseCase(private val repository: UserRelationRepository) {
@@ -16,4 +17,9 @@ class FollowUserUseCase(private val repository: UserRelationRepository) {
 class UnfollowUserUseCase(private val repository: UserRelationRepository) {
     suspend operator fun invoke(sourceId: String, userId: String): Result<String> =
         repository.unfollow(sourceId, userId)
+}
+
+class UpdateUserProfileUseCase(private val repository: UserRelationRepository) {
+    suspend operator fun invoke(sourceId: String, request: ProfileEditRequest): Result<String> =
+        repository.updateProfile(sourceId, request)
 }

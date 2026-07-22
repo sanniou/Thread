@@ -3,6 +3,7 @@ package ai.saniou.thread.data.source.tieba
 import ai.saniou.thread.data.source.tieba.remote.MiniTiebaApi
 import ai.saniou.thread.data.source.tieba.remote.OfficialTiebaApi
 import ai.saniou.thread.data.source.tieba.remote.WebTiebaApi
+import ai.saniou.thread.domain.source.ProfileEditRequest
 import ai.saniou.thread.domain.source.UserRelationConnector
 import ai.saniou.thread.domain.source.UserRelationProfile
 
@@ -38,6 +39,7 @@ class TiebaUserRelationConnector(
             isFollowing = user.hasConcerned == "1",
             fansCount = user.fansNum?.toLongOrNull(),
             followCount = user.concernNum?.toLongOrNull(),
+            sex = user.sex?.toIntOrNull(),
         )
     }
 
@@ -71,6 +73,27 @@ class TiebaUserRelationConnector(
             throw IllegalStateException(response.errorMsg.ifBlank { "取消关注失败 (${response.errorCode})" })
         }
         "已取消关注"
+    }
+
+    override suspend fun updateProfile(request: ProfileEditRequest): Result<String> = runCatching {
+        val stoken = parameterProvider.getSToken().takeIf(String::isNotBlank)
+            ?: throw IllegalStateException("请先登录贴吧账号后再修改资料")
+        val nick = request.nickName.trim()
+        require(nick.isNotBlank()) { "昵称不能为空" }
+        val intro = request.intro.trim().take(500)
+        val sex = request.sex.coerceIn(0, 2)
+        val response = officialApi.profileModify(
+            birthdayShowStatus = if (request.birthdayShowStatus) "1" else "0",
+            birthdayTime = request.birthdayTimeSec.coerceAtLeast(0L).toString(),
+            intro = intro,
+            sex = sex.toString(),
+            nickName = nick,
+            sToken = stoken,
+        )
+        if (response.errorCode != 0) {
+            throw IllegalStateException(response.errorMsg.ifBlank { "修改资料失败 (${response.errorCode})" })
+        }
+        "资料已更新"
     }
 
     private suspend fun resolvePortrait(userId: String): String {

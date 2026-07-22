@@ -46,7 +46,9 @@ object SourceConformance {
 
             val promisesReactions = capabilities.hasUpvote || capabilities.hasDownvote
             checkExact("reactions", promisesReactions, reactions != null)
-            checkExact("user relation", capabilities.supportsUserFollow, userRelation != null)
+            val promisesUserRelation =
+                capabilities.supportsUserFollow || capabilities.supportsProfileEdit
+            checkExact("user relation", promisesUserRelation, userRelation != null)
 
             if (capabilities.commentPageSize != null && capabilities.commentPageSize <= 0) {
                 add("commentPageSize must be positive")

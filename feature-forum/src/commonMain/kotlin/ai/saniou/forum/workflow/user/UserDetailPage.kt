@@ -3,6 +3,7 @@ package ai.saniou.forum.workflow.user
 import ai.saniou.coreui.layout.LocalThreadWindowInfo
 import ai.saniou.coreui.theme.Dimens
 import ai.saniou.coreui.widgets.SaniouButton
+import ai.saniou.coreui.widgets.SaniouTextButton
 import ai.saniou.coreui.widgets.ThreadDetailScaffold
 import ai.saniou.forum.ui.components.TopicCard
 import ai.saniou.forum.ui.components.ThreadListSkeleton
@@ -36,6 +37,9 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.AlertDialog
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -79,6 +83,16 @@ import thread.feature_forum.generated.resources.user_fans_count
 import thread.feature_forum.generated.resources.user_profile_loading
 import thread.feature_forum.generated.resources.unfollow_user
 import thread.feature_forum.generated.resources.follow_user
+import thread.feature_forum.generated.resources.action_cancel
+import thread.feature_forum.generated.resources.profile_save
+import thread.feature_forum.generated.resources.profile_sex_female
+import thread.feature_forum.generated.resources.profile_sex_male
+import thread.feature_forum.generated.resources.profile_sex_unknown
+import thread.feature_forum.generated.resources.profile_sex
+import thread.feature_forum.generated.resources.profile_intro
+import thread.feature_forum.generated.resources.profile_nick_name
+import thread.feature_forum.generated.resources.edit_profile_title
+import thread.feature_forum.generated.resources.edit_profile
 
 data class UserDetailPage(
     val sourceId: String,
@@ -125,6 +139,17 @@ data class UserDetailPage(
         val subtitle = state.profile?.intro?.takeIf { it.isNotBlank() }
             ?: stringResource(Res.string.s_dca79914e5)
 
+        if (state.isEditDialogOpen) {
+            EditProfileDialog(
+                state = state,
+                onNickNameChange = { viewModel.handleEvent(UserDetailContract.Event.EditNickNameChanged(it)) },
+                onIntroChange = { viewModel.handleEvent(UserDetailContract.Event.EditIntroChanged(it)) },
+                onSexChange = { viewModel.handleEvent(UserDetailContract.Event.EditSexChanged(it)) },
+                onDismiss = { viewModel.handleEvent(UserDetailContract.Event.DismissEditProfile) },
+                onSubmit = { viewModel.handleEvent(UserDetailContract.Event.SubmitEditProfile) },
+            )
+        }
+
         ThreadDetailScaffold(
             title = displayTitle,
             eyebrow = stringResource(Res.string.eyebrow_member_activity),
@@ -133,10 +158,11 @@ data class UserDetailPage(
             snackbarHost = { SnackbarHost(snackbarHostState) },
         ) { paddingValues ->
             Column(Modifier.padding(paddingValues).fillMaxSize()) {
-                if (state.supportsUserFollow) {
+                if (state.supportsUserFollow || state.supportsProfileEdit) {
                     UserRelationHeader(
                         state = state,
                         onToggleFollow = { viewModel.handleEvent(UserDetailContract.Event.ToggleFollow) },
+                        onEditProfile = { viewModel.handleEvent(UserDetailContract.Event.OpenEditProfile) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .widthIn(max = Dimens.contentMaxWidth)
@@ -352,6 +378,7 @@ data class UserDetailPage(
 private fun UserRelationHeader(
     state: UserDetailContract.State,
     onToggleFollow: () -> Unit,
+    onEditProfile: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -381,15 +408,93 @@ private fun UserRelationHeader(
                     }
                 }
             }
-            SaniouButton(
-                onClick = onToggleFollow,
-                enabled = !state.isFollowBusy,
-                text = if (state.profile?.isFollowing == true) {
-                    stringResource(Res.string.unfollow_user)
-                } else {
-                    stringResource(Res.string.follow_user)
-                },
-            )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (state.supportsProfileEdit && state.isSelf) {
+                    SaniouButton(
+                        onClick = onEditProfile,
+                        text = stringResource(Res.string.edit_profile),
+                    )
+                }
+                if (state.supportsUserFollow && !state.isSelf) {
+                    SaniouButton(
+                        onClick = onToggleFollow,
+                        enabled = !state.isFollowBusy,
+                        text = if (state.profile?.isFollowing == true) {
+                            stringResource(Res.string.unfollow_user)
+                        } else {
+                            stringResource(Res.string.follow_user)
+                        },
+                    )
+                }
+            }
         }
     }
+}
+
+@Composable
+private fun EditProfileDialog(
+    state: UserDetailContract.State,
+    onNickNameChange: (String) -> Unit,
+    onIntroChange: (String) -> Unit,
+    onSexChange: (Int) -> Unit,
+    onDismiss: () -> Unit,
+    onSubmit: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = { if (!state.isSavingProfile) onDismiss() },
+        title = { Text(text = stringResource(Res.string.edit_profile_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedTextField(
+                    value = state.editNickName,
+                    onValueChange = onNickNameChange,
+                    singleLine = true,
+                    label = { Text(stringResource(Res.string.profile_nick_name)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !state.isSavingProfile,
+                )
+                OutlinedTextField(
+                    value = state.editIntro,
+                    onValueChange = onIntroChange,
+                    minLines = 3,
+                    label = { Text(stringResource(Res.string.profile_intro)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !state.isSavingProfile,
+                )
+                Text(
+                    text = stringResource(Res.string.profile_sex),
+                    style = MaterialTheme.typography.labelLarge,
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf(
+                        0 to Res.string.profile_sex_unknown,
+                        1 to Res.string.profile_sex_male,
+                        2 to Res.string.profile_sex_female,
+                    ).forEach { (value, labelRes) ->
+                        FilterChip(
+                            selected = state.editSex == value,
+                            onClick = { onSexChange(value) },
+                            enabled = !state.isSavingProfile,
+                            label = { Text(stringResource(labelRes)) },
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            SaniouButton(
+                onClick = onSubmit,
+                enabled = !state.isSavingProfile && state.editNickName.isNotBlank(),
+                loading = state.isSavingProfile,
+                text = stringResource(Res.string.profile_save),
+            )
+        },
+        dismissButton = {
+            SaniouTextButton(
+                onClick = onDismiss,
+                enabled = !state.isSavingProfile,
+                text = stringResource(Res.string.action_cancel),
+            )
+        },
+    )
 }

@@ -298,4 +298,15 @@
     <string name="not_interested">不感兴趣</string>
     <string name="not_interested_success">已标记不感兴趣</string>
     <string name="not_interested_failed">标记不感兴趣失败</string>
+    <string name="edit_profile">编辑资料</string>
+    <string name="edit_profile_title">编辑个人资料</string>
+    <string name="profile_nick_name">昵称</string>
+    <string name="profile_intro">简介</string>
+    <string name="profile_sex">性别</string>
+    <string name="profile_sex_unknown">未设置</string>
+    <string name="profile_sex_male">男</string>
+    <string name="profile_sex_female">女</string>
+    <string name="profile_save">保存资料</string>
+    <string name="profile_save_success">资料已更新</string>
+    <string name="action_cancel">取消</string>
 </resources>

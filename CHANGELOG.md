@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.46.0 - 2026-07-22
+
+资料编辑：Tieba `profileModify` 全链路（昵称 / 简介 / 性别）；本人 UserDetail 编辑入口。
+
+- Domain：`ProfileEditRequest` + `UserRelationConnector.updateProfile` + `UpdateUserProfileUseCase`；`supportsProfileEdit` 能力。
+- Data：`TiebaUserRelationConnector` → Official `c/c/profile/modify`；profile 回填 sex。
+- UI：本人资料页「编辑资料」对话框（昵称/简介/性别）；非本人仍关注/取关。
+- Desktop compile + jvmTest 门禁通过；头像 multipart / 云历史 / 设置 parity 仍后续；删帖/吧务 deferred。
+
 ## 0.45.0 - 2026-07-22
 
 本地内容屏蔽：关键词（AND）+ 用户规则；设置页管理；Trend 列表客户端过滤。

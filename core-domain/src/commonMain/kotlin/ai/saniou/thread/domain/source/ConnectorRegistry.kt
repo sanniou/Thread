@@ -66,7 +66,24 @@ interface UserRelationConnector : SourceConnector {
     suspend fun getProfile(userId: String): Result<UserRelationProfile>
     suspend fun follow(userId: String): Result<String>
     suspend fun unfollow(userId: String): Result<String>
+
+    /** Update the currently authenticated user's profile. Default: unsupported. */
+    suspend fun updateProfile(request: ProfileEditRequest): Result<String> =
+        Result.failure(UnsupportedOperationException("Source '$sourceId' does not support profile edit"))
 }
+
+/**
+ * Editable profile fields for sources that support self-profile modification.
+ * [sex]: 0 unknown / 1 male / 2 female (Tieba convention).
+ * [birthdayTimeSec]: unix seconds; 0 means leave/unset.
+ */
+data class ProfileEditRequest(
+    val nickName: String,
+    val intro: String,
+    val sex: Int = 0,
+    val birthdayTimeSec: Long = 0L,
+    val birthdayShowStatus: Boolean = false,
+)
 
 data class UserRelationProfile(
     val userId: String,
@@ -76,6 +93,9 @@ data class UserRelationProfile(
     val isFollowing: Boolean = false,
     val fansCount: Long? = null,
     val followCount: Long? = null,
+    val sex: Int? = null,
+    val birthdayTimeSec: Long? = null,
+    val birthdayShowStatus: Boolean? = null,
 )
 
 interface PostingConnector : SourceConnector {

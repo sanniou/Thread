@@ -27,6 +27,8 @@ data class SourceCapabilities(
     val supportsForumRules: Boolean = false,
     /** Follow / unfollow other users (e.g. Tieba concern). */
     val supportsUserFollow: Boolean = false,
+    /** Edit own profile (e.g. Tieba profileModify). */
+    val supportsProfileEdit: Boolean = false,
 ) {
     companion object {
         val Default = SourceCapabilities()
