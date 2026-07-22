@@ -68,6 +68,10 @@ import ai.saniou.thread.data.source.tieba.TiebaChannelMembership
 import ai.saniou.thread.data.source.tieba.TiebaThreadStoreSync
 import ai.saniou.thread.data.source.tieba.TiebaInboxSync
 import ai.saniou.thread.data.source.tieba.TiebaUserLikeForumSync
+import ai.saniou.thread.data.source.tieba.TiebaChannelSign
+import ai.saniou.thread.data.source.tieba.TiebaForumRuleService
+import ai.saniou.thread.data.repository.ChannelActionRepositoryImpl
+import ai.saniou.thread.domain.repository.ChannelActionRepository
 import ai.saniou.thread.data.source.runtime.DefaultSourceCatalog
 import ai.saniou.thread.data.source.runtime.RuntimeSourceRegistration
 import ai.saniou.thread.domain.service.ImageUrlResolver
@@ -190,6 +194,24 @@ val dataModule = DI.Module("dataModule") {
     bindSingleton { TiebaThreadStoreSync(instance(), instance(), instance()) }
     bindSingleton { TiebaUserLikeForumSync(instance(), instance(), instance()) }
     bindSingleton { TiebaInboxSync(instance(), instance(), instance()) }
+    bindSingleton {
+        TiebaChannelSign(
+            miniApi = instance(),
+            officialApi = instance(),
+            webApi = instance(),
+            database = instance(),
+            parameterProvider = instance(),
+        )
+    }
+    bindSingleton {
+        TiebaForumRuleService(
+            protobufApi = instance(tag = "V11"),
+            parameterProvider = instance(),
+        )
+    }
+    bind<ChannelActionRepository>() with singleton {
+        ChannelActionRepositoryImpl(instance(), instance())
+    }
 
     bindSingleton {
         DiscourseSourceFactory(

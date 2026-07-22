@@ -48,7 +48,6 @@ class SearchViewModel(
 
             is Event.TypeChanged -> {
                 _state.update { it.copy(searchType = event.type) }
-                // 切换类型时，如果有查询词则重新搜索
                 if (_state.value.query.isNotBlank()) {
                     performSearch(_state.value.query)
                 }
@@ -59,7 +58,9 @@ class SearchViewModel(
                     it.copy(
                         query = "",
                         threadPagingData = emptyFlow(),
-                        replyPagingData = emptyFlow()
+                        replyPagingData = emptyFlow(),
+                        channelPagingData = emptyFlow(),
+                        userPagingData = emptyFlow(),
                     )
                 }
                 searchTrigger.value = ""
@@ -69,16 +70,23 @@ class SearchViewModel(
 
     private fun performSearch(query: String) {
         if (query.isBlank()) return
-
-        val currentState = _state.value
-        if (currentState.searchType == SearchType.THREAD) {
-            val pager = repository.searchTopics(sourceId, query)
-                .cachedIn(screenModelScope)
-            _state.update { it.copy(threadPagingData = pager) }
-        } else {
-            val pager = repository.searchComments(sourceId, query)
-                .cachedIn(screenModelScope)
-            _state.update { it.copy(replyPagingData = pager) }
+        when (_state.value.searchType) {
+            SearchType.THREAD -> {
+                val pager = repository.searchTopics(sourceId, query).cachedIn(screenModelScope)
+                _state.update { it.copy(threadPagingData = pager) }
+            }
+            SearchType.REPLY -> {
+                val pager = repository.searchComments(sourceId, query).cachedIn(screenModelScope)
+                _state.update { it.copy(replyPagingData = pager) }
+            }
+            SearchType.CHANNEL -> {
+                val pager = repository.searchChannels(sourceId, query).cachedIn(screenModelScope)
+                _state.update { it.copy(channelPagingData = pager) }
+            }
+            SearchType.USER -> {
+                val pager = repository.searchUsers(sourceId, query).cachedIn(screenModelScope)
+                _state.update { it.copy(userPagingData = pager) }
+            }
         }
     }
 }

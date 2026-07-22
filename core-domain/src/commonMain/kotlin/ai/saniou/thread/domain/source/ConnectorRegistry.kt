@@ -1,6 +1,8 @@
 package ai.saniou.thread.domain.source
 
 import ai.saniou.thread.domain.model.forum.Account
+import ai.saniou.thread.domain.model.forum.Author
+import ai.saniou.thread.domain.model.forum.Channel
 import ai.saniou.thread.domain.model.forum.Comment
 import ai.saniou.thread.domain.model.forum.PostDraft
 import ai.saniou.thread.domain.model.forum.Topic
@@ -9,6 +11,7 @@ import ai.saniou.thread.domain.repository.PostResult
 import ai.saniou.thread.domain.repository.Source
 import androidx.paging.PagingData
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 
 /** Marker shared by every optional source capability. */
 interface SourceConnector {
@@ -18,6 +21,8 @@ interface SourceConnector {
 interface ForumSearchConnector : SourceConnector {
     fun searchTopics(query: String): Flow<PagingData<Topic>>
     fun searchComments(query: String): Flow<PagingData<Comment>>
+    fun searchChannels(query: String): Flow<PagingData<Channel>> = flowOf(PagingData.empty())
+    fun searchUsers(query: String): Flow<PagingData<Author>> = flowOf(PagingData.empty())
 }
 
 interface UserContentConnector : SourceConnector {

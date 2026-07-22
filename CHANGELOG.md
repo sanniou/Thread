@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.41.0 - 2026-07-22
+
+TiebaLite coverage P2: channel sign / forum rules / search forum+user / agreeMe inbox.
+
+- `TiebaChannelSign` (sign + mSign favorites) + `TiebaForumRuleService` (read-only 吧规) via `ChannelActionRepository` / UseCases.
+- UI: Topic page sign + rules dialog; Channel drawer one-tap sign favorites (`supportsChannelSign` / `supportsForumRules` gates).
+- Search: hybrid `searchForum` / `searchUser` on `TiebaSearchConnector` + SearchPage CHANNEL/USER tabs and result cards.
+- Inbox: `TiebaInboxSync` also ingests `agreeMe` (SYSTEM kind, “赞了”).
+- Desktop compile + jvmTest matrix green. Platform admin (delete/bawu) still deferred.
+
 ## 0.40.0 - 2026-07-22
 
 TiebaLite coverage P1: favorites/membership, thread store, inbox sync + main-path polish.

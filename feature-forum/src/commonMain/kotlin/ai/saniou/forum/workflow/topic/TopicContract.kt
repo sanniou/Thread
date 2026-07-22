@@ -2,6 +2,7 @@ package ai.saniou.forum.workflow.topic
 
 import ai.saniou.coreui.state.UiStateWrapper
 import ai.saniou.thread.domain.model.forum.Channel
+import ai.saniou.thread.domain.model.forum.ForumRuleDetail
 import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.model.SourceCapabilities
 import androidx.paging.PagingData
@@ -25,7 +26,12 @@ interface TopicContract {
         val channelDetail: UiStateWrapper<Channel> = UiStateWrapper.Loading,
         val topics: Flow<PagingData<Topic>> = emptyFlow(),
         val capabilities: SourceCapabilities = SourceCapabilities.Default,
-        val showInfoDialog: Boolean = false
+        val showInfoDialog: Boolean = false,
+        val actionMessage: String? = null,
+        val isSigning: Boolean = false,
+        val forumRules: ForumRuleDetail? = null,
+        val isLoadingRules: Boolean = false,
+        val showRulesDialog: Boolean = false,
     )
 
     /**
@@ -56,6 +62,16 @@ interface TopicContract {
          * 显示缓存数据 (降级模式)
          */
         object ShowCache : Event
+
+        /** Sign into the current channel (when source supports it). */
+        object SignChannel : Event
+
+        /** Load and show forum rules (when source supports it). */
+        object LoadForumRules : Event
+
+        data class ToggleRulesDialog(val show: Boolean) : Event
+
+        object ActionMessageShown : Event
     }
 
     /**

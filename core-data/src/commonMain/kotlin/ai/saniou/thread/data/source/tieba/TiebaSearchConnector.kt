@@ -1,8 +1,11 @@
 package ai.saniou.thread.data.source.tieba
 
+import ai.saniou.thread.data.source.tieba.model.SearchForumBean
 import ai.saniou.thread.data.source.tieba.model.SearchThreadBean
+import ai.saniou.thread.data.source.tieba.model.SearchUserBean
 import ai.saniou.thread.data.source.tieba.remote.AppHybridTiebaApi
 import ai.saniou.thread.domain.model.forum.Author
+import ai.saniou.thread.domain.model.forum.Channel
 import ai.saniou.thread.domain.model.forum.Comment
 import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.paging.threadPagingConfig
@@ -18,7 +21,7 @@ import kotlin.time.Instant
 
 /**
  * Hybrid search endpoints from TiebaLite AppHybridTiebaApi.
- * Maps posts → Topic (THREAD tab) and floor-level hits → Comment (REPLY tab).
+ * THREAD/REPLY map searchThread; CHANNEL/USER map searchForum/searchUser (single page).
  */
 class TiebaSearchConnector(
     private val source: TiebaSource,
@@ -48,6 +51,36 @@ class TiebaSearchConnector(
         )
         response.ensureOk()
         response.data.postList.map { it.toComment() }
+    }
+
+    override fun searchChannels(query: String): Flow<PagingData<Channel>> = pager { page ->
+        if (page > 1) return@pager emptyList()
+        val response = api.searchForum(
+            keyword = query,
+            referer = hybridSearchReferer(query),
+        )
+        response.ensureOk()
+        val exact = response.data?.exactMatch?.toChannel()
+        val fuzzy = response.data?.fuzzyMatch.orEmpty().mapNotNull { it.toChannel() }
+        buildList {
+            exact?.let(::add)
+            addAll(fuzzy.filterNot { it.id == exact?.id })
+        }
+    }
+
+    override fun searchUsers(query: String): Flow<PagingData<Author>> = pager { page ->
+        if (page > 1) return@pager emptyList()
+        val response = api.searchUser(
+            keyword = query,
+            referer = hybridSearchReferer(query),
+        )
+        response.ensureOk()
+        val exact = response.data?.exactMatch?.toAuthor()
+        val fuzzy = response.data?.fuzzyMatch.orEmpty().mapNotNull { it.toAuthor() }
+        buildList {
+            exact?.let(::add)
+            addAll(fuzzy.filterNot { it.id == exact?.id })
+        }
     }
 
     private fun <T : Any> pager(loadPage: suspend (Int) -> List<T>): Flow<PagingData<T>> = Pager(
@@ -95,6 +128,56 @@ internal fun SearchThreadBean.ensureOk() {
     if (errorCode != 0) {
         throw IllegalStateException(errorMsg.ifBlank { "贴吧搜索失败 ($errorCode)" })
     }
+}
+
+internal fun SearchForumBean.ensureOk() {
+    if (errorCode != null && errorCode != 0) {
+        throw IllegalStateException(errorMsg?.takeIf(String::isNotBlank) ?: "贴吧搜吧失败 ($errorCode)")
+    }
+}
+
+internal fun SearchUserBean.ensureOk() {
+    if (errorCode != null && errorCode != 0) {
+        throw IllegalStateException(errorMsg?.takeIf(String::isNotBlank) ?: "贴吧搜人失败 ($errorCode)")
+    }
+}
+
+internal fun SearchForumBean.ForumInfoBean.toChannel(): Channel? {
+    val id = forumId?.toString()?.takeIf(String::isNotBlank) ?: return null
+    val name = forumName?.takeIf(String::isNotBlank)
+        ?: forumNameShow?.takeIf(String::isNotBlank)
+        ?: return null
+    return Channel(
+        id = id,
+        name = name,
+        displayName = forumNameShow?.takeIf(String::isNotBlank) ?: name,
+        description = intro.orEmpty().ifBlank { slogan.orEmpty() },
+        descriptionText = slogan ?: intro,
+        groupId = "tieba_search",
+        groupName = "搜索结果",
+        sourceName = TiebaMapper.SOURCE_NAME,
+        sourceId = TiebaMapper.SOURCE_ID,
+        sort = 0,
+        topicCount = null,
+        postCount = postNum.toLongOrNull(),
+        autoDelete = null,
+        logoUrl = avatar,
+        icon = "font-awesome:fa-comments",
+    )
+}
+
+internal fun SearchUserBean.UserBean.toAuthor(): Author? {
+    val id = this.id?.takeIf(String::isNotBlank) ?: return null
+    val display = showNickname?.takeIf(String::isNotBlank)
+        ?: userNickname?.takeIf(String::isNotBlank)
+        ?: name?.takeIf(String::isNotBlank)
+        ?: "贴吧用户"
+    return Author(
+        id = id,
+        name = display,
+        avatar = portrait?.takeIf(String::isNotBlank)?.let { portraitUrl(it) },
+        sourceName = TiebaMapper.SOURCE_NAME,
+    )
 }
 
 internal fun SearchThreadBean.ThreadInfoBean.toTopic(): Topic {

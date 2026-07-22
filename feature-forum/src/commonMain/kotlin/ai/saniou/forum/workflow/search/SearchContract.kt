@@ -1,5 +1,7 @@
 package ai.saniou.forum.workflow.search
 
+import ai.saniou.thread.domain.model.forum.Author
+import ai.saniou.thread.domain.model.forum.Channel
 import ai.saniou.thread.domain.model.forum.Comment
 import ai.saniou.thread.domain.model.forum.Topic
 import androidx.paging.PagingData
@@ -12,6 +14,8 @@ interface SearchContract {
         val searchType: SearchType = SearchType.THREAD,
         val threadPagingData: Flow<PagingData<Topic>> = emptyFlow(),
         val replyPagingData: Flow<PagingData<Comment>> = emptyFlow(),
+        val channelPagingData: Flow<PagingData<Channel>> = emptyFlow(),
+        val userPagingData: Flow<PagingData<Author>> = emptyFlow(),
     )
 
     sealed class Event {
@@ -22,6 +26,8 @@ interface SearchContract {
 
     enum class SearchType {
         THREAD,
-        REPLY
+        REPLY,
+        CHANNEL,
+        USER,
     }
 }

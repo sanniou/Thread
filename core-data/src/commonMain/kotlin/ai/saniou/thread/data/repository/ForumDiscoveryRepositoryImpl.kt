@@ -1,5 +1,7 @@
 package ai.saniou.thread.data.repository
 
+import ai.saniou.thread.domain.model.forum.Author
+import ai.saniou.thread.domain.model.forum.Channel
 import ai.saniou.thread.domain.model.forum.Comment
 import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.repository.ForumSearchRepository
@@ -17,6 +19,12 @@ class ForumSearchRepositoryImpl(
 
     override fun searchComments(sourceId: String, query: String): Flow<PagingData<Comment>> =
         registry.search(sourceId)?.searchComments(query) ?: flowOf(PagingData.empty())
+
+    override fun searchChannels(sourceId: String, query: String): Flow<PagingData<Channel>> =
+        registry.search(sourceId)?.searchChannels(query) ?: flowOf(PagingData.empty())
+
+    override fun searchUsers(sourceId: String, query: String): Flow<PagingData<Author>> =
+        registry.search(sourceId)?.searchUsers(query) ?: flowOf(PagingData.empty())
 }
 
 class UserContentRepositoryImpl(

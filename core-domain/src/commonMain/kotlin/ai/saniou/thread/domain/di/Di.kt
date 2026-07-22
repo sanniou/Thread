@@ -10,6 +10,9 @@ import ai.saniou.thread.domain.usecase.channel.GetChannelDetailUseCase
 import ai.saniou.thread.domain.usecase.channel.GetChannelNameUseCase
 import ai.saniou.thread.domain.usecase.channel.GetChannelsUseCase
 import ai.saniou.thread.domain.usecase.channel.GetChannelTopicsPagingUseCase
+import ai.saniou.thread.domain.usecase.channel.GetForumRulesUseCase
+import ai.saniou.thread.domain.usecase.channel.SignChannelUseCase
+import ai.saniou.thread.domain.usecase.channel.SignFavoriteChannelsUseCase
 import ai.saniou.thread.domain.usecase.history.AddHistoryUseCase
 import ai.saniou.thread.domain.usecase.history.GetHistoryUseCase
 import ai.saniou.thread.domain.usecase.feed.GetTimelineUseCase
@@ -142,6 +145,9 @@ val domainModule = DI.Module("domainModule") {
     bindProvider { ai.saniou.thread.domain.usecase.channel.SetChannelFallbackModeUseCase(instance()) }
     bindProvider { GetChannelNameUseCase(instance()) }
     bindProvider { GetChannelDetailUseCase(instance()) }
+    bindProvider { SignChannelUseCase(instance()) }
+    bindProvider { SignFavoriteChannelsUseCase(instance()) }
+    bindProvider { GetForumRulesUseCase(instance()) }
 
     // Thread
     bindProvider { GetTopicDetailUseCase(instance()) }

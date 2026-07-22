@@ -24,6 +24,7 @@ import ai.saniou.forum.workflow.source.SourceManagerPage
 import ai.saniou.forum.workflow.topic.TopicPage
 import ai.saniou.forum.workflow.topicdetail.TopicDetailPage
 import ai.saniou.forum.workflow.trend.TrendPage
+import ai.saniou.forum.workflow.user.UserDetailPage
 import ai.saniou.thread.domain.model.forum.Notice
 import ai.saniou.thread.domain.model.workspace.WorkspaceDestination
 import ai.saniou.thread.domain.usecase.workspace.UpdateWorkspaceSessionUseCase
@@ -50,6 +51,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.Home
@@ -97,6 +99,7 @@ import thread.feature_forum.generated.resources.*
 import thread.feature_forum.generated.resources.category_collapse
 import thread.feature_forum.generated.resources.category_expand
 import thread.feature_forum.generated.resources.drawer_search
+import thread.feature_forum.generated.resources.drawer_sign_favorites
 import thread.feature_forum.generated.resources.drawer_subscribe
 import thread.feature_forum.generated.resources.empty_workspace_title
 import thread.feature_forum.generated.resources.empty_workspace_desc
@@ -430,6 +433,12 @@ data class ChannelPage(
             if (currentSource?.capabilities?.supportsSearch == true) {
                 add(DrawerItemData(stringResource(Res.string.drawer_search), Icons.Default.Search, false) {
                     navigator.push(SearchPage(state.currentSourceId))
+                    onCloseDrawer()
+                })
+            }
+            if (currentSource?.capabilities?.supportsChannelSign == true) {
+                add(DrawerItemData(stringResource(Res.string.drawer_sign_favorites), Icons.Default.CheckCircle, false) {
+                    viewModel.onEvent(Event.SignFavorites)
                     onCloseDrawer()
                 })
             }

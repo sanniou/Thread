@@ -16,6 +16,7 @@ import ai.saniou.thread.domain.usecase.channel.GetFavoriteChannelsUseCase
 import ai.saniou.thread.domain.usecase.channel.GetLastOpenedChannelUseCase
 import ai.saniou.thread.domain.usecase.channel.GetRecentChannelsUseCase
 import ai.saniou.thread.domain.usecase.channel.SaveLastOpenedChannelUseCase
+import ai.saniou.thread.domain.usecase.channel.SignFavoriteChannelsUseCase
 import ai.saniou.thread.domain.usecase.notice.GetNoticeUseCase
 import ai.saniou.thread.domain.usecase.notice.MarkNoticeAsReadUseCase
 import ai.saniou.thread.domain.usecase.post.ToggleFavoriteUseCase
@@ -42,6 +43,7 @@ import thread.feature_forum.generated.resources.s_249b0d1cc6
 import thread.feature_forum.generated.resources.s_5fafcc2093
 import thread.feature_forum.generated.resources.s_980abb36c0
 import thread.feature_forum.generated.resources.action_bookmark
+import thread.feature_forum.generated.resources.s_0e055beabc
 
 class ChannelViewModel(
     private val getChannelsUseCase: GetChannelsUseCase,
@@ -59,6 +61,7 @@ class ChannelViewModel(
     private val observeRefreshDiagnosticsUseCase: ObserveRefreshDiagnosticsUseCase,
     private val observeWorkspaceSessionUseCase: ObserveWorkspaceSessionUseCase,
     private val updateWorkspaceSessionUseCase: UpdateWorkspaceSessionUseCase,
+    private val signFavoriteChannelsUseCase: SignFavoriteChannelsUseCase,
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(ChannelUiState())
@@ -150,6 +153,20 @@ class ChannelViewModel(
             Event.MarkNoticeRead -> markNoticeAsRead()
             is Event.SelectSource -> selectSource(event.sourceId)
             is Event.ListPositionChanged -> persistListPosition(event)
+            Event.SignFavorites -> signFavorites()
+        }
+    }
+
+    private fun signFavorites() {
+        val sourceId = state.value.currentSourceId
+        if (sourceId.isBlank()) return
+        screenModelScope.launch {
+            val message = runCatching {
+                signFavoriteChannelsUseCase(sourceId)
+            }.getOrElse { error ->
+                getString(Res.string.s_0e055beabc, error.message ?: error.toString())
+            }
+            _state.update { it.copy(toastMessage = message) }
         }
     }
 

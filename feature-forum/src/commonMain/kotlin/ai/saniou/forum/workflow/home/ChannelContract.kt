@@ -97,5 +97,8 @@ interface ChannelContract {
          */
         data class SelectSource(val sourceId: String) : Event
         data class ListPositionChanged(val contextKey: String, val index: Int, val offset: Int) : Event
+
+        /** One-tap sign for favorite channels of the current source (when supported). */
+        object SignFavorites : Event
     }
 }

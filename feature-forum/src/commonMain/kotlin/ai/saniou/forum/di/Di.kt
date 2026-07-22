@@ -48,6 +48,7 @@ val forumFeatureModule = DI.Module("forumFeatureModule") {
             instance(),
             instance(),
             instance(),
+            instance(),
         )
     }
 
@@ -63,6 +64,8 @@ val forumFeatureModule = DI.Module("forumFeatureModule") {
     // Source-aware forum topic factory.
     bindFactory<Triple<String, String, String>, TopicViewModel> { params ->
         TopicViewModel(
+            instance(),
+            instance(),
             instance(),
             instance(),
             instance(),

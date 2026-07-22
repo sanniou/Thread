@@ -21,6 +21,10 @@ data class SourceCapabilities(
     val hasJumpPage: Boolean = false,    // 是否支持跳页
     val hasPoll: Boolean = false,        // 是否支持投票
     val hasHotReplies: Boolean = false,  // 是否支持热评
+    /** Channel-level sign-in (e.g. Tieba forum sign / mSign). */
+    val supportsChannelSign: Boolean = false,
+    /** Read-only forum rules / 吧规. */
+    val supportsForumRules: Boolean = false,
 ) {
     companion object {
         val Default = SourceCapabilities()

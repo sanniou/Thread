@@ -32,12 +32,19 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Forum
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
@@ -74,6 +81,7 @@ import org.jetbrains.compose.resources.stringResource
 import org.kodein.di.compose.localDI
 import org.kodein.di.direct
 import org.kodein.di.instance
+import ai.saniou.coreui.widgets.SaniouTextButton
 import thread.feature_forum.generated.resources.Res
 import thread.feature_forum.generated.resources.*
 import thread.feature_forum.generated.resources.topic_page_back
@@ -87,6 +95,13 @@ import thread.feature_forum.generated.resources.s_934aa9569f
 import thread.feature_forum.generated.resources.s_adbcf07716
 import thread.feature_forum.generated.resources.label_topics_rules_subforums
 import thread.feature_forum.generated.resources.s_c7ca62cbf8
+import thread.feature_forum.generated.resources.topic_action_sign
+import thread.feature_forum.generated.resources.topic_action_rules
+import thread.feature_forum.generated.resources.topic_rules_dialog_title
+import thread.feature_forum.generated.resources.topic_rules_empty
+import thread.feature_forum.generated.resources.topic_rules_close
+import thread.feature_forum.generated.resources.topic_signing
+import thread.feature_forum.generated.resources.topic_loading_rules
 
 data class TopicPage(
     val forumId: String,
@@ -110,6 +125,7 @@ data class TopicPage(
             }
         val state by viewModel.state.collectAsStateWithLifecycle()
         val threads = viewModel.topics.collectAsLazyPagingItems()
+        val snackbarHostState = remember { SnackbarHostState() }
 
         val lazyListState = rememberLazyListState(
             initialFirstVisibleItemIndex = initialListIndex.coerceAtLeast(0),
@@ -118,6 +134,13 @@ data class TopicPage(
         val coroutineScope = rememberCoroutineScope()
         val latestOnListPositionChanged by rememberUpdatedState(onListPositionChanged)
         var showQuickActionBar by remember { mutableStateOf(true) }
+
+        LaunchedEffect(state.actionMessage) {
+            state.actionMessage?.let { message ->
+                snackbarHostState.showSnackbar(message)
+                viewModel.onEvent(TopicContract.Event.ActionMessageShown)
+            }
+        }
         val fabNestedScrollConnection = remember {
             object : NestedScrollConnection {
                 override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
@@ -196,6 +219,32 @@ data class TopicPage(
                 }
             },
             actions = {
+                        if (state.capabilities.supportsChannelSign) {
+                            IconButton(
+                                onClick = { viewModel.onEvent(TopicContract.Event.SignChannel) },
+                                enabled = !state.isSigning,
+                            ) {
+                                Icon(
+                                    Icons.Default.CheckCircle,
+                                    contentDescription = stringResource(
+                                        if (state.isSigning) Res.string.topic_signing else Res.string.topic_action_sign,
+                                    ),
+                                )
+                            }
+                        }
+                        if (state.capabilities.supportsForumRules) {
+                            IconButton(
+                                onClick = { viewModel.onEvent(TopicContract.Event.LoadForumRules) },
+                                enabled = !state.isLoadingRules,
+                            ) {
+                                Icon(
+                                    Icons.Default.Info,
+                                    contentDescription = stringResource(
+                                        if (state.isLoadingRules) Res.string.topic_loading_rules else Res.string.topic_action_rules,
+                                    ),
+                                )
+                            }
+                        }
                         IconButton(onClick = {
                             navigator.push(UserPage())
                         }) {
@@ -204,6 +253,9 @@ data class TopicPage(
                                 contentDescription = stringResource(Res.string.topic_page_user_center)
                             )
                         }
+            },
+            snackbarHost = {
+                SnackbarHost(hostState = snackbarHostState)
             },
             bottomBar = {
                 ai.saniou.coreui.widgets.UnifiedActionBar(
@@ -224,6 +276,36 @@ data class TopicPage(
                                             )
                                         )
                                     }
+                                )
+                            )
+                        }
+                        if (state.capabilities.supportsChannelSign) {
+                            add(
+                                ai.saniou.coreui.widgets.ActionItem(
+                                    label = stringResource(
+                                        if (state.isSigning) Res.string.topic_signing else Res.string.topic_action_sign,
+                                    ),
+                                    icon = Icons.Default.CheckCircle,
+                                    onClick = {
+                                        if (!state.isSigning) {
+                                            viewModel.onEvent(TopicContract.Event.SignChannel)
+                                        }
+                                    },
+                                )
+                            )
+                        }
+                        if (state.capabilities.supportsForumRules) {
+                            add(
+                                ai.saniou.coreui.widgets.ActionItem(
+                                    label = stringResource(
+                                        if (state.isLoadingRules) Res.string.topic_loading_rules else Res.string.topic_action_rules,
+                                    ),
+                                    icon = Icons.Default.Info,
+                                    onClick = {
+                                        if (!state.isLoadingRules) {
+                                            viewModel.onEvent(TopicContract.Event.LoadForumRules)
+                                        }
+                                    },
                                 )
                             )
                         }
@@ -303,6 +385,66 @@ data class TopicPage(
                     }
                 )
             }
+        }
+
+        if (state.showRulesDialog) {
+            AlertDialog(
+                onDismissRequest = {
+                    viewModel.onEvent(TopicContract.Event.ToggleRulesDialog(false))
+                },
+                title = {
+                    Text(
+                        text = state.forumRules?.title?.takeIf { it.isNotBlank() }
+                            ?: stringResource(Res.string.topic_rules_dialog_title),
+                    )
+                },
+                text = {
+                    val rules = state.forumRules
+                    val body = buildString {
+                        if (state.isLoadingRules) {
+                            append(stringResource(Res.string.topic_loading_rules))
+                        } else if (rules == null) {
+                            append(stringResource(Res.string.topic_rules_empty))
+                        } else {
+                            if (rules.preface.isNotBlank()) {
+                                append(rules.preface.trim())
+                                append("\n\n")
+                            }
+                            if (rules.rules.isEmpty()) {
+                                append(stringResource(Res.string.topic_rules_empty))
+                            } else {
+                                rules.rules.forEachIndexed { index, item ->
+                                    if (index > 0) append("\n\n")
+                                    if (item.title.isNotBlank()) {
+                                        append(item.title.trim())
+                                        append('\n')
+                                    }
+                                    if (item.content.isNotBlank()) {
+                                        append(item.content.trim())
+                                    }
+                                }
+                            }
+                            if (rules.publishTime.isNotBlank()) {
+                                append("\n\n")
+                                append(rules.publishTime)
+                            }
+                        }
+                    }
+                    Text(
+                        text = body,
+                        modifier = Modifier.verticalScroll(rememberScrollState()),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                },
+                confirmButton = {
+                    SaniouTextButton(
+                        onClick = {
+                            viewModel.onEvent(TopicContract.Event.ToggleRulesDialog(false))
+                        },
+                        text = stringResource(Res.string.topic_rules_close),
+                    )
+                },
+            )
         }
     }
 }

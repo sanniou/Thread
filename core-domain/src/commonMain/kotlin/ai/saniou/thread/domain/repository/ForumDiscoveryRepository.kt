@@ -1,5 +1,7 @@
 package ai.saniou.thread.domain.repository
 
+import ai.saniou.thread.domain.model.forum.Author
+import ai.saniou.thread.domain.model.forum.Channel
 import ai.saniou.thread.domain.model.forum.Comment
 import ai.saniou.thread.domain.model.forum.Topic
 import androidx.paging.PagingData
@@ -10,6 +12,10 @@ interface ForumSearchRepository {
     fun searchTopics(sourceId: String, query: String): Flow<PagingData<Topic>>
 
     fun searchComments(sourceId: String, query: String): Flow<PagingData<Comment>>
+
+    fun searchChannels(sourceId: String, query: String): Flow<PagingData<Channel>>
+
+    fun searchUsers(sourceId: String, query: String): Flow<PagingData<Author>>
 }
 
 /** Source-aware author-content facade consumed by feature modules. */

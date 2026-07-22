@@ -10,7 +10,7 @@ import ai.saniou.thread.domain.repository.InboxRepository
 import kotlin.time.Instant
 
 /**
- * Pulls Tieba reply-me / at-me feeds into the shared Inbox store.
+ * Pulls Tieba reply-me / at-me / agree-me feeds into the shared Inbox store.
  * Called from background refresh; safe to no-op when not logged in.
  */
 class TiebaInboxSync(
@@ -26,6 +26,7 @@ class TiebaInboxSync(
         for (page in 1..maxPages.coerceAtLeast(1)) {
             upserted += ingestReplyPage(page)
             upserted += ingestAtPage(page)
+            upserted += ingestAgreePage(page)
         }
         return upserted
     }
@@ -46,6 +47,16 @@ class TiebaInboxSync(
         }
     }
 
+    private suspend fun ingestAgreePage(page: Int): Int {
+        val response = api.agreeMe(page = page)
+        response.ensureOk("点赞我的")
+        // agreeMe reuses MessageListBean; list field varies by server — try both.
+        val messages = response.replyList.orEmpty().ifEmpty { response.atList.orEmpty() }
+        return messages.sumOf { message ->
+            upsertMessage(message, InboxKind.SYSTEM, kindLabel = "赞了")
+        }
+    }
+
     private suspend fun upsertMessage(
         message: MessageListBean.MessageInfoBean,
         kind: InboxKind,
@@ -57,6 +68,8 @@ class TiebaInboxSync(
             append(sourceId)
             append(':')
             append(kind.name.lowercase())
+            append(':')
+            append(kindLabel.hashCode())
             append(':')
             append(threadId)
             append(':')
@@ -100,7 +113,11 @@ class TiebaInboxSync(
                 occurredAt = occurredAt,
                 readAt = if (message.unread == "0") occurredAt else null,
                 muted = false,
-                priority = if (kind == InboxKind.MENTION) 1 else 0,
+                priority = when (kind) {
+                    InboxKind.MENTION -> 1
+                    InboxKind.SYSTEM -> 0
+                    else -> 0
+                },
             ),
         )
         return 1
