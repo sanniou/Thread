@@ -39,6 +39,8 @@ class GenericRemoteMediator<PagerValue : Any, FetcherValue : Any>(
     private val cacheChecker: (suspend (String?) -> Boolean)? = null,
     private val initializeAction: suspend () -> InitializeAction = { InitializeAction.LAUNCH_INITIAL_REFRESH },
     private val onRefreshSuccess: suspend () -> Unit = {},
+    /** Optional cursor used for LoadType.REFRESH (e.g. jump-to-page). Null = first page. */
+    private val refreshCursor: String? = null,
 ) : RemoteMediator<Int, PagerValue>() {
 
     init {
@@ -61,13 +63,10 @@ class GenericRemoteMediator<PagerValue : Any, FetcherValue : Any>(
             var referenceOrder: Long = 0 // APPEND 时代表上一页最后一条，PREPEND 时代表当前页第一条
             val cursor: String? = when (loadType) {
                 LoadType.REFRESH -> {
-                    // REFRESH: 开启新批次
+                    // REFRESH: 开启新批次；可选 refreshCursor 支持跳页
                     batchTime = Clock.System.now().toEpochMilliseconds()
                     referenceOrder = 0
-                    // REFRESH 总是从头开始加载 (null)
-                    // 如果需要支持 anchorPosition 刷新，逻辑会非常复杂且容易出错。
-                    // 这里的策略是：下拉刷新 = 回到顶部并获取最新数据。
-                    null
+                    refreshCursor
                 }
 
                 LoadType.PREPEND -> {

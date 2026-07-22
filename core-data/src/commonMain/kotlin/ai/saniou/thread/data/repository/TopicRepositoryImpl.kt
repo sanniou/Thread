@@ -104,9 +104,17 @@ class TopicRepositoryImpl(
         sourceId: String,
         topicId: String,
         isPoOnly: Boolean,
+        isReverse: Boolean,
+        startPage: Int,
     ): Flow<PagingData<Comment>> {
         val source = sourceCatalog.source(sourceId)
             ?: return flowOf(PagingData.empty())
+
+        val viewMode = buildString {
+            append(if (isPoOnly) "po" else "all")
+            if (isReverse) append("_desc")
+        }
+        val refreshCursor = startPage.takeIf { it > 1 }?.toString()
 
         return Pager(
             config = threadPagingConfig(pageSize = 30),
@@ -115,15 +123,19 @@ class TopicRepositoryImpl(
                 dataPolicy = DataPolicy.CACHE_ELSE_NETWORK,
                 remoteKeyStrategy = DefaultRemoteKeyStrategy(
                     db = db,
-                    type = "thread_${sourceId}_${topicId}_${if (isPoOnly) "po" else "all"}",
+                    type = "thread_${sourceId}_${topicId}_${viewMode}_p${startPage.coerceAtLeast(1)}",
                     itemTargetIdExtractor = { comment -> comment.id }
                 ),
                 fetcher = { cursor ->
-                    source.getTopicComments(topicId, cursor, isPoOnly)
+                    source.getTopicComments(
+                        threadId = topicId,
+                        cursor = cursor,
+                        isPoOnly = isPoOnly,
+                        isReverse = isReverse,
+                    )
                 },
                 saver = { comments, loadType, cursor, receiveDate, startOrder ->
-                    val viewMode = if (isPoOnly) "po" else "all"
-                    val page = cursor?.toLongOrNull() ?: 1
+                    val page = cursor?.toLongOrNull() ?: startPage.toLong().coerceAtLeast(1L)
                     if (loadType == LoadType.REFRESH) {
                         cache.clearTopicCommentsCache(sourceId, topicId)
                     }
@@ -139,9 +151,7 @@ class TopicRepositoryImpl(
                 },
                 itemTargetIdExtractor = { comment -> comment.id },
                 cacheChecker = { cursor ->
-                    // 使用 CommentListing 检查指定页码的数据是否已缓存
-                    val viewMode = if (isPoOnly) "po" else "all"
-                    val page = cursor?.toIntOrNull() ?: 1
+                    val page = cursor?.toIntOrNull() ?: startPage.coerceAtLeast(1)
                     db.commentQueries.hasCommentListingForPage(
                         sourceId = sourceId,
                         topicId = topicId,
@@ -150,6 +160,10 @@ class TopicRepositoryImpl(
                     ).executeAsOne()
                 },
                 initializeAction = {
+                    // 跳页 / 倒序切换必须强制拉网，避免错页缓存
+                    if (startPage > 1 || isReverse) {
+                        return@GenericRemoteMediator RemoteMediator.InitializeAction.LAUNCH_INITIAL_REFRESH
+                    }
                     val hasCachedComments = db.commentQueries.countCommentsByTopicId(sourceId, topicId)
                         .executeAsOne() > 0L
                     val policy = cachePolicyProvider.policy(sourceId, CacheResource.TOPIC_COMMENTS)
@@ -166,21 +180,36 @@ class TopicRepositoryImpl(
                 onRefreshSuccess = {
                     freshnessStore.markFresh(CacheFreshnessStore.comments(sourceId, topicId))
                 },
-                lastItemMetadataExtractor = { topic ->
-                    // 用不到所以先随便写
-                    topic.floor to topic.floor
-                }
+                lastItemMetadataExtractor = { comment ->
+                    comment.floor to comment.floor
+                },
+                refreshCursor = refreshCursor,
             ),
             pagingSourceFactory = {
-                if (isPoOnly) {
-                    QueryPagingSource(
+                when {
+                    isPoOnly && isReverse -> QueryPagingSource(
                         transacter = db,
                         context = ioDispatcher,
-                        countQuery =
-                            db.commentQueries.countCommentsByTopicIdPoMode(
+                        countQuery = db.commentQueries.countCommentsByTopicIdPoMode(
+                            sourceId = sourceId,
+                            topicId = topicId
+                        ),
+                        queryProvider = { limit, offset ->
+                            db.commentQueries.getCommentsPoModeKeysetDesc(
                                 sourceId = sourceId,
-                                topicId = topicId
-                            ),
+                                topicId = topicId,
+                                limit = limit,
+                                offset = offset
+                            )
+                        }
+                    )
+                    isPoOnly -> QueryPagingSource(
+                        transacter = db,
+                        context = ioDispatcher,
+                        countQuery = db.commentQueries.countCommentsByTopicIdPoMode(
+                            sourceId = sourceId,
+                            topicId = topicId
+                        ),
                         queryProvider = { limit, offset ->
                             db.commentQueries.getCommentsPoModeKeyset(
                                 sourceId = sourceId,
@@ -190,15 +219,29 @@ class TopicRepositoryImpl(
                             )
                         }
                     )
-                } else {
-                    QueryPagingSource(
+                    isReverse -> QueryPagingSource(
                         transacter = db,
                         context = ioDispatcher,
-                        countQuery =
-                            db.commentQueries.countCommentsByTopicId(
-                                sourceId,
-                                topicId
-                            ),
+                        countQuery = db.commentQueries.countCommentsByTopicId(
+                            sourceId,
+                            topicId
+                        ),
+                        queryProvider = { limit, offset ->
+                            db.commentQueries.getCommentsKeysetDesc(
+                                sourceId = sourceId,
+                                topicId = topicId,
+                                offset = offset,
+                                limit = limit
+                            )
+                        }
+                    )
+                    else -> QueryPagingSource(
+                        transacter = db,
+                        context = ioDispatcher,
+                        countQuery = db.commentQueries.countCommentsByTopicId(
+                            sourceId,
+                            topicId
+                        ),
                         queryProvider = { limit, offset ->
                             db.commentQueries.getCommentsKeyset(
                                 sourceId = sourceId,
@@ -211,6 +254,31 @@ class TopicRepositoryImpl(
                 }
             }
         ).flow.map { it.map { it.toDomain(db.imageQueries, db.commentQueries) } }
+    }
+
+    override suspend fun fetchTopicImagePage(
+        sourceId: String,
+        threadId: String,
+        channelId: String,
+        channelName: String,
+        picId: String,
+        picIndex: String,
+        seeLz: Boolean,
+        forward: Boolean,
+        batchSize: Int,
+    ): Result<List<Image>> {
+        val source = sourceCatalog.source(sourceId)
+            ?: return Result.failure(IllegalArgumentException("Unknown source: $sourceId"))
+        return source.fetchTopicImagePage(
+            threadId = threadId,
+            channelId = channelId,
+            channelName = channelName,
+            picId = picId,
+            picIndex = picIndex,
+            seeLz = seeLz,
+            forward = forward,
+            batchSize = batchSize,
+        )
     }
 
     override suspend fun getSubComments(

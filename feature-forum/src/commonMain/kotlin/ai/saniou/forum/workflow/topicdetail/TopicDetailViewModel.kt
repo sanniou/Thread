@@ -87,6 +87,7 @@ class TopicDetailViewModel(
     private data class LoadRequest(
         val threadId: String,
         val isPoOnly: Boolean = false,
+        val isReverse: Boolean = false,
         val page: Int = 1,
     )
 
@@ -103,7 +104,9 @@ class TopicDetailViewModel(
             getTopicCommentsPagerUseCase(
                 sourceId = sourceId,
                 topicId = request.threadId,
-                isPoOnly = request.isPoOnly
+                isPoOnly = request.isPoOnly,
+                isReverse = request.isReverse,
+                startPage = request.page,
             )
         }.cachedIn(screenModelScope)
 
@@ -118,6 +121,7 @@ class TopicDetailViewModel(
                 _state.update {
                     it.copy(
                         isPoOnlyMode = request.isPoOnly,
+                        isReverseOrder = request.isReverse,
                         currentPage = request.page
                     )
                 }
@@ -130,6 +134,8 @@ class TopicDetailViewModel(
             is Event.JumpToPage -> jumpToPage(event.page)
             Event.Refresh -> refresh()
             Event.TogglePoOnlyMode -> togglePoOnlyMode()
+            Event.ToggleReverseOrder -> toggleReverseOrder()
+            Event.LoadMoreSubComments -> loadMoreSubComments()
             Event.ToggleSubscription -> toggleSubscription()
             Event.CopyLink -> copyLink()
             is Event.CopyContent -> copyContent(event.content)
@@ -147,6 +153,7 @@ class TopicDetailViewModel(
     }
 
     private fun jumpToPage(page: Int) {
+        if (page < 1) return
         loadRequest.update { it.copy(page = page) }
     }
 
@@ -156,7 +163,11 @@ class TopicDetailViewModel(
     }
 
     private fun togglePoOnlyMode() {
-        loadRequest.update { it.copy(isPoOnly = !it.isPoOnly) }
+        loadRequest.update { it.copy(isPoOnly = !it.isPoOnly, page = 1) }
+    }
+
+    private fun toggleReverseOrder() {
+        loadRequest.update { it.copy(isReverse = !it.isReverse, page = 1) }
     }
 
     private fun showSubComments(commentId: String) {
@@ -164,13 +175,23 @@ class TopicDetailViewModel(
             it.copy(
                 showSubCommentsDialog = true,
                 activeCommentId = commentId,
+                subCommentsPage = 1,
+                subCommentsHasMore = false,
+                isLoadingMoreSubComments = false,
                 subCommentsWrapper = UiStateWrapper.Loading
             )
         }
         screenModelScope.launch {
             getSubCommentsUseCase(sourceId, threadId, commentId, 1)
                 .onSuccess { comments ->
-                    _state.update { it.copy(subCommentsWrapper = UiStateWrapper.Success(comments)) }
+                    _state.update {
+                        it.copy(
+                            subCommentsWrapper = UiStateWrapper.Success(comments),
+                            subCommentsPage = 1,
+                            // pbFloor 一页通常 10 条；有数据则允许尝试下一页
+                            subCommentsHasMore = comments.size >= 10,
+                        )
+                    }
                 }
                 .onFailure { e ->
                     _state.update {
@@ -178,6 +199,31 @@ class TopicDetailViewModel(
                             showSubComments(commentId)
                         }))
                     }
+                }
+        }
+    }
+
+    private fun loadMoreSubComments() {
+        val commentId = state.value.activeCommentId ?: return
+        if (state.value.isLoadingMoreSubComments || !state.value.subCommentsHasMore) return
+        val current = (state.value.subCommentsWrapper as? UiStateWrapper.Success)?.value.orEmpty()
+        val nextPage = state.value.subCommentsPage + 1
+        _state.update { it.copy(isLoadingMoreSubComments = true) }
+        screenModelScope.launch {
+            getSubCommentsUseCase(sourceId, threadId, commentId, nextPage)
+                .onSuccess { more ->
+                    _state.update {
+                        it.copy(
+                            isLoadingMoreSubComments = false,
+                            subCommentsPage = nextPage,
+                            subCommentsHasMore = more.size >= 10,
+                            subCommentsWrapper = UiStateWrapper.Success(current + more),
+                        )
+                    }
+                }
+                .onFailure { e ->
+                    _state.update { it.copy(isLoadingMoreSubComments = false) }
+                    _effect.send(Effect.ShowSnackbar(e.message ?: "load more failed"))
                 }
         }
     }

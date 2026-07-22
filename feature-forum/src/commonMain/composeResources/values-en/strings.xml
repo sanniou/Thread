@@ -45,6 +45,9 @@
     <string name="subscribe">Subscribe</string>
     <string name="more_options">More</string>
     <string name="view_all">View all</string>
+    <string name="view_reverse_order">Newest first</string>
+    <string name="page_indicator">Page %1$d / %2$d</string>
+    <string name="load_more">Load more</string>
     <string name="view_po_only">OP only</string>
     <string name="jump_page">Jump page</string>
     <string name="copy_link">Copy link</string>

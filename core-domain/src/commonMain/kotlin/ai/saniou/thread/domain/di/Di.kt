@@ -52,6 +52,7 @@ import ai.saniou.thread.domain.usecase.subscription.SyncLocalSubscriptionsUseCas
 import ai.saniou.thread.domain.usecase.subscription.ToggleSubscriptionUseCase
 import ai.saniou.thread.domain.usecase.thread.GetTopicDetailUseCase
 import ai.saniou.thread.domain.usecase.thread.GetTopicImagesUseCase
+import ai.saniou.thread.domain.usecase.thread.FetchTopicImagePageUseCase
 import ai.saniou.thread.domain.usecase.thread.GetTopicCommentsUseCase
 import ai.saniou.thread.domain.usecase.thread.UpdateTopicLastAccessTimeUseCase
 import ai.saniou.thread.domain.usecase.thread.UpdateTopicLastReadCommentIdUseCase
@@ -160,6 +161,7 @@ val domainModule = DI.Module("domainModule") {
     bindProvider { GetTopicMetadataUseCase(instance()) }
     bindProvider { GetTopicCommentsUseCase(instance()) }
     bindProvider { GetTopicImagesUseCase(instance()) }
+    bindProvider { FetchTopicImagePageUseCase(instance()) }
     bindProvider { UpdateTopicLastAccessTimeUseCase(instance(), instance()) }
     bindProvider { UpdateTopicLastReadCommentIdUseCase(instance()) }
 

@@ -55,6 +55,9 @@
     <string name="subscribe">收藏</string>
     <string name="more_options">更多选项</string>
     <string name="view_all">查看全部</string>
+    <string name="view_reverse_order">倒序</string>
+    <string name="page_indicator">第 %1$d / %2$d 页</string>
+    <string name="load_more">加载更多</string>
     <string name="view_po_only">只看PO</string>
     <string name="jump_page">跳页</string>
     <string name="copy_link">复制链接</string>

@@ -3,6 +3,7 @@ package ai.saniou.thread.data.source.tieba
 import ai.saniou.corecommon.coroutines.ioDispatcher
 import ai.saniou.thread.data.mapper.toDomain
 import ai.saniou.thread.data.source.tieba.remote.ClientVersion
+import ai.saniou.thread.data.source.tieba.remote.MiniTiebaApi
 import ai.saniou.thread.data.source.tieba.remote.OfficialProtobufTiebaApi
 import ai.saniou.thread.data.source.tieba.remote.TiebaProtoBuilder
 import ai.saniou.thread.db.Database
@@ -10,6 +11,7 @@ import ai.saniou.thread.domain.model.PagedResult
 import ai.saniou.thread.domain.model.SourceCapabilities
 import ai.saniou.thread.domain.model.forum.Channel
 import ai.saniou.thread.domain.model.forum.Comment
+import ai.saniou.thread.domain.model.forum.Image
 import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.model.user.LoginStrategy
 import ai.saniou.thread.domain.repository.Source
@@ -33,6 +35,7 @@ class TiebaSource(
     private val officialProtobufTiebaApiV12: OfficialProtobufTiebaApi,
     private val database: Database,
     private val tiebaParameterProvider: TiebaParameterProvider,
+    private val miniTiebaApi: MiniTiebaApi,
 ) : Source, SubCommentConnector {
     override val id: String = TiebaMapper.SOURCE_ID
     override val sourceId: String get() = id
@@ -51,6 +54,7 @@ class TiebaSource(
         hasUpvote = true,
         hasDownvote = true,
         hasPoOnly = true,
+        hasJumpPage = true,
         supportsChannelSign = true,
         supportsForumRules = true,
         supportsUserFollow = true,
@@ -173,6 +177,7 @@ class TiebaSource(
         threadId: String,
         cursor: String?,
         isPoOnly: Boolean,
+        isReverse: Boolean,
     ): Result<PagedResult<Comment>> = runCatching {
         val page = cursor?.toIntOrNull() ?: 1
         val kz =
@@ -188,7 +193,7 @@ class TiebaSource(
                 pn = page,
                 rn = 30,
                 lz = if (isPoOnly) 1 else 0,
-                r = 0,
+                r = if (isReverse) 1 else 0,
                 scr_dip = 3.0,
                 scr_h = 1920,
                 scr_w = 1080,
@@ -296,5 +301,47 @@ class TiebaSource(
             throw Exception("Failed to fetch sub-comments: ${response.error?.error_msg} (Code: ${response.error?.error_code})")
         }
         TiebaMapper.mapPbFloorResponseToComments(response, topicId)
+    }
+
+    override suspend fun fetchTopicImagePage(
+        threadId: String,
+        channelId: String,
+        channelName: String,
+        picId: String,
+        picIndex: String,
+        seeLz: Boolean,
+        forward: Boolean,
+        batchSize: Int,
+    ): Result<List<Image>> = runCatching {
+        val bean = miniTiebaApi.picPage(
+            forumId = channelId,
+            forumName = channelName,
+            threadId = threadId,
+            picId = picId,
+            picIndex = picIndex,
+            objType = "thread",
+            next = if (forward) batchSize else 0,
+            myUid = tiebaParameterProvider.getUid().ifBlank { null },
+            scr_h = "1920",
+            scr_w = "1080",
+            prev = if (forward) 0 else batchSize,
+            not_see_lz = if (seeLz) 0 else 1,
+        )
+        val code = bean.errorCode.toIntOrNull()
+        if (code != null && code != 0) {
+            throw Exception("picPage failed: error_code=${bean.errorCode}")
+        }
+        bean.picList.map { pic ->
+            val original = pic.img.original
+            val thumb = pic.img.medium ?: pic.img.screen ?: pic.img.original
+            Image(
+                originalUrl = original.originalSrc.ifBlank { original.url.ifBlank { original.bigCdnSrc } },
+                thumbnailUrl = thumb.url.ifBlank { thumb.waterUrl.ifBlank { thumb.bigCdnSrc } },
+                name = pic.overAllIndex,
+                extension = original.format,
+                width = original.width?.toIntOrNull(),
+                height = original.height?.toIntOrNull(),
+            )
+        }
     }
 }

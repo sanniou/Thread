@@ -5,6 +5,7 @@ import ai.saniou.thread.domain.model.PagedResult
 import ai.saniou.thread.domain.model.SourceCapabilities
 import ai.saniou.thread.domain.model.forum.Channel
 import ai.saniou.thread.domain.model.forum.Comment
+import ai.saniou.thread.domain.model.forum.Image
 import ai.saniou.thread.domain.model.forum.Topic
 import ai.saniou.thread.domain.model.user.LoginStrategy
 import ai.saniou.thread.domain.source.TrendSource
@@ -77,8 +78,25 @@ interface Source {
         threadId: String,
         cursor: String?,
         isPoOnly: Boolean = false,
+        isReverse: Boolean = false,
     ): Result<PagedResult<Comment>> = Result.failure(
         UnsupportedOperationException("$name does not expose topic comments")
+    )
+
+    /**
+     * 远程分页拉取帖内图片流（贴吧 picpage 等）。默认不支持。
+     */
+    suspend fun fetchTopicImagePage(
+        threadId: String,
+        channelId: String,
+        channelName: String,
+        picId: String = "",
+        picIndex: String = "1",
+        seeLz: Boolean = false,
+        forward: Boolean = true,
+        batchSize: Int = 10,
+    ): Result<List<Image>> = Result.failure(
+        UnsupportedOperationException("$name does not expose topic image stream")
     )
 
     /**

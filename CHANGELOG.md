@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.43.0 - 2026-07-22
+
+看帖核心体验：倒序、跳页、楼中楼分页、贴吧图片流（picPage）、详情工具栏。
+
+- Domain/data：`Source.getTopicComments(isReverse)` + Tieba `pbPage r=1`；`TopicRepository` 倒序 keyset / reverse paging + 跳页清缓存后从 `startPage` 重载。
+- TopicDetail：FilterBar 倒序 chip + 页码跳转；`JumpToPage` / `ToggleReverseOrder` 真正重载分页流；楼中楼 sheet 支持 Load more 分页。
+- 图片流：`FetchTopicImagePageUseCase` + `Source.picPage` / `ThreadImageProvider` 远程分页；ImagePreview 支持 loadMore。
+- Desktop compile + jvmTest 门禁通过；资料编辑/屏蔽/submitDislike 仍后续；删帖/吧务 deferred。
+
 ## 0.42.0 - 2026-07-22
 
 TiebaLite coverage P3 slice: topic downvote + follow/unfollow user.

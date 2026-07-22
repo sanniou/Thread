@@ -71,6 +71,8 @@ import thread.feature_forum.generated.resources.reply
 import thread.feature_forum.generated.resources.reply_count
 import thread.feature_forum.generated.resources.share
 import thread.feature_forum.generated.resources.view_po_only
+import thread.feature_forum.generated.resources.view_reverse_order
+import thread.feature_forum.generated.resources.page_indicator
 import thread.feature_forum.generated.resources.s_b239bbd1d5
 
 @Composable
@@ -283,7 +285,13 @@ fun HeroTopicCard(
 fun FilterBar(
     replyCount: String,
     isPoOnly: Boolean,
+    isReverse: Boolean,
+    showJumpPage: Boolean,
+    currentPage: Int,
+    totalPages: Int,
     onTogglePoOnly: () -> Unit,
+    onToggleReverse: () -> Unit,
+    onJumpPage: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Surface(
@@ -306,27 +314,76 @@ fun FilterBar(
                 color = MaterialTheme.colorScheme.onSurface
             )
 
-            FilterChip(
-                selected = isPoOnly,
-                onClick = onTogglePoOnly,
-                label = { Text(stringResource(Res.string.view_po_only)) },
-                leadingIcon = if (isPoOnly) {
-                    {
-                        Icon(
-                            Icons.Default.Check,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
-                } else null,
-                colors = FilterChipDefaults.filterChipColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer
-                ),
-                border = null,
-                shape = CircleShape,
-                modifier = Modifier.height(32.dp)
-            )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (showJumpPage && totalPages > 1) {
+                    FilterChip(
+                        selected = false,
+                        onClick = onJumpPage,
+                        label = {
+                            Text(
+                                stringResource(
+                                    Res.string.page_indicator,
+                                    currentPage,
+                                    totalPages,
+                                )
+                            )
+                        },
+                        colors = FilterChipDefaults.filterChipColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        ),
+                        border = null,
+                        shape = CircleShape,
+                        modifier = Modifier.height(32.dp)
+                    )
+                }
+
+                FilterChip(
+                    selected = isReverse,
+                    onClick = onToggleReverse,
+                    label = { Text(stringResource(Res.string.view_reverse_order)) },
+                    leadingIcon = if (isReverse) {
+                        {
+                            Icon(
+                                Icons.Default.Check,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    } else null,
+                    colors = FilterChipDefaults.filterChipColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer
+                    ),
+                    border = null,
+                    shape = CircleShape,
+                    modifier = Modifier.height(32.dp)
+                )
+
+                FilterChip(
+                    selected = isPoOnly,
+                    onClick = onTogglePoOnly,
+                    label = { Text(stringResource(Res.string.view_po_only)) },
+                    leadingIcon = if (isPoOnly) {
+                        {
+                            Icon(
+                                Icons.Default.Check,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    } else null,
+                    colors = FilterChipDefaults.filterChipColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer
+                    ),
+                    border = null,
+                    shape = CircleShape,
+                    modifier = Modifier.height(32.dp)
+                )
+            }
         }
     }
 }

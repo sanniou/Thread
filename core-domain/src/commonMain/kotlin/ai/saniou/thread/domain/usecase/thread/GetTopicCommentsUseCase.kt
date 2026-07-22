@@ -11,7 +11,14 @@ class GetTopicCommentsUseCase(private val topicRepository: TopicRepository) {
         threadId: String,
         isPoOnly: Boolean,
         initialPage: Int = 1,
+        isReverse: Boolean = false,
     ): Flow<PagingData<Comment>> {
-        return topicRepository.getTopicCommentsPager(sourceId, threadId, isPoOnly)
+        return topicRepository.getTopicCommentsPager(
+            sourceId = sourceId,
+            topicId = threadId,
+            isPoOnly = isPoOnly,
+            isReverse = isReverse,
+            startPage = initialPage,
+        )
     }
 }

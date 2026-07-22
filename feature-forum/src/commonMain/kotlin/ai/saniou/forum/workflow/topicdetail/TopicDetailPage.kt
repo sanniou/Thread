@@ -283,6 +283,8 @@ data class TopicDetailPage(
                     lazyListState = lazyListState,
                     onRefresh = { viewModel.onEvent(Event.Refresh) },
                     onTogglePoOnly = { viewModel.onEvent(Event.TogglePoOnlyMode) },
+                    onToggleReverse = { viewModel.onEvent(Event.ToggleReverseOrder) },
+                    onJumpPage = { showJumpDialog = true },
                     onRefClick = { refId ->
                         highlightedReplyId = refId.toString()
                         currentReferenceId = refId
@@ -290,13 +292,17 @@ data class TopicDetailPage(
                         showReferencePopup = true
                     },
                     onImageClick = { initialIndex, images ->
+                        val meta = (state.topicWrapper as? UiStateWrapper.Success)?.value
                         navigator.push(
                             ImagePreviewPage(
                                 ImagePreviewViewModelParams(
                                     imageProvider = ThreadImageProvider(
                                         sourceId = sourceId,
                                         threadId = threadId,
-                                        getTopicImagesUseCase = di.direct.instance()
+                                        channelId = meta?.channelId.orEmpty(),
+                                        channelName = meta?.channelName.orEmpty(),
+                                        getTopicImagesUseCase = di.direct.instance(),
+                                        fetchTopicImagePageUseCase = di.direct.instance(),
                                     ),
                                     initialImages = images,
                                     initialIndex = initialIndex
@@ -352,6 +358,9 @@ data class TopicDetailPage(
         if (state.showSubCommentsDialog) {
             SubCommentsSheet(
                 wrapper = state.subCommentsWrapper,
+                hasMore = state.subCommentsHasMore,
+                isLoadingMore = state.isLoadingMoreSubComments,
+                onLoadMore = { viewModel.onEvent(Event.LoadMoreSubComments) },
                 onDismiss = { viewModel.onEvent(Event.HideSubComments) },
                 onRetry = { viewModel.onEvent(Event.RetrySubCommentsLoad) }
             )
@@ -370,6 +379,8 @@ private fun ThreadContentRouter(
     lazyListState: LazyListState,
     onRefresh: () -> Unit,
     onTogglePoOnly: () -> Unit,
+    onToggleReverse: () -> Unit,
+    onJumpPage: () -> Unit,
     onRefClick: (Long) -> Unit,
     onImageClick: (Int, List<Image>) -> Unit,
     onUpdateLastReadId: (String) -> Unit,
@@ -404,6 +415,8 @@ private fun ThreadContentRouter(
                 onRefresh = onRefresh,
                 onReplyClicked = onReplyClicked,
                 onTogglePoOnly = onTogglePoOnly,
+                onToggleReverse = onToggleReverse,
+                onJumpPage = onJumpPage,
                 onRefClick = onRefClick,
                 onImageClick = onImageClick,
                 onUpdateLastReadId = onUpdateLastReadId,
@@ -554,6 +567,8 @@ fun ThreadSuccessContent(
     onRefresh: () -> Unit,
     onReplyClicked: (String) -> Unit,
     onTogglePoOnly: () -> Unit,
+    onToggleReverse: () -> Unit,
+    onJumpPage: () -> Unit,
     onRefClick: (Long) -> Unit,
     onImageClick: (Int, List<Image>) -> Unit,
     onUpdateLastReadId: (String) -> Unit,
@@ -622,6 +637,8 @@ fun ThreadSuccessContent(
             lazyListState = lazyListState,
             onReplyClicked = onReplyClicked,
             onTogglePoOnly = onTogglePoOnly,
+            onToggleReverse = onToggleReverse,
+            onJumpPage = onJumpPage,
             onRefClick = onRefClick,
             onImageClick = { image ->
                 val initialIndex = allImages.indexOfFirst { it == image }
@@ -650,6 +667,8 @@ private fun ThreadList(
     lazyListState: LazyListState,
     onReplyClicked: (String) -> Unit,
     onTogglePoOnly: () -> Unit,
+    onToggleReverse: () -> Unit,
+    onJumpPage: () -> Unit,
     onRefClick: (Long) -> Unit,
     onImageClick: (Image) -> Unit,
     onRefresh: () -> Unit,
@@ -685,14 +704,14 @@ private fun ThreadList(
             // If replies[0] is loading (null) but we are on Page 1, we show placeholder.
             // If we are NOT on Page 1, we don't show content or placeholder in Hero Card.
 
-            val isPageOne = state.currentPage == 1
+            // 正序第 1 页才在 Hero 内嵌主楼；倒序/跳页后主楼只保留元数据卡
+            val isPageOne = state.currentPage == 1 && !state.isReverseOrder
             val firstItem = if (replies.itemCount > 0) replies[0] else null
 
-            // If firstItem is null (loading), we assume it might be main post if on Page 1
             val isMainPost = if (firstItem != null) {
                 firstItem.floor == 1L || firstItem.id == metadata.id
             } else {
-                isPageOne // Assume loading item on page 1 is main post
+                isPageOne
             }
 
             val heroComment = if (isPageOne && isMainPost) firstItem else null
@@ -718,7 +737,13 @@ private fun ThreadList(
             FilterBar(
                 replyCount = metadata.commentCount.toString(),
                 isPoOnly = state.isPoOnlyMode,
-                onTogglePoOnly = onTogglePoOnly
+                isReverse = state.isReverseOrder,
+                showJumpPage = metadata.capabilities.hasJumpPage || state.totalPages > 1,
+                currentPage = state.currentPage,
+                totalPages = state.totalPages,
+                onTogglePoOnly = onTogglePoOnly,
+                onToggleReverse = onToggleReverse,
+                onJumpPage = onJumpPage,
             )
         }
 
@@ -728,7 +753,7 @@ private fun ThreadList(
 
             // Check if this item was already rendered in the Hero Card
             // We skip index 0 if we are on Page 1 (because it's the main post)
-            if (index == 0 && state.currentPage == 1) {
+            if (index == 0 && state.currentPage == 1 && !state.isReverseOrder) {
                  return@items
             }
 

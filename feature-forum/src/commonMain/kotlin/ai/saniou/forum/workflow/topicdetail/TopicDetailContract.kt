@@ -40,8 +40,12 @@ interface TopicDetailContract {
         val forumName: String = "",
         val lastReadCommentId: String? = null,
         val isPoOnlyMode: Boolean = false,
+        val isReverseOrder: Boolean = false,
         val isTogglingSubscription: Boolean = false,
         val isReacting: Boolean = false,
+        val subCommentsPage: Int = 1,
+        val subCommentsHasMore: Boolean = false,
+        val isLoadingMoreSubComments: Boolean = false,
     )
 
     /**
@@ -63,6 +67,16 @@ interface TopicDetailContract {
          * 切换“只看PO”模式
          */
         object TogglePoOnlyMode : Event
+
+        /**
+         * 切换倒序看帖
+         */
+        object ToggleReverseOrder : Event
+
+        /**
+         * 楼中楼加载更多
+         */
+        object LoadMoreSubComments : Event
 
         /**
          * 切换订阅状态

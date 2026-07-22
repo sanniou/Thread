@@ -45,7 +45,9 @@ interface TopicRepository {
     fun getTopicCommentsPager(
         sourceId: String,
         topicId: String,
-        isPoOnly: Boolean
+        isPoOnly: Boolean,
+        isReverse: Boolean = false,
+        startPage: Int = 1,
     ): Flow<PagingData<Comment>>
 
     /**
@@ -67,6 +69,29 @@ interface TopicRepository {
      * @return 包含图片列表的 Flow
      */
     fun getTopicImages(sourceId: String, threadId: String): Flow<List<Image>>
+
+    /**
+     * 远程分页拉取帖内图片流（如贴吧 picpage）。无缓存 [getTopicImages] 的补充。
+     *
+     * @param channelId 吧/频道 ID
+     * @param channelName 吧/频道名
+     * @param picId 当前锚点图片 ID（可空，首屏传空）
+     * @param picIndex 当前锚点序号（1-based 字符串，首屏可 "1"）
+     * @param seeLz 是否只看楼主图
+     * @param forward true=向后取 next 张，false=向前
+     */
+    suspend fun fetchTopicImagePage(
+        sourceId: String,
+        threadId: String,
+        channelId: String,
+        channelName: String,
+        picId: String = "",
+        picIndex: String = "1",
+        seeLz: Boolean = false,
+        forward: Boolean = true,
+        batchSize: Int = 10,
+    ): Result<List<Image>>
+
 
     /**
      * 获取帖子的所有回复（非分页）

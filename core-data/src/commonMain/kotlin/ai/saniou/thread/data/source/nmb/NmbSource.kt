@@ -370,6 +370,7 @@ class NmbSource(
         threadId: String,
         cursor: String?,
         isPoOnly: Boolean,
+        isReverse: Boolean,
     ): Result<PagedResult<Comment>> {
         // NMB comments are paged by page number (1, 2, 3...)
         val page = cursor?.toIntOrNull() ?: 1

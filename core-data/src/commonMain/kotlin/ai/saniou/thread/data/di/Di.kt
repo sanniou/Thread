@@ -181,7 +181,8 @@ val dataModule = DI.Module("dataModule") {
             instance(tag = "V11"), // OfficialProtobufTiebaApi V11
             instance(tag = "V12"), // OfficialProtobufTiebaApi V12
             instance(), // Database
-            instance()  // TiebaParameterProvider
+            instance(), // TiebaParameterProvider
+            instance(), // MiniTiebaApi
         )
     }
 

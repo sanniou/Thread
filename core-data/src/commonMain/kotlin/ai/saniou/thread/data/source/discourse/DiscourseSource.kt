@@ -186,6 +186,7 @@ class DiscourseSource(
         threadId: String,
         cursor: String?,
         isPoOnly: Boolean,
+        isReverse: Boolean,
     ): Result<PagedResult<Comment>> {
         val page = cursor?.toIntOrNull() ?: 1
         return when (val result = api.getTopic(threadId, page)) {
