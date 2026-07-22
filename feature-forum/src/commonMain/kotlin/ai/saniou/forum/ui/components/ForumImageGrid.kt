@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -50,8 +49,8 @@ fun ForumImageGrid(
     if (images.isEmpty()) return
 
     val count = images.size
-    val spacing = 4.dp
-    val radius = Dimens.corner_radius_small
+    val spacing = 6.dp
+    val radius = Dimens.corner_radius_large
 
     Column(modifier = modifier) {
         when (count) {
@@ -62,14 +61,14 @@ fun ForumImageGrid(
                     image = image,
                     isThumb = true,
                     modifier = Modifier
+                        .fillMaxWidth()
                         .height(Dimens.image_height_medium)
-                        .wrapContentWidth(Alignment.Start)
-                        .clip(MaterialTheme.shapes.small)
+                        .clip(MaterialTheme.shapes.medium)
                         .combinedClickable(
                             onClick = { onImageClick(image) },
                             onLongClick = { onImageLongClick?.invoke(image) }
                         ),
-                    contentScale = ContentScale.FillHeight,
+                    contentScale = ContentScale.Crop,
                     contentDescription = stringResource(Res.string.a11y_post_image)
                 )
             }
@@ -174,18 +173,19 @@ fun ForumImageGrid(
                                                     .matchParentSize()
                                                     .clip(RoundedCornerShape(radius))
                                                     .combinedClickable(
-                                                        onClick = { onImageClick(image) }, // 这里其实应该跳转到图库查看更多
+                                                        onClick = { onImageClick(image) },
                                                         onLongClick = {}
                                                     )
                                                     .background(
-                                                        color = Color.Black.copy(alpha = 0.5f)
+                                                        color = Color.Black.copy(alpha = 0.48f)
                                                     ),
                                                 contentAlignment = Alignment.Center
                                             ) {
                                                 Text(
                                                     text = "+$remaining",
-                                                    style = MaterialTheme.typography.titleLarge,
-                                                    color = Color.White
+                                                    style = MaterialTheme.typography.titleMedium,
+                                                    color = Color.White,
+                                                    fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
                                                 )
                                             }
                                         }

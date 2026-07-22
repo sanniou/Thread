@@ -22,10 +22,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import thread.feature_forum.generated.resources.Res
 import thread.feature_forum.generated.resources.label_anonymous
+import kotlin.math.abs
 
 @Composable
 fun ThreadAuthor(
@@ -37,51 +39,45 @@ fun ThreadAuthor(
     modifier: Modifier = Modifier,
     badges: @Composable (() -> Unit)? = null,
 ) {
+    val anonymous = stringResource(Res.string.label_anonymous)
+    val displayName = remember(author.name, author.id, anonymous) {
+        author.name.takeIf { it.isNotBlank() && it != anonymous } ?: author.id.ifBlank { anonymous }
+    }
+    val monogram = remember(displayName) {
+        displayName.trim().take(1).ifBlank { "?" }.uppercase()
+    }
+    val avatarColor = remember(author.id, displayName) {
+        softAvatarColor(author.id.ifBlank { displayName })
+    }
+
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Dimens.padding_medium)
+        horizontalArrangement = Arrangement.spacedBy(Dimens.padding_medium),
     ) {
-        // 头像占位，根据 Hash 生成颜色
-        val avatarColor = remember(author.id) {
-            val hash = author.id.hashCode()
-            // 使用 HSL 模式生成更和谐的颜色，避免过于刺眼或暗淡的颜色
-            // 这里简单模拟：确保饱和度和亮度在一定范围内
-            val r = (hash and 0xFF0000 shr 16) / 255f
-            val g = (hash and 0x00FF00 shr 8) / 255f
-            val b = (hash and 0x0000FF) / 255f
-            // 简单的混合算法，偏向柔和色调
-            Color(
-                red = (r + 0.5f) / 1.5f,
-                green = (g + 0.5f) / 1.5f,
-                blue = (b + 0.5f) / 1.5f,
-                alpha = 1f
-            )
-        }
-
         Box(
             modifier = Modifier
                 .size(Dimens.avatar_size_medium)
                 .clip(CircleShape)
                 .background(avatarColor)
                 .then(
-                    if (onClick != null) Modifier.clickable { onClick(author.id) } else Modifier
+                    if (onClick != null) Modifier.clickable { onClick(author.id) } else Modifier,
                 ),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             if (!avatarUrl.isNullOrBlank()) {
                 NetworkImage(
                     imageUrl = avatarUrl,
-                    contentDescription = author.id,
+                    contentDescription = displayName,
                     modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
+                    contentScale = ContentScale.Crop,
                 )
             } else {
                 Text(
-                    text = author.id.take(1).uppercase(),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = Color.White.copy(alpha = 0.9f),
-                    fontWeight = FontWeight.Bold
+                    text = monogram,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = Color.White.copy(alpha = 0.95f),
+                    fontWeight = FontWeight.SemiBold,
                 )
             }
         }
@@ -89,40 +85,50 @@ fun ThreadAuthor(
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(Dimens.padding_small)
+                horizontalArrangement = Arrangement.spacedBy(Dimens.padding_small),
             ) {
                 Text(
-                    text = author.id,
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    text = displayName,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier
+                        .weight(1f, fill = false)
+                        .then(
+                            if (onClick != null) Modifier.clickable { onClick(author.id) } else Modifier,
+                        ),
                 )
-
-                if (author.name.isNotBlank() && author.name != stringResource(Res.string.label_anonymous)) {
-                    Text(
-                        text = author.name,
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(Dimens.padding_small)
-            ) {
-                Text(
-                    text = threadTime,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.outline
-                )
-
                 if (isPo) {
                     PoTag(isPo = true)
                 }
-
                 badges?.invoke()
             }
+
+            Text(
+                text = threadTime,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
         }
     }
+}
+
+private fun softAvatarColor(seed: String): Color {
+    val hash = abs(seed.hashCode())
+    // Quiet HSL-like palette: mid saturation, mid-high lightness.
+    val hues = listOf(
+        0xFF6366F1, // indigo
+        0xFF0EA5E9, // sky
+        0xFF14B8A6, // teal
+        0xFF8B5CF6, // violet
+        0xFFF59E0B, // amber
+        0xFFEC4899, // pink muted
+        0xFF22C55E, // green
+        0xFF64748B, // slate
+    )
+    return Color(hues[hash % hues.size]).copy(alpha = 0.92f)
 }

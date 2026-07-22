@@ -48,13 +48,15 @@ fun SubCommentsSheet(
         ) {
             Text(
                 text = stringResource(Res.string.sub_comments_title),
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier
                     .padding(horizontal = Dimens.padding_standard)
                     .padding(bottom = Dimens.padding_medium)
             )
 
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
 
             StateLayout(
                 state = wrapper,
@@ -77,9 +79,9 @@ fun SubCommentsSheet(
                             modifier = threadAnimateItem(),
                         )
                         HorizontalDivider(
-                            thickness = 0.5.dp,
-                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f),
-                            modifier = Modifier.padding(start = Dimens.padding_standard)
+                            thickness = 1.dp,
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.28f),
+                            modifier = Modifier.padding(horizontal = Dimens.padding_standard, vertical = 4.dp)
                         )
                     }
                     if (hasMore || isLoadingMore) {

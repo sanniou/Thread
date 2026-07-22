@@ -1,32 +1,31 @@
 package ai.saniou.forum.ui.components
 
+import ai.saniou.coreui.theme.Dimens
+import ai.saniou.coreui.theme.LocalThreadUiPreferences
+import ai.saniou.coreui.theme.ThreadMotion
+import ai.saniou.coreui.theme.threadTween
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.ThumbDown
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.ThumbDown
-import androidx.compose.material.icons.filled.ThumbDown
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,8 +36,8 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 
 /**
- * 带微交互动画的图标按钮
- * 点击时会有缩放回弹效果
+ * Quiet press feedback for icon actions.
+ * Honors reducedMotion — no bounce/spring toy feel.
  */
 @Composable
 fun AnimatedIconButton(
@@ -49,85 +48,87 @@ fun AnimatedIconButton(
     tint: Color = MaterialTheme.colorScheme.onSurfaceVariant,
     selectedIcon: ImageVector? = null,
     isSelected: Boolean = false,
-    selectedTint: Color = MaterialTheme.colorScheme.primary
+    selectedTint: Color = MaterialTheme.colorScheme.primary,
 ) {
     val scale = remember { Animatable(1f) }
     val scope = rememberCoroutineScope()
     val interactionSource = remember { MutableInteractionSource() }
+    val reduced = LocalThreadUiPreferences.current.reducedMotion
+    val pressScale = ThreadMotion.cardPressScale
+    val pressIn = threadTween(ThreadMotion.FastMs)
+    val pressOut = threadTween(ThreadMotion.MediumMs)
 
     Box(
         modifier = modifier
+            .clip(CircleShape)
             .clickable(
                 interactionSource = interactionSource,
-                indication = null // 禁用默认涟漪，使用自定义缩放
+                indication = null,
             ) {
-                scope.launch {
-                    scale.animateTo(
-                        targetValue = 0.8f,
-                        animationSpec = spring(stiffness = Spring.StiffnessMedium)
-                    )
-                    scale.animateTo(
-                        targetValue = 1.2f,
-                        animationSpec = spring(stiffness = Spring.StiffnessMedium)
-                    )
-                    scale.animateTo(
-                        targetValue = 1f,
-                        animationSpec = spring(stiffness = Spring.StiffnessLow)
-                    )
+                if (!reduced) {
+                    scope.launch {
+                        scale.animateTo(pressScale, animationSpec = pressIn)
+                        scale.animateTo(1f, animationSpec = pressOut)
+                    }
                 }
                 onClick()
-            },
-        contentAlignment = Alignment.Center
+            }
+            .padding(6.dp),
+        contentAlignment = Alignment.Center,
     ) {
         Icon(
             imageVector = if (isSelected && selectedIcon != null) selectedIcon else icon,
             contentDescription = contentDescription,
             tint = if (isSelected) selectedTint else tint,
-            modifier = Modifier.scale(scale.value)
+            modifier = Modifier
+                .size(Dimens.icon_size_medium)
+                .scale(scale.value),
         )
     }
 }
 
 /**
- * 带计数和动画的点赞按钮
+ * Modern like chip — primary tint, soft pill, no hard-coded pink.
  */
 @Composable
 fun LikeButton(
     isLiked: Boolean,
     count: Long?,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
+    val active = MaterialTheme.colorScheme.primary
+    val inactive = MaterialTheme.colorScheme.onSurfaceVariant
     Row(
         verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
         modifier = modifier
             .clip(RoundedCornerShape(50))
+            .background(
+                if (isLiked) active.copy(alpha = 0.12f)
+                else MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.55f),
+            )
             .clickable(onClick = onClick)
-            .padding(horizontal = 8.dp, vertical = 4.dp)
+            .padding(horizontal = 10.dp, vertical = 6.dp),
     ) {
-        AnimatedIconButton(
-            onClick = onClick,
-            icon = Icons.Outlined.FavoriteBorder,
-            selectedIcon = Icons.Filled.Favorite,
-            isSelected = isLiked,
-            selectedTint = Color(0xFFE91E63), // Pink for like
+        Icon(
+            imageVector = if (isLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
             contentDescription = "Like",
-            modifier = Modifier.size(20.dp)
+            tint = if (isLiked) active else inactive,
+            modifier = Modifier.size(Dimens.icon_size_medium),
         )
         if (count != null && count > 0) {
-            Spacer(modifier = Modifier.width(4.dp))
             Text(
-                text = count.toString(),
+                text = formatCompactCount(count),
                 style = MaterialTheme.typography.labelMedium,
-                color = if (isLiked) Color(0xFFE91E63) else MaterialTheme.colorScheme.onSurfaceVariant
+                color = if (isLiked) active else inactive,
             )
         }
     }
 }
 
-
 /**
- * 带计数的点踩按钮
+ * Modern dislike chip — muted, quiet product feel.
  */
 @Composable
 fun DislikeButton(
@@ -136,29 +137,41 @@ fun DislikeButton(
     modifier: Modifier = Modifier,
     isSelected: Boolean = false,
 ) {
+    val color = MaterialTheme.colorScheme.onSurfaceVariant
     Row(
         verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
         modifier = modifier
             .clip(RoundedCornerShape(50))
+            .background(
+                if (isSelected) MaterialTheme.colorScheme.surfaceVariant
+                else MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.55f),
+            )
             .clickable(onClick = onClick)
-            .padding(horizontal = 8.dp, vertical = 4.dp)
+            .padding(horizontal = 10.dp, vertical = 6.dp),
     ) {
-        AnimatedIconButton(
-            onClick = onClick,
-            icon = Icons.Outlined.ThumbDown,
-            selectedIcon = Icons.Filled.ThumbDown,
-            isSelected = isSelected,
-            selectedTint = MaterialTheme.colorScheme.onSurfaceVariant,
+        Icon(
+            imageVector = if (isSelected) Icons.Filled.ThumbDown else Icons.Outlined.ThumbDown,
             contentDescription = "Dislike",
-            modifier = Modifier.size(20.dp)
+            tint = color,
+            modifier = Modifier.size(Dimens.icon_size_medium),
         )
         if (count != null && count > 0) {
-            Spacer(modifier = Modifier.width(4.dp))
             Text(
-                text = count.toString(),
+                text = formatCompactCount(count),
                 style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = color,
             )
         }
     }
+}
+
+private fun formatCompactCount(count: Long): String = when {
+    count >= 10_000 -> "${count / 1000}k"
+    count >= 1_000 -> {
+        val whole = count / 1000
+        val frac = (count % 1000) / 100
+        if (frac == 0L) "${whole}k" else "$whole.${frac}k"
+    }
+    else -> count.toString()
 }

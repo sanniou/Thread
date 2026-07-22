@@ -35,7 +35,7 @@ object Dimens {
     val corner_radius_medium = 8.dp
     val corner_radius_large = 12.dp
     val corner_radius_extra_large = 16.dp
-    val corner_radius_hero = 24.dp
+    val corner_radius_hero = 20.dp
 
     // Icon Size
     val icon_size_small = 16.dp
@@ -49,7 +49,7 @@ object Dimens {
     val avatar_size_large = 56.dp
 
     // Image Height
-    val image_height_medium = 240.dp
+    val image_height_medium = 280.dp
 
     // Component Specific
     val drawer_header_height = 140.dp

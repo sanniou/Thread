@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.50.0 - 2026-07-23
+
+### Changed
+- **现代化 UI 重构（弃草图）**：主路径列表 / 详情 / 回复 / 点赞 / 图片流视觉系统刷新。
+- Design tokens：indigo-violet + teal 色板、语义色、圆角、卡片边框、阅读表面。
+- 组件：`TopicCard` 信息层级、`ThreadAuthor` 名称优先头像 monogram、`Like/Dislike` 主题色 pill、`ForumImageGrid` 圆角间距、楼层卡 / 楼中楼预览 / FilterBar / `UnifiedActionBar`。
+- 动效：安静按压缩放，尊重 `reducedMotion`；去掉硬编码粉点赞与弹跳玩具感。
+
+### Notes
+- 能力覆盖侧继续吸收设计/UI 质量；接口主路径此前已基本到位。
+- Desktop compile + jvmTest 门禁通过；设置 parity / 头像 multipart 仍后续；删帖/吧务 deferred。
+
 ## 0.49.0 - 2026-07-22
 
 ### Changed

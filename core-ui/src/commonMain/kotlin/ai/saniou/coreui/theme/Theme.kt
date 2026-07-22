@@ -105,21 +105,21 @@ data class ThreadSemanticColors(
 )
 
 private val LightSemanticColors = ThreadSemanticColors(
-    success = Color(0xFF13795B),
+    success = Color(0xFF0F766E),
     onSuccess = Color.White,
-    warning = Color(0xFF9A6700),
+    warning = Color(0xFFB45309),
     onWarning = Color.White,
-    readerSurface = Color(0xFFFFFEFA),
-    interactiveSurface = Color(0xFFF0F1FA),
+    readerSurface = Color(0xFFFBFCFF),
+    interactiveSurface = Color(0xFFEEF0FF),
 )
 
 private val DarkSemanticColors = ThreadSemanticColors(
-    success = Color(0xFF67D5AE),
-    onSuccess = Color(0xFF052E22),
-    warning = Color(0xFFFFCB6B),
-    onWarning = Color(0xFF3E2B00),
-    readerSurface = Color(0xFF181A20),
-    interactiveSurface = Color(0xFF252833),
+    success = Color(0xFF5EEAD4),
+    onSuccess = Color(0xFF042F2E),
+    warning = Color(0xFFFBBF24),
+    onWarning = Color(0xFF422006),
+    readerSurface = Color(0xFF141924),
+    interactiveSurface = Color(0xFF1E2433),
 )
 
 private val LocalThreadSemanticColors = staticCompositionLocalOf { LightSemanticColors }

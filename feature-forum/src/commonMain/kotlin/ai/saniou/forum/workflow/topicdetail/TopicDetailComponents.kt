@@ -98,17 +98,20 @@ fun HeroTopicCard(
             .fillMaxWidth(),
         color = MaterialTheme.colorScheme.surface,
         shape = MaterialTheme.shapes.large,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f)),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.42f)),
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp,
     ) {
-      Column(modifier = Modifier.padding(bottom = Dimens.padding_medium)) {
+      Column(modifier = Modifier.padding(bottom = Dimens.padding_standard)) {
         if (!metadata.title.isNullOrBlank() && metadata.title != stringResource(Res.string.empty_title)) {
             Text(
                 text = metadata.title!!,
                 style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(
-                    start = Dimens.padding_standard,
-                    end = Dimens.padding_standard,
+                    start = Dimens.padding_large - 4.dp,
+                    end = Dimens.padding_large - 4.dp,
                     top = Dimens.padding_large,
                     bottom = Dimens.padding_small
                 )
@@ -133,9 +136,9 @@ fun HeroTopicCard(
                     ) {
                         if (metadata.sourceName.isNotBlank()) {
                             Badge(
-                                text = metadata.sourceName.uppercase(),
-                                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                                text = metadata.sourceName,
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                             )
                         }
                         metadata.tags.forEach { tag ->
@@ -201,25 +204,26 @@ fun HeroTopicCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = Dimens.padding_small),
+                .padding(horizontal = Dimens.padding_medium),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Dimens.padding_tiny),
+            ) {
                 if (metadata.capabilities.hasUpvote) {
                     LikeButton(
                         isLiked = false,
                         count = metadata.agreeCount,
                         onClick = onUpvote
                     )
-                    Spacer(modifier = Modifier.width(Dimens.padding_small))
                 }
                 if (metadata.capabilities.hasDownvote) {
                     DislikeButton(
                         count = metadata.disagreeCount,
                         onClick = onDownvote
                     )
-                    Spacer(modifier = Modifier.width(Dimens.padding_small))
                 }
 
                 AnimatedIconButton(
@@ -229,7 +233,10 @@ fun HeroTopicCard(
                 )
             }
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
                 AnimatedIconButton(
                     onClick = onBookmark,
                     icon = Icons.Outlined.BookmarkBorder,
@@ -296,21 +303,22 @@ fun FilterBar(
 ) {
     Surface(
         modifier = modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface,
-        shape = MaterialTheme.shapes.medium,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f)),
+        color = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.85f),
+        shape = MaterialTheme.shapes.large,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
         tonalElevation = 0.dp,
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = Dimens.padding_standard, vertical = Dimens.padding_medium),
+                .padding(horizontal = Dimens.padding_standard, vertical = Dimens.padding_small + 2.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
                 text = stringResource(Res.string.reply_count, replyCount),
                 style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface
             )
 
@@ -419,10 +427,16 @@ fun ThreadReply(
                     showMenu = true
                 }
             ),
-        color = if (isHighlighted) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
+        color = if (isHighlighted) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.38f)
             else MaterialTheme.colorScheme.surface,
         shape = MaterialTheme.shapes.large,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f)),
+        border = BorderStroke(
+            1.dp,
+            if (isHighlighted) MaterialTheme.colorScheme.primary.copy(alpha = 0.28f)
+            else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.40f),
+        ),
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp,
     ) {
       Column(
             modifier = Modifier.padding(
@@ -451,17 +465,16 @@ fun ThreadReply(
                 modifier = Modifier.weight(1f)
             )
 
-            Column(horizontalAlignment = Alignment.End) {
+            Surface(
+                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f),
+                shape = MaterialTheme.shapes.extraLarge,
+            ) {
                 Text(
                     text = "#${reply.floor}",
                     style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "ID:${reply.id}",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.outline
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                 )
             }
         }
@@ -500,19 +513,18 @@ fun ThreadReply(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = Dimens.padding_small),
-            horizontalArrangement = Arrangement.End
+            horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.End),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             AnimatedIconButton(
                 onClick = { composeReply(reply) },
                 icon = Icons.AutoMirrored.Filled.Reply,
                 contentDescription = stringResource(Res.string.reply),
-                modifier = Modifier.size(32.dp)
             )
             AnimatedIconButton(
                 onClick = onBookmark,
                 icon = Icons.Outlined.BookmarkBorder,
                 contentDescription = stringResource(Res.string.bookmark),
-                modifier = Modifier.size(32.dp)
             )
         }
 

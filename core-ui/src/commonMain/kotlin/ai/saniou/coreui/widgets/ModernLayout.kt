@@ -168,7 +168,7 @@ fun ThreadCard(
         ),
         color = containerColor,
         shape = MaterialTheme.shapes.large,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f)),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.42f)),
         tonalElevation = 0.dp,
         shadowElevation = 0.dp,
     ) {
@@ -178,11 +178,11 @@ fun ThreadCard(
                     if (windowInfo.widthClass == ThreadWindowWidthClass.Compact) {
                         Dimens.padding_standard
                     } else {
-                        Dimens.padding_large - 4.dp
+                        Dimens.padding_large - 2.dp
                     },
                 ),
             ),
-            verticalArrangement = Arrangement.spacedBy(preferences.itemSpacing.coerceAtLeast(10.dp)),
+            verticalArrangement = Arrangement.spacedBy(preferences.itemSpacing.coerceAtLeast(12.dp)),
             content = content,
         )
     }

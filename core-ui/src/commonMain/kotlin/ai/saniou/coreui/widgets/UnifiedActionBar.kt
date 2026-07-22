@@ -7,12 +7,14 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsBottomHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -23,6 +25,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.dp
 
 /**
  * Shared bottom action strip for detail/read workflows.
@@ -48,41 +51,66 @@ fun UnifiedActionBar(
                 topStart = Dimens.corner_radius_extra_large,
                 topEnd = Dimens.corner_radius_extra_large,
             ),
-            tonalElevation = Dimens.padding_tiny,
-            shadowElevation = Dimens.padding_tiny,
-            color = MaterialTheme.colorScheme.surfaceContainer,
+            tonalElevation = 0.dp,
+            shadowElevation = 0.dp,
+            color = MaterialTheme.colorScheme.surfaceContainerLow,
+            border = BorderStroke(
+                1.dp,
+                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.40f),
+            ),
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(
-                        horizontal = Dimens.padding_small,
+                        horizontal = Dimens.padding_medium,
                         vertical = Dimens.padding_small,
                     ),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceEvenly,
+                horizontalArrangement = Arrangement.spacedBy(
+                    Dimens.padding_tiny,
+                    Alignment.CenterHorizontally,
+                ),
             ) {
                 actions.forEach { action ->
-                    SaniouTextButton(onClick = action.onClick, enabled = action.enabled) {
-                        Icon(
-                            imageVector = action.icon,
-                            contentDescription = action.label,
-                            tint = when {
-                                !action.enabled -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-                                action.emphasized -> MaterialTheme.colorScheme.primary
-                                else -> MaterialTheme.colorScheme.onSurfaceVariant
-                            },
-                        )
-                        Text(
-                            text = action.label,
-                            style = MaterialTheme.typography.labelLarge,
-                            color = when {
-                                !action.enabled -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-                                action.emphasized -> MaterialTheme.colorScheme.primary
-                                else -> MaterialTheme.colorScheme.onSurfaceVariant
-                            },
-                            modifier = Modifier.padding(start = Dimens.padding_tiny),
-                        )
+                    if (action.emphasized) {
+                        SaniouButton(
+                            onClick = action.onClick,
+                            enabled = action.enabled,
+                        ) {
+                            Icon(
+                                imageVector = action.icon,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp),
+                            )
+                            Text(
+                                text = action.label,
+                                style = MaterialTheme.typography.labelLarge,
+                                modifier = Modifier.padding(start = Dimens.padding_tiny),
+                            )
+                        }
+                    } else {
+                        SaniouTextButton(onClick = action.onClick, enabled = action.enabled) {
+                            Icon(
+                                imageVector = action.icon,
+                                contentDescription = action.label,
+                                tint = if (!action.enabled) {
+                                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                                } else {
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                },
+                            )
+                            Text(
+                                text = action.label,
+                                style = MaterialTheme.typography.labelLarge,
+                                color = if (!action.enabled) {
+                                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                                } else {
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                },
+                                modifier = Modifier.padding(start = Dimens.padding_tiny),
+                            )
+                        }
                     }
                 }
             }
