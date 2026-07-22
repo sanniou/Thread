@@ -3,6 +3,7 @@ package ai.saniou.coreui.widgets
 import ai.saniou.coreui.interaction.ThreadShortcut
 import ai.saniou.coreui.interaction.threadShortcutHost
 import ai.saniou.coreui.layout.LocalThreadWindowInfo
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -232,18 +233,36 @@ private fun CompactDestinationItem(
         modifier = Modifier.fillMaxWidth().workspaceDestinationSemantics(item, index),
         shape = MaterialTheme.shapes.large,
         color = if (item.selected) {
-            MaterialTheme.colorScheme.primaryContainer
+            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.92f)
         } else {
-            MaterialTheme.colorScheme.surface
+            MaterialTheme.colorScheme.surfaceContainerLow
         },
+        border = BorderStroke(
+            1.dp,
+            if (item.selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)
+            else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f),
+        ),
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp,
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Icon(item.icon, contentDescription = null)
-            Text(item.label, style = MaterialTheme.typography.titleMedium)
+            Icon(
+                item.icon,
+                contentDescription = null,
+                tint = if (item.selected) MaterialTheme.colorScheme.primary
+                else MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                item.label,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = if (item.selected) FontWeight.SemiBold else FontWeight.Medium,
+                color = if (item.selected) MaterialTheme.colorScheme.onPrimaryContainer
+                else MaterialTheme.colorScheme.onSurface,
+            )
         }
     }
 }
@@ -269,23 +288,26 @@ fun WorkspaceNavigationRail(
         ) {
             Surface(
                 shape = MaterialTheme.shapes.large,
-                color = MaterialTheme.colorScheme.primary,
+                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.92f),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+                tonalElevation = 0.dp,
+                shadowElevation = 0.dp,
             ) {
                 Box(Modifier.size(46.dp), contentAlignment = Alignment.Center) {
                     Text(
                         "T",
                         style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        fontWeight = FontWeight.Black,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        fontWeight = FontWeight.SemiBold,
                     )
                 }
             }
             if (windowInfo.showsNavigationLabels) {
                 Text(
-                    "THREAD",
+                    "Thread",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
                 )
             }
             Spacer(Modifier.size(10.dp))

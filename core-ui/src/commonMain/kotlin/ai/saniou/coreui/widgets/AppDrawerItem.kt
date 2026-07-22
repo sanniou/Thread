@@ -26,6 +26,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
@@ -42,9 +43,15 @@ fun AppDrawerItem(
     onLongClick: (() -> Unit)? = null,
     trailingContent: (@Composable () -> Unit)? = null
 ) {
-    val containerColor = if (selected) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent
+    val containerColor = if (selected) {
+        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.72f)
+    } else {
+        Color.Transparent
+    }
     val contentColor =
-        if (selected) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+        if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+    val iconTint =
+        if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
 
     Row(
         modifier = modifier
@@ -70,7 +77,7 @@ fun AppDrawerItem(
                 imageVector = icon,
                 contentDescription = null,
                 modifier = Modifier.size(24.dp),
-                tint = contentColor
+                tint = iconTint
             )
         } else if (iconUrl != null) {
              NetworkImage(
@@ -84,6 +91,7 @@ fun AppDrawerItem(
             text = label,
             style = MaterialTheme.typography.labelLarge,
             color = contentColor,
+            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
             modifier = Modifier.weight(1f),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis

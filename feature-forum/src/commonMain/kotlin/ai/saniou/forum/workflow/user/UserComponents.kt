@@ -3,7 +3,9 @@ package ai.saniou.forum.workflow.user
 import ai.saniou.coreui.theme.threadAnimateItem
 import ai.saniou.corecommon.utils.toRelativeTimeString
 import ai.saniou.thread.domain.model.forum.Account
-import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.material3.Surface
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,8 +21,6 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -92,14 +92,25 @@ fun CookieItem(
     isDragging: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    val elevation by animateDpAsState(if (isDragging) 8.dp else 2.dp)
     val displayValue = cookie.uid?.let { stringResource(Res.string.s_92a1ea8c23, it) } ?: stringResource(Res.string.s_f9a1271237)
 
-    Card(
+    Surface(
         modifier = modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = elevation)
+        shape = MaterialTheme.shapes.extraLarge,
+        color = if (isDragging) {
+            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f)
+        } else {
+            MaterialTheme.colorScheme.surface
+        },
+        border = BorderStroke(
+            1.dp,
+            if (isDragging) MaterialTheme.colorScheme.primary.copy(alpha = 0.30f)
+            else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.40f),
+        ),
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp,
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -107,13 +118,19 @@ fun CookieItem(
             ) {
                 Text(
                     text = cookie.alias ?: stringResource(Res.string.s_35563060dc),
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
                 IconButton(onClick = onDelete) {
-                    Icon(Icons.Default.Delete, contentDescription = stringResource(Res.string.s_cf70d344a7))
+                    Icon(
+                        Icons.Default.Delete,
+                        contentDescription = stringResource(Res.string.s_cf70d344a7),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
             }
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(6.dp))
             Text(
                 text = displayValue,
                 style = MaterialTheme.typography.bodyMedium,
@@ -124,7 +141,7 @@ fun CookieItem(
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = cookie.createdAt.toRelativeTimeString(),
-                style = MaterialTheme.typography.bodySmall,
+                style = MaterialTheme.typography.labelSmall,
                 modifier = Modifier.align(Alignment.End),
                 color = MaterialTheme.colorScheme.outline
             )
@@ -134,13 +151,14 @@ fun CookieItem(
 @Composable
 fun EmptyCookieList(modifier: Modifier = Modifier) {
     Box(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize().padding(24.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = stringResource(Res.string.s_c699063a5e),
             textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.bodyLarge
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }

@@ -58,8 +58,9 @@ fun AdaptiveModal(
                     modifier = Modifier.fillMaxWidth(0.88f).widthIn(max = 760.dp).heightIn(max = 780.dp),
                     shape = MaterialTheme.shapes.extraLarge,
                     color = MaterialTheme.colorScheme.surface,
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                    shadowElevation = 18.dp,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)),
+                    tonalElevation = 0.dp,
+                    shadowElevation = 0.dp,
                 ) {
                     content()
                 }

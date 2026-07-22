@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.52.0 - 2026-07-23
+
+### Changed
+- **Redesign 波次 3（壳层全覆盖）**：把安静边框/无 elevation 语言扩到导航与工作区其余页面。
+- 壳层：`ContextHero` / `AdaptiveModal` / `WorkspaceNavigation` / `AppDrawerItem` / `CacheStatusBanner` 去重阴影与草图选中态。
+- Home/Topic：侧栏 Drawer 网格、公告横幅、频道项选中、子分类 box、metadata badge 现代化。
+- User：账号 Cookie 卡无 elevation；资料关系区安静容器；空态图标 pill。
+- Workspace：Bookmark 卡、Operations Metric 卡、Activity 数字权重收口。
+
+### Notes
+- Desktop compile + jvmTest 门禁通过；设置 parity / 头像 multipart 仍后续；删帖/吧务 deferred。
+- redesign 主线继续：设置页视觉深挖、ImagePreview HUD polish、Feed/Reader 对齐。
+
 ## 0.51.0 - 2026-07-23
 
 ### Changed

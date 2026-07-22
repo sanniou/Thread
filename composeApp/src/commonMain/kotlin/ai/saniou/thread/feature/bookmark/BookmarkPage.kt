@@ -257,23 +257,28 @@ fun BookmarkItem(
     selectedTagIds: Set<String>,
     onTagClick: (Tag) -> Unit,
 ) {
-    Card(
+    Surface(
         modifier = modifier
             .fillMaxWidth()
             .combinedClickable(
                 onClick = { onBookmarkClick(bookmark) },
                 onLongClick = onLongClick
             ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        shape = MaterialTheme.shapes.large,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f)),
-        colors = if (isSelected) {
-            CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+        shape = MaterialTheme.shapes.extraLarge,
+        color = if (isSelected) {
+            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.72f)
         } else {
-            CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-        }
+            MaterialTheme.colorScheme.surface
+        },
+        border = BorderStroke(
+            1.dp,
+            if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.28f)
+            else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.40f),
+        ),
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp,
     ) {
-        Row(modifier = Modifier.padding(20.dp)) {
+        Row(modifier = Modifier.padding(horizontal = 18.dp, vertical = 16.dp)) {
             if (isSelectionMode) {
                 Icon(
                     imageVector = if (isSelected) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,

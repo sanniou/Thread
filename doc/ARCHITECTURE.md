@@ -481,3 +481,12 @@ Continue quiet redesign on secondary main paths and system states:
 - Post: solid send CTA, quiet more-options panel, border-only bottom toolbar, success overlay without heavy shadow.
 - Search: reply/channel/user cards drop sketch `No.` labels; name-first hierarchy.
 - System: quieter `ModernEmptyState` / `ThreadLoadingState`; `ReferenceSheet` reference label.
+
+## 0.52 Redesign wave 3 (shell coverage)
+
+Expand the quiet border / zero-elevation language across navigation and remaining workspace surfaces:
+
+- Shell: quieter `ContextHero`, border-only `AdaptiveModal`, soft rail brand, selected `AppDrawerItem` / `CacheStatusBanner`.
+- Home: drawer grid tiles, announcement banner, forum item selection, subcategory boxes, metadata badges.
+- User: cookie identity cards without elevation; relation header container; empty-state icon pill.
+- Workspace: Bookmark cards, Operations metric tiles, Activity metric weight.

@@ -116,6 +116,7 @@
 -   [x] **屏蔽扩列表 0.49**: ContentBlock 过滤扩到频道列表 + 帖详情楼层/楼中楼。
 -   [x] **现代化 UI 0.50**: 弃草图；tokens + 列表/详情/回复/点赞/图片流主路径视觉重构。
 -   [x] **Redesign 0.51**: Trend / Post / Search / 空错态第二波现代化。
+-   [x] **Redesign 0.52**: 导航壳层 / Home 侧栏 / User / Bookmark / Operations 第三波现代化。
 
 ## 🚀 构建与运行
 

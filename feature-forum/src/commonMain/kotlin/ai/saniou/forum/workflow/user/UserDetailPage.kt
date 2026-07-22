@@ -11,6 +11,7 @@ import ai.saniou.forum.workflow.image.ImagePreviewPage
 import ai.saniou.forum.workflow.image.ImagePreviewViewModelParams
 import ai.saniou.forum.workflow.topicdetail.TopicDetailPage
 import ai.saniou.forum.workflow.topicdetail.ThreadReply
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,6 +33,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SecondaryTabRow
@@ -354,16 +356,26 @@ data class UserDetailPage(
         Column(
             modifier = modifier
                 .fillMaxWidth()
-                .padding(vertical = 64.dp),
+                .padding(horizontal = 24.dp, vertical = 48.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            Icon(
-                imageVector = Icons.Outlined.Star,
-                contentDescription = null,
-                modifier = Modifier.size(64.dp),
-                tint = MaterialTheme.colorScheme.secondary
-            )
+            Surface(
+                shape = MaterialTheme.shapes.extraLarge,
+                color = MaterialTheme.colorScheme.surfaceContainerLow,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+                tonalElevation = 0.dp,
+                shadowElevation = 0.dp,
+            ) {
+                Box(Modifier.size(64.dp), contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Outlined.Star,
+                        contentDescription = null,
+                        modifier = Modifier.size(28.dp),
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                }
+            }
             Text(
                 text = message,
                 style = MaterialTheme.typography.bodyLarge,
@@ -381,50 +393,62 @@ private fun UserRelationHeader(
     onEditProfile: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        if (state.isProfileLoading && state.profile == null) {
-            Text(
-                text = stringResource(Res.string.user_profile_loading),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        } else {
-            val profile = state.profile
-            if (profile != null) {
-                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    profile.fansCount?.let {
-                        Text(
-                            text = stringResource(Res.string.user_fans_count, it.toString()),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                    profile.followCount?.let {
-                        Text(
-                            text = stringResource(Res.string.user_follow_count, it.toString()),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
+    Surface(
+        modifier = modifier,
+        shape = MaterialTheme.shapes.extraLarge,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp,
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            if (state.isProfileLoading && state.profile == null) {
+                Text(
+                    text = stringResource(Res.string.user_profile_loading),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            } else {
+                val profile = state.profile
+                if (profile != null) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                        profile.fansCount?.let {
+                            Text(
+                                text = stringResource(Res.string.user_fans_count, it.toString()),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        profile.followCount?.let {
+                            Text(
+                                text = stringResource(Res.string.user_follow_count, it.toString()),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
                     }
                 }
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (state.supportsProfileEdit && state.isSelf) {
-                    SaniouButton(
-                        onClick = onEditProfile,
-                        text = stringResource(Res.string.edit_profile),
-                    )
-                }
-                if (state.supportsUserFollow && !state.isSelf) {
-                    SaniouButton(
-                        onClick = onToggleFollow,
-                        enabled = !state.isFollowBusy,
-                        text = if (state.profile?.isFollowing == true) {
-                            stringResource(Res.string.unfollow_user)
-                        } else {
-                            stringResource(Res.string.follow_user)
-                        },
-                    )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (state.supportsProfileEdit && state.isSelf) {
+                        SaniouButton(
+                            onClick = onEditProfile,
+                            text = stringResource(Res.string.edit_profile),
+                        )
+                    }
+                    if (state.supportsUserFollow && !state.isSelf) {
+                        SaniouButton(
+                            onClick = onToggleFollow,
+                            enabled = !state.isFollowBusy,
+                            text = if (state.profile?.isFollowing == true) {
+                                stringResource(Res.string.unfollow_user)
+                            } else {
+                                stringResource(Res.string.follow_user)
+                            },
+                        )
+                    }
                 }
             }
         }

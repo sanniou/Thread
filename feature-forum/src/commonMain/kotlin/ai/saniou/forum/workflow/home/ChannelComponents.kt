@@ -7,6 +7,7 @@ import ai.saniou.thread.domain.repository.Source
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -124,7 +125,7 @@ private fun SourceChip(
                 text = source.name,
                 style = MaterialTheme.typography.labelMedium,
                 color = contentColor,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium
             )
         }
     }
@@ -145,12 +146,12 @@ fun StylizedForumItem(
     indentLevel: Int = 0
 ) {
     val backgroundColor = if (isSelected)
-        MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.7f)
+        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f)
     else
         Color.Transparent
 
     val contentColor = if (isSelected)
-        MaterialTheme.colorScheme.onSecondaryContainer
+        MaterialTheme.colorScheme.onPrimaryContainer
     else
         MaterialTheme.colorScheme.onSurface
 
@@ -186,7 +187,7 @@ fun StylizedForumItem(
                         text = if (forum.displayName.isNullOrBlank()) forum.name else forum.displayName!!,
                         style = MaterialTheme.typography.titleSmall,
                         color = contentColor,
-                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold
+                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium
                     )
 
                     if (forum.autoDelete != null && forum.autoDelete!! > 0) {
@@ -287,12 +288,15 @@ fun SubCategoryBoxItem(
 ) {
     Surface(
         onClick = onClick,
-        shape = RoundedCornerShape(4.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        modifier = Modifier.width(140.dp).height(80.dp) // Fixed size for boxes
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp,
+        modifier = Modifier.width(140.dp).height(80.dp)
     ) {
         Column(
-            modifier = Modifier.padding(8.dp),
+            modifier = Modifier.padding(10.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -307,7 +311,7 @@ fun SubCategoryBoxItem(
                 Text(
                     text = forum.name,
                     style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -327,15 +331,17 @@ fun SubCategoryBoxItem(
 @Composable
 private fun MetadataBadge(text: String) {
     Surface(
-        color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.5f),
-        shape = RoundedCornerShape(4.dp)
+        color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.72f),
+        shape = MaterialTheme.shapes.small,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.28f)),
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp,
     ) {
         Text(
             text = text,
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
-            fontSize = MaterialTheme.typography.labelSmall.fontSize * 0.9f
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
         )
     }
 }

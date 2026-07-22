@@ -201,9 +201,11 @@ fun ContextHero(
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.extraLarge,
-        color = MaterialTheme.colorScheme.primaryContainer,
-        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        contentColor = MaterialTheme.colorScheme.onSurface,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.40f)),
         tonalElevation = 0.dp,
+        shadowElevation = 0.dp,
     ) {
         if (windowInfo.widthClass == ThreadWindowWidthClass.Compact) {
             Column(
@@ -257,19 +259,26 @@ private fun ContextHeroIdentity(
 ) {
     Surface(
         shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.primary,
-        contentColor = MaterialTheme.colorScheme.onPrimary,
+        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.90f),
+        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp,
     ) {
         Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
             Icon(icon, contentDescription = null, modifier = Modifier.size(24.dp))
         }
     }
     Column(modifier, verticalArrangement = Arrangement.spacedBy(5.dp)) {
-        Text(title, style = MaterialTheme.typography.headlineSmall)
+        Text(
+            title,
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
         Text(
             subtitle,
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.75f),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }
@@ -278,14 +287,17 @@ private fun ContextHeroIdentity(
 private fun HeroMetric(metric: String) {
     Surface(
         shape = MaterialTheme.shapes.extraLarge,
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.72f),
+        color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.90f),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp,
     ) {
         Text(
             metric,
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.primary,
-            fontWeight = FontWeight.Bold,
+            fontWeight = FontWeight.SemiBold,
         )
     }
 }

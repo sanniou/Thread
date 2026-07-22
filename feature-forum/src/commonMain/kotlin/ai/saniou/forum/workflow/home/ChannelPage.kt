@@ -33,6 +33,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -481,19 +482,30 @@ data class ChannelPage(
         onClick: () -> Unit,
         modifier: Modifier = Modifier
     ) {
-        val backgroundColor = if (selected) MaterialTheme.colorScheme.primaryContainer
-        else MaterialTheme.colorScheme.surfaceContainer
+        val backgroundColor = if (selected) {
+            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.92f)
+        } else {
+            MaterialTheme.colorScheme.surfaceContainerLow
+        }
 
-        val contentColor = if (selected)
+        val contentColor = if (selected) {
             MaterialTheme.colorScheme.onPrimaryContainer
-        else
+        } else {
             MaterialTheme.colorScheme.onSurfaceVariant
+        }
 
         Surface(
             onClick = onClick,
             modifier = modifier,
-            shape = MaterialTheme.shapes.medium,
+            shape = MaterialTheme.shapes.large,
             color = backgroundColor,
+            border = BorderStroke(
+                1.dp,
+                if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.22f)
+                else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f),
+            ),
+            tonalElevation = 0.dp,
+            shadowElevation = 0.dp,
         ) {
           Row(
             modifier = Modifier.padding(vertical = 12.dp, horizontal = 12.dp),
@@ -503,7 +515,7 @@ data class ChannelPage(
             Icon(
                 imageVector = icon,
                 contentDescription = label,
-                tint = contentColor,
+                tint = if (selected) MaterialTheme.colorScheme.primary else contentColor,
                 modifier = Modifier.size(20.dp)
             )
             Text(
@@ -512,7 +524,7 @@ data class ChannelPage(
                 color = contentColor,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
+                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium
             )
           }
         }
@@ -534,8 +546,8 @@ data class ChannelPage(
             Text(
                 text = group.name,
                 style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.SemiBold
             )
             Spacer(modifier = Modifier.weight(1f))
             Icon(
@@ -550,22 +562,25 @@ data class ChannelPage(
 
     @Composable
     fun NoticeDisplay(notice: Notice, onDismiss: () -> Unit) {
-        Card(
+        Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(8.dp),
-            shape = MaterialTheme.shapes.medium,
-            elevation = CardDefaults.cardElevation(0.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+                .padding(horizontal = 12.dp, vertical = 8.dp),
+            shape = MaterialTheme.shapes.extraLarge,
+            color = MaterialTheme.colorScheme.surfaceContainerLow,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.40f)),
+            tonalElevation = 0.dp,
+            shadowElevation = 0.dp,
         ) {
             Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Text(
                     text = stringResource(Res.string.label_announcement),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.SemiBold,
                 )
                 RichText(
                     text = notice.content,
@@ -576,7 +591,7 @@ data class ChannelPage(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
                 ) {
-                    SaniouButton(onClick = onDismiss, text = stringResource(Res.string.label_dismiss_notice))
+                    SaniouTextButton(onClick = onDismiss, text = stringResource(Res.string.label_dismiss_notice))
                 }
             }
         }

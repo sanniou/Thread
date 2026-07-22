@@ -17,6 +17,7 @@ import ai.saniou.thread.domain.model.operations.ContentSourceKind
 import ai.saniou.thread.domain.model.operations.SourceHealth
 import ai.saniou.thread.domain.model.operations.SourceOperationalState
 import ai.saniou.thread.feature.operations.OperationsContract.Event
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -319,17 +320,32 @@ private fun OperationsMetrics(sourceCount: Int, activeCount: Int, failedCount: I
 private fun MetricCard(label: String, value: String, icon: ImageVector, modifier: Modifier) {
     Surface(
         modifier = modifier.widthIn(min = 150.dp),
-        shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.surfaceContainer,
+        shape = MaterialTheme.shapes.extraLarge,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp,
     ) {
         Row(
-            Modifier.padding(16.dp),
+            Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Icon(icon, null, tint = MaterialTheme.colorScheme.primary)
-            Column {
-                Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Surface(
+                shape = MaterialTheme.shapes.medium,
+                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.85f),
+                tonalElevation = 0.dp,
+                shadowElevation = 0.dp,
+            ) {
+                Icon(
+                    icon,
+                    null,
+                    modifier = Modifier.padding(8.dp).size(18.dp),
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                )
+            }
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
                 Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
@@ -369,9 +385,10 @@ private fun SourceHealthCard(
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(source.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     Text(
-                        if (source.kind == ContentSourceKind.FORUM) "FORUM" else "READER",
+                        if (source.kind == ContentSourceKind.FORUM) "Forum" else "Reader",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.SemiBold,
                     )
                 }
                 Text(
