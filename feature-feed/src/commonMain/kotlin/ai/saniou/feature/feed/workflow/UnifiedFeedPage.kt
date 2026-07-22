@@ -24,6 +24,7 @@ import ai.saniou.coreui.widgets.ThreadCard
 import ai.saniou.coreui.widgets.NetworkImage
 import ai.saniou.coreui.widgets.RichText
 import ai.saniou.coreui.widgets.ArticleItem as ArticleListItem
+import ai.saniou.coreui.theme.threadAnimateItem
 import ai.saniou.feature.feed.ui.components.FeedRichText
 import ai.saniou.thread.domain.model.feed.ArticleItem
 import ai.saniou.thread.domain.model.feed.PostItem
@@ -405,12 +406,14 @@ private fun FeedScaffold(
                             count = timeline.itemCount,
                             key = timeline.itemKey { it.uniqueId },
                         ) { index ->
+                            val itemModifier = threadAnimateItem()
                             when (val item = timeline[index]) {
-                                is PostItem -> TimelinePostCard(item.post, onOpenTopic)
+                                is PostItem -> TimelinePostCard(item.post, onOpenTopic, modifier = itemModifier)
                                 is ArticleItem -> ArticleListItem(
                                     article = item.article,
                                     sourceName = item.sourceName,
                                     onClick = { onOpenArticle(item.article) },
+                                    modifier = itemModifier,
                                 )
                                 is SocialItem -> TimelineSocialCard(
                                     item = item,
@@ -418,6 +421,7 @@ private fun FeedScaffold(
                                     onInteract = { interaction, enabled ->
                                         onEvent(FeedContract.Event.InteractSocial(item.post, interaction, enabled))
                                     },
+                                    modifier = itemModifier,
                                 )
                                 null -> Unit
                             }
@@ -446,10 +450,11 @@ private fun TimelineSocialCard(
     item: SocialItem,
     onOpen: () -> Unit,
     onInteract: (SocialInteraction, Boolean) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val post = item.post
     ThreadCard(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onOpen),
+        modifier = modifier.fillMaxWidth().clickable(onClick = onOpen),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             post.author.avatarUrl?.let { avatar ->
@@ -534,9 +539,10 @@ private fun SocialInteractionButton(
 private fun TimelinePostCard(
     topic: Topic,
     onClick: (Topic) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     ThreadCard(
-        modifier = Modifier.fillMaxWidth().clickable { onClick(topic) },
+        modifier = modifier.fillMaxWidth().clickable { onClick(topic) },
     ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(

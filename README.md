@@ -98,6 +98,7 @@
 -   [x] **i18n 全量 0.31**: ViewModel / side-effect `getString`、AppError 资源化、次级页 / semantics / filter labels；values-en 清零中文残留；Desktop 编译与 jvmTest 门禁通过。
 -   [x] **发布候选（0.32）**: Desktop 全量门禁（jvmTest / compile / release 分发 / launcher smoke）通过；tag `v0.32.0` 已推送。真机 ActivityPub 登录回归仍可选。
 -   [x] **体验一致性 0.33**: 主路径全页 loading 统一为 `ThreadLoadingState`（App/详情/用户/来源管理/订阅/Reader/Inbox）。
+-   [x] **安静列表动效 0.34**: `threadAnimateItem` 进入主列表（Forum/Feed/Reader/Bookmark/User）；Bookmark/UserDetail 剩余全页 loading 收敛。
 
 ## 🚀 构建与运行
 

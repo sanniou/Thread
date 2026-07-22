@@ -13,6 +13,7 @@ import org.jetbrains.compose.resources.stringResource
 import thread.feature_forum.generated.resources.Res
 import thread.feature_forum.generated.resources.label_show_cache
 import ai.saniou.coreui.widgets.PullToRefreshWrapper
+import ai.saniou.coreui.theme.threadAnimateItem
 import ai.saniou.forum.ui.components.ThreadListSkeleton
 import ai.saniou.forum.ui.components.TopicCard
 import ai.saniou.thread.domain.model.forum.Image
@@ -113,7 +114,8 @@ fun ListThreadPage(
                             onImageClick = { img -> onImageClick(feed.id, img) },
                             onUserClick = onUserClick,
                             showChannelBadge = showChannelBadge,
-                            modifier = Modifier.animateContentSize(animationSpec = threadContentSizeSpec()),
+                            modifier = threadAnimateItem()
+                                .animateContentSize(animationSpec = threadContentSizeSpec()),
                         )
                     }
 

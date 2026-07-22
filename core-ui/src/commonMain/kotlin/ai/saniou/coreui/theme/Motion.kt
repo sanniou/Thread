@@ -8,9 +8,12 @@ import androidx.compose.animation.core.TweenSpec
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 
@@ -89,3 +92,35 @@ fun <T> threadSpringSpec(
 fun threadMotionMillis(preferred: Int): Int {
     return if (LocalThreadUiPreferences.current.reducedMotion) ThreadMotion.InstantMs else preferred
 }
+
+/** Fade-in/out for [LazyItemScope.animateItem]; null when reducedMotion (no list enter noise). */
+@Composable
+@ReadOnlyComposable
+fun threadListItemFadeSpec(
+    durationMillis: Int = ThreadMotion.FastMs,
+): FiniteAnimationSpec<Float>? {
+    if (LocalThreadUiPreferences.current.reducedMotion) return null
+    return threadTweenSpec(durationMillis = durationMillis)
+}
+
+/** Placement reordering for [LazyItemScope.animateItem]; null when reducedMotion. */
+@Composable
+@ReadOnlyComposable
+fun threadListItemPlacementSpec(
+    durationMillis: Int = ThreadMotion.MediumMs,
+): FiniteAnimationSpec<IntOffset>? {
+    if (LocalThreadUiPreferences.current.reducedMotion) return null
+    return threadTweenSpec(durationMillis = durationMillis)
+}
+
+/**
+ * Quiet list item enter/exit/reorder animation for LazyColumn/LazyRow items.
+ * Requires a stable item [key]. Honors [LocalThreadUiPreferences.reducedMotion].
+ */
+@Composable
+fun LazyItemScope.threadAnimateItem(): Modifier =
+    Modifier.animateItem(
+        fadeInSpec = threadListItemFadeSpec(),
+        placementSpec = threadListItemPlacementSpec(),
+        fadeOutSpec = threadListItemFadeSpec(),
+    )

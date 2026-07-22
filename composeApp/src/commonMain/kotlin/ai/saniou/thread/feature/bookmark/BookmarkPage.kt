@@ -10,6 +10,8 @@ import ai.saniou.coreui.widgets.ThreadContentColumn
 import ai.saniou.coreui.widgets.ThreadPage
 import ai.saniou.coreui.widgets.ThreadSearchField
 import ai.saniou.coreui.state.PagingAppendState
+import ai.saniou.coreui.theme.threadAnimateItem
+import ai.saniou.coreui.widgets.ThreadLoadingState
 import ai.saniou.forum.workflow.topicdetail.TopicDetailPage
 import ai.saniou.reader.workflow.articledetail.ArticleDetailPage
 import ai.saniou.thread.domain.model.bookmark.Bookmark
@@ -123,6 +125,7 @@ object BookmarkPage : Screen {
                         if (bookmark != null) {
                             val isSelected = state.selectedBookmarks.contains(bookmark.id)
                             BookmarkItem(
+                                modifier = threadAnimateItem(),
                                 bookmark = bookmark,
                                 isSelectionMode = state.isSelectionMode,
                                 isSelected = isSelected,
@@ -179,13 +182,7 @@ object BookmarkPage : Screen {
                         when {
                             refresh is Loading -> {
                                 item {
-                                    Box(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
-                                        CircularProgressIndicator(
-                                            modifier = Modifier.align(
-                                                Alignment.Center
-                                            )
-                                        )
-                                    }
+                                    ThreadLoadingState(modifier = Modifier.fillMaxWidth())
                                 }
                             }
 
@@ -251,6 +248,7 @@ private fun BookmarkTagFilters(
 )
 @Composable
 fun BookmarkItem(
+    modifier: Modifier = Modifier,
     bookmark: Bookmark,
     isSelectionMode: Boolean,
     isSelected: Boolean,
@@ -260,7 +258,7 @@ fun BookmarkItem(
     onTagClick: (Tag) -> Unit,
 ) {
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .combinedClickable(
                 onClick = { onBookmarkClick(bookmark) },

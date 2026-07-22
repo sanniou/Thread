@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.34.0 - 2026-07-22
+
+Quiet list enter motion + remaining full-page loading consistency.
+
+- Added `threadAnimateItem()` / list fade+placement specs in `Motion.kt` (honors reducedMotion; null specs = no list noise).
+- Main lists adopt quiet item animation: Forum topics, Unified Feed, Reader articles, Bookmarks, User topics.
+- Bookmark refresh and UserDetail replies initial load use `ThreadLoadingState` instead of bare spinners.
+- Desktop compile + jvmTest matrix green.
+
 ## 0.33.0 - 2026-07-22
 
 Quiet product consistency: full-page loading surfaces share `ThreadLoadingState`.

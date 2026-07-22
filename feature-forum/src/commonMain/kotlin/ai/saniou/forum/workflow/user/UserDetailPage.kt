@@ -24,7 +24,6 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Star
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -46,6 +45,8 @@ import androidx.paging.LoadState.Error
 import androidx.paging.LoadState.Loading
 import androidx.paging.compose.collectAsLazyPagingItems
 import ai.saniou.coreui.state.PagingAppendState
+import ai.saniou.coreui.theme.threadAnimateItem
+import ai.saniou.coreui.widgets.ThreadLoadingState
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -164,7 +165,8 @@ data class UserDetailPage(
                                                         )
                                                     )
                                                 )
-                                            }
+                                            },
+                                            modifier = threadAnimateItem(),
                                         )
                                     }
                                 }
@@ -254,9 +256,7 @@ data class UserDetailPage(
 
                                 when (replies.loadState.refresh) {
                                     is Loading -> item {
-                                        Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
-                                            CircularProgressIndicator()
-                                        }
+                                        ThreadLoadingState(modifier = Modifier.fillMaxWidth())
                                     }
                                     is Error -> item {
                                         Box(

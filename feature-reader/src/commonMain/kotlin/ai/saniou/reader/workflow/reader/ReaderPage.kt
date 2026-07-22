@@ -25,6 +25,7 @@ import ai.saniou.coreui.widgets.SectionLabel
 import ai.saniou.coreui.widgets.SidebarHeader
 import ai.saniou.coreui.widgets.ThreadSearchField
 import ai.saniou.coreui.widgets.ThreadLoadingState
+import ai.saniou.coreui.theme.threadAnimateItem
 import ai.saniou.reader.workflow.articledetail.ArticleDetailPage
 import ai.saniou.thread.domain.model.reader.Article
 import ai.saniou.thread.domain.model.reader.FeedSource
@@ -407,6 +408,7 @@ private fun ReaderScaffold(
                                             article = article,
                                             sourceName = sourceName,
                                             onClick = { onArticleClick(article) },
+                                            modifier = threadAnimateItem(),
                                         )
                                     }
                                 }
