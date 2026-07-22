@@ -7,7 +7,8 @@ Release-candidate Desktop gates after the 0.31 i18n completion wave.
 - Re-verified jvmTest + compileKotlinJvm matrix: core-domain, core-data, core-ui, composeApp.
 - `createReleaseDistributable` wrote main-release app image under `composeApp/build/compose/binaries/main-release/app`.
 - Launcher `--smoke-check` passed: `Thread Desktop offline startup probe passed: discourse, nmb, tieba` (exit 0; incidental SLF4J / pure-virtual noise ignored).
-- No product-code delta beyond 0.31 tip; this tag marks the RC gate set green on current main.
+- No product-code delta beyond 0.31 tip; this release marks the RC gate set green on current main.
+- Annotated tag `v0.32.0` pushed to origin (points at RC docs tip).
 
 ## 0.31.0 - 2026-07-22
 
