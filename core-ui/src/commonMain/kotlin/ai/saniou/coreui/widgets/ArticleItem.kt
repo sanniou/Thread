@@ -31,7 +31,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import thread.core_ui.generated.resources.Res
-import thread.core_ui.generated.resources.s_1e230aa201
+import thread.core_ui.generated.resources.label_unread
 import thread.core_ui.generated.resources.s_2d2cdabf29
 
 @Composable
@@ -60,7 +60,7 @@ fun ArticleItem(
             if (showUnreadIndicator && !isRead) {
                 Icon(
                     Icons.Default.Circle,
-                    contentDescription = stringResource(Res.string.s_1e230aa201),
+                    contentDescription = stringResource(Res.string.label_unread),
                     modifier = Modifier.padding(top = 7.dp).size(8.dp),
                     tint = MaterialTheme.colorScheme.primary,
                 )

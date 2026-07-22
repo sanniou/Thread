@@ -133,13 +133,13 @@ import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import thread.composeapp.generated.resources.Res
 import thread.composeapp.generated.resources.s_0120a7f4c4
-import thread.composeapp.generated.resources.s_1fc1afc5c5
+import thread.composeapp.generated.resources.action_continue
 import thread.composeapp.generated.resources.s_367c1ec5d7
-import thread.composeapp.generated.resources.s_4d0b4688c7
+import thread.composeapp.generated.resources.action_cancel
 import thread.composeapp.generated.resources.s_523e40a074
 import thread.composeapp.generated.resources.s_543fab9d19
 import thread.composeapp.generated.resources.s_57bd58e6ff
-import thread.composeapp.generated.resources.s_753ccc8e2e
+import thread.composeapp.generated.resources.label_activity
 import thread.composeapp.generated.resources.s_7cac745e03
 import thread.composeapp.generated.resources.s_7debf9cb03
 import thread.composeapp.generated.resources.s_93d5a89429
@@ -149,7 +149,7 @@ import thread.composeapp.generated.resources.s_abd3040b73
 import thread.composeapp.generated.resources.s_b2548636f0
 import thread.composeapp.generated.resources.s_cd0aecbcd0
 import thread.composeapp.generated.resources.s_cd83e6e100
-import thread.composeapp.generated.resources.s_d07cee786a
+import thread.composeapp.generated.resources.action_bookmark
 import thread.composeapp.generated.resources.s_2855f9d4e8
 import thread.composeapp.generated.resources.s_abe10f8a12
 
@@ -500,13 +500,13 @@ fun App(
                         WorkspaceNavigationItem(Icons.Default.RssFeed, stringResource(Res.string.s_aac0ef6c1c), selectedWorkspace == WorkspaceDestination.READER) {
                             navigateTo(WorkspaceDestination.READER, ReaderRoute)
                         },
-                        WorkspaceNavigationItem(Icons.Default.DynamicFeed, stringResource(Res.string.s_753ccc8e2e), selectedWorkspace == WorkspaceDestination.FEED) {
+                        WorkspaceNavigationItem(Icons.Default.DynamicFeed, stringResource(Res.string.label_activity), selectedWorkspace == WorkspaceDestination.FEED) {
                             navigateTo(WorkspaceDestination.FEED, FeedRoute)
                         },
                         WorkspaceNavigationItem(Icons.Default.Search, stringResource(Res.string.s_523e40a074), selectedWorkspace == WorkspaceDestination.SEARCH) {
                             navigateTo(WorkspaceDestination.SEARCH, GlobalSearchPage)
                         },
-                        WorkspaceNavigationItem(Icons.Default.Bookmark, stringResource(Res.string.s_d07cee786a), selectedWorkspace == WorkspaceDestination.BOOKMARKS) {
+                        WorkspaceNavigationItem(Icons.Default.Bookmark, stringResource(Res.string.action_bookmark), selectedWorkspace == WorkspaceDestination.BOOKMARKS) {
                             navigateTo(WorkspaceDestination.BOOKMARKS, BookmarkPage)
                         },
                         WorkspaceNavigationItem(Icons.Default.Inbox, stringResource(Res.string.s_cd83e6e100), selectedWorkspace == WorkspaceDestination.INBOX) {
@@ -566,16 +566,16 @@ fun App(
                                 SaniouDangerButton(onClick = {
                                     pendingProductCommand = null
                                     performProductCommand(command, confirmed = true)
-                                }, text = stringResource(Res.string.s_1fc1afc5c5))
+                                }, text = stringResource(Res.string.action_continue))
                             } else {
                                 SaniouButton(onClick = {
                                     pendingProductCommand = null
                                     performProductCommand(command, confirmed = true)
-                                }, text = stringResource(Res.string.s_1fc1afc5c5))
+                                }, text = stringResource(Res.string.action_continue))
                             }
                         },
                         dismissButton = {
-                            SaniouTextButton(onClick = { pendingProductCommand = null }, text = stringResource(Res.string.s_4d0b4688c7))
+                            SaniouTextButton(onClick = { pendingProductCommand = null }, text = stringResource(Res.string.action_cancel))
                         },
                     )
                 }

@@ -100,6 +100,7 @@
 -   [x] **体验一致性 0.33**: 主路径全页 loading 统一为 `ThreadLoadingState`（App/详情/用户/来源管理/订阅/Reader/Inbox）。
 -   [x] **安静列表动效 0.34**: `threadAnimateItem` 进入主列表（Forum/Feed/Reader/Bookmark/User）；Bookmark/UserDetail 剩余全页 loading 收敛。
 -   [x] **次级列表动效 0.35**: Search/Subscription/SourceManager/Trend/TopicDetail/GlobalSearch/Inbox 接入 `threadAnimateItem`；Inbox 分页尾部统一 `PagingAppendState`。
+-   [x] **语义化 i18n key 0.36**: 高频 `s_*` 重命名为 `action_*` / `label_*` 等可读 key（跨 composeApp/core-ui/forum/reader/feed）。
 
 ## 🚀 构建与运行
 

@@ -5,7 +5,7 @@
     <string name="s_16dbcf21a4">Aggregated timeline</string>
     <string name="s_246b5aebf6">RSS / Atom Reader</string>
     <string name="s_274a1a8d2e">%1$s sources not updated; failed sources isolated</string>
-    <string name="s_38108eaa1d">Refresh</string>
+    <string name="action_refresh">Refresh</string>
     <string name="s_3e14c19001">FilterSource</string>
     <string name="s_53a0111222">AllForumSource</string>
     <string name="s_5b60fee8a5">Open social timeline</string>

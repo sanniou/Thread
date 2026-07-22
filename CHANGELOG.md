@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.36.0 - 2026-07-22
+
+Semantic rename for high-traffic auto i18n keys.
+
+- Renamed 22 frequent `s_*` keys to readable names (`action_*` / `label_*` / `filter_*` / `a11y_*`) across composeApp, core-ui, forum, reader, feed.
+- Kotlin `Res.string.*` and resource imports updated in the same pass; zh/en catalogs stay in parity.
+- Desktop compile + jvmTest matrix green. Tag `v0.35.0` pushed for secondary list motion.
+
 ## 0.35.0 - 2026-07-22
 
 Secondary list quiet motion + Inbox append consistency.

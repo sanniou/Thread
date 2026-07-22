@@ -37,7 +37,7 @@ import org.jetbrains.compose.resources.stringResource
 import thread.feature_forum.generated.resources.Res
 import thread.feature_forum.generated.resources.s_637f5a02cc
 import thread.feature_forum.generated.resources.s_685f61ba7b
-import thread.feature_forum.generated.resources.s_6c14bd7f6f
+import thread.feature_forum.generated.resources.action_close
 import thread.feature_forum.generated.resources.s_70cd4c4538
 
 /**
@@ -89,7 +89,7 @@ fun ReferenceSheet(
                         contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 ) {
-                    Icon(Icons.Default.Close, contentDescription = stringResource(Res.string.s_6c14bd7f6f))
+                    Icon(Icons.Default.Close, contentDescription = stringResource(Res.string.action_close))
                 }
             }
 

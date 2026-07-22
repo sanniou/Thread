@@ -3,7 +3,7 @@
     <string name="s_16dbcf21a4">聚合动态</string>
     <string name="s_246b5aebf6">RSS / Atom 阅读器</string>
     <string name="s_274a1a8d2e">%1$s 个来源暂未更新，已隔离失败源</string>
-    <string name="s_38108eaa1d">刷新</string>
+    <string name="action_refresh">刷新</string>
     <string name="s_3e14c19001">筛选来源</string>
     <string name="s_53a0111222">全部论坛来源</string>
     <string name="s_5b60fee8a5">开放社交时间线</string>

@@ -41,7 +41,7 @@ import thread.core_ui.generated.resources.s_a980ac855c
 import thread.core_ui.generated.resources.s_af2fab7689
 import thread.core_ui.generated.resources.s_b8e0d519a4
 import thread.core_ui.generated.resources.s_bac95e1e52
-import thread.core_ui.generated.resources.s_e2d53a6d3a
+import thread.core_ui.generated.resources.action_retry
 import thread.core_ui.generated.resources.s_edb8f0043f
 import ai.saniou.coreui.state.AppError
 import ai.saniou.coreui.state.AppErrorType
@@ -184,5 +184,5 @@ private fun AppError.presentation(): ErrorPresentation = when (type) {
     AppErrorType.AUTHENTICATION -> ErrorPresentation(stringResource(Res.string.s_74d54da6e7), stringResource(Res.string.s_a980ac855c), Icons.Default.Lock)
     AppErrorType.RATE_LIMIT -> ErrorPresentation(stringResource(Res.string.s_2bd11d56d9), stringResource(Res.string.s_b8e0d519a4), Icons.Default.HourglassTop)
     AppErrorType.SERVER -> ErrorPresentation(stringResource(Res.string.s_6513bc3959), stringResource(Res.string.s_5982c44c18), Icons.Default.SyncProblem)
-    AppErrorType.UNKNOWN -> ErrorPresentation(stringResource(Res.string.s_af2fab7689), stringResource(Res.string.s_e2d53a6d3a), Icons.Default.WarningAmber)
+    AppErrorType.UNKNOWN -> ErrorPresentation(stringResource(Res.string.s_af2fab7689), stringResource(Res.string.action_retry), Icons.Default.WarningAmber)
 }

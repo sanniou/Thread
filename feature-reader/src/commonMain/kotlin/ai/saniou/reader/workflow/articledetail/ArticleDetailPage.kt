@@ -66,12 +66,12 @@ import thread.feature_reader.generated.resources.s_29554f3cb1
 import thread.feature_reader.generated.resources.s_2d2cdabf29
 import thread.feature_reader.generated.resources.s_3c731ff0a2
 import thread.feature_reader.generated.resources.s_4b560383be
-import thread.feature_reader.generated.resources.s_7a92434114
+import thread.feature_reader.generated.resources.action_share
 import thread.feature_reader.generated.resources.s_88d650dd4f
 import thread.feature_reader.generated.resources.s_aac0ef6c1c
 import thread.feature_reader.generated.resources.s_c578c37700
 import thread.feature_reader.generated.resources.s_cee8bcba20
-import thread.feature_reader.generated.resources.s_d07cee786a
+import thread.feature_reader.generated.resources.action_bookmark
 import thread.feature_reader.generated.resources.s_dfd9994508
 import thread.feature_reader.generated.resources.s_ea2ac35993
 
@@ -167,13 +167,13 @@ data class ArticleDetailPage(val articleId: String) : Screen {
                     visible = article != null,
                     actions = listOf(
                         ActionItem(
-                            label = if (article?.isBookmarked == true) stringResource(Res.string.s_2d2cdabf29) else stringResource(Res.string.s_d07cee786a),
+                            label = if (article?.isBookmarked == true) stringResource(Res.string.s_2d2cdabf29) else stringResource(Res.string.action_bookmark),
                             icon = if (article?.isBookmarked == true) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
                             emphasized = article?.isBookmarked == true,
                             onClick = { viewModel.onEvent(ArticleDetailContract.Event.OnToggleBookmark) },
                         ),
                         ActionItem(
-                            label = stringResource(Res.string.s_7a92434114),
+                            label = stringResource(Res.string.action_share),
                             icon = Icons.Default.Share,
                             onClick = {
                                 article?.let {
@@ -235,12 +235,12 @@ private fun ArticleDetailActions(
                 IconButton(onClick = onToggleBookmark) {
                     Icon(
                         imageVector = if (article.isBookmarked) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
-                        contentDescription = stringResource(Res.string.s_d07cee786a),
+                        contentDescription = stringResource(Res.string.action_bookmark),
                         tint = if (article.isBookmarked) MaterialTheme.colorScheme.primary else LocalContentColor.current
                     )
                 }
                 IconButton(onClick = onShare) {
-                    Icon(Icons.Default.Share, contentDescription = stringResource(Res.string.s_7a92434114))
+                    Icon(Icons.Default.Share, contentDescription = stringResource(Res.string.action_share))
                 }
                 Box {
                     IconButton(onClick = { onToggleMenu(true) }) {

@@ -74,7 +74,7 @@ import org.jetbrains.compose.resources.stringResource
 import thread.composeapp.generated.resources.Res
 import thread.composeapp.generated.resources.s_11fdaed970
 import thread.composeapp.generated.resources.s_1ca2668ead
-import thread.composeapp.generated.resources.s_1f425b6bf0
+import thread.composeapp.generated.resources.label_working
 import thread.composeapp.generated.resources.s_358adbfeaf
 import thread.composeapp.generated.resources.s_4bcb37a2a4
 import thread.composeapp.generated.resources.s_528869a02b
@@ -333,7 +333,7 @@ private fun ProductCommandRow(command: ProductCommand, selected: Boolean, onClic
             }
             Surface(shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.surfaceContainerHigh) {
                 Text(
-                    if (command.descriptor.enabled) stringResource(Res.string.s_f3ea6d345e) else stringResource(Res.string.s_1f425b6bf0),
+                    if (command.descriptor.enabled) stringResource(Res.string.s_f3ea6d345e) else stringResource(Res.string.label_working),
                     Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                     style = MaterialTheme.typography.labelSmall,
                 )

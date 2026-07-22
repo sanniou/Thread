@@ -25,7 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import thread.feature_forum.generated.resources.Res
-import thread.feature_forum.generated.resources.s_fadf24dbc5
+import thread.feature_forum.generated.resources.action_save
 import thread.feature_forum.generated.resources.subscription_cancel
 
 @Composable
@@ -72,7 +72,7 @@ fun ManualLoginDialog(
                 SaniouButton(
                     onClick = { onConfirm(inputs.toMap()) },
                     enabled = strategy.fields.all { !it.isRequired || !inputs[it.key].isNullOrBlank() },
-                    text = stringResource(Res.string.s_fadf24dbc5),
+                    text = stringResource(Res.string.action_save),
                 )
             }
         }

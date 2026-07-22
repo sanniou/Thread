@@ -99,18 +99,18 @@ import thread.composeapp.generated.resources.s_0b46d8806e
 import thread.composeapp.generated.resources.s_0f436818c0
 import thread.composeapp.generated.resources.s_109d57e951
 import thread.composeapp.generated.resources.s_149b3c638f
-import thread.composeapp.generated.resources.s_1f425b6bf0
-import thread.composeapp.generated.resources.s_1fc1afc5c5
+import thread.composeapp.generated.resources.label_working
+import thread.composeapp.generated.resources.action_continue
 import thread.composeapp.generated.resources.s_28febba225
 import thread.composeapp.generated.resources.s_35405c37e2
 import thread.composeapp.generated.resources.s_39f95e3775
 import thread.composeapp.generated.resources.s_3f7b376d3e
 import thread.composeapp.generated.resources.s_45ad45848d
-import thread.composeapp.generated.resources.s_4d0b4688c7
+import thread.composeapp.generated.resources.action_cancel
 import thread.composeapp.generated.resources.s_4edd1d0087
 import thread.composeapp.generated.resources.s_62e27e2865
 import thread.composeapp.generated.resources.s_65fc81e161
-import thread.composeapp.generated.resources.s_6c14bd7f6f
+import thread.composeapp.generated.resources.action_close
 import thread.composeapp.generated.resources.s_7cac745e03
 import thread.composeapp.generated.resources.s_8a6e4f192f
 import thread.composeapp.generated.resources.s_ab0a804137
@@ -120,7 +120,7 @@ import thread.composeapp.generated.resources.s_b2548636f0
 import thread.composeapp.generated.resources.s_c840cbecba
 import thread.composeapp.generated.resources.s_d2ade1f772
 import thread.composeapp.generated.resources.s_d84129b8be
-import thread.composeapp.generated.resources.s_e99b48a29b
+import thread.composeapp.generated.resources.label_completed
 import thread.composeapp.generated.resources.s_ea4899468c
 import thread.composeapp.generated.resources.s_ed5909bac1
 import thread.composeapp.generated.resources.s_1354374f76
@@ -131,7 +131,7 @@ import thread.composeapp.generated.resources.s_5ffe0b99be
 import thread.composeapp.generated.resources.s_62c7d33506
 import thread.composeapp.generated.resources.s_656c40a504
 import thread.composeapp.generated.resources.s_6c7dcbb73a
-import thread.composeapp.generated.resources.s_778fc8f994
+import thread.composeapp.generated.resources.label_all
 import thread.composeapp.generated.resources.s_89a2b24d0c
 import thread.composeapp.generated.resources.s_8ecb358ed8
 import thread.composeapp.generated.resources.s_9117f23d72
@@ -270,19 +270,19 @@ object ActivityCenterPage : Screen {
                     if (request.danger == ProductActionDanger.DESTRUCTIVE) {
                         SaniouDangerButton(
                             onClick = { viewModel.onEvent(Event.ConfirmDangerAction) },
-                            text = stringResource(Res.string.s_1fc1afc5c5),
+                            text = stringResource(Res.string.action_continue),
                         )
                     } else {
                         SaniouButton(
                             onClick = { viewModel.onEvent(Event.ConfirmDangerAction) },
-                            text = stringResource(Res.string.s_1fc1afc5c5),
+                            text = stringResource(Res.string.action_continue),
                         )
                     }
                 },
                 dismissButton = {
                     SaniouTextButton(
                         onClick = { viewModel.onEvent(Event.DismissDangerAction) },
-                        text = stringResource(Res.string.s_4d0b4688c7),
+                        text = stringResource(Res.string.action_cancel),
                     )
                 },
             )
@@ -311,7 +311,7 @@ object ActivityCenterPage : Screen {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                         SaniouTextButton(
                             onClick = { viewModel.onEvent(Event.DismissOutput) },
-                            text = stringResource(Res.string.s_6c14bd7f6f),
+                            text = stringResource(Res.string.action_close),
                         )
                         SaniouButton(onClick = {
                             clipboard.copyText(payload)
@@ -331,10 +331,10 @@ object ActivityCenterPage : Screen {
 @Composable
 private fun ActivityMetrics(running: Int, attention: Int, drafts: Int, completed: Int) {
     FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        ActivityMetric(stringResource(Res.string.s_1f425b6bf0), running, Icons.Default.Sync, MaterialTheme.colorScheme.primary)
+        ActivityMetric(stringResource(Res.string.label_working), running, Icons.Default.Sync, MaterialTheme.colorScheme.primary)
         ActivityMetric(stringResource(Res.string.s_ed5909bac1), attention, Icons.Default.ErrorOutline, MaterialTheme.colorScheme.error)
         ActivityMetric(stringResource(Res.string.s_0f436818c0), drafts, Icons.Default.EditNote, MaterialTheme.colorScheme.tertiary)
-        ActivityMetric(stringResource(Res.string.s_e99b48a29b), completed, Icons.Default.History, MaterialTheme.colorScheme.secondary)
+        ActivityMetric(stringResource(Res.string.label_completed), completed, Icons.Default.History, MaterialTheme.colorScheme.secondary)
     }
 }
 
@@ -405,7 +405,7 @@ private fun ActivityCard(
                 SaniouOutlinedButton(onClick = onOpen) {
                     Icon(if (item.kind == ActivityKind.DRAFT) Icons.Default.EditNote else Icons.AutoMirrored.Filled.OpenInNew, null)
                     Spacer(Modifier.width(6.dp))
-                    Text(if (item.kind == ActivityKind.DRAFT) stringResource(Res.string.s_1fc1afc5c5) else stringResource(Res.string.s_65fc81e161))
+                    Text(if (item.kind == ActivityKind.DRAFT) stringResource(Res.string.action_continue) else stringResource(Res.string.s_65fc81e161))
                 }
             }
             item.primaryAction?.let { action ->
@@ -454,11 +454,11 @@ private enum class ActivityTone { GOOD, INFO, WARNING, ERROR }
 
 @Composable
 private fun ActivityItem.presentation(): ActivityPresentation = when (state) {
-    ActivityState.RUNNING -> ActivityPresentation(stringResource(Res.string.s_1f425b6bf0), Icons.Default.Sync, ActivityTone.INFO)
+    ActivityState.RUNNING -> ActivityPresentation(stringResource(Res.string.label_working), Icons.Default.Sync, ActivityTone.INFO)
     ActivityState.ACTION_REQUIRED -> ActivityPresentation(stringResource(Res.string.s_8ecb358ed8), Icons.Default.Lock, ActivityTone.ERROR)
     ActivityState.FAILED -> ActivityPresentation(stringResource(Res.string.s_5ffe0b99be), Icons.Default.CloudOff, ActivityTone.WARNING)
     ActivityState.READY -> ActivityPresentation(stringResource(Res.string.s_ed15fd8c6c), if (kind == ActivityKind.DRAFT) Icons.Default.EditNote else Icons.Default.NotificationsActive, ActivityTone.INFO)
-    ActivityState.COMPLETED -> ActivityPresentation(stringResource(Res.string.s_e99b48a29b), Icons.Default.CheckCircle, ActivityTone.GOOD)
+    ActivityState.COMPLETED -> ActivityPresentation(stringResource(Res.string.label_completed), Icons.Default.CheckCircle, ActivityTone.GOOD)
 }
 
 @Composable
@@ -480,10 +480,10 @@ private fun ActivityPresentation.contentColor(): Color = when (tone) {
 @Composable
 private fun ActivityCenterContract.Filter.label(): String = when (this) {
     ActivityCenterContract.Filter.ATTENTION -> stringResource(Res.string.s_59a9eb4e65)
-    ActivityCenterContract.Filter.ALL -> stringResource(Res.string.s_778fc8f994)
-    ActivityCenterContract.Filter.RUNNING -> stringResource(Res.string.s_1f425b6bf0)
+    ActivityCenterContract.Filter.ALL -> stringResource(Res.string.label_all)
+    ActivityCenterContract.Filter.RUNNING -> stringResource(Res.string.label_working)
     ActivityCenterContract.Filter.DRAFTS -> stringResource(Res.string.s_0f436818c0)
-    ActivityCenterContract.Filter.HISTORY -> stringResource(Res.string.s_e99b48a29b)
+    ActivityCenterContract.Filter.HISTORY -> stringResource(Res.string.label_completed)
 }
 
 @Composable

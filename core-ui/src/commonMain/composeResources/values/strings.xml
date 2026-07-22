@@ -13,7 +13,7 @@
     <string name="s_0b13297f85">打开命令与全局发现，快捷键 Ctrl 或 Command 加 Shift 加 P</string>
     <string name="s_11f8516f82">缩小</string>
     <string name="s_12e2ed4d50">缩放</string>
-    <string name="s_1e230aa201">未读</string>
+    <string name="label_unread">未读</string>
     <string name="s_2d2cdabf29">已收藏</string>
     <string name="s_2da40f4073">信息</string>
     <string name="s_316334eed7">%1$s 个来源需要更新登录状态，其他来源不受影响。</string>
@@ -26,7 +26,7 @@
     <string name="s_64f6dfa563">%1$s 个来源暂未刷新</string>
     <string name="s_65c709f5be">第 %1$s 次</string>
     <string name="s_682836a89a">关联内容</string>
-    <string name="s_6c14bd7f6f">关闭</string>
+    <string name="action_close">关闭</string>
     <string name="s_84fcd70d42">清空</string>
     <string name="s_8657c1c431">未能加载更多内容</string>
     <string name="s_8f27d2c8a0">包含当前工作区</string>
@@ -57,7 +57,7 @@
     <string name="s_34f34e7de0">同一作者</string>
     <string name="s_1efeb8fdd8">相同标签</string>
     <string name="s_48ddea0013">同一内容</string>
-    <string name="s_11d0241540">返回</string>
+    <string name="action_back">返回</string>
     <string name="s_b863c3bd02">Thread 工作区</string>
     <string name="s_8ea79fb9c8">当前工作区</string>
     <string name="s_43341a1c24">正在准备内容</string>
@@ -71,7 +71,7 @@
     <string name="s_6513bc3959">来源服务暂不可用</string>
     <string name="s_5982c44c18">重新加载</string>
     <string name="s_af2fab7689">内容暂时无法加载</string>
-    <string name="s_e2d53a6d3a">重试</string>
+    <string name="action_retry">重试</string>
     <string name="s_8a662fdebf">网络离线</string>
     <string name="s_e41ce24cf7">请求超时</string>
     <string name="s_979b6bb444">请求受限</string>

@@ -101,7 +101,7 @@ import thread.feature_feed.generated.resources.Res
 import thread.feature_feed.generated.resources.s_16dbcf21a4
 import thread.feature_feed.generated.resources.s_246b5aebf6
 import thread.feature_feed.generated.resources.s_274a1a8d2e
-import thread.feature_feed.generated.resources.s_38108eaa1d
+import thread.feature_feed.generated.resources.action_refresh
 import thread.feature_feed.generated.resources.s_3e14c19001
 import thread.feature_feed.generated.resources.s_53a0111222
 import thread.feature_feed.generated.resources.s_5b60fee8a5
@@ -316,7 +316,7 @@ private fun FeedScaffold(
                         CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
                     } else {
                         IconButton(onClick = onRefresh) {
-                            Icon(Icons.Default.Refresh, contentDescription = stringResource(Res.string.s_38108eaa1d))
+                            Icon(Icons.Default.Refresh, contentDescription = stringResource(Res.string.action_refresh))
                         }
                     }
                 },

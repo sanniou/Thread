@@ -29,7 +29,7 @@ import org.jetbrains.compose.resources.getString
 import thread.composeapp.generated.resources.Res
 import thread.composeapp.generated.resources.s_09e424b5e8
 import thread.composeapp.generated.resources.s_1ad61173b4
-import thread.composeapp.generated.resources.s_342dc7b5e9
+import thread.composeapp.generated.resources.filter_unread_only
 import thread.composeapp.generated.resources.s_521889b79f
 import thread.composeapp.generated.resources.s_6da9925ffe
 import thread.composeapp.generated.resources.s_70a5ae0f89
@@ -154,7 +154,7 @@ class SyncSettingsViewModel(
                     name = name,
                     description = buildList {
                         if (query.isNotBlank()) add(getString(Res.string.s_790909b45b, query))
-                        if (event.unreadOnly) add(getString(Res.string.s_342dc7b5e9))
+                        if (event.unreadOnly) add(getString(Res.string.filter_unread_only))
                         if (event.bookmarkedOnly) add(getString(Res.string.s_70a5ae0f89))
                     }.joinToString(" · "),
                     rules = SmartCollectionRules(

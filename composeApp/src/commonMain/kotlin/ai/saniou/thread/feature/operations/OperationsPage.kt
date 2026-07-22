@@ -80,20 +80,20 @@ import org.kodein.di.instance
 import kotlin.time.Instant
 import org.jetbrains.compose.resources.stringResource
 import thread.composeapp.generated.resources.Res
-import thread.composeapp.generated.resources.s_1e230aa201
-import thread.composeapp.generated.resources.s_ffc7850925
-import thread.composeapp.generated.resources.s_ad3fd0f4c7
-import thread.composeapp.generated.resources.s_e848ddd482
+import thread.composeapp.generated.resources.label_unread
+import thread.composeapp.generated.resources.action_reply
+import thread.composeapp.generated.resources.label_article
+import thread.composeapp.generated.resources.label_topic
 import thread.composeapp.generated.resources.s_01ca4b8486
 import thread.composeapp.generated.resources.s_06b65ae162
 import thread.composeapp.generated.resources.s_2426432239
 import thread.composeapp.generated.resources.s_284b34e15f
 import thread.composeapp.generated.resources.s_35050c33c1
-import thread.composeapp.generated.resources.s_38108eaa1d
+import thread.composeapp.generated.resources.action_refresh
 import thread.composeapp.generated.resources.s_456ee3d61d
 import thread.composeapp.generated.resources.s_4e173af0bc
 import thread.composeapp.generated.resources.s_67a0fbb9dc
-import thread.composeapp.generated.resources.s_6c14bd7f6f
+import thread.composeapp.generated.resources.action_close
 import thread.composeapp.generated.resources.s_6cff6c6817
 import thread.composeapp.generated.resources.s_6d1fac16bc
 import thread.composeapp.generated.resources.s_6dfb2feb93
@@ -115,7 +115,7 @@ import thread.composeapp.generated.resources.s_f57207adee
 import thread.composeapp.generated.resources.s_fe5e010aa4
 import thread.composeapp.generated.resources.s_5faee8f507
 import thread.composeapp.generated.resources.s_6c7dcbb73a
-import thread.composeapp.generated.resources.s_778fc8f994
+import thread.composeapp.generated.resources.label_all
 import thread.composeapp.generated.resources.s_8a662fdebf
 import thread.composeapp.generated.resources.s_979b6bb444
 import thread.composeapp.generated.resources.s_b796f2d4ca
@@ -282,7 +282,7 @@ object OperationsPage : Screen {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                         SaniouTextButton(
                             onClick = { viewModel.onEvent(Event.DiagnosticDismissed) },
-                            text = stringResource(Res.string.s_6c14bd7f6f),
+                            text = stringResource(Res.string.action_close),
                         )
                         SaniouButton(onClick = {
                             clipboard.copyText(payload)
@@ -379,9 +379,9 @@ private fun SourceHealthCard(
                         append(' ')
                         append(
                             if (source.kind == ContentSourceKind.FORUM) {
-                                stringResource(Res.string.s_e848ddd482)
+                                stringResource(Res.string.label_topic)
                             } else {
-                                stringResource(Res.string.s_ad3fd0f4c7)
+                                stringResource(Res.string.label_article)
                             },
                         )
                         append(" · ")
@@ -389,9 +389,9 @@ private fun SourceHealthCard(
                         append(' ')
                         append(
                             if (source.kind == ContentSourceKind.FORUM) {
-                                stringResource(Res.string.s_ffc7850925)
+                                stringResource(Res.string.action_reply)
                             } else {
-                                stringResource(Res.string.s_1e230aa201)
+                                stringResource(Res.string.label_unread)
                             },
                         )
                     },
@@ -405,7 +405,7 @@ private fun SourceHealthCard(
                 SaniouButton(onClick = onRetry) {
                     Icon(Icons.Default.Refresh, null)
                     Spacer(Modifier.width(6.dp))
-                    Text(stringResource(Res.string.s_38108eaa1d))
+                    Text(stringResource(Res.string.action_refresh))
                 }
             }
         }
@@ -488,7 +488,7 @@ private fun HealthPresentation.contentColor(): Color = when (tone) {
 
 @Composable
 private fun OperationsContract.Filter.label(): String = when (this) {
-    OperationsContract.Filter.ALL -> stringResource(Res.string.s_778fc8f994)
+    OperationsContract.Filter.ALL -> stringResource(Res.string.label_all)
     OperationsContract.Filter.ATTENTION -> stringResource(Res.string.s_284b34e15f)
     OperationsContract.Filter.FORUM -> stringResource(Res.string.s_5faee8f507)
     OperationsContract.Filter.READER -> "Reader"

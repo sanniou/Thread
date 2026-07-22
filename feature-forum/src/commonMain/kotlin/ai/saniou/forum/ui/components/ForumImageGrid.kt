@@ -26,7 +26,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import thread.feature_forum.generated.resources.Res
-import thread.feature_forum.generated.resources.s_30f1332521
+import thread.feature_forum.generated.resources.a11y_post_image
 
 /**
  * 商业级图片网格组件 (九宫格布局)
@@ -70,7 +70,7 @@ fun ForumImageGrid(
                             onLongClick = { onImageLongClick?.invoke(image) }
                         ),
                     contentScale = ContentScale.FillHeight,
-                    contentDescription = stringResource(Res.string.s_30f1332521)
+                    contentDescription = stringResource(Res.string.a11y_post_image)
                 )
             }
 
@@ -88,7 +88,7 @@ fun ForumImageGrid(
                                     onClick = { onImageClick(image) },
                                     onLongClick = { onImageLongClick?.invoke(image) }
                                 ),
-                            contentDescription = stringResource(Res.string.s_30f1332521),
+                            contentDescription = stringResource(Res.string.a11y_post_image),
                             contentScale = ContentScale.Crop
                         )
                     }
@@ -110,7 +110,7 @@ fun ForumImageGrid(
                                         onClick = { onImageClick(image) },
                                         onLongClick = { onImageLongClick?.invoke(image) }
                                     ),
-                                contentDescription = stringResource(Res.string.s_30f1332521),
+                                contentDescription = stringResource(Res.string.a11y_post_image),
                                 contentScale = ContentScale.Crop
                             )
                         }
@@ -128,7 +128,7 @@ fun ForumImageGrid(
                                         onClick = { onImageClick(image) },
                                         onLongClick = { onImageLongClick?.invoke(image) }
                                     ),
-                                contentDescription = stringResource(Res.string.s_30f1332521),
+                                contentDescription = stringResource(Res.string.a11y_post_image),
                                 contentScale = ContentScale.Crop
                             )
                         }
@@ -164,7 +164,7 @@ fun ForumImageGrid(
                                                     onClick = { onImageClick(image) },
                                                     onLongClick = { onImageLongClick?.invoke(image) }
                                                 ),
-                                            contentDescription = stringResource(Res.string.s_30f1332521),
+                                            contentDescription = stringResource(Res.string.a11y_post_image),
                                             contentScale = ContentScale.Crop
                                         )
 

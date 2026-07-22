@@ -81,11 +81,11 @@ import org.jetbrains.compose.resources.stringResource
 import thread.composeapp.generated.resources.Res
 import thread.composeapp.generated.resources.s_1795a34c15
 import thread.composeapp.generated.resources.s_5eee313d53
-import thread.composeapp.generated.resources.s_7a92434114
+import thread.composeapp.generated.resources.action_share
 import thread.composeapp.generated.resources.s_ac12e825b5
 import thread.composeapp.generated.resources.s_adacab81ba
 import thread.composeapp.generated.resources.s_d4efdb587a
-import thread.composeapp.generated.resources.s_e2d53a6d3a
+import thread.composeapp.generated.resources.action_retry
 import thread.composeapp.generated.resources.s_f8b857f50a
 
 data class SocialDetailPage(
@@ -155,7 +155,7 @@ data class SocialDetailPage(
                             snackbar.showSnackbar(if (shared) shareOkMsg else shareFallbackMsg)
                         }
                     }) {
-                        Icon(Icons.Outlined.Share, contentDescription = stringResource(Res.string.s_7a92434114))
+                        Icon(Icons.Outlined.Share, contentDescription = stringResource(Res.string.action_share))
                     }
                     post.canonicalUrl?.let { url ->
                         IconButton(onClick = { uriHandler.openUri(url) }) {
@@ -179,7 +179,7 @@ data class SocialDetailPage(
                             action = {
                                 SaniouButton(
                                     onClick = { viewModel.onEvent(Event.Retry) },
-                                    text = stringResource(Res.string.s_e2d53a6d3a),
+                                    text = stringResource(Res.string.action_retry),
                                 )
                             },
                         )

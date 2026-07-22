@@ -45,8 +45,8 @@ import thread.composeapp.generated.resources.s_29f6711704
 import thread.composeapp.generated.resources.s_3488c54564
 import thread.composeapp.generated.resources.s_447b732eb0
 import thread.composeapp.generated.resources.s_543842233f
-import thread.composeapp.generated.resources.s_778fc8f994
-import thread.composeapp.generated.resources.s_ad3fd0f4c7
+import thread.composeapp.generated.resources.label_all
+import thread.composeapp.generated.resources.label_article
 import thread.composeapp.generated.resources.s_c84df4602f
 import thread.composeapp.generated.resources.s_f9bb327879
 import thread.composeapp.generated.resources.s_fc825effd8
@@ -73,8 +73,8 @@ class HistoryPage : Screen {
                     },
                 )
                 val historyFilterPost = stringResource(Res.string.s_3488c54564)
-                val historyFilterArticle = stringResource(Res.string.s_ad3fd0f4c7)
-                val historyFilterAll = stringResource(Res.string.s_778fc8f994)
+                val historyFilterArticle = stringResource(Res.string.label_article)
+                val historyFilterAll = stringResource(Res.string.label_all)
                 ThreadFilterBar(
                     items = listOf(null, "post", "article"),
                     selected = typeFilter,

@@ -37,7 +37,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import thread.core_ui.generated.resources.Res
-import thread.core_ui.generated.resources.s_11d0241540
+import thread.core_ui.generated.resources.action_back
 
 /**
  * Shared shell for secondary workflows. It keeps navigation and commands
@@ -58,7 +58,7 @@ fun ThreadDetailScaffold(
     contentWindowInsets: WindowInsets = ScaffoldDefaults.contentWindowInsets,
     navigationIcon: @Composable () -> Unit = {
         IconButton(onClick = onBack) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(Res.string.s_11d0241540))
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(Res.string.action_back))
         }
     },
     content: @Composable (PaddingValues) -> Unit,

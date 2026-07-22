@@ -59,7 +59,7 @@ import thread.feature_forum.generated.resources.Res
 import thread.feature_forum.generated.resources.post_page_back
 import thread.feature_forum.generated.resources.s_12f92d07e1
 import thread.feature_forum.generated.resources.s_7d25c5442f
-import thread.feature_forum.generated.resources.s_fadf24dbc5
+import thread.feature_forum.generated.resources.action_save
 
 data class ImagePreviewPage(
     val params: ImagePreviewViewModelParams,
@@ -225,7 +225,7 @@ private fun ImagePreviewHud(
             ) {
                 Icon(
                     Icons.Default.Save,
-                    contentDescription = stringResource(Res.string.s_fadf24dbc5),
+                    contentDescription = stringResource(Res.string.action_save),
                 )
             }
         }

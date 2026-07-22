@@ -85,15 +85,15 @@ import org.kodein.di.instance
 import org.jetbrains.compose.resources.stringResource
 import thread.composeapp.generated.resources.Res
 import thread.composeapp.generated.resources.s_1a0ea4638c
-import thread.composeapp.generated.resources.s_1e230aa201
+import thread.composeapp.generated.resources.label_unread
 import thread.composeapp.generated.resources.s_26fdb68077
-import thread.composeapp.generated.resources.s_342dc7b5e9
+import thread.composeapp.generated.resources.filter_unread_only
 import thread.composeapp.generated.resources.s_3c0aaf62db
 import thread.composeapp.generated.resources.s_41ca4f4fa4
 import thread.composeapp.generated.resources.s_5274a19b11
 import thread.composeapp.generated.resources.s_557ee228de
 import thread.composeapp.generated.resources.s_64d2bc34d9
-import thread.composeapp.generated.resources.s_778fc8f994
+import thread.composeapp.generated.resources.label_all
 import thread.composeapp.generated.resources.s_7f0d5ec20d
 import thread.composeapp.generated.resources.s_862ebc4065
 import thread.composeapp.generated.resources.s_ac210d6e7d
@@ -105,7 +105,7 @@ import thread.composeapp.generated.resources.s_ccb91c07d7
 import thread.composeapp.generated.resources.s_cd83e6e100
 import thread.composeapp.generated.resources.s_d01a73e67b
 import thread.composeapp.generated.resources.s_d37c67c75a
-import thread.composeapp.generated.resources.s_e2d53a6d3a
+import thread.composeapp.generated.resources.action_retry
 import thread.composeapp.generated.resources.s_f5d9c71552
 import thread.composeapp.generated.resources.s_f86d4f875a
 import thread.composeapp.generated.resources.s_f8d22fd22e
@@ -113,7 +113,7 @@ import thread.composeapp.generated.resources.s_1a1f6dff78
 import thread.composeapp.generated.resources.s_3f95695328
 import thread.composeapp.generated.resources.s_5319af762d
 import thread.composeapp.generated.resources.s_9f7ab435be
-import thread.composeapp.generated.resources.s_ffc7850925
+import thread.composeapp.generated.resources.action_reply
 
 object InboxPage : Screen {
     @Composable
@@ -210,7 +210,7 @@ object InboxPage : Screen {
                         FilterChip(
                             selected = state.filter.unreadOnly,
                             onClick = { viewModel.onEvent(Event.UnreadOnlyChanged(!state.filter.unreadOnly)) },
-                            label = { Text(stringResource(Res.string.s_342dc7b5e9)) },
+                            label = { Text(stringResource(Res.string.filter_unread_only)) },
                         )
                         FilterChip(
                             selected = state.filter.includeMuted,
@@ -251,7 +251,7 @@ object InboxPage : Screen {
                         ThreadCard(Modifier.fillMaxWidth()) {
                             Text(stringResource(Res.string.s_d37c67c75a), style = MaterialTheme.typography.titleMedium)
                             Text(refresh.error.message ?: stringResource(Res.string.s_d01a73e67b), color = MaterialTheme.colorScheme.error)
-                            SaniouButton(onClick = inbox::retry, text = stringResource(Res.string.s_e2d53a6d3a))
+                            SaniouButton(onClick = inbox::retry, text = stringResource(Res.string.action_retry))
                         }
                     }
                     else -> if (inbox.itemCount == 0) item {
@@ -290,7 +290,7 @@ object InboxPage : Screen {
 @Composable
 private fun InboxMetrics(total: Int, unread: Int, sources: Int, muted: Int) {
     FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        listOf(stringResource(Res.string.s_778fc8f994) to total, stringResource(Res.string.s_1e230aa201) to unread, stringResource(Res.string.s_c63f79e636) to sources, stringResource(Res.string.s_afdbd1ddec) to muted).forEach { (label, value) ->
+        listOf(stringResource(Res.string.label_all) to total, stringResource(Res.string.label_unread) to unread, stringResource(Res.string.s_c63f79e636) to sources, stringResource(Res.string.s_afdbd1ddec) to muted).forEach { (label, value) ->
             Surface(color = MaterialTheme.colorScheme.surfaceContainerHigh, shape = MaterialTheme.shapes.large) {
                 Column(Modifier.padding(horizontal = 18.dp, vertical = 12.dp)) {
                     Text(value.toString(), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
@@ -363,7 +363,7 @@ private fun InboxEventCard(
 private fun InboxKind.label(): String = when (this) {
     InboxKind.ANNOUNCEMENT -> stringResource(Res.string.s_3f95695328)
     InboxKind.MENTION -> stringResource(Res.string.s_9f7ab435be)
-    InboxKind.REPLY -> stringResource(Res.string.s_ffc7850925)
+    InboxKind.REPLY -> stringResource(Res.string.action_reply)
     InboxKind.SUBSCRIPTION_UPDATE -> stringResource(Res.string.s_5319af762d)
     InboxKind.READER_UPDATE -> "Reader"
     InboxKind.SYSTEM -> stringResource(Res.string.s_1a1f6dff78)

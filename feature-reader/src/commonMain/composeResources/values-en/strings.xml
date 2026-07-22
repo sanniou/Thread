@@ -4,7 +4,7 @@
     <!-- auto-migrated product strings (composable UI) -->
     <string name="s_0c8b3594f5">ConfirmSubscribeInfo</string>
     <string name="s_0e9cfb13bf">Read · %1$s</string>
-    <string name="s_11d0241540">Back</string>
+    <string name="action_back">Back</string>
     <string name="s_127db1eb5e">Analysis failed</string>
     <string name="s_138be3960f">%1$s feeds</string>
     <string name="s_13f5a71b47">Unknown source</string>
@@ -23,7 +23,7 @@
     <string name="s_33246f6a5e">Done</string>
     <string name="s_362ae50a1d">Articles, unread items, and bookmarks for the current feed</string>
     <string name="s_3755f56f2f">Delete</string>
-    <string name="s_38108eaa1d">Refresh</string>
+    <string name="action_refresh">Refresh</string>
     <string name="s_3a9a579a96">1h</string>
     <string name="s_3b9ec1c412">Export JSON</string>
     <string name="s_3bbbd45469">Copy the following and save it; this format can be re-imported into Thread.</string>
@@ -35,7 +35,7 @@
     <string name="s_4a8be83972">No articles yet</string>
     <string name="s_4b560383be">Web view</string>
     <string name="s_4b62c5ce6c">Advanced parsing rules</string>
-    <string name="s_4d0b4688c7">Cancel</string>
+    <string name="action_cancel">Cancel</string>
     <string name="s_4d69dbdf62">Original</string>
     <string name="s_4fc9662b55">Collects %1$s feeds so you can read at your own pace</string>
     <string name="s_54b8a90b3c">Data</string>
@@ -47,9 +47,9 @@
     <string name="s_76b3e684df">Reload article</string>
     <string name="s_7829a6c547">Pull down or tap refresh to update feeds</string>
     <string name="s_7a124b0cee">Add a subscription, or refresh content later.</string>
-    <string name="s_7a92434114">Share</string>
+    <string name="action_share">Share</string>
     <string name="s_7ce6f142b0">AllArticle</string>
-    <string name="s_8837069fef">Add subscription</string>
+    <string name="action_add_feed_source">Add subscription</string>
     <string name="s_88d650dd4f">Browser</string>
     <string name="s_899dfaf555">Analyzing page…</string>
     <string name="s_8e17667027">Configure how article content is extracted</string>
@@ -57,7 +57,7 @@
     <string name="s_99250ff7cc">Enter URL (RSS, HTML, JSON)</string>
     <string name="s_a0ecc22def">Add more sources</string>
     <string name="s_a701463879">Feed</string>
-    <string name="s_a7f814c0a4">Edit</string>
+    <string name="action_edit">Edit</string>
     <string name="s_aac0ef6c1c">Read</string>
     <string name="s_ad3c05564d">Refresh will not clear the existing article list</string>
     <string name="s_b37255ca3a">2h</string>
@@ -74,7 +74,7 @@
     <string name="s_c96ee4e21a">Read today</string>
     <string name="s_c9e72455c7">30min</string>
     <string name="s_cee8bcba20">Font size</string>
-    <string name="s_d07cee786a">Bookmark</string>
+    <string name="action_bookmark">Bookmark</string>
     <string name="s_d2045dd3b8">Import JSON</string>
     <string name="s_d506ee7198">%1$s Unread</string>
     <string name="s_d79148c66d">Show help</string>
@@ -83,7 +83,7 @@
     <string name="s_dfd9994508">More options</string>
     <string name="s_e1d8a5a688">AllRefresh</string>
     <string name="s_e25eb142fc">Auto-refresh is not running</string>
-    <string name="s_e2d53a6d3a">Retry</string>
+    <string name="action_retry">Retry</string>
     <string name="s_e40a06c88b">CloseSearch</string>
     <string name="s_e45f66052e">Local cache is still readable</string>
     <string name="s_e4e46c7235">Type</string>
@@ -94,7 +94,7 @@
     <string name="s_f0e21f6e0f">Cache first · show local content first</string>
     <string name="s_f511238a87">No subscriptions yet</string>
     <string name="s_f9f25fb227">No related articles found</string>
-    <string name="s_fadf24dbc5">Save</string>
+    <string name="action_save">Save</string>
     <string name="s_fbf6b9bcc8">Paste subscription data; import merges by ID or URL.</string>
     <string name="reader_import_format_title">Import %1$s feed</string>
     <string name="reader_export_format_title">Export %1$s feed</string>

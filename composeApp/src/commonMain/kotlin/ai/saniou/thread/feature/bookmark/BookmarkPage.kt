@@ -56,8 +56,8 @@ import thread.composeapp.generated.resources.s_5d071a7a42
 import thread.composeapp.generated.resources.s_61d0e95680
 import thread.composeapp.generated.resources.s_7459b11af2
 import thread.composeapp.generated.resources.s_9ebd38aa1b
-import thread.composeapp.generated.resources.s_a7f814c0a4
-import thread.composeapp.generated.resources.s_ad3fd0f4c7
+import thread.composeapp.generated.resources.action_edit
+import thread.composeapp.generated.resources.label_article
 import thread.composeapp.generated.resources.s_ae8714509f
 import thread.composeapp.generated.resources.s_d4dcb361a4
 import thread.composeapp.generated.resources.s_e23ed7cf28
@@ -93,7 +93,7 @@ object BookmarkPage : Screen {
                                 Icon(Icons.Default.Close, contentDescription = stringResource(Res.string.s_e23ed7cf28))
                             }
                         } else {
-                            SaniouTextButton(onClick = { viewModel.onEvent(BookmarkContract.Event.ToggleSelectionMode) }, text = stringResource(Res.string.s_a7f814c0a4))
+                            SaniouTextButton(onClick = { viewModel.onEvent(BookmarkContract.Event.ToggleSelectionMode) }, text = stringResource(Res.string.action_edit))
                         }
                     },
                 )
@@ -290,7 +290,7 @@ fun BookmarkItem(
                     }
 
                     is Bookmark.Quote -> {
-                        val label = if (bookmark.sourceType == "article") stringResource(Res.string.s_ad3fd0f4c7) else stringResource(Res.string.s_3488c54564)
+                        val label = if (bookmark.sourceType == "article") stringResource(Res.string.label_article) else stringResource(Res.string.s_3488c54564)
                         Text(
                             text = bookmark.content,
                             maxLines = 5,

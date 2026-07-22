@@ -60,22 +60,22 @@ import thread.feature_forum.generated.resources.eyebrow_forum_sources
 import thread.feature_forum.generated.resources.s_09ceea7644
 import thread.feature_forum.generated.resources.s_3507ddb87f
 import thread.feature_forum.generated.resources.s_3755f56f2f
-import thread.feature_forum.generated.resources.s_3cf2fddb98
+import thread.feature_forum.generated.resources.action_add_discourse
 import thread.feature_forum.generated.resources.s_5fee7d843d
 import thread.feature_forum.generated.resources.s_6780ab7294
 import thread.feature_forum.generated.resources.s_6e04347c1c
 import thread.feature_forum.generated.resources.s_6fe30db879
-import thread.feature_forum.generated.resources.s_753ccc8e2e
+import thread.feature_forum.generated.resources.label_activity
 import thread.feature_forum.generated.resources.s_75ae6a8a7d
 import thread.feature_forum.generated.resources.s_7bda6019d9
 import thread.feature_forum.generated.resources.s_96d7780f27
-import thread.feature_forum.generated.resources.s_a7f814c0a4
+import thread.feature_forum.generated.resources.action_edit
 import thread.feature_forum.generated.resources.s_ac8895327b
 import thread.feature_forum.generated.resources.s_acc77f9e5b
 import thread.feature_forum.generated.resources.s_ae96a77def
 import thread.feature_forum.generated.resources.s_b4e08a4b66
 import thread.feature_forum.generated.resources.s_bb7f40922f
-import thread.feature_forum.generated.resources.s_fadf24dbc5
+import thread.feature_forum.generated.resources.action_save
 import thread.feature_forum.generated.resources.subscription_cancel
 
 class SourceManagerPage : Screen {
@@ -103,7 +103,7 @@ class SourceManagerPage : Screen {
             snackbarHost = { SnackbarHost(snackbar) },
             actions = {
                 IconButton(onClick = { viewModel.onEvent(Event.AddDiscourse) }) {
-                    Icon(Icons.Default.Add, contentDescription = stringResource(Res.string.s_3cf2fddb98))
+                    Icon(Icons.Default.Add, contentDescription = stringResource(Res.string.action_add_discourse))
                 }
             },
         ) { padding ->
@@ -142,7 +142,7 @@ class SourceManagerPage : Screen {
                                     action = {
                                         SaniouButton(
                                             onClick = { viewModel.onEvent(Event.AddDiscourse) },
-                                            text = stringResource(Res.string.s_3cf2fddb98),
+                                            text = stringResource(Res.string.action_add_discourse),
                                         )
                                     },
                                 )
@@ -203,7 +203,7 @@ private fun SourceDescriptorCard(
                         },
                     ) {
                         Text(
-                            if (descriptor.isBuiltIn) stringResource(Res.string.s_09ceea7644) else stringResource(Res.string.s_753ccc8e2e),
+                            if (descriptor.isBuiltIn) stringResource(Res.string.s_09ceea7644) else stringResource(Res.string.label_activity),
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                             style = MaterialTheme.typography.labelSmall,
                         )
@@ -220,7 +220,7 @@ private fun SourceDescriptorCard(
             }
             if (!descriptor.isBuiltIn) {
                 IconButton(onClick = onEdit, enabled = enabled) {
-                    Icon(Icons.Default.Edit, contentDescription = stringResource(Res.string.s_a7f814c0a4))
+                    Icon(Icons.Default.Edit, contentDescription = stringResource(Res.string.action_edit))
                 }
                 IconButton(onClick = onDelete, enabled = enabled) {
                     Icon(Icons.Default.Delete, contentDescription = stringResource(Res.string.s_3755f56f2f))
@@ -253,7 +253,7 @@ private fun DiscourseEditorDialog(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(
-                if (descriptor == null) stringResource(Res.string.s_3cf2fddb98) else stringResource(Res.string.s_ae96a77def),
+                if (descriptor == null) stringResource(Res.string.action_add_discourse) else stringResource(Res.string.s_ae96a77def),
                 style = MaterialTheme.typography.headlineSmall,
             )
             Text(
@@ -300,7 +300,7 @@ private fun DiscourseEditorDialog(
                     onClick = { onSave(id, name, url, apiKey) },
                     enabled = !isSaving && id.isNotBlank() && name.isNotBlank() && url.isNotBlank(),
                     loading = isSaving,
-                    text = stringResource(Res.string.s_fadf24dbc5),
+                    text = stringResource(Res.string.action_save),
                 )
             }
         }

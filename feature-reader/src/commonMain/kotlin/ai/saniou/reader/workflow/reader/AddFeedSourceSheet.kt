@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import thread.feature_reader.generated.resources.Res
 import thread.feature_reader.generated.resources.s_0c8b3594f5
-import thread.feature_reader.generated.resources.s_11d0241540
+import thread.feature_reader.generated.resources.action_back
 import thread.feature_reader.generated.resources.s_127db1eb5e
 import thread.feature_reader.generated.resources.s_1be7ae4fc2
 import thread.feature_reader.generated.resources.s_22735a939e
@@ -35,7 +35,7 @@ import thread.feature_reader.generated.resources.s_3a9a579a96
 import thread.feature_reader.generated.resources.s_3f5cb2d1a1
 import thread.feature_reader.generated.resources.s_45a2727884
 import thread.feature_reader.generated.resources.s_4b62c5ce6c
-import thread.feature_reader.generated.resources.s_4d0b4688c7
+import thread.feature_reader.generated.resources.action_cancel
 import thread.feature_reader.generated.resources.s_57937ccefc
 import thread.feature_reader.generated.resources.s_75ef1241c0
 import thread.feature_reader.generated.resources.s_899dfaf555
@@ -48,10 +48,10 @@ import thread.feature_reader.generated.resources.s_c02d95def4
 import thread.feature_reader.generated.resources.s_c3147ba167
 import thread.feature_reader.generated.resources.s_c9e72455c7
 import thread.feature_reader.generated.resources.s_dee3a22068
-import thread.feature_reader.generated.resources.s_e2d53a6d3a
+import thread.feature_reader.generated.resources.action_retry
 import thread.feature_reader.generated.resources.s_e4e46c7235
 import thread.feature_reader.generated.resources.s_ea0ef2ae72
-import thread.feature_reader.generated.resources.s_fadf24dbc5
+import thread.feature_reader.generated.resources.action_save
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -170,9 +170,9 @@ private fun Step_AnalysisFailed(
             horizontalArrangement = Arrangement.End,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            SaniouTextButton(onClick = onBack, text = stringResource(Res.string.s_11d0241540))
+            SaniouTextButton(onClick = onBack, text = stringResource(Res.string.action_back))
             Spacer(modifier = Modifier.width(8.dp))
-            SaniouButton(onClick = onRetry, text = stringResource(Res.string.s_e2d53a6d3a))
+            SaniouButton(onClick = onRetry, text = stringResource(Res.string.action_retry))
         }
     }
 }
@@ -213,7 +213,7 @@ private fun Step_SelectSource(
                 .padding(horizontal = 24.dp, vertical = 16.dp),
             horizontalArrangement = Arrangement.End
         ) {
-            SaniouTextButton(onClick = onBack, text = stringResource(Res.string.s_11d0241540))
+            SaniouTextButton(onClick = onBack, text = stringResource(Res.string.action_back))
         }
     }
 }
@@ -416,7 +416,7 @@ private fun Step_ConfirmSource(
                             refreshInterval = refreshInterval
                         ))
                     },
-                    text = stringResource(Res.string.s_fadf24dbc5),
+                    text = stringResource(Res.string.action_save),
                 )
             }
         }
@@ -454,7 +454,7 @@ private fun Step1_EnterUrl(onNext: (String) -> Unit, onDismiss: () -> Unit) {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.End
         ) {
-            SaniouTextButton(onClick = onDismiss, text = stringResource(Res.string.s_4d0b4688c7))
+            SaniouTextButton(onClick = onDismiss, text = stringResource(Res.string.action_cancel))
             Spacer(modifier = Modifier.width(8.dp))
             SaniouButton(
                 onClick = { onNext(url) },

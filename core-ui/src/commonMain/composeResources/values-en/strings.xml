@@ -15,7 +15,7 @@
     <string name="s_0b13297f85">Open command palette and global discover. Shortcut: Ctrl or Command + Shift + P</string>
     <string name="s_11f8516f82">Zoom out</string>
     <string name="s_12e2ed4d50">Zoom</string>
-    <string name="s_1e230aa201">Unread</string>
+    <string name="label_unread">Unread</string>
     <string name="s_2d2cdabf29">Bookmarked</string>
     <string name="s_2da40f4073">Info</string>
     <string name="s_316334eed7">%1$s sources need an updated login state; other sources are unaffected.</string>
@@ -28,7 +28,7 @@
     <string name="s_64f6dfa563">%1$s sources not refreshed yet</string>
     <string name="s_65c709f5be">Attempt %1$s</string>
     <string name="s_682836a89a">Related content</string>
-    <string name="s_6c14bd7f6f">Close</string>
+    <string name="action_close">Close</string>
     <string name="s_84fcd70d42">Clear</string>
     <string name="s_8657c1c431">Could not load more content</string>
     <string name="s_8f27d2c8a0">Includes the current workspace</string>
@@ -45,7 +45,7 @@
     <string name="s_f7bd72c0c7">Shortcut menu</string>
     <string name="s_ff55f08cf1">Jump workspace or search offline cache</string>
     <string name="s_04c5a5e4ed">Reply chain</string>
-    <string name="s_11d0241540">Back</string>
+    <string name="action_back">Back</string>
     <string name="s_14c9516e3f">Too many requests. Try again later.</string>
     <string name="s_1efeb8fdd8">Same tags</string>
     <string name="s_21a58979fe">Dialog</string>
@@ -75,7 +75,7 @@
     <string name="s_bbbd563c35">Service error</string>
     <string name="s_d656314c49">Network unavailable. Check your connection.</string>
     <string name="s_d811b10221">Shortcut Ctrl or Command + %1$s</string>
-    <string name="s_e2d53a6d3a">Retry</string>
+    <string name="action_retry">Retry</string>
     <string name="s_e41ce24cf7">Timed out</string>
     <string name="s_e89c04731b">All content loaded</string>
     <string name="s_edb8f0043f">Thread is syncing sources and local cache.</string>

@@ -41,7 +41,7 @@ import thread.feature_forum.generated.resources.Res
 import thread.feature_forum.generated.resources.s_249b0d1cc6
 import thread.feature_forum.generated.resources.s_5fafcc2093
 import thread.feature_forum.generated.resources.s_980abb36c0
-import thread.feature_forum.generated.resources.s_d07cee786a
+import thread.feature_forum.generated.resources.action_bookmark
 
 class ChannelViewModel(
     private val getChannelsUseCase: GetChannelsUseCase,
@@ -222,7 +222,7 @@ class ChannelViewModel(
             }.collect { (forums, favorites, recent) ->
                 val favoriteGroup = ChannelCategoryUiState(
                     id = "-2", // Special ID for favorites
-                    name = getString(Res.string.s_d07cee786a),
+                    name = getString(Res.string.action_bookmark),
                     channels = favorites
                 )
                 val recentGroup = ChannelCategoryUiState(

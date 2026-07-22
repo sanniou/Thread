@@ -78,13 +78,13 @@ import thread.feature_reader.generated.resources.s_274a1a8d2e
 import thread.feature_reader.generated.resources.s_33246f6a5e
 import thread.feature_reader.generated.resources.s_362ae50a1d
 import thread.feature_reader.generated.resources.s_3755f56f2f
-import thread.feature_reader.generated.resources.s_38108eaa1d
+import thread.feature_reader.generated.resources.action_refresh
 import thread.feature_reader.generated.resources.s_3b9ec1c412
 import thread.feature_reader.generated.resources.s_3bbbd45469
 import thread.feature_reader.generated.resources.s_452c23cf13
 import thread.feature_reader.generated.resources.s_463923ed95
 import thread.feature_reader.generated.resources.s_4a8be83972
-import thread.feature_reader.generated.resources.s_4d0b4688c7
+import thread.feature_reader.generated.resources.action_cancel
 import thread.feature_reader.generated.resources.s_4fc9662b55
 import thread.feature_reader.generated.resources.s_54b8a90b3c
 import thread.feature_reader.generated.resources.s_57c031dbd9
@@ -93,11 +93,11 @@ import thread.feature_reader.generated.resources.s_6f3f39d03c
 import thread.feature_reader.generated.resources.s_7829a6c547
 import thread.feature_reader.generated.resources.s_7a124b0cee
 import thread.feature_reader.generated.resources.s_7ce6f142b0
-import thread.feature_reader.generated.resources.s_8837069fef
+import thread.feature_reader.generated.resources.action_add_feed_source
 import thread.feature_reader.generated.resources.s_96cc0e8ed2
 import thread.feature_reader.generated.resources.s_a0ecc22def
 import thread.feature_reader.generated.resources.s_a701463879
-import thread.feature_reader.generated.resources.s_a7f814c0a4
+import thread.feature_reader.generated.resources.action_edit
 import thread.feature_reader.generated.resources.s_ad3c05564d
 import thread.feature_reader.generated.resources.s_b7f317d76b
 import thread.feature_reader.generated.resources.s_badc7c8a1d
@@ -469,7 +469,7 @@ private fun EmptyState(
                 {
                     SaniouButton(
                         onClick = onAddSource,
-                        text = if (!hasSources) stringResource(Res.string.s_8837069fef) else stringResource(Res.string.s_a0ecc22def),
+                        text = if (!hasSources) stringResource(Res.string.action_add_feed_source) else stringResource(Res.string.s_a0ecc22def),
                     )
                 }
             } else null,
@@ -639,7 +639,7 @@ private fun ReaderHeader(
                         )
                         HorizontalDivider()
                         DropdownMenuItem(
-                            text = { Text(stringResource(Res.string.s_8837069fef)) },
+                            text = { Text(stringResource(Res.string.action_add_feed_source)) },
                             leadingIcon = { Icon(Icons.Default.Add, null) },
                             onClick = {
                                 transferMenuExpanded = false
@@ -729,7 +729,7 @@ private fun FeedSourceList(
         )
 
         AppDrawerItem(
-            label = stringResource(Res.string.s_8837069fef),
+            label = stringResource(Res.string.action_add_feed_source),
             icon = Icons.Default.Add,
             selected = false,
             onClick = onAdd
@@ -778,7 +778,7 @@ private fun ReaderTransferDialog(
                 horizontalArrangement = Arrangement.End,
             ) {
                 if (dialog.isImport) {
-                    SaniouTextButton(onClick = onDismiss, enabled = !isWorking, text = stringResource(Res.string.s_4d0b4688c7))
+                    SaniouTextButton(onClick = onDismiss, enabled = !isWorking, text = stringResource(Res.string.action_cancel))
                     SaniouButton(
                         onClick = { onImport(payload) },
                         enabled = payload.isNotBlank() && !isWorking,
@@ -822,12 +822,12 @@ fun FeedSourceItem(
                     onDismissRequest = { showMenu = false }
                 ) {
                     DropdownMenuItem(
-                        text = { Text(stringResource(Res.string.s_38108eaa1d)) },
+                        text = { Text(stringResource(Res.string.action_refresh)) },
                         onClick = { onRefresh(); showMenu = false },
                         leadingIcon = { Icon(Icons.Default.Refresh, null) }
                     )
                     DropdownMenuItem(
-                        text = { Text(stringResource(Res.string.s_a7f814c0a4)) },
+                        text = { Text(stringResource(Res.string.action_edit)) },
                         onClick = { onEdit(); showMenu = false },
                         leadingIcon = { Icon(Icons.Default.Edit, null) }
                     )

@@ -39,10 +39,10 @@ import org.jetbrains.compose.resources.stringResource
 import thread.composeapp.generated.resources.Res
 import thread.composeapp.generated.resources.s_8accf8d664
 import thread.composeapp.generated.resources.s_15d15d9013
-import thread.composeapp.generated.resources.s_753ccc8e2e
-import thread.composeapp.generated.resources.s_ad3fd0f4c7
-import thread.composeapp.generated.resources.s_e848ddd482
-import thread.composeapp.generated.resources.s_ffc7850925
+import thread.composeapp.generated.resources.label_activity
+import thread.composeapp.generated.resources.label_article
+import thread.composeapp.generated.resources.label_topic
+import thread.composeapp.generated.resources.action_reply
 
 @Composable
 fun GlobalSearchResults(
@@ -154,8 +154,8 @@ data class SearchTypePresentation(val label: String, val icon: ImageVector)
 
 @Composable
 fun GlobalSearchType.presentation(): SearchTypePresentation = when (this) {
-    GlobalSearchType.TOPIC -> SearchTypePresentation(stringResource(Res.string.s_e848ddd482), Icons.Default.Forum)
-    GlobalSearchType.COMMENT -> SearchTypePresentation(stringResource(Res.string.s_ffc7850925), Icons.Default.QuestionAnswer)
-    GlobalSearchType.ARTICLE -> SearchTypePresentation(stringResource(Res.string.s_ad3fd0f4c7), Icons.AutoMirrored.Filled.Article)
-    GlobalSearchType.SOCIAL -> SearchTypePresentation(stringResource(Res.string.s_753ccc8e2e), Icons.Default.Public)
+    GlobalSearchType.TOPIC -> SearchTypePresentation(stringResource(Res.string.label_topic), Icons.Default.Forum)
+    GlobalSearchType.COMMENT -> SearchTypePresentation(stringResource(Res.string.action_reply), Icons.Default.QuestionAnswer)
+    GlobalSearchType.ARTICLE -> SearchTypePresentation(stringResource(Res.string.label_article), Icons.AutoMirrored.Filled.Article)
+    GlobalSearchType.SOCIAL -> SearchTypePresentation(stringResource(Res.string.label_activity), Icons.Default.Public)
 }

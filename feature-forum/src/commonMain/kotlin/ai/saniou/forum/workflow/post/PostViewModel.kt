@@ -28,7 +28,7 @@ import org.jetbrains.compose.resources.getString
 import thread.feature_forum.generated.resources.Res
 import thread.feature_forum.generated.resources.s_38eb42e243
 import thread.feature_forum.generated.resources.s_f95134f690
-import thread.feature_forum.generated.resources.s_ffc7850925
+import thread.feature_forum.generated.resources.action_reply
 
 class PostViewModel(
     private val createThreadUseCase: CreateThreadUseCase,
@@ -50,7 +50,7 @@ class PostViewModel(
     init {
         screenModelScope.launch {
             if (params.forumName == null) {
-                _state.update { it.copy(forumName = getString(Res.string.s_ffc7850925)) }
+                _state.update { it.copy(forumName = getString(Res.string.action_reply)) }
             } else {
                 _state.update { it.copy(forumName = params.forumName) }
             }

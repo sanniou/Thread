@@ -94,7 +94,7 @@ import thread.composeapp.generated.resources.s_30b2c979ac
 import thread.composeapp.generated.resources.s_31e11f96c9
 import thread.composeapp.generated.resources.s_32d9d4ba90
 import thread.composeapp.generated.resources.s_33246f6a5e
-import thread.composeapp.generated.resources.s_342dc7b5e9
+import thread.composeapp.generated.resources.filter_unread_only
 import thread.composeapp.generated.resources.s_351619af9a
 import thread.composeapp.generated.resources.s_3930ecdc05
 import thread.composeapp.generated.resources.s_3cce4b557d
@@ -104,7 +104,7 @@ import thread.composeapp.generated.resources.s_4373b82f21
 import thread.composeapp.generated.resources.s_44ceb01368
 import thread.composeapp.generated.resources.s_49c7737142
 import thread.composeapp.generated.resources.s_4a88d2ab0b
-import thread.composeapp.generated.resources.s_4d0b4688c7
+import thread.composeapp.generated.resources.action_cancel
 import thread.composeapp.generated.resources.s_4e2f1163fc
 import thread.composeapp.generated.resources.s_4edd1d0087
 import thread.composeapp.generated.resources.s_56fdd69721
@@ -155,7 +155,7 @@ import thread.composeapp.generated.resources.s_dc35af8d69
 import thread.composeapp.generated.resources.s_de6433b70d
 import thread.composeapp.generated.resources.s_e3ec414278
 import thread.composeapp.generated.resources.s_e5b4eb9f7c
-import thread.composeapp.generated.resources.s_e848ddd482
+import thread.composeapp.generated.resources.label_topic
 import thread.composeapp.generated.resources.s_ed59779c27
 import thread.composeapp.generated.resources.s_f4bbd91f79
 import thread.composeapp.generated.resources.s_11f4ce0c4c
@@ -255,7 +255,7 @@ class SyncSettingsPage(
                         stringResource(Res.string.s_c831720c36),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    Text(stringResource(Res.string.s_e848ddd482), style = MaterialTheme.typography.labelLarge)
+                    Text(stringResource(Res.string.label_topic), style = MaterialTheme.typography.labelLarge)
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         ThemeMode.entries.forEach { mode ->
                             FilterChip(
@@ -338,7 +338,7 @@ class SyncSettingsPage(
                         modifier = Modifier.fillMaxWidth(),
                     )
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        FilterChip(collectionUnread, { collectionUnread = !collectionUnread }, { Text(stringResource(Res.string.s_342dc7b5e9)) })
+                        FilterChip(collectionUnread, { collectionUnread = !collectionUnread }, { Text(stringResource(Res.string.filter_unread_only)) })
                         FilterChip(collectionBookmarked, { collectionBookmarked = !collectionBookmarked }, { Text(stringResource(Res.string.s_70a5ae0f89)) })
                     }
                     Text(stringResource(Res.string.s_dc35af8d69), style = MaterialTheme.typography.labelLarge)
@@ -718,7 +718,7 @@ private fun UserDataTransferDialog(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 if (dialog.isImport) {
-                    SaniouTextButton(onClick = onDismiss, enabled = !isWorking, text = stringResource(Res.string.s_4d0b4688c7))
+                    SaniouTextButton(onClick = onDismiss, enabled = !isWorking, text = stringResource(Res.string.action_cancel))
                     SaniouButton(
                         onClick = { onImport(payload) },
                         enabled = payload.isNotBlank() && !isWorking,
